@@ -1,0 +1,399 @@
+/* src/styles/utilities/responsive.css */
+
+/* ===== BREAKPOINT SYSTEM ===== */
+:root {
+  --breakpoint-xs: 320px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* ===== CONTAINER QUERIES ===== */
+@container (max-width: 768px) {
+  .container-responsive {
+    padding: var(--space-sm);
+  }
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+
+/* Hide/Show at breakpoints */
+.hidden-xs {
+  display: none;
+}
+.hidden-sm {
+  display: none;
+}
+.hidden-md {
+  display: block;
+}
+.hidden-lg {
+  display: block;
+}
+.hidden-xl {
+  display: block;
+}
+
+@media (min-width: 640px) {
+  .hidden-xs {
+    display: block;
+  }
+  .hidden-sm {
+    display: none;
+  }
+  .show-sm {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .hidden-sm {
+    display: block;
+  }
+  .hidden-md {
+    display: none;
+  }
+  .show-md {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hidden-md {
+    display: block;
+  }
+  .hidden-lg {
+    display: none;
+  }
+  .show-lg {
+    display: block;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hidden-lg {
+    display: block;
+  }
+  .hidden-xl {
+    display: none;
+  }
+  .show-xl {
+    display: block;
+  }
+}
+
+/* ===== RESPONSIVE GRID ===== */
+.responsive-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ===== RESPONSIVE FLEXBOX ===== */
+.responsive-flex {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .responsive-flex {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* ===== RESPONSIVE SPACING ===== */
+.responsive-padding {
+  padding: var(--space-sm);
+}
+
+@media (min-width: 768px) {
+  .responsive-padding {
+    padding: var(--space-md);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-padding {
+    padding: var(--space-lg);
+  }
+}
+
+.responsive-margin {
+  margin: var(--space-sm);
+}
+
+@media (min-width: 768px) {
+  .responsive-margin {
+    margin: var(--space-md);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-margin {
+    margin: var(--space-lg);
+  }
+}
+
+/* ===== RESPONSIVE TYPOGRAPHY ===== */
+.responsive-heading {
+  font-size: 1.25rem; /* 20px */
+  line-height: 1.4;
+}
+
+@media (min-width: 640px) {
+  .responsive-heading {
+    font-size: 1.5rem; /* 24px */
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-heading {
+    font-size: 1.875rem; /* 30px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-heading {
+    font-size: 2.25rem; /* 36px */
+  }
+}
+
+.responsive-text {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+  .responsive-text {
+    font-size: 1rem; /* 16px */
+  }
+}
+
+/* ===== RESPONSIVE IMAGES ===== */
+.responsive-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.responsive-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+@media (min-width: 768px) {
+  .responsive-avatar {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-avatar {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* ===== RESPONSIVE TABLES ===== */
+.responsive-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.responsive-table {
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .responsive-table-stack {
+    display: block;
+  }
+
+  .responsive-table-stack thead {
+    display: none;
+  }
+
+  .responsive-table-stack tbody,
+  .responsive-table-stack tr,
+  .responsive-table-stack td {
+    display: block;
+    width: 100%;
+  }
+
+  .responsive-table-stack tr {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: var(--space-sm);
+    padding: var(--space-sm);
+  }
+
+  .responsive-table-stack td {
+    border: none;
+    padding: 4px 0;
+    text-align: left;
+  }
+
+  .responsive-table-stack td::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+/* ===== MOBILE-FIRST NAVIGATION ===== */
+.mobile-nav-container {
+  position: relative;
+}
+
+@media (max-width: 767px) {
+  .desktop-nav {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-nav {
+    display: none;
+  }
+
+  .desktop-nav {
+    display: flex;
+  }
+}
+
+/* ===== RESPONSIVE MODALS ===== */
+.responsive-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.responsive-modal-content {
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  border-radius: 12px;
+  padding: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .responsive-modal {
+    padding: var(--space-xl);
+  }
+
+  .responsive-modal-content {
+    max-width: 600px;
+    padding: var(--space-lg);
+  }
+}
+
+/* ===== SAFE AREA HANDLING (iOS) ===== */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ===== RESPONSIVE CARD LAYOUTS ===== */
+.card-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+/* ===== TOUCH-FRIENDLY SIZING ===== */
+@media (max-width: 767px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px;
+  }
+
+  .touch-target-small {
+    min-height: 40px;
+    min-width: 40px;
+    padding: 10px;
+  }
+}
+
+/* ===== LANDSCAPE PHONE ADJUSTMENTS ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .landscape-adjust {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}
+
+/* ===== PRINT RESPONSIVE ===== */
+@media print {
+  .responsive-print-hide {
+    display: none !important;
+  }
+
+  .responsive-print-full-width {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .responsive-table {
+    font-size: 10px;
+  }
+
+  .responsive-heading {
+    font-size: 14px;
+  }
+}

@@ -1,27 +1,147 @@
 {
-  "name": "basketball-analytics",
+  "name": "jthom-analytics",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --hostname 0.0.0.0",
+    "dev:clean": "rm -rf .next && npm cache clean --force && npm run dev",
+    "dev:turbo": "next dev --turbo --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "analyze": "ANALYZE=true npm run build",
+    "clean": "rm -rf .next dist node_modules/.cache",
+    "clean:all": "rm -rf .next dist node_modules/.cache && npm cache clean --force",
+    "postinstall": "npm run clean"
   },
   "dependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@sentry/nextjs": "^9.24.0",
+    "@tanstack/react-query": "^5.59.20",
+    "@tanstack/react-query-devtools": "^5.59.20",
+    "@vercel/analytics": "^1.4.1",
+    "@vercel/speed-insights": "^1.1.0",
+    "chart.js": "^4.4.9",
+    "clsx": "^2.1.1",
+    "html2canvas": "^1.4.1",
+    "lucide-react": "^0.460.0",
+    "next": "^15.1.0",
+    "next-pwa": "^5.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.1.8"
+    "react-hot-toast": "^2.4.1",
+    "tailwind-merge": "^2.5.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "eslint": "^9",
-    "eslint-config-next": "15.1.8",
-    "@eslint/eslintrc": "^3"
+    "@lhci/cli": "^0.14.0",
+    "@next/bundle-analyzer": "^15.1.0",
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.1.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "jest": "^29.7.0",
+    "lighthouse": "^12.6.1",
+    "postcss": "^8.5.1",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.7.2",
+    "webpack-bundle-analyzer": "^4.10.2"
+  },
+  "engines": {
+    "node": ">=18.17.0",
+    "npm": ">=9.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "moduleNameMapping": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "testPathIgnorePatterns": [
+      "<rootDir>/.next/",
+      "<rootDir>/node_modules/"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/types/**/*"
+    ]
+  },
+  "lighthouse-config": {
+    "ci": {
+      "collect": {
+        "url": [
+          "http://localhost:3000/basketball/wins"
+        ],
+        "startServerCommand": "npm start"
+      },
+      "assert": {
+        "assertions": {
+          "categories:performance": [
+            "warn",
+            {
+              "minScore": 0.8
+            }
+          ],
+          "categories:accessibility": [
+            "error",
+            {
+              "minScore": 0.9
+            }
+          ],
+          "categories:best-practices": [
+            "warn",
+            {
+              "minScore": 0.8
+            }
+          ],
+          "categories:seo": [
+            "warn",
+            {
+              "minScore": 0.8
+            }
+          ]
+        }
+      },
+      "upload": {
+        "target": "temporary-public-storage"
+      }
+    }
+  },
+  "pwa": {
+    "name": "JThom Analytics",
+    "short_name": "JThom Analytics",
+    "description": "Basketball analytics and projections",
+    "theme_color": "#4caf50",
+    "background_color": "#ffffff",
+    "start_url": "/basketball/wins",
+    "display": "standalone",
+    "orientation": "portrait-primary"
   }
 }

@@ -1,0 +1,42 @@
+/* src/styles/base/layout.css */
+.main-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: var(--bg-primary);
+  min-height: 100vh;
+  padding-top: 0rem;
+  box-shadow:
+    -4px 0 8px rgba(0, 0, 0, 0.08),
+    4px 0 8px rgba(0, 0, 0, 0.08);
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+@media (max-width: 768px) {
+  .conference-selector {
+    margin-top: -12px; /* Move up by 8px on mobile */
+  }
+
+  /* Remove shadows on mobile */
+  .main-content {
+    box-shadow: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .conference-selector {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-90%); /* ✅ Changed from -50% to move up */
+  }
+
+  .page-header {
+    position: relative;
+  }
+}

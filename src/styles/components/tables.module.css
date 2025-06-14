@@ -1,0 +1,34 @@
+/* src/styles/components/tables.module.css */
+
+/* Table container */
+.tableContainer {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  font-family: var(--font-inter);
+}
+
+/* Sticky header */
+.stickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-inter);
+}
+
+/* Row hover effects */
+.tableRow:hover {
+  background-color: #f9fafb;
+  transition: background-color var(--transition-fast);
+}
+
+/* Mobile responsive adjustments - simplified */
+@media (max-width: 768px) {
+  .tableContainer {
+    font-size: 12px;
+  }
+}

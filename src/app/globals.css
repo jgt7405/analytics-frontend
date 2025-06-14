@@ -1,21 +1,68 @@
+/* src/app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@import "../styles/base/variables.css";
+@import "../styles/base/reset.css";
+@import "../styles/base/layout.css";
+@import "../styles/utilities/accessibility.css";
+
+/* Apply Inter as default font */
+body {
+  font-family: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Chart and data specific fonts */
+.chart-data,
+.table-data,
+.numeric-data,
+.percentage-data,
+.score-data,
+.record-data,
+.cwv-value,
+.standings-value,
+.wins-value {
+  font-family: var(--font-roboto-mono);
+}
+
+/* Main content styles - moved from theme files */
+.main-content {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow:
+    -4px 0 8px rgba(0, 0, 0, 0.1),
+    4px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Remove shadows on mobile */
+@media (max-width: 768px) {
+  .main-content {
+    box-shadow: none;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media print {
+  .main-content {
+    box-shadow: none;
+    max-width: none;
+  }
+
+  .no-print {
+    display: none !important;
+  }
 }

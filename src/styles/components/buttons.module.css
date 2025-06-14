@@ -1,0 +1,371 @@
+/* src/styles/components/buttons.module.css */
+
+/* ===== BASE BUTTON STYLES ===== */
+.buttonBase {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  font-family: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.buttonBase:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.buttonBase:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ===== BUTTON VARIANTS ===== */
+.buttonPrimary {
+  background-color: var(--color-primary);
+  color: white;
+  border: 1px solid var(--color-primary);
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.buttonPrimary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
+}
+
+.buttonSecondary {
+  background-color: var(--color-accent);
+  color: white;
+  border: 1px solid var(--color-accent);
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.buttonOutline {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.buttonOutline:hover:not(:disabled) {
+  background-color: var(--bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.buttonGhost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+
+.buttonGhost:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.buttonDanger {
+  background-color: #ef4444;
+  color: white;
+  border: 1px solid #ef4444;
+}
+
+.buttonDanger:hover:not(:disabled) {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ===== BUTTON SIZES ===== */
+.buttonXs {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+  gap: 4px;
+}
+
+.buttonSm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.buttonMd {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.buttonLg {
+  height: 48px;
+  padding: 0 24px;
+  font-size: 16px;
+  gap: 10px;
+}
+
+.buttonXl {
+  height: 56px;
+  padding: 0 32px;
+  font-size: 18px;
+  gap: 12px;
+}
+
+/* ===== ICON BUTTONS ===== */
+.buttonIcon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.buttonIcon.buttonSm {
+  width: 32px;
+  height: 32px;
+}
+
+.buttonIcon.buttonLg {
+  width: 48px;
+  height: 48px;
+}
+
+/* ===== BUTTON GROUPS ===== */
+.buttonGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.buttonGroup .buttonBase {
+  border-radius: 0;
+}
+
+.buttonGroup .buttonBase:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.buttonGroup .buttonBase:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.buttonGroup .buttonBase:not(:last-child) {
+  border-right: none;
+}
+
+/* ===== LOADING STATE ===== */
+.buttonLoading {
+  position: relative;
+  color: transparent !important;
+}
+
+.buttonLoading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: buttonSpin 1s linear infinite;
+}
+
+@keyframes buttonSpin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* ===== FLOATING ACTION BUTTON ===== */
+.buttonFab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 40;
+}
+
+.buttonFab:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== TABLE ACTION BUTTONS ===== */
+.tableActionButton {
+  padding: 6px 12px;
+  font-size: 12px;
+  height: auto;
+  min-height: 28px;
+  border-radius: 4px;
+}
+
+.screenshotButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: all var(--transition-fast);
+}
+
+.screenshotButton:hover:not(:disabled) {
+  background-color: var(--bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.screenshotButton:disabled {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+/* ===== SHARE BUTTONS ===== */
+.btnContainer {
+  display: flex;
+  gap: 5px;
+}
+
+.downloadBtn {
+  font-size: 12px;
+  padding: 4px 6px;
+  width: 120px;
+  background-color: #4a5568;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.downloadBtn:hover {
+  background-color: #2d3748;
+}
+
+.shareBtn {
+  font-size: 12px;
+  padding: 4px 6px;
+  width: 120px;
+  background-color: #1da1f2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.shareBtn:hover {
+  background-color: #1a91da;
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+@media (max-width: 768px) {
+  .buttonBase {
+    min-height: 44px; /* iOS recommended minimum */
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+
+  .buttonSm {
+    min-height: 40px;
+    padding: 10px 14px;
+  }
+
+  .buttonXs {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+
+  .tableActionButton {
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .buttonFab {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .btnContainer {
+    flex-direction: column;
+  }
+
+  .downloadBtn,
+  .shareBtn {
+    font-size: 10px;
+    width: 100px;
+  }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+@media (prefers-contrast: high) {
+  .buttonBase {
+    border-width: 2px;
+  }
+
+  .buttonPrimary,
+  .buttonSecondary,
+  .buttonDanger {
+    border-color: currentColor;
+  }
+
+  .buttonOutline {
+    border-color: currentColor;
+  }
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .buttonBase {
+    transition: none;
+  }
+
+  .buttonBase:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .buttonLoading::after {
+    animation: none;
+  }
+}

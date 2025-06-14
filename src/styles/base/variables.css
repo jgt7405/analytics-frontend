@@ -1,0 +1,75 @@
+/* src/styles/base/variables.css */
+:root {
+  /* Font families */
+  --font-roboto-condensed: "Roboto Condensed", system-ui, sans-serif;
+
+  /* Color System */
+  --color-primary: #4caf50;
+  --color-primary-hover: #45a049;
+  --color-accent: #3b82f6;
+
+  /* Semantic Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+
+  /* Spacing Scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+}
+
+/* Chart titles */
+h2 {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  color: #666;
+  font-weight: 500;
+  margin: var(--space-md) 0;
+  font-family: var(--font-roboto-condensed);
+}
+
+/* Explainer text */
+.explanation {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.3;
+  font-family: var(--font-roboto-condensed);
+}
+
+@media (max-width: 768px) {
+  .explanation {
+    font-size: 11px;
+  }
+}
+
+/* Layout containers */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Chart data elements - use Roboto Mono */
+.chart-data,
+.table-data,
+.numeric-data,
+.percentage-data,
+.score-data,
+.record-data {
+  font-family: var(--font-roboto-condensed);
+}
