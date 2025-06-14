@@ -322,7 +322,11 @@ function SeedTable({ seedData, className }: SeedTableProps) {
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderLeft: "none",
-                  ...getCellColor(team.tournament_bid_pct || 0),
+                  ...getCellColor(
+                    team.tournament_bid_pct && team.tournament_bid_pct <= 1
+                      ? team.tournament_bid_pct * 100
+                      : team.tournament_bid_pct || 0
+                  ),
                 }}
               >
                 <div
