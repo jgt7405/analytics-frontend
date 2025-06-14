@@ -19,7 +19,7 @@ export function getCellColor(
   const colorSchemes = {
     blue: {
       light: [195, 224, 236],
-      dark: [24, 98, 123],
+      dark: [0, 50, 87],
     },
     yellow: {
       light: [255, 255, 255],
