@@ -56,6 +56,11 @@ export default function Navigation() {
       description: "Conference bid projections",
     },
     {
+      name: "NCAA Tourney", // ADD THIS
+      path: "/basketball/ncaa-tourney",
+      description: "NCAA tournament round projections",
+    },
+    {
       name: "Teams",
       path: "/basketball/teams",
       description: "Teams directory",

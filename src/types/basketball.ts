@@ -608,6 +608,11 @@ export interface ThemeColors {
   info: string;
 }
 
+export interface NCAATeamApiResponse {
+  data: NCAATeam[];
+  conferences: string[];
+}
+
 export interface Theme {
   name: string;
   colors: ThemeColors;
