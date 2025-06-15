@@ -5,6 +5,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { CWVData } from "@/types/basketball";
+import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
 
 interface GameData {
@@ -22,6 +23,14 @@ interface CWVTableProps {
 
 function CWVTable({ cwvData, className }: CWVTableProps) {
   const { isMobile } = useResponsive();
+  const router = useRouter();
+
+  const navigateToTeam = useCallback(
+    (teamName: string) => {
+      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    },
+    [router]
+  );
 
   if (!cwvData || !cwvData.teams || !cwvData.games) {
     return (
@@ -196,12 +205,19 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
                   borderLeft: "none",
                 }}
               >
-                <div className="flex justify-center items-center h-full">
+                <div
+                  className="flex justify-center items-center h-full cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToTeam(team.team_name);
+                  }}
+                >
                   <TeamLogo
                     logoUrl={team.logo_url}
                     teamName={team.team_name}
                     size={isMobile ? 24 : 28}
                     className="flex-shrink-0"
+                    onClick={() => navigateToTeam(team.team_name)}
                   />
                 </div>
               </th>

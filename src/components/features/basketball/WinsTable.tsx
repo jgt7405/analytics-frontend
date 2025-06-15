@@ -6,7 +6,8 @@ import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { Standing } from "@/types/basketball";
-import { memo, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { memo, useCallback, useMemo } from "react";
 
 interface WinsTableProps {
   standings: Standing[];
@@ -15,6 +16,14 @@ interface WinsTableProps {
 
 function WinsTable({ standings, className }: WinsTableProps) {
   const { isMobile } = useResponsive();
+  const router = useRouter();
+
+  const navigateToTeam = useCallback(
+    (teamName: string) => {
+      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    },
+    [router]
+  );
 
   const sortedTeams = useMemo(() => {
     const startTime = performance.now();
@@ -124,12 +133,19 @@ function WinsTable({ standings, className }: WinsTableProps) {
                   borderLeft: "none",
                 }}
               >
-                <div className="flex justify-center items-center h-full">
+                <div
+                  className="flex justify-center items-center h-full cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToTeam(team.team_name);
+                  }}
+                >
                   <TeamLogo
                     logoUrl={team.logo_url}
                     teamName={team.team_name}
                     size={isMobile ? 24 : 28}
                     className="flex-shrink-0"
+                    onClick={() => navigateToTeam(team.team_name)}
                   />
                 </div>
               </th>
@@ -176,9 +192,7 @@ function WinsTable({ standings, className }: WinsTableProps) {
                     }}
                   >
                     <div
-                      className={`absolute inset-0 flex items-center justify-center ${
-                        isMobile ? "text-xs" : "text-sm"
-                      }`}
+                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
                     >
                       {percentage > 0 ? `${Math.round(percentage)}%` : ""}
                     </div>
@@ -208,7 +222,7 @@ function WinsTable({ standings, className }: WinsTableProps) {
             </td>
             {sortedTeams.map((team) => (
               <td
-                key={`${team.team_name}-avg-wins`}
+                key={`${team.team_name}-avg`}
                 className="bg-gray-50 text-center"
                 style={{
                   height: summaryRowHeight,

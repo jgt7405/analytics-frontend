@@ -6,7 +6,8 @@ import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { Standing } from "@/types/basketball";
-import { memo, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { memo, useCallback, useMemo } from "react";
 
 interface StandingsTableProps {
   standings: Standing[];
@@ -15,6 +16,14 @@ interface StandingsTableProps {
 
 function StandingsTable({ standings, className }: StandingsTableProps) {
   const { isMobile } = useResponsive();
+  const router = useRouter();
+
+  const navigateToTeam = useCallback(
+    (teamName: string) => {
+      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    },
+    [router]
+  );
 
   const sortedTeams = useMemo(() => {
     const startTime = performance.now();
@@ -68,7 +77,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
   }
 
   // Responsive dimensions
-  const firstColWidth = isMobile ? 80 : 90;
+  const firstColWidth = isMobile ? 60 : 80;
   const teamColWidth = isMobile ? 40 : 64;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
@@ -105,7 +114,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Final Conf Standing
+              Position
             </th>
             {sortedTeams.map((team) => (
               <th
@@ -120,12 +129,19 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
                   borderLeft: "none",
                 }}
               >
-                <div className="flex justify-center items-center h-full">
+                <div
+                  className="flex justify-center items-center h-full cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToTeam(team.team_name);
+                  }}
+                >
                   <TeamLogo
-                    logoUrl={team.logo_url || "/images/default-logo.png"}
+                    logoUrl={team.logo_url}
                     teamName={team.team_name}
                     size={isMobile ? 24 : 28}
                     className="flex-shrink-0"
+                    onClick={() => navigateToTeam(team.team_name)}
                   />
                 </div>
               </th>
@@ -134,7 +150,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
         </thead>
         <tbody>
           {positions.map((position) => (
-            <tr key={position}>
+            <tr key={`position-${position}`}>
               <td
                 className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
@@ -157,7 +173,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
 
                 return (
                   <td
-                    key={`${team.team_name}-${position}`}
+                    key={`${team.team_name}-position-${position}`}
                     className="relative p-0"
                     style={{
                       height: cellHeight,
@@ -182,7 +198,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
             </tr>
           ))}
 
-          {/* Summary rows */}
+          {/* Summary row */}
           <tr className="bg-gray-50">
             <td
               className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
@@ -198,11 +214,11 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Avg Finish
+              Avg Position
             </td>
             {sortedTeams.map((team) => (
               <td
-                key={`avg-${team.team_name}`}
+                key={`${team.team_name}-avg-position`}
                 className="bg-gray-50 text-center"
                 style={{
                   height: summaryRowHeight,
@@ -216,43 +232,6 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
                 }}
               >
                 {team.avg_standing?.toFixed(1) || "-"}
-              </td>
-            ))}
-          </tr>
-
-          <tr className="bg-gray-50">
-            <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: summaryRowHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid #e5e7eb",
-                borderTop: "none",
-                borderRight: "1px solid #e5e7eb",
-              }}
-            >
-              Current Record
-            </td>
-            {sortedTeams.map((team) => (
-              <td
-                key={`record-${team.team_name}`}
-                className="bg-gray-50 text-center"
-                style={{
-                  height: summaryRowHeight,
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  fontSize: isMobile ? "12px" : "14px",
-                }}
-              >
-                {team.record || "0-0"}
               </td>
             ))}
           </tr>
