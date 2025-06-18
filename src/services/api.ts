@@ -1,3 +1,4 @@
+// src/services/api.ts
 import { monitoring } from "@/lib/unified-monitoring";
 import {
   sanitizeInput,
@@ -12,6 +13,12 @@ import {
   StandingsApiResponse,
 } from "@/types/basketball";
 import { ApiError, BasketballApiError } from "@/types/errors";
+import {
+  FootballCWVApiResponse,
+  FootballPlayoffApiResponse,
+  FootballStandingsApiResponse,
+  FootballTWVApiResponse,
+} from "@/types/football";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -142,6 +149,7 @@ class ApiClient {
     throw new Error("Max retries exceeded");
   }
 
+  // Basketball API methods
   async getStandings(conference: string): Promise<StandingsApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
@@ -190,7 +198,6 @@ class ApiClient {
     return this.request(`/conf_schedule/${formattedConf}`, validateSchedule);
   }
 
-  // TWV endpoint
   async getTWV(conference: string): Promise<any> {
     const sanitized = sanitizeInput(conference);
 
@@ -248,7 +255,7 @@ class ApiClient {
       properties: { conference: formattedConf },
     });
 
-    return this.request(`/ncaa_tourney/${formattedConf}`, (data) => ({
+    return this.request(`/ncca_tourney/${formattedConf}`, (data) => ({
       success: true,
       data: data as any,
       error: null,
@@ -268,7 +275,7 @@ class ApiClient {
       properties: { conference: formattedConf },
     });
 
-    return this.request(`/seed/${formattedConf}`, (data) => ({
+    return this.request(`/seed_data/${formattedConf}`, (data) => ({
       success: true,
       data: data as any,
       error: null,
@@ -306,6 +313,91 @@ class ApiClient {
       data: data as any,
       error: null,
     }));
+  }
+
+  // Football API methods
+  async getFootballStandings(
+    conference: string
+  ): Promise<FootballStandingsApiResponse> {
+    const sanitized = sanitizeInput(conference);
+    if (!validateConference(sanitized)) {
+      throw new Error("Invalid conference parameter");
+    }
+
+    const formattedConf = sanitized.replace(/ /g, "_");
+
+    monitoring.trackEvent({
+      name: "football_standings_requested",
+      properties: { conference: formattedConf },
+    });
+
+    const data = await this.get<FootballStandingsApiResponse>(
+      `/football/standings/${encodeURIComponent(formattedConf)}`
+    );
+
+    const validation = validateStandings(data);
+    if (!validation.success) {
+      throw new Error(validation.error || "Invalid football standings data");
+    }
+
+    return validation.data;
+  }
+
+  async getFootballTWV(conference: string): Promise<FootballTWVApiResponse> {
+    const sanitized = sanitizeInput(conference);
+    if (!validateConference(sanitized)) {
+      throw new Error("Invalid conference parameter");
+    }
+
+    const formattedConf = sanitized.replace(/ /g, "_");
+
+    monitoring.trackEvent({
+      name: "football_twv_requested",
+      properties: { conference: formattedConf },
+    });
+
+    return this.get<FootballTWVApiResponse>(
+      `/football/twv/${encodeURIComponent(formattedConf)}`
+    );
+  }
+
+  // ADD THIS MISSING METHOD:
+  async getFootballCWV(conference: string): Promise<FootballCWVApiResponse> {
+    const sanitized = sanitizeInput(conference);
+    if (!validateConference(sanitized)) {
+      throw new Error("Invalid conference parameter");
+    }
+
+    const formattedConf = sanitized.replace(/ /g, "_");
+
+    monitoring.trackEvent({
+      name: "football_cwv_requested",
+      properties: { conference: formattedConf },
+    });
+
+    return this.get<FootballCWVApiResponse>(
+      `/football/cwv/${encodeURIComponent(formattedConf)}`
+    );
+  }
+
+  async getFootballPlayoffs(
+    conference: string
+  ): Promise<FootballPlayoffApiResponse> {
+    const sanitized = sanitizeInput(conference);
+    if (!validateConference(sanitized)) {
+      throw new Error("Invalid conference parameter");
+    }
+
+    const formattedConf = sanitized.replace(/ /g, "_");
+
+    monitoring.trackEvent({
+      name: "football_playoffs_requested",
+      properties: { conference: formattedConf },
+    });
+
+    return this.get<FootballPlayoffApiResponse>(
+      `/football/playoffs/${encodeURIComponent(formattedConf)}`
+    );
   }
 
   // Health check endpoint
@@ -416,7 +508,7 @@ class ApiClient {
 
 export const api = new ApiClient();
 
-// Export individual functions for backward compatibility
+// Basketball API exports for backward compatibility
 export const getStandings = (conference: string) =>
   api.getStandings(conference);
 export const getCWV = (conference: string) => api.getCWV(conference);
@@ -429,6 +521,16 @@ export const getNCCATourney = (conference: string) =>
 export const getSeedData = (conference: string) => api.getSeedData(conference);
 export const getTeamData = (teamName: string) => api.getTeamData(teamName);
 export const getUnifiedConferenceData = () => api.getUnifiedConferenceData();
+
+// Football API exports
+export const getFootballStandings = (conference: string) =>
+  api.getFootballStandings(conference);
+export const getFootballTWV = (conference: string) =>
+  api.getFootballTWV(conference);
+export const getFootballCWV = (conference: string) =>
+  api.getFootballCWV(conference);
+export const getFootballPlayoffs = (conference: string) =>
+  api.getFootballPlayoffs(conference);
 
 // Legacy function names for compatibility
 export const getConfScheduleData = (conference: string) =>
