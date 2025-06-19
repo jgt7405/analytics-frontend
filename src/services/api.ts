@@ -21,8 +21,9 @@ import {
 } from "@/types/football";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://analytics-backend-production.up.railway.app/api";
+  process.env.NODE_ENV === "production"
+    ? "/api/proxy" // Use proxy in production
+    : process.env.NEXT_PUBLIC_API_URL || "/api/proxy";
 
 class ApiClient {
   private createUserFriendlyError(
