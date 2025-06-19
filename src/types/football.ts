@@ -121,3 +121,29 @@ export interface FootballCWVApiResponse {
   data: FootballCWVData;
   conferences: string[];
 }
+
+export interface FootballScheduleData {
+  Loc: string;
+  Team: string;
+  Win_Pct: string;
+  Win_Pct_Raw: number;
+  games: Record<string, string>;
+}
+
+export interface FootballScheduleResponse {
+  data: FootballScheduleData[];
+  teams: string[];
+  team_logos: Record<string, string>;
+  conferences: string[];
+  summary: Record<
+    string,
+    {
+      total_games: number;
+      expected_wins: number;
+      top_quartile: number;
+      second_quartile: number;
+      third_quartile: number;
+      bottom_quartile: number;
+    }
+  >;
+}
