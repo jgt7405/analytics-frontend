@@ -1,4 +1,3 @@
-// src/components/features/football/CWVTable.tsx
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
@@ -26,6 +25,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
+  // ✅ ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const navigateToTeam = useCallback(
     (teamName: string) => {
       router.push(`/football/team/${encodeURIComponent(teamName)}`);
@@ -33,21 +33,18 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     [router]
   );
 
-  if (!cwvData || !cwvData.teams || !cwvData.games) {
-    return (
-      <div className="p-4 text-center text-gray-500">No CWV data available</div>
-    );
-  }
-
-  const { teams, games } = cwvData;
-
   const sortedTeams = useMemo(() => {
-    return [...teams].sort((a, b) => b.cwv - a.cwv);
-  }, [teams]);
+    if (!cwvData?.teams) return [];
+    return [...cwvData.teams].sort((a, b) => b.cwv - a.cwv);
+  }, [cwvData?.teams]);
 
   const { ranks, gamesByRankAndTeam, winProbsByRank } = useMemo(() => {
-    const maxRank =
-      games.length > 0 ? Math.max(...games.map((g) => g.rank)) : 0;
+    if (!cwvData?.games || cwvData.games.length === 0) {
+      return { ranks: [], gamesByRankAndTeam: {}, winProbsByRank: {} };
+    }
+
+    const { games } = cwvData;
+    const maxRank = Math.max(...games.map((g) => g.rank));
     const ranks = Array.from({ length: maxRank }, (_, i) => i + 1);
 
     const gamesByRankAndTeam: Record<number, Record<string, GameData>> = {};
@@ -68,7 +65,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     }
 
     return { ranks, gamesByRankAndTeam, winProbsByRank };
-  }, [games, sortedTeams]);
+  }, [cwvData?.games, sortedTeams]);
 
   const formatDate = useCallback((dateStr: string | undefined): string => {
     if (!dateStr) return "";
@@ -135,6 +132,13 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     },
     [gamesByRankAndTeam, formatDate, isMobile]
   );
+
+  // ✅ NOW check for missing data AFTER all hooks
+  if (!cwvData || !cwvData.teams || !cwvData.games) {
+    return (
+      <div className="p-4 text-center text-gray-500">No CWV data available</div>
+    );
+  }
 
   const shouldVirtualize = ranks.length > 100;
   const maxVisibleRows = shouldVirtualize ? 50 : ranks.length;
