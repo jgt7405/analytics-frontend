@@ -139,8 +139,8 @@ export default function FootballCWVPage() {
                         style={{ lineHeight: "1.3" }}
                       >
                         <div>
-                          Each team's conference games are ranked by difficulty
-                          (based on rankings).
+                          Conference games are ranked by difficulty for each
+                          team (based on rankings).
                         </div>
                         <div style={{ marginTop: "6px" }}>
                           Win Prob is an allocation of probabilities that a team

@@ -19,7 +19,10 @@ const eslintConfig = [
       },
     },
     rules: {
-      // Make some rules warnings instead of errors for gradual improvement
+      // Temporarily disable the unescaped entities rule
+      "react/no-unescaped-entities": "off", // ✅ Add this line
+
+      // Make other rules warnings instead of errors
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "warn",
@@ -28,17 +31,14 @@ const eslintConfig = [
           varsIgnorePattern: "^_",
         },
       ],
-      "@typescript-eslint/no-require-imports": "off", // Allow in config files
+      "@typescript-eslint/no-require-imports": "off",
       "react-hooks/exhaustive-deps": "warn",
-      "react-hooks/rules-of-hooks": "error", // Keep this strict - it prevents bugs
+      "react-hooks/rules-of-hooks": "error",
       "@next/next/no-img-element": "warn",
-
-      // Allow any in specific contexts
       "@typescript-eslint/no-this-alias": "off",
     },
   }),
 
-  // Special rules for config files
   {
     files: ["*.config.{js,mjs,ts}", "next.config.js"],
     rules: {

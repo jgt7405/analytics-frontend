@@ -279,8 +279,8 @@ export default function CWVPage() {
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
-                            Each team's conference games are ranked by
-                            difficulty (based on kenpom rankings).
+                            Conference games are ranked by difficulty for each
+                            team (based on kenpom rankings).
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Win Prob is an allocation of probabilities that a
