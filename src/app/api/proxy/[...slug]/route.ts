@@ -6,45 +6,53 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const [endpoint, conference] = slug;
 
     // Route to the correct Railway backend API
     const BACKEND_BASE_URL =
       "https://analytics-backend-production.up.railway.app/api";
     let backendPath = "";
 
-    switch (endpoint) {
-      case "standings":
-        backendPath = `/standings/${conference}`;
-        break;
-      case "cwv":
-        backendPath = `/cwv/${conference}`;
-        break;
-      case "twv":
-        backendPath = `/twv/${conference}`;
-        break;
-      case "conf-tourney":
-        backendPath = `/conf_tourney/${conference}`;
-        break;
-      case "ncaa-tourney":
-        backendPath = `/ncaa_tourney/${conference}`;
-        break;
-      case "seed":
-        backendPath = `/seed/${conference}`;
-        break;
-      case "schedule":
-        backendPath = `/conf_schedule/${conference}`;
-        break;
-      // Add football routes
-      case "football":
-        const [, footballEndpoint, footballConference] = slug;
-        backendPath = `/football/${footballEndpoint}/${footballConference}`;
-        break;
-      default:
-        return NextResponse.json(
-          { error: "Unknown endpoint" },
-          { status: 404 }
-        );
+    // Handle different URL patterns
+    if (slug.length === 2) {
+      const [endpoint, conference] = slug;
+
+      switch (endpoint) {
+        case "standings":
+          backendPath = `/standings/${conference}`;
+          break;
+        case "cwv":
+          backendPath = `/cwv/${conference}`;
+          break;
+        case "twv":
+          backendPath = `/twv/${conference}`;
+          break;
+        case "conf-tourney":
+          backendPath = `/conf_tourney/${conference}`;
+          break;
+        case "ncaa-tourney":
+          backendPath = `/ncaa_tourney/${conference}`;
+          break;
+        case "seed":
+          backendPath = `/seed/${conference}`;
+          break;
+        case "conf_schedule": // ✅ Add this case
+          backendPath = `/conf_schedule/${conference}`;
+          break;
+        default:
+          return NextResponse.json(
+            { error: "Unknown endpoint" },
+            { status: 404 }
+          );
+      }
+    } else if (slug.length === 3 && slug[0] === "football") {
+      // Handle football routes: /api/proxy/football/standings/Big_12
+      const [, footballEndpoint, footballConference] = slug;
+      backendPath = `/football/${footballEndpoint}/${footballConference}`;
+    } else {
+      return NextResponse.json(
+        { error: "Invalid URL structure" },
+        { status: 404 }
+      );
     }
 
     // Make request to Railway backend
@@ -67,7 +75,7 @@ export async function GET(
 
     const data = await response.json();
 
-    // Add CORS headers for development
+    // Add CORS headers
     const headers = new Headers();
     headers.set("Access-Control-Allow-Origin", "*");
     headers.set(
