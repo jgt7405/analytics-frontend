@@ -12,8 +12,23 @@ export async function GET(
       "https://analytics-backend-production.up.railway.app/api";
     let backendPath = "";
 
-    // Handle different URL patterns
-    if (slug.length === 2) {
+    // Handle single endpoint with no conference (unified_conference_data)
+    if (slug.length === 1) {
+      const [endpoint] = slug;
+
+      switch (endpoint) {
+        case "unified_conference_data":
+          backendPath = `/unified_conference_data`;
+          break;
+        default:
+          return NextResponse.json(
+            { error: "Unknown single endpoint" },
+            { status: 404 }
+          );
+      }
+    }
+    // Handle endpoint + conference pattern
+    else if (slug.length === 2) {
       const [endpoint, conference] = slug;
 
       switch (endpoint) {
@@ -27,15 +42,19 @@ export async function GET(
           backendPath = `/twv/${conference}`;
           break;
         case "conf-tourney":
+        case "conf_tourney":
           backendPath = `/conf_tourney/${conference}`;
           break;
         case "ncaa-tourney":
+        case "ncaa_tourney":
+        case "ncca_tourney": // ✅ Handle the typo in your logs
           backendPath = `/ncaa_tourney/${conference}`;
           break;
         case "seed":
+        case "seed_data": // ✅ Handle both variations
           backendPath = `/seed/${conference}`;
           break;
-        case "conf_schedule": // ✅ Add this case
+        case "conf_schedule":
           backendPath = `/conf_schedule/${conference}`;
           break;
         default:
@@ -44,8 +63,9 @@ export async function GET(
             { status: 404 }
           );
       }
-    } else if (slug.length === 3 && slug[0] === "football") {
-      // Handle football routes: /api/proxy/football/standings/Big_12
+    }
+    // Handle football routes: /api/proxy/football/standings/Big_12
+    else if (slug.length === 3 && slug[0] === "football") {
       const [, footballEndpoint, footballConference] = slug;
       backendPath = `/football/${footballEndpoint}/${footballConference}`;
     } else {
@@ -65,10 +85,14 @@ export async function GET(
 
     if (!response.ok) {
       console.error(
-        `Backend API error: ${response.status} ${response.statusText}`
+        `Backend API error: ${response.status} ${response.statusText} for ${backendPath}`
       );
       return NextResponse.json(
-        { error: "Backend API error", status: response.status },
+        {
+          error: "Backend API error",
+          status: response.status,
+          path: backendPath,
+        },
         { status: response.status }
       );
     }
