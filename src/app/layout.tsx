@@ -12,7 +12,7 @@ import { baseMetadata } from "./metadata";
 export const metadata: Metadata = {
   ...baseMetadata,
   description:
-    "Advanced basketball analytics and projections for college basketball conferences.",
+    "Advanced basketball and football analytics and projections for D1 college conferences and teams.",
 };
 
 // Client component for chunk error handling
