@@ -123,6 +123,13 @@ select {
     color: #666 !important;
     outline: none !important;
     border-color: #d1d5db !important;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><polyline points='1,1 6,6 11,1' stroke='%23666' stroke-width='2' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 8px;
+    padding-right: 32px;
   }
 
   .conference-selector select:focus {
