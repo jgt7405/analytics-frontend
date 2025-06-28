@@ -116,12 +116,18 @@ select {
   select,
   select option {
     color: #666 !important;
-    appearance: none;
-    -webkit-appearance: none;
     -webkit-text-fill-color: #666 !important;
   }
 
   .conference-selector select {
     color: #666 !important;
+    outline: none !important;
+    border-color: #d1d5db !important;
+  }
+
+  .conference-selector select:focus {
+    outline: none !important;
+    border-color: #d1d5db !important;
+    box-shadow: none !important;
   }
 }
