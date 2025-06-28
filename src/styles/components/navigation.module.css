@@ -57,16 +57,16 @@
   transition: var(--transition-fast);
 }
 
-/* X animation when active */
-.hamburgerButton:global(.active) span:nth-child(1) {
+/* Hamburger animation when active - FIXED */
+.hamburgerButtonActive span:nth-child(1) {
   transform: rotate(45deg) translate(5px, 5px);
 }
 
-.hamburgerButton:global(.active) span:nth-child(2) {
+.hamburgerButtonActive span:nth-child(2) {
   opacity: 0;
 }
 
-.hamburgerButton:global(.active) span:nth-child(3) {
+.hamburgerButtonActive span:nth-child(3) {
   transform: rotate(-45deg) translate(7px, -6px);
 }
 

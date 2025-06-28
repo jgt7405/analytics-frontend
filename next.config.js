@@ -65,9 +65,24 @@ const nextConfig = {
     },
   }),
 
-  // Production optimizations
+  // Production optimizations with CSS error fixes
   ...(process.env.NODE_ENV === "production" && {
     compress: true,
+    webpack: (config, { dev, isServer }) => {
+      if (!dev && !isServer) {
+        config.optimization = {
+          ...config.optimization,
+          splitChunks: {
+            ...config.optimization.splitChunks,
+            cacheGroups: {
+              ...config.optimization.splitChunks.cacheGroups,
+              styles: false, // Prevent CSS chunk splitting that causes errors
+            },
+          },
+        };
+      }
+      return config;
+    },
   }),
 
   // Universal settings
@@ -77,6 +92,7 @@ const nextConfig = {
   // Experimental features
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    optimizeCss: false, // Disable CSS optimization that creates bad selectors
   },
 
   // Image optimization
@@ -86,7 +102,7 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Compiler optimizations (SWC minification is enabled by default in Next.js 15)
+  // Compiler optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },

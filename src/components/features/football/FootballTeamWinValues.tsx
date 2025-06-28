@@ -4,7 +4,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { Chart, ChartConfiguration } from "chart.js/auto";
 import { useEffect, useRef, useState } from "react";
 
-interface TeamGame {
+interface FootballTeamGame {
   date: string;
   opponent: string;
   opponent_logo?: string;
@@ -12,16 +12,16 @@ interface TeamGame {
   status: string;
   twv?: number;
   cwv?: number;
-  kenpom_rank?: number;
+  sagarin_rank?: number;
 }
 
-interface TeamWinValuesProps {
-  schedule: TeamGame[];
+interface FootballTeamWinValuesProps {
+  schedule: FootballTeamGame[];
   primaryColor?: string;
   secondaryColor?: string;
 }
 
-interface GameWithDate extends TeamGame {
+interface GameWithDate extends FootballTeamGame {
   dateObj: Date;
 }
 
@@ -31,11 +31,11 @@ interface ContinuousDataPoint {
   cwv: number;
 }
 
-export default function TeamWinValues({
+export default function FootballTeamWinValues({
   schedule,
   primaryColor,
   secondaryColor,
-}: TeamWinValuesProps) {
+}: FootballTeamWinValuesProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<Chart | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,7 +83,7 @@ export default function TeamWinValues({
       }
 
       const validGames = schedule.filter(
-        (game): game is TeamGame =>
+        (game): game is FootballTeamGame =>
           Boolean(game.date) &&
           (game.twv !== undefined || game.cwv !== undefined)
       );
@@ -95,15 +95,15 @@ export default function TeamWinValues({
 
       const gameWithDates: GameWithDate[] = validGames.map((game) => {
         const [month, day] = game.date.split("/").map(Number);
-        const year = month >= 9 ? 2024 : 2025;
+        const year = month >= 8 ? 2024 : 2025;
         const dateObj = new Date(year, month - 1, day);
         return { ...game, dateObj };
       });
 
       gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
-      const startDate = new Date(2024, 10, 1);
-      const endDate = new Date(2025, 2, 15);
+      const startDate = new Date(2024, 7, 15);
+      const endDate = new Date(2025, 0, 30);
 
       const allDates: Date[] = [];
       const currentDate = new Date(startDate);

@@ -20,10 +20,7 @@ import {
   FootballTWVApiResponse,
 } from "@/types/football";
 
-const API_BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "/api/proxy" // Use proxy in production
-    : process.env.NEXT_PUBLIC_API_URL || "/api/proxy";
+const API_BASE_URL = "/api/proxy";
 
 class ApiClient {
   private createUserFriendlyError(
@@ -243,7 +240,7 @@ class ApiClient {
     }));
   }
 
-  async getNCCATourney(conference: string): Promise<any> {
+  async getNCAATourney(conference: string): Promise<any> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
@@ -256,7 +253,7 @@ class ApiClient {
       properties: { conference: formattedConf },
     });
 
-    return this.request(`/ncca_tourney/${formattedConf}`, (data) => ({
+    return this.request(`/ncaa_tourney/${formattedConf}`, (data) => ({
       success: true,
       data: data as any,
       error: null,
@@ -272,11 +269,11 @@ class ApiClient {
     const formattedConf = sanitized.replace(/ /g, "_");
 
     monitoring.trackEvent({
-      name: "seed_data_requested",
+      name: "seed_requested",
       properties: { conference: formattedConf },
     });
 
-    return this.request(`/seed_data/${formattedConf}`, (data) => ({
+    return this.request(`/seed/${formattedConf}`, (data) => ({
       success: true,
       data: data as any,
       error: null,
@@ -401,6 +398,62 @@ class ApiClient {
     );
   }
 
+  // Add to ApiClient class
+  async getCFP(conference: string): Promise<any> {
+    const sanitized = sanitizeInput(conference);
+    const formattedConf =
+      sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
+
+    return this.request(`/cfp/${formattedConf}`, (data) => ({
+      success: true,
+      data: data as any,
+      error: null,
+    }));
+  }
+
+  async getFootballSeed(conference: string): Promise<any> {
+    const sanitized = sanitizeInput(conference);
+    const formattedConf =
+      sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
+
+    return this.request(`/football_seed/${formattedConf}`, (data) => ({
+      success: true,
+      data: data as any,
+      error: null,
+    }));
+  }
+
+  async getFootballConfData(): Promise<any> {
+    return this.request(`/football/conf-data`, (data) => ({
+      success: true,
+      data: data as any,
+      error: null,
+    }));
+  }
+
+  async getFootballTeams(): Promise<any> {
+    console.log("🏈 API: About to call /football_teams");
+    const result = await this.request(`/football_teams`, (data) => {
+      console.log("🏈 API: Raw response data:", data);
+      return {
+        success: true,
+        data: data as any,
+        error: null,
+      };
+    });
+    console.log("🏈 API: Final result:", result);
+    return result;
+  }
+
+  async getFootballTeam(teamName: string): Promise<any> {
+    const encoded = encodeURIComponent(teamName);
+    return this.request(`/football_team/${encoded}`, (data) => ({
+      success: true,
+      data: data as any,
+      error: null,
+    }));
+  }
+
   // Health check endpoint
   async healthCheck(): Promise<{ status: string; timestamp: number }> {
     try {
@@ -517,8 +570,8 @@ export const getSchedule = (conference: string) => api.getSchedule(conference);
 export const getTWV = (conference: string) => api.getTWV(conference);
 export const getConfTourney = (conference: string) =>
   api.getConfTourney(conference);
-export const getNCCATourney = (conference: string) =>
-  api.getNCCATourney(conference);
+export const getNCAATourney = (conference: string) =>
+  api.getNCAATourney(conference);
 export const getSeedData = (conference: string) => api.getSeedData(conference);
 export const getTeamData = (teamName: string) => api.getTeamData(teamName);
 export const getUnifiedConferenceData = () => api.getUnifiedConferenceData();

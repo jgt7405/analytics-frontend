@@ -1,0 +1,19 @@
+/* Suppress browser console warnings */
+@supports not (field-sizing: content) {
+  * {
+    box-sizing: border-box;
+  }
+}
+
+/* Fix webkit text adjust issues */
+html {
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* Suppress :host selector errors */
+@supports selector(:host) {
+  :host {
+    display: block;
+  }
+}

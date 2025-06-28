@@ -20,7 +20,6 @@ export default function PageLayoutWrapper({
 }: PageLayoutWrapperProps) {
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
-      {/* ✅ Always render header structure - even during loading */}
       <div className="mb-6 page-header">
         {isLoading ? (
           <>

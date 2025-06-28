@@ -1,4 +1,4 @@
-// src/components/features/basketball/NCAATeamTable.tsx
+// src/components/features/football/FootballCFPTable.tsx
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
@@ -6,70 +6,66 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
-import { NCAATeam } from "@/types/basketball";
+import { FootballCFPTeam } from "@/types/football";
 import { useRouter } from "next/navigation";
 import { memo, useMemo } from "react";
 
-interface NCAATeamTableProps {
-  ncaaData: NCAATeam[];
+interface FootballCFPTableProps {
+  cfpData: FootballCFPTeam[];
   className?: string;
 }
 
-function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
+function FootballCFPTable({ cfpData, className }: FootballCFPTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    router.push(`/football/team/${encodeURIComponent(teamName)}`);
   };
 
-  const roundOrder = [
-    "NCAA_First_Round",
-    "NCAA_Second_Round",
-    "NCAA_Sweet_Sixteen",
-    "NCAA_Elite_Eight",
-    "NCAA_Final_Four",
-    "NCAA_Championship",
-    "NCAA_Champion",
-  ];
+  const roundOrder = useMemo(
+    () =>
+      [
+        "CFP_First_Round",
+        "CFP_Quarterfinals",
+        "CFP_Semifinals",
+        "CFP_Championship",
+        "CFP_Champion",
+      ] as const,
+    []
+  );
 
   const fieldToLabel: Record<string, string> = {
-    NCAA_First_Round: "First\nRound",
-    NCAA_Second_Round: "Second\nRound",
-    NCAA_Sweet_Sixteen: "Sweet\nSixteen",
-    NCAA_Elite_Eight: "Elite\nEight",
-    NCAA_Final_Four: "Final\nFour",
-    NCAA_Championship: "Champion-\nship",
-    NCAA_Champion: "Champion",
+    CFP_First_Round: "First\nRound",
+    CFP_Quarterfinals: "Quarter-\nfinals",
+    CFP_Semifinals: "Semi-\nfinals",
+    CFP_Championship: "Champion-\nship",
+    CFP_Champion: "Champion",
   };
 
   // Show ALL rounds, not just active ones
   const allRounds = roundOrder;
 
   const sortedTeams = useMemo(() => {
-    return [...ncaaData].sort((a, b) => {
+    return [...cfpData].sort((a, b) => {
       const reverseRounds = [...roundOrder].reverse();
       for (const round of reverseRounds) {
-        const aVal = (a as any)[round] || 0;
-        const bVal = (b as any)[round] || 0;
+        const aVal = (a[round as keyof FootballCFPTeam] as number) || 0;
+        const bVal = (b[round as keyof FootballCFPTeam] as number) || 0;
         if (aVal !== bVal) return bVal - aVal;
       }
 
       // Final tiebreaker: alphabetical order by team name
       return a.team_name.localeCompare(b.team_name);
     });
-  }, [ncaaData]);
+  }, [cfpData, roundOrder]);
 
   const firstColWidth = isMobile ? 120 : 180;
   const roundColWidth = isMobile ? 55 : 70;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 50 : 60;
 
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "ncaa-tourney-table",
-    className
-  );
+  const tableClassName = cn(tableStyles.tableContainer, "cfp-table", className);
 
   // Format percentage without decimal if it's a whole number
   const formatPercentage = (value: number): string => {
@@ -78,11 +74,9 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
     return `${rounded}%`;
   };
 
-  if (!ncaaData || ncaaData.length === 0) {
+  if (!cfpData || cfpData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
-        No NCAA tournament data available
-      </div>
+      <div className="p-4 text-center text-gray-500">No CFP data available</div>
     );
   }
 
@@ -169,7 +163,8 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
                 </div>
               </td>
               {allRounds.map((round) => {
-                const value = (team as any)[round] || 0;
+                const value =
+                  (team[round as keyof FootballCFPTeam] as number) || 0;
                 const cellStyle = getCellColor(value, "blue");
                 return (
                   <td
@@ -202,4 +197,4 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
   );
 }
 
-export default memo(NCAATeamTable);
+export default memo(FootballCFPTable);

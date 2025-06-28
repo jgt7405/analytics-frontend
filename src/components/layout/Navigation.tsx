@@ -14,7 +14,9 @@ export default function Navigation() {
   const firstItemRef = useRef<HTMLAnchorElement>(null);
   const lastItemRef = useRef<HTMLAnchorElement>(null);
 
-  const navItems = [
+  const isFootball = pathname.startsWith("/football");
+
+  const basketballNavItems = [
     {
       name: "Wins",
       path: "/basketball/wins",
@@ -36,7 +38,7 @@ export default function Navigation() {
       description: "Team schedules and results",
     },
     {
-      name: "TWV", // Add this new item
+      name: "TWV",
       path: "/basketball/twv",
       description: "True win value analysis",
     },
@@ -56,7 +58,7 @@ export default function Navigation() {
       description: "Conference bid projections",
     },
     {
-      name: "NCAA Tourney", // ADD THIS
+      name: "NCAA Tourney",
       path: "/basketball/ncaa-tourney",
       description: "NCAA tournament round projections",
     },
@@ -66,6 +68,61 @@ export default function Navigation() {
       description: "Teams directory",
     },
   ];
+
+  const footballNavItems = [
+    {
+      name: "Wins",
+      path: "/football/wins",
+      description: "Conference wins distribution",
+    },
+    {
+      name: "Standings",
+      path: "/football/standings",
+      description: "Projected standings",
+    },
+    {
+      name: "CWV",
+      path: "/football/cwv",
+      description: "Conference win value analysis",
+    },
+    {
+      name: "Schedule",
+      path: "/football/schedule",
+      description: "Team schedules and results",
+    },
+    {
+      name: "TWV",
+      path: "/football/twv",
+      description: "True win value analysis",
+    },
+    {
+      name: "Conf Champ",
+      path: "/football/conf-champ",
+      description: "Conference championship projections",
+    },
+    {
+      name: "Seed",
+      path: "/football/seed",
+      description: "CFP seed projections",
+    },
+    {
+      name: "CFP",
+      path: "/football/cfp",
+      description: "College Football Playoff projections",
+    },
+    {
+      name: "Conf Data",
+      path: "/football/conf-data",
+      description: "Conference CFP bid projections",
+    },
+    {
+      name: "Teams",
+      path: "/football/teams",
+      description: "Football teams directory",
+    },
+  ];
+
+  const navItems = isFootball ? footballNavItems : basketballNavItems;
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -129,7 +186,6 @@ export default function Navigation() {
 
   return (
     <div className="flex items-center">
-      {/* Desktop Navigation */}
       <nav
         className="navigation-tabs hidden md:flex"
         role="navigation"
@@ -153,9 +209,19 @@ export default function Navigation() {
             </Link>
           );
         })}
+
+        <Link
+          href={isFootball ? "/basketball/wins" : "/football/wins"}
+          className={cn(
+            navStyles.tabButton,
+            "text-xs flex flex-col items-center justify-center leading-none py-1"
+          )}
+        >
+          <span>Switch to </span>
+          <span>{isFootball ? "Basketball" : "Football"}</span>
+        </Link>
       </nav>
 
-      {/* Mobile Navigation */}
       <div className={navStyles.mobileNavToggle}>
         <button
           ref={toggleButtonRef}
@@ -166,7 +232,10 @@ export default function Navigation() {
               toggleMobileMenu();
             }
           }}
-          className={cn(navStyles.hamburgerButton, mobileMenuOpen && "active")}
+          className={cn(
+            navStyles.hamburgerButton,
+            mobileMenuOpen && navStyles.hamburgerButtonActive
+          )}
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-menu"
           aria-label="Toggle navigation menu"
@@ -212,6 +281,20 @@ export default function Navigation() {
                 </Link>
               );
             })}
+
+            <Link
+              href={isFootball ? "/basketball/wins" : "/football/wins"}
+              className={cn(
+                navStyles.tabButton,
+                "text-xs flex flex-col items-center justify-center leading-none py-1 gap-0"
+              )}
+              onClick={() => setMobileMenuOpen(false)}
+              role="menuitem"
+              tabIndex={mobileMenuOpen ? 0 : -1}
+            >
+              <span>Switch to </span>
+              <span>{isFootball ? "Basketball" : "Football"}</span>
+            </Link>
           </nav>
         </div>
       </div>

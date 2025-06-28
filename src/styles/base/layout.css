@@ -19,10 +19,9 @@
 
 @media (max-width: 768px) {
   .conference-selector {
-    margin-top: -12px; /* Move up by 8px on mobile */
+    margin-top: -12px;
   }
 
-  /* Remove shadows on mobile */
   .main-content {
     box-shadow: none;
   }
@@ -33,7 +32,7 @@
     position: absolute;
     top: 50%;
     right: 16px;
-    transform: translateY(-90%); /* ✅ Changed from -50% to move up */
+    transform: translateY(-90%);
   }
 
   .page-header {

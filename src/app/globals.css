@@ -11,6 +11,8 @@
 /* Apply Inter as default font */
 body {
   font-family: var(--font-inter);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Chart and data specific fonts */
@@ -26,7 +28,7 @@ body {
   font-family: var(--font-roboto-mono);
 }
 
-/* Main content styles - moved from theme files */
+/* Main content styles */
 .main-content {
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -39,6 +41,30 @@ body {
 @media (max-width: 768px) {
   .main-content {
     box-shadow: none;
+  }
+}
+
+/* Suppress CSS errors */
+@supports not (field-sizing: content) {
+  input,
+  textarea,
+  select {
+    box-sizing: border-box;
+  }
+}
+
+/* Fix browser-specific issues */
+input,
+textarea,
+select {
+  field-sizing: content;
+}
+
+@supports not (field-sizing: content) {
+  input,
+  textarea,
+  select {
+    field-sizing: initial;
   }
 }
 

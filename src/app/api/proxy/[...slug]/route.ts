@@ -7,18 +7,29 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    // Route to the correct Railway backend API
     const BACKEND_BASE_URL =
       "https://analytics-backend-production.up.railway.app/api";
     let backendPath = "";
 
-    // Handle single endpoint with no conference (unified_conference_data)
+    console.log("Proxy slug:", slug); // Debug log
+
+    // Handle single endpoint with no conference
     if (slug.length === 1) {
       const [endpoint] = slug;
 
       switch (endpoint) {
         case "unified_conference_data":
           backendPath = `/unified_conference_data`;
+          break;
+        case "football_conf_data":
+          backendPath = `/football_conf_data`;
+          break;
+        case "football_teams":
+          backendPath = `/football_teams`;
+          break;
+        case "basketball_teams":
+        case "teams": // Support both variants
+          backendPath = `/basketball_teams`;
           break;
         default:
           return NextResponse.json(
@@ -27,47 +38,129 @@ export async function GET(
           );
       }
     }
-    // Handle endpoint + conference pattern
+    // Handle 2-part routes
     else if (slug.length === 2) {
-      const [endpoint, conference] = slug;
+      const [first, second] = slug;
 
-      switch (endpoint) {
+      // Handle basketball 2-part routes: /api/proxy/basketball/teams
+      if (first === "basketball") {
+        switch (second) {
+          case "teams":
+            backendPath = `/basketball_teams`;
+            break;
+          case "conf-data":
+            backendPath = `/unified_conference_data`;
+            break;
+          default:
+            return NextResponse.json(
+              { error: "Unknown basketball endpoint" },
+              { status: 404 }
+            );
+        }
+      }
+      // Handle football 2-part routes: /api/proxy/football/conf-data
+      else if (first === "football") {
+        switch (second) {
+          case "conf-data":
+            backendPath = `/football_conf_data`;
+            break;
+          case "teams":
+            backendPath = `/football_teams`;
+            break;
+          default:
+            return NextResponse.json(
+              { error: "Unknown football endpoint" },
+              { status: 404 }
+            );
+        }
+      }
+      // Handle basketball endpoint + conference pattern
+      else {
+        const [endpoint, conference] = slug;
+
+        switch (endpoint) {
+          case "standings":
+            backendPath = `/standings/${conference}`;
+            break;
+          case "cwv":
+            backendPath = `/cwv/${conference}`;
+            break;
+          case "twv":
+            backendPath = `/twv/${conference}`;
+            break;
+          case "conf-tourney":
+          case "conf_tourney":
+            backendPath = `/conf_tourney/${conference}`;
+            break;
+          case "ncaa-tourney":
+          case "ncaa_tourney":
+          case "ncca_tourney":
+            backendPath = `/ncaa_tourney/${conference}`;
+            break;
+          case "seed":
+          case "seed_data":
+            backendPath = `/seed/${conference}`;
+            break;
+          case "conf_schedule":
+            backendPath = `/conf_schedule/${conference}`;
+            break;
+          case "team":
+            backendPath = `/team/${conference}`;
+            break;
+          // Football endpoints with conference
+          case "cfp":
+            backendPath = `/cfp/${conference}`;
+            break;
+          case "football_seed":
+            backendPath = `/football_seed/${conference}`;
+            break;
+          case "football_team":
+            backendPath = `/football_team/${conference}`;
+            break;
+          default:
+            return NextResponse.json(
+              { error: "Unknown endpoint" },
+              { status: 404 }
+            );
+        }
+      }
+    }
+    // Handle 3-part football routes: /api/proxy/football/standings/Big_12
+    else if (slug.length === 3 && slug[0] === "football") {
+      const [, footballEndpoint, footballConference] = slug;
+
+      switch (footballEndpoint) {
         case "standings":
-          backendPath = `/standings/${conference}`;
+          backendPath = `/football/standings/${footballConference}`;
           break;
         case "cwv":
-          backendPath = `/cwv/${conference}`;
+          backendPath = `/football/cwv/${footballConference}`;
+          break;
+        case "schedule":
+          backendPath = `/football/schedule/${footballConference}`;
           break;
         case "twv":
-          backendPath = `/twv/${conference}`;
+          backendPath = `/football/twv/${footballConference}`;
           break;
-        case "conf-tourney":
-        case "conf_tourney":
-          backendPath = `/conf_tourney/${conference}`;
-          break;
-        case "ncaa-tourney":
-        case "ncaa_tourney":
-        case "ncca_tourney": // ✅ Handle the typo in your logs
-          backendPath = `/ncaa_tourney/${conference}`;
+        case "conf-champ":
+        case "conf_champ":
+          backendPath = `/football/conf_champ/${footballConference}`;
           break;
         case "seed":
-        case "seed_data": // ✅ Handle both variations
-          backendPath = `/seed/${conference}`;
+          backendPath = `/football_seed/${footballConference}`;
           break;
-        case "conf_schedule":
-          backendPath = `/conf_schedule/${conference}`;
+        case "cfp":
+          backendPath = `/cfp/${footballConference}`;
+          break;
+        case "team":
+          backendPath = `/football_team/${footballConference}`;
           break;
         default:
           return NextResponse.json(
-            { error: "Unknown endpoint" },
+            { error: "Unknown football endpoint" },
             { status: 404 }
           );
       }
-    }
-    // Handle football routes: /api/proxy/football/standings/Big_12
-    else if (slug.length === 3 && slug[0] === "football") {
-      const [, footballEndpoint, footballConference] = slug;
-      backendPath = `/football/${footballEndpoint}/${footballConference}`;
     } else {
       return NextResponse.json(
         { error: "Invalid URL structure" },
@@ -76,56 +169,43 @@ export async function GET(
     }
 
     // Make request to Railway backend
-    const response = await fetch(`${BACKEND_BASE_URL}${backendPath}`, {
+    const backendUrl = `${BACKEND_BASE_URL}${backendPath}`;
+    console.log("Backend URL:", backendUrl); // Debug log
+
+    const response = await fetch(backendUrl, {
+      method: "GET",
       headers: {
-        Accept: "application/json",
         "Content-Type": "application/json",
+        Accept: "application/json",
       },
+      // Add timeout
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
       console.error(
-        `Backend API error: ${response.status} ${response.statusText} for ${backendPath}`
+        `Backend request failed: ${response.status} ${response.statusText} for ${backendUrl}`
       );
       return NextResponse.json(
         {
-          error: "Backend API error",
-          status: response.status,
-          path: backendPath,
+          error: `Backend request failed: ${response.status}`,
+          details: response.statusText,
+          url: backendPath,
         },
         { status: response.status }
       );
     }
 
     const data = await response.json();
-
-    // Add CORS headers
-    const headers = new Headers();
-    headers.set("Access-Control-Allow-Origin", "*");
-    headers.set(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS"
-    );
-    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-    return NextResponse.json(data, { headers });
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Proxy API error:", error);
+    console.error("Proxy error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      {
+        error: "Internal proxy error",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
-}
-
-// Handle OPTIONS requests for CORS preflight
-export async function OPTIONS(_request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
 }

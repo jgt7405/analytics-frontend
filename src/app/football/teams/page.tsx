@@ -22,25 +22,26 @@ interface Team {
   actual_conference_losses: number;
   actual_total_wins: number;
   actual_total_losses: number;
-  tournament_bid_pct?: number;
+  playoff_bid_pct?: number;
 }
 
-interface BasketballTeamApiResponse {
+// Interface for the API response from /football_teams
+interface FootballTeamApiResponse {
   team_name: string;
   team_id: string;
   conference: string;
   logo_url: string;
   overall_record: string;
   conference_record: string;
-  tournament_bid_pct: number;
+  cfp_bid_pct: number;
   average_seed?: number | null;
 }
 
-interface BasketballTeamsApiResponse {
-  data: BasketballTeamApiResponse[];
+interface FootballTeamsApiResponse {
+  data: FootballTeamApiResponse[];
 }
 
-export default function BasketballTeamsPage() {
+export default function FootballTeamsPage() {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -56,30 +57,37 @@ export default function BasketballTeamsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Track page load
   useEffect(() => {
     trackEvent({
       name: "page_view",
-      properties: { page: "basketball-teams", conference: selectedConference },
+      properties: { page: "football-teams", conference: selectedConference },
     });
   }, [selectedConference, trackEvent]);
 
+  // Fetch teams data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/proxy/basketball_teams");
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL ||
+          "https://analytics-backend-production.up.railway.app/api";
+
+        const response = await fetch(`${baseUrl}/football_teams`);
 
         if (!response.ok) {
           throw new Error("Failed to load teams data");
         }
 
-        const data: BasketballTeamsApiResponse = await response.json();
+        const data: FootballTeamsApiResponse = await response.json();
 
+        // Extract conferences with proper typing
         if (data.data && Array.isArray(data.data)) {
           const conferences = data.data.map(
-            (team: BasketballTeamApiResponse) => team.conference
+            (team: FootballTeamApiResponse) => team.conference
           );
           const uniqueConferences = Array.from(new Set(conferences)).filter(
             Boolean
@@ -88,16 +96,19 @@ export default function BasketballTeamsPage() {
           setAvailableConferences(allConferences);
         }
 
+        // Filter by conference if not "All Teams"
         const filteredTeams =
           selectedConference === "All Teams"
             ? data.data || []
             : (data.data || []).filter(
-                (team: BasketballTeamApiResponse) =>
+                (team: FootballTeamApiResponse) =>
                   team.conference === selectedConference
               );
 
+        // Transform using the correct API response structure
         const transformedTeams: Team[] = filteredTeams.map(
-          (team: BasketballTeamApiResponse) => {
+          (team: FootballTeamApiResponse) => {
+            // Parse records from strings like "10-2"
             const [totalWins, totalLosses] = team.overall_record
               ?.split("-")
               .map(Number) || [0, 0];
@@ -115,16 +126,12 @@ export default function BasketballTeamsPage() {
               actual_conference_losses: confLosses || 0,
               actual_total_wins: totalWins || 0,
               actual_total_losses: totalLosses || 0,
-              tournament_bid_pct: team.tournament_bid_pct * 100,
+              playoff_bid_pct: team.cfp_bid_pct,
             };
           }
         );
 
-        setTeamsData(
-          transformedTeams.sort((a, b) =>
-            a.team_name.localeCompare(b.team_name)
-          )
-        );
+        setTeamsData(transformedTeams);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load teams data"
@@ -145,7 +152,7 @@ export default function BasketballTeamsPage() {
   };
 
   const handleTeamClick = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    router.push(`/football/team/${encodeURIComponent(teamName)}`);
   };
 
   const formatBidPct = (value?: number) => {
@@ -250,7 +257,7 @@ export default function BasketballTeamsPage() {
               color: "#9ca3af",
             }}
           >
-            NCAA Bid
+            Playoff Bid
           </div>
           <div
             style={{
@@ -258,7 +265,7 @@ export default function BasketballTeamsPage() {
               fontWeight: "bold",
             }}
           >
-            {formatBidPct(team.tournament_bid_pct)}
+            {formatBidPct(team.playoff_bid_pct)}
           </div>
         </div>
       </div>
@@ -269,7 +276,7 @@ export default function BasketballTeamsPage() {
     return (
       <ErrorBoundary level="page">
         <PageLayoutWrapper
-          title="Basketball Teams"
+          title="Football Teams"
           conferenceSelector={
             <ConferenceSelector
               conferences={availableConferences}
@@ -288,7 +295,7 @@ export default function BasketballTeamsPage() {
   return (
     <ErrorBoundary level="page">
       <PageLayoutWrapper
-        title="Basketball Teams"
+        title="Football Teams"
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}

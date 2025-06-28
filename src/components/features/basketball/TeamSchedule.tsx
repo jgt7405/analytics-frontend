@@ -70,11 +70,11 @@ export default function TeamSchedule({
   const getBorderColor = (status: string) => {
     switch (status) {
       case "W":
-        return "#22c55e";
+        return "#22c55e"; // Green
       case "L":
-        return "#ef4444";
+        return "#ef4444"; // Red
       default:
-        return "#e5e7eb";
+        return "#e5e7eb"; // Gray
     }
   };
 
@@ -87,7 +87,9 @@ export default function TeamSchedule({
       {(["Away", "Neutral", "Home"] as const).map((location) => (
         <div key={location} className="flex-shrink-0">
           <div className="text-center mb-3">
-            <h3 className="text-sm font-semibold text-gray-600">{location}</h3>
+            <h3 className="text-sm font-semibold text-gray-600 -mb-1">
+              {location}
+            </h3>
             <div className="text-xs text-gray-500">
               {groupedGames.records[location].wins}-
               {groupedGames.records[location].losses}
@@ -99,12 +101,11 @@ export default function TeamSchedule({
               groupedGames.groups[location].map((game, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2 border rounded"
+                  className="flex items-center justify-between p-2 rounded bg-white"
                   style={{
                     width: boxWidth,
                     height: boxHeight,
-                    borderColor: getBorderColor(game.status),
-                    borderWidth: 2,
+                    border: `2px solid ${getBorderColor(game.status)}`,
                   }}
                 >
                   <TeamLogo

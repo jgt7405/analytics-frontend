@@ -149,8 +149,11 @@ export default function FootballBoxWhiskerChart({
             {yAxisTicks.map((tick) => (
               <div
                 key={tick}
-                className="absolute w-full border-b border-gray-200"
-                style={{ top: `${scale(tick)}px` }}
+                className="absolute w-full"
+                style={{
+                  top: `${scale(tick)}px`,
+                  borderBottom: "1px solid #e5e7eb",
+                }}
               />
             ))}
           </div>

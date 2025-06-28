@@ -4,19 +4,47 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { useEffect, useState } from "react";
 
-// Define proper types
-interface WinSeedCountEntry {
+// Proper TypeScript interfaces
+interface FootballWinSeedCount {
   Wins: number;
-  Seed?: string;
-  Tournament_Status?: string;
+  Seed: string | number;
+  Tournament_Status: string;
   Count: number;
+  Percentage?: number;
 }
 
-interface TeamSeedProjectionsProps {
-  winSeedCounts: WinSeedCountEntry[];
+interface FootballStatusDistribution {
+  "In Playoffs %": number;
+  "First Four Out": number;
+  "Next Four Out": number;
+  "Out of Playoffs": number;
 }
 
-interface StylesConfig {
+interface FootballSeedDistribution {
+  [seed: string]: number;
+}
+
+interface FootballRawCounts {
+  seedDistribution: FootballSeedDistribution;
+  statusDistribution: FootballStatusDistribution;
+}
+
+interface FootballWinData {
+  seedDistribution: FootballSeedDistribution;
+  statusDistribution: FootballStatusDistribution;
+  rawCounts: FootballRawCounts;
+  total: number;
+  percentOfTotal: number;
+}
+
+interface FootballTotalRow {
+  seedDistribution: FootballSeedDistribution;
+  statusDistribution: FootballStatusDistribution;
+  rawCounts: FootballRawCounts;
+  total: number;
+}
+
+interface FootballStyles {
   container: React.CSSProperties;
   table: React.CSSProperties;
   thead: React.CSSProperties;
@@ -26,61 +54,15 @@ interface StylesConfig {
   stickyCell: React.CSSProperties;
 }
 
-interface DistributionData {
-  [key: string]: number;
+interface FootballTeamSeedProjectionsProps {
+  winSeedCounts: FootballWinSeedCount[];
 }
 
-interface RawCounts {
-  seedDistribution: DistributionData;
-  statusDistribution: DistributionData;
-}
-
-interface WinRowData {
-  seedDistribution: DistributionData;
-  statusDistribution: DistributionData;
-  rawCounts: RawCounts;
-  total: number;
-  percentOfTotal: number;
-}
-
-interface WinData {
-  [winsValue: string]: WinRowData;
-}
-
-interface TotalRowData {
-  seedDistribution: DistributionData;
-  statusDistribution: DistributionData;
-  rawCounts: RawCounts;
-  total: number;
-}
-
-interface ProcessedData {
-  winData: WinData;
-  winTotals: string[];
-  seeds: string[];
-  totalRow: TotalRowData;
-  hasNumericSeeds: boolean;
-  grandTotal: number;
-}
-
-interface ColorStyle {
-  backgroundColor?: string;
-  color?: string;
-}
-
-export default function TeamSeedProjections({
+export default function FootballTeamSeedProjections({
   winSeedCounts,
-}: TeamSeedProjectionsProps) {
+}: FootballTeamSeedProjectionsProps) {
   const { isMobile } = useResponsive();
-  const [styles, setStyles] = useState<StylesConfig>({
-    container: {},
-    table: {},
-    thead: {},
-    headerCell: {},
-    stickyHeaderCell: {},
-    dataCell: {},
-    stickyCell: {},
-  });
+  const [styles, setStyles] = useState<FootballStyles>({} as FootballStyles);
 
   useEffect(() => {
     setStyles({
@@ -133,10 +115,7 @@ export default function TeamSeedProjections({
     });
   }, [isMobile]);
 
-  const getStatusColor = (
-    value: number,
-    isOutCategory: boolean
-  ): ColorStyle => {
+  const getStatusColor = (value: number, isOutCategory: boolean) => {
     if (value === 0) return { backgroundColor: "white", color: "transparent" };
 
     if (isOutCategory) {
@@ -154,7 +133,7 @@ export default function TeamSeedProjections({
     return getCellColor(value);
   };
 
-  const processData = (): ProcessedData | null => {
+  const processData = () => {
     if (!Array.isArray(winSeedCounts) || winSeedCounts.length === 0)
       return null;
 
@@ -169,13 +148,13 @@ export default function TeamSeedProjections({
     winSeedCounts.forEach((entry) => {
       if (entry.Wins !== undefined) winTotalsSet.add(entry.Wins.toString());
 
-      if (entry.Seed && !isNaN(parseInt(entry.Seed))) {
-        seedsSet.add(entry.Seed);
+      if (entry.Seed && !isNaN(parseInt(entry.Seed.toString()))) {
+        seedsSet.add(entry.Seed.toString());
       }
     });
 
     const hasNumericSeeds = seedsSet.size > 0;
-    const winData: WinData = {};
+    const winData: Record<string, FootballWinData> = {};
     const winTotals = [...winTotalsSet].sort((a, b) => Number(b) - Number(a));
     const seeds = hasNumericSeeds
       ? [...seedsSet].sort((a, b) => Number(a) - Number(b))
@@ -186,14 +165,19 @@ export default function TeamSeedProjections({
       winData[winsValue] = {
         seedDistribution: {},
         statusDistribution: {
-          "In Tourney %": 0,
+          "In Playoffs %": 0,
           "First Four Out": 0,
           "Next Four Out": 0,
-          "Out of Tourney": 0,
+          "Out of Playoffs": 0,
         },
         rawCounts: {
           seedDistribution: {},
-          statusDistribution: {},
+          statusDistribution: {
+            "In Playoffs %": 0,
+            "First Four Out": 0,
+            "Next Four Out": 0,
+            "Out of Playoffs": 0,
+          },
         },
         total: 0,
         percentOfTotal: 0,
@@ -203,36 +187,32 @@ export default function TeamSeedProjections({
         winData[winsValue].seedDistribution[seed] = 0;
         winData[winsValue].rawCounts.seedDistribution[seed] = 0;
       });
-
-      Object.keys(winData[winsValue].statusDistribution).forEach((status) => {
-        winData[winsValue].rawCounts.statusDistribution[status] = 0;
-      });
     });
 
     // Process each entry to populate the data
     winSeedCounts.forEach((entry) => {
       const winsValue = entry.Wins.toString();
-      const status = entry.Tournament_Status || "Out of Tourney";
+      const status = entry.Tournament_Status || "Out of Playoffs";
       const count = entry.Count || 0;
 
-      if (!winData[winsValue]) return; // Skip if wins value not initialized
+      if (!winData[winsValue]) return;
 
       winData[winsValue].total += count;
 
-      // Handle seed distribution - FIXED: Only add to seed distribution if it's a valid tournament seed
+      // Handle seed distribution
       if (
         entry.Seed &&
-        !isNaN(parseInt(entry.Seed)) &&
-        status === "In Tourney"
+        !isNaN(parseInt(entry.Seed.toString())) &&
+        status === "In Playoffs"
       ) {
-        winData[winsValue].rawCounts.seedDistribution[entry.Seed] =
-          (winData[winsValue].rawCounts.seedDistribution[entry.Seed] || 0) +
-          count;
+        const seedKey = entry.Seed.toString();
+        winData[winsValue].rawCounts.seedDistribution[seedKey] =
+          (winData[winsValue].rawCounts.seedDistribution[seedKey] || 0) + count;
       }
 
       // Handle status distribution
-      if (status === "In Tourney") {
-        winData[winsValue].rawCounts.statusDistribution["In Tourney %"] +=
+      if (status === "In Playoffs") {
+        winData[winsValue].rawCounts.statusDistribution["In Playoffs %"] +=
           count;
       } else if (status === "First Four Out") {
         winData[winsValue].rawCounts.statusDistribution["First Four Out"] +=
@@ -241,12 +221,12 @@ export default function TeamSeedProjections({
         winData[winsValue].rawCounts.statusDistribution["Next Four Out"] +=
           count;
       } else {
-        winData[winsValue].rawCounts.statusDistribution["Out of Tourney"] +=
+        winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
           count;
       }
     });
 
-    // Calculate percentages - FIXED: Use proper totals for seed distribution
+    // Calculate percentages
     winTotals.forEach((winsValue) => {
       const rowData = winData[winsValue];
       rowData.percentOfTotal = (rowData.total / grandTotal) * 100;
@@ -262,24 +242,30 @@ export default function TeamSeedProjections({
       // Calculate status distribution percentages based on row total
       Object.entries(rowData.rawCounts.statusDistribution).forEach(
         ([status, count]) => {
-          rowData.statusDistribution[status] =
-            rowData.total > 0 ? (count / rowData.total) * 100 : 0;
+          rowData.statusDistribution[
+            status as keyof FootballStatusDistribution
+          ] = rowData.total > 0 ? (count / rowData.total) * 100 : 0;
         }
       );
     });
 
     // Calculate total row
-    const totalRow: TotalRowData = {
+    const totalRow: FootballTotalRow = {
       seedDistribution: {},
       statusDistribution: {
-        "In Tourney %": 0,
+        "In Playoffs %": 0,
         "First Four Out": 0,
         "Next Four Out": 0,
-        "Out of Tourney": 0,
+        "Out of Playoffs": 0,
       },
       rawCounts: {
         seedDistribution: {},
-        statusDistribution: {},
+        statusDistribution: {
+          "In Playoffs %": 0,
+          "First Four Out": 0,
+          "Next Four Out": 0,
+          "Out of Playoffs": 0,
+        },
       },
       total: 0,
     };
@@ -287,10 +273,6 @@ export default function TeamSeedProjections({
     seeds.forEach((seed) => {
       totalRow.seedDistribution[seed] = 0;
       totalRow.rawCounts.seedDistribution[seed] = 0;
-    });
-
-    Object.keys(totalRow.statusDistribution).forEach((status) => {
-      totalRow.rawCounts.statusDistribution[status] = 0;
     });
 
     // Sum up totals across all win values
@@ -306,8 +288,12 @@ export default function TeamSeedProjections({
 
       Object.entries(data.rawCounts.statusDistribution).forEach(
         ([status, count]) => {
-          totalRow.rawCounts.statusDistribution[status] =
-            (totalRow.rawCounts.statusDistribution[status] || 0) + count;
+          totalRow.rawCounts.statusDistribution[
+            status as keyof FootballStatusDistribution
+          ] =
+            (totalRow.rawCounts.statusDistribution[
+              status as keyof FootballStatusDistribution
+            ] || 0) + count;
         }
       );
     });
@@ -322,8 +308,9 @@ export default function TeamSeedProjections({
 
     Object.entries(totalRow.rawCounts.statusDistribution).forEach(
       ([status, count]) => {
-        totalRow.statusDistribution[status] =
-          grandTotal > 0 ? (count / grandTotal) * 100 : 0;
+        totalRow.statusDistribution[
+          status as keyof FootballStatusDistribution
+        ] = grandTotal > 0 ? (count / grandTotal) * 100 : 0;
       }
     );
 
@@ -335,24 +322,24 @@ export default function TeamSeedProjections({
   if (!data) {
     return (
       <div style={{ padding: "20px", textAlign: "center", color: "#999" }}>
-        No seed projection data available
+        No CFP seed projection data available
       </div>
     );
   }
 
-  const statusColumns = [
-    "In Tourney %",
+  const statusColumns: (keyof FootballStatusDistribution)[] = [
+    "In Playoffs %",
     "First Four Out",
     "Next Four Out",
-    "Out of Tourney",
+    "Out of Playoffs",
   ];
   const seedColumns = data.hasNumericSeeds ? data.seeds : [];
 
-  const getCompactHeader = (label: string): string => {
-    if (label === "In Tourney %") return "In Tourney %";
+  const getCompactHeader = (label: string) => {
+    if (label === "In Playoffs %") return "In Playoffs %";
     if (label === "First Four Out") return "First\nFour Out";
     if (label === "Next Four Out") return "Next\nFour Out";
-    if (label === "Out of Tourney") return "Out of\nTourney";
+    if (label === "Out of Playoffs") return "Out of\nPlayoffs";
     return label;
   };
 
@@ -386,7 +373,7 @@ export default function TeamSeedProjections({
             )}
 
             <th colSpan={statusColumns.length} style={styles.headerCell}>
-              NCAA Tourney Status
+              CFP Status
             </th>
 
             <th
@@ -476,7 +463,7 @@ export default function TeamSeedProjections({
                 {statusColumns.map((status) => {
                   const pct = rowData.statusDistribution[status] || 0;
                   const isOutCategory =
-                    status === "Out of Tourney" ||
+                    status === "Out of Playoffs" ||
                     status === "First Four Out" ||
                     status === "Next Four Out";
                   const colorStyle = getStatusColor(pct, isOutCategory);
@@ -553,7 +540,7 @@ export default function TeamSeedProjections({
             {statusColumns.map((status) => {
               const pct = data.totalRow.statusDistribution[status] || 0;
               const isOutCategory =
-                status === "Out of Tourney" ||
+                status === "Out of Playoffs" ||
                 status === "First Four Out" ||
                 status === "Next Four Out";
               const colorStyle = getStatusColor(pct, isOutCategory);

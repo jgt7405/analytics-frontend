@@ -1,3 +1,4 @@
+// src/components/layout/Header.tsx
 "use client";
 
 import Image from "next/image";
@@ -6,7 +7,10 @@ import Navigation from "./Navigation";
 
 function Header() {
   return (
-    <header className="main-header w-full border-b border-gray-200">
+    <header
+      className="main-header w-full"
+      style={{ borderBottom: "1px solid #d1d5db" }}
+    >
       <div className="header-content flex items-center justify-between w-full px-4 py-0 md:justify-start md:gap-8">
         <Link href="/basketball/wins" className="logo-link flex-shrink-0">
           <Image

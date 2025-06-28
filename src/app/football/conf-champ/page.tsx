@@ -1,20 +1,19 @@
-// src/app/football/twv/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
-import FootballTWVTable from "@/components/features/football/FootballTWVTable";
+import FootballConfChampTable from "@/components/features/football/FootballConfChampTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
-import { useFootballTWV } from "@/hooks/useFootballTWV";
+import { useFootballConfChamp } from "@/hooks/useFootballConfChamp";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useState } from "react";
 
-export default function FootballTWVPage() {
+export default function FootballConfChampPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -22,24 +21,22 @@ export default function FootballTWVPage() {
     preferences.defaultConference
   );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
-    "All Teams",
     preferences.defaultConference,
   ]);
 
   const {
-    data: twvResponse,
-    isLoading: twvLoading,
-    error: twvError,
+    data: confChampResponse,
+    isLoading: confChampLoading,
+    error: confChampError,
     refetch,
-  } = useFootballTWV(selectedConference);
+  } = useFootballConfChamp(selectedConference);
 
   // Update available conferences when data loads
   useEffect(() => {
-    if (twvResponse?.conferences) {
-      const conferences = ["All Teams", ...twvResponse.conferences];
-      setAvailableConferences(conferences);
+    if (confChampResponse?.conferences) {
+      setAvailableConferences(confChampResponse.conferences);
     }
-  }, [twvResponse]);
+  }, [confChampResponse]);
 
   // Handle conference changes
   const handleConferenceChange = (conference: string) => {
@@ -49,7 +46,7 @@ export default function FootballTWVPage() {
     trackEvent({
       name: "conference_selected",
       properties: {
-        page: "football-twv",
+        page: "football-conf-champ",
         conference: conference,
       },
     });
@@ -57,53 +54,56 @@ export default function FootballTWVPage() {
 
   // Track page load
   useEffect(() => {
-    startMeasurement("football-twv-page-load");
+    startMeasurement("football-conf-champ-page-load");
     trackEvent({
       name: "page_view",
       properties: {
-        page: "football-twv",
+        page: "football-conf-champ",
         conference: selectedConference,
       },
     });
     return () => {
-      endMeasurement("football-twv-page-load");
+      endMeasurement("football-conf-champ-page-load");
     };
   }, [selectedConference, startMeasurement, endMeasurement, trackEvent]);
 
   // Track errors
   useEffect(() => {
-    if (twvError) {
+    if (confChampError) {
       trackEvent({
         name: "data_load_error",
         properties: {
-          page: "football-twv",
+          page: "football-conf-champ",
           conference: selectedConference,
-          errorMessage: twvError.message,
+          errorMessage: confChampError.message,
         },
       });
     }
-  }, [twvError, selectedConference, trackEvent]);
+  }, [confChampError, selectedConference, trackEvent]);
 
   // Error state
-  if (twvError) {
+  if (confChampError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
-          title="Football True Win Value (TWV)"
+          title="Conference Championship Projections"
           conferenceSelector={
             <ConferenceSelector
               conferences={availableConferences}
               selectedConference={selectedConference}
               onChange={handleConferenceChange}
-              error={twvError.message}
+              error={confChampError.message}
             />
           }
           isLoading={false}
         >
           <ErrorMessage
-            message={twvError.message || "Failed to load football TWV data"}
+            message={
+              confChampError.message ||
+              "Failed to load conference championship data"
+            }
             onRetry={() => refetch()}
-            retryLabel="Reload TWV Data"
+            retryLabel="Reload Championship Data"
           />
         </PageLayoutWrapper>
       </ErrorBoundary>
@@ -111,10 +111,10 @@ export default function FootballTWVPage() {
   }
 
   // No data state
-  if (!twvLoading && !twvResponse?.data) {
+  if (!confChampLoading && !confChampResponse?.data) {
     return (
       <PageLayoutWrapper
-        title="Football True Win Value (TWV)"
+        title="Conference Championship Projections"
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
@@ -126,7 +126,7 @@ export default function FootballTWVPage() {
       >
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg mb-4">
-            No TWV data available
+            No conference championship data available
           </div>
           <p className="text-gray-400 text-sm mb-6">
             Try selecting a different conference or check back later.
@@ -145,24 +145,24 @@ export default function FootballTWVPage() {
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
-        title="Football True Win Value (TWV)"
+        title="Conference Championship Projections"
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
-            loading={twvLoading}
+            loading={confChampLoading}
           />
         }
-        isLoading={twvLoading}
+        isLoading={confChampLoading}
       >
         <div className="-mt-2 md:-mt-6">
-          {twvLoading ? (
+          {confChampLoading ? (
             <div className="mb-8">
               <BasketballTableSkeleton
                 tableType="standings"
-                rows={selectedConference === "All Teams" ? 25 : 15}
-                teamCols={5}
+                rows={12}
+                teamCols={3}
                 showSummaryRows={false}
               />
             </div>
@@ -170,40 +170,41 @@ export default function FootballTWVPage() {
             <>
               <ErrorBoundary level="component">
                 <div className="mb-8">
-                  <div className="twv-table">
+                  <div className="conf-champ-table">
                     <Suspense
                       fallback={
                         <BasketballTableSkeleton
                           tableType="standings"
-                          rows={selectedConference === "All Teams" ? 25 : 15}
-                          teamCols={5}
+                          rows={12}
+                          teamCols={3}
                           showSummaryRows={false}
                         />
                       }
                     >
-                      {twvResponse?.data && (
-                        <FootballTWVTable
-                          twvData={twvResponse.data}
-                          className="twv-table"
+                      {confChampResponse?.data && (
+                        <FootballConfChampTable
+                          confChampData={confChampResponse.data}
+                          className="conf-champ-table"
                         />
                       )}
                     </Suspense>
                   </div>
 
-                  {/* Buttons and Explainer - EXACT same layout as basketball */}
+                  {/* Buttons and Explainer - EXACT same layout as TWV */}
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       {/* Explainer text on the left */}
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
-                            TWV (True Win Value) shows actual wins compared to
-                            expected wins for a team ranked 30th by SP+.
+                            Conference Championship Projections based on
+                            simulations of remaining games, showing each team's
+                            percentage chance to reach and win their conference
+                            championship game.
                           </div>
                           <div style={{ marginTop: "6px" }}>
-                            Positive values indicate overperformance, negative
-                            values indicate underperformance relative to a
-                            top-30 team.
+                            Championship game participants are determined by the
+                            top 2 teams in final conference standings.
                           </div>
                         </div>
                       </div>
@@ -214,11 +215,11 @@ export default function FootballTWVPage() {
                       >
                         <TableActionButtons
                           selectedConference={selectedConference}
-                          contentSelector=".twv-table"
-                          pageName="football-twv"
-                          pageTitle="Football True Win Value (TWV)"
-                          shareTitle="Football True Win Value Analysis"
-                          explainerSelector=".twv-explainer"
+                          contentSelector=".conf-champ-table"
+                          pageName="football-conf-champ"
+                          pageTitle="Conference Championship Projections"
+                          shareTitle="Football Conference Championship Analysis"
+                          explainerSelector=".conf-champ-explainer"
                         />
                       </div>
                     </div>

@@ -29,61 +29,83 @@ function FootballStandingsTable({
   );
 
   const sortedTeams = useMemo(() => {
-    return [...standings].sort((a, b) => {
+    const startTime = performance.now();
+    const result = [...standings].sort((a, b) => {
       const aStanding = a.avg_standing ?? 999;
       const bStanding = b.avg_standing ?? 999;
       return aStanding - bStanding;
     });
+
+    if (process.env.NODE_ENV === "development") {
+      const duration = performance.now() - startTime;
+      if (duration > 10) {
+        console.log(
+          `FootballStandingsTable sort took ${duration.toFixed(2)}ms for ${standings.length} teams`
+        );
+      }
+    }
+    return result;
   }, [standings]);
 
   const positions = useMemo(() => {
+    const startTime = performance.now();
     let maxPosition = 0;
 
     for (const team of standings) {
       if (team.standings_distribution) {
-        const validPositions = Object.keys(team.standings_distribution)
-          .map((key) => parseFloat(key))
-          .filter((pos) => !isNaN(pos) && isFinite(pos) && pos > 0);
-
-        if (validPositions.length > 0) {
-          const teamMax = Math.max(...validPositions);
-          if (teamMax > maxPosition) maxPosition = teamMax;
-        }
+        const teamMax = Math.max(
+          ...Object.keys(team.standings_distribution).map(Number)
+        );
+        if (teamMax > maxPosition) maxPosition = teamMax;
       }
     }
 
+    if (process.env.NODE_ENV === "development") {
+      const duration = performance.now() - startTime;
+      if (duration > 5) {
+        console.log(
+          `FootballStandingsTable positions calculation took ${duration.toFixed(2)}ms`
+        );
+      }
+    }
     return Array.from({ length: Math.max(maxPosition, 1) }, (_, i) => i + 1);
   }, [standings]);
 
   if (!standings || standings.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">
-        No football standings data available
+        No standings data available
       </div>
     );
   }
 
+  // Responsive dimensions - exact match to basketball
   const firstColWidth = isMobile ? 60 : 80;
   const teamColWidth = isMobile ? 40 : 64;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
   const summaryRowHeight = isMobile ? 20 : 24;
 
+  const tableClassName = cn(
+    tableStyles.tableContainer,
+    "standings-table",
+    className
+  );
+
   return (
-    <div className={cn(tableStyles.tableContainer, className)}>
+    <div className={`${tableClassName} relative overflow-x-auto`}>
       <table
-        className={tableStyles.standingsTable}
+        className="border-collapse border-spacing-0"
         style={{
-          tableLayout: "fixed",
+          width: "max-content",
           borderCollapse: "separate",
           borderSpacing: 0,
-          width: firstColWidth + sortedTeams.length * teamColWidth,
         }}
       >
         <thead>
           <tr>
             <th
-              className="sticky left-0 z-30 bg-white text-center border border-gray-300"
+              className={`sticky left-0 z-30 bg-gray-50 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -91,24 +113,23 @@ function FootballStandingsTable({
                 height: headerHeight,
                 position: "sticky",
                 left: 0,
+                border: "1px solid #e5e7eb",
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              <div
-                className={`${isMobile ? "text-xs" : "text-sm"} font-medium text-gray-700`}
-              >
-                Position
-              </div>
+              Position
             </th>
             {sortedTeams.map((team) => (
               <th
                 key={`header-${team.team_id}-${team.team_name}`}
-                className="border border-gray-300 border-l-0 bg-white p-0"
+                className={`bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
                   height: headerHeight,
+                  border: "1px solid #e5e7eb",
+                  borderLeft: "none",
                 }}
               >
                 <div className="flex flex-col items-center justify-center h-full px-1">
@@ -148,7 +169,7 @@ function FootballStandingsTable({
                   team.standings_distribution?.[position.toString()] ||
                   team.standings_distribution?.[`${position}.0`] ||
                   0;
-                const colorStyle = getCellColor(percentage);
+                const colorStyle = getCellColor(percentage); // Use basketball's color function
 
                 return (
                   <td
@@ -197,7 +218,7 @@ function FootballStandingsTable({
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_id}-${team.team_name}-avg-position`}
-                className="bg-gray-50 text-center"
+                className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -206,7 +227,6 @@ function FootballStandingsTable({
                   border: "1px solid #e5e7eb",
                   borderTop: "2px solid #4b5563",
                   borderLeft: "none",
-                  fontSize: isMobile ? "12px" : "14px",
                 }}
               >
                 {team.avg_standing?.toFixed(1) || "-"}

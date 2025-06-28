@@ -1,4 +1,3 @@
-// src/components/features/basketball/NCAATeamTable.tsx
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
@@ -6,60 +5,63 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
-import { NCAATeam } from "@/types/basketball";
 import { useRouter } from "next/navigation";
 import { memo, useMemo } from "react";
 
-interface NCAATeamTableProps {
-  ncaaData: NCAATeam[];
+interface FootballConfChampTeam {
+  team_name: string;
+  team_id: string;
+  logo_url: string;
+  Champ_Game?: number;
+  Champion?: number;
+}
+
+interface FootballConfChampTableProps {
+  confChampData: FootballConfChampTeam[];
   className?: string;
 }
 
-function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
+function FootballConfChampTable({
+  confChampData,
+  className,
+}: FootballConfChampTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    router.push(`/football/team/${encodeURIComponent(teamName)}`);
   };
 
-  const roundOrder = [
-    "NCAA_First_Round",
-    "NCAA_Second_Round",
-    "NCAA_Sweet_Sixteen",
-    "NCAA_Elite_Eight",
-    "NCAA_Final_Four",
-    "NCAA_Championship",
-    "NCAA_Champion",
-  ];
+  // Only show columns that have data (mirroring basketball logic)
+  const columns = ["Champ_Game", "Champion"];
 
   const fieldToLabel: Record<string, string> = {
-    NCAA_First_Round: "First\nRound",
-    NCAA_Second_Round: "Second\nRound",
-    NCAA_Sweet_Sixteen: "Sweet\nSixteen",
-    NCAA_Elite_Eight: "Elite\nEight",
-    NCAA_Final_Four: "Final\nFour",
-    NCAA_Championship: "Champion-\nship",
-    NCAA_Champion: "Champion",
+    Champ_Game: "Champ\nGame",
+    Champion: "Champion",
   };
 
-  // Show ALL rounds, not just active ones
-  const allRounds = roundOrder;
+  const activeColumns = useMemo(() => {
+    return columns.filter((column) =>
+      confChampData.some(
+        (team) => (team as any)[column] && (team as any)[column] > 0
+      )
+    );
+  }, [confChampData]);
 
   const sortedTeams = useMemo(() => {
-    return [...ncaaData].sort((a, b) => {
-      const reverseRounds = [...roundOrder].reverse();
-      for (const round of reverseRounds) {
-        const aVal = (a as any)[round] || 0;
-        const bVal = (b as any)[round] || 0;
-        if (aVal !== bVal) return bVal - aVal;
-      }
+    return [...confChampData].sort((a, b) => {
+      // Sort by Champion first, then Champ_Game
+      const aChamp = a.Champion || 0;
+      const bChamp = b.Champion || 0;
+      if (aChamp !== bChamp) return bChamp - aChamp;
 
-      // Final tiebreaker: alphabetical order by team name
-      return a.team_name.localeCompare(b.team_name);
+      const aGame = a.Champ_Game || 0;
+      const bGame = b.Champ_Game || 0;
+      return bGame - aGame;
     });
-  }, [ncaaData]);
+  }, [confChampData]);
 
+  // Use same dimensions as basketball conf-tourney
   const firstColWidth = isMobile ? 120 : 180;
   const roundColWidth = isMobile ? 55 : 70;
   const cellHeight = isMobile ? 24 : 28;
@@ -67,21 +69,14 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
 
   const tableClassName = cn(
     tableStyles.tableContainer,
-    "ncaa-tourney-table",
+    "conf-champ-table",
     className
   );
 
-  // Format percentage without decimal if it's a whole number
-  const formatPercentage = (value: number): string => {
-    if (value === 0) return "";
-    const rounded = Math.round(value);
-    return `${rounded}%`;
-  };
-
-  if (!ncaaData || ncaaData.length === 0) {
+  if (!confChampData || confChampData.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">
-        No NCAA tournament data available
+        No conference championship data available
       </div>
     );
   }
@@ -99,9 +94,7 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-left font-normal px-2 ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
+              className={`sticky left-0 z-30 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -116,9 +109,9 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
             >
               Team
             </th>
-            {allRounds.map((round) => (
+            {activeColumns.map((column) => (
               <th
-                key={round}
+                key={column}
                 className="bg-gray-50 text-center font-normal"
                 style={{
                   height: headerHeight,
@@ -133,7 +126,7 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
                   lineHeight: "1.2",
                 }}
               >
-                {fieldToLabel[round]}
+                {fieldToLabel[column]}
               </th>
             ))}
           </tr>
@@ -142,9 +135,7 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
           {sortedTeams.map((team, index) => (
             <tr key={`${team.team_name}-${index}`}>
               <td
-                className={`sticky left-0 z-20 bg-white text-left px-2 ${
-                  isMobile ? "text-xs" : "text-sm"
-                } cursor-pointer hover:bg-gray-50 transition-colors`}
+                className={`sticky left-0 z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -155,42 +146,43 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderRight: "1px solid #e5e7eb",
-                  verticalAlign: "middle",
                 }}
-                onClick={() => navigateToTeam(team.team_name)}
               >
                 <div className="flex items-center gap-2">
                   <TeamLogo
                     logoUrl={team.logo_url}
                     teamName={team.team_name}
-                    size={isMobile ? 16 : 20}
+                    size={isMobile ? 20 : 24}
+                    onClick={() => navigateToTeam(team.team_name)}
                   />
                   <span className="truncate">{team.team_name}</span>
                 </div>
               </td>
-              {allRounds.map((round) => {
-                const value = (team as any)[round] || 0;
-                const cellStyle = getCellColor(value, "blue");
+              {activeColumns.map((column) => {
+                const value = (team as any)[column] || 0;
+                const colorStyle = getCellColor(value);
+
                 return (
                   <td
-                    key={round}
-                    className="text-center"
+                    key={`${team.team_name}-${column}`}
+                    className="relative p-0"
                     style={{
-                      fontFamily: "var(--font-roboto-condensed)",
+                      height: cellHeight,
                       width: roundColWidth,
                       minWidth: roundColWidth,
                       maxWidth: roundColWidth,
-                      height: cellHeight,
-                      backgroundColor: cellStyle.backgroundColor,
-                      color: cellStyle.color,
                       border: "1px solid #e5e7eb",
                       borderTop: "none",
                       borderLeft: "none",
-                      fontSize: isMobile ? "10px" : "12px",
-                      verticalAlign: "middle",
+                      backgroundColor: colorStyle.backgroundColor,
+                      color: colorStyle.color,
                     }}
                   >
-                    {formatPercentage(value)}
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    >
+                      {value > 0 ? `${Math.round(value)}%` : ""}
+                    </div>
                   </td>
                 );
               })}
@@ -202,4 +194,4 @@ function NCAATeamTable({ ncaaData, className }: NCAATeamTableProps) {
   );
 }
 
-export default memo(NCAATeamTable);
+export default memo(FootballConfChampTable);

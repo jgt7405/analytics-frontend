@@ -43,7 +43,7 @@ function FootballTWVTable({ twvData, className }: FootballTWVTableProps) {
     };
   }, [twvData]);
 
-  // Color function for TWV values - same as basketball
+  // Color function for TWV values - matches the exact specification
   const getTWVColor = useCallback(
     (twv: number) => {
       const blue = [24, 98, 123]; // Dark blue for positive values
@@ -53,19 +53,23 @@ function FootballTWVTable({ twvData, className }: FootballTWVTableProps) {
       let r: number, g: number, b: number;
 
       if (twv > 0) {
+        // Positive values: interpolate from white to dark blue
         const ratio = Math.min(Math.abs(twv / maxTWV), 1);
         r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
         g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
         b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
       } else if (twv < 0) {
+        // Negative values: interpolate from white to yellow
         const ratio = Math.min(Math.abs(twv / minTWV), 1);
         r = Math.round(white[0] + (yellow[0] - white[0]) * ratio);
         g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
         b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
       } else {
+        // Zero values remain white
         [r, g, b] = white;
       }
 
+      // Calculate brightness for text color contrast
       const brightness = (r * 299 + g * 587 + b * 114) / 1000;
       const textColor = brightness > 140 ? "#000000" : "#ffffff";
 
@@ -83,108 +87,242 @@ function FootballTWVTable({ twvData, className }: FootballTWVTableProps) {
     );
   }
 
-  // Responsive dimensions
-  const rankColWidth = isMobile ? "40px" : "50px";
-  const logoColWidth = isMobile ? "35px" : "45px";
-  const teamColWidth = isMobile ? "120px" : "180px";
-  const twvColWidth = isMobile ? "60px" : "80px";
-  const recordColWidth = isMobile ? "70px" : "90px";
+  // Responsive dimensions - Updated mobile widths for record columns (EXACT match to basketball)
+  const rankColWidth = isMobile ? 50 : 60;
+  const teamColWidth = isMobile ? 150 : 220;
+  const twvColWidth = isMobile ? 70 : 80;
+  const recordColWidth = isMobile ? 70 : 120; // Reduced from 90 to 70 on mobile
+  const cellHeight = isMobile ? 32 : 36;
+  const headerHeight = isMobile ? 40 : 48;
 
-  // Logo size as number (fixed the TypeScript error)
-  const logoSize = isMobile ? 20 : 28;
+  const tableClassName = cn(tableStyles.tableContainer, "twv-table", className);
 
   return (
-    <div className={cn("overflow-x-auto", className)}>
-      <table className={cn(tableStyles.table, "w-full")}>
+    <div
+      className={`${tableClassName} relative`}
+      style={{
+        overflowX: "auto",
+        overflowY: "auto",
+        maxHeight: "80vh", // CRITICAL: Must set height for sticky to work
+      }}
+    >
+      <table
+        className="border-collapse border-spacing-0"
+        style={{
+          width: "max-content",
+          borderCollapse: "separate",
+          borderSpacing: 0,
+        }}
+      >
         <thead>
-          <tr className="bg-gray-100">
+          <tr>
+            {/* Rank Column */}
             <th
-              className="text-center font-semibold p-2"
-              style={{ width: rankColWidth, minWidth: rankColWidth }}
+              className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: rankColWidth,
+                minWidth: rankColWidth,
+                maxWidth: rankColWidth,
+                height: headerHeight,
+                position: "sticky",
+                top: 0,
+                left: 0,
+                border: "1px solid #e5e7eb",
+                borderRight: "1px solid #e5e7eb",
+              }}
             >
               Rank
             </th>
+
+            {/* Team Column */}
             <th
-              className="text-center font-semibold p-2"
-              style={{ width: logoColWidth, minWidth: logoColWidth }}
-            >
-              {/* Logo column */}
-            </th>
-            <th
-              className="text-left font-semibold p-2"
-              style={{ width: teamColWidth, minWidth: teamColWidth }}
+              className={`sticky z-30 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: teamColWidth,
+                minWidth: teamColWidth,
+                maxWidth: teamColWidth,
+                height: headerHeight,
+                position: "sticky",
+                top: 0,
+                left: rankColWidth,
+                border: "1px solid #e5e7eb",
+                borderLeft: "none",
+                borderRight: "2px solid #d1d5db",
+              }}
             >
               Team
             </th>
+
+            {/* TWV Column */}
             <th
-              className="text-center font-semibold p-2"
-              style={{ width: twvColWidth, minWidth: twvColWidth }}
+              className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: twvColWidth,
+                minWidth: twvColWidth,
+                maxWidth: twvColWidth,
+                height: headerHeight,
+                position: "sticky",
+                top: 0,
+                border: "1px solid #e5e7eb",
+                borderLeft: "none",
+              }}
             >
               TWV
             </th>
+
+            {/* Actual Record Column - Updated with line breaks for mobile */}
             <th
-              className="text-center font-semibold p-2"
-              style={{ width: recordColWidth, minWidth: recordColWidth }}
+              className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: recordColWidth,
+                minWidth: recordColWidth,
+                maxWidth: recordColWidth,
+                height: headerHeight,
+                position: "sticky",
+                top: 0,
+                border: "1px solid #e5e7eb",
+                borderLeft: "none",
+              }}
             >
-              Actual
+              {isMobile ? (
+                <>
+                  Actual
+                  <br />
+                  Record
+                </>
+              ) : (
+                "Actual Record"
+              )}
             </th>
+
+            {/* Expected Record Column - Updated with line breaks for mobile */}
             <th
-              className="text-center font-semibold p-2"
-              style={{ width: recordColWidth, minWidth: recordColWidth }}
+              className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: recordColWidth,
+                minWidth: recordColWidth,
+                maxWidth: recordColWidth,
+                height: headerHeight,
+                position: "sticky",
+                top: 0,
+                border: "1px solid #e5e7eb",
+                borderLeft: "none",
+              }}
             >
-              Expected
+              {isMobile ? (
+                <>
+                  Expected
+                  <br />
+                  Record
+                </>
+              ) : (
+                "Expected Record"
+              )}
             </th>
           </tr>
         </thead>
         <tbody>
-          {twvData.map((team) => (
-            <tr
-              key={team.team_name}
-              className="hover:bg-gray-50 cursor-pointer"
-              onClick={() => navigateToTeam(team.team_name)}
-            >
+          {twvData.map((team, index) => (
+            <tr key={`${team.team_name}-${index}`}>
+              {/* Rank Cell */}
               <td
-                className="text-center p-2"
-                style={{ width: rankColWidth, minWidth: rankColWidth }}
+                className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  width: rankColWidth,
+                  minWidth: rankColWidth,
+                  maxWidth: rankColWidth,
+                  height: cellHeight,
+                  position: "sticky",
+                  left: 0,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderRight: "1px solid #e5e7eb",
+                }}
               >
                 {team.rank}
               </td>
+
+              {/* Team Cell */}
               <td
-                className="text-center p-2"
-                style={{ width: logoColWidth, minWidth: logoColWidth }}
+                className={`sticky z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  width: teamColWidth,
+                  minWidth: teamColWidth,
+                  maxWidth: teamColWidth,
+                  height: cellHeight,
+                  position: "sticky",
+                  left: rankColWidth,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  borderRight: "2px solid #d1d5db",
+                }}
               >
-                <TeamLogo
-                  logoUrl={team.logo_url}
-                  teamName={team.team_name}
-                  size={logoSize}
-                />
+                <div className="flex items-center gap-2">
+                  <TeamLogo
+                    logoUrl={team.logo_url}
+                    teamName={team.team_name}
+                    size={isMobile ? 24 : 28}
+                    onClick={() => navigateToTeam(team.team_name)}
+                    className="flex-shrink-0"
+                  />
+                  <span className="truncate">{team.team_name}</span>
+                </div>
               </td>
+
+              {/* TWV Cell with exact color specification */}
               <td
-                className="text-left p-2 font-medium"
-                style={{ width: teamColWidth, minWidth: teamColWidth }}
-              >
-                {team.team_name}
-              </td>
-              <td
-                className="text-center p-2 font-bold"
+                className={`relative p-0`}
                 style={{
                   width: twvColWidth,
                   minWidth: twvColWidth,
-                  ...getTWVColor(team.twv),
+                  maxWidth: twvColWidth,
+                  height: cellHeight,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
                 }}
               >
-                {team.twv >= 0 ? "+" : ""}
-                {team.twv.toFixed(1)}
+                <div
+                  className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}
+                  style={getTWVColor(team.twv)}
+                >
+                  {team.twv > 0
+                    ? `+${team.twv.toFixed(1)}`
+                    : team.twv.toFixed(1)}
+                </div>
               </td>
+
+              {/* Actual Record Cell */}
               <td
-                className="text-center p-2"
-                style={{ width: recordColWidth, minWidth: recordColWidth }}
+                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  width: recordColWidth,
+                  minWidth: recordColWidth,
+                  maxWidth: recordColWidth,
+                  height: cellHeight,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  padding: "6px 4px",
+                }}
               >
                 {team.actual_record}
               </td>
+
+              {/* Expected Record Cell */}
               <td
-                className="text-center p-2"
-                style={{ width: recordColWidth, minWidth: recordColWidth }}
+                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  width: recordColWidth,
+                  minWidth: recordColWidth,
+                  maxWidth: recordColWidth,
+                  height: cellHeight,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  padding: "6px 4px",
+                }}
               >
                 {team.expected_record}
               </td>
