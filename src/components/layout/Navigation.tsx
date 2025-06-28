@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import navStyles from "@/styles/components/navigation.module.css";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -128,23 +128,26 @@ export default function Navigation() {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (!mobileMenuOpen) return;
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (!mobileMenuOpen) return;
 
-    if (e.key === "Tab") {
-      if (e.shiftKey) {
-        if (document.activeElement === firstItemRef.current) {
-          e.preventDefault();
-          lastItemRef.current?.focus();
-        }
-      } else {
-        if (document.activeElement === lastItemRef.current) {
-          e.preventDefault();
-          firstItemRef.current?.focus();
+      if (e.key === "Tab") {
+        if (e.shiftKey) {
+          if (document.activeElement === firstItemRef.current) {
+            e.preventDefault();
+            lastItemRef.current?.focus();
+          }
+        } else {
+          if (document.activeElement === lastItemRef.current) {
+            e.preventDefault();
+            firstItemRef.current?.focus();
+          }
         }
       }
-    }
-  };
+    },
+    [mobileMenuOpen]
+  );
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -152,7 +155,7 @@ export default function Navigation() {
       firstItemRef.current?.focus();
       return () => document.removeEventListener("keydown", handleKeyDown);
     }
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, handleKeyDown]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -211,7 +214,11 @@ export default function Navigation() {
         })}
 
         <Link
-          href={isFootball ? "/basketball/wins" : "/football/wins"}
+          href={
+            isFootball
+              ? "/basketball/wins?conf=Big%2012"
+              : "/football/wins?conf=Big%2012"
+          }
           className={cn(
             navStyles.tabButton,
             "text-xs flex flex-col items-center justify-center leading-none py-1"
@@ -283,7 +290,11 @@ export default function Navigation() {
             })}
 
             <Link
-              href={isFootball ? "/basketball/wins" : "/football/wins"}
+              href={
+                isFootball
+                  ? "/basketball/wins?conf=Big%2012"
+                  : "/football/wins?conf=Big%2012"
+              }
               className={cn(
                 navStyles.tabButton,
                 "text-xs flex flex-col items-center justify-center leading-none py-1 gap-0"
