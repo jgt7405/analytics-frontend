@@ -5,20 +5,23 @@ export const baseMetadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "https://jthom-analytics.vercel.app"
   ),
   title: {
-    default: "JThom Analytics - Basketball Intelligence",
+    default: "JThom Analytics - Sports analytics your eyes will like",
     template: "%s | JThom Analytics",
   },
   description:
-    "Advanced basketball analytics and projections for college basketball conferences. View win projections, standings predictions, and conference win value analysis.",
+    "Sports analytics your eyes will like. Advanced basketball and football analytics with projections, standings predictions, and conference win value analysis.",
   keywords: [
     "basketball analytics",
+    "football analytics",
     "college basketball",
-    "basketball predictions",
+    "college football",
+    "sports predictions",
     "sports analytics",
     "basketball statistics",
+    "football statistics",
     "conference standings",
     "win projections",
-    "basketball data",
+    "sports data",
   ],
   authors: [{ name: "JThom Analytics" }],
   creator: "JThom Analytics",
@@ -45,23 +48,23 @@ export const baseMetadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "JThom Analytics",
-    title: "JThom Analytics - Basketball Intelligence",
+    title: "JThom Analytics - Sports analytics your eyes will like",
     description:
-      "Advanced basketball analytics and projections for college basketball conferences.",
+      "Sports analytics your eyes will like. Advanced basketball and football analytics with projections.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "JThom Analytics Basketball Data",
+        alt: "JThom Analytics Sports Data",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "JThom Analytics - Basketball Intelligence",
+    title: "JThom Analytics - Sports analytics your eyes will like",
     description:
-      "Advanced basketball analytics and projections for college basketball conferences.",
+      "Sports analytics your eyes will like. Advanced basketball and football analytics with projections.",
     images: ["/og-image.png"],
     creator: "@jthom_analytics",
   },
@@ -86,7 +89,7 @@ export function generatePageMetadata({
 }): Metadata {
   const fullTitle = conference ? `${conference} ${title}` : title;
   const fullDescription = conference
-    ? `${description} View detailed analytics for ${conference} basketball teams.`
+    ? `${description} View detailed analytics for ${conference} teams.`
     : description;
 
   return {
