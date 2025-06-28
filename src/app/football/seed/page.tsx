@@ -99,36 +99,57 @@ export default function FootballSeedPage() {
         ) : (
           <>
             <div className="mb-8">
-              <Suspense
-                fallback={
-                  <BasketballTableSkeleton
-                    tableType="standings"
-                    rows={15}
-                    teamCols={15}
-                    showSummaryRows={false}
-                  />
-                }
-              >
-                {seedResponse?.data && (
-                  <FootballSeedTable
-                    seedData={seedResponse.data}
-                    className="seed-table"
-                  />
-                )}
-              </Suspense>
-            </div>
+              <div className="seed-table">
+                <Suspense
+                  fallback={
+                    <BasketballTableSkeleton
+                      tableType="standings"
+                      rows={15}
+                      teamCols={15}
+                      showSummaryRows={false}
+                    />
+                  }
+                >
+                  {seedResponse?.data && (
+                    <FootballSeedTable
+                      seedData={seedResponse.data}
+                      className="seed-table"
+                    />
+                  )}
+                </Suspense>
+              </div>
 
-            <div className="mt-6">
-              <div className="flex flex-row items-start gap-4">
-                <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                  <div style={{ lineHeight: "1.3" }}>
-                    CFP seed distribution probabilities (1-12) and playoff bid
-                    percentages based on current projections.
+              {/* Buttons and Explainer in side-by-side layout - FIXED POSITIONING */}
+              <div className="mt-6">
+                <div className="flex flex-row items-start gap-4">
+                  {/* Explainer text on the left - takes remaining space */}
+                  <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div
+                      className="seed-explainer"
+                      style={{ lineHeight: "1.3" }}
+                    >
+                      <div>
+                        CFP seed distribution probabilities (1-12) and playoff
+                        bid percentages based on current projections.
+                      </div>
+                      <div style={{ marginTop: "6px" }}>
+                        Darker colors indicate higher probabilities.
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-20"}`}>
-                  <div className="flex flex-col gap-2">
-                    <TableActionButtons contentSelector=".seed-table" />
+
+                  {/* Action buttons on the right - FIXED: better spacing from edge */}
+                  <div
+                    className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
+                  >
+                    <TableActionButtons
+                      selectedConference={selectedConference}
+                      contentSelector=".seed-table"
+                      pageName="football-seed"
+                      pageTitle="CFP Seed Projections"
+                      shareTitle="Football CFP Seed Analysis"
+                      explainerSelector=".seed-explainer"
+                    />
                   </div>
                 </div>
               </div>

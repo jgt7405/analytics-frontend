@@ -62,36 +62,56 @@ export default function FootballConfDataPage() {
         ) : (
           <>
             <div className="mb-8">
-              <Suspense
-                fallback={
-                  <BasketballTableSkeleton
-                    tableType="standings"
-                    rows={15}
-                    teamCols={13}
-                    showSummaryRows={false}
-                  />
-                }
-              >
-                {confResponse?.data && (
-                  <FootballConfDataTable
-                    confData={confResponse.data}
-                    className="conf-data-table"
-                  />
-                )}
-              </Suspense>
-            </div>
+              <div className="conf-data-table">
+                <Suspense
+                  fallback={
+                    <BasketballTableSkeleton
+                      tableType="standings"
+                      rows={15}
+                      teamCols={13}
+                      showSummaryRows={false}
+                    />
+                  }
+                >
+                  {confResponse?.data && (
+                    <FootballConfDataTable
+                      confData={confResponse.data}
+                      className="conf-data-table"
+                    />
+                  )}
+                </Suspense>
+              </div>
 
-            <div className="mt-6">
-              <div className="flex flex-row items-start gap-4">
-                <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                  <div style={{ lineHeight: "1.3" }}>
-                    Conference bid distribution showing probability of each
-                    conference receiving 0-12 CFP bids.
+              {/* FIXED: Proper action button positioning */}
+              <div className="mt-6">
+                <div className="flex flex-row items-start gap-4">
+                  {/* Explainer text on the left - takes remaining space */}
+                  <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div
+                      className="conf-data-explainer"
+                      style={{ lineHeight: "1.3" }}
+                    >
+                      <div>
+                        Conference bid distribution showing probability of each
+                        conference receiving 0-12 CFP bids.
+                      </div>
+                      <div style={{ marginTop: "6px" }}>
+                        Based on current team projections and playoff scenarios.
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-20"}`}>
-                  <div className="flex flex-col gap-2">
-                    <TableActionButtons contentSelector=".conf-data-table" />
+
+                  {/* Action buttons on the right - FIXED spacing */}
+                  <div
+                    className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
+                  >
+                    <TableActionButtons
+                      contentSelector=".conf-data-table"
+                      pageName="football-conf-data"
+                      pageTitle="Conference CFP Bid Projections"
+                      shareTitle="Football Conference Bid Analysis"
+                      explainerSelector=".conf-data-explainer"
+                    />
                   </div>
                 </div>
               </div>

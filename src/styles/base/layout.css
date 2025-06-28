@@ -22,8 +22,12 @@
     margin-top: -12px;
   }
 
-  .main-content {
-    box-shadow: none;
+  .main-content,
+  .tableContainer,
+  .seed-table,
+  .conf-data-table,
+  .stickyHeader {
+    box-shadow: none !important;
   }
 }
 
