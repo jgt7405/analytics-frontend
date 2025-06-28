@@ -18,6 +18,8 @@ interface ApiSeedCount {
   Seed: string | number;
   Percentage: number;
   Tournament_Status: string;
+  Wins: number;
+  Count: number;
 }
 
 interface FootballTeamInfo {
@@ -129,51 +131,18 @@ export default function FootballTeamPage({
   const transformFootballWinSeedCounts = (
     apiData: ApiSeedCount[]
   ): FootballWinSeedCount[] => {
-    // Group by seed to create win scenarios
-    const seedGroups: Record<string, ApiSeedCount[]> = {};
-
-    apiData.forEach((item) => {
-      const seedKey = item.Seed.toString();
-      if (!seedGroups[seedKey]) {
-        seedGroups[seedKey] = [];
-      }
-      seedGroups[seedKey].push(item);
-    });
-
-    const result: FootballWinSeedCount[] = [];
-
-    // Create entries for different win scenarios
-    Object.entries(seedGroups).forEach(([seed, items]) => {
-      items.forEach((item, index) => {
-        // Create multiple win scenarios based on the data
-        // You might need to adjust this logic based on your actual data structure
-        result.push({
-          Wins: 8 + index, // Placeholder - adjust based on your data (football typically 8-15 wins)
-          Seed: seed,
-          Tournament_Status:
-            item.Tournament_Status ||
-            (item.Percentage > 50 ? "In Playoffs" : "Out of Playoffs"),
-          Count: Math.floor(item.Percentage * 10), // Convert percentage to count
-          Percentage: item.Percentage,
-        });
-      });
-    });
-
-    // If no data, create a default structure for football
-    if (result.length === 0) {
-      for (let wins = 8; wins <= 15; wins++) {
-        for (let seed = 1; seed <= 12; seed++) {
-          result.push({
-            Wins: wins,
-            Seed: seed,
-            Tournament_Status: seed <= 8 ? "In Playoffs" : "Out of Playoffs",
-            Count: Math.floor(Math.random() * 100), // Placeholder
-          });
-        }
-      }
+    if (!Array.isArray(apiData) || apiData.length === 0) {
+      return [];
     }
 
-    return result;
+    // Direct transformation - use real data only
+    return apiData.map((item) => ({
+      Wins: item.Wins,
+      Seed: item.Seed,
+      Tournament_Status: item.Tournament_Status,
+      Count: item.Count,
+      Percentage: item.Percentage,
+    }));
   };
 
   if (error) {

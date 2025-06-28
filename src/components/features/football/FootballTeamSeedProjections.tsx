@@ -4,7 +4,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { useEffect, useState } from "react";
 
-// Proper TypeScript interfaces
+// TypeScript interfaces
 interface FootballWinSeedCount {
   Wins: number;
   Seed: string | number;
@@ -239,14 +239,24 @@ export default function FootballTeamSeedProjections({
         }
       );
 
-      // Calculate status distribution percentages based on row total
-      Object.entries(rowData.rawCounts.statusDistribution).forEach(
-        ([status, count]) => {
-          rowData.statusDistribution[
-            status as keyof FootballStatusDistribution
-          ] = rowData.total > 0 ? (count / rowData.total) * 100 : 0;
-        }
-      );
+      // Calculate individual status percentages
+      const inPlayoffsCount =
+        rowData.rawCounts.statusDistribution["In Playoffs %"];
+      const firstFourOutCount =
+        rowData.rawCounts.statusDistribution["First Four Out"];
+      const nextFourOutCount =
+        rowData.rawCounts.statusDistribution["Next Four Out"];
+
+      rowData.statusDistribution["In Playoffs %"] =
+        rowData.total > 0 ? (inPlayoffsCount / rowData.total) * 100 : 0;
+      rowData.statusDistribution["First Four Out"] =
+        rowData.total > 0 ? (firstFourOutCount / rowData.total) * 100 : 0;
+      rowData.statusDistribution["Next Four Out"] =
+        rowData.total > 0 ? (nextFourOutCount / rowData.total) * 100 : 0;
+
+      // "Out of Playoffs" = 100% - "In Playoffs %" (includes FFO + NFO + other scenarios)
+      rowData.statusDistribution["Out of Playoffs"] =
+        100 - rowData.statusDistribution["In Playoffs %"];
     });
 
     // Calculate total row
@@ -306,13 +316,21 @@ export default function FootballTeamSeedProjections({
       }
     );
 
-    Object.entries(totalRow.rawCounts.statusDistribution).forEach(
-      ([status, count]) => {
-        totalRow.statusDistribution[
-          status as keyof FootballStatusDistribution
-        ] = grandTotal > 0 ? (count / grandTotal) * 100 : 0;
-      }
-    );
+    const totalInPlayoffs =
+      totalRow.rawCounts.statusDistribution["In Playoffs %"];
+    const totalFirstFourOut =
+      totalRow.rawCounts.statusDistribution["First Four Out"];
+    const totalNextFourOut =
+      totalRow.rawCounts.statusDistribution["Next Four Out"];
+
+    totalRow.statusDistribution["In Playoffs %"] =
+      grandTotal > 0 ? (totalInPlayoffs / grandTotal) * 100 : 0;
+    totalRow.statusDistribution["First Four Out"] =
+      grandTotal > 0 ? (totalFirstFourOut / grandTotal) * 100 : 0;
+    totalRow.statusDistribution["Next Four Out"] =
+      grandTotal > 0 ? (totalNextFourOut / grandTotal) * 100 : 0;
+    totalRow.statusDistribution["Out of Playoffs"] =
+      100 - totalRow.statusDistribution["In Playoffs %"];
 
     return { winData, winTotals, seeds, totalRow, hasNumericSeeds, grandTotal };
   };
@@ -493,16 +511,14 @@ export default function FootballTeamSeedProjections({
                     maxWidth: totalColWidth,
                   }}
                 >
-                  {Math.round(percentOfTotal)}%
+                  {percentOfTotal > 0 ? `${Math.round(percentOfTotal)}%` : ""}
                 </td>
               </tr>
             );
           })}
 
           {/* Total row */}
-          <tr
-            style={{ borderTop: "2px solid #444", backgroundColor: "#f8f9fa" }}
-          >
+          <tr style={{ borderTop: "2px solid #333" }}>
             <td
               style={{
                 ...styles.dataCell,
@@ -510,7 +526,6 @@ export default function FootballTeamSeedProjections({
                 width: winsColWidth,
                 minWidth: winsColWidth,
                 maxWidth: winsColWidth,
-                backgroundColor: "#f8f9fa",
               }}
             >
               Total
@@ -518,15 +533,12 @@ export default function FootballTeamSeedProjections({
 
             {seedColumns.map((seed) => {
               const pct = data.totalRow.seedDistribution[seed] || 0;
-              const colorStyle = getCellColor(pct);
-
               return (
                 <td
                   key={`total-seed-${seed}`}
                   style={{
                     ...styles.dataCell,
-                    ...colorStyle,
-                    backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
+                    ...getCellColor(pct),
                     width: seedColWidth,
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
@@ -551,7 +563,6 @@ export default function FootballTeamSeedProjections({
                   style={{
                     ...styles.dataCell,
                     ...colorStyle,
-                    backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
                     width: statusColWidth,
                     minWidth: statusColWidth,
                     maxWidth: statusColWidth,
@@ -571,7 +582,7 @@ export default function FootballTeamSeedProjections({
                 maxWidth: totalColWidth,
               }}
             >
-              {/* Empty cell */}
+              100%
             </td>
           </tr>
         </tbody>
