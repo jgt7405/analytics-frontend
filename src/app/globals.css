@@ -116,6 +116,7 @@ select {
   select,
   select option {
     color: #666 !important;
+    appearance: none;
     -webkit-appearance: none;
     -webkit-text-fill-color: #666 !important;
   }
