@@ -130,7 +130,7 @@
   .tabButtonActive::after {
     content: "";
     position: absolute;
-    bottom: 6px;
+    bottom: 10px !important;
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 16px);
