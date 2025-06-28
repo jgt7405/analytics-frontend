@@ -48,6 +48,39 @@ body {
   }
 }
 
+/* Select styling for all devices */
+.conference-selector select {
+  font-family: var(--font-roboto-mono) !important;
+  outline: none !important;
+  border-color: #d1d5db !important;
+}
+
+.conference-selector select:focus {
+  outline: none !important;
+  border-color: #d1d5db !important;
+  box-shadow: none !important;
+}
+
+/* Mobile select color fix */
+@media (max-width: 768px) {
+  select,
+  select option {
+    color: #666 !important;
+    -webkit-text-fill-color: #666 !important;
+  }
+
+  .conference-selector select {
+    color: #666 !important;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><polyline points='1,1 6,6 11,1' stroke='%23666' stroke-width='2' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 8px;
+    padding-right: 32px;
+  }
+}
+
 /* Suppress CSS errors */
 @supports not (field-sizing: content) {
   input,
@@ -94,47 +127,5 @@ select {
 
   .no-print {
     display: none !important;
-  }
-}
-
-/* Force remove all shadows on mobile - highest specificity */
-@media (max-width: 768px) {
-  * {
-    box-shadow: none !important;
-  }
-
-  /* Re-enable necessary shadows for buttons/modals only */
-  button:hover,
-  .modal,
-  .dropdown-menu {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-  }
-}
-
-/* Mobile select color fix */
-@media (max-width: 768px) {
-  select,
-  select option {
-    color: #666 !important;
-    -webkit-text-fill-color: #666 !important;
-  }
-
-  .conference-selector select {
-    color: #666 !important;
-    outline: none !important;
-    border-color: #d1d5db !important;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><polyline points='1,1 6,6 11,1' stroke='%23666' stroke-width='2' fill='none'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 12px 8px;
-    padding-right: 32px;
-  }
-
-  .conference-selector select:focus {
-    outline: none !important;
-    border-color: #d1d5db !important;
-    box-shadow: none !important;
   }
 }
