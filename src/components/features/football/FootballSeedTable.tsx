@@ -87,7 +87,7 @@ function FootballSeedTable({ seedData, className }: FootballSeedTableProps) {
   // Format CFP percentage (like basketball's tournament percentage)
   const formatCFPPct = (value?: number) => {
     if (value === null || value === undefined) return "-";
-    if (value > 0 && value <= 1) return `${Math.round(value * 100)}%`;
+    if (value > 0 && value < 1) return `${Math.round(value * 100)}%`; // Changed <= to
     return `${Math.round(value)}%`;
   };
 
