@@ -309,7 +309,6 @@ export const FOOTBALL_CONFERENCES = [
   "Big 12",
   "Big Ten",
   "Conference USA",
-  "FCS",
   "Independent",
   "Mid-American",
   "Mountain West",

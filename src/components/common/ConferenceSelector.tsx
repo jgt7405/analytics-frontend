@@ -17,6 +17,9 @@ export default function ConferenceSelector({
   disabled = false,
   error,
 }: ConferenceSelectorProps) {
+  // Filter out FCS from all conferences regardless of sport
+  const filteredConferences = conferences.filter((conf) => conf !== "FCS");
+
   return (
     <div className="conference-selector">
       <div className="relative">
@@ -24,7 +27,7 @@ export default function ConferenceSelector({
           id="conference-select"
           value={selectedConference}
           onChange={(e) => onChange(e.target.value)}
-          disabled={disabled || conferences.length === 0}
+          disabled={disabled || filteredConferences.length === 0}
           className={`px-3 py-1.5 border rounded-md bg-white min-w-[200px] transition-colors text-xs
            ${
              error
@@ -32,7 +35,7 @@ export default function ConferenceSelector({
                : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
            }
            ${
-             disabled || conferences.length === 0
+             disabled || filteredConferences.length === 0
                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                : "hover:border-gray-400"
            }
@@ -40,10 +43,10 @@ export default function ConferenceSelector({
           aria-describedby={error ? "conference-error" : "conference-help"}
           aria-invalid={!!error}
         >
-          {conferences.length === 0 ? (
+          {filteredConferences.length === 0 ? (
             <option value="">Loading conferences...</option>
           ) : (
-            conferences.map((conference) => (
+            filteredConferences.map((conference) => (
               <option key={conference} value={conference} className="text-xs">
                 {conference}
               </option>

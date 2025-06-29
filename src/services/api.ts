@@ -14,29 +14,114 @@ import {
 } from "@/types/basketball";
 import { ApiError, BasketballApiError } from "@/types/errors";
 import {
+  FootballCFPApiResponse,
+  FootballConferenceApiResponse,
   FootballCWVApiResponse,
   FootballPlayoffApiResponse,
+  FootballSeedApiResponse,
   FootballStandingsApiResponse,
+  FootballTeamApiResponse,
+  FootballTeamsApiResponse,
   FootballTWVApiResponse,
 } from "@/types/football";
 
 const API_BASE_URL = "/api/proxy";
 
+// Define specific API response types
+interface TWVApiResponse {
+  data: Array<{
+    team_name: string;
+    team_id: string;
+    logo_url: string;
+    twv: number;
+    actual_record: string;
+    expected_record: string;
+    rank: number;
+  }>;
+  conferences: string[];
+}
+
+interface ConfTourneyApiResponse {
+  data: Array<{
+    team_name: string;
+    team_id: string;
+    logo_url: string;
+    conf_tourney_pct: number;
+    conf_champion_pct: number;
+  }>;
+  conferences: string[];
+}
+
+interface NCAATourneyApiResponse {
+  data: Array<{
+    team_name: string;
+    team_id: string;
+    logo_url: string;
+    ncaa_bid_pct: number;
+    seed_distribution: Record<string, number>;
+  }>;
+  conferences: string[];
+}
+
+interface SeedApiResponse {
+  data: Array<{
+    team_name: string;
+    team_id: string;
+    logo_url: string;
+    ncaa_bid_pct: number;
+    average_seed: number;
+    seed_distribution: Record<string, number>;
+  }>;
+  conferences: string[];
+}
+
+interface TeamDataApiResponse {
+  team_info: {
+    team_name: string;
+    team_id: string;
+    conference: string;
+    logo_url: string;
+    overall_record: string;
+    conference_record: string;
+  };
+  schedule: Array<{
+    date: string;
+    opponent: string;
+    location: string;
+    status: string;
+  }>;
+}
+
+interface UnifiedConferenceDataResponse {
+  conferences: string[];
+  data: Record<string, unknown>;
+}
+
+interface HealthCheckResponse {
+  status: string;
+  timestamp: number;
+}
+
 class ApiClient {
   private createUserFriendlyError(
-    error: any,
+    error: unknown,
     endpoint: string
   ): BasketballApiError {
     let apiError: ApiError;
 
-    if (error.name === "AbortError") {
+    if (error instanceof Error && error.name === "AbortError") {
       apiError = {
         type: "network",
         message: `Request timeout for ${endpoint}`,
         userMessage: "Request timed out. Please try again.",
         retryable: true,
       };
-    } else if (error.status === 404) {
+    } else if (
+      error &&
+      typeof error === "object" &&
+      "status" in error &&
+      error.status === 404
+    ) {
       apiError = {
         type: "not_found",
         message: `Conference data not found: ${endpoint}`,
@@ -45,16 +130,25 @@ class ApiClient {
         status: 404,
         retryable: false,
       };
-    } else if (error.status >= 500) {
+    } else if (
+      error &&
+      typeof error === "object" &&
+      "status" in error &&
+      typeof error.status === "number" &&
+      error.status >= 500
+    ) {
       apiError = {
         type: "server",
-        message: `Server error: ${error.message}`,
+        message: `Server error: ${error instanceof Error ? error.message : "Unknown server error"}`,
         userMessage:
           "Our servers are experiencing issues. Please try again in a few minutes.",
         status: error.status,
         retryable: true,
       };
-    } else if (error.message?.includes("Validation failed")) {
+    } else if (
+      error instanceof Error &&
+      error.message?.includes("Validation failed")
+    ) {
       apiError = {
         type: "validation",
         message: `Data validation failed: ${error.message}`,
@@ -64,20 +158,26 @@ class ApiClient {
     } else {
       apiError = {
         type: "network",
-        message: error.message || "Unknown error",
+        message: error instanceof Error ? error.message : "Unknown error",
         userMessage:
           "Unable to load data. Please check your connection and try again.",
         retryable: true,
       };
     }
 
-    monitoring.trackError(error, {
-      endpoint,
-      apiErrorType: apiError.type,
-      retryable: apiError.retryable,
-    });
+    monitoring.trackError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        endpoint,
+        apiErrorType: apiError.type,
+        retryable: apiError.retryable,
+      }
+    );
 
-    return new BasketballApiError(apiError, error);
+    return new BasketballApiError(
+      apiError,
+      error instanceof Error ? error : new Error(String(error))
+    );
   }
 
   private async request<T>(
@@ -85,7 +185,7 @@ class ApiClient {
     validator: (data: unknown) => {
       success: boolean;
       data: T | null;
-      error: any;
+      error: unknown;
     },
     retries = 3
   ): Promise<T> {
@@ -196,7 +296,7 @@ class ApiClient {
     return this.request(`/conf_schedule/${formattedConf}`, validateSchedule);
   }
 
-  async getTWV(conference: string): Promise<any> {
+  async getTWV(conference: string): Promise<TWVApiResponse> {
     const sanitized = sanitizeInput(conference);
 
     // Allow "All Teams" as a special case
@@ -215,12 +315,12 @@ class ApiClient {
 
     return this.request(`/twv/${formattedConf}`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as TWVApiResponse,
       error: null,
     }));
   }
 
-  async getConfTourney(conference: string): Promise<any> {
+  async getConfTourney(conference: string): Promise<ConfTourneyApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
@@ -235,12 +335,12 @@ class ApiClient {
 
     return this.request(`/conf_tourney/${formattedConf}`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as ConfTourneyApiResponse,
       error: null,
     }));
   }
 
-  async getNCAATourney(conference: string): Promise<any> {
+  async getNCAATourney(conference: string): Promise<NCAATourneyApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
@@ -255,12 +355,12 @@ class ApiClient {
 
     return this.request(`/ncaa_tourney/${formattedConf}`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as NCAATourneyApiResponse,
       error: null,
     }));
   }
 
-  async getSeedData(conference: string): Promise<any> {
+  async getSeedData(conference: string): Promise<SeedApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
@@ -275,12 +375,12 @@ class ApiClient {
 
     return this.request(`/seed/${formattedConf}`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as SeedApiResponse,
       error: null,
     }));
   }
 
-  async getTeamData(teamName: string): Promise<any> {
+  async getTeamData(teamName: string): Promise<TeamDataApiResponse> {
     const sanitized = sanitizeInput(teamName);
     if (!sanitized) {
       throw new Error("Invalid team name");
@@ -295,12 +395,12 @@ class ApiClient {
 
     return this.request(`/team/${encodedTeamName}`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as TeamDataApiResponse,
       error: null,
     }));
   }
 
-  async getUnifiedConferenceData(): Promise<any> {
+  async getUnifiedConferenceData(): Promise<UnifiedConferenceDataResponse> {
     monitoring.trackEvent({
       name: "unified_conference_data_requested",
       properties: {},
@@ -308,7 +408,7 @@ class ApiClient {
 
     return this.request(`/unified_conference_data`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as UnifiedConferenceDataResponse,
       error: null,
     }));
   }
@@ -359,7 +459,6 @@ class ApiClient {
     );
   }
 
-  // ADD THIS MISSING METHOD:
   async getFootballCWV(conference: string): Promise<FootballCWVApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
@@ -398,46 +497,45 @@ class ApiClient {
     );
   }
 
-  // Add to ApiClient class
-  async getCFP(conference: string): Promise<any> {
+  async getCFP(conference: string): Promise<FootballCFPApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
 
     return this.request(`/cfp/${formattedConf}`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as FootballCFPApiResponse,
       error: null,
     }));
   }
 
-  async getFootballSeed(conference: string): Promise<any> {
+  async getFootballSeed(conference: string): Promise<FootballSeedApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
 
     return this.request(`/football_seed/${formattedConf}`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as FootballSeedApiResponse,
       error: null,
     }));
   }
 
-  async getFootballConfData(): Promise<any> {
+  async getFootballConfData(): Promise<FootballConferenceApiResponse> {
     return this.request(`/football/conf-data`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as FootballConferenceApiResponse,
       error: null,
     }));
   }
 
-  async getFootballTeams(): Promise<any> {
+  async getFootballTeams(): Promise<FootballTeamsApiResponse> {
     console.log("🏈 API: About to call /football_teams");
     const result = await this.request(`/football_teams`, (data) => {
       console.log("🏈 API: Raw response data:", data);
       return {
         success: true,
-        data: data as any,
+        data: data as FootballTeamsApiResponse,
         error: null,
       };
     });
@@ -445,17 +543,17 @@ class ApiClient {
     return result;
   }
 
-  async getFootballTeam(teamName: string): Promise<any> {
+  async getFootballTeam(teamName: string): Promise<FootballTeamApiResponse> {
     const encoded = encodeURIComponent(teamName);
     return this.request(`/football_team/${encoded}`, (data) => ({
       success: true,
-      data: data as any,
+      data: data as FootballTeamApiResponse,
       error: null,
     }));
   }
 
   // Health check endpoint
-  async healthCheck(): Promise<{ status: string; timestamp: number }> {
+  async healthCheck(): Promise<HealthCheckResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/health`, {
         method: "GET",
@@ -527,7 +625,7 @@ class ApiClient {
   }
 
   // Generic POST request
-  async post<T>(endpoint: string, body: any): Promise<T> {
+  async post<T>(endpoint: string, body: unknown): Promise<T> {
     const startTime = Date.now();
 
     try {
