@@ -11,14 +11,7 @@ import { useNCAATeam } from "@/hooks/useNCAATeam";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { NCAATeam } from "@/types/basketball";
 import { Suspense, useEffect, useState } from "react";
-
-// Define possible response structures
-interface NCAAResponseWithData {
-  data: NCAATeam[];
-  conferences: string[];
-}
 
 export default function NCAATeamPage() {
   const { trackEvent } = useMonitoring();
@@ -47,46 +40,19 @@ export default function NCAATeamPage() {
     });
   }, [selectedConference, trackEvent]);
 
-  // Update available conferences - Fixed to handle different response structures
+  // Update available conferences - handle unknown type safely
   useEffect(() => {
-    if (ncaaResponse) {
-      // Use unknown first, then cast to the expected type
-      const response = ncaaResponse as unknown;
-
-      // Type guard functions
-      const isArrayResponse = (r: unknown): r is NCAATeam[] => Array.isArray(r);
-      const isDataResponse = (r: unknown): r is NCAAResponseWithData =>
-        typeof r === "object" && r !== null && "data" in r;
-
-      if (isArrayResponse(response)) {
-        // Direct array response
-        const conferences = Array.from(
-          new Set(
-            response
-              .map((_team: NCAATeam) => {
-                // Try to extract conference - this might need adjustment based on your data
-                // For now, we'll use a placeholder approach
-                return "Conference"; // You may need to adjust this based on actual data structure
-              })
-              .filter(Boolean)
-          )
-        ) as string[];
-        setAvailableConferences(["All Teams", ...conferences.sort()]);
-      } else if (isDataResponse(response)) {
-        // Response with data and possibly conferences properties
-        if (response.conferences) {
-          setAvailableConferences(["All Teams", ...response.conferences]);
-        } else if (Array.isArray(response.data)) {
-          // Extract conferences from data
-          const conferences = Array.from(
-            new Set(
-              response.data
-                .map((_team: NCAATeam) => "Conference") // Placeholder - adjust based on actual data
-                .filter(Boolean)
-            )
-          ) as string[];
-          setAvailableConferences(["All Teams", ...conferences.sort()]);
-        }
+    if (
+      ncaaResponse &&
+      typeof ncaaResponse === "object" &&
+      ncaaResponse !== null
+    ) {
+      const response = ncaaResponse as Record<string, unknown>;
+      if (Array.isArray(response.conferences)) {
+        setAvailableConferences([
+          "All Teams",
+          ...(response.conferences as string[]),
+        ]);
       }
     }
   }, [ncaaResponse]);
@@ -98,26 +64,17 @@ export default function NCAATeamPage() {
     }
   };
 
-  // Get the actual data for rendering - ensure it matches NCAATeam[]
-  const ncaaData: NCAATeam[] | null = (() => {
-    if (!ncaaResponse) return null;
-
-    const response = ncaaResponse as unknown;
-
-    if (Array.isArray(response)) {
-      return response as NCAATeam[];
-    }
-
+  // Get data safely from unknown response
+  const ncaaData = (() => {
     if (
-      typeof response === "object" &&
-      response !== null &&
-      "data" in response
+      !ncaaResponse ||
+      typeof ncaaResponse !== "object" ||
+      ncaaResponse === null
     ) {
-      const dataResponse = response as NCAAResponseWithData;
-      return dataResponse.data || null;
+      return null;
     }
-
-    return null;
+    const response = ncaaResponse as Record<string, unknown>;
+    return Array.isArray(response.data) ? response.data : null;
   })();
 
   // Error state

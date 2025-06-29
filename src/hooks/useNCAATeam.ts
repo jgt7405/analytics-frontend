@@ -1,9 +1,9 @@
+// src/hooks/useNCAATeam.ts
 import { api } from "@/services/api";
-import { NCAATeamApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
 
 export const useNCAATeam = (conference: string) => {
-  return useQuery<NCAATeamApiResponse, Error>({
+  return useQuery({
     queryKey: ["ncaa-tourney", conference],
     queryFn: () => api.getNCAATourney(conference),
     enabled: !!conference,

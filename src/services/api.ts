@@ -52,17 +52,6 @@ interface ConfTourneyApiResponse {
   conferences: string[];
 }
 
-interface NCAATourneyApiResponse {
-  data: Array<{
-    team_name: string;
-    team_id: string;
-    logo_url: string;
-    ncaa_bid_pct: number;
-    seed_distribution: Record<string, number>;
-  }>;
-  conferences: string[];
-}
-
 interface SeedApiResponse {
   data: Array<{
     team_name: string;
@@ -340,7 +329,7 @@ class ApiClient {
     }));
   }
 
-  async getNCAATourney(conference: string): Promise<NCAATourneyApiResponse> {
+  async getNCAATourney(conference: string): Promise<unknown> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
@@ -355,7 +344,7 @@ class ApiClient {
 
     return this.request(`/ncaa_tourney/${formattedConf}`, (data) => ({
       success: true,
-      data: data as NCAATourneyApiResponse,
+      data: data as unknown,
       error: null,
     }));
   }
