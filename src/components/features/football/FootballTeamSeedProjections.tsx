@@ -239,24 +239,40 @@ export default function FootballTeamSeedProjections({
         }
       );
 
-      // Calculate individual status percentages
+      // Calculate status distribution as conditional probability: P(Status | X Wins)
+      // This should show: "If a team gets X wins, what's the probability of each status?"
       const inPlayoffsCount =
         rowData.rawCounts.statusDistribution["In Playoffs %"];
       const firstFourOutCount =
         rowData.rawCounts.statusDistribution["First Four Out"];
       const nextFourOutCount =
         rowData.rawCounts.statusDistribution["Next Four Out"];
+      const outOfPlayoffsCount =
+        rowData.rawCounts.statusDistribution["Out of Playoffs"];
 
-      rowData.statusDistribution["In Playoffs %"] =
-        rowData.total > 0 ? (inPlayoffsCount / rowData.total) * 100 : 0;
-      rowData.statusDistribution["First Four Out"] =
-        rowData.total > 0 ? (firstFourOutCount / rowData.total) * 100 : 0;
-      rowData.statusDistribution["Next Four Out"] =
-        rowData.total > 0 ? (nextFourOutCount / rowData.total) * 100 : 0;
+      // Total scenarios at this specific win level
+      const totalScenariosAtThisWinLevel =
+        inPlayoffsCount +
+        firstFourOutCount +
+        nextFourOutCount +
+        outOfPlayoffsCount;
 
-      // "Out of Playoffs" = 100% - "In Playoffs %" (includes FFO + NFO + other scenarios)
-      rowData.statusDistribution["Out of Playoffs"] =
-        100 - rowData.statusDistribution["In Playoffs %"];
+      if (totalScenariosAtThisWinLevel > 0) {
+        rowData.statusDistribution["In Playoffs %"] =
+          (inPlayoffsCount / totalScenariosAtThisWinLevel) * 100;
+        rowData.statusDistribution["First Four Out"] =
+          (firstFourOutCount / totalScenariosAtThisWinLevel) * 100;
+        rowData.statusDistribution["Next Four Out"] =
+          (nextFourOutCount / totalScenariosAtThisWinLevel) * 100;
+        rowData.statusDistribution["Out of Playoffs"] =
+          (outOfPlayoffsCount / totalScenariosAtThisWinLevel) * 100;
+      } else {
+        // Default to 0% if no scenarios
+        rowData.statusDistribution["In Playoffs %"] = 0;
+        rowData.statusDistribution["First Four Out"] = 0;
+        rowData.statusDistribution["Next Four Out"] = 0;
+        rowData.statusDistribution["Out of Playoffs"] = 0;
+      }
     });
 
     // Calculate total row
