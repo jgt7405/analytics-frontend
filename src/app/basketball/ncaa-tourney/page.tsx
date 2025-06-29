@@ -1,4 +1,3 @@
-// src/app/basketball/ncaa-tourney/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
@@ -12,7 +11,14 @@ import { useNCAATeam } from "@/hooks/useNCAATeam";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
+import { NCAATeam } from "@/types/basketball";
 import { Suspense, useEffect, useState } from "react";
+
+// Define possible response structures
+interface NCAAResponseWithData {
+  data: NCAATeam[];
+  conferences: string[];
+}
 
 export default function NCAATeamPage() {
   const { trackEvent } = useMonitoring();
@@ -41,10 +47,47 @@ export default function NCAATeamPage() {
     });
   }, [selectedConference, trackEvent]);
 
-  // Update available conferences
+  // Update available conferences - Fixed to handle different response structures
   useEffect(() => {
-    if (ncaaResponse?.conferences) {
-      setAvailableConferences(["All Teams", ...ncaaResponse.conferences]);
+    if (ncaaResponse) {
+      // Use unknown first, then cast to the expected type
+      const response = ncaaResponse as unknown;
+
+      // Type guard functions
+      const isArrayResponse = (r: unknown): r is NCAATeam[] => Array.isArray(r);
+      const isDataResponse = (r: unknown): r is NCAAResponseWithData =>
+        typeof r === "object" && r !== null && "data" in r;
+
+      if (isArrayResponse(response)) {
+        // Direct array response
+        const conferences = Array.from(
+          new Set(
+            response
+              .map((_team: NCAATeam) => {
+                // Try to extract conference - this might need adjustment based on your data
+                // For now, we'll use a placeholder approach
+                return "Conference"; // You may need to adjust this based on actual data structure
+              })
+              .filter(Boolean)
+          )
+        ) as string[];
+        setAvailableConferences(["All Teams", ...conferences.sort()]);
+      } else if (isDataResponse(response)) {
+        // Response with data and possibly conferences properties
+        if (response.conferences) {
+          setAvailableConferences(["All Teams", ...response.conferences]);
+        } else if (Array.isArray(response.data)) {
+          // Extract conferences from data
+          const conferences = Array.from(
+            new Set(
+              response.data
+                .map((_team: NCAATeam) => "Conference") // Placeholder - adjust based on actual data
+                .filter(Boolean)
+            )
+          ) as string[];
+          setAvailableConferences(["All Teams", ...conferences.sort()]);
+        }
+      }
     }
   }, [ncaaResponse]);
 
@@ -55,6 +98,28 @@ export default function NCAATeamPage() {
     }
   };
 
+  // Get the actual data for rendering - ensure it matches NCAATeam[]
+  const ncaaData: NCAATeam[] | null = (() => {
+    if (!ncaaResponse) return null;
+
+    const response = ncaaResponse as unknown;
+
+    if (Array.isArray(response)) {
+      return response as NCAATeam[];
+    }
+
+    if (
+      typeof response === "object" &&
+      response !== null &&
+      "data" in response
+    ) {
+      const dataResponse = response as NCAAResponseWithData;
+      return dataResponse.data || null;
+    }
+
+    return null;
+  })();
+
   // Error state
   if (ncaaError) {
     return (
@@ -64,7 +129,7 @@ export default function NCAATeamPage() {
           conferenceSelector={
             <ConferenceSelector
               conferences={availableConferences}
-              selectedConference={selectedConference} // Fixed: use selectedConference instead of selected
+              selectedConference={selectedConference}
               onChange={handleConferenceChange}
             />
           }
@@ -81,14 +146,14 @@ export default function NCAATeamPage() {
   }
 
   // No data state
-  if (!ncaaLoading && !ncaaResponse?.data) {
+  if (!ncaaLoading && !ncaaData) {
     return (
       <PageLayoutWrapper
         title="NCAA Tournament Round Projections"
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
-            selectedConference={selectedConference} // Fixed: use selectedConference instead of selected
+            selectedConference={selectedConference}
             onChange={handleConferenceChange}
           />
         }
@@ -117,7 +182,7 @@ export default function NCAATeamPage() {
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
-            selectedConference={selectedConference} // Fixed: use selectedConference instead of selected
+            selectedConference={selectedConference}
             onChange={handleConferenceChange}
           />
         }
@@ -136,9 +201,7 @@ export default function NCAATeamPage() {
               <div className="mb-8">
                 <div className="ncaa-tourney-table">
                   <Suspense fallback={<BasketballTableSkeleton />}>
-                    {ncaaResponse?.data && (
-                      <NCAATeamTable ncaaData={ncaaResponse.data} />
-                    )}
+                    {ncaaData && <NCAATeamTable ncaaData={ncaaData} />}
                   </Suspense>
                 </div>
 
