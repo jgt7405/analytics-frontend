@@ -240,35 +240,31 @@ export default function FootballTeamSeedProjections({
         }
       );
 
-      // Calculate status distribution as conditional probability: P(Status | X Wins)
-      // This should show: "If a team gets X wins, what's the probability of each status?"
+      // For status distribution: calculate conditional probability P(Status | X Wins)
       const inPlayoffsCount =
         rowData.rawCounts.statusDistribution["In Playoffs %"];
       const firstFourOutCount =
         rowData.rawCounts.statusDistribution["First Four Out"];
       const nextFourOutCount =
         rowData.rawCounts.statusDistribution["Next Four Out"];
-      const outOfPlayoffsCount =
+      const outOfPlayoffsRawCount =
         rowData.rawCounts.statusDistribution["Out of Playoffs"];
 
-      // Total scenarios at this specific win level
-      const totalScenariosAtThisWinLevel =
-        inPlayoffsCount +
-        firstFourOutCount +
-        nextFourOutCount +
-        outOfPlayoffsCount;
+      // For "In Playoffs %" - this is when they have ANY seed (numeric seed)
+      // For "Out of Playoffs %" - this includes FFO, NFO, and true out of playoffs
+      const totalOutOfPlayoffs =
+        firstFourOutCount + nextFourOutCount + outOfPlayoffsRawCount;
 
-      if (totalScenariosAtThisWinLevel > 0) {
+      if (rowData.total > 0) {
         rowData.statusDistribution["In Playoffs %"] =
-          (inPlayoffsCount / totalScenariosAtThisWinLevel) * 100;
+          (inPlayoffsCount / rowData.total) * 100;
         rowData.statusDistribution["First Four Out"] =
-          (firstFourOutCount / totalScenariosAtThisWinLevel) * 100;
+          (firstFourOutCount / rowData.total) * 100;
         rowData.statusDistribution["Next Four Out"] =
-          (nextFourOutCount / totalScenariosAtThisWinLevel) * 100;
+          (nextFourOutCount / rowData.total) * 100;
         rowData.statusDistribution["Out of Playoffs"] =
-          (outOfPlayoffsCount / totalScenariosAtThisWinLevel) * 100;
+          (totalOutOfPlayoffs / rowData.total) * 100;
       } else {
-        // Default to 0% if no scenarios
         rowData.statusDistribution["In Playoffs %"] = 0;
         rowData.statusDistribution["First Four Out"] = 0;
         rowData.statusDistribution["Next Four Out"] = 0;
