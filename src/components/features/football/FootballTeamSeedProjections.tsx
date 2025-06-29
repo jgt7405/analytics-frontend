@@ -210,7 +210,7 @@ export default function FootballTeamSeedProjections({
           (winData[winsValue].rawCounts.seedDistribution[seedKey] || 0) + count;
       }
 
-      // Handle status distribution
+      // Handle status distribution - map all statuses correctly
       if (status === "In Playoffs") {
         winData[winsValue].rawCounts.statusDistribution["In Playoffs %"] +=
           count;
@@ -221,6 +221,7 @@ export default function FootballTeamSeedProjections({
         winData[winsValue].rawCounts.statusDistribution["Next Four Out"] +=
           count;
       } else {
+        // Map "Out of Playoffs" and any other status to "Out of Playoffs"
         winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
           count;
       }
