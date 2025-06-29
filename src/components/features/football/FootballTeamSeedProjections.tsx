@@ -199,31 +199,32 @@ export default function FootballTeamSeedProjections({
 
       winData[winsValue].total += count;
 
-      // Handle seed distribution
-      if (
-        entry.Seed &&
-        !isNaN(parseInt(entry.Seed.toString())) &&
-        status === "In Playoffs"
-      ) {
+      // Handle seed distribution (only for numeric seeds)
+      if (entry.Seed && !isNaN(parseInt(entry.Seed.toString()))) {
         const seedKey = entry.Seed.toString();
         winData[winsValue].rawCounts.seedDistribution[seedKey] =
           (winData[winsValue].rawCounts.seedDistribution[seedKey] || 0) + count;
-      }
 
-      // Handle status distribution - map all statuses correctly
-      if (status === "In Playoffs") {
+        // If they have a numeric seed, they are "In Playoffs"
         winData[winsValue].rawCounts.statusDistribution["In Playoffs %"] +=
           count;
-      } else if (status === "First Four Out") {
-        winData[winsValue].rawCounts.statusDistribution["First Four Out"] +=
-          count;
-      } else if (status === "Next Four Out") {
-        winData[winsValue].rawCounts.statusDistribution["Next Four Out"] +=
-          count;
       } else {
-        // Map "Out of Playoffs" and any other status to "Out of Playoffs"
-        winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
-          count;
+        // Handle status distribution for non-seeded scenarios
+        if (status === "First Four Out") {
+          winData[winsValue].rawCounts.statusDistribution["First Four Out"] +=
+            count;
+          winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
+            count;
+        } else if (status === "Next Four Out") {
+          winData[winsValue].rawCounts.statusDistribution["Next Four Out"] +=
+            count;
+          winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
+            count;
+        } else {
+          // True "Out of Playoffs" scenarios
+          winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
+            count;
+        }
       }
     });
 
@@ -240,20 +241,15 @@ export default function FootballTeamSeedProjections({
         }
       );
 
-      // For status distribution: calculate conditional probability P(Status | X Wins)
+      // Calculate status distribution percentages based on row total
       const inPlayoffsCount =
         rowData.rawCounts.statusDistribution["In Playoffs %"];
       const firstFourOutCount =
         rowData.rawCounts.statusDistribution["First Four Out"];
       const nextFourOutCount =
         rowData.rawCounts.statusDistribution["Next Four Out"];
-      const outOfPlayoffsRawCount =
+      const outOfPlayoffsCount =
         rowData.rawCounts.statusDistribution["Out of Playoffs"];
-
-      // For "In Playoffs %" - this is when they have ANY seed (numeric seed)
-      // For "Out of Playoffs %" - this includes FFO, NFO, and true out of playoffs
-      const totalOutOfPlayoffs =
-        firstFourOutCount + nextFourOutCount + outOfPlayoffsRawCount;
 
       if (rowData.total > 0) {
         rowData.statusDistribution["In Playoffs %"] =
@@ -263,7 +259,7 @@ export default function FootballTeamSeedProjections({
         rowData.statusDistribution["Next Four Out"] =
           (nextFourOutCount / rowData.total) * 100;
         rowData.statusDistribution["Out of Playoffs"] =
-          (totalOutOfPlayoffs / rowData.total) * 100;
+          (outOfPlayoffsCount / rowData.total) * 100;
       } else {
         rowData.statusDistribution["In Playoffs %"] = 0;
         rowData.statusDistribution["First Four Out"] = 0;
@@ -335,6 +331,8 @@ export default function FootballTeamSeedProjections({
       totalRow.rawCounts.statusDistribution["First Four Out"];
     const totalNextFourOut =
       totalRow.rawCounts.statusDistribution["Next Four Out"];
+    const totalOutOfPlayoffs =
+      totalRow.rawCounts.statusDistribution["Out of Playoffs"];
 
     totalRow.statusDistribution["In Playoffs %"] =
       grandTotal > 0 ? (totalInPlayoffs / grandTotal) * 100 : 0;
@@ -343,7 +341,7 @@ export default function FootballTeamSeedProjections({
     totalRow.statusDistribution["Next Four Out"] =
       grandTotal > 0 ? (totalNextFourOut / grandTotal) * 100 : 0;
     totalRow.statusDistribution["Out of Playoffs"] =
-      100 - totalRow.statusDistribution["In Playoffs %"];
+      grandTotal > 0 ? (totalOutOfPlayoffs / grandTotal) * 100 : 0;
 
     return { winData, winTotals, seeds, totalRow, hasNumericSeeds, grandTotal };
   };
