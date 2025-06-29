@@ -199,17 +199,18 @@ export default function FootballTeamSeedProjections({
 
       winData[winsValue].total += count;
 
-      // Handle seed distribution (only for numeric seeds)
+      // Handle seed distribution and determine playoff status
       if (entry.Seed && !isNaN(parseInt(entry.Seed.toString()))) {
+        // This scenario has a numeric seed
         const seedKey = entry.Seed.toString();
         winData[winsValue].rawCounts.seedDistribution[seedKey] =
           (winData[winsValue].rawCounts.seedDistribution[seedKey] || 0) + count;
 
-        // If they have a numeric seed, they are "In Playoffs"
+        // ANY scenario with a numeric seed counts as "In Playoffs" regardless of status
         winData[winsValue].rawCounts.statusDistribution["In Playoffs %"] +=
           count;
       } else {
-        // Handle status distribution for non-seeded scenarios
+        // No numeric seed - handle based on status
         if (status === "First Four Out") {
           winData[winsValue].rawCounts.statusDistribution["First Four Out"] +=
             count;
@@ -221,7 +222,7 @@ export default function FootballTeamSeedProjections({
           winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
             count;
         } else {
-          // True "Out of Playoffs" scenarios
+          // True "Out of Playoffs" scenarios (includes any other status)
           winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
             count;
         }
