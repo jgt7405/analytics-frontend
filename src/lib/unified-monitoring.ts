@@ -7,15 +7,24 @@ interface PerformanceMetric {
 
 interface MonitoringEvent {
   name: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   timestamp: number;
 }
 
-interface PerformanceAlert {
-  type: "slow_operation" | "memory_leak" | "repeated_slow";
-  message: string;
-  timestamp: number;
-  severity: "low" | "medium" | "high";
+// Define gtag function type
+interface GtagFunction {
+  (
+    command: string,
+    eventName: string,
+    properties?: Record<string, unknown>
+  ): void;
+}
+
+// Extend Window interface to include gtag
+declare global {
+  interface Window {
+    gtag?: GtagFunction;
+  }
 }
 
 class UnifiedMonitoringService {
@@ -76,41 +85,40 @@ class UnifiedMonitoringService {
       timestamp: Date.now(),
     });
 
-    if (
-      this.isProduction &&
-      typeof window !== "undefined" &&
-      (window as any).gtag
-    ) {
-      (window as any).gtag("event", event.name, event.properties);
+    if (this.isProduction && typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", event.name, {
+        ...event.properties,
+        event_category: "engagement",
+        event_label: event.properties?.page || "unknown",
+      });
     }
 
-    // ✅ FIXED: Only log important events in development, not all events
+    // Only log important events in development, not all events
     if (this.isDevelopment && this.shouldLogEvent(event.name)) {
       console.log("📊 Event tracked:", event.name, event.properties);
     }
   }
 
-  // ✅ NEW: Filter which events to log in development
+  // Filter which events to log in development
   private shouldLogEvent(eventName: string): boolean {
-    const importantEvents = [
-      "error_occurred",
-      "data_load_error",
-    ];
+    const importantEvents = ["error_occurred", "data_load_error"];
     return importantEvents.includes(eventName);
   }
 
-  trackError(error: Error, context?: Record<string, any>): void {
-    this.trackEvent({
+  trackError(error: Error, context?: Record<string, unknown>): void {
+    const errorEvent = {
       name: "error_occurred",
       properties: {
         message: error.message,
         stack: error.stack,
         ...context,
       },
-    });
+    };
+
+    this.trackEvent(errorEvent);
 
     if (this.isDevelopment) {
-      console.error("❌ Error tracked:", error, context);
+      console.error("🚨 Error tracked:", error, context);
     }
   }
 
@@ -127,14 +135,13 @@ class UnifiedMonitoringService {
         method,
         duration,
         status,
-        success: status >= 200 && status < 300,
+        success: status < 400,
       },
     });
 
-    // ✅ FIXED: Only log slow API calls in development
-    if (this.isDevelopment && duration > 1000) {
+    if (this.isDevelopment && (duration > 2000 || status >= 400)) {
       console.warn(
-        `🐌 Slow API call: ${endpoint} took ${duration.toFixed(2)}ms`
+        `🐌 Slow/failed API call: ${method} ${endpoint} - ${duration}ms - ${status}`
       );
     }
   }
@@ -143,42 +150,64 @@ class UnifiedMonitoringService {
     return [...this.metrics];
   }
 
-  getRecentAlerts(minutes: number = 10): PerformanceAlert[] {
-    if (!this.isDevelopment) return [];
-
-    const cutoff = Date.now() - minutes * 60 * 1000;
-    const recentMetrics = this.metrics.filter((m) => m.timestamp > cutoff);
-
-    return recentMetrics
-      .filter((m) => m.duration > 200)
-      .map((m) => ({
-        type: "slow_operation" as const,
-        message: `Slow operation: ${m.name} took ${m.duration.toFixed(2)}ms`,
-        timestamp: m.timestamp,
-        severity: m.duration > 500 ? ("high" as const) : ("medium" as const),
-      }));
-  }
-
-  clearAlerts(): void {
-    this.cleanOldMetrics();
+  getEvents(): MonitoringEvent[] {
+    return [...this.events];
   }
 
   clearMetrics(): void {
     this.metrics = [];
+    this.events = [];
   }
 
-  getSummary() {
+  getAverageMetric(name: string): number {
+    const matching = this.metrics.filter((m) => m.name === name);
+    if (matching.length === 0) return 0;
+    return matching.reduce((sum, m) => sum + m.duration, 0) / matching.length;
+  }
+
+  getSlowOperations(threshold = 1000): PerformanceMetric[] {
+    return this.metrics.filter((m) => m.duration > threshold);
+  }
+
+  // ADD THIS MISSING FUNCTION:
+  getRecentAlerts(limit = 5): MonitoringEvent[] {
+    return this.events
+      .filter(
+        (e) => e.name === "error_occurred" || e.name === "data_load_error"
+      )
+      .slice(-limit);
+  }
+
+  generatePerformanceReport(): {
+    totalMetrics: number;
+    averageLoadTime: number;
+    slowOperations: PerformanceMetric[];
+    recentErrors: MonitoringEvent[];
+  } {
+    const loadTimeMetrics = this.metrics.filter((m) => m.name.includes("load"));
+    const averageLoadTime =
+      loadTimeMetrics.length > 0
+        ? loadTimeMetrics.reduce((sum, m) => sum + m.duration, 0) /
+          loadTimeMetrics.length
+        : 0;
+
+    const recentErrors = this.events
+      .filter((e) => e.name === "error_occurred")
+      .slice(-10);
+
     return {
-      totalEvents: this.events.length,
       totalMetrics: this.metrics.length,
-      recentEvents: this.events.slice(-10),
-      recentMetrics: this.metrics.slice(-10),
+      averageLoadTime,
+      slowOperations: this.getSlowOperations(),
+      recentErrors,
     };
   }
 }
 
+// Create singleton instance
 export const monitoring = new UnifiedMonitoringService();
 
+// React hook for easy access
 export function useMonitoring() {
   return {
     startMeasurement: monitoring.startMeasurement.bind(monitoring),
@@ -187,8 +216,32 @@ export function useMonitoring() {
     trackError: monitoring.trackError.bind(monitoring),
     trackApiCall: monitoring.trackApiCall.bind(monitoring),
     getMetrics: monitoring.getMetrics.bind(monitoring),
-    getRecentAlerts: monitoring.getRecentAlerts.bind(monitoring),
-    clearAlerts: monitoring.clearAlerts.bind(monitoring),
+    getEvents: monitoring.getEvents.bind(monitoring),
     clearMetrics: monitoring.clearMetrics.bind(monitoring),
+    getAverageMetric: monitoring.getAverageMetric.bind(monitoring),
+    getSlowOperations: monitoring.getSlowOperations.bind(monitoring),
+    getRecentAlerts: monitoring.getRecentAlerts.bind(monitoring), // ADD THIS LINE
+    generatePerformanceReport:
+      monitoring.generatePerformanceReport.bind(monitoring),
   };
+}
+
+// Global error handler setup
+if (typeof window !== "undefined") {
+  window.addEventListener("error", (event) => {
+    monitoring.trackError(new Error(event.message), {
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    });
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    monitoring.trackError(
+      new Error(event.reason?.message || "Unhandled promise rejection"),
+      {
+        reason: event.reason,
+      }
+    );
+  });
 }

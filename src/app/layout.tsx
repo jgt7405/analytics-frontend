@@ -1,3 +1,4 @@
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import PerformancePanel from "@/components/debug/PerformancePanel";
 import Header from "@/components/layout/Header";
 import { Providers } from "@/components/providers/Providers";
@@ -67,6 +68,7 @@ export default function RootLayout({
         {/* ✅ REMOVED: Don't preload logo here since it's already priority in Header component */}
       </head>
       <body className={`min-h-screen bg-gray-50 ${robotoCondensed.className}`}>
+        <GoogleAnalytics />
         <ChunkErrorHandler />
         <Providers>
           <div className="main-content">
