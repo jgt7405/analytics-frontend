@@ -38,10 +38,7 @@ export const baseMetadata: Metadata = {
     },
   },
   verification: {
-    google: [
-      process.env.GOOGLE_VERIFICATION_ID,
-      process.env.GOOGLE_SEARCH_CONSOLE_VERIFICATION,
-    ].filter(Boolean) as string[],
+    google: "dbd5b81c9ddee8dd",
   },
   alternates: {
     canonical: "/",
