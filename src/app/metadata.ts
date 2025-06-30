@@ -37,9 +37,6 @@ export const baseMetadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "dbd5b81c9ddee8dd",
-  },
   alternates: {
     canonical: "/",
   },
