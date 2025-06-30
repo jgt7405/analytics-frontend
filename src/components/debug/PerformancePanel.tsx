@@ -10,11 +10,13 @@ interface PerformanceMetric {
   timestamp: number;
 }
 
-interface PerformanceAlert {
-  type: string;
-  message: string;
+// Define a union type that covers both possible structures
+interface AlertEvent {
+  name?: string;
+  message?: string;
   timestamp: number;
-  severity: string;
+  severity?: string;
+  properties?: Record<string, unknown>;
 }
 
 export default function PerformancePanel() {
@@ -122,7 +124,7 @@ export default function PerformancePanel() {
             <div className="mb-4">
               <h4 className="font-medium text-red-600 mb-2">Recent Alerts</h4>
               <div className="space-y-1 max-h-32 overflow-y-auto">
-                {recentAlerts.map((alert: PerformanceAlert, index: number) => (
+                {recentAlerts.map((alert: AlertEvent, index: number) => (
                   <div
                     key={index}
                     className={`text-xs p-2 rounded ${
@@ -130,10 +132,10 @@ export default function PerformancePanel() {
                         ? "bg-red-100 text-red-800"
                         : alert.severity === "medium"
                           ? "bg-yellow-100 text-yellow-800"
-                          : "bg-blue-100 text-blue-800"
+                          : "bg-red-100 text-red-800"
                     }`}
                   >
-                    {alert.message}
+                    {alert.message || alert.name || "Performance alert"}
                   </div>
                 ))}
               </div>
