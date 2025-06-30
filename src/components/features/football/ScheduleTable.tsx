@@ -8,11 +8,21 @@ import { FootballScheduleData } from "@/types/football";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
 
+// Define proper types for the summary data
+interface FootballScheduleSummary {
+  total_games: number;
+  expected_wins: number;
+  top_quartile: number;
+  second_quartile: number;
+  third_quartile: number;
+  bottom_quartile: number;
+}
+
 interface FootballScheduleTableProps {
   scheduleData: FootballScheduleData[];
   teams: string[];
   teamLogos: Record<string, string>;
-  summary: Record<string, any>;
+  summary: Record<string, FootballScheduleSummary>;
   className?: string;
   renderMainTable?: boolean;
   renderSummaryTable?: boolean;
@@ -50,7 +60,7 @@ function FootballScheduleTable({
     }
   }, []);
 
-  const formatCellValue = useCallback((value: any): string => {
+  const formatCellValue = useCallback((value: unknown): string => {
     if (value === null || value === undefined || value === "-") return "";
     if (typeof value === "object") return "";
     return String(value).trim();
@@ -58,7 +68,7 @@ function FootballScheduleTable({
 
   // ✅ MOVED: Define getCellValue BEFORE it's used in useMemo
   const getCellValue = useCallback(
-    (row: FootballScheduleData, team: string): any => {
+    (row: FootballScheduleData, team: string): unknown => {
       if (!row.games) return undefined;
 
       if (typeof row.games === "string") {
@@ -71,7 +81,7 @@ function FootballScheduleTable({
       }
 
       if (typeof row.games === "object") {
-        return (row.games as Record<string, any>)[team];
+        return (row.games as Record<string, unknown>)[team];
       }
 
       return undefined;
@@ -79,14 +89,27 @@ function FootballScheduleTable({
     []
   );
 
-  // ✅ NOW: Calculate next games for each team (after getCellValue is defined)
+  // ✅ NEW: Filter out rows that have no games for any team
+  const filteredScheduleData = useMemo(() => {
+    return scheduleData.filter((row) => {
+      // Check if any team has a game in this row
+      return teams.some((team) => {
+        const cellValue = getCellValue(row, team);
+        const formattedValue = formatCellValue(cellValue);
+        // Row has games if any team has a non-empty value
+        return formattedValue !== "";
+      });
+    });
+  }, [scheduleData, teams, getCellValue, formatCellValue]);
+
+  // ✅ UPDATED: Calculate next games for each team using filtered data
   const nextGamesForTeams = useMemo(() => {
     const nextGames: Record<string, { date: string; rowIndex: number } | null> =
       {};
 
     teams.forEach((team) => {
-      // Get all future games for this team
-      const futureGames = scheduleData
+      // Get all future games for this team using filtered data
+      const futureGames = filteredScheduleData
         .map((row, idx) => {
           const cellValue = getCellValue(row, team);
           return {
@@ -95,8 +118,8 @@ function FootballScheduleTable({
           };
         })
         .filter(
-          (game) =>
-            game.date &&
+          (game): game is { date: string; rowIndex: number } =>
+            game.date != null &&
             typeof game.date === "string" &&
             /^\d{1,2}\/\d{1,2}$/.test(game.date) &&
             game.date !== "-"
@@ -118,7 +141,7 @@ function FootballScheduleTable({
     });
 
     return nextGames;
-  }, [scheduleData, teams, getCellValue]); // ✅ Add getCellValue to dependencies
+  }, [filteredScheduleData, teams, getCellValue]); // ✅ Updated dependencies
 
   // ✅ UPDATED: Improved cell styling with next game logic
   const getCellStyle = useCallback(
@@ -152,10 +175,14 @@ function FootballScheduleTable({
     (value: number, type: string) => {
       if (type === "expected_wins") {
         const maxExpectedWins = Math.max(
-          ...Object.values(summary).map((team: any) => team.expected_wins || 0)
+          ...Object.values(summary).map(
+            (team: FootballScheduleSummary) => team.expected_wins || 0
+          )
         );
         const minExpectedWins = Math.min(
-          ...Object.values(summary).map((team: any) => team.expected_wins || 0)
+          ...Object.values(summary).map(
+            (team: FootballScheduleSummary) => team.expected_wins || 0
+          )
         );
         const normalizedValue =
           (value - minExpectedWins) / (maxExpectedWins - minExpectedWins);
@@ -171,7 +198,7 @@ function FootballScheduleTable({
         return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
       } else if (type === "quartile") {
         const maxQuartile = Math.max(
-          ...Object.values(summary).flatMap((team: any) =>
+          ...Object.values(summary).flatMap((team: FootballScheduleSummary) =>
             [
               team.top_quartile,
               team.second_quartile,
@@ -351,7 +378,8 @@ function FootballScheduleTable({
               </thead>
 
               <tbody>
-                {scheduleData.map((row, index) => (
+                {/* ✅ UPDATED: Use filteredScheduleData instead of scheduleData */}
+                {filteredScheduleData.map((row, index) => (
                   <tr key={index}>
                     <td
                       className={`sticky left-0 z-20 text-center ${isMobile ? "text-xs" : "text-sm"}`}
@@ -553,70 +581,73 @@ function FootballScheduleTable({
                     </tr>
 
                     {/* Quartile rows */}
-                    {["top", "second", "third", "bottom"].map((quartile) => (
-                      <tr key={quartile} className="bg-gray-50">
-                        <td
-                          colSpan={3}
-                          className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                          style={{
-                            width:
-                              firstColWidth +
-                              opponentColWidth +
-                              winProbColWidth,
-                            minWidth:
-                              firstColWidth +
-                              opponentColWidth +
-                              winProbColWidth,
-                            maxWidth:
-                              firstColWidth +
-                              opponentColWidth +
-                              winProbColWidth,
-                            height: summaryRowHeight,
-                            position: "sticky",
-                            left: 0,
-                            border: "1px solid #e5e7eb",
-                            borderTop: "none",
-                            borderRight: "2px solid #d1d5db",
-                          }}
-                        >
-                          {quartile === "top"
-                            ? "Top Quartile"
-                            : quartile === "second"
-                              ? "Second Quartile"
-                              : quartile === "third"
-                                ? "Third Quartile"
-                                : "Bottom Quartile"}
-                        </td>
-                        {teams.map((team) => (
+                    {(["top", "second", "third", "bottom"] as const).map(
+                      (quartile) => (
+                        <tr key={quartile} className="bg-gray-50">
                           <td
-                            key={`${team}-${quartile}-quartile`}
-                            className="bg-gray-50 text-center relative p-0"
+                            colSpan={3}
+                            className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                             style={{
+                              width:
+                                firstColWidth +
+                                opponentColWidth +
+                                winProbColWidth,
+                              minWidth:
+                                firstColWidth +
+                                opponentColWidth +
+                                winProbColWidth,
+                              maxWidth:
+                                firstColWidth +
+                                opponentColWidth +
+                                winProbColWidth,
                               height: summaryRowHeight,
-                              width: teamColWidth,
-                              minWidth: teamColWidth,
-                              maxWidth: teamColWidth,
+                              position: "sticky",
+                              left: 0,
                               border: "1px solid #e5e7eb",
                               borderTop: "none",
-                              borderLeft: "none",
+                              borderRight: "2px solid #d1d5db",
                             }}
                           >
-                            <div
-                              className={`absolute inset-0 flex items-center justify-center`}
+                            {quartile === "top"
+                              ? "Top Quartile"
+                              : quartile === "second"
+                                ? "Second Quartile"
+                                : quartile === "third"
+                                  ? "Third Quartile"
+                                  : "Bottom Quartile"}
+                          </td>
+                          {teams.map((team) => (
+                            <td
+                              key={`${team}-${quartile}-quartile`}
+                              className="bg-gray-50 text-center relative p-0"
                               style={{
-                                ...getSummaryColor(
-                                  summary[team]?.[`${quartile}_quartile`] || 0,
-                                  "quartile"
-                                ),
-                                fontSize: isMobile ? "12px" : "14px",
+                                height: summaryRowHeight,
+                                width: teamColWidth,
+                                minWidth: teamColWidth,
+                                maxWidth: teamColWidth,
+                                border: "1px solid #e5e7eb",
+                                borderTop: "none",
+                                borderLeft: "none",
                               }}
                             >
-                              {summary[team]?.[`${quartile}_quartile`] || 0}
-                            </div>
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                              <div
+                                className={`absolute inset-0 flex items-center justify-center`}
+                                style={{
+                                  ...getSummaryColor(
+                                    summary[team]?.[`${quartile}_quartile`] ||
+                                      0,
+                                    "quartile"
+                                  ),
+                                  fontSize: isMobile ? "12px" : "14px",
+                                }}
+                              >
+                                {summary[team]?.[`${quartile}_quartile`] || 0}
+                              </div>
+                            </td>
+                          ))}
+                        </tr>
+                      )
+                    )}
                   </>
                 )}
               </tbody>
@@ -781,7 +812,8 @@ function FootballScheduleTable({
                 {Object.entries(summary)
                   .sort(
                     ([, a], [, b]) =>
-                      (b as any).expected_wins - (a as any).expected_wins
+                      (b as FootballScheduleSummary).expected_wins -
+                      (a as FootballScheduleSummary).expected_wins
                   )
                   .map(([team, data]) => (
                     <tr key={team}>
@@ -826,11 +858,11 @@ function FootballScheduleTable({
                         <div
                           className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
                           style={getSummaryColor(
-                            (data as any).expected_wins,
+                            (data as FootballScheduleSummary).expected_wins,
                             "expected_wins"
                           )}
                         >
-                          {(data as any).expected_wins}
+                          {(data as FootballScheduleSummary).expected_wins}
                         </div>
                       </td>
                       <td
@@ -849,15 +881,17 @@ function FootballScheduleTable({
                         <div
                           className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
                         >
-                          {(data as any).total_games}
+                          {(data as FootballScheduleSummary).total_games}
                         </div>
                       </td>
-                      {[
-                        "top_quartile",
-                        "second_quartile",
-                        "third_quartile",
-                        "bottom_quartile",
-                      ].map((quartileKey) => (
+                      {(
+                        [
+                          "top_quartile",
+                          "second_quartile",
+                          "third_quartile",
+                          "bottom_quartile",
+                        ] as const
+                      ).map((quartileKey) => (
                         <td
                           key={quartileKey}
                           className="relative p-0"
@@ -874,11 +908,11 @@ function FootballScheduleTable({
                           <div
                             className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
                             style={getSummaryColor(
-                              (data as any)[quartileKey],
+                              (data as FootballScheduleSummary)[quartileKey],
                               "quartile"
                             )}
                           >
-                            {(data as any)[quartileKey]}
+                            {(data as FootballScheduleSummary)[quartileKey]}
                           </div>
                         </td>
                       ))}
