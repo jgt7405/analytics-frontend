@@ -5,11 +5,11 @@ export const baseMetadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "https://jthom-analytics.vercel.app"
   ),
   title: {
-    default: "JThom Analytics - Sports analytics your eyes will like",
+    default: "JThom Analytics - Sports analytics your eyes will love",
     template: "%s | JThom Analytics",
   },
   description:
-    "Sports analytics your eyes will like. Advanced basketball and football analytics with projections, standings predictions, and conference win value analysis.",
+    "Sports analytics your eyes will love. Advanced basketball and football analytics with projections, standings predictions, and conference win value analysis.",
   keywords: [
     "basketball analytics",
     "football analytics",
@@ -38,7 +38,10 @@ export const baseMetadata: Metadata = {
     },
   },
   verification: {
-    google: process.env.GOOGLE_VERIFICATION_ID,
+    google: [
+      process.env.GOOGLE_VERIFICATION_ID,
+      process.env.GOOGLE_SEARCH_CONSOLE_VERIFICATION,
+    ].filter(Boolean) as string[],
   },
   alternates: {
     canonical: "/",
@@ -48,9 +51,9 @@ export const baseMetadata: Metadata = {
     locale: "en_US",
     url: "/",
     siteName: "JThom Analytics",
-    title: "JThom Analytics - Sports analytics your eyes will like",
+    title: "JThom Analytics - Sports analytics your eyes will love",
     description:
-      "Sports analytics your eyes will like. Advanced basketball and football analytics with projections.",
+      "Sports analytics your eyes will love. Advanced basketball and football analytics with projections.",
     images: [
       {
         url: "/og-image.png",
@@ -62,9 +65,9 @@ export const baseMetadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "JThom Analytics - Sports analytics your eyes will like",
+    title: "JThom Analytics - Sports analytics your eyes will love",
     description:
-      "Sports analytics your eyes will like. Advanced basketball and football analytics with projections.",
+      "Sports analytics your eyes will love. Advanced basketball and football analytics with projections.",
     images: ["/og-image.png"],
     creator: "@jthom_analytics",
   },
