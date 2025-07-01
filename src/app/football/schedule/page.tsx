@@ -31,13 +31,35 @@ export default function FootballSchedulePage() {
     refetch,
   } = useFootballSchedule(selectedConference);
 
-  // Filter for conference games only
+  // Filter for conference games only - FILTERING NOW ENABLED
   const filteredScheduleData = useMemo(() => {
-    if (!scheduleResponse?.data) return [];
+    if (!scheduleResponse?.data) {
+      console.log("No schedule data available");
+      return [];
+    }
 
-    return scheduleResponse.data.filter(
-      (game) => game.conf_game === "Y" || game.conf_game === true
+    console.log("=== FOOTBALL SCHEDULE DEBUG ===");
+    console.log("Total games:", scheduleResponse.data.length);
+    console.log("Sample game data (first game):", scheduleResponse.data[0]);
+    console.log(
+      "Available properties:",
+      Object.keys(scheduleResponse.data[0] || {})
     );
+    console.log("First 3 games:", scheduleResponse.data.slice(0, 3));
+    console.log("=== END DEBUG ===");
+
+    // NOW FILTER FOR CONFERENCE GAMES ONLY
+    const filtered = scheduleResponse.data.filter(
+      (game: any) => game.conf_game === "Y"
+    );
+
+    console.log("=== FILTERING RESULTS ===");
+    console.log("Games before filtering:", scheduleResponse.data.length);
+    console.log("Games after filtering:", filtered.length);
+    console.log("Sample filtered game:", filtered[0]);
+    console.log("=== END FILTERING ===");
+
+    return filtered;
   }, [scheduleResponse?.data]);
 
   // Track page load
@@ -142,8 +164,11 @@ export default function FootballSchedulePage() {
     );
   }
 
-  // No data state
-  if (!scheduleLoading && !scheduleResponse?.data) {
+  // No data state - Updated to check filtered data
+  if (
+    !scheduleLoading &&
+    (!scheduleResponse?.data || filteredScheduleData.length === 0)
+  ) {
     return (
       <PageLayoutWrapper
         title="Football Team Schedules"
@@ -161,7 +186,12 @@ export default function FootballSchedulePage() {
             No football schedule data available
           </div>
           <p className="text-gray-400 text-sm mb-6">
-            Try selecting a different conference or check back later.
+            {!scheduleResponse?.data
+              ? "No data received from server."
+              : `Found ${scheduleResponse.data.length} total games, but ${filteredScheduleData.length} conference games after filtering.`}
+          </p>
+          <p className="text-gray-400 text-xs mb-6">
+            Check the browser console for detailed debugging information.
           </p>
           <button
             onClick={() => refetch()}

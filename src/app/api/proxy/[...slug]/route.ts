@@ -38,6 +38,43 @@ export async function GET(
           );
       }
     }
+    // Handle 3-part football routes FIRST: /api/proxy/football/standings/Big_12
+    else if (slug.length === 3 && slug[0] === "football") {
+      const [, footballEndpoint, footballConference] = slug;
+
+      switch (footballEndpoint) {
+        case "standings":
+          backendPath = `/football/standings/${footballConference}`;
+          break;
+        case "cwv":
+          backendPath = `/football/cwv/${footballConference}`;
+          break;
+        case "schedule":
+          backendPath = `/football/schedule/${footballConference}`;
+          break;
+        case "twv":
+          backendPath = `/football/twv/${footballConference}`;
+          break;
+        case "conf-champ":
+        case "conf_champ":
+          backendPath = `/football/conf_champ/${footballConference}`;
+          break;
+        case "seed":
+          backendPath = `/football_seed/${footballConference}`;
+          break;
+        case "cfp":
+          backendPath = `/cfp/${footballConference}`;
+          break;
+        case "team":
+          backendPath = `/football_team/${footballConference}`;
+          break;
+        default:
+          return NextResponse.json(
+            { error: "Unknown football endpoint" },
+            { status: 404 }
+          );
+      }
+    }
     // Handle 2-part routes
     else if (slug.length === 2) {
       const [first, second] = slug;
@@ -123,43 +160,6 @@ export async function GET(
               { status: 404 }
             );
         }
-      }
-    }
-    // Handle 3-part football routes: /api/proxy/football/standings/Big_12
-    else if (slug.length === 3 && slug[0] === "football") {
-      const [, footballEndpoint, footballConference] = slug;
-
-      switch (footballEndpoint) {
-        case "standings":
-          backendPath = `/football/standings/${footballConference}`;
-          break;
-        case "cwv":
-          backendPath = `/football/cwv/${footballConference}`;
-          break;
-        case "schedule":
-          backendPath = `/football/schedule/${footballConference}`;
-          break;
-        case "twv":
-          backendPath = `/football/twv/${footballConference}`;
-          break;
-        case "conf-champ":
-        case "conf_champ":
-          backendPath = `/football/conf_champ/${footballConference}`;
-          break;
-        case "seed":
-          backendPath = `/football_seed/${footballConference}`;
-          break;
-        case "cfp":
-          backendPath = `/cfp/${footballConference}`;
-          break;
-        case "team":
-          backendPath = `/football_team/${footballConference}`;
-          break;
-        default:
-          return NextResponse.json(
-            { error: "Unknown football endpoint" },
-            { status: 404 }
-          );
       }
     } else {
       return NextResponse.json(
