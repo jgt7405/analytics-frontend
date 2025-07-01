@@ -11,7 +11,7 @@ import { useFootballSchedule } from "@/hooks/useFootballSchedule";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 export default function FootballSchedulePage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
@@ -30,6 +30,15 @@ export default function FootballSchedulePage() {
     error: scheduleError,
     refetch,
   } = useFootballSchedule(selectedConference);
+
+  // Filter for conference games only
+  const filteredScheduleData = useMemo(() => {
+    if (!scheduleResponse?.data) return [];
+
+    return scheduleResponse.data.filter(
+      (game) => game.conf_game === "Y" || game.conf_game === true
+    );
+  }, [scheduleResponse?.data]);
 
   // Track page load
   useEffect(() => {
@@ -232,7 +241,7 @@ export default function FootballSchedulePage() {
                           }
                         >
                           <FootballScheduleTable
-                            scheduleData={scheduleResponse.data}
+                            scheduleData={filteredScheduleData}
                             teams={scheduleResponse.teams}
                             teamLogos={scheduleResponse.team_logos}
                             summary={scheduleResponse.summary}
@@ -295,7 +304,7 @@ export default function FootballSchedulePage() {
                           }
                         >
                           <FootballScheduleTable
-                            scheduleData={scheduleResponse.data}
+                            scheduleData={filteredScheduleData}
                             teams={scheduleResponse.teams}
                             teamLogos={scheduleResponse.team_logos}
                             summary={scheduleResponse.summary}

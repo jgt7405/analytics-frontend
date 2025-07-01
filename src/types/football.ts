@@ -130,6 +130,7 @@ export interface FootballScheduleData {
   Win_Pct: string;
   Win_Pct_Raw: number;
   games: Record<string, string>;
+  conf_game: string | boolean;
 }
 
 export interface FootballScheduleResponse {
