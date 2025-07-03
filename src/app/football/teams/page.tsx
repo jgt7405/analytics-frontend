@@ -72,11 +72,7 @@ export default function FootballTeamsPage() {
         setLoading(true);
         setError(null);
 
-        const baseUrl =
-          process.env.NEXT_PUBLIC_API_URL ||
-          "https://analytics-backend-production.up.railway.app/api";
-
-        const response = await fetch(`${baseUrl}/football_teams`);
+        const response = await fetch(`/api/proxy/football_teams`);
 
         if (!response.ok) {
           throw new Error("Failed to load teams data");

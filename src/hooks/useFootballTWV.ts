@@ -8,9 +8,7 @@ const fetchFootballTWV = async (
   const encodedConference = encodeURIComponent(conference.replace(/\s+/g, "_"));
 
   // Call Railway backend directly (same as your basketball routes)
-  const response = await fetch(
-    `https://analytics-backend-production.up.railway.app/api/football/twv/${encodedConference}`
-  );
+  const response = await fetch(`/api/proxy/football/twv/${encodedConference}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch football TWV data");

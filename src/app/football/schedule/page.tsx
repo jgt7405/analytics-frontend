@@ -11,6 +11,7 @@ import { useFootballSchedule } from "@/hooks/useFootballSchedule";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
+import { FootballScheduleData } from "@/types/football"; // Fixed import
 import { Suspense, useEffect, useMemo, useState } from "react";
 
 export default function FootballSchedulePage() {
@@ -48,9 +49,9 @@ export default function FootballSchedulePage() {
     console.log("First 3 games:", scheduleResponse.data.slice(0, 3));
     console.log("=== END DEBUG ===");
 
-    // NOW FILTER FOR CONFERENCE GAMES ONLY
+    // NOW FILTER FOR CONFERENCE GAMES ONLY - Fixed type
     const filtered = scheduleResponse.data.filter(
-      (game: any) => game.conf_game === "Y"
+      (game: FootballScheduleData) => game.conf_game === "Y"
     );
 
     console.log("=== FILTERING RESULTS ===");

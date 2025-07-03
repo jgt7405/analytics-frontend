@@ -50,7 +50,8 @@ export async function GET(
           backendPath = `/football/cwv/${footballConference}`;
           break;
         case "schedule":
-          backendPath = `/football/schedule/${footballConference}`;
+        case "conf_schedule": // Added this mapping
+          backendPath = `/football/conf_schedule/${footballConference}`;
           break;
         case "twv":
           backendPath = `/football/twv/${footballConference}`;

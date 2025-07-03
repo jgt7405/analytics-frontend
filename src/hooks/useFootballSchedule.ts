@@ -5,10 +5,7 @@ const fetchFootballSchedule = async (
   conference: string
 ): Promise<FootballScheduleResponse> => {
   // Use your Railway backend URL
-  const backendUrl = "https://analytics-backend-production.up.railway.app";
-  const response = await fetch(
-    `${backendUrl}/api/football/conf_schedule/${conference}`
-  );
+  const response = await fetch(`/api/proxy/football/schedule/${conference}`);
 
   if (!response.ok) {
     throw new Error(

@@ -90,12 +90,8 @@ export default function FootballTeamPage({
     const fetchTeamData = async () => {
       try {
         setLoading(true);
-        const baseUrl =
-          process.env.NEXT_PUBLIC_API_URL ||
-          "https://analytics-backend-production.up.railway.app/api";
-
         const response = await fetch(
-          `${baseUrl}/football_team/${encodeURIComponent(teamname)}`
+          `/api/proxy/football/team/${encodeURIComponent(teamname)}`
         );
 
         if (!response.ok) throw new Error("Failed to load team data");
