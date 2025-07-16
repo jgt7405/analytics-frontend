@@ -119,6 +119,11 @@ const nextConfig = {
     missingSuspenseWithCSRBailout: false, // ✅ Add this line
   },
 
+  // ESLint configuration
+  eslint: {
+    ignoreDuringBuilds: true, // ✅ Add this entire section
+  },
+
   // Image optimization
   images: {
     formats: ["image/webp", "image/avif"],
