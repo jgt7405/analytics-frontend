@@ -110,18 +110,18 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
 
+  // ESLint configuration - ✅ ADD THIS SECTION
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Experimental features
   experimental: {
     optimizePackageImports: ["lucide-react"],
     // Add these for better performance
     optimizeCss: process.env.NODE_ENV === "production",
     webpackBuildWorker: true,
-    missingSuspenseWithCSRBailout: false, // ✅ Add this line
-  },
-
-  // ESLint configuration
-  eslint: {
-    ignoreDuringBuilds: true, // ✅ Add this entire section
+    missingSuspenseWithCSRBailout: false, // ✅ ADD THIS LINE
   },
 
   // Image optimization
