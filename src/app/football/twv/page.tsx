@@ -8,6 +8,7 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useConferenceUrl } from "@/hooks/useConferenceUrl"; // ADD THIS
 import { useFootballTWV } from "@/hooks/useFootballTWV";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -33,6 +34,10 @@ export default function FootballTWVPage() {
     refetch,
   } = useFootballTWV(selectedConference);
 
+  // ADD THIS: Use the conference URL hook for consistent URL state management
+  const { handleConferenceChange: handleUrlConferenceChange } =
+    useConferenceUrl(setSelectedConference, availableConferences);
+
   // Update available conferences when data loads
   useEffect(() => {
     if (twvResponse?.conferences) {
@@ -41,10 +46,15 @@ export default function FootballTWVPage() {
     }
   }, [twvResponse]);
 
-  // Handle conference changes
+  // Handle conference changes - REPLACE the existing handleConferenceChange
   const handleConferenceChange = (conference: string) => {
-    setSelectedConference(conference);
-    updatePreference("defaultConference", conference);
+    // Use the URL-aware conference change handler
+    handleUrlConferenceChange(conference);
+
+    // Update preferences
+    if (conference !== "All Teams") {
+      updatePreference("defaultConference", conference);
+    }
 
     trackEvent({
       name: "conference_selected",

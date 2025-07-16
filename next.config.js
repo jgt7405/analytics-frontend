@@ -2,6 +2,8 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
 });
 
+const path = require("path"); // Add this import
+
 // Conditional PWA setup
 const withPWA =
   process.env.NODE_ENV === "production"
@@ -13,7 +15,7 @@ const withPWA =
         runtimeCaching: [
           {
             urlPattern:
-              /^https:\/\/analytics-backend-production\.up\.railway\.app\/api\/.*/i,
+              /^https:\/\/jthomprodbackend-production\.up\.railway\.app\/api\/.*/i,
             handler: "CacheFirst",
             options: {
               cacheName: "api-cache",
@@ -44,43 +46,64 @@ const nextConfig = {
   ...(process.env.NODE_ENV === "development" && {
     webpack: (config, { dev, isServer }) => {
       if (dev && !isServer) {
+        // Increase chunk load timeout for development
+        config.output = {
+          ...config.output,
+          chunkLoadTimeout: 600000, // 10 minutes instead of 2 minutes
+        };
+
+        // Improve watch options
         config.watchOptions = {
           poll: 1000,
           aggregateTimeout: 300,
+          ignored: ["**/node_modules", "**/.git", "**/.next"],
         };
 
-        config.output = {
-          ...config.output,
-          chunkLoadTimeout: 300000,
-        };
-
+        // Better resolve configuration
         config.resolve.fallback = {
           ...config.resolve.fallback,
           fs: false,
           path: false,
           os: false,
         };
+
+        // Improve module resolution
+        config.resolve.symlinks = false;
+
+        // Better cache configuration - FIX: Use absolute path
+        config.cache = {
+          type: "filesystem",
+          cacheDirectory: path.resolve(__dirname, ".next/cache/webpack"),
+        };
       }
       return config;
     },
   }),
 
-  // Production optimizations with CSS error fixes
+  // Production optimizations
   ...(process.env.NODE_ENV === "production" && {
     compress: true,
-    webpack: (config, { dev, isServer }) => {
-      if (!dev && !isServer) {
-        config.optimization = {
-          ...config.optimization,
-          splitChunks: {
-            ...config.optimization.splitChunks,
-            cacheGroups: {
-              ...config.optimization.splitChunks.cacheGroups,
-              styles: false, // Prevent CSS chunk splitting that causes errors
+    webpack: (config) => {
+      // Production webpack optimizations
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: "all",
+          cacheGroups: {
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: "vendors",
+              priority: -10,
+              chunks: "all",
             },
           },
-        };
-      }
+        },
+      };
       return config;
     },
   }),
@@ -92,7 +115,9 @@ const nextConfig = {
   // Experimental features
   experimental: {
     optimizePackageImports: ["lucide-react"],
-    optimizeCss: false, // Disable CSS optimization that creates bad selectors
+    // Add these for better performance
+    optimizeCss: process.env.NODE_ENV === "production",
+    webpackBuildWorker: true,
   },
 
   // Image optimization
@@ -107,7 +132,7 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
 
-  // Headers
+  // Headers with better caching
   async headers() {
     return [
       {
@@ -128,6 +153,16 @@ const nextConfig = {
           {
             key: "Referrer-Policy",
             value: "origin-when-cross-origin",
+          },
+        ],
+      },
+      // Cache static assets longer
+      {
+        source: "/_next/static/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
         ],
       },

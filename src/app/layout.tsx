@@ -38,7 +38,7 @@ export default function RootLayout({
       <head>
         <link
           rel="preconnect"
-          href="https://analytics-backend-production.up.railway.app"
+          href="https://jthomprodbackend-production.up.railway.app"
         />
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
         <meta httpEquiv="Referrer-Policy" content="origin-when-cross-origin" />

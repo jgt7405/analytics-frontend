@@ -149,6 +149,7 @@ export default function FootballSchedulePage() {
               selectedConference={selectedConference}
               onChange={handleConferenceChange}
               error={scheduleError.message}
+              excludeConferences={["Independent"]}
             />
           }
           isLoading={false}
@@ -178,6 +179,7 @@ export default function FootballSchedulePage() {
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
+            excludeConferences={["Independent"]}
           />
         }
         isLoading={false}
@@ -214,6 +216,7 @@ export default function FootballSchedulePage() {
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
+            excludeConferences={["Independent"]}
             loading={scheduleLoading}
           />
         }

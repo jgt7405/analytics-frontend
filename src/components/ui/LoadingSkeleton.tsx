@@ -61,7 +61,7 @@ export function BasketballTableSkeleton({
 }: {
   rows?: number;
   teamCols?: number;
-  tableType?: "standings" | "wins" | "cwv" | "schedule";
+  tableType?: "standings" | "wins" | "cwv" | "schedule" | "ncaa";
   showSummaryRows?: boolean;
 }) {
   return (

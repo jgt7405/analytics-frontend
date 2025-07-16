@@ -8,11 +8,12 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useStandings } from "@/hooks/useStandings";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 export default function StandingsPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
@@ -32,6 +33,11 @@ export default function StandingsPage() {
     refetch,
   } = useStandings(selectedConference);
 
+  const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
+    setSelectedConference,
+    availableConferences
+  );
+
   // Track page load start
   useEffect(() => {
     startMeasurement("standings-page-load");
@@ -45,7 +51,7 @@ export default function StandingsPage() {
     return () => {
       endMeasurement("standings-page-load");
     };
-  }, [selectedConference]);
+  }, [endMeasurement, startMeasurement, trackEvent, selectedConference]);
 
   // Track successful data loading
   useEffect(() => {
@@ -64,23 +70,39 @@ export default function StandingsPage() {
         },
       });
     }
-  }, [standingsLoading, standingsResponse, selectedConference]);
+  }, [
+    standingsLoading,
+    standingsResponse,
+    selectedConference,
+    endMeasurement,
+    trackEvent,
+  ]); // Add endMeasurement and trackEvent
 
   // Handle conference changes
-  const handleConferenceChange = (conference: string) => {
-    startMeasurement("conference-change");
-    setSelectedConference(conference);
-    updatePreference("defaultConference", conference);
-    trackEvent({
-      name: "conference_changed",
-      properties: {
-        page: "standings",
-        fromConference: selectedConference,
-        toConference: conference,
-      },
-    });
-    endMeasurement("conference-change");
-  };
+  const handleConferenceChange = useCallback(
+    (conference: string) => {
+      startMeasurement("conference-change");
+      handleUrlChange(conference); // This replaces setSelectedConference and also updates the URL
+      updatePreference("defaultConference", conference);
+      trackEvent({
+        name: "conference_changed",
+        properties: {
+          page: "standings", // or "football-standings" for football pages
+          fromConference: selectedConference,
+          toConference: conference,
+        },
+      });
+      endMeasurement("conference-change");
+    },
+    [
+      startMeasurement,
+      handleUrlChange,
+      updatePreference,
+      trackEvent,
+      endMeasurement,
+      selectedConference,
+    ]
+  );
 
   // Update available conferences
   useEffect(() => {
@@ -107,7 +129,7 @@ export default function StandingsPage() {
         },
       });
     }
-  }, [standingsError, selectedConference]);
+  }, [standingsError, selectedConference, trackEvent]); // Add trackEvent
 
   // Error state
   if (standingsError) {

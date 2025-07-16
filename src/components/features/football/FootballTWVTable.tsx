@@ -34,14 +34,36 @@ function FootballTWVTable({ twvData, className }: FootballTWVTableProps) {
     [router]
   );
 
+  // Calculate proper ranks with tie handling
+  const rankedTwvData = useMemo(() => {
+    if (!twvData || twvData.length === 0) return [];
+
+    // Sort by TWV in descending order (highest TWV gets rank 1)
+    const sortedData = [...twvData].sort((a, b) => b.twv - a.twv);
+
+    let currentRank = 1;
+
+    return sortedData.map((team, index) => {
+      // If this is not the first team and TWV is different from previous team
+      if (index > 0 && team.twv !== sortedData[index - 1].twv) {
+        currentRank = index + 1; // Set rank to position + 1
+      }
+
+      return {
+        ...team,
+        rank: currentRank,
+      };
+    });
+  }, [twvData]);
+
   // Calculate min/max for color scaling
   const { minTWV, maxTWV } = useMemo(() => {
-    const twvValues = twvData.map((team) => team.twv);
+    const twvValues = rankedTwvData.map((team) => team.twv);
     return {
       minTWV: Math.min(...twvValues, -1),
       maxTWV: Math.max(...twvValues, 1),
     };
-  }, [twvData]);
+  }, [rankedTwvData]);
 
   // Color function for TWV values - matches the exact specification
   const getTWVColor = useCallback(
@@ -81,13 +103,13 @@ function FootballTWVTable({ twvData, className }: FootballTWVTableProps) {
     [maxTWV, minTWV]
   );
 
-  if (!twvData || twvData.length === 0) {
+  if (!rankedTwvData || rankedTwvData.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">No TWV data available</div>
     );
   }
 
-  // Responsive dimensions - Updated mobile widths for record columns (EXACT match to basketball)
+  // Responsive dimensions - Updated mobile widths for record columns
   const rankColWidth = isMobile ? 50 : 60;
   const teamColWidth = isMobile ? 150 : 220;
   const twvColWidth = isMobile ? 70 : 80;
@@ -222,7 +244,7 @@ function FootballTWVTable({ twvData, className }: FootballTWVTableProps) {
           </tr>
         </thead>
         <tbody>
-          {twvData.map((team, index) => (
+          {rankedTwvData.map((team, index) => (
             <tr key={`${team.team_name}-${index}`}>
               {/* Rank Cell */}
               <td

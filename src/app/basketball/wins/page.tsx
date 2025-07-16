@@ -10,11 +10,13 @@ import {
   BasketballTableSkeleton,
   BoxWhiskerChartSkeleton,
 } from "@/components/ui/LoadingSkeleton";
+import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useStandings } from "@/hooks/useStandings";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 
 const BoxWhiskerChart = lazy(
   () => import("@/components/features/basketball/BoxWhiskerChart")
@@ -22,48 +24,118 @@ const BoxWhiskerChart = lazy(
 
 export default function WinsPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
-  const { preferences, updatePreference } = useUserPreferences();
+  const { updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
-  const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
-  );
-  const [availableConferences, setAvailableConferences] = useState<string[]>([
-    preferences.defaultConference,
-  ]);
+  const searchParams = useSearchParams();
 
+  // CRITICAL: Start with Big 12 to avoid invalid API calls
+  const [selectedConference, setSelectedConference] = useState("Big 12");
+  const [availableConferences, setAvailableConferences] = useState<string[]>([
+    "Big 12", // Always include Big 12 as default
+  ]);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // URL management hook
+  const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
+    setSelectedConference,
+    availableConferences
+  );
+
+  // IMPORTANT: Validate URL conference BEFORE making API calls
+  useEffect(() => {
+    if (!hasInitialized) {
+      const confParam = searchParams.get("conf");
+
+      if (confParam) {
+        const decodedConf = decodeURIComponent(confParam);
+
+        // Define known basketball conferences to avoid API calls with invalid ones
+        const knownBasketballConferences = [
+          "Big 12",
+          "SEC",
+          "Big Ten",
+          "ACC",
+          "Pac-12",
+          "Big East",
+          "Mountain West",
+          "American",
+          "Atlantic 10",
+          "WCC",
+          "West Coast",
+          "Conference USA",
+          "MAC",
+          "Sun Belt",
+          "WAC",
+          "Ivy League",
+          "Patriot League",
+          "MAAC",
+          "CAA",
+          "Horizon League",
+          "Summit League",
+          "Southland",
+          "Big Sky",
+          "America East",
+          "NEC",
+          "MEAC",
+          "SWAC",
+        ];
+
+        if (knownBasketballConferences.includes(decodedConf)) {
+          setSelectedConference(decodedConf);
+        } else {
+          console.log(
+            `Conference "${decodedConf}" not valid for basketball, using Big 12`
+          );
+          setSelectedConference("Big 12");
+          // Update URL immediately to prevent subsequent bad API calls
+          const params = new URLSearchParams(searchParams.toString());
+          params.set("conf", "Big 12");
+          const newUrl = `${window.location.pathname}?${params.toString()}`;
+          window.history.replaceState({}, "", newUrl);
+        }
+      }
+      setHasInitialized(true);
+    }
+  }, [searchParams, hasInitialized]);
+
+  // Only make API call after initialization
   const {
     data: standingsResponse,
     isLoading: standingsLoading,
     error: standingsError,
     refetch,
-  } = useStandings(selectedConference);
+  } = useStandings(hasInitialized ? selectedConference : "Big 12");
 
   // Track page load start
   useEffect(() => {
-    startMeasurement("wins-page-load");
-
-    trackEvent({
-      name: "page_view",
-      properties: {
-        page: "wins",
-        conference: selectedConference,
-      },
-    });
-
-    return () => {
-      endMeasurement("wins-page-load");
-    };
-  }, [selectedConference]);
+    if (hasInitialized) {
+      startMeasurement("wins-page-load");
+      trackEvent({
+        name: "page_view",
+        properties: {
+          page: "wins",
+          conference: selectedConference,
+        },
+      });
+      return () => {
+        endMeasurement("wins-page-load");
+      };
+    }
+  }, [
+    selectedConference,
+    startMeasurement,
+    endMeasurement,
+    trackEvent,
+    hasInitialized,
+  ]);
 
   // Track successful data loading
   useEffect(() => {
-    if (!standingsLoading && standingsResponse) {
+    if (!standingsLoading && standingsResponse && hasInitialized) {
       const loadTime = endMeasurement("wins-page-load");
-
       if (process.env.NODE_ENV === "development" && loadTime > 10) {
         console.log(`📊 Wins page loaded in ${loadTime.toFixed(2)}ms`);
       }
-
       trackEvent({
         name: "data_load_success",
         properties: {
@@ -74,26 +146,40 @@ export default function WinsPage() {
         },
       });
     }
-  }, [standingsLoading, standingsResponse, selectedConference]);
+  }, [
+    standingsLoading,
+    standingsResponse,
+    selectedConference,
+    endMeasurement,
+    trackEvent,
+    hasInitialized,
+  ]);
 
   // Handle conference changes
-  const handleConferenceChange = (conference: string) => {
-    startMeasurement("conference-change");
-
-    setSelectedConference(conference);
-    updatePreference("defaultConference", conference);
-
-    trackEvent({
-      name: "conference_changed",
-      properties: {
-        page: "wins",
-        fromConference: selectedConference,
-        toConference: conference,
-      },
-    });
-
-    endMeasurement("conference-change");
-  };
+  const handleConferenceChange = useCallback(
+    (conference: string) => {
+      startMeasurement("conference-change");
+      handleUrlChange(conference);
+      updatePreference("defaultConference", conference);
+      trackEvent({
+        name: "conference_changed",
+        properties: {
+          page: "wins",
+          fromConference: selectedConference,
+          toConference: conference,
+        },
+      });
+      endMeasurement("conference-change");
+    },
+    [
+      startMeasurement,
+      handleUrlChange,
+      updatePreference,
+      trackEvent,
+      endMeasurement,
+      selectedConference,
+    ]
+  );
 
   // Update available conferences
   useEffect(() => {
@@ -104,14 +190,13 @@ export default function WinsPage() {
 
   // Track errors
   useEffect(() => {
-    if (standingsError) {
+    if (standingsError && hasInitialized) {
       console.error("Wins error details:", {
         error: standingsError,
         message: standingsError.message,
         conference: selectedConference,
         timestamp: new Date().toISOString(),
       });
-
       trackEvent({
         name: "data_load_error",
         properties: {
@@ -121,9 +206,9 @@ export default function WinsPage() {
         },
       });
     }
-  }, [standingsError, selectedConference]);
+  }, [standingsError, selectedConference, trackEvent, hasInitialized]);
 
-  // Error state content
+  // Error state
   if (standingsError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
@@ -149,8 +234,8 @@ export default function WinsPage() {
     );
   }
 
-  // No data state content
-  if (!standingsLoading && !standingsResponse?.data) {
+  // No data state
+  if (!standingsLoading && !standingsResponse?.data && hasInitialized) {
     return (
       <PageLayoutWrapper
         title="Projected Conference Wins"
@@ -198,7 +283,7 @@ export default function WinsPage() {
         <div className="-mt-2 md:-mt-6">
           {standingsLoading ? (
             <>
-              {/* Box Whisker Chart Skeleton First */}
+              {/* Box Whisker Chart Skeleton */}
               <div className="mb-8">
                 <BoxWhiskerChartSkeleton />
                 <div className="mt-4 flex gap-2">
@@ -207,7 +292,7 @@ export default function WinsPage() {
                 </div>
               </div>
 
-              {/* Table Skeleton */}
+              {/* Wins Table Skeleton */}
               <div className="mb-8">
                 <BasketballTableSkeleton
                   tableType="wins"
@@ -216,7 +301,7 @@ export default function WinsPage() {
                   showSummaryRows={true}
                 />
                 <div className="mt-4 flex gap-2">
-                  <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
                   <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
                 </div>
               </div>
@@ -229,7 +314,6 @@ export default function WinsPage() {
                       <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
                       <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
                       <div className="h-4 w-4/5 bg-gray-200 animate-pulse rounded" />
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
                     </div>
                   </div>
                   <div
@@ -245,7 +329,7 @@ export default function WinsPage() {
             </>
           ) : (
             <>
-              {/* Box Whisker Chart Section - First */}
+              {/* Box Whisker Chart Section */}
               <ErrorBoundary level="component" onRetry={() => refetch()}>
                 <div className="mb-8">
                   <div className="box-whisker-container">
@@ -256,15 +340,13 @@ export default function WinsPage() {
                     </Suspense>
                   </div>
 
-                  {/* Buttons for Box Whisker Chart - moved below the chart */}
-                  <div className="mt-4">
+                  <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
-                      {/* Explainer text on the left - takes remaining space */}
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
-                            Box plot shows distribution of conference wins from
-                            1,000 simulations using kenpom ratings.
+                            Projected conference wins from 1,000 season
+                            simulations using KenPom ratings.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Box shows 25th to 75th percentile, line shows
@@ -272,8 +354,6 @@ export default function WinsPage() {
                           </div>
                         </div>
                       </div>
-
-                      {/* Action buttons on the right - responsive width */}
                       <div
                         className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
                       >
@@ -281,8 +361,9 @@ export default function WinsPage() {
                           selectedConference={selectedConference}
                           contentSelector=".box-whisker-container"
                           pageName="wins-chart"
-                          pageTitle="Projected Conference Wins Chart"
-                          shareTitle="Win Distribution Visualization"
+                          pageTitle="Conference Wins Chart"
+                          shareTitle="Basketball Conference Wins Distribution"
+                          pathname="/basketball/wins"
                         />
                       </div>
                     </div>
@@ -290,60 +371,55 @@ export default function WinsPage() {
                 </div>
               </ErrorBoundary>
 
-              {/* Wins Table Section - Second */}
+              {/* Wins Table Section */}
               <ErrorBoundary level="component" onRetry={() => refetch()}>
-                <div className="mb-8">
-                  <div className="wins-table">
-                    <Suspense
-                      fallback={
-                        <BasketballTableSkeleton
-                          tableType="wins"
-                          rows={12}
-                          teamCols={10}
-                          showSummaryRows={true}
-                        />
-                      }
-                    >
-                      {standingsResponse?.data && (
-                        <WinsTable
-                          standings={standingsResponse.data}
-                          className="wins-table"
-                        />
-                      )}
-                    </Suspense>
-                  </div>
+                {standingsResponse?.data && (
+                  <div className="mb-8">
+                    <div className="wins-table-container">
+                      <Suspense
+                        fallback={
+                          <BasketballTableSkeleton
+                            tableType="wins"
+                            rows={12}
+                            teamCols={10}
+                            showSummaryRows={true}
+                          />
+                        }
+                      >
+                        <WinsTable standings={standingsResponse.data} />
+                      </Suspense>
+                    </div>
 
-                  {/* Buttons and Explainer in side-by-side layout */}
-                  <div className="mt-6">
-                    <div className="flex flex-row items-start gap-4">
-                      {/* Explainer text on the left - takes remaining space */}
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                        <div style={{ lineHeight: "1.3" }}>
-                          <div>
-                            Probabilities from 1,000 season simulations using
-                            kenpom ratings.
-                          </div>
-                          <div style={{ marginTop: "6px" }}>
-                            Darker colors indicate higher probabilities.
+                    <div className="mt-6">
+                      <div className="flex flex-row items-start gap-4">
+                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div style={{ lineHeight: "1.3" }}>
+                            <div>
+                              Projected conference wins from 1,000 season
+                              simulations using KenPom ratings.
+                            </div>
+                            <div style={{ marginTop: "6px" }}>
+                              Tournament projections are based on historical bid
+                              allocation patterns.
+                            </div>
                           </div>
                         </div>
-                      </div>
-
-                      {/* Action buttons on the right - responsive width */}
-                      <div
-                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                      >
-                        <TableActionButtons
-                          selectedConference={selectedConference}
-                          contentSelector=".wins-table"
-                          pageName="wins"
-                          pageTitle="Projected Conference Wins"
-                          shareTitle="Conference Wins Analysis"
-                        />
+                        <div
+                          className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                        >
+                          <TableActionButtons
+                            selectedConference={selectedConference}
+                            contentSelector=".wins-table-container"
+                            pageName="wins-table"
+                            pageTitle="Conference Wins Table"
+                            shareTitle="Basketball Conference Wins Projections"
+                            pathname="/basketball/wins"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </ErrorBoundary>
             </>
           )}

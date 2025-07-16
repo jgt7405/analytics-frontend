@@ -174,12 +174,6 @@ export interface TableHeader {
   align?: "left" | "center" | "right";
 }
 
-// Hook result types
-export interface UseConferenceStateResult {
-  selectedConference: string;
-  setSelectedConference: (conference: string) => void;
-}
-
 // Team and Game Types
 export interface Team {
   id: number;
@@ -474,10 +468,10 @@ export type ApiResponse<T> = {
   timestamp?: string;
 };
 
-export type TableData<T = any> = {
+export type TableData<T = unknown> = {
   headers: TableHeader[];
   rows: T[];
-  summary?: Record<string, any>;
+  summary?: Record<string, unknown>;
 };
 
 export type ChartData = {
@@ -495,7 +489,7 @@ export type ChartData = {
 export interface BasketballError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
   timestamp: Date;
 }
 
@@ -546,7 +540,7 @@ export interface ExportConfig {
 // Analytics and tracking types
 export interface AnalyticsEvent {
   name: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   timestamp?: Date;
   userId?: string;
   sessionId?: string;
@@ -555,13 +549,13 @@ export interface AnalyticsEvent {
 export interface UserInteraction {
   type: "click" | "hover" | "scroll" | "search" | "filter";
   target: string;
-  value?: any;
+  value?: unknown;
   timestamp: Date;
 }
 
 // Component prop types
 export interface BaseTableProps {
-  data: any[];
+  data: unknown[];
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;

@@ -1,3 +1,4 @@
+// src/components/common/ConferenceSelector.tsx
 "use client";
 
 interface ConferenceSelectorProps {
@@ -7,6 +8,7 @@ interface ConferenceSelectorProps {
   loading?: boolean;
   disabled?: boolean;
   error?: string;
+  excludeConferences?: string[]; // ← NEW: Allow excluding specific conferences
 }
 
 export default function ConferenceSelector({
@@ -16,9 +18,12 @@ export default function ConferenceSelector({
   loading = false,
   disabled = false,
   error,
+  excludeConferences = [], // ← NEW: Default to empty array
 }: ConferenceSelectorProps) {
-  // Filter out FCS from all conferences regardless of sport
-  const filteredConferences = conferences.filter((conf) => conf !== "FCS");
+  // Filter out FCS and any specified conferences to exclude
+  const filteredConferences = conferences.filter(
+    (conf) => conf !== "FCS" && !excludeConferences.includes(conf)
+  );
 
   return (
     <div className="conference-selector">

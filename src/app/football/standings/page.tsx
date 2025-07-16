@@ -98,6 +98,7 @@ export default function FootballStandingsPage() {
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
+            excludeConferences={["Independent"]}
           />
         )
       }

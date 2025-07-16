@@ -3,12 +3,13 @@
 import { cn } from "@/lib/utils";
 import navStyles from "@/styles/components/navigation.module.css";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const firstItemRef = useRef<HTMLAnchorElement>(null);
@@ -16,55 +17,67 @@ export default function Navigation() {
 
   const isFootball = pathname.startsWith("/football");
 
+  // Helper function to add conference to URL
+  const addConferenceToUrl = useCallback(
+    (basePath: string) => {
+      const currentConf = searchParams.get("conf");
+      if (currentConf) {
+        return `${basePath}?conf=${encodeURIComponent(currentConf)}`;
+      }
+      return basePath;
+    },
+    [searchParams]
+  );
+
   const basketballNavItems = [
     {
       name: "Wins",
-      path: "/basketball/wins",
+      path: addConferenceToUrl("/basketball/wins"),
       description: "Conference wins distribution",
     },
     {
       name: "Standings",
-      path: "/basketball/standings",
+      path: addConferenceToUrl("/basketball/standings"),
       description: "Projected standings",
     },
     {
       name: "CWV",
-      path: "/basketball/cwv",
+      path: addConferenceToUrl("/basketball/cwv"),
       description: "Conference win value analysis",
     },
     {
       name: "Schedule",
-      path: "/basketball/schedule",
+      path: addConferenceToUrl("/basketball/schedule"),
       description: "Team schedules and results",
     },
     {
       name: "TWV",
-      path: "/basketball/twv",
+      path: addConferenceToUrl("/basketball/twv"),
       description: "True win value analysis",
     },
     {
       name: "Conf Tourney",
-      path: "/basketball/conf-tourney",
+      path: addConferenceToUrl("/basketball/conf-tourney"),
       description: "Conference tournament projections",
     },
     {
       name: "Seed",
-      path: "/basketball/seed",
+      path: addConferenceToUrl("/basketball/seed"),
       description: "NCAA tournament seed projections",
     },
     {
       name: "Conf Data",
-      path: "/basketball/conf-data",
+      path: addConferenceToUrl("/basketball/conf-data"),
       description: "Conference bid projections",
     },
     {
       name: "NCAA Tourney",
-      path: "/basketball/ncaa-tourney",
+      path: addConferenceToUrl("/basketball/ncaa-tourney"),
       description: "NCAA tournament round projections",
     },
     {
       name: "Teams",
-      path: "/basketball/teams",
+      path: addConferenceToUrl("/basketball/teams"),
       description: "Teams directory",
     },
   ];
@@ -72,57 +85,65 @@ export default function Navigation() {
   const footballNavItems = [
     {
       name: "Wins",
-      path: "/football/wins",
+      path: addConferenceToUrl("/football/wins"),
       description: "Conference wins distribution",
     },
     {
       name: "Standings",
-      path: "/football/standings",
+      path: addConferenceToUrl("/football/standings"),
       description: "Projected standings",
     },
     {
       name: "CWV",
-      path: "/football/cwv",
+      path: addConferenceToUrl("/football/cwv"),
       description: "Conference win value analysis",
     },
     {
       name: "Schedule",
-      path: "/football/schedule",
+      path: addConferenceToUrl("/football/schedule"),
       description: "Team schedules and results",
     },
     {
       name: "TWV",
-      path: "/football/twv",
+      path: addConferenceToUrl("/football/twv"),
       description: "True win value analysis",
     },
     {
       name: "Conf Champ",
-      path: "/football/conf-champ",
+      path: addConferenceToUrl("/football/conf-champ"),
       description: "Conference championship projections",
     },
     {
       name: "Seed",
-      path: "/football/seed",
+      path: addConferenceToUrl("/football/seed"),
       description: "CFP seed projections",
     },
     {
       name: "CFP",
-      path: "/football/cfp",
+      path: addConferenceToUrl("/football/cfp"),
       description: "College Football Playoff projections",
     },
     {
       name: "Conf Data",
-      path: "/football/conf-data",
+      path: addConferenceToUrl("/football/conf-data"),
       description: "Conference CFP bid projections",
     },
     {
       name: "Teams",
-      path: "/football/teams",
+      path: addConferenceToUrl("/football/teams"),
       description: "Football teams directory",
     },
   ];
 
   const navItems = isFootball ? footballNavItems : basketballNavItems;
+
+  // Helper for sport switching links
+  const getSportSwitchUrl = useCallback(() => {
+    const currentConf = searchParams.get("conf") || "Big 12";
+    return isFootball
+      ? `/basketball/wins?conf=${encodeURIComponent(currentConf)}`
+      : `/football/wins?conf=${encodeURIComponent(currentConf)}`;
+  }, [isFootball, searchParams]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -195,7 +216,8 @@ export default function Navigation() {
         aria-label="Main navigation"
       >
         {navItems.map((item) => {
-          const isActive = pathname === item.path;
+          // FIX: Compare only the pathname portion, not the full URL with query params
+          const isActive = pathname === item.path.split("?")[0];
           return (
             <Link
               key={item.path}
@@ -214,11 +236,7 @@ export default function Navigation() {
         })}
 
         <Link
-          href={
-            isFootball
-              ? "/basketball/wins?conf=Big%2012"
-              : "/football/wins?conf=Big%2012"
-          }
+          href={getSportSwitchUrl()}
           className={cn(
             navStyles.tabButton,
             "text-xs flex flex-col items-center justify-center leading-none py-1"
@@ -264,7 +282,8 @@ export default function Navigation() {
         >
           <nav role="navigation" aria-label="Mobile navigation">
             {navItems.map((item, index) => {
-              const isActive = pathname === item.path;
+              // FIX: Same fix for mobile navigation
+              const isActive = pathname === item.path.split("?")[0];
               const isFirst = index === 0;
               const isLast = index === navItems.length - 1;
 
@@ -290,11 +309,7 @@ export default function Navigation() {
             })}
 
             <Link
-              href={
-                isFootball
-                  ? "/basketball/wins?conf=Big%2012"
-                  : "/football/wins?conf=Big%2012"
-              }
+              href={getSportSwitchUrl()}
               className={cn(
                 navStyles.tabButton,
                 "text-xs flex flex-col items-center justify-center leading-none py-1 gap-0"

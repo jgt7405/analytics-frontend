@@ -92,6 +92,7 @@ export default function FootballConfChampPage() {
               conferences={availableConferences}
               selectedConference={selectedConference}
               onChange={handleConferenceChange}
+              excludeConferences={["Independent"]}
               error={confChampError.message}
             />
           }
@@ -120,6 +121,7 @@ export default function FootballConfChampPage() {
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
+            excludeConferences={["Independent"]}
           />
         }
         isLoading={false}
@@ -151,6 +153,7 @@ export default function FootballConfChampPage() {
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
+            excludeConferences={["Independent"]}
             loading={confChampLoading}
           />
         }

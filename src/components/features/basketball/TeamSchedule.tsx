@@ -98,29 +98,41 @@ export default function TeamSchedule({
 
           <div className="space-y-2">
             {groupedGames.groups[location].length > 0 ? (
-              groupedGames.groups[location].map((game, idx) => (
+              groupedGames.groups[location].map((game, index) => (
                 <div
-                  key={idx}
-                  className="flex items-center justify-between p-2 rounded bg-white"
+                  key={index}
+                  className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
                   style={{
                     width: boxWidth,
                     height: boxHeight,
                     border: `2px solid ${getBorderColor(game.status)}`,
+                    borderRadius: "4px",
+                    backgroundColor: "white",
                   }}
+                  onClick={() => navigateToTeam(game.opponent)}
+                  title={`${game.opponent} (${game.kenpom_rank ? `#${game.kenpom_rank}` : "Unranked"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
                 >
                   <TeamLogo
-                    logoUrl={game.opponent_logo || "/images/default-logo.png"}
+                    logoUrl={
+                      game.opponent_logo || "/images/team_logos/default.png"
+                    }
                     teamName={game.opponent}
                     size={logoSize}
-                    onClick={() => navigateToTeam(game.opponent)}
                   />
-                  <span className="text-xs text-gray-600">
-                    {game.kenpom_rank ? `#${game.kenpom_rank}` : ""}
-                  </span>
                 </div>
               ))
             ) : (
-              <div className="text-xs text-gray-500 text-center">None</div>
+              <div
+                className="flex items-center justify-center text-xs text-gray-400"
+                style={{
+                  width: boxWidth,
+                  height: boxHeight,
+                  border: "1px dashed #d1d5db",
+                  borderRadius: "4px",
+                }}
+              >
+                None
+              </div>
             )}
           </div>
         </div>

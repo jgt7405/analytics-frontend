@@ -91,9 +91,19 @@ export default function FootballTeamSchedule({
 
   return (
     <div className={`${className}`}>
-      <div className="flex gap-4 overflow-x-auto">
+      <div
+        className="flex gap-4 overflow-x-auto"
+        style={{ minWidth: (boxWidth + 16) * 3 + 32 }}
+      >
         {(["Away", "Neutral", "Home"] as const).map((location) => (
-          <div key={location} className="flex-shrink-0">
+          <div
+            key={location}
+            className="flex-shrink-0"
+            style={{
+              width: boxWidth + 16, // Fixed width for consistent spacing
+              minWidth: boxWidth + 16,
+            }}
+          >
             <div className="text-center mb-3">
               <h3 className="text-sm font-semibold text-gray-600 -mb-1">
                 {location}
@@ -104,31 +114,44 @@ export default function FootballTeamSchedule({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2" style={{ minHeight: boxHeight + 8 }}>
               {groupedGames.groups[location].length > 0 ? (
                 groupedGames.groups[location].map((game, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-2 rounded bg-white"
+                    className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
                     style={{
                       width: boxWidth,
                       height: boxHeight,
                       border: `2px solid ${getBorderColor(game.status)}`,
+                      borderRadius: "4px",
+                      backgroundColor: "white",
                     }}
+                    onClick={() => navigateToTeam(game.opponent)}
+                    title={`${game.opponent} (${game.sagarin_rank ? `#${game.sagarin_rank}` : "Unranked"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
                   >
                     <TeamLogo
-                      logoUrl={game.opponent_logo || "/images/default-logo.png"}
+                      logoUrl={
+                        game.opponent_logo || "/images/team_logos/default.png"
+                      }
                       teamName={game.opponent}
                       size={logoSize}
-                      onClick={() => navigateToTeam(game.opponent)}
                     />
-                    <span className="text-xs text-gray-600">
-                      {game.sagarin_rank ? `#${game.sagarin_rank}` : ""}
-                    </span>
                   </div>
                 ))
               ) : (
-                <div className="text-xs text-gray-500 text-center">None</div>
+                <div
+                  className="flex items-center justify-center text-xs text-gray-400"
+                  style={{
+                    width: boxWidth, // Same width as game tiles
+                    height: boxHeight, // Same height as game tiles
+                    border: "1px dashed #d1d5db",
+                    borderRadius: "4px",
+                    backgroundColor: "#f9f9f9",
+                  }}
+                >
+                  None
+                </div>
               )}
             </div>
           </div>

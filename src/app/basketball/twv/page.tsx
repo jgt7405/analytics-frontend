@@ -1,5 +1,4 @@
-// src/app/basketball/twv/page.tsx - Update the page component
-
+// src/app/basketball/twv/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
@@ -9,6 +8,7 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useTWV } from "@/hooks/useTWV";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -23,7 +23,7 @@ export default function TWVPage() {
     preferences.defaultConference
   );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
-    "All Teams", // Add "All Teams" as default option
+    "All Teams",
     preferences.defaultConference,
   ]);
 
@@ -34,10 +34,17 @@ export default function TWVPage() {
     refetch,
   } = useTWV(selectedConference);
 
-  // Track page load start
+  // URL state management - HAS "All Teams"
+  const { handleConferenceChange: handleUrlConferenceChange } =
+    useConferenceUrl(
+      setSelectedConference,
+      availableConferences,
+      true // HAS "All Teams" for TWV
+    );
+
+  // Track page load
   useEffect(() => {
     startMeasurement("twv-page-load");
-
     trackEvent({
       name: "page_view",
       properties: {
@@ -45,44 +52,18 @@ export default function TWVPage() {
         conference: selectedConference,
       },
     });
-
     return () => {
       endMeasurement("twv-page-load");
     };
-  }, [selectedConference]);
-
-  // Track successful data loading
-  useEffect(() => {
-    if (!twvLoading && twvResponse) {
-      const loadTime = endMeasurement("twv-page-load");
-
-      if (process.env.NODE_ENV === "development" && loadTime > 10) {
-        console.log(`📊 TWV page loaded in ${loadTime.toFixed(2)}ms`);
-      }
-
-      trackEvent({
-        name: "data_load_success",
-        properties: {
-          page: "twv",
-          conference: selectedConference,
-          loadTime,
-          teamsCount: twvResponse.data?.length || 0,
-        },
-      });
-    }
-  }, [twvLoading, twvResponse, selectedConference]);
+  }, [selectedConference, startMeasurement, endMeasurement, trackEvent]);
 
   // Handle conference changes
   const handleConferenceChange = (conference: string) => {
     startMeasurement("conference-change");
-
-    setSelectedConference(conference);
-
-    // Only update default preference if it's not "All Teams"
+    handleUrlConferenceChange(conference);
     if (conference !== "All Teams") {
       updatePreference("defaultConference", conference);
     }
-
     trackEvent({
       name: "conference_changed",
       properties: {
@@ -91,7 +72,6 @@ export default function TWVPage() {
         toConference: conference,
       },
     });
-
     endMeasurement("conference-change");
   };
 
@@ -106,16 +86,25 @@ export default function TWVPage() {
     }
   }, [twvResponse]);
 
+  // Track successful data loading
+  useEffect(() => {
+    if (!twvLoading && twvResponse) {
+      const loadTime = endMeasurement("twv-page-load");
+      trackEvent({
+        name: "data_load_success",
+        properties: {
+          page: "twv",
+          conference: selectedConference,
+          loadTime,
+          teamsCount: twvResponse.data?.length || 0,
+        },
+      });
+    }
+  }, [twvLoading, twvResponse, selectedConference, endMeasurement, trackEvent]);
+
   // Track errors
   useEffect(() => {
     if (twvError) {
-      console.error("TWV error details:", {
-        error: twvError,
-        message: twvError.message,
-        conference: selectedConference,
-        timestamp: new Date().toISOString(),
-      });
-
       trackEvent({
         name: "data_load_error",
         properties: {
@@ -125,9 +114,8 @@ export default function TWVPage() {
         },
       });
     }
-  }, [twvError, selectedConference]);
+  }, [twvError, selectedConference, trackEvent]);
 
-  // Error state content
   if (twvError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
@@ -153,7 +141,6 @@ export default function TWVPage() {
     );
   }
 
-  // No data state content
   if (!twvLoading && !twvResponse?.data) {
     return (
       <PageLayoutWrapper
@@ -171,9 +158,6 @@ export default function TWVPage() {
           <div className="text-gray-500 text-lg mb-4">
             No TWV data available
           </div>
-          <p className="text-gray-400 text-sm mb-6">
-            Try selecting a different conference or check back later.
-          </p>
           <button
             onClick={() => refetch()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -201,45 +185,15 @@ export default function TWVPage() {
       >
         <div className="-mt-2 md:-mt-6">
           {twvLoading ? (
-            <>
-              {/* Table Skeleton */}
-              <div className="mb-8">
-                <BasketballTableSkeleton
-                  tableType="standings"
-                  rows={selectedConference === "All Teams" ? 25 : 15}
-                  teamCols={5}
-                  showSummaryRows={false}
-                />
-                <div className="mt-4 flex gap-2">
-                  <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
-                  <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
-                </div>
-              </div>
-
-              {/* Explainer and Buttons Skeleton */}
-              <div className="mt-6">
-                <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 pr-4">
-                    <div className="space-y-2">
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
-                      <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
-                    </div>
-                  </div>
-                  <div
-                    className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-20"}`}
-                  >
-                    <div className="flex flex-col gap-2">
-                      <div className="h-8 w-full bg-gray-200 animate-pulse rounded" />
-                      <div className="h-8 w-full bg-gray-200 animate-pulse rounded" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
+            <BasketballTableSkeleton
+              tableType="standings"
+              rows={selectedConference === "All Teams" ? 25 : 15}
+              teamCols={5}
+              showSummaryRows={false}
+            />
           ) : (
             <>
-              {/* TWV Table Section */}
-              <ErrorBoundary level="component" onRetry={() => refetch()}>
+              <ErrorBoundary level="component">
                 <div className="mb-8">
                   <div className="twv-table">
                     <Suspense
@@ -261,10 +215,8 @@ export default function TWVPage() {
                     </Suspense>
                   </div>
 
-                  {/* Buttons and Explainer in side-by-side layout */}
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
-                      {/* Explainer text on the left - takes remaining space */}
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
@@ -278,8 +230,6 @@ export default function TWVPage() {
                           </div>
                         </div>
                       </div>
-
-                      {/* Action buttons on the right - responsive width */}
                       <div
                         className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
                       >

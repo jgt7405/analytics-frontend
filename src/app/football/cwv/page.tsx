@@ -78,6 +78,7 @@ export default function FootballCWVPage() {
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
+            excludeConferences={["Independent"]}
           />
         }
       >

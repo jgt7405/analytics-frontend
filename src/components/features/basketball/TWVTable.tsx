@@ -34,14 +34,17 @@ function TWVTable({ twvData, className }: TWVTableProps) {
     [router]
   );
 
+  // Calculate proper ranks with tie handling
+  const rankedTwvData = twvData;
+
   // Calculate min/max for color scaling
   const { minTWV, maxTWV } = useMemo(() => {
-    const twvValues = twvData.map((team) => team.twv);
+    const twvValues = rankedTwvData.map((team) => team.twv);
     return {
       minTWV: Math.min(...twvValues, -1),
       maxTWV: Math.max(...twvValues, 1),
     };
-  }, [twvData]);
+  }, [rankedTwvData]);
 
   // Color function for TWV values - matches the exact specification
   const getTWVColor = useCallback(
@@ -81,7 +84,7 @@ function TWVTable({ twvData, className }: TWVTableProps) {
     [maxTWV, minTWV]
   );
 
-  if (!twvData || twvData.length === 0) {
+  if (!rankedTwvData || rankedTwvData.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">No TWV data available</div>
     );
@@ -222,7 +225,7 @@ function TWVTable({ twvData, className }: TWVTableProps) {
           </tr>
         </thead>
         <tbody>
-          {twvData.map((team, index) => (
+          {rankedTwvData.map((team, index) => (
             <tr key={`${team.team_name}-${index}`}>
               {/* Rank Cell */}
               <td

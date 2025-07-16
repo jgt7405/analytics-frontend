@@ -8,13 +8,22 @@ import { ScheduleData } from "@/types/basketball";
 import { useRouter } from "next/navigation";
 import { memo, useCallback } from "react";
 
+// ✅ Define proper types for summary data
+interface BasketballScheduleSummary {
+  total_games: number;
+  expected_wins: number;
+  top_quartile: number;
+  second_quartile: number;
+  third_quartile: number;
+  bottom_quartile: number;
+}
+
 interface ScheduleTableProps {
   scheduleData: ScheduleData[];
   teams: string[];
   teamLogos: Record<string, string>;
-  summary: Record<string, any>;
+  summary: Record<string, BasketballScheduleSummary>; // ✅ Fixed type
   className?: string;
-  // ✅ New props to control what gets rendered
   renderMainTable?: boolean;
   renderSummaryTable?: boolean;
 }
@@ -25,8 +34,8 @@ function ScheduleTable({
   teamLogos,
   summary,
   className,
-  renderMainTable = true, // ✅ Default to true
-  renderSummaryTable = true, // ✅ Default to true
+  renderMainTable = true,
+  renderSummaryTable = true,
 }: ScheduleTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -61,40 +70,49 @@ function ScheduleTable({
     return {};
   }, []);
 
-  const formatCellValue = useCallback((value: any): string => {
+  const formatCellValue = useCallback((value: unknown): string => {
+    // ✅ Fixed type
     if (value === null || value === undefined || value === "-") return "";
     if (typeof value === "object") return "";
     return String(value).trim();
   }, []);
 
-  const getCellValue = useCallback((row: ScheduleData, team: string): any => {
-    if (!row.games) return undefined;
+  const getCellValue = useCallback(
+    (row: ScheduleData, team: string): unknown => {
+      // ✅ Fixed type
+      if (!row.games) return undefined;
 
-    if (typeof row.games === "string") {
-      try {
-        const parsed = JSON.parse(row.games);
-        return parsed[team];
-      } catch {
-        return undefined;
+      if (typeof row.games === "string") {
+        try {
+          const parsed = JSON.parse(row.games);
+          return parsed[team];
+        } catch {
+          return undefined;
+        }
       }
-    }
 
-    if (typeof row.games === "object") {
-      return (row.games as Record<string, any>)[team];
-    }
+      if (typeof row.games === "object") {
+        return (row.games as Record<string, unknown>)[team]; // ✅ Fixed type
+      }
 
-    return undefined;
-  }, []);
+      return undefined;
+    },
+    []
+  );
 
   const getSummaryColor = useCallback(
     (value: number, type: string) => {
       if (type === "expected_wins") {
         // Green gradient for expected wins
         const maxExpectedWins = Math.max(
-          ...Object.values(summary).map((team: any) => team.expected_wins || 0)
+          ...Object.values(summary).map(
+            (team: BasketballScheduleSummary) => team.expected_wins || 0
+          ) // ✅ Fixed type
         );
         const minExpectedWins = Math.min(
-          ...Object.values(summary).map((team: any) => team.expected_wins || 0)
+          ...Object.values(summary).map(
+            (team: BasketballScheduleSummary) => team.expected_wins || 0
+          ) // ✅ Fixed type
         );
         const normalizedValue =
           (value - minExpectedWins) / (maxExpectedWins - minExpectedWins);
@@ -109,15 +127,17 @@ function ScheduleTable({
 
         return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
       } else if (type === "quartile") {
-        // Blue gradient for quartile counts
         const maxQuartile = Math.max(
-          ...Object.values(summary).flatMap((team: any) =>
-            [
-              team.top_quartile,
-              team.second_quartile,
-              team.third_quartile,
-              team.bottom_quartile,
-            ].filter(Boolean)
+          ...Object.values(summary).flatMap(
+            (
+              team: BasketballScheduleSummary // ✅ Fixed type
+            ) =>
+              [
+                team.top_quartile,
+                team.second_quartile,
+                team.third_quartile,
+                team.bottom_quartile,
+              ].filter(Boolean)
           )
         );
 
@@ -133,20 +153,19 @@ function ScheduleTable({
     [summary]
   );
 
-  // ✅ Updated responsive dimensions with requested changes
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
   const summaryRowHeight = isMobile ? 24 : 28;
   const firstColWidth = isMobile ? 60 : 80;
-  const opponentColWidth = isMobile ? 45 : 80; // ✅ Made narrower on mobile: 60 -> 45
+  const opponentColWidth = isMobile ? 45 : 80;
   const winProbColWidth = isMobile ? 80 : 100;
-  const teamColWidth = isMobile ? 40 : 60; // ✅ Changed from 64 to 62 (2px smaller on desktop)
-  const quartileColWidth = isMobile ? 50 : 70; // ✅ Wider quartile columns for second chart
-  const summaryTeamColWidth = isMobile ? 55 : 75; // ✅ New: smaller team column for summary table
+  const teamColWidth = isMobile ? 40 : 60;
+  const quartileColWidth = isMobile ? 50 : 70;
+  const summaryTeamColWidth = isMobile ? 55 : 75;
 
   const tableClassName = cn(
     tableStyles.tableContainer,
-    "schedule-table",
+    "basketball-schedule-table",
     className
   );
 
@@ -158,14 +177,14 @@ function ScheduleTable({
   ) {
     return (
       <div className="p-4 text-center text-gray-500">
-        No schedule data available
+        No basketball schedule data available
       </div>
     );
   }
 
   return (
     <div>
-      {/* ✅ Main Schedule Table - Only render if renderMainTable is true */}
+      {/* Main Schedule Table */}
       {renderMainTable && (
         <div className="mb-4">
           <div
@@ -186,17 +205,19 @@ function ScheduleTable({
             >
               <thead>
                 <tr>
-                  {/* Location Column */}
+                  {/* Location Column - Fixed sticky positioning */}
                   <th
-                    className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       width: firstColWidth,
                       minWidth: firstColWidth,
                       maxWidth: firstColWidth,
                       height: headerHeight,
                       position: "sticky",
-                      top: 0,
                       left: 0,
+                      top: 0,
                       border: "1px solid #e5e7eb",
                       borderRight: "1px solid #e5e7eb",
                     }}
@@ -204,23 +225,24 @@ function ScheduleTable({
                     Location
                   </th>
 
-                  {/* Opponent Column - ✅ Updated with responsive label */}
+                  {/* Opponent Column - Fixed sticky positioning */}
                   <th
-                    className={`sticky z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`sticky z-30 bg-gray-50 text-center font-normal ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       width: opponentColWidth,
                       minWidth: opponentColWidth,
                       maxWidth: opponentColWidth,
                       height: headerHeight,
                       position: "sticky",
-                      top: 0,
                       left: firstColWidth,
+                      top: 0,
                       border: "1px solid #e5e7eb",
                       borderLeft: "none",
                       borderRight: "1px solid #e5e7eb",
                     }}
                   >
-                    {/* ✅ Responsive label with line break on mobile */}
                     {isMobile ? (
                       <>
                         Opp-
@@ -232,17 +254,19 @@ function ScheduleTable({
                     )}
                   </th>
 
-                  {/* Win Probability Column */}
+                  {/* Win Probability Column - Fixed sticky positioning */}
                   <th
-                    className={`sticky z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`sticky z-30 bg-gray-50 text-center font-normal ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       width: winProbColWidth,
                       minWidth: winProbColWidth,
                       maxWidth: winProbColWidth,
                       height: headerHeight,
                       position: "sticky",
-                      top: 0,
                       left: firstColWidth + opponentColWidth,
+                      top: 0,
                       border: "1px solid #e5e7eb",
                       borderLeft: "none",
                       borderRight: "2px solid #d1d5db",
@@ -298,9 +322,11 @@ function ScheduleTable({
               <tbody>
                 {scheduleData.map((row, index) => (
                   <tr key={index}>
-                    {/* Location Cell */}
+                    {/* Location Cell - Capitalize and apply correct styling */}
                     <td
-                      className={`sticky left-0 z-20 text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                      className={`sticky left-0 z-20 text-center ${
+                        isMobile ? "text-xs" : "text-sm"
+                      }`}
                       style={{
                         width: firstColWidth,
                         minWidth: firstColWidth,
@@ -311,15 +337,23 @@ function ScheduleTable({
                         border: "1px solid #e5e7eb",
                         borderTop: "none",
                         borderRight: "1px solid #e5e7eb",
-                        ...getLocationStyle(row.Loc),
+                        // ✅ Use capitalized version for styling lookup
+                        ...getLocationStyle(
+                          row.Loc.charAt(0).toUpperCase() +
+                            row.Loc.slice(1).toLowerCase()
+                        ),
                       }}
                     >
-                      {row.Loc}
+                      {/* ✅ Display capitalized location */}
+                      {row.Loc.charAt(0).toUpperCase() +
+                        row.Loc.slice(1).toLowerCase()}
                     </td>
 
                     {/* Opponent Cell */}
                     <td
-                      className={`sticky z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                      className={`sticky z-20 bg-white text-center ${
+                        isMobile ? "text-xs" : "text-sm"
+                      }`}
                       style={{
                         width: opponentColWidth,
                         minWidth: opponentColWidth,
@@ -334,22 +368,24 @@ function ScheduleTable({
                       }}
                     >
                       <div className="flex justify-center items-center h-full">
-                        {teamLogos[row.Team] ? (
-                          <TeamLogo
-                            logoUrl={teamLogos[row.Team]}
-                            teamName={row.Team}
-                            size={isMobile ? 20 : 24}
-                            onClick={() => navigateToTeam(row.Team)}
-                          />
-                        ) : (
-                          <span className="text-xs">{row.Team}</span>
-                        )}
+                        <TeamLogo
+                          logoUrl={
+                            teamLogos[row.Team] ||
+                            "/images/team_logos/default.png"
+                          }
+                          teamName={row.Team}
+                          size={isMobile ? 16 : 20}
+                          className="flex-shrink-0"
+                          onClick={() => navigateToTeam(row.Team)}
+                        />
                       </div>
                     </td>
 
                     {/* Win Probability Cell */}
                     <td
-                      className={`sticky z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                      className={`sticky z-20 bg-white text-center ${
+                        isMobile ? "text-xs" : "text-sm"
+                      }`}
                       style={{
                         width: winProbColWidth,
                         minWidth: winProbColWidth,
@@ -363,14 +399,14 @@ function ScheduleTable({
                         borderRight: "2px solid #d1d5db",
                       }}
                     >
-                      {row.Win_Pct || "-"}
+                      {formatCellValue(row.Win_Pct)}
                     </td>
 
                     {/* Team Game Cells */}
                     {teams.map((team) => {
                       const cellValue = getCellValue(row, team);
-                      const displayValue = formatCellValue(cellValue);
-                      const isEmpty = !displayValue || displayValue === "";
+                      const formattedValue = formatCellValue(cellValue);
+                      const isEmpty = !formattedValue || formattedValue === "";
 
                       return (
                         <td
@@ -384,357 +420,46 @@ function ScheduleTable({
                             border: "1px solid #e5e7eb",
                             borderTop: "none",
                             borderLeft: "none",
-                            // ✅ Made "no game" cells darker gray
+                            // ✅ Made empty cells darker gray
                             backgroundColor: isEmpty
-                              ? "#d1d5db"
-                              : "transparent", // Changed from #f0f0f0 to #d1d5db
+                              ? "#d1d5db" // Darker gray for empty cells
+                              : "transparent",
                           }}
                         >
                           <div
-                            className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
-                            style={isEmpty ? {} : getCellStyle(displayValue)}
+                            className={`absolute inset-0 flex items-center justify-center ${
+                              isMobile ? "text-xs" : "text-sm"
+                            }`}
+                            style={
+                              isEmpty
+                                ? {} // No additional styling for empty cells
+                                : getCellStyle(formattedValue)
+                            }
                           >
-                            {displayValue}
+                            {formattedValue}
                           </div>
                         </td>
                       );
                     })}
                   </tr>
                 ))}
-
-                {/* ✅ Enhanced Summary Rows with quartile data at bottom of main table */}
-                {summary && Object.keys(summary).length > 0 && (
-                  <>
-                    {/* Total Games Row */}
-                    <tr className="bg-gray-50">
-                      <td
-                        colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                        style={{
-                          width:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          minWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          maxWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          height: summaryRowHeight,
-                          position: "sticky",
-                          left: 0,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "2px solid #4b5563",
-                          borderRight: "2px solid #d1d5db",
-                        }}
-                      >
-                        Total Games
-                      </td>
-                      {teams.map((team) => (
-                        <td
-                          key={`${team}-total`}
-                          className="bg-gray-50 text-center"
-                          style={{
-                            height: summaryRowHeight,
-                            width: teamColWidth,
-                            minWidth: teamColWidth,
-                            maxWidth: teamColWidth,
-                            border: "1px solid #e5e7eb",
-                            borderTop: "2px solid #4b5563",
-                            borderLeft: "none",
-                            fontSize: isMobile ? "12px" : "14px",
-                          }}
-                        >
-                          {summary[team]?.total_games || 0}
-                        </td>
-                      ))}
-                    </tr>
-
-                    {/* Expected Wins Row */}
-                    <tr className="bg-gray-50">
-                      <td
-                        colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                        style={{
-                          width:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          minWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          maxWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          height: summaryRowHeight,
-                          position: "sticky",
-                          left: 0,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderRight: "2px solid #d1d5db",
-                        }}
-                      >
-                        Expected Wins
-                      </td>
-                      {teams.map((team) => (
-                        <td
-                          key={`${team}-expected`}
-                          className="bg-gray-50 text-center relative p-0"
-                          style={{
-                            height: summaryRowHeight,
-                            width: teamColWidth,
-                            minWidth: teamColWidth,
-                            maxWidth: teamColWidth,
-                            border: "1px solid #e5e7eb",
-                            borderTop: "none",
-                            borderLeft: "none",
-                          }}
-                        >
-                          <div
-                            className={`absolute inset-0 flex items-center justify-center`}
-                            style={{
-                              ...getSummaryColor(
-                                summary[team]?.expected_wins || 0,
-                                "expected_wins"
-                              ),
-                              fontSize: isMobile ? "12px" : "14px",
-                            }}
-                          >
-                            {summary[team]?.expected_wins || 0}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-
-                    {/* ✅ NEW: Top Quartile Row */}
-                    <tr className="bg-gray-50">
-                      <td
-                        colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                        style={{
-                          width:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          minWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          maxWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          height: summaryRowHeight,
-                          position: "sticky",
-                          left: 0,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderRight: "2px solid #d1d5db",
-                        }}
-                      >
-                        Top Quartile
-                      </td>
-                      {teams.map((team) => (
-                        <td
-                          key={`${team}-top-quartile`}
-                          className="bg-gray-50 text-center relative p-0"
-                          style={{
-                            height: summaryRowHeight,
-                            width: teamColWidth,
-                            minWidth: teamColWidth,
-                            maxWidth: teamColWidth,
-                            border: "1px solid #e5e7eb",
-                            borderTop: "none",
-                            borderLeft: "none",
-                          }}
-                        >
-                          <div
-                            className={`absolute inset-0 flex items-center justify-center`}
-                            style={{
-                              ...getSummaryColor(
-                                summary[team]?.top_quartile || 0,
-                                "quartile"
-                              ),
-                              fontSize: isMobile ? "12px" : "14px",
-                            }}
-                          >
-                            {summary[team]?.top_quartile || 0}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-
-                    {/* ✅ NEW: Second Quartile Row */}
-                    <tr className="bg-gray-50">
-                      <td
-                        colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                        style={{
-                          width:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          minWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          maxWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          height: summaryRowHeight,
-                          position: "sticky",
-                          left: 0,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderRight: "2px solid #d1d5db",
-                        }}
-                      >
-                        Second Quartile
-                      </td>
-                      {teams.map((team) => (
-                        <td
-                          key={`${team}-second-quartile`}
-                          className="bg-gray-50 text-center relative p-0"
-                          style={{
-                            height: summaryRowHeight,
-                            width: teamColWidth,
-                            minWidth: teamColWidth,
-                            maxWidth: teamColWidth,
-                            border: "1px solid #e5e7eb",
-                            borderTop: "none",
-                            borderLeft: "none",
-                          }}
-                        >
-                          <div
-                            className={`absolute inset-0 flex items-center justify-center`}
-                            style={{
-                              ...getSummaryColor(
-                                summary[team]?.second_quartile || 0,
-                                "quartile"
-                              ),
-                              fontSize: isMobile ? "12px" : "14px",
-                            }}
-                          >
-                            {summary[team]?.second_quartile || 0}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-
-                    {/* ✅ NEW: Third Quartile Row */}
-                    <tr className="bg-gray-50">
-                      <td
-                        colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                        style={{
-                          width:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          minWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          maxWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          height: summaryRowHeight,
-                          position: "sticky",
-                          left: 0,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderRight: "2px solid #d1d5db",
-                        }}
-                      >
-                        Third Quartile
-                      </td>
-                      {teams.map((team) => (
-                        <td
-                          key={`${team}-third-quartile`}
-                          className="bg-gray-50 text-center relative p-0"
-                          style={{
-                            height: summaryRowHeight,
-                            width: teamColWidth,
-                            minWidth: teamColWidth,
-                            maxWidth: teamColWidth,
-                            border: "1px solid #e5e7eb",
-                            borderTop: "none",
-                            borderLeft: "none",
-                          }}
-                        >
-                          <div
-                            className={`absolute inset-0 flex items-center justify-center`}
-                            style={{
-                              ...getSummaryColor(
-                                summary[team]?.third_quartile || 0,
-                                "quartile"
-                              ),
-                              fontSize: isMobile ? "12px" : "14px",
-                            }}
-                          >
-                            {summary[team]?.third_quartile || 0}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-
-                    {/* ✅ NEW: Bottom Quartile Row */}
-                    <tr className="bg-gray-50">
-                      <td
-                        colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                        style={{
-                          width:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          minWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          maxWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          height: summaryRowHeight,
-                          position: "sticky",
-                          left: 0,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderRight: "2px solid #d1d5db",
-                        }}
-                      >
-                        Bottom Quartile
-                      </td>
-                      {teams.map((team) => (
-                        <td
-                          key={`${team}-bottom-quartile`}
-                          className="bg-gray-50 text-center relative p-0"
-                          style={{
-                            height: summaryRowHeight,
-                            width: teamColWidth,
-                            minWidth: teamColWidth,
-                            maxWidth: teamColWidth,
-                            border: "1px solid #e5e7eb",
-                            borderTop: "none",
-                            borderLeft: "none",
-                          }}
-                        >
-                          <div
-                            className={`absolute inset-0 flex items-center justify-center`}
-                            style={{
-                              ...getSummaryColor(
-                                summary[team]?.bottom_quartile || 0,
-                                "quartile"
-                              ),
-                              fontSize: isMobile ? "12px" : "14px",
-                            }}
-                          >
-                            {summary[team]?.bottom_quartile || 0}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                  </>
-                )}
               </tbody>
             </table>
-          </div>
-
-          {/* Legend for main table */}
-          <div className="mt-4 text-sm text-gray-600">
-            <p>
-              <strong>Legend:</strong>{" "}
-              <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
-              Win |{" "}
-              <span className="inline-block w-4 h-4 bg-yellow-100 border border-gray-300 mr-1 align-middle"></span>
-              Loss |{" "}
-              <span className="inline-block w-4 h-4 bg-blue-200 mr-1 align-middle"></span>
-              Next Game |{" "}
-              <span className="inline-block w-4 h-4 bg-gray-100 mr-1 align-middle"></span>
-              Future Games |{" "}
-              <span className="inline-block w-4 h-4 bg-gray-300 mr-1 align-middle"></span>
-              No Game
-            </p>
           </div>
         </div>
       )}
 
-      {/* ✅ Schedule Summary Table - Only render if renderSummaryTable is true */}
-      {renderSummaryTable && summary && Object.keys(summary).length > 0 && (
+      {/* Summary Table */}
+      {renderSummaryTable && (
         <div className="mb-4">
-          <div className={`${tableClassName} relative overflow-x-auto`}>
+          <div
+            className={`${tableClassName} relative`}
+            style={{
+              overflowX: "auto",
+              overflowY: "auto",
+              maxHeight: "80vh",
+            }}
+          >
             <table
               className="border-collapse border-spacing-0"
               style={{
@@ -745,25 +470,27 @@ function ScheduleTable({
             >
               <thead>
                 <tr>
-                  {/* ✅ UPDATED: Team column header with new smaller width */}
                   <th
-                    className={`sticky left-0 z-30 bg-gray-50 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
-                      width: summaryTeamColWidth, // ✅ Using new smaller width
+                      height: headerHeight,
+                      width: summaryTeamColWidth,
                       minWidth: summaryTeamColWidth,
                       maxWidth: summaryTeamColWidth,
-                      height: headerHeight,
                       position: "sticky",
                       left: 0,
                       top: 0,
                       border: "1px solid #e5e7eb",
-                      borderRight: "1px solid #e5e7eb",
                     }}
                   >
                     Team
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       height: headerHeight,
                       width: teamColWidth,
@@ -778,7 +505,9 @@ function ScheduleTable({
                     {isMobile ? "Avg\nWins" : "Expected\nWins"}
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       height: headerHeight,
                       width: teamColWidth,
@@ -795,10 +524,12 @@ function ScheduleTable({
                     Games
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       height: headerHeight,
-                      width: quartileColWidth, // ✅ Using wider quartile column width
+                      width: quartileColWidth,
                       minWidth: quartileColWidth,
                       maxWidth: quartileColWidth,
                       position: "sticky",
@@ -814,10 +545,12 @@ function ScheduleTable({
                     (Hardest)
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       height: headerHeight,
-                      width: quartileColWidth, // ✅ Using wider quartile column width
+                      width: quartileColWidth,
                       minWidth: quartileColWidth,
                       maxWidth: quartileColWidth,
                       position: "sticky",
@@ -831,10 +564,12 @@ function ScheduleTable({
                     Quartile
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       height: headerHeight,
-                      width: quartileColWidth, // ✅ Using wider quartile column width
+                      width: quartileColWidth,
                       minWidth: quartileColWidth,
                       maxWidth: quartileColWidth,
                       position: "sticky",
@@ -848,10 +583,12 @@ function ScheduleTable({
                     Quartile
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
                     style={{
                       height: headerHeight,
-                      width: quartileColWidth, // ✅ Using wider quartile column width
+                      width: quartileColWidth,
                       minWidth: quartileColWidth,
                       maxWidth: quartileColWidth,
                       position: "sticky",
@@ -868,172 +605,176 @@ function ScheduleTable({
                   </th>
                 </tr>
               </thead>
+
               <tbody>
-                {Object.entries(summary)
-                  .sort(
-                    ([, a], [, b]) =>
-                      (b as any).expected_wins - (a as any).expected_wins
-                  )
-                  .map(([team, data]) => (
-                    <tr key={team}>
-                      {/* ✅ UPDATED: Team column cell with new smaller width */}
-                      <td
-                        className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                        style={{
-                          width: summaryTeamColWidth, // ✅ Using new smaller width
-                          minWidth: summaryTeamColWidth,
-                          maxWidth: summaryTeamColWidth,
-                          height: summaryRowHeight,
-                          position: "sticky",
-                          left: 0,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderRight: "1px solid #e5e7eb",
-                        }}
-                      >
-                        <div className="flex justify-center items-center h-full">
-                          <TeamLogo
-                            logoUrl={
-                              teamLogos[team] ||
-                              "/images/team_logos/default.png"
-                            }
-                            teamName={team}
-                            size={isMobile ? 24 : 28}
-                            onClick={() => navigateToTeam(team)}
-                          />
-                        </div>
-                      </td>
-                      <td
-                        className="relative p-0"
-                        style={{
-                          height: summaryRowHeight,
-                          width: teamColWidth,
-                          minWidth: teamColWidth,
-                          maxWidth: teamColWidth,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderLeft: "none",
-                        }}
-                      >
-                        <div
-                          className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
-                          style={getSummaryColor(
-                            (data as any).expected_wins,
-                            "expected_wins"
-                          )}
+                {/* ✅ Sort teams by expected wins (highest to lowest) */}
+                {teams
+                  .filter((team) => summary[team]) // Only include teams with summary data
+                  .sort((a, b) => {
+                    const aExpectedWins = summary[a]?.expected_wins || 0;
+                    const bExpectedWins = summary[b]?.expected_wins || 0;
+                    return bExpectedWins - aExpectedWins; // Descending order (highest to lowest)
+                  })
+                  .map((team) => {
+                    const teamSummary = summary[team];
+                    if (!teamSummary) return null;
+
+                    return (
+                      <tr key={team}>
+                        <td
+                          className={`sticky left-0 z-20 bg-white text-center ${
+                            isMobile ? "text-xs" : "text-sm"
+                          }`}
+                          style={{
+                            width: summaryTeamColWidth,
+                            minWidth: summaryTeamColWidth,
+                            maxWidth: summaryTeamColWidth,
+                            height: summaryRowHeight,
+                            position: "sticky",
+                            left: 0,
+                            border: "1px solid #e5e7eb",
+                            borderTop: "none",
+                            borderRight: "1px solid #e5e7eb",
+                          }}
                         >
-                          {(data as any).expected_wins}
-                        </div>
-                      </td>
-                      <td
-                        className="relative p-0"
-                        style={{
-                          height: summaryRowHeight,
-                          width: teamColWidth,
-                          minWidth: teamColWidth,
-                          maxWidth: teamColWidth,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderLeft: "none",
-                          backgroundColor: "#ffffff",
-                        }}
-                      >
-                        <div
-                          className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                          <div className="flex justify-center items-center h-full">
+                            <TeamLogo
+                              logoUrl={
+                                teamLogos[team] ||
+                                "/images/team_logos/default.png"
+                              }
+                              teamName={team}
+                              size={isMobile ? 16 : 20}
+                              className="flex-shrink-0"
+                              onClick={() => navigateToTeam(team)}
+                            />
+                          </div>
+                        </td>
+
+                        <td
+                          className={`text-center ${
+                            isMobile ? "text-xs" : "text-sm"
+                          }`}
+                          style={{
+                            width: teamColWidth,
+                            minWidth: teamColWidth,
+                            maxWidth: teamColWidth,
+                            height: summaryRowHeight,
+                            border: "1px solid #e5e7eb",
+                            borderTop: "none",
+                            borderLeft: "none",
+                            ...getSummaryColor(
+                              teamSummary.expected_wins || 0,
+                              "expected_wins"
+                            ),
+                          }}
                         >
-                          {(data as any).total_games}
-                        </div>
-                      </td>
-                      <td
-                        className="relative p-0"
-                        style={{
-                          height: summaryRowHeight,
-                          width: quartileColWidth, // ✅ Using wider quartile column width
-                          minWidth: quartileColWidth,
-                          maxWidth: quartileColWidth,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderLeft: "none",
-                        }}
-                      >
-                        <div
-                          className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
-                          style={getSummaryColor(
-                            (data as any).top_quartile,
-                            "quartile"
-                          )}
+                          {teamSummary.expected_wins?.toFixed(1) || "0.0"}
+                        </td>
+
+                        <td
+                          className={`text-center ${
+                            isMobile ? "text-xs" : "text-sm"
+                          }`}
+                          style={{
+                            width: teamColWidth,
+                            minWidth: teamColWidth,
+                            maxWidth: teamColWidth,
+                            height: summaryRowHeight,
+                            border: "1px solid #e5e7eb",
+                            borderTop: "none",
+                            borderLeft: "none",
+                          }}
                         >
-                          {(data as any).top_quartile}
-                        </div>
-                      </td>
-                      <td
-                        className="relative p-0"
-                        style={{
-                          height: summaryRowHeight,
-                          width: quartileColWidth, // ✅ Using wider quartile column width
-                          minWidth: quartileColWidth,
-                          maxWidth: quartileColWidth,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderLeft: "none",
-                        }}
-                      >
-                        <div
-                          className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
-                          style={getSummaryColor(
-                            (data as any).second_quartile,
-                            "quartile"
-                          )}
+                          {teamSummary.total_games || 0}
+                        </td>
+
+                        <td
+                          className={`text-center ${
+                            isMobile ? "text-xs" : "text-sm"
+                          }`}
+                          style={{
+                            width: quartileColWidth,
+                            minWidth: quartileColWidth,
+                            maxWidth: quartileColWidth,
+                            height: summaryRowHeight,
+                            border: "1px solid #e5e7eb",
+                            borderTop: "none",
+                            borderLeft: "none",
+                            ...getSummaryColor(
+                              teamSummary.top_quartile || 0,
+                              "quartile"
+                            ),
+                          }}
                         >
-                          {(data as any).second_quartile}
-                        </div>
-                      </td>
-                      <td
-                        className="relative p-0"
-                        style={{
-                          height: summaryRowHeight,
-                          width: quartileColWidth, // ✅ Using wider quartile column width
-                          minWidth: quartileColWidth,
-                          maxWidth: quartileColWidth,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderLeft: "none",
-                        }}
-                      >
-                        <div
-                          className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
-                          style={getSummaryColor(
-                            (data as any).third_quartile,
-                            "quartile"
-                          )}
+                          {teamSummary.top_quartile || 0}
+                        </td>
+
+                        <td
+                          className={`text-center ${
+                            isMobile ? "text-xs" : "text-sm"
+                          }`}
+                          style={{
+                            width: quartileColWidth,
+                            minWidth: quartileColWidth,
+                            maxWidth: quartileColWidth,
+                            height: summaryRowHeight,
+                            border: "1px solid #e5e7eb",
+                            borderTop: "none",
+                            borderLeft: "none",
+                            ...getSummaryColor(
+                              teamSummary.second_quartile || 0,
+                              "quartile"
+                            ),
+                          }}
                         >
-                          {(data as any).third_quartile}
-                        </div>
-                      </td>
-                      <td
-                        className="relative p-0"
-                        style={{
-                          height: summaryRowHeight,
-                          width: quartileColWidth, // ✅ Using wider quartile column width
-                          minWidth: quartileColWidth,
-                          maxWidth: quartileColWidth,
-                          border: "1px solid #e5e7eb",
-                          borderTop: "none",
-                          borderLeft: "none",
-                        }}
-                      >
-                        <div
-                          className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
-                          style={getSummaryColor(
-                            (data as any).bottom_quartile,
-                            "quartile"
-                          )}
+                          {teamSummary.second_quartile || 0}
+                        </td>
+
+                        <td
+                          className={`text-center ${
+                            isMobile ? "text-xs" : "text-sm"
+                          }`}
+                          style={{
+                            width: quartileColWidth,
+                            minWidth: quartileColWidth,
+                            maxWidth: quartileColWidth,
+                            height: summaryRowHeight,
+                            border: "1px solid #e5e7eb",
+                            borderTop: "none",
+                            borderLeft: "none",
+                            ...getSummaryColor(
+                              teamSummary.third_quartile || 0,
+                              "quartile"
+                            ),
+                          }}
                         >
-                          {(data as any).bottom_quartile}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          {teamSummary.third_quartile || 0}
+                        </td>
+
+                        <td
+                          className={`text-center ${
+                            isMobile ? "text-xs" : "text-sm"
+                          }`}
+                          style={{
+                            width: quartileColWidth,
+                            minWidth: quartileColWidth,
+                            maxWidth: quartileColWidth,
+                            height: summaryRowHeight,
+                            border: "1px solid #e5e7eb",
+                            borderTop: "none",
+                            borderLeft: "none",
+                            ...getSummaryColor(
+                              teamSummary.bottom_quartile || 0,
+                              "quartile"
+                            ),
+                          }}
+                        >
+                          {teamSummary.bottom_quartile || 0}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>

@@ -75,16 +75,15 @@ export default function TeamPage({
     });
   }, [teamname, trackEvent]);
 
+  // In basketball team page useEffect
   useEffect(() => {
     const fetchTeamData = async () => {
       try {
         setLoading(true);
-        const baseUrl =
-          process.env.NEXT_PUBLIC_API_URL ||
-          "https://analytics-backend-production.up.railway.app/api";
 
+        // Use proxy instead of direct Railway call
         const response = await fetch(
-          `${baseUrl}/team/${encodeURIComponent(teamname)}`
+          `/api/proxy/team/${encodeURIComponent(teamname)}`
         );
 
         if (!response.ok) throw new Error("Failed to load team data");
@@ -101,9 +100,7 @@ export default function TeamPage({
       }
     };
 
-    if (teamname) {
-      fetchTeamData();
-    }
+    fetchTeamData();
   }, [teamname]);
 
   const navigateToTeam = (targetTeam: string) => {

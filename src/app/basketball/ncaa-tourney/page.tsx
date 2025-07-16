@@ -1,3 +1,4 @@
+// src/app/basketball/ncaa-tourney/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
@@ -7,6 +8,7 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useNCAATeam } from "@/hooks/useNCAATeam";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -32,7 +34,14 @@ export default function NCAATeamPage() {
     refetch,
   } = useNCAATeam(selectedConference);
 
-  // Track page load
+  // URL state management - HAS "All Teams"
+  const { handleConferenceChange: handleUrlConferenceChange } =
+    useConferenceUrl(
+      setSelectedConference,
+      availableConferences,
+      true // HAS "All Teams" for NCAA tournament
+    );
+
   useEffect(() => {
     trackEvent({
       name: "page_view",
@@ -40,14 +49,23 @@ export default function NCAATeamPage() {
     });
   }, [selectedConference, trackEvent]);
 
-  // Update available conferences - handle unknown type safely
+  // Handle conference changes
+  const handleConferenceChange = (conference: string) => {
+    handleUrlConferenceChange(conference);
+    if (conference !== "All Teams") {
+      updatePreference("defaultConference", conference);
+    }
+  };
+
+  // Update available conferences - HAS "All Teams"
   useEffect(() => {
     if (
       ncaaResponse &&
       typeof ncaaResponse === "object" &&
       ncaaResponse !== null
     ) {
-      const response = ncaaResponse as Record<string, unknown>;
+      // Cast to unknown first, then to Record<string, unknown>
+      const response = ncaaResponse as unknown as Record<string, unknown>;
       if (Array.isArray(response.conferences)) {
         setAvailableConferences([
           "All Teams",
@@ -57,14 +75,7 @@ export default function NCAATeamPage() {
     }
   }, [ncaaResponse]);
 
-  const handleConferenceChange = (conference: string) => {
-    setSelectedConference(conference);
-    if (conference !== "All Teams") {
-      updatePreference("defaultConference", conference);
-    }
-  };
-
-  // Get data safely from unknown response
+  // Get data safely from response
   const ncaaData = (() => {
     if (
       !ncaaResponse ||
@@ -73,21 +84,22 @@ export default function NCAATeamPage() {
     ) {
       return null;
     }
-    const response = ncaaResponse as Record<string, unknown>;
+    // Cast to unknown first, then to Record<string, unknown>
+    const response = ncaaResponse as unknown as Record<string, unknown>;
     return Array.isArray(response.data) ? response.data : null;
   })();
 
-  // Error state
   if (ncaaError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
-          title="NCAA Tournament Round Projections"
+          title="NCAA Tournament"
           conferenceSelector={
             <ConferenceSelector
               conferences={availableConferences}
               selectedConference={selectedConference}
               onChange={handleConferenceChange}
+              error={ncaaError.message}
             />
           }
           isLoading={false}
@@ -95,18 +107,17 @@ export default function NCAATeamPage() {
           <ErrorMessage
             message={ncaaError.message || "Failed to load NCAA tournament data"}
             onRetry={() => refetch()}
-            retryLabel="Reload NCAA Tournament Data"
+            retryLabel="Reload NCAA Data"
           />
         </PageLayoutWrapper>
       </ErrorBoundary>
     );
   }
 
-  // No data state
   if (!ncaaLoading && !ncaaData) {
     return (
       <PageLayoutWrapper
-        title="NCAA Tournament Round Projections"
+        title="NCAA Tournament"
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
@@ -120,7 +131,6 @@ export default function NCAATeamPage() {
           <div className="text-gray-500 text-lg mb-4">
             No NCAA tournament data available
           </div>
-          <p className="text-gray-400 text-sm mb-6">Please check back later.</p>
           <button
             onClick={() => refetch()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -135,12 +145,13 @@ export default function NCAATeamPage() {
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
-        title="NCAA Tournament Round Projections"
+        title="NCAA Tournament"
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
+            loading={ncaaLoading}
           />
         }
         isLoading={ncaaLoading}
@@ -148,50 +159,66 @@ export default function NCAATeamPage() {
         <div className="-mt-2 md:-mt-6">
           {ncaaLoading ? (
             <BasketballTableSkeleton
-              tableType="standings"
-              rows={15}
+              tableType="ncaa"
+              rows={selectedConference === "All Teams" ? 25 : 15}
               teamCols={7}
               showSummaryRows={false}
             />
           ) : (
-            <ErrorBoundary level="component" onRetry={() => refetch()}>
-              <div className="mb-8">
-                <div className="ncaa-tourney-table">
-                  <Suspense fallback={<BasketballTableSkeleton />}>
-                    {ncaaData && <NCAATeamTable ncaaData={ncaaData} />}
-                  </Suspense>
-                </div>
+            <>
+              <ErrorBoundary level="component">
+                <div className="mb-8">
+                  <div className="ncaa-table">
+                    <Suspense
+                      fallback={
+                        <BasketballTableSkeleton
+                          tableType="ncaa"
+                          rows={selectedConference === "All Teams" ? 25 : 15}
+                          teamCols={7}
+                          showSummaryRows={false}
+                        />
+                      }
+                    >
+                      {ncaaData && (
+                        <NCAATeamTable
+                          ncaaData={ncaaData}
+                          className="ncaa-table"
+                        />
+                      )}
+                    </Suspense>
+                  </div>
 
-                <div className="mt-6">
-                  <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                      <div style={{ lineHeight: "1.3" }}>
-                        <div>
-                          Shows projected probability of reaching each round of
-                          the NCAA tournament.
-                        </div>
-                        <div style={{ marginTop: "6px" }}>
-                          Percentages based on 1,000 simulations. Darker colors
-                          indicate higher probabilities.
+                  <div className="mt-6">
+                    <div className="flex flex-row items-start gap-4">
+                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                        <div style={{ lineHeight: "1.3" }}>
+                          <div>
+                            NCAA Tournament round advancement probabilities for
+                            all teams.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            Shows the probability of reaching each tournament
+                            round from First Round to Championship.
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div
-                      className={`flex-shrink-0 ${
-                        isMobile ? "w-1/3" : "w-auto mr-2"
-                      }`}
-                    >
-                      <TableActionButtons
-                        contentSelector=".ncaa-tourney-table"
-                        pageName="ncaa-tourney"
-                        pageTitle="NCAA Tournament Round Projections"
-                        shareTitle="NCAA Tournament Analysis"
-                      />
+                      <div
+                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                      >
+                        <TableActionButtons
+                          selectedConference={selectedConference}
+                          contentSelector=".ncaa-table"
+                          pageName="ncaa-tourney"
+                          pageTitle="NCAA Tournament"
+                          shareTitle="NCAA Tournament Analysis"
+                          explainerSelector=".ncaa-explainer"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </ErrorBoundary>
+              </ErrorBoundary>
+            </>
           )}
         </div>
       </PageLayoutWrapper>
