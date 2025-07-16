@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 import navStyles from "@/styles/components/navigation.module.css";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
-export default function Navigation() {
+function NavigationContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -325,5 +325,13 @@ export default function Navigation() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Navigation() {
+  return (
+    <Suspense fallback={<div>Loading navigation...</div>}>
+      <NavigationContent />
+    </Suspense>
   );
 }
