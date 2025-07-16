@@ -11,7 +11,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface WinSeedCountEntry {
   Wins: number;
@@ -64,22 +64,44 @@ export default function TeamPage({
   const [teamData, setTeamData] = useState<TeamData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [teamname, setTeamname] = useState<string>("");
+  const [paramsResolved, setParamsResolved] = useState(false);
 
-  const resolvedParams = use(params);
-  const teamname = decodeURIComponent(resolvedParams.teamname);
-
+  // Resolve params in useEffect
   useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolvedParams = await params;
+        const decodedTeamname = decodeURIComponent(resolvedParams.teamname);
+        setTeamname(decodedTeamname);
+        setParamsResolved(true);
+      } catch (err) {
+        console.error("Error resolving params:", err);
+        setError("Failed to load team page");
+        setLoading(false);
+      }
+    };
+    resolveParams();
+  }, [params]);
+
+  // Track page view once teamname is available
+  useEffect(() => {
+    if (!teamname || !paramsResolved) return;
+
     trackEvent({
       name: "page_view",
       properties: { page: "team", team: teamname },
     });
-  }, [teamname, trackEvent]);
+  }, [teamname, paramsResolved, trackEvent]);
 
-  // In basketball team page useEffect
+  // Fetch team data once teamname is available
   useEffect(() => {
+    if (!teamname || !paramsResolved) return;
+
     const fetchTeamData = async () => {
       try {
         setLoading(true);
+        setError(null);
 
         // Use proxy instead of direct Railway call
         const response = await fetch(
@@ -90,7 +112,6 @@ export default function TeamPage({
 
         const data = await response.json();
         setTeamData(data);
-        setError(null);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load team data"
@@ -101,7 +122,7 @@ export default function TeamPage({
     };
 
     fetchTeamData();
-  }, [teamname]);
+  }, [teamname, paramsResolved]);
 
   const navigateToTeam = (targetTeam: string) => {
     if (targetTeam && targetTeam !== teamname) {
@@ -115,6 +136,17 @@ export default function TeamPage({
     return `${Math.round(value)}%`;
   };
 
+  // Show loading while params are being resolved or data is being fetched
+  if (!paramsResolved || loading || !teamData) {
+    return (
+      <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner size="lg" message="Loading team data..." />
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <ErrorBoundary level="page">
@@ -122,16 +154,6 @@ export default function TeamPage({
           <ErrorMessage message={error} />
         </div>
       </ErrorBoundary>
-    );
-  }
-
-  if (loading || !teamData) {
-    return (
-      <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner size="lg" message="Loading team data..." />
-        </div>
-      </div>
     );
   }
 
