@@ -116,6 +116,7 @@ const nextConfig = {
     // Add these for better performance
     optimizeCss: process.env.NODE_ENV === "production",
     webpackBuildWorker: true,
+    missingSuspenseWithCSRBailout: false, // ✅ Add this line
   },
 
   // Image optimization
