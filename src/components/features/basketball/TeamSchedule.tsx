@@ -98,16 +98,14 @@ export default function TeamSchedule({
 
           <div className="space-y-2">
             {groupedGames.groups[location].length > 0 ? (
-              groupedGames.groups[location].map((game, index) => (
+              groupedGames.groups[location].map((game, idx) => (
                 <div
-                  key={index}
-                  className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                  key={idx}
+                  className="flex items-center justify-between p-2 rounded bg-white cursor-pointer hover:opacity-80 transition-opacity"
                   style={{
                     width: boxWidth,
                     height: boxHeight,
                     border: `2px solid ${getBorderColor(game.status)}`,
-                    borderRadius: "4px",
-                    backgroundColor: "white",
                   }}
                   onClick={() => navigateToTeam(game.opponent)}
                   title={`${game.opponent} (${game.kenpom_rank ? `#${game.kenpom_rank}` : "Unranked"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
@@ -119,6 +117,9 @@ export default function TeamSchedule({
                     teamName={game.opponent}
                     size={logoSize}
                   />
+                  <span className="text-xs text-gray-600 font-medium">
+                    {game.kenpom_rank ? `#${game.kenpom_rank}` : ""}
+                  </span>
                 </div>
               ))
             ) : (
