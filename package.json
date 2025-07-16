@@ -35,9 +35,9 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@eslint/js": "^9.15.0",
     "@eslint/eslintrc": "^3.3.1",
-    "@lhci/cli": "^0.14.0",
+    "@eslint/js": "^9.15.0",
+    "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^15.1.0",
     "@types/node": "^22.10.1",
     "@types/react": "^19.0.1",
@@ -45,6 +45,7 @@
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "autoprefixer": "^10.4.20",
+    "critters": "^0.0.23",
     "eslint": "^9.15.0",
     "eslint-config-next": "^15.1.0",
     "eslint-config-prettier": "^9.1.0",
