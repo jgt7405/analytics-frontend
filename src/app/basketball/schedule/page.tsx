@@ -2,108 +2,150 @@
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
-import ScheduleTable from "@/components/features/basketball/ScheduleTable";
+import FootballScheduleTable from "@/components/features/football/ScheduleTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useConferenceUrl } from "@/hooks/useConferenceUrl";
+import { useFootballSchedule } from "@/hooks/useFootballSchedule";
 import { useResponsive } from "@/hooks/useResponsive";
-import { useSchedule } from "@/hooks/useSchedule";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
-export default function SchedulePage() {
+export default function FootballSchedulePage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
-  const { preferences, updatePreference } = useUserPreferences();
+  const { updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
-  const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
-  );
+  const searchParams = useSearchParams();
+
+  const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>([
-    preferences.defaultConference,
+    "Big 12",
   ]);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  const { handleConferenceChange: handleUrlConferenceChange } =
+    useConferenceUrl(setSelectedConference, availableConferences, false);
+
+  useEffect(() => {
+    if (!hasInitialized) {
+      const confParam = searchParams.get("conf");
+
+      if (confParam) {
+        const decodedConf = decodeURIComponent(confParam);
+        const knownFootballConferences = [
+          "Big 12",
+          "SEC",
+          "Big Ten",
+          "ACC",
+          "Pac-12",
+          "Mountain West",
+          "American Athletic",
+          "Conference USA",
+          "Mid-American",
+          "Sun Belt",
+          "WAC",
+          "Independent",
+        ];
+
+        if (knownFootballConferences.includes(decodedConf)) {
+          setSelectedConference(decodedConf);
+        } else {
+          setSelectedConference("Big 12");
+          const params = new URLSearchParams(searchParams.toString());
+          params.set("conf", "Big 12");
+          const newUrl = `${window.location.pathname}?${params.toString()}`;
+          window.history.replaceState({}, "", newUrl);
+        }
+      }
+      setHasInitialized(true);
+    }
+  }, [searchParams, hasInitialized]);
 
   const {
     data: scheduleResponse,
     isLoading: scheduleLoading,
     error: scheduleError,
     refetch,
-  } = useSchedule(selectedConference);
+  } = useFootballSchedule(hasInitialized ? selectedConference : "Big 12");
 
-  // Track page load
-  useEffect(() => {
-    startMeasurement("schedule-page-load");
-    trackEvent({
-      name: "page_view",
-      properties: { page: "schedule", conference: selectedConference },
-    });
-  }, [selectedConference, startMeasurement, trackEvent]);
-
-  useEffect(() => {
-    return () => {
-      endMeasurement("schedule-page-load");
-    };
-  }, [endMeasurement]);
-
-  // Track successful loading
-  useEffect(() => {
-    if (!scheduleLoading && scheduleResponse) {
-      const loadTime = endMeasurement("schedule-page-load");
-      trackEvent({
-        name: "data_load_success",
-        properties: {
-          page: "schedule",
-          conference: selectedConference,
-          loadTime,
-          teamsCount: scheduleResponse.teams?.length || 0,
-        },
-      });
-    }
-  }, [
-    scheduleLoading,
-    scheduleResponse,
-    selectedConference,
-    endMeasurement,
-    trackEvent,
-  ]);
-
-  // Handle conference changes
-  const handleConferenceChange = (conference: string) => {
-    startMeasurement("conference-change");
-    setSelectedConference(conference);
-    updatePreference("defaultConference", conference);
-    trackEvent({
-      name: "conference_changed",
-      properties: {
-        page: "schedule",
-        fromConference: selectedConference,
-        toConference: conference,
-      },
-    });
-    endMeasurement("conference-change");
-  };
-
-  // Update available conferences
   useEffect(() => {
     if (scheduleResponse?.conferences) {
       setAvailableConferences(scheduleResponse.conferences);
     }
   }, [scheduleResponse]);
 
-  // Track errors
+  const filteredScheduleData = useMemo(() => {
+    if (!scheduleResponse?.data) return [];
+    return scheduleResponse.data;
+  }, [scheduleResponse?.data]);
+
+  // Track page load
   useEffect(() => {
-    if (scheduleError) {
+    if (hasInitialized) {
+      startMeasurement("football-schedule-page-load");
       trackEvent({
-        name: "data_load_error",
+        name: "page_view",
         properties: {
-          page: "schedule",
+          page: "football-schedule",
           conference: selectedConference,
-          errorMessage: scheduleError.message,
         },
       });
     }
-  }, [scheduleError, selectedConference, trackEvent]);
+  }, [selectedConference, startMeasurement, trackEvent, hasInitialized]);
+
+  useEffect(() => {
+    return () => {
+      endMeasurement("football-schedule-page-load");
+    };
+  }, [endMeasurement]);
+
+  useEffect(() => {
+    if (!scheduleLoading && scheduleResponse && hasInitialized) {
+      const loadTime = endMeasurement("football-schedule-page-load");
+      trackEvent({
+        name: "data_load_success",
+        properties: {
+          page: "football-schedule",
+          conference: selectedConference,
+          loadTime,
+          teamsCount: scheduleResponse?.teams?.length || 0,
+        },
+      });
+    }
+  }, [
+    scheduleLoading,
+    scheduleResponse,
+    hasInitialized,
+    selectedConference,
+    endMeasurement,
+    trackEvent,
+  ]);
+
+  const handleConferenceChange = useCallback(
+    (newConference: string) => {
+      setSelectedConference(newConference);
+      handleUrlConferenceChange(newConference);
+      updatePreference("defaultConference", newConference);
+      trackEvent({
+        name: "conference_changed",
+        properties: {
+          page: "football-schedule",
+          fromConference: selectedConference,
+          toConference: newConference,
+        },
+      });
+    },
+    [
+      selectedConference,
+      handleUrlConferenceChange,
+      updatePreference,
+      trackEvent,
+    ]
+  );
 
   // Error state
   if (scheduleError) {
@@ -180,7 +222,6 @@ export default function SchedulePage() {
         <div className="-mt-2 md:-mt-6">
           {scheduleLoading ? (
             <>
-              {/* Main Table Skeleton */}
               <div className="mb-8">
                 <BasketballTableSkeleton
                   tableType="schedule"
@@ -194,7 +235,6 @@ export default function SchedulePage() {
                 </div>
               </div>
 
-              {/* Summary Table Skeleton */}
               <div className="mb-8">
                 <div className="h-7 w-80 bg-gray-300 animate-pulse rounded mb-4" />
                 <BasketballTableSkeleton
@@ -211,14 +251,14 @@ export default function SchedulePage() {
             </>
           ) : (
             <>
-              {/* ✅ This will now render ONLY the main schedule table with its action buttons */}
+              {/* Main schedule table */}
               <ErrorBoundary level="component" onRetry={() => refetch()}>
                 {scheduleResponse?.data &&
                   scheduleResponse?.teams &&
                   scheduleResponse?.team_logos &&
                   scheduleResponse?.summary && (
                     <div className="mb-8">
-                      <div className="schedule-table">
+                      <div className="football-schedule-table">
                         <Suspense
                           fallback={
                             <BasketballTableSkeleton
@@ -229,18 +269,32 @@ export default function SchedulePage() {
                             />
                           }
                         >
-                          <ScheduleTable
-                            scheduleData={scheduleResponse.data}
+                          <FootballScheduleTable
+                            scheduleData={filteredScheduleData}
                             teams={scheduleResponse.teams}
                             teamLogos={scheduleResponse.team_logos}
                             summary={scheduleResponse.summary}
-                            // ✅ Pass a prop to render only the main table
                             renderSummaryTable={false}
                           />
                         </Suspense>
                       </div>
 
-                      {/* ✅ Action buttons for FIRST chart - immediately below main schedule table */}
+                      {/* Legend */}
+                      <div className="mt-4 mb-6 text-sm text-gray-600">
+                        <p>
+                          <strong>Legend:</strong>{" "}
+                          <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
+                          Win |{" "}
+                          <span className="inline-block w-4 h-4 bg-[#fff7d6] border border-gray-300 mr-1 align-middle"></span>
+                          Loss |{" "}
+                          <span className="inline-block w-4 h-4 bg-[#add8e6] mr-1 align-middle"></span>
+                          Next Game |{" "}
+                          <span className="inline-block w-4 h-4 bg-[#f0f0f0] mr-1 align-middle"></span>
+                          Future Games
+                        </p>
+                      </div>
+
+                      {/* Action buttons */}
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
                           <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
@@ -259,11 +313,11 @@ export default function SchedulePage() {
                           >
                             <TableActionButtons
                               selectedConference={selectedConference}
-                              contentSelector=".schedule-table"
-                              pageName="schedule"
+                              contentSelector=".football-schedule-table"
+                              pageName="football-schedule"
                               pageTitle="Team Schedules"
                               shareTitle="Team Schedule Analysis"
-                              pathname="/basketball/schedule"
+                              pathname="/football/schedule"
                             />
                           </div>
                         </div>
@@ -272,7 +326,7 @@ export default function SchedulePage() {
                   )}
               </ErrorBoundary>
 
-              {/* ✅ Now render ONLY the summary table with its own action buttons */}
+              {/* Summary table */}
               {scheduleResponse?.summary &&
                 Object.keys(scheduleResponse.summary).length > 0 && (
                   <ErrorBoundary level="component" onRetry={() => refetch()}>
@@ -282,7 +336,7 @@ export default function SchedulePage() {
                         <span className="text-base">(By Quartile)</span>
                       </h1>
 
-                      <div className="schedule-summary-table">
+                      <div className="football-schedule-summary-table">
                         <Suspense
                           fallback={
                             <BasketballTableSkeleton
@@ -293,18 +347,17 @@ export default function SchedulePage() {
                             />
                           }
                         >
-                          <ScheduleTable
-                            scheduleData={scheduleResponse.data}
+                          <FootballScheduleTable
+                            scheduleData={filteredScheduleData}
                             teams={scheduleResponse.teams}
                             teamLogos={scheduleResponse.team_logos}
                             summary={scheduleResponse.summary}
-                            // ✅ Pass a prop to render only the summary table
                             renderMainTable={false}
                           />
                         </Suspense>
                       </div>
 
-                      {/* ✅ Action buttons for SECOND chart - immediately below summary table */}
+                      {/* Action buttons */}
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
                           <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
@@ -323,11 +376,11 @@ export default function SchedulePage() {
                           >
                             <TableActionButtons
                               selectedConference={selectedConference}
-                              contentSelector=".schedule-summary-table"
-                              pageName="schedule-summary"
+                              contentSelector=".football-schedule-summary-table"
+                              pageName="football-schedule-summary"
                               pageTitle="Schedule Difficulty Summary"
                               shareTitle="Schedule Difficulty Summary"
-                              pathname="/basketball/schedule"
+                              pathname="/football/schedule"
                             />
                           </div>
                         </div>

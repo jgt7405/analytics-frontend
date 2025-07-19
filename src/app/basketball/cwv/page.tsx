@@ -208,10 +208,28 @@ export default function CWVPage() {
                     </Suspense>
                   </div>
 
+                  {/* Legend - with correct colors matching the chart */}
+                  <div className="mt-4 mb-6 text-sm text-gray-600">
+                    <p>
+                      <strong>Legend:</strong>{" "}
+                      <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
+                      Win |{" "}
+                      <span className="inline-block w-4 h-4 bg-[#fff7d6] border border-gray-300 mr-1 align-middle"></span>
+                      Loss |{" "}
+                      <span className="inline-block w-4 h-4 bg-[#add8e6] mr-1 align-middle"></span>
+                      Next Game |{" "}
+                      <span className="inline-block w-4 h-4 bg-[#f0f0f0] mr-1 align-middle"></span>
+                      Future Games
+                    </p>
+                  </div>
+
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                        <div style={{ lineHeight: "1.3" }}>
+                        <div
+                          className="cwv-explainer"
+                          style={{ lineHeight: "1.3" }}
+                        >
                           <div>
                             Conference Win Value (CWV) shows the expected win
                             probability for each remaining game ranked by

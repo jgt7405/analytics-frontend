@@ -115,17 +115,17 @@ export default function FootballCWVPage() {
                   </Suspense>
                 </div>
 
-                {/* Legend - moved below the chart */}
+                {/* Legend - corrected colors to match chart */}
                 <div className="mt-4 mb-6 text-sm text-gray-600">
                   <p>
                     <strong>Legend:</strong>{" "}
                     <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
                     Win |{" "}
-                    <span className="inline-block w-4 h-4 bg-yellow-100 border border-gray-300 mr-1 align-middle"></span>
+                    <span className="inline-block w-4 h-4 bg-[#fff7d6] border border-gray-300 mr-1 align-middle"></span>
                     Loss |{" "}
-                    <span className="inline-block w-4 h-4 bg-blue-200 mr-1 align-middle"></span>
+                    <span className="inline-block w-4 h-4 bg-[#add8e6] mr-1 align-middle"></span>
                     Next Game |{" "}
-                    <span className="inline-block w-4 h-4 bg-gray-100 mr-1 align-middle"></span>
+                    <span className="inline-block w-4 h-4 bg-[#f0f0f0] mr-1 align-middle"></span>
                     Future Games
                   </p>
                 </div>

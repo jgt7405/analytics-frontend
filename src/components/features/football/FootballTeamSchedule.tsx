@@ -62,10 +62,6 @@ export default function FootballTeamSchedule({
         if (a.sagarin_rank && b.sagarin_rank) {
           return a.sagarin_rank - b.sagarin_rank;
         }
-        // If only one has a rank, prioritize the ranked team
-        if (a.sagarin_rank && !b.sagarin_rank) return -1;
-        if (!a.sagarin_rank && b.sagarin_rank) return 1;
-        // If neither has a rank, sort alphabetically
         return a.opponent.localeCompare(b.opponent);
       });
     });
@@ -84,79 +80,66 @@ export default function FootballTeamSchedule({
     }
   };
 
-  // Exact same dimensions as basketball
   const boxWidth = isMobile ? 70 : 80;
   const boxHeight = isMobile ? 36 : 40;
   const logoSize = isMobile ? 24 : 28;
 
   return (
-    <div className={`${className}`}>
-      <div
-        className="flex gap-4 overflow-x-auto"
-        style={{ minWidth: (boxWidth + 16) * 3 + 32 }}
-      >
-        {(["Away", "Neutral", "Home"] as const).map((location) => (
-          <div
-            key={location}
-            className="flex-shrink-0"
-            style={{
-              width: boxWidth + 16, // Fixed width for consistent spacing
-              minWidth: boxWidth + 16,
-            }}
-          >
-            <div className="text-center mb-3">
-              <h3 className="text-sm font-semibold text-gray-600 -mb-1">
-                {location}
-              </h3>
-              <div className="text-xs text-gray-500">
-                {groupedGames.records[location].wins}-
-                {groupedGames.records[location].losses}
-              </div>
-            </div>
-
-            <div className="space-y-2" style={{ minHeight: boxHeight + 8 }}>
-              {groupedGames.groups[location].length > 0 ? (
-                groupedGames.groups[location].map((game, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                    style={{
-                      width: boxWidth,
-                      height: boxHeight,
-                      border: `2px solid ${getBorderColor(game.status)}`,
-                      borderRadius: "4px",
-                      backgroundColor: "white",
-                    }}
-                    onClick={() => navigateToTeam(game.opponent)}
-                    title={`${game.opponent} (${game.sagarin_rank ? `#${game.sagarin_rank}` : "Unranked"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
-                  >
-                    <TeamLogo
-                      logoUrl={
-                        game.opponent_logo || "/images/team_logos/default.png"
-                      }
-                      teamName={game.opponent}
-                      size={logoSize}
-                    />
-                  </div>
-                ))
-              ) : (
-                <div
-                  className="flex items-center justify-center text-xs text-gray-400"
-                  style={{
-                    width: boxWidth, // Same width as game tiles
-                    height: boxHeight, // Same height as game tiles
-                    border: "1px dashed #d1d5db",
-                    borderRadius: "4px",
-                    backgroundColor: "#f9f9f9",
-                  }}
-                >
-                  None
-                </div>
-              )}
+    <div className={`flex gap-4 overflow-x-auto ${className}`}>
+      {(["Away", "Neutral", "Home"] as const).map((location) => (
+        <div key={location} className="flex-shrink-0">
+          <div className="text-center mb-3">
+            <h3 className="text-sm font-semibold text-gray-600 -mb-1">
+              {location}
+            </h3>
+            <div className="text-xs text-gray-500">
+              {groupedGames.records[location].wins}-
+              {groupedGames.records[location].losses}
             </div>
           </div>
-        ))}
-      </div>
+
+          <div className="space-y-2">
+            {groupedGames.groups[location].length > 0 ? (
+              groupedGames.groups[location].map((game, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-2 rounded bg-white cursor-pointer hover:opacity-80 transition-opacity"
+                  style={{
+                    width: boxWidth,
+                    height: boxHeight,
+                    border: `2px solid ${getBorderColor(game.status)}`,
+                  }}
+                  onClick={() => navigateToTeam(game.opponent)}
+                  title={`${game.opponent} (${game.sagarin_rank ? `#${game.sagarin_rank}` : "Unranked"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
+                >
+                  <TeamLogo
+                    logoUrl={
+                      game.opponent_logo || "/images/team_logos/default.png"
+                    }
+                    teamName={game.opponent}
+                    size={logoSize}
+                  />
+                  <span className="text-xs text-gray-600 font-medium">
+                    {game.sagarin_rank ? `#${game.sagarin_rank}` : ""}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div
+                className="flex items-center justify-center text-xs text-gray-400"
+                style={{
+                  width: boxWidth,
+                  height: boxHeight,
+                  border: "1px dashed #d1d5db",
+                  borderRadius: "4px",
+                }}
+              >
+                None
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

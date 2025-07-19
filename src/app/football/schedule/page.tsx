@@ -3,6 +3,7 @@
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
 import FootballScheduleTable from "@/components/features/football/ScheduleTable";
+import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
@@ -20,26 +21,20 @@ export default function FootballSchedulePage() {
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
 
-  // CRITICAL: Start with Big 12 to avoid invalid API calls
   const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>([
-    "Big 12", // Always include Big 12 as default
+    "Big 12",
   ]);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // URL management hook for consistent URL state management
   const { handleConferenceChange: handleUrlConferenceChange } =
     useConferenceUrl(setSelectedConference, availableConferences, false);
 
-  // IMPORTANT: Validate URL conference BEFORE making API calls
   useEffect(() => {
     if (!hasInitialized) {
       const confParam = searchParams.get("conf");
-
       if (confParam) {
         const decodedConf = decodeURIComponent(confParam);
-
-        // Define known football conferences to avoid API calls with invalid ones
         const knownFootballConferences = [
           "Big 12",
           "SEC",
@@ -58,11 +53,7 @@ export default function FootballSchedulePage() {
         if (knownFootballConferences.includes(decodedConf)) {
           setSelectedConference(decodedConf);
         } else {
-          console.log(
-            `Conference "${decodedConf}" not valid for football, using Big 12`
-          );
           setSelectedConference("Big 12");
-          // Update URL immediately to prevent subsequent bad API calls
           const params = new URLSearchParams(searchParams.toString());
           params.set("conf", "Big 12");
           const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -73,7 +64,6 @@ export default function FootballSchedulePage() {
     }
   }, [searchParams, hasInitialized]);
 
-  // Only make API call after initialization
   const {
     data: scheduleResponse,
     isLoading: scheduleLoading,
@@ -81,47 +71,14 @@ export default function FootballSchedulePage() {
     refetch,
   } = useFootballSchedule(hasInitialized ? selectedConference : "Big 12");
 
-  // 🔍 ADD DEBUG LOGS FOR RECEIVED DATA
-  useEffect(() => {
-    if (scheduleResponse) {
-      console.log("🔍 PAGE: Received scheduleResponse:", scheduleResponse);
-      console.log(
-        "🔍 PAGE: scheduleResponse.summary:",
-        scheduleResponse.summary
-      );
-      if (scheduleResponse.summary?.Arizona) {
-        console.log(
-          "🔍 PAGE: Arizona summary in page:",
-          scheduleResponse.summary.Arizona
-        );
-      }
-      // Log all teams' quartile data
-      Object.entries(scheduleResponse.summary || {}).forEach(
-        ([team, summary]) => {
-          console.log(`🔍 PAGE: ${team} quartiles:`, {
-            top: summary.top_quartile,
-            second: summary.second_quartile,
-            third: summary.third_quartile,
-            bottom: summary.bottom_quartile,
-          });
-        }
-      );
-    }
-  }, [scheduleResponse]);
-
-  // Update available conferences when data loads
   useEffect(() => {
     if (scheduleResponse?.conferences) {
       setAvailableConferences(scheduleResponse.conferences);
     }
   }, [scheduleResponse]);
 
-  // Filter for conference games only - FILTERING NOW ENABLED
   const filteredScheduleData = useMemo(() => {
     if (!scheduleResponse?.data) return [];
-
-    // For football schedule, we typically want to show all games
-    // but you can add filtering logic here if needed
     return scheduleResponse.data;
   }, [scheduleResponse?.data]);
 
@@ -145,7 +102,6 @@ export default function FootballSchedulePage() {
     };
   }, [endMeasurement]);
 
-  // Track successful loading
   useEffect(() => {
     if (!scheduleLoading && scheduleResponse && hasInitialized) {
       const loadTime = endMeasurement("football-schedule-page-load");
@@ -170,219 +126,273 @@ export default function FootballSchedulePage() {
 
   const handleConferenceChange = useCallback(
     (newConference: string) => {
-      console.log(
-        `🏈 Schedule page: Conference change from ${selectedConference} to ${newConference}`
-      );
-
+      startMeasurement("conference-change");
       setSelectedConference(newConference);
       handleUrlConferenceChange(newConference);
-
-      // Update user preferences - FIXED: Use existing preference key
       updatePreference("defaultConference", newConference);
-
-      // Track conference change
       trackEvent({
-        name: "conference_change",
+        name: "conference_changed",
         properties: {
           page: "football-schedule",
-          from: selectedConference,
-          to: newConference,
+          fromConference: selectedConference,
+          toConference: newConference,
         },
       });
+      endMeasurement("conference-change");
     },
     [
       selectedConference,
       handleUrlConferenceChange,
       updatePreference,
       trackEvent,
+      startMeasurement,
+      endMeasurement,
     ]
   );
 
+  // Error state - matches basketball exactly
   if (scheduleError) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <ErrorMessage
-          title="Failed to load football schedule data"
-          message={
-            scheduleError instanceof Error
-              ? scheduleError.message
-              : "Unknown error occurred"
-          }
-          onRetry={() => refetch()}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="space-y-6">
-        {/* Conference Selector */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Football Schedule Analysis
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Team schedule difficulty and game results
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      <ErrorBoundary level="page" onRetry={() => refetch()}>
+        <PageLayoutWrapper
+          title="Team Schedules"
+          conferenceSelector={
             <ConferenceSelector
               conferences={availableConferences}
               selectedConference={selectedConference}
               onChange={handleConferenceChange}
-              loading={scheduleLoading}
+              error={scheduleError.message}
             />
+          }
+          isLoading={false}
+        >
+          <ErrorMessage
+            message={scheduleError.message || "Failed to load schedule data"}
+            onRetry={() => refetch()}
+            retryLabel="Reload Schedule Data"
+          />
+        </PageLayoutWrapper>
+      </ErrorBoundary>
+    );
+  }
+
+  // No data state - matches basketball exactly
+  if (!scheduleLoading && !scheduleResponse?.data) {
+    return (
+      <PageLayoutWrapper
+        title="Team Schedules"
+        conferenceSelector={
+          <ConferenceSelector
+            conferences={availableConferences}
+            selectedConference={selectedConference}
+            onChange={handleConferenceChange}
+          />
+        }
+        isLoading={false}
+      >
+        <div className="text-center py-12">
+          <div className="text-gray-500 text-lg mb-4">
+            No schedule data available
           </div>
+          <p className="text-gray-400 text-sm mb-6">
+            Try selecting a different conference or check back later.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Retry Loading
+          </button>
         </div>
+      </PageLayoutWrapper>
+    );
+  }
 
-        {/* Loading State */}
-        {scheduleLoading && (
-          <div className="space-y-8">
-            <BasketballTableSkeleton
-              tableType="schedule"
-              rows={15}
-              teamCols={16}
-              showSummaryRows={true}
-            />
-          </div>
-        )}
-
-        {/* Content */}
-        {!scheduleLoading && scheduleResponse && (
-          <>
-            {/* ✅ Main schedule table */}
-            {scheduleResponse.data && scheduleResponse.data.length > 0 && (
-              <ErrorBoundary level="component" onRetry={() => refetch()}>
-                <div className="mb-8">
-                  <div className="flex flex-row justify-between items-start mb-4">
-                    <h1 className="text-xl font-normal text-gray-500">
-                      Conference Schedule Matrix
-                    </h1>
-                  </div>
-
-                  <div className="football-schedule-table">
-                    <Suspense
-                      fallback={
-                        <BasketballTableSkeleton
-                          tableType="schedule"
-                          rows={15}
-                          teamCols={16}
-                          showSummaryRows={false}
-                        />
-                      }
-                    >
-                      <FootballScheduleTable
-                        scheduleData={filteredScheduleData}
-                        teams={scheduleResponse.teams}
-                        teamLogos={scheduleResponse.team_logos}
-                        summary={scheduleResponse.summary}
-                        // ✅ Pass a prop to render only the main table
-                        renderSummaryTable={false}
-                      />
-                    </Suspense>
-                  </div>
-
-                  {/* ✅ Action buttons for FIRST chart - immediately below main table */}
-                  <div className="mt-6">
-                    <div className="flex flex-row items-start gap-4">
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                        <div style={{ lineHeight: "1.3" }}>
-                          <div>
-                            Matrix showing team schedules and game results.
-                          </div>
-                          <div style={{ marginTop: "6px" }}>
-                            Each column shows game results from perspective of
-                            team at top of column.
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                      >
-                        <TableActionButtons
-                          selectedConference={selectedConference}
-                          contentSelector=".football-schedule-table"
-                          pageName="football-schedule"
-                          pageTitle="Football Team Schedules"
-                          shareTitle="Football Schedule Analysis"
-                          pathname="/football/schedule"
-                        />
-                      </div>
-                    </div>
-                  </div>
+  return (
+    <ErrorBoundary level="page" onRetry={() => refetch()}>
+      <PageLayoutWrapper
+        title="Team Schedules"
+        conferenceSelector={
+          <ConferenceSelector
+            conferences={availableConferences}
+            selectedConference={selectedConference}
+            onChange={handleConferenceChange}
+            loading={scheduleLoading}
+          />
+        }
+        isLoading={scheduleLoading}
+      >
+        <div className="-mt-2 md:-mt-6">
+          {scheduleLoading ? (
+            <>
+              <div className="mb-8">
+                <BasketballTableSkeleton
+                  tableType="schedule"
+                  rows={12}
+                  teamCols={10}
+                  showSummaryRows={true}
+                />
+                <div className="mt-4 flex gap-2">
+                  <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
                 </div>
-              </ErrorBoundary>
-            )}
+              </div>
 
-            {/* ✅ Now render ONLY the summary table with its own action buttons */}
-            {scheduleResponse?.summary &&
-              Object.keys(scheduleResponse.summary).length > 0 && (
-                <ErrorBoundary level="component" onRetry={() => refetch()}>
-                  <div className="mb-8">
-                    <h1 className="text-xl font-normal text-gray-500 mb-4">
-                      Schedule Difficulty Summary{" "}
-                      <span className="text-base">(By Quartile)</span>
-                    </h1>
-
-                    <div className="football-schedule-summary-table">
-                      <Suspense
-                        fallback={
-                          <BasketballTableSkeleton
-                            tableType="schedule"
-                            rows={12}
-                            teamCols={7}
-                            showSummaryRows={false}
+              <div className="mb-8">
+                <div className="h-7 w-80 bg-gray-300 animate-pulse rounded mb-4" />
+                <BasketballTableSkeleton
+                  tableType="schedule"
+                  rows={12}
+                  teamCols={7}
+                  showSummaryRows={false}
+                />
+                <div className="mt-4 flex gap-2">
+                  <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Main schedule table */}
+              <ErrorBoundary level="component" onRetry={() => refetch()}>
+                {scheduleResponse?.data &&
+                  scheduleResponse?.teams &&
+                  scheduleResponse?.team_logos &&
+                  scheduleResponse?.summary && (
+                    <div className="mb-8">
+                      <div className="football-schedule-table">
+                        <Suspense
+                          fallback={
+                            <BasketballTableSkeleton
+                              tableType="schedule"
+                              rows={12}
+                              teamCols={10}
+                              showSummaryRows={true}
+                            />
+                          }
+                        >
+                          <FootballScheduleTable
+                            scheduleData={filteredScheduleData}
+                            teams={scheduleResponse.teams}
+                            teamLogos={scheduleResponse.team_logos}
+                            summary={scheduleResponse.summary}
+                            renderSummaryTable={false}
                           />
-                        }
-                      >
-                        <FootballScheduleTable
-                          scheduleData={filteredScheduleData}
-                          teams={scheduleResponse.teams}
-                          teamLogos={scheduleResponse.team_logos}
-                          summary={scheduleResponse.summary}
-                          // ✅ Pass a prop to render only the summary table
-                          renderMainTable={false}
-                        />
-                      </Suspense>
-                    </div>
+                        </Suspense>
+                      </div>
 
-                    {/* ✅ Action buttons for SECOND chart - immediately below summary table */}
-                    <div className="mt-6">
-                      <div className="flex flex-row items-start gap-4">
-                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                          <div style={{ lineHeight: "1.3" }}>
-                            <div>
-                              Team schedule difficulty breakdown by quartile.
-                            </div>
-                            <div style={{ marginTop: "6px" }}>
-                              Quartiles based on opponent win percentages (Top =
-                              hardest games).
+                      {/* Legend */}
+                      <div className="mt-4 mb-6 text-sm text-gray-600">
+                        <p>
+                          <strong>Legend:</strong>{" "}
+                          <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
+                          Win |{" "}
+                          <span className="inline-block w-4 h-4 bg-[#fff7d6] border border-gray-300 mr-1 align-middle"></span>
+                          Loss |{" "}
+                          <span className="inline-block w-4 h-4 bg-[#add8e6] mr-1 align-middle"></span>
+                          Next Game |{" "}
+                          <span className="inline-block w-4 h-4 bg-[#f0f0f0] mr-1 align-middle"></span>
+                          Future Games
+                        </p>
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex flex-row items-start gap-4">
+                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                            <div style={{ lineHeight: "1.3" }}>
+                              <div>
+                                Location and Opponent are sorted by difficulty.
+                              </div>
+                              <div style={{ marginTop: "6px" }}>
+                                Each column shows game results from perspective
+                                of team at top of column.
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div
-                          className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                        >
-                          <TableActionButtons
-                            selectedConference={selectedConference}
-                            contentSelector=".football-schedule-summary-table"
-                            pageName="football-schedule-summary"
-                            pageTitle="Football Schedule Difficulty Summary"
-                            shareTitle="Football Schedule Quartile Analysis"
-                            pathname="/football/schedule"
-                          />
+                          <div
+                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                          >
+                            <TableActionButtons
+                              selectedConference={selectedConference}
+                              contentSelector=".football-schedule-table"
+                              pageName="schedule"
+                              pageTitle="Team Schedules"
+                              shareTitle="Team Schedule Analysis"
+                              pathname="/football/schedule"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </ErrorBoundary>
-              )}
-          </>
-        )}
-      </div>
-    </div>
+                  )}
+              </ErrorBoundary>
+
+              {/* Summary table */}
+              {scheduleResponse?.summary &&
+                Object.keys(scheduleResponse.summary).length > 0 && (
+                  <ErrorBoundary level="component" onRetry={() => refetch()}>
+                    <div className="mb-8">
+                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                        Schedule Difficulty Summary{" "}
+                        <span className="text-base">(By Quartile)</span>
+                      </h1>
+
+                      <div className="football-schedule-summary-table">
+                        <Suspense
+                          fallback={
+                            <BasketballTableSkeleton
+                              tableType="schedule"
+                              rows={12}
+                              teamCols={7}
+                              showSummaryRows={false}
+                            />
+                          }
+                        >
+                          <FootballScheduleTable
+                            scheduleData={filteredScheduleData}
+                            teams={scheduleResponse.teams}
+                            teamLogos={scheduleResponse.team_logos}
+                            summary={scheduleResponse.summary}
+                            renderMainTable={false}
+                          />
+                        </Suspense>
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex flex-row items-start gap-4">
+                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                            <div style={{ lineHeight: "1.3" }}>
+                              <div>
+                                Team schedule difficulty breakdown by quartile.
+                              </div>
+                              <div style={{ marginTop: "6px" }}>
+                                Darker blues indicate more games in that
+                                difficulty category.
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                          >
+                            <TableActionButtons
+                              selectedConference={selectedConference}
+                              contentSelector=".football-schedule-summary-table"
+                              pageName="schedule-summary"
+                              pageTitle="Schedule Difficulty Summary"
+                              shareTitle="Schedule Difficulty Summary"
+                              pathname="/football/schedule"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ErrorBoundary>
+                )}
+            </>
+          )}
+        </div>
+      </PageLayoutWrapper>
+    </ErrorBoundary>
   );
 }
