@@ -11,7 +11,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 // API response interfaces
 interface ApiSeedCount {
@@ -67,7 +67,7 @@ interface FootballWinSeedCount {
 export default function FootballTeamPage({
   params,
 }: {
-  params: Promise<{ teamname: string }>;
+  params: { teamname: string }; // Changed: Remove Promise wrapper
 }) {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
@@ -76,8 +76,8 @@ export default function FootballTeamPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const resolvedParams = use(params);
-  const teamname = decodeURIComponent(resolvedParams.teamname);
+  // Changed: Direct access to params, no use() hook needed
+  const teamname = decodeURIComponent(params.teamname);
 
   useEffect(() => {
     trackEvent({

@@ -18,6 +18,7 @@ import {
   FootballConferenceApiResponse,
   FootballCWVApiResponse,
   FootballPlayoffApiResponse,
+  FootballScheduleResponse,
   FootballSeedApiResponse,
   FootballStandingsApiResponse,
   FootballTeamApiResponse,
@@ -513,6 +514,22 @@ class ApiClient {
     return this.request(`/football/standings/${formattedConf}`, (data) => ({
       success: true,
       data: data as FootballStandingsApiResponse,
+      error: null,
+    }));
+  }
+
+  async getFootballSchedule(
+    conference: string
+  ): Promise<FootballScheduleResponse> {
+    const sanitized = sanitizeInput(conference);
+    const formattedConf = sanitized.replace(/ /g, "_");
+    console.log(
+      `🏈 Getting football schedule for: ${sanitized} -> ${formattedConf}`
+    );
+
+    return this.request(`/football/conf_schedule/${formattedConf}`, (data) => ({
+      success: true,
+      data: data as FootballScheduleResponse,
       error: null,
     }));
   }

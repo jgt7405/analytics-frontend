@@ -8,7 +8,7 @@ import { FootballScheduleData } from "@/types/football";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
 
-// Define proper types for the summary data
+// ✅ Define proper types for summary data
 interface FootballScheduleSummary {
   total_games: number;
   expected_wins: number;
@@ -40,6 +40,82 @@ function FootballScheduleTable({
   const { isMobile } = useResponsive();
   const router = useRouter();
 
+  // 🔍 COMPREHENSIVE DEBUG: Add extensive debugging to understand data flow
+  console.log(
+    "🚀 ================================================================="
+  );
+  console.log("🔍 FootballScheduleTable COMPREHENSIVE DEBUG START");
+  console.log(
+    "🚀 ================================================================="
+  );
+
+  console.log("🔧 QUARTILE VALUE TEST:");
+  if (teams && teams.length > 0 && summary) {
+    const firstTeam = teams[0];
+    const teamSummary = summary[firstTeam];
+    if (teamSummary) {
+      console.log(`Direct access test for ${firstTeam}:`);
+      console.log("- top_quartile:", teamSummary.top_quartile);
+      console.log("- second_quartile:", teamSummary.second_quartile);
+      console.log("- third_quartile:", teamSummary.third_quartile);
+      console.log("- bottom_quartile:", teamSummary.bottom_quartile);
+
+      console.log("Template literal test:");
+      console.log("- top_quartile via template:", teamSummary[`top_quartile`]);
+      console.log(
+        "- second_quartile via template:",
+        teamSummary[`second_quartile`]
+      );
+    }
+  }
+
+  // Basic data validation
+  console.log("📊 BASIC DATA VALIDATION:");
+  console.log("- scheduleData length:", scheduleData?.length);
+  console.log("- teams length:", teams?.length);
+  console.log("- summary keys length:", Object.keys(summary || {}).length);
+  console.log("- renderMainTable:", renderMainTable);
+  console.log("- renderSummaryTable:", renderSummaryTable);
+
+  // Teams array analysis
+  console.log("\n👥 TEAMS ARRAY ANALYSIS:");
+  console.log("- Teams:", teams);
+  console.log("- First 3 teams:", teams?.slice(0, 3));
+
+  // Summary object deep analysis
+  console.log("\n📈 SUMMARY OBJECT DEEP ANALYSIS:");
+  console.log("- Summary object:", summary);
+  console.log("- Summary object type:", typeof summary);
+  console.log("- Summary object keys:", Object.keys(summary || {}));
+  console.log("- Summary is null/undefined:", summary == null);
+  console.log(
+    "- Summary is empty object:",
+    Object.keys(summary || {}).length === 0
+  );
+
+  // Check all teams summary data
+  console.log("\n👨‍👩‍👧‍👦 ALL TEAMS SUMMARY CHECK:");
+  if (teams && summary) {
+    teams.forEach((team) => {
+      const teamSummary = summary[team];
+      if (teamSummary) {
+        console.log(
+          `✅ ${team}: top=${teamSummary.top_quartile}, second=${teamSummary.second_quartile}, third=${teamSummary.third_quartile}, bottom=${teamSummary.bottom_quartile}`
+        );
+      } else {
+        console.log(`❌ ${team}: NO SUMMARY DATA`);
+      }
+    });
+  }
+
+  console.log(
+    "🚀 ================================================================="
+  );
+  console.log("🔍 FootballScheduleTable COMPREHENSIVE DEBUG END");
+  console.log(
+    "🚀 =================================================================\n"
+  );
+
   const navigateToTeam = useCallback(
     (teamName: string) => {
       router.push(`/football/team/${encodeURIComponent(teamName)}`);
@@ -66,10 +142,8 @@ function FootballScheduleTable({
     return String(value).trim();
   }, []);
 
-  // ✅ FIXED: Define getCellValue with proper types
   const getCellValue = useCallback(
     (row: FootballScheduleData, team: string): unknown => {
-      // ✅ Fixed: was 'any'
       if (!row.games) return undefined;
 
       if (typeof row.games === "string") {
@@ -82,7 +156,7 @@ function FootballScheduleTable({
       }
 
       if (typeof row.games === "object") {
-        return (row.games as Record<string, unknown>)[team]; // ✅ Fixed: was 'any'
+        return (row.games as Record<string, unknown>)[team];
       }
 
       return undefined;
@@ -90,19 +164,7 @@ function FootballScheduleTable({
     []
   );
 
-  // ✅ UPDATED: Improved filtering for better performance
-  const filteredScheduleData = useMemo(() => {
-    return scheduleData.filter((row) => {
-      // Keep all rows that have at least one team with a game
-      return teams.some((team) => {
-        const cellValue = getCellValue(row, team);
-        const formattedValue = formatCellValue(cellValue);
-        return formattedValue !== "";
-      });
-    });
-  }, [scheduleData, teams, getCellValue, formatCellValue]);
-
-  // ✅ NEW: Calculate next upcoming games for each team
+  // Calculate next upcoming games for each team
   const nextGamesForTeams = useMemo(() => {
     const nextGames: Record<string, { date: string; rowIndex: number } | null> =
       {};
@@ -110,7 +172,7 @@ function FootballScheduleTable({
     teams.forEach((team) => {
       const futureGames: { date: string; rowIndex: number }[] = [];
 
-      filteredScheduleData.forEach((row, rowIndex) => {
+      scheduleData.forEach((row, rowIndex) => {
         const cellValue = getCellValue(row, team);
         const formattedValue = formatCellValue(cellValue);
 
@@ -120,31 +182,34 @@ function FootballScheduleTable({
         }
       });
 
-      // Sort by date (assuming MM/DD format)
+      // Sort by date to find the earliest upcoming game
       futureGames.sort((a, b) => {
         const [aMonth, aDay] = a.date.split("/").map(Number);
         const [bMonth, bDay] = b.date.split("/").map(Number);
-        if (aMonth !== bMonth) return aMonth - bMonth;
-        return aDay - bDay;
+
+        // Create dates for comparison (assuming current academic year)
+        const currentYear = new Date().getFullYear();
+        const aDate = new Date(currentYear, aMonth - 1, aDay);
+        const bDate = new Date(currentYear, bMonth - 1, bDay);
+
+        return aDate.getTime() - bDate.getTime();
       });
 
       nextGames[team] = futureGames.length > 0 ? futureGames[0] : null;
     });
 
     return nextGames;
-  }, [filteredScheduleData, teams, getCellValue, formatCellValue]);
+  }, [scheduleData, teams, getCellValue, formatCellValue]);
 
-  // ✅ UPDATED: Improved cell styling with next game logic
   const getCellStyle = useCallback(
     (value: string | undefined, teamName: string, rowIndex: number) => {
       if (!value || typeof value !== "string") return {};
 
-      // Match basketball schedule colors exactly
-      if (value === "W") return { backgroundColor: "#18627b", color: "white" }; // Win color
-      if (value === "L") return { backgroundColor: "#fff7d6", color: "black" }; // Loss color
-      if (value === "T") return { backgroundColor: "#e6e6fa", color: "black" }; // Tie color
+      // Game results
+      if (value === "W") return { backgroundColor: "#18627b", color: "white" }; // CWV win color
+      if (value === "L") return { backgroundColor: "#fff7d6", color: "black" }; // CWV loss color
 
-      // For dates, check if this is the next upcoming game for this team
+      // Future games (dates)
       if (/^\d{1,2}\/\d{1,2}$/.test(value)) {
         const nextGame = nextGamesForTeams[teamName];
         const isNextGame =
@@ -164,6 +229,10 @@ function FootballScheduleTable({
 
   const getSummaryColor = useCallback(
     (value: number, type: string) => {
+      console.log(
+        `🎨 getSummaryColor called with value: ${value}, type: ${type}`
+      );
+
       if (type === "expected_wins") {
         const maxExpectedWins = Math.max(
           ...Object.values(summary).map(
@@ -199,19 +268,28 @@ function FootballScheduleTable({
           )
         );
 
+        console.log(
+          `🎨 Quartile coloring: value=${value}, maxQuartile=${maxQuartile}`
+        );
+
         const intensity = value / maxQuartile;
         const r = Math.round(195 - (195 - 24) * intensity);
         const g = Math.round(224 - (224 - 98) * intensity);
         const b = Math.round(236 - (236 - 123) * intensity);
         const textColor = intensity > 0.5 ? "white" : "black";
-        return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
+
+        const result = {
+          backgroundColor: `rgb(${r}, ${g}, ${b})`,
+          color: textColor,
+        };
+        console.log(`🎨 Returning style:`, result);
+        return result;
       }
       return { backgroundColor: "#ffffff" };
     },
     [summary]
   );
 
-  // Same dimensions as basketball schedule
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
   const summaryRowHeight = isMobile ? 24 : 28;
@@ -243,7 +321,7 @@ function FootballScheduleTable({
 
   return (
     <div>
-      {/* Main Schedule Table */}
+      {/* Main Schedule Table with Summary Rows */}
       {renderMainTable && (
         <div className="mb-4">
           <div
@@ -264,7 +342,7 @@ function FootballScheduleTable({
             >
               <thead>
                 <tr>
-                  {/* Location Column - Fixed sticky positioning */}
+                  {/* Location Column */}
                   <th
                     className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
@@ -284,7 +362,7 @@ function FootballScheduleTable({
                     Location
                   </th>
 
-                  {/* Opponent Column - Fixed sticky positioning */}
+                  {/* Opponent Column */}
                   <th
                     className={`sticky z-30 bg-gray-50 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
@@ -313,7 +391,7 @@ function FootballScheduleTable({
                     )}
                   </th>
 
-                  {/* Win Probability Column - Fixed sticky positioning */}
+                  {/* Win Probability Column */}
                   <th
                     className={`sticky z-30 bg-gray-50 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
@@ -379,10 +457,10 @@ function FootballScheduleTable({
               </thead>
 
               <tbody>
-                {/* ✅ UPDATED: Use filteredScheduleData instead of scheduleData */}
-                {filteredScheduleData.map((row, index) => (
+                {/* Game Rows */}
+                {scheduleData.map((row, index) => (
                   <tr key={index}>
-                    {/* Location Cell - Capitalize and apply correct styling */}
+                    {/* Location Cell */}
                     <td
                       className={`sticky left-0 z-20 text-center ${
                         isMobile ? "text-xs" : "text-sm"
@@ -397,14 +475,12 @@ function FootballScheduleTable({
                         border: "1px solid #e5e7eb",
                         borderTop: "none",
                         borderRight: "1px solid #e5e7eb",
-                        // ✅ Use capitalized version for styling lookup
                         ...getLocationStyle(
                           row.Loc.charAt(0).toUpperCase() +
                             row.Loc.slice(1).toLowerCase()
                         ),
                       }}
                     >
-                      {/* ✅ Display capitalized location */}
                       {row.Loc.charAt(0).toUpperCase() +
                         row.Loc.slice(1).toLowerCase()}
                     </td>
@@ -480,9 +556,8 @@ function FootballScheduleTable({
                             border: "1px solid #e5e7eb",
                             borderTop: "none",
                             borderLeft: "none",
-                            // ✅ Made empty cells darker gray
                             backgroundColor: isEmpty
-                              ? "#d1d5db" // Darker gray for empty cells
+                              ? "#d1d5db"
                               : "transparent",
                           }}
                         >
@@ -492,7 +567,7 @@ function FootballScheduleTable({
                             }`}
                             style={
                               isEmpty
-                                ? {} // No additional styling for empty cells
+                                ? {}
                                 : getCellStyle(formattedValue, team, index)
                             }
                           >
@@ -503,13 +578,228 @@ function FootballScheduleTable({
                     })}
                   </tr>
                 ))}
+
+                {/* Summary Rows - Added to the bottom of the main table */}
+                {summary && Object.keys(summary).length > 0 && (
+                  <>
+                    {/* Expected Wins Row */}
+                    <tr className="bg-gray-50">
+                      <td
+                        colSpan={3}
+                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                          isMobile ? "text-xs" : "text-sm"
+                        }`}
+                        style={{
+                          width:
+                            firstColWidth + opponentColWidth + winProbColWidth,
+                          minWidth:
+                            firstColWidth + opponentColWidth + winProbColWidth,
+                          maxWidth:
+                            firstColWidth + opponentColWidth + winProbColWidth,
+                          height: summaryRowHeight,
+                          position: "sticky",
+                          left: 0,
+                          border: "1px solid #e5e7eb",
+                          borderTop: "2px solid #4b5563",
+                          borderRight: "2px solid #d1d5db",
+                        }}
+                      >
+                        Expected Wins
+                      </td>
+                      {teams.map((team) => {
+                        const expectedWins = summary[team]?.expected_wins || 0;
+                        console.log(
+                          `🔍 Expected wins for ${team}: ${expectedWins}`
+                        );
+                        return (
+                          <td
+                            key={`${team}-expected`}
+                            className="bg-gray-50 text-center relative p-0"
+                            style={{
+                              height: summaryRowHeight,
+                              width: teamColWidth,
+                              minWidth: teamColWidth,
+                              maxWidth: teamColWidth,
+                              border: "1px solid #e5e7eb",
+                              borderTop: "2px solid #4b5563",
+                              borderLeft: "none",
+                            }}
+                          >
+                            <div
+                              className={`absolute inset-0 flex items-center justify-center`}
+                              style={{
+                                ...getSummaryColor(
+                                  expectedWins,
+                                  "expected_wins"
+                                ),
+                                fontSize: isMobile ? "12px" : "14px",
+                              }}
+                            >
+                              {expectedWins.toFixed(1)}
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+
+                    {/* Total Games Row */}
+                    <tr className="bg-gray-50">
+                      <td
+                        colSpan={3}
+                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                          isMobile ? "text-xs" : "text-sm"
+                        }`}
+                        style={{
+                          width:
+                            firstColWidth + opponentColWidth + winProbColWidth,
+                          minWidth:
+                            firstColWidth + opponentColWidth + winProbColWidth,
+                          maxWidth:
+                            firstColWidth + opponentColWidth + winProbColWidth,
+                          height: summaryRowHeight,
+                          position: "sticky",
+                          left: 0,
+                          border: "1px solid #e5e7eb",
+                          borderTop: "none",
+                          borderRight: "2px solid #d1d5db",
+                        }}
+                      >
+                        Total Games
+                      </td>
+                      {teams.map((team) => {
+                        const totalGames = summary[team]?.total_games || 0;
+                        console.log(
+                          `🔍 Total games for ${team}: ${totalGames}`
+                        );
+                        return (
+                          <td
+                            key={`${team}-total`}
+                            className="bg-gray-50 text-center"
+                            style={{
+                              height: summaryRowHeight,
+                              width: teamColWidth,
+                              minWidth: teamColWidth,
+                              maxWidth: teamColWidth,
+                              border: "1px solid #e5e7eb",
+                              borderTop: "none",
+                              borderLeft: "none",
+                              fontSize: isMobile ? "12px" : "14px",
+                            }}
+                          >
+                            {totalGames}
+                          </td>
+                        );
+                      })}
+                    </tr>
+
+                    {/* Quartile rows - FIXED VERSION */}
+                    {(["top", "second", "third", "bottom"] as const).map(
+                      (quartile) => (
+                        <tr key={quartile} className="bg-gray-50">
+                          <td
+                            colSpan={3}
+                            className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                              isMobile ? "text-xs" : "text-sm"
+                            }`}
+                            style={{
+                              width:
+                                firstColWidth +
+                                opponentColWidth +
+                                winProbColWidth,
+                              minWidth:
+                                firstColWidth +
+                                opponentColWidth +
+                                winProbColWidth,
+                              maxWidth:
+                                firstColWidth +
+                                opponentColWidth +
+                                winProbColWidth,
+                              height: summaryRowHeight,
+                              position: "sticky",
+                              left: 0,
+                              border: "1px solid #e5e7eb",
+                              borderTop: "none",
+                              borderRight: "2px solid #d1d5db",
+                            }}
+                          >
+                            {quartile === "top"
+                              ? "Top Quartile (Hardest)"
+                              : quartile === "second"
+                                ? "2nd Quartile"
+                                : quartile === "third"
+                                  ? "3rd Quartile"
+                                  : "Bottom Quartile (Easiest)"}
+                          </td>
+                          {teams.map((team) => {
+                            // 🔧 FIXED: Direct property access instead of template literal
+                            const teamSummary = summary[team];
+                            let quartileValue = 0;
+
+                            if (teamSummary) {
+                              switch (quartile) {
+                                case "top":
+                                  quartileValue = teamSummary.top_quartile || 0;
+                                  break;
+                                case "second":
+                                  quartileValue =
+                                    teamSummary.second_quartile || 0;
+                                  break;
+                                case "third":
+                                  quartileValue =
+                                    teamSummary.third_quartile || 0;
+                                  break;
+                                case "bottom":
+                                  quartileValue =
+                                    teamSummary.bottom_quartile || 0;
+                                  break;
+                              }
+                            }
+
+                            console.log(
+                              `🔧 QUARTILE DEBUG: ${team} ${quartile} = ${quartileValue}`
+                            );
+
+                            return (
+                              <td
+                                key={`${team}-${quartile}-quartile`}
+                                className="bg-gray-50 text-center relative p-0"
+                                style={{
+                                  height: summaryRowHeight,
+                                  width: teamColWidth,
+                                  minWidth: teamColWidth,
+                                  maxWidth: teamColWidth,
+                                  border: "1px solid #e5e7eb",
+                                  borderTop: "none",
+                                  borderLeft: "none",
+                                }}
+                              >
+                                <div
+                                  className={`absolute inset-0 flex items-center justify-center`}
+                                  style={{
+                                    ...getSummaryColor(
+                                      quartileValue,
+                                      "quartile"
+                                    ),
+                                    fontSize: isMobile ? "12px" : "14px",
+                                  }}
+                                >
+                                  {quartileValue}
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )
+                    )}
+                  </>
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Summary Table */}
+      {/* Summary Table - Keep this for the separate summary view */}
       {renderSummaryTable && (
         <div className="mb-4">
           <div
@@ -562,7 +852,9 @@ function FootballScheduleTable({
                       borderLeft: "none",
                     }}
                   >
-                    {isMobile ? "Avg\nWins" : "Expected\nWins"}
+                    Expected
+                    <br />
+                    Wins
                   </th>
                   <th
                     className={`bg-gray-50 text-center font-normal sticky z-20 ${
@@ -667,17 +959,35 @@ function FootballScheduleTable({
               </thead>
 
               <tbody>
-                {/* ✅ Sort teams by expected wins (highest to lowest) */}
                 {teams
-                  .filter((team) => summary[team]) // Only include teams with summary data
+                  .filter((team) => {
+                    const hasData = summary[team];
+                    console.log(
+                      `🔍 SUMMARY TABLE: Team ${team} has data: ${!!hasData}`
+                    );
+                    if (hasData) {
+                      console.log(`🔍 SUMMARY TABLE: ${team} quartiles:`, {
+                        top: summary[team].top_quartile,
+                        second: summary[team].second_quartile,
+                        third: summary[team].third_quartile,
+                        bottom: summary[team].bottom_quartile,
+                      });
+                    }
+                    return hasData;
+                  })
                   .sort((a, b) => {
                     const aExpectedWins = summary[a]?.expected_wins || 0;
                     const bExpectedWins = summary[b]?.expected_wins || 0;
-                    return bExpectedWins - aExpectedWins; // Descending order (highest to lowest)
+                    return bExpectedWins - aExpectedWins;
                   })
                   .map((team) => {
                     const teamSummary = summary[team];
                     if (!teamSummary) return null;
+
+                    console.log(
+                      `🔍 SUMMARY TABLE ROW: Rendering ${team} with data:`,
+                      teamSummary
+                    );
 
                     return (
                       <tr key={team}>
@@ -767,7 +1077,13 @@ function FootballScheduleTable({
                             ),
                           }}
                         >
-                          {teamSummary.top_quartile || 0}
+                          {(() => {
+                            const value = teamSummary.top_quartile || 0;
+                            console.log(
+                              `🔍 SUMMARY TABLE CELL: ${team} top_quartile = ${value}`
+                            );
+                            return value;
+                          })()}
                         </td>
 
                         <td
@@ -788,7 +1104,13 @@ function FootballScheduleTable({
                             ),
                           }}
                         >
-                          {teamSummary.second_quartile || 0}
+                          {(() => {
+                            const value = teamSummary.second_quartile || 0;
+                            console.log(
+                              `🔍 SUMMARY TABLE CELL: ${team} second_quartile = ${value}`
+                            );
+                            return value;
+                          })()}
                         </td>
 
                         <td
@@ -809,7 +1131,13 @@ function FootballScheduleTable({
                             ),
                           }}
                         >
-                          {teamSummary.third_quartile || 0}
+                          {(() => {
+                            const value = teamSummary.third_quartile || 0;
+                            console.log(
+                              `🔍 SUMMARY TABLE CELL: ${team} third_quartile = ${value}`
+                            );
+                            return value;
+                          })()}
                         </td>
 
                         <td
@@ -830,7 +1158,13 @@ function FootballScheduleTable({
                             ),
                           }}
                         >
-                          {teamSummary.bottom_quartile || 0}
+                          {(() => {
+                            const value = teamSummary.bottom_quartile || 0;
+                            console.log(
+                              `🔍 SUMMARY TABLE CELL: ${team} bottom_quartile = ${value}`
+                            );
+                            return value;
+                          })()}
                         </td>
                       </tr>
                     );
