@@ -11,7 +11,7 @@ export async function GET(
       "https://jthomprodbackend-production.up.railway.app/api";
     let backendPath = "";
 
-    console.log("Proxy slug:", slug); // Debug log
+    console.log("Proxy slug:", slug);
 
     // Handle single endpoint with no conference
     if (slug.length === 1) {
@@ -170,13 +170,14 @@ export async function GET(
 
     // Make request to Railway backend
     const backendUrl = `${BACKEND_BASE_URL}${backendPath}`;
-    console.log("Backend URL:", backendUrl); // Debug log
+    console.log("Backend URL:", backendUrl);
 
     const response = await fetch(backendUrl, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        "Cache-Control": "no-cache",
       },
       // Add timeout
       signal: AbortSignal.timeout(30000),

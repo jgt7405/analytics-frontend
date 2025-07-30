@@ -3,6 +3,8 @@
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
 import FootballBoxWhiskerChart from "@/components/features/football/FootballBoxWhiskerChart";
+import FootballRegularSeasonBoxWhiskerChart from "@/components/features/football/FootballRegularSeasonBoxWhiskerChart";
+import FootballRegularSeasonWinsTable from "@/components/features/football/FootballRegularSeasonWinsTable";
 import FootballWinsTable from "@/components/features/football/FootballWinsTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -25,28 +27,22 @@ export default function FootballWinsPage() {
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
 
-  // CRITICAL: Start with Big 12 to avoid invalid API calls
   const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>([
-    "Big 12", // Always include Big 12 as default
+    "Big 12",
   ]);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // URL management hook
   const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
     setSelectedConference,
     availableConferences
   );
 
-  // IMPORTANT: Validate URL conference BEFORE making API calls
   useEffect(() => {
     if (!hasInitialized) {
       const confParam = searchParams.get("conf");
-
       if (confParam) {
         const decodedConf = decodeURIComponent(confParam);
-
-        // Define known football conferences to avoid API calls with invalid ones
         const knownFootballConferences = [
           "Big 12",
           "SEC",
@@ -65,22 +61,20 @@ export default function FootballWinsPage() {
         if (knownFootballConferences.includes(decodedConf)) {
           setSelectedConference(decodedConf);
         } else {
-          console.log(
-            `Conference "${decodedConf}" not valid for football, using Big 12`
-          );
           setSelectedConference("Big 12");
-          // Update URL immediately to prevent subsequent bad API calls
           const params = new URLSearchParams(searchParams.toString());
           params.set("conf", "Big 12");
-          const newUrl = `${window.location.pathname}?${params.toString()}`;
-          window.history.replaceState({}, "", newUrl);
+          window.history.replaceState(
+            {},
+            "",
+            `${window.location.pathname}?${params.toString()}`
+          );
         }
       }
       setHasInitialized(true);
     }
   }, [searchParams, hasInitialized]);
 
-  // Only make API call after initialization
   const {
     data: standingsResponse,
     isLoading: standingsLoading,
@@ -88,7 +82,6 @@ export default function FootballWinsPage() {
     refetch,
   } = useFootballStandings(hasInitialized ? selectedConference : "Big 12");
 
-  // Track page load start
   useEffect(() => {
     if (hasInitialized) {
       startMeasurement("football-wins-page-load");
@@ -111,7 +104,6 @@ export default function FootballWinsPage() {
     hasInitialized,
   ]);
 
-  // Track successful data loading
   useEffect(() => {
     if (!standingsLoading && standingsResponse && hasInitialized) {
       const loadTime = endMeasurement("football-wins-page-load");
@@ -134,7 +126,6 @@ export default function FootballWinsPage() {
     hasInitialized,
   ]);
 
-  // Handle conference changes
   const handleConferenceChange = useCallback(
     (conference: string) => {
       startMeasurement("conference-change");
@@ -160,22 +151,14 @@ export default function FootballWinsPage() {
     ]
   );
 
-  // Update available conferences
   useEffect(() => {
     if (standingsResponse?.conferences) {
       setAvailableConferences(standingsResponse.conferences);
     }
   }, [standingsResponse]);
 
-  // Track errors
   useEffect(() => {
     if (standingsError && hasInitialized) {
-      console.error("Football wins error details:", {
-        error: standingsError,
-        message: standingsError.message,
-        conference: selectedConference,
-        timestamp: new Date().toISOString(),
-      });
       trackEvent({
         name: "data_load_error",
         properties: {
@@ -187,7 +170,6 @@ export default function FootballWinsPage() {
     }
   }, [standingsError, selectedConference, trackEvent, hasInitialized]);
 
-  // Error state
   if (standingsError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
@@ -216,7 +198,6 @@ export default function FootballWinsPage() {
     );
   }
 
-  // No data state
   if (!standingsLoading && !standingsResponse?.data && hasInitialized) {
     return (
       <PageLayoutWrapper
@@ -267,7 +248,7 @@ export default function FootballWinsPage() {
         <div className="-mt-2 md:-mt-6">
           {standingsLoading ? (
             <>
-              {/* Box Whisker Chart Skeleton */}
+              {/* Skeletons for all four components */}
               <div className="mb-8">
                 <BoxWhiskerChartSkeleton />
                 <div className="mt-4 flex gap-2">
@@ -275,8 +256,6 @@ export default function FootballWinsPage() {
                   <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
                 </div>
               </div>
-
-              {/* Wins Table Skeleton */}
               <div className="mb-8">
                 <BasketballTableSkeleton
                   tableType="wins"
@@ -289,31 +268,29 @@ export default function FootballWinsPage() {
                   <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
                 </div>
               </div>
-
-              {/* Explainer and Buttons Skeleton */}
-              <div className="mt-6">
-                <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 pr-4">
-                    <div className="space-y-2">
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
-                      <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
-                      <div className="h-4 w-4/5 bg-gray-200 animate-pulse rounded" />
-                    </div>
-                  </div>
-                  <div
-                    className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-20"}`}
-                  >
-                    <div className="flex flex-col gap-2">
-                      <div className="h-8 w-full bg-gray-200 animate-pulse rounded" />
-                      <div className="h-8 w-full bg-gray-200 animate-pulse rounded" />
-                    </div>
-                  </div>
+              <div className="mb-8">
+                <BoxWhiskerChartSkeleton />
+                <div className="mt-4 flex gap-2">
+                  <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
+                </div>
+              </div>
+              <div className="mb-8">
+                <BasketballTableSkeleton
+                  tableType="wins"
+                  rows={12}
+                  teamCols={10}
+                  showSummaryRows={true}
+                />
+                <div className="mt-4 flex gap-2">
+                  <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
                 </div>
               </div>
             </>
           ) : (
             <>
-              {/* Box Whisker Chart Section */}
+              {/* Conference Wins Section - NO additional title */}
               <ErrorBoundary level="component" onRetry={() => refetch()}>
                 <div className="mb-8">
                   <div className="box-whisker-container">
@@ -325,7 +302,6 @@ export default function FootballWinsPage() {
                       )}
                     </Suspense>
                   </div>
-
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
@@ -357,7 +333,6 @@ export default function FootballWinsPage() {
                 </div>
               </ErrorBoundary>
 
-              {/* Wins Table Section */}
               <ErrorBoundary level="component" onRetry={() => refetch()}>
                 {standingsResponse?.data && (
                   <div className="mb-8">
@@ -375,7 +350,6 @@ export default function FootballWinsPage() {
                         <FootballWinsTable standings={standingsResponse.data} />
                       </Suspense>
                     </div>
-
                     <div className="mt-6">
                       <div className="flex flex-row items-start gap-4">
                         <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
@@ -399,6 +373,108 @@ export default function FootballWinsPage() {
                             pageName="football-wins-table"
                             pageTitle="Football Conference Wins Table"
                             shareTitle="Football Conference Wins Projections"
+                            pathname="/football/wins"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </ErrorBoundary>
+
+              {/* Regular Season Wins Section - WITH title matching main page title exactly */}
+              <ErrorBoundary level="component" onRetry={() => refetch()}>
+                <div className="mb-8">
+                  {/* Section Title - matches PageLayoutWrapper title formatting exactly */}
+                  <div className="mb-6">
+                    <h1 className="text-xl font-normal text-gray-600">
+                      Projected Regular Season Wins
+                    </h1>
+                  </div>
+
+                  <div className="regular-season-box-whisker-container">
+                    <Suspense fallback={<BoxWhiskerChartSkeleton />}>
+                      {standingsResponse?.data && (
+                        <FootballRegularSeasonBoxWhiskerChart
+                          standings={standingsResponse.data}
+                        />
+                      )}
+                    </Suspense>
+                  </div>
+                  <div className="mt-6">
+                    <div className="flex flex-row items-start gap-4">
+                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                        <div style={{ lineHeight: "1.3" }}>
+                          <div>
+                            Projected regular season wins from 1,000 season
+                            simulations using SP+ ratings.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            X indicates expected wins for #12 ranked team. Box
+                            shows 25th to 75th percentile, whiskers show 5th to
+                            95th percentile.
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                      >
+                        <TableActionButtons
+                          selectedConference={selectedConference}
+                          contentSelector=".regular-season-box-whisker-container"
+                          pageName="football-regular-season-wins-chart"
+                          pageTitle="Football Regular Season Wins Chart"
+                          shareTitle="Football Regular Season Wins Distribution"
+                          pathname="/football/wins"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ErrorBoundary>
+
+              <ErrorBoundary level="component" onRetry={() => refetch()}>
+                {standingsResponse?.data && (
+                  <div className="mb-8">
+                    <div className="regular-season-wins-table-container">
+                      <Suspense
+                        fallback={
+                          <BasketballTableSkeleton
+                            tableType="wins"
+                            rows={12}
+                            teamCols={10}
+                            showSummaryRows={true}
+                          />
+                        }
+                      >
+                        <FootballRegularSeasonWinsTable
+                          standings={standingsResponse.data}
+                        />
+                      </Suspense>
+                    </div>
+                    <div className="mt-6">
+                      <div className="flex flex-row items-start gap-4">
+                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div style={{ lineHeight: "1.3" }}>
+                            <div>
+                              Projected regular season wins from 1,000 season
+                              simulations using SP+ ratings.
+                            </div>
+                            <div style={{ marginTop: "6px" }}>
+                              Regular season TWV = Projected Wins - Sag12
+                              Expected Wins.
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                        >
+                          <TableActionButtons
+                            selectedConference={selectedConference}
+                            contentSelector=".regular-season-wins-table-container"
+                            pageName="football-regular-season-wins-table"
+                            pageTitle="Football Regular Season Wins Table"
+                            shareTitle="Football Regular Season Wins Projections"
                             pathname="/football/wins"
                           />
                         </div>
