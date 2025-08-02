@@ -232,8 +232,7 @@ export default function CWVPage() {
                         >
                           <div>
                             Conference Win Value (CWV) shows the expected win
-                            probability for each remaining game ranked by
-                            difficulty.
+                            probability for each game ranked by difficulty.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Games are color-coded: blue for wins, yellow for
