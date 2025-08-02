@@ -613,7 +613,7 @@ class ApiClient {
   async getFootballConfData(): Promise<FootballConferenceApiResponse> {
     console.log(`🏈 Getting football conference data`);
 
-    return this.request(`/football/conf-data`, (data) => ({
+    return this.request(`/football_conf_data`, (data) => ({
       success: true,
       data: data as FootballConferenceApiResponse,
       error: null,
