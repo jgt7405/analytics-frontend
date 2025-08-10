@@ -2,6 +2,8 @@
 
 import FootballTeamSchedule from "@/components/features/football/FootballTeamSchedule";
 import FootballTeamSeedProjections from "@/components/features/football/FootballTeamSeedProjections";
+import FootballTeamStandingsHistory from "@/components/features/football/FootballTeamStandingsHistory";
+import FootballTeamWinHistory from "@/components/features/football/FootballTeamWinHistory";
 import FootballTeamWinValues from "@/components/features/football/FootballTeamWinValues";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -67,7 +69,7 @@ interface FootballWinSeedCount {
 export default function FootballTeamPage({
   params,
 }: {
-  params: { teamname: string }; // Changed: Remove Promise wrapper
+  params: { teamname: string };
 }) {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
@@ -76,7 +78,6 @@ export default function FootballTeamPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Changed: Direct access to params, no use() hook needed
   const teamname = decodeURIComponent(params.teamname);
 
   useEffect(() => {
@@ -131,7 +132,6 @@ export default function FootballTeamPage({
       return [];
     }
 
-    // Direct transformation - use real data only
     return apiData.map((item) => ({
       Wins: item.Wins,
       Seed: item.Seed,
@@ -311,6 +311,34 @@ export default function FootballTeamPage({
                   )}
                 />
               </div>
+
+              {/* Mobile Historical Wins Chart */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  Projected Wins History
+                </h2>
+                <FootballTeamWinHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                />
+              </div>
+
+              {/* NEW: Mobile Historical Standings Chart */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  Conference Standings History
+                </h2>
+                <FootballTeamStandingsHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                />
+              </div>
             </div>
           ) : (
             // Desktop Layout
@@ -456,6 +484,35 @@ export default function FootballTeamPage({
                       winSeedCounts={transformFootballWinSeedCounts(
                         team_info.win_seed_counts
                       )}
+                    />
+                  </div>
+
+                  {/* Desktop Historical Wins Chart */}
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      Projected Wins History
+                    </h2>
+                    <FootballTeamWinHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                    />
+                  </div>
+
+                  {/* NEW: Desktop Historical Standings Chart */}
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      Conference Standings History
+                    </h2>
+                    <FootballTeamStandingsHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
                     />
                   </div>
                 </div>

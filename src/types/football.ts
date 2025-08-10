@@ -231,6 +231,13 @@ export interface FootballConferenceData {
   logo_url: string;
   average_bids: number;
   bid_distribution: Record<string, number>;
+  teamcount: number;
+  teams: string[];
+  sagarin_min: number;
+  sagarin_q25: number;
+  sagarin_median: number;
+  sagarin_q75: number;
+  sagarin_max: number;
 }
 
 export interface FootballConferenceApiResponse {
@@ -284,6 +291,27 @@ export interface FootballTeamData {
 export interface FootballTeamApiResponse {
   team_info: FootballTeamInfo;
   schedule: FootballTeamGame[];
+}
+
+export interface ConferenceData {
+  conference: string;
+  teamcount: number;
+  teams: string[];
+  sagarin_min: number;
+  sagarin_q25: number;
+  sagarin_median: number;
+  sagarin_q75: number;
+  sagarin_max: number;
+  totalbidsdistribution: Record<string, number>;
+  averagebidsperscenario: number;
+  created_date: string;
+  created_timestamp: string;
+  version_id: string;
+  is_current: boolean;
+}
+
+export interface ConferenceApiResponse {
+  data: ConferenceData[];
 }
 
 // Filter and UI Types

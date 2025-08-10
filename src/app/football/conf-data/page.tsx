@@ -1,12 +1,18 @@
 "use client";
 
 import TableActionButtons from "@/components/common/TableActionButtons";
+import ConferenceSagarinBoxWhiskerChart from "@/components/features/football/ConferenceSagarinBoxWhiskerChart";
+import FootballConfBidsHistoryChart from "@/components/features/football/FootballConfBidsHistoryChart";
 import FootballConfDataTable from "@/components/features/football/FootballConfDataTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
-import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import {
+  BasketballTableSkeleton,
+  BoxWhiskerChartSkeleton,
+} from "@/components/ui/LoadingSkeleton";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
+import { useFootballConfDataHistory } from "@/hooks/useFootballConfDataHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect } from "react";
@@ -21,6 +27,8 @@ export default function FootballConfDataPage() {
     error: confError,
     refetch,
   } = useFootballConfData();
+
+  const { data: historyData } = useFootballConfDataHistory();
 
   useEffect(() => {
     trackEvent({
@@ -53,12 +61,22 @@ export default function FootballConfDataPage() {
     >
       <ErrorBoundary level="component" onRetry={() => refetch()}>
         {confLoading ? (
-          <BasketballTableSkeleton
-            tableType="standings"
-            rows={15}
-            teamCols={13}
-            showSummaryRows={false}
-          />
+          <>
+            <div className="mb-8">
+              <BasketballTableSkeleton
+                tableType="standings"
+                rows={15}
+                teamCols={13}
+                showSummaryRows={false}
+              />
+            </div>
+            <div className="mb-8">
+              <BoxWhiskerChartSkeleton />
+            </div>
+            <div className="mb-8">
+              <div className="h-96 bg-gray-200 animate-pulse rounded" />
+            </div>
+          </>
         ) : (
           <>
             <div className="mb-8">
@@ -82,10 +100,8 @@ export default function FootballConfDataPage() {
                 </Suspense>
               </div>
 
-              {/* FIXED: Proper action button positioning */}
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
-                  {/* Explainer text on the left - takes remaining space */}
                   <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                     <div
                       className="conf-data-explainer"
@@ -100,8 +116,6 @@ export default function FootballConfDataPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Action buttons on the right - FIXED spacing */}
                   <div
                     className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
                   >
@@ -116,6 +130,89 @@ export default function FootballConfDataPage() {
                 </div>
               </div>
             </div>
+
+            <div className="mb-8">
+              <div className="sagarin-box-whisker-container">
+                <Suspense fallback={<BoxWhiskerChartSkeleton />}>
+                  {confResponse?.data && (
+                    <ConferenceSagarinBoxWhiskerChart
+                      conferenceData={confResponse.data}
+                    />
+                  )}
+                </Suspense>
+              </div>
+              <div className="mt-6">
+                <div className="flex flex-row items-start gap-4">
+                  <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div style={{ lineHeight: "1.3" }}>
+                      <div>
+                        Sagarin rating distribution by conference showing
+                        strength depth.
+                      </div>
+                      <div style={{ marginTop: "6px" }}>
+                        Higher ratings indicate stronger teams. Box plots show
+                        quartile ranges.
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
+                  >
+                    <TableActionButtons
+                      contentSelector=".sagarin-box-whisker-container"
+                      pageName="conference-sagarin-chart"
+                      pageTitle="Conference Sagarin Distribution"
+                      shareTitle="Conference Sagarin Rating Distribution"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {historyData && (
+              <div className="mb-8">
+                <div className="bg-white rounded-lg border">
+                  <div className="p-4 pb-2">
+                    <h3 className="text-xl font-normal text-gray-600">
+                      Conference CFP Bid Trends Over Time
+                    </h3>
+                  </div>
+                  <div className="conf-bids-history-container">
+                    <ErrorBoundary level="component">
+                      <FootballConfBidsHistoryChart
+                        timelineData={historyData.timeline_data}
+                      />
+                    </ErrorBoundary>
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <div className="flex flex-row items-start gap-4">
+                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                      <div style={{ lineHeight: "1.3" }}>
+                        <div>
+                          Historical trend of projected CFP bids by conference
+                          over time.
+                        </div>
+                        <div style={{ marginTop: "6px" }}>
+                          Shows how bid projections have changed as the season
+                          progresses.
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
+                    >
+                      <TableActionButtons
+                        contentSelector=".conf-bids-history-container"
+                        pageName="conference-bids-history-chart"
+                        pageTitle="Conference CFP Bids History"
+                        shareTitle="Conference CFP Bid Trends Over Time"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </ErrorBoundary>
