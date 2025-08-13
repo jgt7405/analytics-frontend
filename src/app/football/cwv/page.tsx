@@ -8,6 +8,7 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useFootballCWV } from "@/hooks/useFootballCWV";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -31,6 +32,13 @@ export default function FootballCWVPage() {
     error: cwvError,
     refetch,
   } = useFootballCWV(selectedConference);
+
+  // Add URL management but only after we have conferences
+  const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
+    setSelectedConference,
+    availableConferences,
+    false
+  );
 
   // Track page load start
   useEffect(() => {
@@ -57,7 +65,12 @@ export default function FootballCWVPage() {
   }, [cwvResponse]);
 
   const handleConferenceChange = (conference: string) => {
-    setSelectedConference(conference);
+    // Use URL management if conferences are loaded, otherwise just set state
+    if (availableConferences.length > 1) {
+      handleUrlChange(conference);
+    } else {
+      setSelectedConference(conference);
+    }
     updatePreference("defaultConference", conference);
     trackEvent({
       name: "conference_changed",
@@ -84,98 +97,74 @@ export default function FootballCWVPage() {
       >
         <div className="-mt-2 md:-mt-6">
           {cwvError ? (
-            <ErrorMessage error={cwvError} onRetry={refetch} />
-          ) : cwvLoading ? (
-            <BasketballTableSkeleton
-              tableType="cwv"
-              rows={20}
-              teamCols={12}
-              showSummaryRows={true}
+            <ErrorMessage
+              message={cwvError.message || "Failed to load CWV data"}
+              onRetry={() => refetch()}
+              retryLabel="Reload CWV Data"
             />
+          ) : cwvLoading ? (
+            <div className="mb-8">
+              <BasketballTableSkeleton />
+            </div>
           ) : (
-            <ErrorBoundary level="component" onRetry={() => refetch()}>
-              <div className="mb-8">
-                <div className="cwv-table">
-                  <Suspense
-                    fallback={
-                      <BasketballTableSkeleton
-                        tableType="cwv"
-                        rows={20}
-                        teamCols={12}
-                        showSummaryRows={true}
-                      />
-                    }
-                  >
-                    {cwvResponse?.data && (
-                      <CWVTable
-                        cwvData={cwvResponse.data}
-                        className="cwv-table"
-                      />
-                    )}
-                  </Suspense>
-                </div>
+            <>
+              <ErrorBoundary level="component">
+                <div className="mb-8">
+                  <div className="cwv-table">
+                    <Suspense fallback={<BasketballTableSkeleton />}>
+                      {cwvResponse?.data && (
+                        <CWVTable
+                          cwvData={cwvResponse.data}
+                          className="cwv-table"
+                        />
+                      )}
+                    </Suspense>
+                  </div>
 
-                {/* Legend - corrected colors to match chart */}
-                <div className="mt-4 mb-6 text-sm text-gray-600">
-                  <p>
-                    <strong>Legend:</strong>{" "}
-                    <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
-                    Win |{" "}
-                    <span className="inline-block w-4 h-4 bg-[#fff7d6] border border-gray-300 mr-1 align-middle"></span>
-                    Loss |{" "}
-                    <span className="inline-block w-4 h-4 bg-[#add8e6] mr-1 align-middle"></span>
-                    Next Game |{" "}
-                    <span className="inline-block w-4 h-4 bg-[#f0f0f0] mr-1 align-middle"></span>
-                    Future Games
-                  </p>
-                </div>
-
-                {/* Buttons and Explainer in side-by-side layout */}
-                <div className="mt-6">
-                  <div className="flex flex-row items-start gap-4">
-                    {/* Explainer text on the left - takes remaining space */}
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                      <div
-                        className="cwv-explainer"
-                        style={{ lineHeight: "1.3" }}
-                      >
-                        <div>
-                          Conference games are ranked by difficulty for each
-                          team (based on rankings).
-                        </div>
-                        <div style={{ marginTop: "6px" }}>
-                          Win Prob is an allocation of probabilities that a team
-                          that finishes .500 in conference would win each game,
-                          favoring easier matchups.
-                        </div>
-                        <div style={{ marginTop: "6px" }}>
-                          Conf Win Value compares the actual wins to expected
-                          wins for a .500 team with that same schedule.
-                        </div>
-                        <div style={{ marginTop: "6px" }}>
-                          This only reflects past results, not future
-                          projections or predictions of final standings.
+                  {/* Buttons and Explainer - EXACT same layout as original */}
+                  <div className="mt-6">
+                    <div className="flex flex-row items-start gap-4">
+                      {/* Explainer text on the left */}
+                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 cwv-explainer">
+                        <div style={{ lineHeight: "1.3" }}>
+                          <div>
+                            Win Prob is an allocation of probabilities that a
+                            team that finishes .500 in conference would win each
+                            game, favoring easier matchups.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            Conf Win Value compares the actual wins to expected
+                            wins for a .500 team with that same schedule.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            This only reflects past results, not future
+                            projections or predictions of final standings.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            Games are color-coded: blue for wins, yellow for
+                            losses, and gray for upcoming games.
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Action buttons on the right - responsive width */}
-                    <div
-                      className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                    >
-                      <TableActionButtons
-                        selectedConference={selectedConference}
-                        contentSelector=".cwv-table"
-                        pageName="football-cwv"
-                        pageTitle="Conference Win Value (CWV)"
-                        shareTitle="Conference Win Value Analysis"
-                        explainerSelector=".cwv-explainer"
-                      />
+                      {/* Action buttons on the right - responsive width */}
+                      <div
+                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                      >
+                        <TableActionButtons
+                          selectedConference={selectedConference}
+                          contentSelector=".cwv-table"
+                          pageName="football-cwv"
+                          pageTitle="Conference Win Value (CWV)"
+                          shareTitle="Conference Win Value Analysis"
+                          explainerSelector=".cwv-explainer"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </ErrorBoundary>
+              </ErrorBoundary>
+            </>
           )}
         </div>
       </PageLayoutWrapper>

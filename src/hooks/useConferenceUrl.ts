@@ -1,6 +1,6 @@
-// Update useConferenceUrl.ts
+// src/hooks/useConferenceUrl.ts
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export const useConferenceUrl = (
   setSelectedConference: (conference: string) => void,
@@ -11,139 +11,144 @@ export const useConferenceUrl = (
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  // Check if current page supports Independent conference
+  // CRITICAL: Track if we've already initialized from URL
+  const hasInitialized = useRef(false);
+
+  // Filter out FCS from available conferences
+  const getFilteredConferences = useCallback((conferences: string[]) => {
+    return conferences.filter((conf) => conf !== "FCS");
+  }, []);
+
+  // Check if current page supports Independent conference - FIXED
   const supportsIndependent = useCallback(() => {
-    // Define pages that don't support Independent conference
+    // Define EXACT pages that don't support Independent conference
     const pagesWithoutIndependent = [
-      "/schedule",
+      "/basketball/schedule",
       "/conf-schedule",
-      "/cwv", // Add any other pages that don't work with Independent
+      "/cwv",
     ];
 
-    return !pagesWithoutIndependent.some((page) => pathname.includes(page));
-  }, [pathname]); // Only pathname as dependency since pagesWithoutIndependent is now inside the callback
+    // Football pages generally DO support Independent
+    if (pathname.includes("/football/")) {
+      return true;
+    }
+
+    return !pagesWithoutIndependent.includes(pathname);
+  }, [pathname]);
 
   // Get a safe fallback conference
   const getSafeFallbackConference = useCallback(() => {
-    if (availableConferences.includes("Big 12")) {
+    const filteredConferences = getFilteredConferences(availableConferences);
+
+    if (filteredConferences.includes("Big 12")) {
       return "Big 12";
     }
     return (
-      availableConferences.find(
+      filteredConferences.find(
         (conf) =>
-          conf !== "Independent" && (allowAllTeams || conf !== "All Teams")
+          conf !== "Independent" &&
+          conf !== "FCS" &&
+          (allowAllTeams || conf !== "All Teams")
       ) ||
-      availableConferences[0] ||
+      filteredConferences[0] ||
       "Big 12"
     );
-  }, [availableConferences, allowAllTeams]);
+  }, [availableConferences, allowAllTeams, getFilteredConferences]);
+
+  // SIMPLIFIED: Don't validate against availableConferences until they're fully loaded
+  const getAppropriateConference = useCallback(
+    (requestedConference: string) => {
+      // If requesting Independent but page doesn't support it, use fallback
+      if (requestedConference === "Independent" && !supportsIndependent()) {
+        return getSafeFallbackConference();
+      }
+
+      // If requesting FCS, use fallback
+      if (requestedConference === "FCS") {
+        return getSafeFallbackConference();
+      }
+
+      // CRITICAL FIX: Don't validate against availableConferences here
+      // Let the API handle invalid conferences
+      return requestedConference;
+    },
+    [supportsIndependent, getSafeFallbackConference]
+  );
 
   // Update URL when conference changes
   const updateUrl = useCallback(
     (conference: string) => {
       const params = new URLSearchParams(searchParams.toString());
+      const appropriateConference = getAppropriateConference(conference);
 
-      // If switching to a page that doesn't support the current conference, use fallback
-      if (!supportsIndependent() && conference === "Independent") {
-        conference = getSafeFallbackConference();
-      }
-
-      if (conference && (conference !== "All Teams" || allowAllTeams)) {
-        params.set("conf", conference);
+      if (
+        appropriateConference &&
+        (appropriateConference !== "All Teams" || allowAllTeams)
+      ) {
+        params.set("conf", appropriateConference);
       } else {
         params.delete("conf");
       }
 
       const newUrl = `${window.location.pathname}?${params.toString()}`;
       router.replace(newUrl, { scroll: false });
+
+      // Update the selected conference to the appropriate one
+      if (appropriateConference !== conference) {
+        setSelectedConference(appropriateConference);
+      }
     },
     [
       router,
       searchParams,
       allowAllTeams,
-      supportsIndependent,
-      getSafeFallbackConference,
+      getAppropriateConference,
+      setSelectedConference,
     ]
   );
 
   // Handle conference changes
   const handleConferenceChange = useCallback(
     (conference: string) => {
-      setSelectedConference(conference);
-      updateUrl(conference);
+      const appropriateConference = getAppropriateConference(conference);
+      setSelectedConference(appropriateConference);
+      updateUrl(appropriateConference);
     },
-    [setSelectedConference, updateUrl]
+    [setSelectedConference, updateUrl, getAppropriateConference]
   );
 
-  // Initialize from URL on mount with enhanced validation
+  // Initialize from URL on mount - ONLY ONCE
   useEffect(() => {
+    // CRITICAL: Only run once, when we first have URL params
+    if (hasInitialized.current) {
+      return;
+    }
+
     const confParam = searchParams.get("conf");
 
-    if (confParam && availableConferences.length > 0) {
+    if (confParam) {
       const decodedConf = decodeURIComponent(confParam);
-
-      // Check if conference is valid for this page
-      const isValidForPage =
-        supportsIndependent() || decodedConf !== "Independent";
-
-      if (
-        availableConferences.includes(decodedConf) &&
-        (decodedConf !== "All Teams" || allowAllTeams) &&
-        isValidForPage
-      ) {
-        setSelectedConference(decodedConf);
-      } else {
-        // Conference doesn't exist, not allowed, or not valid for this page
-        const fallback = getSafeFallbackConference();
-        console.log(
-          `Conference "${decodedConf}" not available for this page, switching to "${fallback}"`
-        );
-        setSelectedConference(fallback);
-        updateUrl(fallback);
-      }
-    } else if (availableConferences.length > 0 && !confParam) {
-      // No conference in URL, use safe default
-      const defaultConf = getSafeFallbackConference();
-      setSelectedConference(defaultConf);
-      updateUrl(defaultConf);
+      const appropriateConference = getAppropriateConference(decodedConf);
+      console.log(
+        `🚀 HOOK DEBUG: Setting conference from URL: "${appropriateConference}"`
+      );
+      setSelectedConference(appropriateConference);
+    } else {
+      // No conference in URL, use default
+      console.log(`🚀 HOOK DEBUG: No URL param, using default: "Big 12"`);
+      setSelectedConference("Big 12");
+      // Don't update URL immediately - let it get set when conferences load
     }
-  }, [
-    searchParams,
-    availableConferences,
-    setSelectedConference,
+
+    // Mark as initialized
+    hasInitialized.current = true;
+  }, [searchParams, setSelectedConference, getAppropriateConference]);
+
+  // REMOVED: The pathname effect that was causing resets
+
+  return {
+    handleConferenceChange,
     updateUrl,
-    allowAllTeams,
-    supportsIndependent,
-    getSafeFallbackConference,
-  ]);
-
-  // Additional effect: Check when pathname changes (navigation between pages)
-  useEffect(() => {
-    if (availableConferences.length > 0) {
-      const currentConf = searchParams.get("conf");
-      if (currentConf) {
-        const decodedConf = decodeURIComponent(currentConf);
-
-        // If navigating to a page that doesn't support current conference, switch
-        if (!supportsIndependent() && decodedConf === "Independent") {
-          const fallback = getSafeFallbackConference();
-          console.log(
-            `Navigated to page that doesn't support Independent, switching to "${fallback}"`
-          );
-          setSelectedConference(fallback);
-          updateUrl(fallback);
-        }
-      }
-    }
-  }, [
-    pathname,
-    searchParams,
-    availableConferences,
-    setSelectedConference,
-    updateUrl,
-    supportsIndependent,
-    getSafeFallbackConference,
-  ]);
-
-  return { handleConferenceChange, updateUrl };
+    filteredConferences: getFilteredConferences(availableConferences),
+  };
 };

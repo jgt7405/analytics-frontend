@@ -80,6 +80,22 @@ export default function FootballTeamSchedule({
     }
   };
 
+  const formatRanking = (sagarin_rank?: number) => {
+    if (!sagarin_rank) return "";
+    if (sagarin_rank === 999) return "FCS";
+    return `#${sagarin_rank}`;
+  };
+
+  const formatRankingForTitle = (sagarin_rank?: number) => {
+    if (!sagarin_rank) return "Unranked";
+    if (sagarin_rank === 999) return "FCS";
+    return `#${sagarin_rank}`;
+  };
+
+  const isFCSTeam = (sagarin_rank?: number) => {
+    return sagarin_rank === 999;
+  };
+
   const boxWidth = isMobile ? 70 : 80;
   const boxHeight = isMobile ? 36 : 40;
   const logoSize = isMobile ? 24 : 28;
@@ -100,30 +116,38 @@ export default function FootballTeamSchedule({
 
           <div className="space-y-2">
             {groupedGames.groups[location].length > 0 ? (
-              groupedGames.groups[location].map((game, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-2 rounded bg-white cursor-pointer hover:opacity-80 transition-opacity"
-                  style={{
-                    width: boxWidth,
-                    height: boxHeight,
-                    border: `2px solid ${getBorderColor(game.status)}`,
-                  }}
-                  onClick={() => navigateToTeam(game.opponent)}
-                  title={`${game.opponent} (${game.sagarin_rank ? `#${game.sagarin_rank}` : "Unranked"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
-                >
-                  <TeamLogo
-                    logoUrl={
-                      game.opponent_logo || "/images/team_logos/default.png"
-                    }
-                    teamName={game.opponent}
-                    size={logoSize}
-                  />
-                  <span className="text-xs text-gray-600 font-medium">
-                    {game.sagarin_rank ? `#${game.sagarin_rank}` : ""}
-                  </span>
-                </div>
-              ))
+              groupedGames.groups[location].map((game, idx) => {
+                const isClickable = !isFCSTeam(game.sagarin_rank);
+
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-center justify-between p-2 rounded bg-white transition-opacity ${
+                      isClickable
+                        ? "cursor-pointer hover:opacity-80"
+                        : "cursor-default"
+                    }`}
+                    style={{
+                      width: boxWidth,
+                      height: boxHeight,
+                      border: `2px solid ${getBorderColor(game.status)}`,
+                    }}
+                    onClick={() => isClickable && navigateToTeam(game.opponent)}
+                    title={`${game.opponent} (${formatRankingForTitle(game.sagarin_rank)}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
+                  >
+                    <TeamLogo
+                      logoUrl={
+                        game.opponent_logo || "/images/team_logos/default.png"
+                      }
+                      teamName={game.opponent}
+                      size={logoSize}
+                    />
+                    <span className="text-xs text-gray-600 font-medium">
+                      {formatRanking(game.sagarin_rank)}
+                    </span>
+                  </div>
+                );
+              })
             ) : (
               <div
                 className="flex items-center justify-center text-xs text-gray-400"

@@ -21,49 +21,32 @@ export default function FootballSchedulePage() {
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
 
+  // Initialize with safe defaults
   const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     "Big 12",
   ]);
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  // URL state management - no "All Teams" for football schedule
   const { handleConferenceChange: handleUrlConferenceChange } =
     useConferenceUrl(setSelectedConference, availableConferences, false);
 
+  // Handle URL parameter initialization WITHOUT hardcoded validation
   useEffect(() => {
     if (!hasInitialized) {
       const confParam = searchParams.get("conf");
+
       if (confParam) {
         const decodedConf = decodeURIComponent(confParam);
-        const knownFootballConferences = [
-          "Big 12",
-          "SEC",
-          "Big Ten",
-          "ACC",
-          "Pac-12",
-          "Mountain West",
-          "American Athletic",
-          "Conference USA",
-          "Mid-American",
-          "Sun Belt",
-          "WAC",
-          "Independent",
-        ];
-
-        if (knownFootballConferences.includes(decodedConf)) {
-          setSelectedConference(decodedConf);
-        } else {
-          setSelectedConference("Big 12");
-          const params = new URLSearchParams(searchParams.toString());
-          params.set("conf", "Big 12");
-          const newUrl = `${window.location.pathname}?${params.toString()}`;
-          window.history.replaceState({}, "", newUrl);
-        }
+        // Accept any conference from URL initially
+        setSelectedConference(decodedConf);
       }
       setHasInitialized(true);
     }
   }, [searchParams, hasInitialized]);
 
+  // Fetch schedule data
   const {
     data: scheduleResponse,
     isLoading: scheduleLoading,
@@ -71,18 +54,40 @@ export default function FootballSchedulePage() {
     refetch,
   } = useFootballSchedule(hasInitialized ? selectedConference : "Big 12");
 
+  // Update available conferences and validate selected conference when API data loads
   useEffect(() => {
     if (scheduleResponse?.conferences) {
       setAvailableConferences(scheduleResponse.conferences);
-    }
-  }, [scheduleResponse]);
 
+      // Validate that current selection is valid, correct if not
+      if (!scheduleResponse.conferences.includes(selectedConference)) {
+        const fallbackConference = scheduleResponse.conferences.includes(
+          "Big 12"
+        )
+          ? "Big 12"
+          : scheduleResponse.conferences[0];
+
+        setSelectedConference(fallbackConference);
+
+        // Update URL to reflect the corrected conference
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("conf", fallbackConference);
+        window.history.replaceState(
+          {},
+          "",
+          `${window.location.pathname}?${params.toString()}`
+        );
+      }
+    }
+  }, [scheduleResponse, selectedConference, searchParams]);
+
+  // Memoized filtered data
   const filteredScheduleData = useMemo(() => {
     if (!scheduleResponse?.data) return [];
     return scheduleResponse.data;
   }, [scheduleResponse?.data]);
 
-  // Track page load
+  // Performance tracking - page load start
   useEffect(() => {
     if (hasInitialized) {
       startMeasurement("football-schedule-page-load");
@@ -96,12 +101,14 @@ export default function FootballSchedulePage() {
     }
   }, [selectedConference, startMeasurement, trackEvent, hasInitialized]);
 
+  // Performance tracking - cleanup
   useEffect(() => {
     return () => {
       endMeasurement("football-schedule-page-load");
     };
   }, [endMeasurement]);
 
+  // Performance tracking - data load success
   useEffect(() => {
     if (!scheduleLoading && scheduleResponse && hasInitialized) {
       const loadTime = endMeasurement("football-schedule-page-load");
@@ -124,12 +131,14 @@ export default function FootballSchedulePage() {
     trackEvent,
   ]);
 
+  // Handle conference changes
   const handleConferenceChange = useCallback(
     (newConference: string) => {
       startMeasurement("conference-change");
       setSelectedConference(newConference);
       handleUrlConferenceChange(newConference);
       updatePreference("defaultConference", newConference);
+
       trackEvent({
         name: "conference_changed",
         properties: {
@@ -138,6 +147,7 @@ export default function FootballSchedulePage() {
           toConference: newConference,
         },
       });
+
       endMeasurement("conference-change");
     },
     [
@@ -150,7 +160,7 @@ export default function FootballSchedulePage() {
     ]
   );
 
-  // Error state - matches basketball exactly
+  // Error state
   if (scheduleError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
@@ -176,7 +186,7 @@ export default function FootballSchedulePage() {
     );
   }
 
-  // No data state - matches basketball exactly
+  // No data state
   if (!scheduleLoading && !scheduleResponse?.data) {
     return (
       <PageLayoutWrapper
@@ -208,6 +218,7 @@ export default function FootballSchedulePage() {
     );
   }
 
+  // Main render
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
@@ -297,6 +308,7 @@ export default function FootballSchedulePage() {
                         </p>
                       </div>
 
+                      {/* Action buttons */}
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
                           <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
@@ -316,7 +328,7 @@ export default function FootballSchedulePage() {
                             <TableActionButtons
                               selectedConference={selectedConference}
                               contentSelector=".football-schedule-table"
-                              pageName="schedule"
+                              pageName="football-schedule"
                               pageTitle="Team Schedules"
                               shareTitle="Team Schedule Analysis"
                               pathname="/football/schedule"
@@ -359,6 +371,7 @@ export default function FootballSchedulePage() {
                         </Suspense>
                       </div>
 
+                      {/* Action buttons */}
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
                           <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
@@ -378,7 +391,7 @@ export default function FootballSchedulePage() {
                             <TableActionButtons
                               selectedConference={selectedConference}
                               contentSelector=".football-schedule-summary-table"
-                              pageName="schedule-summary"
+                              pageName="football-schedule-summary"
                               pageTitle="Schedule Difficulty Summary"
                               shareTitle="Schedule Difficulty Summary"
                               pathname="/football/schedule"
