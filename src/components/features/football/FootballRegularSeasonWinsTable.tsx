@@ -223,7 +223,7 @@ function FootballRegularSeasonWinsTable({
                 borderTop: "none",
               }}
             >
-              Sag12
+              Est #12 Wins
             </td>
             {sortedTeams.map((team, index) => (
               <td
