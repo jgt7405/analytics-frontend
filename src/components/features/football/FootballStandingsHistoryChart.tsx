@@ -93,18 +93,6 @@ export default function FootballStandingsHistoryChart({
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
-  // Transform data to show rankings instead of raw standings
-  const getTeamRankingsForDate = (date: string) => {
-    return timelineData
-      .filter((item) => item.date === date)
-      .sort((a, b) => a.avg_standing - b.avg_standing)
-      .map((item, index) => ({
-        ...item,
-        ranking_position: index + 1,
-      }));
-  };
-
-  // Build team data with ranking positions
   const teamData: Record<string, TeamInfo> = {};
 
   timelineData.forEach((item) => {
@@ -114,21 +102,16 @@ export default function FootballStandingsHistoryChart({
         team_info: item.team_info,
       };
     }
-  });
-
-  allDates.forEach((date) => {
-    const dateRankings = getTeamRankingsForDate(date);
-
-    dateRankings.forEach((teamRanking) => {
-      teamData[teamRanking.team_name].data.push({
-        x: formatDate(date),
-        y: teamRanking.ranking_position,
-      });
+    teamData[item.team_name].data.push({
+      x: formatDate(item.date),
+      y: item.avg_standing,
     });
   });
 
   const lastDate = allDates[allDates.length - 1];
-  const finalRankings = getTeamRankingsForDate(lastDate);
+  const finalStandings = timelineData
+    .filter((item) => item.date === lastDate)
+    .sort((a, b) => a.avg_standing - b.avg_standing);
 
   const datasets = Object.entries(teamData).map(([teamName, team]) => ({
     label: teamName,
@@ -149,35 +132,81 @@ export default function FootballStandingsHistoryChart({
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
+    },
     plugins: {
       title: {
         display: true,
-        text: "Conference Rankings Over Time",
+        text: "Average Conference Standings Over Time",
         font: { size: isMobile ? 14 : 16 },
       },
       legend: {
         display: false,
       },
       tooltip: {
-        callbacks: {
-          title: (context: Array<{ label: string }>) => {
-            return context[0].label;
-          },
-          label: (context: {
-            dataset: { label?: string };
-            parsed: { y: number };
-          }) => {
-            const position = context.parsed.y;
-            const suffix =
-              position === 1
-                ? "st"
-                : position === 2
-                  ? "nd"
-                  : position === 3
-                    ? "rd"
-                    : "th";
-            return `${context.dataset.label || "Unknown"}: ${position}${suffix} place`;
-          },
+        enabled: false,
+        external: (context: any) => {
+          let tooltipEl = document.getElementById("chartjs-tooltip");
+          if (!tooltipEl) {
+            tooltipEl = document.createElement("div");
+            tooltipEl.id = "chartjs-tooltip";
+            tooltipEl.style.background = "#ffffff";
+            tooltipEl.style.border = "1px solid #e5e7eb";
+            tooltipEl.style.borderRadius = "8px";
+            tooltipEl.style.color = "#1f2937";
+            tooltipEl.style.fontFamily = "Inter, system-ui, sans-serif";
+            tooltipEl.style.fontSize = "12px";
+            tooltipEl.style.opacity = "0";
+            tooltipEl.style.padding = "16px";
+            tooltipEl.style.pointerEvents = "none";
+            tooltipEl.style.position = "absolute";
+            tooltipEl.style.transform = "translate(-50%, 0)";
+            tooltipEl.style.transition = "all .1s ease";
+            tooltipEl.style.zIndex = "1000";
+            tooltipEl.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+            document.body.appendChild(tooltipEl);
+          }
+
+          const tooltipModel = context.tooltip;
+          if (tooltipModel.opacity === 0) {
+            tooltipEl.style.opacity = "0";
+            return;
+          }
+
+          if (tooltipModel.body) {
+            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+            const currentDate = allDates[dataIndex];
+
+            const teamsAtDate = timelineData
+              .filter((item) => item.date === currentDate)
+              .map((item) => ({
+                name: item.team_name,
+                standing: item.avg_standing,
+                color: item.team_info.primary_color || "#000000",
+              }))
+              .sort((a, b) => a.standing - b.standing);
+
+            let innerHtml = `<div style="font-weight: 600; margin-bottom: 8px; color: #1f2937;">${formatDate(currentDate)}</div>`;
+            teamsAtDate.forEach((team) => {
+              innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${team.standing.toFixed(1)}</div>`;
+            });
+
+            tooltipEl.innerHTML = innerHtml;
+          }
+
+          const position = context.chart.canvas.getBoundingClientRect();
+          tooltipEl.style.opacity = "1";
+          tooltipEl.style.left =
+            position.left + window.pageXOffset + tooltipModel.caretX + "px";
+          tooltipEl.style.top =
+            position.top +
+            window.pageYOffset +
+            tooltipModel.caretY -
+            tooltipEl.offsetHeight +
+            225 +
+            "px";
         },
       },
     },
@@ -196,7 +225,7 @@ export default function FootballStandingsHistoryChart({
       y: {
         title: {
           display: true,
-          text: "Conference Ranking",
+          text: "Average Standing",
         },
         reverse: true,
         min: 1,
@@ -204,10 +233,7 @@ export default function FootballStandingsHistoryChart({
         ticks: {
           stepSize: 1,
           callback: function (value: any) {
-            const num = Number(value);
-            const suffix =
-              num === 1 ? "st" : num === 2 ? "nd" : num === 3 ? "rd" : "th";
-            return `${num}${suffix}`;
+            return Number(value);
           },
         },
       },
@@ -215,7 +241,7 @@ export default function FootballStandingsHistoryChart({
     layout: {
       padding: {
         left: 10,
-        right: 60,
+        right: 100,
       },
     },
     animation: {
@@ -231,19 +257,52 @@ export default function FootballStandingsHistoryChart({
   };
 
   const chartHeight = isMobile ? 420 : 560;
-  const logoSize = isMobile ? 16 : 20;
 
-  // Helper functions for positioning
-  const getChartJsYPosition = (ranking: number) => {
+  const getChartJsYPosition = (standing: number) => {
     if (!chartDimensions?.chartArea) return null;
     const { top, bottom } = chartDimensions.chartArea;
-    return top + ((ranking - 1) / (conferenceSize - 1)) * (bottom - top);
+    return top + ((standing - 1) / (conferenceSize - 1)) * (bottom - top);
   };
 
-  const getChartJsXPosition = (dateIndex: number) => {
-    if (!chartDimensions?.chartArea) return null;
-    const { left, right } = chartDimensions.chartArea;
-    return left + (dateIndex / (allDates.length - 1)) * (right - left);
+  const getAdjustedLogoPositions = () => {
+    if (!chartDimensions) return [];
+
+    const minSpacing = 25;
+    const chartTop = chartDimensions.chartArea.top;
+    const chartBottom = chartDimensions.chartArea.bottom - 15;
+
+    const positions = finalStandings.map((team) => {
+      const teamDataPoint = teamData[team.team_name];
+      const lastPoint = teamDataPoint?.data[teamDataPoint.data.length - 1];
+      const idealY =
+        getChartJsYPosition(lastPoint?.y || team.avg_standing) || 0;
+
+      return {
+        team,
+        idealY,
+        adjustedY: idealY,
+      };
+    });
+
+    positions.sort((a, b) => a.team.avg_standing - b.team.avg_standing);
+
+    for (let i = 1; i < positions.length; i++) {
+      const currentPos = positions[i];
+      const prevPos = positions[i - 1];
+
+      if (currentPos.adjustedY - prevPos.adjustedY < minSpacing) {
+        currentPos.adjustedY = prevPos.adjustedY + minSpacing;
+      }
+
+      if (currentPos.adjustedY > chartBottom) {
+        currentPos.adjustedY = chartBottom;
+      }
+      if (currentPos.adjustedY < chartTop) {
+        currentPos.adjustedY = chartTop;
+      }
+    }
+
+    return positions;
   };
 
   return (
@@ -263,124 +322,79 @@ export default function FootballStandingsHistoryChart({
       >
         <Line ref={chartRef} data={chartData} options={options} />
 
-        {/* Team logos at each data point */}
         {chartDimensions && (
           <div
-            className="absolute"
-            style={{
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: `${chartHeight}px`,
-              pointerEvents: "none",
-              zIndex: 30,
-            }}
+            className="absolute left-0 top-0 pointer-events-none"
+            style={{ width: "100%", height: "100%" }}
           >
-            {allDates.map((date, dateIndex) => {
-              const dateRankings = getTeamRankingsForDate(date);
-              const xPosition = getChartJsXPosition(dateIndex);
+            {getAdjustedLogoPositions().map(({ team, idealY, adjustedY }) => {
+              const teamColor = team.team_info.primary_color || "#94a3b8";
 
-              if (xPosition === null) return null;
+              return (
+                <div key={`end-${team.team_name}`}>
+                  <svg
+                    className="absolute top-0 left-0"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    <line
+                      x1={chartDimensions.chartArea.right}
+                      y1={idealY}
+                      x2={chartDimensions.chartArea.right + 12}
+                      y2={adjustedY}
+                      stroke={teamColor}
+                      strokeWidth="1"
+                      strokeDasharray="2,2"
+                      opacity="0.7"
+                    />
+                  </svg>
+                </div>
+              );
+            })}
 
-              return dateRankings.map((teamRanking) => {
-                const yPosition = getChartJsYPosition(
-                  teamRanking.ranking_position
-                );
-
-                if (yPosition === null) return null;
+            <div className="absolute right-0 top-0">
+              {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
+                const teamDataPoint = teamData[team.team_name];
+                const lastPoint =
+                  teamDataPoint?.data[teamDataPoint.data.length - 1];
 
                 return (
                   <div
-                    key={`${date}-${teamRanking.team_name}`}
-                    className="absolute flex items-center justify-center"
+                    key={`logo-${team.team_name}`}
+                    className="absolute flex items-center"
                     style={{
-                      left: `${xPosition - logoSize / 2}px`,
-                      top: `${yPosition - logoSize / 2}px`,
-                      zIndex: 40,
+                      right: "25px",
+                      top: `${adjustedY - 10}px`,
+                      zIndex: 10,
                     }}
                   >
                     <TeamLogo
                       logoUrl={
-                        teamRanking.team_info.logo_url ||
+                        team.team_info.logo_url ||
                         "/images/team_logos/default.png"
                       }
-                      teamName={teamRanking.team_name}
-                      size={logoSize}
+                      teamName={team.team_name}
+                      size={20}
                     />
+                    <span
+                      className="text-xs font-medium ml-2"
+                      style={{
+                        color: team.team_info.primary_color || "#000000",
+                        minWidth: "35px",
+                        textAlign: "left",
+                      }}
+                    >
+                      {lastPoint?.y.toFixed(1) || team.avg_standing.toFixed(1)}
+                    </span>
                   </div>
                 );
-              });
-            })}
+              })}
+            </div>
           </div>
         )}
-
-        {/* Right side final rankings */}
-        <div
-          className="absolute right-0 top-0"
-          style={{
-            zIndex: 20,
-            pointerEvents: "none",
-            width: "60px",
-            height: `${chartHeight}px`,
-          }}
-        >
-          {finalRankings.map((team, rankIndex) => {
-            const teamDataPoint = teamData[team.team_name];
-            if (!teamDataPoint) return null;
-
-            const rankPosition = rankIndex + 1;
-            const logoY = getChartJsYPosition(rankPosition);
-
-            const lastPoint = teamDataPoint.data[teamDataPoint.data.length - 1];
-            const actualFinalY = getChartJsYPosition(lastPoint.y);
-
-            if (logoY === null || actualFinalY === null) return null;
-
-            const teamColor = team.team_info.primary_color || "#94a3b8";
-
-            return (
-              <div key={`right-${team.team_name}`}>
-                <svg
-                  className="absolute"
-                  style={{
-                    top: 0,
-                    right: 0,
-                    width: "60px",
-                    height: `${chartHeight}px`,
-                    pointerEvents: "none",
-                  }}
-                >
-                  <line
-                    x1={0}
-                    y1={actualFinalY}
-                    x2={25}
-                    y2={logoY}
-                    stroke={teamColor}
-                    strokeWidth="1"
-                    strokeDasharray="2,2"
-                  />
-                </svg>
-
-                <div
-                  className="absolute flex items-center"
-                  style={{
-                    top: `${logoY - 10}px`,
-                    right: "25px",
-                  }}
-                >
-                  <TeamLogo
-                    logoUrl={
-                      team.team_info.logo_url ||
-                      "/images/team_logos/default.png"
-                    }
-                    teamName={team.team_name}
-                    size={20}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </div>
   );

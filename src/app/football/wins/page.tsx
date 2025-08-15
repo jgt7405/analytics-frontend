@@ -225,9 +225,9 @@ export default function FootballWinsPage() {
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 box-whisker-explainer">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
-                            Projected conference wins from 1,000 simulations
-                            using composite of multiple college football rating
-                            models.
+                            Projected conference wins from 1,000 season
+                            simulations using composite of multiple college
+                            football rating models.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Box shows 25th to 75th percentile, line shows
@@ -311,8 +311,9 @@ export default function FootballWinsPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Projected regular season wins (excluding
-                            post-season) from 1,000 simulations using composite
-                            of multiple college football rating models.
+                            post-season) from 1,000 season simulations using
+                            composite of multiple college football rating
+                            models.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Box shows 25th to 75th percentile, whiskers show 5th
