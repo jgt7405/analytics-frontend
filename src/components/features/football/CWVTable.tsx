@@ -65,7 +65,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     }
 
     return { ranks, gamesByRankAndTeam, winProbsByRank };
-  }, [cwvData, cwvData?.games, sortedTeams]);
+  }, [cwvData, sortedTeams]);
 
   const formatDate = useCallback((dateStr: string | undefined): string => {
     if (!dateStr) return "";

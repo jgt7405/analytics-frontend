@@ -99,7 +99,7 @@ export default function FootballTWVPage() {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
-          title="Football True Win Value (TWV)"
+          title="True Win Value (TWV)"
           conferenceSelector={
             <ConferenceSelector
               conferences={availableConferences}
@@ -111,7 +111,7 @@ export default function FootballTWVPage() {
           isLoading={false}
         >
           <ErrorMessage
-            message={twvError.message || "Failed to load football TWV data"}
+            message={twvError.message || "Failed to load TWV data"}
             onRetry={() => refetch()}
             retryLabel="Reload TWV Data"
           />
@@ -124,7 +124,7 @@ export default function FootballTWVPage() {
   if (!twvLoading && !twvResponse?.data) {
     return (
       <PageLayoutWrapper
-        title="Football True Win Value (TWV)"
+        title="True Win Value (TWV)"
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
@@ -155,7 +155,7 @@ export default function FootballTWVPage() {
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
-        title="Football True Win Value (TWV)"
+        title="True Win Value (TWV)"
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
@@ -208,12 +208,13 @@ export default function FootballTWVPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             TWV (True Win Value) shows actual wins compared to
-                            expected wins for a team ranked 30th by SP+.
+                            expected wins for the 12th rated team in composite
+                            ratings.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Positive values indicate overperformance, negative
-                            values indicate underperformance relative to a
-                            top-30 team.
+                            values indicate underperformance relative to the
+                            12th rated team.
                           </div>
                         </div>
                       </div>
@@ -226,8 +227,8 @@ export default function FootballTWVPage() {
                           selectedConference={selectedConference}
                           contentSelector=".twv-table"
                           pageName="football-twv"
-                          pageTitle="Football True Win Value (TWV)"
-                          shareTitle="Football True Win Value Analysis"
+                          pageTitle="True Win Value (TWV)"
+                          shareTitle="True Win Value Analysis"
                           explainerSelector=".twv-explainer"
                         />
                       </div>

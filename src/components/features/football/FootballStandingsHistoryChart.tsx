@@ -2,6 +2,7 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
+import type { Chart } from "chart.js";
 import {
   CategoryScale,
   ChartArea,
@@ -12,6 +13,7 @@ import {
   PointElement,
   Title,
   Tooltip,
+  TooltipModel,
 } from "chart.js";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
@@ -137,17 +139,13 @@ export default function FootballStandingsHistoryChart({
       intersect: false,
     },
     plugins: {
-      title: {
-        display: true,
-        text: "Average Conference Standings Over Time",
-        font: { size: isMobile ? 14 : 16 },
-      },
-      legend: {
-        display: false,
-      },
+      title: { display: false },
+      legend: { display: false },
       tooltip: {
         enabled: false,
-        external: (context: any) => {
+        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+          const { tooltip: tooltipModel, chart } = args;
+
           let tooltipEl = document.getElementById("chartjs-tooltip");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
@@ -169,7 +167,6 @@ export default function FootballStandingsHistoryChart({
             document.body.appendChild(tooltipEl);
           }
 
-          const tooltipModel = context.tooltip;
           if (tooltipModel.opacity === 0) {
             tooltipEl.style.opacity = "0";
             return;
@@ -196,7 +193,7 @@ export default function FootballStandingsHistoryChart({
             tooltipEl.innerHTML = innerHtml;
           }
 
-          const position = context.chart.canvas.getBoundingClientRect();
+          const position = chart.canvas.getBoundingClientRect();
           tooltipEl.style.opacity = "1";
           tooltipEl.style.left =
             position.left + window.pageXOffset + tooltipModel.caretX + "px";
@@ -212,37 +209,25 @@ export default function FootballStandingsHistoryChart({
     },
     scales: {
       x: {
-        title: {
-          display: false,
-        },
-        ticks: {
-          maxTicksLimit: isMobile ? 5 : 10,
-        },
-        grid: {
-          display: false,
-        },
+        title: { display: false },
+        ticks: { maxTicksLimit: isMobile ? 5 : 10 },
+        grid: { display: false },
       },
       y: {
-        title: {
-          display: true,
-          text: "Average Standing",
-        },
+        title: { display: true, text: "Average Standing" },
         reverse: true,
         min: 1,
         max: conferenceSize,
         ticks: {
           stepSize: 1,
-          callback: function (value: any) {
+          callback: function (value: string | number) {
             return Number(value);
           },
         },
       },
     },
     layout: {
-      padding: {
-        left: 10,
-        right: 100,
-      },
+      padding: { left: 10, right: 100 },
     },
     animation: {
       onComplete: () => {
@@ -308,17 +293,11 @@ export default function FootballStandingsHistoryChart({
   return (
     <div
       className="bg-white rounded-lg p-4 border relative"
-      style={{
-        zIndex: 10,
-        isolation: "isolate",
-      }}
+      style={{ zIndex: 10, isolation: "isolate" }}
     >
       <div
         className="relative"
-        style={{
-          height: `${chartHeight}px`,
-          overflow: "visible",
-        }}
+        style={{ height: `${chartHeight}px`, overflow: "visible" }}
       >
         <Line ref={chartRef} data={chartData} options={options} />
 

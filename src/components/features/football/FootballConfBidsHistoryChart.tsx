@@ -1,6 +1,7 @@
 "use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
+import type { Chart } from "chart.js";
 import {
   CategoryScale,
   ChartArea,
@@ -11,6 +12,7 @@ import {
   PointElement,
   Title,
   Tooltip,
+  TooltipModel,
 } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -45,6 +47,15 @@ interface ChartDimensions {
   chartArea: ChartArea;
   canvas: HTMLCanvasElement;
 }
+
+type ConferenceData = {
+  data: Array<{ x: string; y: number }>;
+  conf_info: {
+    primary_color?: string;
+    secondary_color?: string;
+    logo_url?: string;
+  };
+};
 
 export default function FootballConfBidsHistoryChart({
   timelineData,
@@ -90,7 +101,11 @@ export default function FootballConfBidsHistoryChart({
     return !confName.includes("fcs");
   });
 
-  const confData = filteredData.reduce(
+  const sortedData = filteredData.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  const confData = sortedData.reduce(
     (acc, item) => {
       if (!acc[item.conference_name]) {
         acc[item.conference_name] = {
@@ -104,22 +119,12 @@ export default function FootballConfBidsHistoryChart({
       });
       return acc;
     },
-    {} as Record<
-      string,
-      {
-        data: Array<{ x: string; y: number }>;
-        conf_info: {
-          primary_color?: string;
-          secondary_color?: string;
-          logo_url?: string;
-        };
-      }
-    >
+    {} as Record<string, ConferenceData>
   );
 
-  const dates = [
-    ...new Set(filteredData.map((d) => formatDate(d.date))),
-  ].sort();
+  const allDates = [
+    ...new Set(sortedData.map((item) => formatDate(item.date))),
+  ];
 
   const datasets = Object.entries(confData).map(([confName, conf]) => ({
     label: confName,
@@ -147,7 +152,7 @@ export default function FootballConfBidsHistoryChart({
     .sort((a, b) => b.final_bids - a.final_bids);
 
   const chartData = {
-    labels: dates,
+    labels: allDates,
     datasets,
   };
 
@@ -169,35 +174,71 @@ export default function FootballConfBidsHistoryChart({
       title: { display: false },
       legend: { display: false },
       tooltip: {
-        mode: "index" as const,
-        intersect: false,
-        backgroundColor: "#ffffff",
-        borderColor: "#e5e7eb",
-        borderWidth: 1,
-        titleColor: "#374151",
-        bodyColor: "#374151",
-        displayColors: false,
-        callbacks: {
-          title: (tooltipItems: Array<{ dataIndex: number }>) => {
-            if (tooltipItems.length === 0) return "";
-            return dates[tooltipItems[0].dataIndex];
-          },
-          label: () => "",
-          afterBody: (tooltipItems: Array<{ dataIndex: number }>) => {
-            if (tooltipItems.length === 0) return [];
-            const currentDate = dates[tooltipItems[0].dataIndex];
+        enabled: false,
+        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+          const { tooltip: tooltipModel, chart } = args;
+
+          let tooltipEl = document.getElementById("chartjs-tooltip-conf");
+          if (!tooltipEl) {
+            tooltipEl = document.createElement("div");
+            tooltipEl.id = "chartjs-tooltip-conf";
+            tooltipEl.style.background = "#ffffff";
+            tooltipEl.style.border = "1px solid #e5e7eb";
+            tooltipEl.style.borderRadius = "8px";
+            tooltipEl.style.color = "#1f2937";
+            tooltipEl.style.fontFamily = "Inter, system-ui, sans-serif";
+            tooltipEl.style.fontSize = "12px";
+            tooltipEl.style.opacity = "0";
+            tooltipEl.style.padding = "16px";
+            tooltipEl.style.pointerEvents = "none";
+            tooltipEl.style.position = "absolute";
+            tooltipEl.style.transform = "translate(-50%, 0)";
+            tooltipEl.style.transition = "all .1s ease";
+            tooltipEl.style.zIndex = "1000";
+            tooltipEl.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+            document.body.appendChild(tooltipEl);
+          }
+
+          if (tooltipModel.opacity === 0) {
+            tooltipEl.style.opacity = "0";
+            return;
+          }
+
+          if (tooltipModel.body) {
+            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+            const currentDate = allDates[dataIndex];
+
             const confsAtDate = Object.entries(confData)
               .map(([confName, conf]) => {
                 const dataPoint = conf.data.find(
                   (d: { x: string; y: number }) => d.x === currentDate
                 );
-                return { name: confName, bids: dataPoint?.y || 0 };
+                return {
+                  name: confName,
+                  bids: dataPoint?.y || 0,
+                  color: conf.conf_info.primary_color || "#666666",
+                };
               })
               .sort((a, b) => b.bids - a.bids);
-            return confsAtDate.map(
-              (conf) => `${conf.name}: ${conf.bids.toFixed(1)} bids`
-            );
-          },
+
+            let innerHtml = `<div style="font-weight: 600; margin-bottom: 8px; color: #1f2937;">${currentDate}</div>`;
+            confsAtDate.forEach((conf) => {
+              innerHtml += `<div style="color: ${conf.color}; margin: 2px 0; font-weight: 400;">${conf.name}: ${conf.bids.toFixed(1)} bids</div>`;
+            });
+
+            tooltipEl.innerHTML = innerHtml;
+          }
+
+          const position = chart.canvas.getBoundingClientRect();
+          tooltipEl.style.opacity = "1";
+          tooltipEl.style.left =
+            position.left + window.pageXOffset + tooltipModel.caretX + "px";
+          tooltipEl.style.top =
+            position.top +
+            window.pageYOffset +
+            tooltipModel.caretY -
+            300 +
+            "px";
         },
       },
     },
@@ -222,7 +263,7 @@ export default function FootballConfBidsHistoryChart({
       },
     },
     layout: {
-      padding: { left: 10, right: 60, top: 10, bottom: 10 },
+      padding: { left: 0, right: 60, top: 10, bottom: 10 },
     },
     animation: {
       onComplete: () => {
@@ -295,25 +336,10 @@ export default function FootballConfBidsHistoryChart({
   }
 
   return (
-    <div
-      className="relative"
-      style={{
-        zIndex: 10,
-        isolation: "isolate",
-        overflow: "hidden",
-        backgroundColor: "#ffffff",
-        position: "relative",
-        padding: "16px",
-      }}
-    >
+    <div className="w-full bg-white">
       <div
-        className="relative"
-        style={{
-          height: `${chartHeight}px`,
-          overflow: "visible",
-          position: "relative",
-          backgroundColor: "#ffffff",
-        }}
+        className="relative w-full"
+        style={{ height: `${chartHeight}px`, overflow: "visible" }}
       >
         <Line ref={chartRef} data={chartData} options={options} />
 

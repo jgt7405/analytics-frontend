@@ -2,6 +2,7 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
+import type { Chart } from "chart.js";
 import {
   CategoryScale,
   ChartArea,
@@ -12,6 +13,7 @@ import {
   PointElement,
   Title,
   Tooltip,
+  TooltipModel,
 } from "chart.js";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
@@ -117,7 +119,6 @@ export default function FootballFirstPlaceChart({
   const teamsForLogos = Object.entries(teamData)
     .map(([teamName, team]) => {
       const finalPct = team.data[team.data.length - 1]?.y || 0;
-
       return {
         team_name: teamName,
         final_pct: finalPct,
@@ -153,17 +154,13 @@ export default function FootballFirstPlaceChart({
       intersect: false,
     },
     plugins: {
-      title: {
-        display: true,
-        text: "First Place Probability Over Time",
-        font: { size: isMobile ? 14 : 16 },
-      },
-      legend: {
-        display: false,
-      },
+      title: { display: false },
+      legend: { display: false },
       tooltip: {
         enabled: false,
-        external: (context: any) => {
+        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+          const { tooltip: tooltipModel, chart } = args;
+
           let tooltipEl = document.getElementById("chartjs-tooltip");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
@@ -185,7 +182,6 @@ export default function FootballFirstPlaceChart({
             document.body.appendChild(tooltipEl);
           }
 
-          const tooltipModel = context.tooltip;
           if (tooltipModel.opacity === 0) {
             tooltipEl.style.opacity = "0";
             return;
@@ -217,7 +213,7 @@ export default function FootballFirstPlaceChart({
             tooltipEl.innerHTML = innerHtml;
           }
 
-          const position = context.chart.canvas.getBoundingClientRect();
+          const position = chart.canvas.getBoundingClientRect();
           tooltipEl.style.opacity = "1";
           tooltipEl.style.left =
             position.left + window.pageXOffset + tooltipModel.caretX + "px";
@@ -232,21 +228,12 @@ export default function FootballFirstPlaceChart({
     },
     scales: {
       x: {
-        title: {
-          display: false,
-        },
-        ticks: {
-          maxTicksLimit: isMobile ? 5 : 10,
-        },
-        grid: {
-          display: false,
-        },
+        title: { display: false },
+        ticks: { maxTicksLimit: isMobile ? 5 : 10 },
+        grid: { display: false },
       },
       y: {
-        title: {
-          display: true,
-          text: "First Place Probability (%)",
-        },
+        title: { display: true, text: "First Place Probability (%)" },
         min: 0,
         max: (() => {
           const allValues = Object.values(teamData).flatMap((team) =>
@@ -261,10 +248,7 @@ export default function FootballFirstPlaceChart({
       },
     },
     layout: {
-      padding: {
-        left: 10,
-        right: 70,
-      },
+      padding: { left: 10, right: 70 },
     },
     animation: {
       onComplete: () => {
@@ -282,7 +266,6 @@ export default function FootballFirstPlaceChart({
 
   const getChartJsYPosition = (percentage: number) => {
     if (!chartDimensions?.chartArea) return null;
-
     const { top, bottom } = chartDimensions.chartArea;
     const maxY = (() => {
       const allValues = Object.values(teamData).flatMap((team) =>
@@ -291,8 +274,7 @@ export default function FootballFirstPlaceChart({
       const maxValue = Math.max(...allValues);
       return Math.max(20, Math.ceil(maxValue / 10) * 10);
     })();
-    const yPosition = top + ((maxY - percentage) / maxY) * (bottom - top);
-    return yPosition;
+    return top + ((maxY - percentage) / maxY) * (bottom - top);
   };
 
   const getChartEndXPosition = () => {
@@ -302,7 +284,6 @@ export default function FootballFirstPlaceChart({
 
   const getAdjustedLogoPositions = () => {
     if (!chartDimensions) return [];
-
     const minSpacing = 20;
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom - 15;
@@ -323,7 +304,6 @@ export default function FootballFirstPlaceChart({
         const lowerLogo = positions[i + 1];
         const maxAllowedY = lowerLogo.adjustedY - minSpacing;
         positions[i].adjustedY = Math.min(positions[i].idealY, maxAllowedY);
-
         if (positions[i].adjustedY < chartTop) {
           positions[i].adjustedY = chartTop;
         }
@@ -336,7 +316,6 @@ export default function FootballFirstPlaceChart({
     if (topBunchedLogos.length > 1) {
       const availableSpace = chartBottom - chartTop;
       const evenSpacing = availableSpace / (positions.length - 1);
-
       for (let i = 0; i < positions.length; i++) {
         if (positions[i].adjustedY <= chartTop + minSpacing) {
           positions[i].adjustedY =
@@ -370,7 +349,6 @@ export default function FootballFirstPlaceChart({
           {getAdjustedLogoPositions().map(
             ({ team, idealY, adjustedY, endX }) => {
               const teamColor = team.team_info.primary_color || "#94a3b8";
-
               return (
                 <div key={`end-${team.team_name}`}>
                   <svg
@@ -402,11 +380,7 @@ export default function FootballFirstPlaceChart({
               <div
                 key={`logo-${team.team_name}`}
                 className="absolute flex items-center"
-                style={{
-                  right: "0px",
-                  top: `${adjustedY - 12}px`,
-                  zIndex: 10,
-                }}
+                style={{ right: "0px", top: `${adjustedY - 12}px`, zIndex: 10 }}
               >
                 <TeamLogo
                   logoUrl={

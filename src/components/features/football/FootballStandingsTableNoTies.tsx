@@ -36,30 +36,6 @@ function FootballStandingsTableNoTies({
     });
   }, [standings]);
 
-  // Debug logging
-  console.log("=== DEBUG: Football No-Ties Data ===");
-  console.log("Total teams:", standings.length);
-  if (standings.length > 0) {
-    const firstTeam = standings[0];
-    console.log("First team:", firstTeam.team_name);
-    console.log("standing_dist_no_ties:", firstTeam.standing_dist_no_ties);
-    console.log(
-      "conf_standing_no_ties_avg:",
-      firstTeam.conf_standing_no_ties_avg
-    );
-    console.log("All keys:", Object.keys(firstTeam));
-
-    // Check a few more teams
-    standings.slice(0, 3).forEach((team, index) => {
-      console.log(`Team ${index + 1} (${team.team_name}):`);
-      console.log("  standing_dist_no_ties:", team.standing_dist_no_ties);
-      console.log(
-        "  has data:",
-        Object.keys(team.standing_dist_no_ties || {}).length > 0
-      );
-    });
-  }
-
   const positions = useMemo(() => {
     let maxPosition = 0;
 
@@ -76,33 +52,32 @@ function FootballStandingsTableNoTies({
       }
     }
 
-    console.log("Max position found:", maxPosition);
     return Array.from({ length: Math.max(maxPosition, 1) }, (_, i) => i + 1);
   }, [standings]);
 
   if (!standings || standings.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">
-        No football standings data available
+        No standings data available
       </div>
     );
   }
 
+  // Responsive dimensions - exact match to previous table
   const firstColWidth = isMobile ? 60 : 80;
   const teamColWidth = isMobile ? 40 : 64;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
-  const summaryRowHeight = isMobile ? 24 : 28;
+  const summaryRowHeight = isMobile ? 20 : 24;
+
+  const tableClassName = cn(
+    tableStyles.tableContainer,
+    "standings-table",
+    className
+  );
 
   return (
-    <div
-      className={cn(
-        tableStyles.tableContainer,
-        "standings-no-ties-table",
-        className,
-        "relative overflow-x-auto"
-      )}
-    >
+    <div className={`${tableClassName} relative overflow-x-auto`}>
       <table
         className="border-collapse border-spacing-0"
         style={{
@@ -120,16 +95,18 @@ function FootballStandingsTableNoTies({
                 minWidth: firstColWidth,
                 maxWidth: firstColWidth,
                 height: headerHeight,
+                position: "sticky",
+                left: 0,
                 border: "1px solid #e5e7eb",
-                borderBottom: "2px solid #d1d5db",
+                borderRight: "1px solid #e5e7eb",
               }}
             >
-              Pos
+              Position
             </th>
             {sortedTeams.map((team) => (
               <th
-                key={`${team.team_id}-${team.team_name}`}
-                className={`text-center font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+                key={`header-${team.team_id}-${team.team_name}`}
+                className={`bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
@@ -137,14 +114,12 @@ function FootballStandingsTableNoTies({
                   height: headerHeight,
                   border: "1px solid #e5e7eb",
                   borderLeft: "none",
-                  borderBottom: "2px solid #d1d5db",
-                  backgroundColor: "#f9fafb",
                 }}
               >
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center justify-center h-full px-1">
                   <TeamLogo
-                    logoUrl={team.logo_url}
                     teamName={team.team_name}
+                    logoUrl={team.logo_url}
                     size={isMobile ? 20 : 24}
                     className="flex-shrink-0"
                     onClick={() => navigateToTeam(team.team_name)}
@@ -178,15 +153,6 @@ function FootballStandingsTableNoTies({
                   team.standing_dist_no_ties?.[position.toString()] ||
                   team.standing_dist_no_ties?.[`${position}.0`] ||
                   0;
-
-                // Debug specific cells
-                if (position <= 3 && sortedTeams.indexOf(team) <= 2) {
-                  console.log(`Debug cell [${position}][${team.team_name}]:`, {
-                    percentage,
-                    raw_data: team.standing_dist_no_ties,
-                    position_key: position.toString(),
-                  });
-                }
 
                 const colorStyle = getCellColor(percentage);
 
@@ -228,31 +194,76 @@ function FootballStandingsTableNoTies({
                 position: "sticky",
                 left: 0,
                 border: "1px solid #e5e7eb",
-                borderTop: "2px solid #d1d5db",
+                borderTop: "2px solid #4b5563",
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Avg
+              Avg Position
             </td>
             {sortedTeams.map((team) => {
               const avgStanding =
                 team.conf_standing_no_ties_avg ?? team.avg_standing ?? 0;
               return (
                 <td
-                  key={`${team.team_id}-${team.team_name}-avg`}
-                  className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  key={`${team.team_id}-${team.team_name}-avg-position`}
+                  className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     height: summaryRowHeight,
                     width: teamColWidth,
                     minWidth: teamColWidth,
                     maxWidth: teamColWidth,
                     border: "1px solid #e5e7eb",
-                    borderTop: "2px solid #d1d5db",
+                    borderTop: "2px solid #4b5563",
                     borderLeft: "none",
-                    backgroundColor: "#f9fafb",
                   }}
                 >
                   {avgStanding.toFixed(1)}
+                </td>
+              );
+            })}
+          </tr>
+
+          {/* NEW: Current Conference Record Row */}
+          <tr className="bg-gray-50">
+            <td
+              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: firstColWidth,
+                minWidth: firstColWidth,
+                maxWidth: firstColWidth,
+                height: summaryRowHeight,
+                position: "sticky",
+                left: 0,
+                border: "1px solid #e5e7eb",
+                borderTop: "none",
+                borderRight: "1px solid #e5e7eb",
+              }}
+            >
+              Curr Conf Record
+            </td>
+            {sortedTeams.map((team) => {
+              // Format conference record as "W-L"
+              const confRecord =
+                team.actual_conference_wins !== undefined &&
+                team.actual_conference_losses !== undefined
+                  ? `${team.actual_conference_wins}-${team.actual_conference_losses}`
+                  : "-";
+
+              return (
+                <td
+                  key={`${team.team_id}-${team.team_name}-conf-record`}
+                  className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  style={{
+                    height: summaryRowHeight,
+                    width: teamColWidth,
+                    minWidth: teamColWidth,
+                    maxWidth: teamColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                  }}
+                >
+                  {confRecord}
                 </td>
               );
             })}

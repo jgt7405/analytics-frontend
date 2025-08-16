@@ -1,4 +1,3 @@
-// src/app/football/cwv/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
@@ -121,6 +120,21 @@ export default function FootballCWVPage() {
                     </Suspense>
                   </div>
 
+                  {/* Legend - NEW: Added legend section */}
+                  <div className="mt-4 mb-6 text-sm text-gray-600">
+                    <p>
+                      <strong>Legend:</strong>{" "}
+                      <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
+                      Win |{" "}
+                      <span className="inline-block w-4 h-4 bg-[#fff7d6] border border-gray-300 mr-1 align-middle"></span>
+                      Loss |{" "}
+                      <span className="inline-block w-4 h-4 bg-[#add8e6] mr-1 align-middle"></span>
+                      Next Game |{" "}
+                      <span className="inline-block w-4 h-4 bg-[#f0f0f0] mr-1 align-middle"></span>
+                      Future Games
+                    </p>
+                  </div>
+
                   {/* Buttons and Explainer - EXACT same layout as original */}
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
@@ -139,10 +153,6 @@ export default function FootballCWVPage() {
                           <div style={{ marginTop: "6px" }}>
                             This only reflects past results, not future
                             projections or predictions of final standings.
-                          </div>
-                          <div style={{ marginTop: "6px" }}>
-                            Games are color-coded: blue for wins, yellow for
-                            losses, and gray for upcoming games.
                           </div>
                         </div>
                       </div>

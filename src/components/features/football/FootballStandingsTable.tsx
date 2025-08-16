@@ -233,6 +233,52 @@ function FootballStandingsTable({
               </td>
             ))}
           </tr>
+
+          {/* NEW: Current Conference Record Row */}
+          <tr className="bg-gray-50">
+            <td
+              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: firstColWidth,
+                minWidth: firstColWidth,
+                maxWidth: firstColWidth,
+                height: summaryRowHeight,
+                position: "sticky",
+                left: 0,
+                border: "1px solid #e5e7eb",
+                borderTop: "none",
+                borderRight: "1px solid #e5e7eb",
+              }}
+            >
+              Curr Conf Record
+            </td>
+            {sortedTeams.map((team) => {
+              // Format conference record as "W-L"
+              const confRecord =
+                team.actual_conference_wins !== undefined &&
+                team.actual_conference_losses !== undefined
+                  ? `${team.actual_conference_wins}-${team.actual_conference_losses}`
+                  : "-";
+
+              return (
+                <td
+                  key={`${team.team_id}-${team.team_name}-conf-record`}
+                  className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  style={{
+                    height: summaryRowHeight,
+                    width: teamColWidth,
+                    minWidth: teamColWidth,
+                    maxWidth: teamColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                  }}
+                >
+                  {confRecord}
+                </td>
+              );
+            })}
+          </tr>
         </tbody>
       </table>
     </div>

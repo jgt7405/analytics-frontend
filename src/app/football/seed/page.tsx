@@ -129,8 +129,9 @@ export default function FootballSeedPage() {
                       style={{ lineHeight: "1.3" }}
                     >
                       <div>
-                        CFP seed distribution probabilities (1-12) and playoff
-                        bid percentages based on current projections.
+                        CFP seed distribution probabilities based on 1,000
+                        season simulations using composite of multiple college
+                        football rating models.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         Darker colors indicate higher probabilities.

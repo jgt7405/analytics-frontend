@@ -108,11 +108,9 @@ export default function FootballConfDataPage() {
                       style={{ lineHeight: "1.3" }}
                     >
                       <div>
-                        Conference bid distribution showing probability of each
-                        conference receiving 0-12 CFP bids.
-                      </div>
-                      <div style={{ marginTop: "6px" }}>
-                        Based on current team projections and playoff scenarios.
+                        Conference bid distribution based on 1,000 season
+                        simulations using composite of multiple college football
+                        rating models.
                       </div>
                     </div>
                   </div>
@@ -132,6 +130,9 @@ export default function FootballConfDataPage() {
             </div>
 
             <div className="mb-8">
+              <h3 className="text-xl font-normal text-gray-600 mb-4">
+                Conference Win Probability vs Average Team
+              </h3>
               <div className="sagarin-box-whisker-container">
                 <Suspense fallback={<BoxWhiskerChartSkeleton />}>
                   {confResponse?.data && (
@@ -146,12 +147,13 @@ export default function FootballConfDataPage() {
                   <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        Sagarin rating distribution by conference showing
-                        strength depth.
+                        Win probability distribution by conference based on
+                        probability each team in conference would win a game vs
+                        the average college football team in a neutral location.
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        Higher ratings indicate stronger teams. Box plots show
-                        quartile ranges.
+                        Box shows 25th to 75th percentile teams in conference,
+                        line shows median, whiskers show top and bottom teams.
                       </div>
                     </div>
                   </div>
@@ -160,9 +162,9 @@ export default function FootballConfDataPage() {
                   >
                     <TableActionButtons
                       contentSelector=".sagarin-box-whisker-container"
-                      pageName="conference-sagarin-chart"
-                      pageTitle="Conference Sagarin Distribution"
-                      shareTitle="Conference Sagarin Rating Distribution"
+                      pageName="conference-win-probability-chart"
+                      pageTitle="Conference Win Probability Distribution"
+                      shareTitle="Conference Win Probability vs Average Team"
                     />
                   </div>
                 </div>
@@ -171,31 +173,24 @@ export default function FootballConfDataPage() {
 
             {historyData && (
               <div className="mb-8">
-                <div className="bg-white rounded-lg border">
-                  <div className="p-4 pb-2">
-                    <h3 className="text-xl font-normal text-gray-600">
-                      Conference CFP Bid Trends Over Time
-                    </h3>
-                  </div>
-                  <div className="conf-bids-history-container">
-                    <ErrorBoundary level="component">
-                      <FootballConfBidsHistoryChart
-                        timelineData={historyData.timeline_data}
-                      />
-                    </ErrorBoundary>
-                  </div>
+                <h3 className="text-xl font-normal text-gray-600 mb-4">
+                  Conference CFP Bid Trends Over Time
+                </h3>
+                <div className="conf-bids-history-container">
+                  <ErrorBoundary level="component">
+                    <FootballConfBidsHistoryChart
+                      timelineData={historyData.timeline_data}
+                    />
+                  </ErrorBoundary>
                 </div>
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
                     <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
-                          Historical trend of projected CFP bids by conference
-                          over time.
-                        </div>
-                        <div style={{ marginTop: "6px" }}>
-                          Shows how bid projections have changed as the season
-                          progresses.
+                          Progression of projected CFP bids by conference over
+                          time from 1,000 season simulations using composite of
+                          multiple college football rating models.
                         </div>
                       </div>
                     </div>

@@ -314,7 +314,9 @@ export default function FootballSchedulePage() {
                           <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
-                                Location and Opponent are sorted by difficulty.
+                                Location and Opponent are sorted by difficulty,
+                                based on the probability that an average team in
+                                the conference would win vs that opponent.
                               </div>
                               <div style={{ marginTop: "6px" }}>
                                 Each column shows game results from perspective

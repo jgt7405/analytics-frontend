@@ -9,7 +9,7 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/basketball/wins");
+    router.replace("/football/wins");
   }, [router]);
 
   return (

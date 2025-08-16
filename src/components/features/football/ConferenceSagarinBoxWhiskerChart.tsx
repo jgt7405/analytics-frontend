@@ -67,6 +67,25 @@ function adjustColorIfWhite(color: string): string {
   return white.includes(color.toLowerCase()) ? "#000000" : color;
 }
 
+// Probability calculation function from Python code
+function calculateWinProbability(
+  teamRating: number,
+  avgRating: number
+): number {
+  const variance = Math.abs(teamRating - avgRating);
+  let probability: number;
+
+  if (teamRating >= avgRating) {
+    probability = -0.0005 * Math.pow(variance, 2) + 0.0284 * variance + 0.5017;
+  } else {
+    probability =
+      1 - (-0.0005 * Math.pow(variance, 2) + 0.0284 * variance + 0.5017);
+  }
+
+  // Convert to percentage and clamp between 0-100
+  return Math.max(0, Math.min(100, probability * 100));
+}
+
 export default function ConferenceSagarinBoxWhiskerChart({
   conferenceData,
   className = "",
@@ -104,41 +123,54 @@ export default function ConferenceSagarinBoxWhiskerChart({
     });
   }, [conferenceData]);
 
-  const sortedConferences = useMemo(() => {
-    return [...validConferences].sort(
-      (a, b) => b.sagarin_median - a.sagarin_median
-    );
+  // Calculate average rating across all teams
+  const averageRating = useMemo(() => {
+    const allRatings: number[] = [];
+
+    validConferences.forEach((conf) => {
+      // Add each quartile value, weighted by approximate team count in each quartile
+      const quarterTeams = conf.teamcount / 4;
+
+      // Add ratings for each quartile section
+      for (let i = 0; i < quarterTeams; i++) {
+        allRatings.push(conf.sagarin_min); // Bottom quartile
+        allRatings.push(conf.sagarin_q25); // Second quartile
+        allRatings.push(conf.sagarin_median); // Third quartile
+        allRatings.push(conf.sagarin_q75); // Top quartile
+        allRatings.push(conf.sagarin_max); // Maximum
+      }
+    });
+
+    return allRatings.length > 0
+      ? allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length
+      : 70; // Default fallback
   }, [validConferences]);
 
-  const allValues = useMemo(() => {
-    return sortedConferences.flatMap((conf) => [
-      conf.sagarin_min,
-      conf.sagarin_max,
-    ]);
-  }, [sortedConferences]);
+  // Convert conferences to probability data
+  const probabilityConferences = useMemo(() => {
+    return validConferences.map((conf) => ({
+      ...conf,
+      prob_min: calculateWinProbability(conf.sagarin_min, averageRating),
+      prob_q25: calculateWinProbability(conf.sagarin_q25, averageRating),
+      prob_median: calculateWinProbability(conf.sagarin_median, averageRating),
+      prob_q75: calculateWinProbability(conf.sagarin_q75, averageRating),
+      prob_max: calculateWinProbability(conf.sagarin_max, averageRating),
+    }));
+  }, [validConferences, averageRating]);
+
+  const sortedConferences = useMemo(() => {
+    return [...probabilityConferences].sort(
+      (a, b) => b.prob_median - a.prob_median
+    );
+  }, [probabilityConferences]);
 
   const chartBounds = useMemo(() => {
-    if (allValues.length === 0) return { yMin: 0, yMax: 100 };
-
-    const minValue = Math.min(...allValues);
-    const maxValue = Math.max(...allValues);
-    const valueRange = maxValue - minValue;
-    const padding_value = valueRange * 0.1;
-
-    return {
-      yMin: minValue - padding_value,
-      yMax: maxValue + padding_value,
-    };
-  }, [allValues]);
+    return { yMin: 0, yMax: 100 };
+  }, []);
 
   const yAxisTicks = useMemo(() => {
-    const range = chartBounds.yMax - chartBounds.yMin;
-    const tickCount = 7;
-    const step = range / (tickCount - 1);
-    return Array.from({ length: tickCount }, (_, i) =>
-      Math.round(chartBounds.yMin + i * step)
-    );
-  }, [chartBounds]);
+    return [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  }, []);
 
   if (!conferenceData || conferenceData.length === 0) {
     return (
@@ -184,16 +216,10 @@ export default function ConferenceSagarinBoxWhiskerChart({
   const chartWidth =
     sortedConferences.length * boxWidth +
     (sortedConferences.length - 1) * teamSpacing +
-    40;
+    10;
 
   return (
     <div className={cn(components.table.container, "bg-white", className)}>
-      <div className="p-4 pb-2">
-        <h3 className="text-xl font-normal text-gray-600">
-          Conference Sagarin Rating Distribution
-        </h3>
-      </div>
-
       <div className="relative">
         {/* Fixed Y-axis outside scroll container */}
         <div
@@ -223,7 +249,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                   fontSize: isMobile ? "14px" : "16px",
                 }}
               >
-                {tick}
+                {tick}%
               </div>
             ))}
           </div>
@@ -236,6 +262,8 @@ export default function ConferenceSagarinBoxWhiskerChart({
             style={{
               height: chartHeight + logoHeight + padding.top + padding.bottom,
               minWidth: chartWidth + padding.left + padding.right,
+              maxWidth: chartWidth + padding.left + padding.right,
+              width: chartWidth + padding.left + padding.right,
               marginLeft: padding.left,
             }}
           >
@@ -266,11 +294,11 @@ export default function ConferenceSagarinBoxWhiskerChart({
                     ? conf.secondary_color
                     : "#64748b";
 
-                const bottom = conf.sagarin_min;
-                const q1 = conf.sagarin_q25;
-                const median = conf.sagarin_median;
-                const q3 = conf.sagarin_q75;
-                const top = conf.sagarin_max;
+                const bottom = conf.prob_min;
+                const q1 = conf.prob_q25;
+                const median = conf.prob_median;
+                const q3 = conf.prob_q75;
+                const top = conf.prob_max;
 
                 return (
                   <div
@@ -282,6 +310,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                       marginLeft: index === 0 ? 0 : teamSpacing,
                     }}
                   >
+                    {/* Whisker line */}
                     <div
                       className="absolute"
                       style={{
@@ -292,6 +321,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         left: (boxWidth - lineThickness) / 2,
                       }}
                     />
+                    {/* Top whisker */}
                     <div
                       className="absolute"
                       style={{
@@ -302,6 +332,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         left: (boxWidth - whiskerWidth) / 2,
                       }}
                     />
+                    {/* Bottom whisker */}
                     <div
                       className="absolute"
                       style={{
@@ -312,6 +343,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         left: (boxWidth - whiskerWidth) / 2,
                       }}
                     />
+                    {/* Box (Q1 to Q3) */}
                     <div
                       className="absolute"
                       style={{
@@ -322,6 +354,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         border: `${lineThickness}px solid ${adjustColorIfWhite(secondaryColor)}`,
                       }}
                     />
+                    {/* Median line */}
                     <div
                       className="absolute"
                       style={{
@@ -331,6 +364,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         backgroundColor: adjustColorIfWhite(secondaryColor),
                       }}
                     />
+                    {/* Conference logo */}
                     <div
                       className="absolute flex justify-center items-center"
                       style={{

@@ -147,12 +147,12 @@ export default function FootballCFPPage() {
                     <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
-                          Shows projected probability of reaching each round of
-                          the College Football Playoff.
+                          Probabilities to reach each round of college football
+                          playoff based on 1,000 season simulations using
+                          composite of multiple college football rating models.
                         </div>
                         <div style={{ marginTop: "6px" }}>
-                          Percentages based on simulations. Darker colors
-                          indicate higher probabilities.
+                          Darker colors indicate higher probabilities.
                         </div>
                       </div>
                     </div>

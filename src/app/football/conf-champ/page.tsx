@@ -200,14 +200,9 @@ export default function FootballConfChampPage() {
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
-                            Conference Championship Projections based on
-                            simulations of remaining games, showing each team's
-                            percentage chance to reach and win their conference
-                            championship game.
-                          </div>
-                          <div style={{ marginTop: "6px" }}>
-                            Championship game participants are determined by the
-                            top 2 teams in final conference standings.
+                            Conference Championship Projections based on 1,000
+                            season simulations using composite of multiple
+                            college football rating models.
                           </div>
                         </div>
                       </div>

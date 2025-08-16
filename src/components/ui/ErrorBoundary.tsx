@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<
   };
 
   handleGoHome = () => {
-    window.location.href = "/basketball/wins";
+    window.location.href = "/football/wins";
   };
 
   render(): ReactNode {

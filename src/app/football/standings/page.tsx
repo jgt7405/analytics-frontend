@@ -267,16 +267,84 @@ export default function FootballStandingsPage() {
             {historyData && (
               <div className="space-y-6 mb-8">
                 <ErrorBoundary level="component">
-                  <FootballStandingsHistoryChart
-                    timelineData={historyData.timeline_data}
-                    conferenceSize={standingsResponse?.data?.length || 12}
-                  />
+                  <div className="mb-8">
+                    <h1 className="text-xl font-normal text-gray-500 mb-4">
+                      Conference Rankings History{" "}
+                      <span className="text-base">(Over Time)</span>
+                    </h1>
+                    <div className="standings-history-chart">
+                      <FootballStandingsHistoryChart
+                        timelineData={historyData.timeline_data}
+                        conferenceSize={standingsResponse?.data?.length || 12}
+                      />
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="flex flex-row items-start gap-4">
+                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div style={{ lineHeight: "1.3" }}>
+                            <div>
+                              Progression of projected conference standings
+                              (with ties) from 1,000 season simulations using
+                              composite of multiple college football rating
+                              models.
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                        >
+                          <TableActionButtons
+                            selectedConference={selectedConference}
+                            contentSelector=".standings-history-chart"
+                            pageName="standings-history"
+                            pageTitle="Conference Rankings History Over Time"
+                            shareTitle="Conference Rankings History"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </ErrorBoundary>
 
                 <ErrorBoundary level="component">
-                  <FootballFirstPlaceChart
-                    firstPlaceData={historyData.first_place_data}
-                  />
+                  <div className="mb-8">
+                    <h1 className="text-xl font-normal text-gray-500 mb-4">
+                      First Place Probability History{" "}
+                      <span className="text-base">(Over Time)</span>
+                    </h1>
+                    <div className="first-place-chart">
+                      <FootballFirstPlaceChart
+                        firstPlaceData={historyData.first_place_data}
+                      />
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="flex flex-row items-start gap-4">
+                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div style={{ lineHeight: "1.3" }}>
+                            <div>
+                              Progression of projected probability of first
+                              place conference finish (with ties) from 1,000
+                              season simulations using composite of multiple
+                              college football rating models.
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                        >
+                          <TableActionButtons
+                            selectedConference={selectedConference}
+                            contentSelector=".first-place-chart"
+                            pageName="first-place-history"
+                            pageTitle="First Place Probability History Over Time"
+                            shareTitle="First Place Probability History"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </ErrorBoundary>
               </div>
             )}
