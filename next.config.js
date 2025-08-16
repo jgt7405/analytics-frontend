@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
 });
@@ -43,12 +44,12 @@ const nextConfig = {
   // Force all pages to be client-side rendered
   experimental: {
     missingSuspenseWithCSRBailout: false,
-    esmExternals: 'loose',
+    esmExternals: "loose",
   },
-  
+
   // Disable static generation
   trailingSlash: false,
-  
+
   // Universal settings
   poweredByHeader: false,
   reactStrictMode: true,
@@ -115,7 +116,7 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/basketball/wins",
+        destination: "/football/wins",
         permanent: false,
       },
     ];

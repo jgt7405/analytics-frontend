@@ -9,12 +9,22 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log("🔄 HomePage useEffect triggered");
+    console.log("📍 Current location:", window.location.href);
+    console.log("🎯 About to redirect to /football/wins");
+
     router.replace("/football/wins");
+
+    // Add a timeout to check if redirect happened
+    setTimeout(() => {
+      console.log("📍 Location after redirect attempt:", window.location.href);
+    }, 100);
   }, [router]);
+
+  console.log("🏠 HomePage component rendering");
 
   return (
     <>
-      {/* Google Analytics for Search Console verification */}
       <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-R69NZJ9JM8"
         strategy="afterInteractive"
