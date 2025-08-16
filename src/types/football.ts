@@ -218,11 +218,24 @@ export interface FootballSeedData {
   seed_distribution: Record<string, number>;
   first_four_out: number;
   next_four_out: number;
+  conf_champ_overall_pct?: number; // NEW
+  at_large_overall_pct?: number; // NEW
 }
 
 export interface FootballSeedApiResponse {
   data: FootballSeedData[];
   conferences: string[];
+}
+
+// Win-Seed Count Data Types
+export interface FootballWinSeedCount {
+  Wins: number;
+  Seed: string | number;
+  Playoff_Status: string;
+  Count: number;
+  Percentage: number;
+  Conf_Champ_Pct?: number; // NEW
+  At_Large_Pct?: number; // NEW
 }
 
 // Conference Data Types
@@ -273,6 +286,9 @@ export interface FootballTeamInfo {
   cfp_bid_pct: number;
   average_seed?: number;
   seed_distribution: Record<string, number>;
+  conf_champ_overall_pct?: number; // NEW
+  at_large_overall_pct?: number; // NEW
+  no_bid_pct?: number; // NEW
 }
 
 export interface FootballTeamGame {
