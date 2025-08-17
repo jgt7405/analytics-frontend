@@ -22,6 +22,8 @@ interface ApiSeedCount {
   Tournament_Status: string;
   Wins: number;
   Count: number;
+  Conf_Champ_Pct?: number; // Add this
+  At_Large_Pct?: number; // Add this
 }
 
 interface FootballTeamInfo {
@@ -138,6 +140,8 @@ export default function FootballTeamPage({
       Tournament_Status: item.Tournament_Status,
       Count: item.Count,
       Percentage: item.Percentage,
+      Conf_Champ_Pct: item.Conf_Champ_Pct || 0, // Add this
+      At_Large_Pct: item.At_Large_Pct || 0, // Add this
     }));
   };
 
