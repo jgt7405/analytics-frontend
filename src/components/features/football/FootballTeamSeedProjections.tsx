@@ -144,12 +144,8 @@ export default function FootballTeamSeedProjections({
   };
 
   const processData = () => {
-    console.log("🚀 Starting processData with winSeedCounts:", winSeedCounts);
-
-    if (!Array.isArray(winSeedCounts) || winSeedCounts.length === 0) {
-      console.error("❌ No winSeedCounts data available");
+    if (!Array.isArray(winSeedCounts) || winSeedCounts.length === 0)
       return null;
-    }
 
     const winTotalsSet = new Set<string>();
     const seedsSet = new Set<string>();
@@ -158,8 +154,6 @@ export default function FootballTeamSeedProjections({
       (sum, entry) => sum + (entry.Count || 0),
       0
     );
-
-    console.log("📊 Grand total count:", grandTotal);
 
     winSeedCounts.forEach((entry) => {
       if (entry.Wins !== undefined) winTotalsSet.add(entry.Wins.toString());
@@ -175,10 +169,6 @@ export default function FootballTeamSeedProjections({
     const seeds = hasNumericSeeds
       ? [...seedsSet].sort((a, b) => Number(a) - Number(b))
       : [];
-
-    console.log("🎯 Win totals found:", winTotals);
-    console.log("🌱 Seeds found:", seeds);
-    console.log("🔢 Has numeric seeds:", hasNumericSeeds);
 
     // Initialize winData structure
     winTotals.forEach((winsValue) => {
@@ -217,117 +207,58 @@ export default function FootballTeamSeedProjections({
       });
     });
 
-    console.log(
-      "✅ Initialized winData structure for",
-      winTotals.length,
-      "win totals"
-    );
-
     // Process each entry to populate the data
-    winSeedCounts.forEach((entry, index) => {
+    winSeedCounts.forEach((entry) => {
       const winsValue = entry.Wins.toString();
       const status = entry.Tournament_Status || "Out of Playoffs";
       const count = entry.Count || 0;
       const confChampPct = entry.Conf_Champ_Pct || 0;
       const atLargePct = entry.At_Large_Pct || 0;
 
-      console.log(
-        `\n📝 Processing entry ${index + 1}/${winSeedCounts.length}:`
-      );
-      console.log(`   Wins: ${winsValue}`);
-      console.log(`   Seed: ${entry.Seed}`);
-      console.log(`   Status: ${status}`);
-      console.log(`   Count: ${count}`);
-      console.log(`   Conf_Champ_Pct: ${confChampPct}%`);
-      console.log(`   At_Large_Pct: ${atLargePct}%`);
-
-      if (!winData[winsValue]) {
-        console.warn(`⚠️ No winData found for wins value: ${winsValue}`);
-        return;
-      }
+      if (!winData[winsValue]) return;
 
       winData[winsValue].total += count;
 
       // Handle bid category distribution
       if (status === "In Playoffs" || !isNaN(parseInt(entry.Seed.toString()))) {
-        console.log(`   🎯 Processing bid categories (playoff scenario)`);
-
         const confChampCount = Math.round((confChampPct / 100) * count);
         const atLargeCount = Math.round((atLargePct / 100) * count);
-
-        console.log(`   📊 Bid calculations:`);
-        console.log(
-          `      Conf Champ Count: ${confChampCount} (${confChampPct}% of ${count})`
-        );
-        console.log(
-          `      At Large Count: ${atLargeCount} (${atLargePct}% of ${count})`
-        );
-        console.log(`      Total bid count: ${confChampCount + atLargeCount}`);
 
         winData[winsValue].rawCounts.bidCategoryDistribution[
           "Conference Champion"
         ] += confChampCount;
         winData[winsValue].rawCounts.bidCategoryDistribution["At Large"] +=
           atLargeCount;
-
-        console.log(`   ✅ Updated bid category raw counts:`);
-        console.log(
-          `      Conf Champ total: ${winData[winsValue].rawCounts.bidCategoryDistribution["Conference Champion"]}`
-        );
-        console.log(
-          `      At Large total: ${winData[winsValue].rawCounts.bidCategoryDistribution["At Large"]}`
-        );
-      } else {
-        console.log(`   ⏭️ Skipping bid categories (non-playoff scenario)`);
       }
 
       // Handle seed distribution and determine playoff status
       if (entry.Seed && !isNaN(parseInt(entry.Seed.toString()))) {
-        // This scenario has a numeric seed
+        // This scenario has a numeric seed - IN PLAYOFFS
         const seedKey = entry.Seed.toString();
-        console.log(`   🌱 Processing numeric seed: ${seedKey}`);
-
         winData[winsValue].rawCounts.seedDistribution[seedKey] =
           (winData[winsValue].rawCounts.seedDistribution[seedKey] || 0) + count;
 
-        // ANY scenario with a numeric seed counts as "In Playoffs" regardless of status
         winData[winsValue].rawCounts.statusDistribution["In Playoffs %"] +=
           count;
-
-        console.log(`   ✅ Added ${count} to seed ${seedKey} and In Playoffs`);
       } else {
-        // No numeric seed - handle based on status
-        console.log(`   📊 Processing non-numeric seed with status: ${status}`);
-
+        // No numeric seed - track First/Next Four Out only
         if (status === "First Four Out") {
           winData[winsValue].rawCounts.statusDistribution["First Four Out"] +=
             count;
-          console.log(`   ✅ Added ${count} to First Four Out`);
         } else if (status === "Next Four Out") {
           winData[winsValue].rawCounts.statusDistribution["Next Four Out"] +=
             count;
-          console.log(`   ✅ Added ${count} to Next Four Out`);
-        } else {
-          // True "Out of Playoffs" scenarios (includes any other status)
-          winData[winsValue].rawCounts.statusDistribution["Out of Playoffs"] +=
-            count;
-          console.log(`   ✅ Added ${count} to Out of Playoffs`);
         }
+        // Don't add to "Out of Playoffs" - it's calculated as complement
       }
     });
-
-    console.log("\n🧮 Starting percentage calculations...");
 
     // Calculate percentages
     winTotals.forEach((winsValue) => {
       const rowData = winData[winsValue];
       rowData.percentOfTotal = (rowData.total / grandTotal) * 100;
 
-      console.log(
-        `\n📊 Calculating percentages for ${winsValue} wins (total: ${rowData.total}):`
-      );
-
-      // Calculate seed distribution percentages based on row total
+      // Calculate seed distribution percentages
       Object.entries(rowData.rawCounts.seedDistribution).forEach(
         ([seed, count]) => {
           rowData.seedDistribution[seed] =
@@ -345,51 +276,30 @@ export default function FootballTeamSeedProjections({
         const count = rowData.rawCounts.bidCategoryDistribution[category];
         rowData.bidCategoryDistribution[category] =
           rowData.total > 0 ? (count / rowData.total) * 100 : 0;
-
-        console.log(
-          `   ${category}: ${count} raw → ${rowData.bidCategoryDistribution[category].toFixed(1)}%`
-        );
       });
 
-      // Calculate status distribution percentages based on row total
+      // Calculate status distribution percentages
       const inPlayoffsCount =
         rowData.rawCounts.statusDistribution["In Playoffs %"];
       const firstFourOutCount =
         rowData.rawCounts.statusDistribution["First Four Out"];
       const nextFourOutCount =
         rowData.rawCounts.statusDistribution["Next Four Out"];
-      const outOfPlayoffsCount =
-        rowData.rawCounts.statusDistribution["Out of Playoffs"];
 
       if (rowData.total > 0) {
-        rowData.statusDistribution["In Playoffs %"] =
-          (inPlayoffsCount / rowData.total) * 100;
+        const inPlayoffsPct = (inPlayoffsCount / rowData.total) * 100;
+        rowData.statusDistribution["In Playoffs %"] = inPlayoffsPct;
+        rowData.statusDistribution["Out of Playoffs"] = 100 - inPlayoffsPct; // Complement
         rowData.statusDistribution["First Four Out"] =
           (firstFourOutCount / rowData.total) * 100;
         rowData.statusDistribution["Next Four Out"] =
           (nextFourOutCount / rowData.total) * 100;
-        rowData.statusDistribution["Out of Playoffs"] =
-          (outOfPlayoffsCount / rowData.total) * 100;
       } else {
         rowData.statusDistribution["In Playoffs %"] = 0;
+        rowData.statusDistribution["Out of Playoffs"] = 100;
         rowData.statusDistribution["First Four Out"] = 0;
         rowData.statusDistribution["Next Four Out"] = 0;
-        rowData.statusDistribution["Out of Playoffs"] = 0;
       }
-
-      console.log(`   Status percentages:`);
-      console.log(
-        `     In Playoffs: ${rowData.statusDistribution["In Playoffs %"].toFixed(1)}%`
-      );
-      console.log(
-        `     First Four Out: ${rowData.statusDistribution["First Four Out"].toFixed(1)}%`
-      );
-      console.log(
-        `     Next Four Out: ${rowData.statusDistribution["Next Four Out"].toFixed(1)}%`
-      );
-      console.log(
-        `     Out of Playoffs: ${rowData.statusDistribution["Out of Playoffs"].toFixed(1)}%`
-      );
     });
 
     // Calculate total row
@@ -426,8 +336,6 @@ export default function FootballTeamSeedProjections({
       totalRow.rawCounts.seedDistribution[seed] = 0;
     });
 
-    console.log("\n🧮 Calculating total row...");
-
     // Sum up totals across all win values
     Object.entries(winData).forEach(([, data]) => {
       totalRow.total += data.total;
@@ -439,18 +347,14 @@ export default function FootballTeamSeedProjections({
         }
       );
 
-      Object.entries(data.rawCounts.statusDistribution).forEach(
-        ([status, count]) => {
-          totalRow.rawCounts.statusDistribution[
-            status as keyof FootballStatusDistribution
-          ] =
-            (totalRow.rawCounts.statusDistribution[
-              status as keyof FootballStatusDistribution
-            ] || 0) + count;
-        }
-      );
+      // Only sum In Playoffs, First Four Out, Next Four Out
+      totalRow.rawCounts.statusDistribution["In Playoffs %"] +=
+        data.rawCounts.statusDistribution["In Playoffs %"];
+      totalRow.rawCounts.statusDistribution["First Four Out"] +=
+        data.rawCounts.statusDistribution["First Four Out"];
+      totalRow.rawCounts.statusDistribution["Next Four Out"] +=
+        data.rawCounts.statusDistribution["Next Four Out"];
 
-      // Fixed bid category aggregation with explicit type casting
       const bidCategoryEntries = Object.entries(
         data.rawCounts.bidCategoryDistribution
       ) as Array<[keyof FootballBidCategoryDistribution, number]>;
@@ -468,17 +372,12 @@ export default function FootballTeamSeedProjections({
       }
     );
 
-    // Calculate total bid category percentages with explicit type casting
     const totalBidCategoryEntries = Object.entries(
       totalRow.rawCounts.bidCategoryDistribution
     ) as Array<[keyof FootballBidCategoryDistribution, number]>;
     totalBidCategoryEntries.forEach(([category, count]) => {
       totalRow.bidCategoryDistribution[category] =
         grandTotal > 0 ? (count / grandTotal) * 100 : 0;
-
-      console.log(
-        `Total ${category}: ${count} raw → ${totalRow.bidCategoryDistribution[category].toFixed(1)}%`
-      );
     });
 
     const totalInPlayoffs =
@@ -487,27 +386,21 @@ export default function FootballTeamSeedProjections({
       totalRow.rawCounts.statusDistribution["First Four Out"];
     const totalNextFourOut =
       totalRow.rawCounts.statusDistribution["Next Four Out"];
-    const totalOutOfPlayoffs =
-      totalRow.rawCounts.statusDistribution["Out of Playoffs"];
 
-    totalRow.statusDistribution["In Playoffs %"] =
-      grandTotal > 0 ? (totalInPlayoffs / grandTotal) * 100 : 0;
-    totalRow.statusDistribution["First Four Out"] =
-      grandTotal > 0 ? (totalFirstFourOut / grandTotal) * 100 : 0;
-    totalRow.statusDistribution["Next Four Out"] =
-      grandTotal > 0 ? (totalNextFourOut / grandTotal) * 100 : 0;
-    totalRow.statusDistribution["Out of Playoffs"] =
-      grandTotal > 0 ? (totalOutOfPlayoffs / grandTotal) * 100 : 0;
-
-    console.log("\n🎉 ProcessData completed successfully!");
-    console.log("Final data structure:", {
-      winData,
-      winTotals,
-      seeds,
-      totalRow,
-      hasNumericSeeds,
-      grandTotal,
-    });
+    if (grandTotal > 0) {
+      const totalInPlayoffsPct = (totalInPlayoffs / grandTotal) * 100;
+      totalRow.statusDistribution["In Playoffs %"] = totalInPlayoffsPct;
+      totalRow.statusDistribution["Out of Playoffs"] = 100 - totalInPlayoffsPct; // Complement
+      totalRow.statusDistribution["First Four Out"] =
+        (totalFirstFourOut / grandTotal) * 100;
+      totalRow.statusDistribution["Next Four Out"] =
+        (totalNextFourOut / grandTotal) * 100;
+    } else {
+      totalRow.statusDistribution["In Playoffs %"] = 0;
+      totalRow.statusDistribution["Out of Playoffs"] = 100;
+      totalRow.statusDistribution["First Four Out"] = 0;
+      totalRow.statusDistribution["Next Four Out"] = 0;
+    }
 
     return { winData, winTotals, seeds, totalRow, hasNumericSeeds, grandTotal };
   };
