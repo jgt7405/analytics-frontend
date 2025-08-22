@@ -286,10 +286,22 @@ export default function FootballTeamSeedProjections({
       const nextFourOutCount =
         rowData.rawCounts.statusDistribution["Next Four Out"];
 
+      // Calculate bid category distribution percentages
+      const confChampCount =
+        rowData.rawCounts.bidCategoryDistribution["Conference Champion"];
+      const atLargeCount =
+        rowData.rawCounts.bidCategoryDistribution["At Large"];
+      const totalBidCount = confChampCount + atLargeCount;
+
+      rowData.bidCategoryDistribution["Conference Champion"] =
+        totalBidCount > 0 ? (confChampCount / totalBidCount) * 100 : 0;
+      rowData.bidCategoryDistribution["At Large"] =
+        totalBidCount > 0 ? (atLargeCount / totalBidCount) * 100 : 0;
+
       if (rowData.total > 0) {
         const inPlayoffsPct = (inPlayoffsCount / rowData.total) * 100;
         rowData.statusDistribution["In Playoffs %"] = inPlayoffsPct;
-        rowData.statusDistribution["Out of Playoffs"] = 100 - inPlayoffsPct; // Complement
+        rowData.statusDistribution["Out of Playoffs"] = 100 - inPlayoffsPct;
         rowData.statusDistribution["First Four Out"] =
           (firstFourOutCount / rowData.total) * 100;
         rowData.statusDistribution["Next Four Out"] =
