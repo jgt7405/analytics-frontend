@@ -400,8 +400,8 @@ export default function FootballTeamStandingsHistory({
             position.top +
             window.pageYOffset +
             caretY -
-            tooltipEl.offsetHeight / 2 -
-            20 +
+            tooltipEl.offsetHeight / 2 +
+            0 +
             "px";
         },
       },
