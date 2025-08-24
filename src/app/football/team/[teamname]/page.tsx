@@ -1,5 +1,6 @@
 "use client";
 
+import FootballTeamFirstPlaceHistory from "@/components/features/football/FootballTeamFirstPlaceHistory";
 import FootballTeamSchedule from "@/components/features/football/FootballTeamSchedule";
 import FootballTeamSeedProjections from "@/components/features/football/FootballTeamSeedProjections";
 import FootballTeamStandingsHistory from "@/components/features/football/FootballTeamStandingsHistory";
@@ -312,7 +313,7 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Mobile Historical Wins Chart - FIXED: Added secondaryColor */}
+              {/* Mobile Historical Wins Chart */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -327,15 +328,30 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Mobile Historical Standings Chart - FIXED: Added secondaryColor */}
+              {/* Mobile Projected Standings History */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
-                  Conference Standings History
+                  Projected Standings History
                 </h2>
                 <FootballTeamStandingsHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                />
+              </div>
+
+              {/* Mobile First Place Probability History */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  First Place Probability History
+                </h2>
+                <FootballTeamFirstPlaceHistory
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
@@ -485,7 +501,7 @@ export default function FootballTeamPage({
                     />
                   </div>
 
-                  {/* Desktop Historical Wins Chart - FIXED: Added secondaryColor */}
+                  {/* Desktop Historical Wins Chart */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
@@ -500,15 +516,30 @@ export default function FootballTeamPage({
                     />
                   </div>
 
-                  {/* Desktop Historical Standings Chart - Already had secondaryColor */}
+                  {/* Desktop Projected Standings History */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
-                      Conference Standings History
+                      Projected Standings History
                     </h2>
                     <FootballTeamStandingsHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                    />
+                  </div>
+
+                  {/* Desktop First Place Probability History */}
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      First Place Probability History
+                    </h2>
+                    <FootballTeamFirstPlaceHistory
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
