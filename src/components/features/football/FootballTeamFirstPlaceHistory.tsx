@@ -30,30 +30,34 @@ interface HistoricalDataPoint {
   date: string;
   projected_conf_wins: number;
   projected_total_wins: number;
+  standings_with_ties: number;
+  standings_no_ties: number;
+  first_place_with_ties: number;
+  first_place_no_ties: number;
   version_id: string;
-  is_current?: boolean;
+  is_current: boolean;
 }
 
-interface FootballTeamWinHistoryProps {
+interface FootballTeamFirstPlaceHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
 }
 
-export default function FootballTeamWinHistory({
+export default function FootballTeamFirstPlaceHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
-}: FootballTeamWinHistoryProps) {
+}: FootballTeamFirstPlaceHistoryProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
     "line",
     Array<{ x: string; y: number }>,
     string
   > | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const parseDateCentralTime = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
@@ -66,21 +70,26 @@ export default function FootballTeamWinHistory({
     return `${month}/${day}`;
   };
 
-  // Fetch historical data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true);
+        setLoading(true);
         const response = await fetch(
           `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins`
         );
 
         if (!response.ok) {
-          throw new Error("Failed to load historical data");
+          throw new Error("Failed to fetch historical data");
         }
 
         const result = await response.json();
-        const rawData = result.data || [];
+        const rawData: HistoricalDataPoint[] = result.data || [];
+
+        if (rawData.length === 0) {
+          setData([]);
+          setError(null);
+          return;
+        }
 
         // Filter data starting from 8/22
         const cutoffDate = new Date("2025-08-22");
@@ -89,37 +98,32 @@ export default function FootballTeamWinHistory({
           return itemDate >= cutoffDate;
         });
 
-        // Group by date and take the FIRST entry per day (earliest version_id)
+        // Deduplicate by date, keeping earliest version_id
         const dataByDate = new Map<string, HistoricalDataPoint>();
-
         filteredData.forEach((point: HistoricalDataPoint) => {
           const dateKey = point.date;
-
-          if (!dataByDate.has(dateKey)) {
+          if (
+            !dataByDate.has(dateKey) ||
+            point.version_id < dataByDate.get(dateKey)!.version_id
+          ) {
             dataByDate.set(dateKey, point);
-          } else {
-            const existing = dataByDate.get(dateKey)!;
-            if (point.version_id < existing.version_id) {
-              dataByDate.set(dateKey, point);
-            }
           }
         });
 
-        // Convert back to array and sort by date
-        const uniqueData = Array.from(dataByDate.values()).sort((a, b) => {
+        const processedData = Array.from(dataByDate.values()).sort((a, b) => {
           const dateA = parseDateCentralTime(a.date);
           const dateB = parseDateCentralTime(b.date);
           return dateA.getTime() - dateB.getTime();
         });
 
-        setData(uniqueData);
+        setData(processedData);
         setError(null);
       } catch (err) {
-        console.error("Error in fetchData:", err);
-        setError(err instanceof Error ? err.message : "Failed to load data");
+        console.error("Error fetching first place history:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
         setData([]);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
@@ -155,19 +159,19 @@ export default function FootballTeamWinHistory({
   })();
 
   const labels = data.map((point) => formatDateForDisplay(point.date));
-  const confWinsData = data.map((point, index) => ({
+  const firstPlaceWithTiesData = data.map((point, index) => ({
     x: labels[index],
-    y: point.projected_conf_wins,
+    y: point.first_place_with_ties,
   }));
-  const totalWinsData = data.map((point, index) => ({
+  const firstPlaceNoTiesData = data.map((point, index) => ({
     x: labels[index],
-    y: point.projected_total_wins,
+    y: point.first_place_no_ties,
   }));
 
   const datasets = [
     {
-      label: "Projected Total Wins",
-      data: totalWinsData,
+      label: "#1 % (With Ties)",
+      data: firstPlaceWithTiesData,
       backgroundColor: `${primaryColor}20`,
       borderColor: primaryColor,
       borderWidth: 3,
@@ -179,8 +183,8 @@ export default function FootballTeamWinHistory({
       fill: false,
     },
     {
-      label: "Projected Conference Wins",
-      data: confWinsData,
+      label: "#1 % (No Ties)",
+      data: firstPlaceNoTiesData,
       backgroundColor: `${finalSecondaryColor}20`,
       borderColor: finalSecondaryColor,
       borderWidth: 3,
@@ -190,6 +194,7 @@ export default function FootballTeamWinHistory({
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
+      borderDash: [5, 5],
     },
   ];
 
@@ -223,10 +228,12 @@ export default function FootballTeamWinHistory({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-winhistory");
+          let tooltipEl = document.getElementById(
+            "chartjs-tooltip-firstplace-history"
+          );
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-winhistory";
+            tooltipEl.id = "chartjs-tooltip-firstplace-history";
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
@@ -276,8 +283,8 @@ export default function FootballTeamWinHistory({
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const currentDate = labels[dataIndex];
-            const totalWins = data[dataIndex].projected_total_wins;
-            const confWins = data[dataIndex].projected_conf_wins;
+            const withTies = data[dataIndex].first_place_with_ties;
+            const noTies = data[dataIndex].first_place_no_ties;
 
             // Standard header with close button
             let innerHtml = `
@@ -301,8 +308,8 @@ export default function FootballTeamWinHistory({
               </div>
             `;
 
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Projected Total Wins: ${totalWins.toFixed(1)}</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Projected Conference Wins: ${confWins.toFixed(1)}</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">#1 % (With Ties): ${withTies.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">#1 % (No Ties): ${noTies.toFixed(1)}%</div>`;
 
             tooltipEl.innerHTML = innerHtml;
 
@@ -391,8 +398,8 @@ export default function FootballTeamWinHistory({
             position.top +
             window.pageYOffset +
             caretY -
-            tooltipEl.offsetHeight / 2 +
-            40 +
+            tooltipEl.offsetHeight / 2 -
+            20 +
             "px";
         },
       },
@@ -409,6 +416,8 @@ export default function FootballTeamWinHistory({
       },
       y: {
         beginAtZero: true,
+        min: 0,
+        max: 100,
         grid: {
           color: "rgba(0, 0, 0, 0.1)",
         },
@@ -417,7 +426,7 @@ export default function FootballTeamWinHistory({
             size: isMobile ? 10 : 12,
           },
           callback: function (value: string | number) {
-            return `${value}`;
+            return `${value}%`;
           },
         },
       },
@@ -426,11 +435,11 @@ export default function FootballTeamWinHistory({
 
   const chartHeight = isMobile ? 200 : 300;
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="text-center py-8">
         <div className="animate-pulse text-gray-500">
-          Loading historical data...
+          Loading first place history...
         </div>
       </div>
     );
@@ -440,7 +449,7 @@ export default function FootballTeamWinHistory({
     return (
       <div className="text-center py-8">
         <div className="text-red-500 text-sm">
-          Unable to load historical data
+          Unable to load first place history
         </div>
         <div className="text-gray-400 text-xs mt-1">{error}</div>
       </div>
@@ -450,9 +459,12 @@ export default function FootballTeamWinHistory({
   if (data.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 text-sm">Historical data coming soon</div>
+        <div className="text-gray-500 text-sm">
+          No historical data available
+        </div>
         <div className="text-gray-400 text-xs mt-1">
-          Chart will show projected wins over time once data is collected
+          Chart will show first place probability over time once data is
+          collected
         </div>
       </div>
     );

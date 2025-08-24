@@ -32,6 +32,7 @@ interface FirstPlaceData {
   team_name: string;
   date: string;
   first_place_pct: number;
+  version_id: string;
   team_info: {
     logo_url?: string;
     primary_color?: string;
@@ -87,34 +88,54 @@ export default function FootballFirstPlaceChart({
   }, [firstPlaceData]);
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const date = new Date(year, month - 1, day, 12, 0, 0);
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
-  const teamData: Record<string, TeamInfo> = firstPlaceData.reduce(
-    (acc, item) => {
-      if (!acc[item.team_name]) {
-        acc[item.team_name] = {
-          data: [],
-          team_info: item.team_info,
-        };
-      }
-      acc[item.team_name].data.push({
-        x: formatDate(item.date),
-        y: item.first_place_pct,
-      });
-      return acc;
-    },
-    {} as Record<string, TeamInfo>
-  );
+  // Filter data starting from 8/22
+  const filteredFirstPlaceData = firstPlaceData.filter((item) => {
+    const itemDate = new Date(item.date);
+    const cutoffDate = new Date("2025-08-22");
+    return itemDate >= cutoffDate;
+  });
 
-  const dates = [...new Set(firstPlaceData.map((d: FirstPlaceData) => d.date))]
-    .sort((a, b) => {
-      const dateA = new Date(a);
-      const dateB = new Date(b);
-      return dateA.getTime() - dateB.getTime();
-    })
-    .map(formatDate);
+  // Deduplicate by team and date, keeping earliest version_id
+  const dataByTeamAndDate = new Map<string, FirstPlaceData>();
+  filteredFirstPlaceData.forEach((item) => {
+    const key = `${item.team_name}-${item.date}`;
+    if (
+      !dataByTeamAndDate.has(key) ||
+      item.version_id < dataByTeamAndDate.get(key)!.version_id
+    ) {
+      dataByTeamAndDate.set(key, item);
+    }
+  });
+
+  // Build team data from deduplicated items
+  const teamData: Record<string, TeamInfo> = {};
+  Array.from(dataByTeamAndDate.values()).forEach((item) => {
+    if (!teamData[item.team_name]) {
+      teamData[item.team_name] = {
+        data: [],
+        team_info: item.team_info,
+      };
+    }
+    teamData[item.team_name].data.push({
+      x: formatDate(item.date),
+      y: item.first_place_pct,
+    });
+  });
+
+  const dates = [
+    ...new Set(
+      Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
+    ),
+  ].sort((a, b) => {
+    const dateA = new Date(a + "/2025"); // Add year for proper sorting
+    const dateB = new Date(b + "/2025");
+    return dateA.getTime() - dateB.getTime();
+  });
 
   const teamsForLogos = Object.entries(teamData)
     .map(([teamName, team]) => {
@@ -161,24 +182,48 @@ export default function FootballFirstPlaceChart({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip");
+          let tooltipEl = document.getElementById("chartjs-tooltip-firstplace");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip";
-            tooltipEl.style.background = "#ffffff";
-            tooltipEl.style.border = "1px solid #e5e7eb";
-            tooltipEl.style.borderRadius = "8px";
-            tooltipEl.style.color = "#1f2937";
-            tooltipEl.style.fontFamily = "Inter, system-ui, sans-serif";
-            tooltipEl.style.fontSize = "12px";
-            tooltipEl.style.opacity = "0";
-            tooltipEl.style.padding = "16px";
-            tooltipEl.style.pointerEvents = "none";
-            tooltipEl.style.position = "absolute";
-            tooltipEl.style.transform = "translate(-50%, 0)";
-            tooltipEl.style.transition = "all .1s ease";
-            tooltipEl.style.zIndex = "1000";
-            tooltipEl.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+            tooltipEl.id = "chartjs-tooltip-firstplace";
+
+            Object.assign(tooltipEl.style, {
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              color: "#1f2937",
+              fontFamily: "Inter, system-ui, sans-serif",
+              fontSize: "12px",
+              opacity: "0",
+              padding: "16px",
+              paddingTop: "8px",
+              pointerEvents: "auto",
+              position: "absolute",
+              transition: "all .1s ease",
+              zIndex: "1000",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+              minWidth: "200px",
+              maxWidth: "300px",
+            });
+
+            // Add close functionality
+            const handleClickOutside = (e: Event) => {
+              if (!tooltipEl?.contains(e.target as Node)) {
+                tooltipEl!.style.opacity = "0";
+                setTimeout(() => {
+                  if (tooltipEl && tooltipEl.parentNode) {
+                    document.removeEventListener("click", handleClickOutside);
+                    document.removeEventListener(
+                      "touchstart",
+                      handleClickOutside
+                    );
+                  }
+                }, 100);
+              }
+            };
+
+            document.addEventListener("click", handleClickOutside);
+            document.addEventListener("touchstart", handleClickOutside);
             document.body.appendChild(tooltipEl);
           }
 
@@ -205,23 +250,121 @@ export default function FootballFirstPlaceChart({
               .filter((team) => team.pct > 0)
               .sort((a, b) => b.pct - a.pct);
 
-            let innerHtml = `<div style="font-weight: 600; margin-bottom: 8px; color: #1f2937;">${currentDate}</div>`;
+            // Standard header with close button
+            let innerHtml = `
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <button id="tooltip-close" style="
+                  background: none; 
+                  border: none; 
+                  font-size: 16px; 
+                  cursor: pointer; 
+                  color: #6b7280;
+                  padding: 0;
+                  margin: 0;
+                  line-height: 1;
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                ">&times;</button>
+              </div>
+            `;
+
             teamsAtDate.forEach((team) => {
               innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${Math.round(team.pct)}%</div>`;
             });
 
             tooltipEl.innerHTML = innerHtml;
+
+            // Add close button functionality
+            const closeBtn = tooltipEl.querySelector("#tooltip-close");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                tooltipEl.style.opacity = "0";
+              });
+            }
           }
 
+          // Smart positioning logic
           const position = chart.canvas.getBoundingClientRect();
+          const chartWidth = chart.width;
+          const tooltipWidth = tooltipEl.offsetWidth || 200;
+          const caretX = tooltipModel.caretX;
+          const caretY = tooltipModel.caretY;
+
+          // Determine positioning
+          const isLeftSide = caretX < chartWidth / 2;
+          let leftPosition: number;
+          let arrowPosition: string;
+
+          if (isLeftSide) {
+            leftPosition = position.left + window.pageXOffset + caretX + 20;
+            arrowPosition = "left";
+          } else {
+            leftPosition =
+              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
+            arrowPosition = "right";
+          }
+
+          // Add/update arrow
+          if (!tooltipEl.querySelector(".tooltip-arrow")) {
+            const arrow = document.createElement("div");
+            arrow.className = "tooltip-arrow";
+            arrow.style.position = "absolute";
+            arrow.style.width = "0";
+            arrow.style.height = "0";
+            arrow.style.top = "50%";
+            arrow.style.transform = "translateY(-50%)";
+
+            if (arrowPosition === "left") {
+              arrow.style.left = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderRight = "8px solid #ffffff";
+            } else {
+              arrow.style.right = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderLeft = "8px solid #ffffff";
+            }
+
+            tooltipEl.appendChild(arrow);
+          } else {
+            // Update existing arrow
+            const arrow = tooltipEl.querySelector(
+              ".tooltip-arrow"
+            ) as HTMLElement;
+            if (arrow) {
+              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
+              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
+
+              if (arrowPosition === "left") {
+                arrow.style.borderLeft = "none";
+                arrow.style.borderRight = "8px solid #ffffff";
+              } else {
+                arrow.style.borderRight = "none";
+                arrow.style.borderLeft = "8px solid #ffffff";
+              }
+            }
+          }
+
+          // Prevent off-screen positioning
+          const maxLeft = window.innerWidth - tooltipWidth - 10;
+          const minLeft = 10;
+          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
+
+          // Position tooltip
           tooltipEl.style.opacity = "1";
-          tooltipEl.style.left =
-            position.left + window.pageXOffset + tooltipModel.caretX + "px";
+          tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
             position.top +
             window.pageYOffset +
-            tooltipModel.caretY -
-            350 +
+            caretY -
+            tooltipEl.offsetHeight / 2 -
+            120 +
             "px";
         },
       },
@@ -327,7 +470,7 @@ export default function FootballFirstPlaceChart({
     return positions;
   };
 
-  if (firstPlaceData.length === 0) {
+  if (filteredFirstPlaceData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">

@@ -22,8 +22,8 @@ interface ApiSeedCount {
   Tournament_Status: string;
   Wins: number;
   Count: number;
-  Conf_Champ_Pct?: number; // Add this
-  At_Large_Pct?: number; // Add this
+  Conf_Champ_Pct?: number;
+  At_Large_Pct?: number;
 }
 
 interface FootballTeamInfo {
@@ -140,8 +140,8 @@ export default function FootballTeamPage({
       Tournament_Status: item.Tournament_Status,
       Count: item.Count,
       Percentage: item.Percentage,
-      Conf_Champ_Pct: item.Conf_Champ_Pct || 0, // Add this
-      At_Large_Pct: item.At_Large_Pct || 0, // Add this
+      Conf_Champ_Pct: item.Conf_Champ_Pct || 0,
+      At_Large_Pct: item.At_Large_Pct || 0,
     }));
   };
 
@@ -295,11 +295,7 @@ export default function FootballTeamPage({
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   Win Values Over Time
                 </h2>
-                <FootballTeamWinValues
-                  schedule={schedule}
-                  primaryColor={team_info.primary_color}
-                  secondaryColor={team_info.secondary_color}
-                />
+                <FootballTeamWinValues schedule={schedule} />
               </div>
 
               <div
@@ -316,7 +312,7 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Mobile Historical Wins Chart */}
+              {/* Mobile Historical Wins Chart - FIXED: Added secondaryColor */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -327,10 +323,11 @@ export default function FootballTeamPage({
                 <FootballTeamWinHistory
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
                 />
               </div>
 
-              {/* NEW: Mobile Historical Standings Chart */}
+              {/* Mobile Historical Standings Chart - FIXED: Added secondaryColor */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -341,6 +338,7 @@ export default function FootballTeamPage({
                 <FootballTeamStandingsHistory
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
                 />
               </div>
             </div>
@@ -470,11 +468,7 @@ export default function FootballTeamPage({
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       Win Values Over Time
                     </h2>
-                    <FootballTeamWinValues
-                      schedule={schedule}
-                      primaryColor={team_info.primary_color}
-                      secondaryColor={team_info.secondary_color}
-                    />
+                    <FootballTeamWinValues schedule={schedule} />
                   </div>
 
                   <div
@@ -491,7 +485,7 @@ export default function FootballTeamPage({
                     />
                   </div>
 
-                  {/* Desktop Historical Wins Chart */}
+                  {/* Desktop Historical Wins Chart - FIXED: Added secondaryColor */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
@@ -502,10 +496,11 @@ export default function FootballTeamPage({
                     <FootballTeamWinHistory
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
                     />
                   </div>
 
-                  {/* NEW: Desktop Historical Standings Chart */}
+                  {/* Desktop Historical Standings Chart - Already had secondaryColor */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}

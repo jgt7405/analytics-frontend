@@ -32,6 +32,7 @@ interface ConfHistoryData {
   conference_name: string;
   date: string;
   avg_bids: number;
+  version_id: string;
   conf_info: {
     primary_color?: string;
     secondary_color?: string;
@@ -68,12 +69,6 @@ export default function FootballConfBidsHistoryChart({
   > | null>(null);
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
-  const [isStable, setIsStable] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -82,48 +77,64 @@ export default function FootballConfBidsHistoryChart({
           chartArea: chartRef.current.chartArea,
           canvas: chartRef.current.canvas,
         });
-        setIsStable(true);
       }
     };
 
-    setIsStable(false);
     const timeout = setTimeout(updateDimensions, 1000);
     return () => clearTimeout(timeout);
   }, [timelineData]);
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const date = new Date(year, month - 1, day, 12, 0, 0);
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
   const filteredData = timelineData.filter((item) => {
     const confName = item.conference_name.toLowerCase();
-    return !confName.includes("fcs");
+    const itemDate = new Date(item.date);
+    const cutoffDate = new Date("2025-08-22");
+
+    return !confName.includes("fcs") && itemDate >= cutoffDate;
   });
 
   const sortedData = filteredData.sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  const confData = sortedData.reduce(
-    (acc, item) => {
-      if (!acc[item.conference_name]) {
-        acc[item.conference_name] = {
-          data: [],
-          conf_info: item.conf_info,
-        };
-      }
-      acc[item.conference_name].data.push({
-        x: formatDate(item.date),
-        y: item.avg_bids,
-      });
-      return acc;
-    },
-    {} as Record<string, ConferenceData>
-  );
+  // Deduplicate by conference and date, keeping earliest version_id
+  const dataByConfAndDate = new Map<string, ConfHistoryData>();
+  sortedData.forEach((item) => {
+    const key = `${item.conference_name}-${item.date}`;
+    if (
+      !dataByConfAndDate.has(key) ||
+      item.version_id < dataByConfAndDate.get(key)!.version_id
+    ) {
+      dataByConfAndDate.set(key, item);
+    }
+  });
+
+  // Build conference data from deduplicated items
+  const confData: Record<string, ConferenceData> = {};
+  Array.from(dataByConfAndDate.values()).forEach((item) => {
+    if (!confData[item.conference_name]) {
+      confData[item.conference_name] = {
+        data: [],
+        conf_info: item.conf_info,
+      };
+    }
+    confData[item.conference_name].data.push({
+      x: formatDate(item.date),
+      y: item.avg_bids,
+    });
+  });
 
   const allDates = [
-    ...new Set(sortedData.map((item) => formatDate(item.date))),
+    ...new Set(
+      Array.from(dataByConfAndDate.values()).map((item) =>
+        formatDate(item.date)
+      )
+    ),
   ];
 
   const datasets = Object.entries(confData).map(([confName, conf]) => ({
@@ -190,12 +201,34 @@ export default function FootballConfBidsHistoryChart({
             tooltipEl.style.fontSize = "12px";
             tooltipEl.style.opacity = "0";
             tooltipEl.style.padding = "16px";
-            tooltipEl.style.pointerEvents = "none";
+            tooltipEl.style.paddingTop = "8px";
+            tooltipEl.style.pointerEvents = "auto";
             tooltipEl.style.position = "absolute";
-            tooltipEl.style.transform = "translate(-50%, 0)";
             tooltipEl.style.transition = "all .1s ease";
             tooltipEl.style.zIndex = "1000";
             tooltipEl.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+            tooltipEl.style.minWidth = "200px";
+            tooltipEl.style.maxWidth = "300px";
+
+            // Add close functionality
+            const handleClickOutside = (e: Event) => {
+              if (!tooltipEl?.contains(e.target as Node)) {
+                tooltipEl!.style.opacity = "0";
+                setTimeout(() => {
+                  if (tooltipEl && tooltipEl.parentNode) {
+                    document.removeEventListener("click", handleClickOutside);
+                    document.removeEventListener(
+                      "touchstart",
+                      handleClickOutside
+                    );
+                  }
+                }, 100);
+              }
+            };
+
+            document.addEventListener("click", handleClickOutside);
+            document.addEventListener("touchstart", handleClickOutside);
+
             document.body.appendChild(tooltipEl);
           }
 
@@ -221,23 +254,123 @@ export default function FootballConfBidsHistoryChart({
               })
               .sort((a, b) => b.bids - a.bids);
 
-            let innerHtml = `<div style="font-weight: 600; margin-bottom: 8px; color: #1f2937;">${currentDate}</div>`;
+            // Close button
+            let innerHtml = `
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+               <button id="tooltip-close" style="
+                 background: none; 
+                 border: none; 
+                 font-size: 16px; 
+                 cursor: pointer; 
+                 color: #6b7280;
+                 padding: 0;
+                 margin: 0;
+                 line-height: 1;
+                 width: 20px;
+                 height: 20px;
+                 display: flex;
+                 align-items: center;
+                 justify-content: center;
+               ">&times;</button>
+             </div>
+           `;
+
             confsAtDate.forEach((conf) => {
               innerHtml += `<div style="color: ${conf.color}; margin: 2px 0; font-weight: 400;">${conf.name}: ${conf.bids.toFixed(1)} bids</div>`;
             });
 
             tooltipEl.innerHTML = innerHtml;
+
+            // Add close button functionality
+            const closeBtn = tooltipEl.querySelector("#tooltip-close");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                tooltipEl.style.opacity = "0";
+              });
+            }
           }
 
+          // Smart positioning logic
           const position = chart.canvas.getBoundingClientRect();
+          const chartWidth = chart.width;
+          const tooltipWidth = tooltipEl.offsetWidth || 200;
+          const caretX = tooltipModel.caretX;
+          const caretY = tooltipModel.caretY;
+
+          // Determine if point is on left or right side of chart
+          const isLeftSide = caretX < chartWidth / 2;
+
+          let leftPosition: number;
+          let arrowPosition: string;
+
+          if (isLeftSide) {
+            // Point on left, show tooltip to the right
+            leftPosition = position.left + window.pageXOffset + caretX + 20;
+            arrowPosition = "left";
+          } else {
+            // Point on right, show tooltip to the left
+            leftPosition =
+              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
+            arrowPosition = "right";
+          }
+
+          // Add arrow styling
+          if (!tooltipEl.querySelector(".tooltip-arrow")) {
+            const arrow = document.createElement("div");
+            arrow.className = "tooltip-arrow";
+            arrow.style.position = "absolute";
+            arrow.style.width = "0";
+            arrow.style.height = "0";
+            arrow.style.top = "50%";
+            arrow.style.transform = "translateY(-50%)";
+
+            if (arrowPosition === "left") {
+              arrow.style.left = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderRight = "8px solid #ffffff";
+            } else {
+              arrow.style.right = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderLeft = "8px solid #ffffff";
+            }
+
+            tooltipEl.appendChild(arrow);
+          } else {
+            // Update existing arrow position
+            const arrow = tooltipEl.querySelector(
+              ".tooltip-arrow"
+            ) as HTMLElement;
+            if (arrow) {
+              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
+              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
+
+              if (arrowPosition === "left") {
+                arrow.style.borderLeft = "none";
+                arrow.style.borderRight = "8px solid #ffffff";
+              } else {
+                arrow.style.borderRight = "none";
+                arrow.style.borderLeft = "8px solid #ffffff";
+              }
+            }
+          }
+
+          // Ensure tooltip doesn't go off screen
+          const maxLeft = window.innerWidth - tooltipWidth - 10;
+          const minLeft = 10;
+          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
+
           tooltipEl.style.opacity = "1";
-          tooltipEl.style.left =
-            position.left + window.pageXOffset + tooltipModel.caretX + "px";
+          tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
             position.top +
             window.pageYOffset +
-            tooltipModel.caretY -
-            300 +
+            caretY -
+            tooltipEl.offsetHeight / 2 -
+            150 +
             "px";
         },
       },
@@ -263,7 +396,7 @@ export default function FootballConfBidsHistoryChart({
       },
     },
     layout: {
-      padding: { left: 0, right: 60, top: 10, bottom: 10 },
+      padding: { left: 10, right: 100 },
     },
     animation: {
       onComplete: () => {
@@ -272,7 +405,6 @@ export default function FootballConfBidsHistoryChart({
             chartArea: chartRef.current.chartArea,
             canvas: chartRef.current.canvas,
           });
-          setIsStable(true);
         }
       },
     },
@@ -320,6 +452,7 @@ export default function FootballConfBidsHistoryChart({
         }
       }
     }
+
     return positions;
   };
 
@@ -343,19 +476,17 @@ export default function FootballConfBidsHistoryChart({
       >
         <Line ref={chartRef} data={chartData} options={options} />
 
-        <div
-          className="absolute right-0 top-0"
-          style={{
-            zIndex: 20,
-            pointerEvents: "none",
-            width: "60px",
-            height: `${chartHeight}px`,
-          }}
-        >
-          {mounted &&
-            isStable &&
-            chartDimensions &&
-            logoPositions.map(({ conf, idealY, adjustedY }) => {
+        {chartDimensions && (
+          <div
+            className="absolute right-0 top-0"
+            style={{
+              zIndex: 20,
+              pointerEvents: "none",
+              width: "100px",
+              height: `${chartHeight}px`,
+            }}
+          >
+            {logoPositions.map(({ conf, idealY, adjustedY }) => {
               const confColor = conf.conf_info.primary_color || "#94a3b8";
               const logoUrl = conf.conf_info.logo_url;
 
@@ -366,7 +497,7 @@ export default function FootballConfBidsHistoryChart({
                     style={{
                       top: 0,
                       right: 0,
-                      width: "60px",
+                      width: "100px",
                       height: `${chartHeight}px`,
                       pointerEvents: "none",
                     }}
@@ -374,16 +505,21 @@ export default function FootballConfBidsHistoryChart({
                     <line
                       x1={0}
                       y1={idealY}
-                      x2={25}
+                      x2={12}
                       y2={adjustedY}
                       stroke={confColor}
                       strokeWidth="1"
                       strokeDasharray="2,2"
+                      opacity="0.7"
                     />
                   </svg>
+
                   <div
                     className="absolute flex items-center"
-                    style={{ top: `${adjustedY - 12}px`, right: "25px" }}
+                    style={{
+                      top: `${adjustedY - 12}px`,
+                      right: "25px",
+                    }}
                   >
                     {logoUrl ? (
                       <Image
@@ -418,11 +554,22 @@ export default function FootballConfBidsHistoryChart({
                         title={conf.conference_name}
                       />
                     )}
+                    <span
+                      className="text-xs font-medium ml-2"
+                      style={{
+                        color: confColor,
+                        minWidth: "35px",
+                        textAlign: "left",
+                      }}
+                    >
+                      {conf.final_bids.toFixed(1)}
+                    </span>
                   </div>
                 </div>
               );
             })}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
