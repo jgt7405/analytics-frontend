@@ -28,10 +28,10 @@ ChartJS.register(
   Legend
 );
 
-interface FirstPlaceData {
+interface ChampGameHistoryData {
   team_name: string;
   date: string;
-  first_place_pct: number;
+  champ_game_pct: number;
   version_id?: string;
   team_info: {
     logo_url?: string;
@@ -40,8 +40,8 @@ interface FirstPlaceData {
   };
 }
 
-interface FootballFirstPlaceChartProps {
-  firstPlaceData: FirstPlaceData[];
+interface FootballChampGameHistoryChartProps {
+  champGameData: ChampGameHistoryData[];
 }
 
 interface ChartDimensions {
@@ -63,9 +63,9 @@ interface TeamInfo {
   };
 }
 
-export default function FootballFirstPlaceChart({
-  firstPlaceData,
-}: FootballFirstPlaceChartProps) {
+export default function FootballChampGameHistoryChart({
+  champGameData,
+}: FootballChampGameHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", TeamDataPoint[], string> | null>(
     null
@@ -85,7 +85,7 @@ export default function FootballFirstPlaceChart({
 
     const timeout = setTimeout(updateDimensions, 500);
     return () => clearTimeout(timeout);
-  }, [firstPlaceData]);
+  }, [champGameData]);
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -94,15 +94,15 @@ export default function FootballFirstPlaceChart({
   };
 
   // Filter data starting from 8/22
-  const filteredFirstPlaceData = firstPlaceData.filter((item) => {
+  const filteredChampGameData = champGameData.filter((item) => {
     const itemDate = new Date(item.date);
     const cutoffDate = new Date("2025-08-22");
     return itemDate >= cutoffDate;
   });
 
   // Deduplicate by team and date, keeping earliest version_id
-  const dataByTeamAndDate = new Map<string, FirstPlaceData>();
-  filteredFirstPlaceData.forEach((item: FirstPlaceData) => {
+  const dataByTeamAndDate = new Map<string, ChampGameHistoryData>();
+  filteredChampGameData.forEach((item: ChampGameHistoryData) => {
     const key = `${item.team_name}-${item.date}`;
     if (
       !dataByTeamAndDate.has(key) ||
@@ -125,7 +125,7 @@ export default function FootballFirstPlaceChart({
     }
     teamData[item.team_name].data.push({
       x: formatDate(item.date),
-      y: item.first_place_pct,
+      y: item.champ_game_pct,
     });
   });
 
@@ -184,10 +184,10 @@ export default function FootballFirstPlaceChart({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-firstplace");
+          let tooltipEl = document.getElementById("chartjs-tooltip-champgame");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-firstplace";
+            tooltipEl.id = "chartjs-tooltip-champgame";
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
@@ -371,7 +371,7 @@ export default function FootballFirstPlaceChart({
         grid: { display: false },
       },
       y: {
-        title: { display: true, text: "First Place Probability (%)" },
+        title: { display: true, text: "Championship Game Probability (%)" },
         min: 0,
         max: (() => {
           const allValues = Object.values(teamData).flatMap((team) =>
@@ -465,11 +465,11 @@ export default function FootballFirstPlaceChart({
     return positions;
   };
 
-  if (filteredFirstPlaceData.length === 0) {
+  if (filteredChampGameData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">
-          No first place probability data available
+          No championship game probability data available
         </div>
       </div>
     );

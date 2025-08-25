@@ -2,12 +2,15 @@
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
+import FootballChampGameHistoryChart from "@/components/features/football/FootballChampGameHistoryChart";
+import FootballConfChampionHistoryChart from "@/components/features/football/FootballConfChampionHistoryChart";
 import FootballConfChampTable from "@/components/features/football/FootballConfChampTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useFootballConfChamp } from "@/hooks/useFootballConfChamp";
+import { useFootballStandingsHistory } from "@/hooks/useFootballStandingsHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
@@ -17,12 +20,13 @@ export default function FootballConfChampPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
+
   const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
+    preferences.defaultConference || "Big 12"
   );
-  const [availableConferences, setAvailableConferences] = useState<string[]>([
-    preferences.defaultConference,
-  ]);
+  const [availableConferences, setAvailableConferences] = useState<string[]>(
+    []
+  );
 
   const {
     data: confChampResponse,
@@ -31,7 +35,9 @@ export default function FootballConfChampPage() {
     refetch,
   } = useFootballConfChamp(selectedConference);
 
-  // Update available conferences when data loads
+  const { data: historyData } = useFootballStandingsHistory(selectedConference);
+
+  // Set available conferences
   useEffect(() => {
     if (confChampResponse?.conferences) {
       setAvailableConferences(confChampResponse.conferences);
@@ -87,15 +93,6 @@ export default function FootballConfChampPage() {
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="Conference Championship Projections"
-          conferenceSelector={
-            <ConferenceSelector
-              conferences={availableConferences}
-              selectedConference={selectedConference}
-              onChange={handleConferenceChange}
-              excludeConferences={["Independent"]}
-              error={confChampError.message}
-            />
-          }
           isLoading={false}
         >
           <ErrorMessage
@@ -104,62 +101,30 @@ export default function FootballConfChampPage() {
               "Failed to load conference championship data"
             }
             onRetry={() => refetch()}
-            retryLabel="Reload Championship Data"
+            retryLabel="Reload Data"
           />
         </PageLayoutWrapper>
       </ErrorBoundary>
     );
   }
 
-  // No data state
-  if (!confChampLoading && !confChampResponse?.data) {
-    return (
-      <PageLayoutWrapper
-        title="Conference Championship Projections"
-        conferenceSelector={
-          <ConferenceSelector
-            conferences={availableConferences}
-            selectedConference={selectedConference}
-            onChange={handleConferenceChange}
-            excludeConferences={["Independent"]}
-          />
-        }
-        isLoading={false}
-      >
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-4">
-            No conference championship data available
-          </div>
-          <p className="text-gray-400 text-sm mb-6">
-            Try selecting a different conference or check back later.
-          </p>
-          <button
-            onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Retry Loading
-          </button>
-        </div>
-      </PageLayoutWrapper>
-    );
-  }
-
   return (
-    <ErrorBoundary level="page" onRetry={() => refetch()}>
+    <ErrorBoundary level="page">
       <PageLayoutWrapper
         title="Conference Championship Projections"
-        conferenceSelector={
-          <ConferenceSelector
-            conferences={availableConferences}
-            selectedConference={selectedConference}
-            onChange={handleConferenceChange}
-            excludeConferences={["Independent"]}
-            loading={confChampLoading}
-          />
-        }
         isLoading={confChampLoading}
+        conferenceSelector={
+          !confChampLoading && (
+            <ConferenceSelector
+              selectedConference={selectedConference}
+              onChange={handleConferenceChange}
+              conferences={availableConferences}
+            />
+          )
+        }
       >
-        <div className="-mt-2 md:-mt-6">
+        <div className="space-y-6">
+          {/* Conference Championship Table */}
           {confChampLoading ? (
             <div className="mb-8">
               <BasketballTableSkeleton
@@ -193,7 +158,7 @@ export default function FootballConfChampPage() {
                     </Suspense>
                   </div>
 
-                  {/* Buttons and Explainer - EXACT same layout as TWV */}
+                  {/* Buttons and Explainer */}
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       {/* Explainer text on the left */}
@@ -217,13 +182,99 @@ export default function FootballConfChampPage() {
                           pageName="football-conf-champ"
                           pageTitle="Conference Championship Projections"
                           shareTitle="Football Conference Championship Analysis"
-                          explainerSelector=".conf-champ-explainer"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
               </ErrorBoundary>
+
+              {/* Historical Charts */}
+              {historyData && (
+                <div className="space-y-6 mb-8">
+                  {/* Championship Game Probability History */}
+                  <ErrorBoundary level="component">
+                    <div className="mb-8">
+                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                        Championship Game Probability History{" "}
+                        <span className="text-base">(Over Time)</span>
+                      </h1>
+                      <div className="champ-game-chart">
+                        <FootballChampGameHistoryChart
+                          champGameData={historyData.champ_game_data}
+                        />
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex flex-row items-start gap-4">
+                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                            <div style={{ lineHeight: "1.3" }}>
+                              <div>
+                                Progression of projected probability of
+                                conference championship game appearance from
+                                1,000 season simulations using composite of
+                                multiple college football rating models.
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                          >
+                            <TableActionButtons
+                              selectedConference={selectedConference}
+                              contentSelector=".champ-game-chart"
+                              pageName="champ-game-history"
+                              pageTitle="Championship Game Probability History Over Time"
+                              shareTitle="Championship Game Probability History"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ErrorBoundary>
+
+                  {/* Conference Champion Probability History */}
+                  <ErrorBoundary level="component">
+                    <div className="mb-8">
+                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                        Conference Champion Probability History{" "}
+                        <span className="text-base">(Over Time)</span>
+                      </h1>
+                      <div className="champion-chart">
+                        <FootballConfChampionHistoryChart
+                          championData={historyData.champion_data}
+                        />
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex flex-row items-start gap-4">
+                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                            <div style={{ lineHeight: "1.3" }}>
+                              <div>
+                                Progression of projected probability of
+                                conference championship from 1,000 season
+                                simulations using composite of multiple college
+                                football rating models.
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                          >
+                            <TableActionButtons
+                              selectedConference={selectedConference}
+                              contentSelector=".champion-chart"
+                              pageName="champion-history"
+                              pageTitle="Conference Champion Probability History Over Time"
+                              shareTitle="Conference Champion Probability History"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ErrorBoundary>
+                </div>
+              )}
             </>
           )}
         </div>

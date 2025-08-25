@@ -10,6 +10,7 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useFootballStandings } from "@/hooks/useFootballStandings";
 import { useFootballStandingsHistory } from "@/hooks/useFootballStandingsHistory";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -37,6 +38,17 @@ export default function FootballStandingsPage() {
 
   const { data: historyData } = useFootballStandingsHistory(selectedConference);
 
+  // Add URL state management
+  const { handleConferenceChange: handleUrlConferenceChange } =
+    useConferenceUrl(setSelectedConference, availableConferences, false);
+
+  // Update available conferences when data loads
+  useEffect(() => {
+    if (standingsResponse?.conferences) {
+      setAvailableConferences(standingsResponse.conferences);
+    }
+  }, [standingsResponse]);
+
   useEffect(() => {
     startMeasurement("football-standings-page-load");
     trackEvent({
@@ -52,19 +64,19 @@ export default function FootballStandingsPage() {
   }, [startMeasurement, endMeasurement, trackEvent, selectedConference]);
 
   useEffect(() => {
-    if (standingsResponse?.conferences) {
-      setAvailableConferences(standingsResponse.conferences);
-    }
-  }, [standingsResponse]);
-
-  useEffect(() => {
     if (selectedConference !== preferences.defaultConference) {
       updatePreference("defaultConference", selectedConference);
     }
   }, [selectedConference, preferences.defaultConference, updatePreference]);
 
+  // Replace the existing handleConferenceChange with URL-aware version
   const handleConferenceChange = (conference: string) => {
-    setSelectedConference(conference);
+    // Use the URL-aware conference change handler
+    handleUrlConferenceChange(conference);
+
+    // Update preferences
+    updatePreference("defaultConference", conference);
+
     trackEvent({
       name: "conference_selected",
       properties: {

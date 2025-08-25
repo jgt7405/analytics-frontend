@@ -32,7 +32,7 @@ interface TimelineData {
   team_name: string;
   date: string;
   avg_standing: number;
-  version_id: string;
+  version_id?: string;
   team_info: {
     logo_url?: string;
     primary_color?: string;
@@ -96,29 +96,28 @@ export default function FootballStandingsHistoryChart({
     return itemDate >= cutoffDate;
   });
 
-  const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort();
-
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
     const date = new Date(year, month - 1, day, 12, 0, 0);
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
-  const teamData: Record<string, TeamInfo> = {};
-
   // Deduplicate by team and date, keeping earliest version_id
   const dataByTeamAndDate = new Map<string, TimelineData>();
-  filteredTimelineData.forEach((item) => {
+  filteredTimelineData.forEach((item: TimelineData) => {
     const key = `${item.team_name}-${item.date}`;
     if (
       !dataByTeamAndDate.has(key) ||
-      item.version_id < dataByTeamAndDate.get(key)!.version_id
+      (item.version_id &&
+        dataByTeamAndDate.get(key)?.version_id &&
+        item.version_id < dataByTeamAndDate.get(key)!.version_id!)
     ) {
       dataByTeamAndDate.set(key, item);
     }
   });
 
   // Build team data from deduplicated items
+  const teamData: Record<string, TeamInfo> = {};
   Array.from(dataByTeamAndDate.values()).forEach((item) => {
     if (!teamData[item.team_name]) {
       teamData[item.team_name] = {
@@ -132,6 +131,17 @@ export default function FootballStandingsHistoryChart({
     });
   });
 
+  const dates = [
+    ...new Set(
+      Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
+    ),
+  ].sort((a, b) => {
+    const dateA = new Date(a + "/2025");
+    const dateB = new Date(b + "/2025");
+    return dateA.getTime() - dateB.getTime();
+  });
+
+  const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort();
   const lastDate = allDates[allDates.length - 1];
   const finalStandings = filteredTimelineData
     .filter((item) => item.date === lastDate)
@@ -149,7 +159,7 @@ export default function FootballStandingsHistoryChart({
   }));
 
   const chartData = {
-    labels: allDates.map(formatDate),
+    labels: dates,
     datasets,
   };
 
@@ -192,7 +202,6 @@ export default function FootballStandingsHistoryChart({
               maxWidth: "300px",
             });
 
-            // Add close functionality
             const handleClickOutside = (e: Event) => {
               if (!tooltipEl?.contains(e.target as Node)) {
                 tooltipEl!.style.opacity = "0";
@@ -231,27 +240,26 @@ export default function FootballStandingsHistoryChart({
               }))
               .sort((a, b) => a.standing - b.standing);
 
-            // Standard header with close button
             let innerHtml = `
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <div style="font-weight: 600; color: #1f2937;">${formatDate(currentDate)}</div>
-               <button id="tooltip-close" style="
-                 background: none; 
-                 border: none; 
-                 font-size: 16px; 
-                 cursor: pointer; 
-                 color: #6b7280;
-                 padding: 0;
-                 margin: 0;
-                 line-height: 1;
-                 width: 20px;
-                 height: 20px;
-                 display: flex;
-                 align-items: center;
-                 justify-content: center;
-               ">&times;</button>
-             </div>
-           `;
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="font-weight: 600; color: #1f2937;">${formatDate(currentDate)}</div>
+              <button id="tooltip-close" style="
+                background: none; 
+                border: none; 
+                font-size: 16px; 
+                cursor: pointer; 
+                color: #6b7280;
+                padding: 0;
+                margin: 0;
+                line-height: 1;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">&times;</button>
+            </div>
+          `;
 
             teamsAtDate.forEach((team) => {
               innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${team.standing.toFixed(1)}</div>`;
@@ -259,7 +267,6 @@ export default function FootballStandingsHistoryChart({
 
             tooltipEl.innerHTML = innerHtml;
 
-            // Add close button functionality
             const closeBtn = tooltipEl.querySelector("#tooltip-close");
             if (closeBtn) {
               closeBtn.addEventListener("click", (e) => {
@@ -276,7 +283,6 @@ export default function FootballStandingsHistoryChart({
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
-          // Determine positioning
           const isLeftSide = caretX < chartWidth / 2;
           let leftPosition: number;
           let arrowPosition: string;
@@ -314,7 +320,6 @@ export default function FootballStandingsHistoryChart({
 
             tooltipEl.appendChild(arrow);
           } else {
-            // Update existing arrow
             const arrow = tooltipEl.querySelector(
               ".tooltip-arrow"
             ) as HTMLElement;
@@ -332,12 +337,10 @@ export default function FootballStandingsHistoryChart({
             }
           }
 
-          // Prevent off-screen positioning
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
 
-          // Position tooltip
           tooltipEl.style.opacity = "1";
           tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =

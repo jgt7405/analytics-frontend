@@ -28,10 +28,10 @@ ChartJS.register(
   Legend
 );
 
-interface FirstPlaceData {
+interface ChampionHistoryData {
   team_name: string;
   date: string;
-  first_place_pct: number;
+  champion_pct: number;
   version_id?: string;
   team_info: {
     logo_url?: string;
@@ -40,13 +40,8 @@ interface FirstPlaceData {
   };
 }
 
-interface FootballFirstPlaceChartProps {
-  firstPlaceData: FirstPlaceData[];
-}
-
-interface ChartDimensions {
-  chartArea: ChartArea;
-  canvas: HTMLCanvasElement;
+interface FootballConfChampionHistoryChartProps {
+  championData: ChampionHistoryData[];
 }
 
 interface TeamDataPoint {
@@ -63,9 +58,14 @@ interface TeamInfo {
   };
 }
 
-export default function FootballFirstPlaceChart({
-  firstPlaceData,
-}: FootballFirstPlaceChartProps) {
+interface ChartDimensions {
+  chartArea: ChartArea;
+  canvas: HTMLCanvasElement;
+}
+
+export default function FootballConfChampionHistoryChart({
+  championData,
+}: FootballConfChampionHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", TeamDataPoint[], string> | null>(
     null
@@ -85,7 +85,7 @@ export default function FootballFirstPlaceChart({
 
     const timeout = setTimeout(updateDimensions, 500);
     return () => clearTimeout(timeout);
-  }, [firstPlaceData]);
+  }, [championData]);
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -94,15 +94,15 @@ export default function FootballFirstPlaceChart({
   };
 
   // Filter data starting from 8/22
-  const filteredFirstPlaceData = firstPlaceData.filter((item) => {
+  const filteredChampionData = championData.filter((item) => {
     const itemDate = new Date(item.date);
     const cutoffDate = new Date("2025-08-22");
     return itemDate >= cutoffDate;
   });
 
   // Deduplicate by team and date, keeping earliest version_id
-  const dataByTeamAndDate = new Map<string, FirstPlaceData>();
-  filteredFirstPlaceData.forEach((item: FirstPlaceData) => {
+  const dataByTeamAndDate = new Map<string, ChampionHistoryData>();
+  filteredChampionData.forEach((item: ChampionHistoryData) => {
     const key = `${item.team_name}-${item.date}`;
     if (
       !dataByTeamAndDate.has(key) ||
@@ -125,7 +125,7 @@ export default function FootballFirstPlaceChart({
     }
     teamData[item.team_name].data.push({
       x: formatDate(item.date),
-      y: item.first_place_pct,
+      y: item.champion_pct,
     });
   });
 
@@ -184,10 +184,10 @@ export default function FootballFirstPlaceChart({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-firstplace");
+          let tooltipEl = document.getElementById("chartjs-tooltip-champion");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-firstplace";
+            tooltipEl.id = "chartjs-tooltip-champion";
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
@@ -252,25 +252,25 @@ export default function FootballFirstPlaceChart({
               .sort((a, b) => b.pct - a.pct);
 
             let innerHtml = `
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-               <button id="tooltip-close" style="
-                 background: none; 
-                 border: none; 
-                 font-size: 16px; 
-                 cursor: pointer; 
-                 color: #6b7280;
-                 padding: 0;
-                 margin: 0;
-                 line-height: 1;
-                 width: 20px;
-                 height: 20px;
-                 display: flex;
-                 align-items: center;
-                 justify-content: center;
-               ">&times;</button>
-             </div>
-           `;
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <button id="tooltip-close" style="
+                  background: none; 
+                  border: none; 
+                  font-size: 16px; 
+                  cursor: pointer; 
+                  color: #6b7280;
+                  padding: 0;
+                  margin: 0;
+                  line-height: 1;
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                ">&times;</button>
+              </div>
+            `;
 
             teamsAtDate.forEach((team) => {
               innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${Math.round(team.pct)}%</div>`;
@@ -371,7 +371,7 @@ export default function FootballFirstPlaceChart({
         grid: { display: false },
       },
       y: {
-        title: { display: true, text: "First Place Probability (%)" },
+        title: { display: true, text: "Conference Champion Probability (%)" },
         min: 0,
         max: (() => {
           const allValues = Object.values(teamData).flatMap((team) =>
@@ -465,11 +465,11 @@ export default function FootballFirstPlaceChart({
     return positions;
   };
 
-  if (filteredFirstPlaceData.length === 0) {
+  if (filteredChampionData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">
-          No first place probability data available
+          No conference champion probability data available
         </div>
       </div>
     );

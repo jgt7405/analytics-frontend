@@ -84,6 +84,11 @@ export async function GET(
           );
       }
     }
+    // Handle 3-part CFP history routes: cfp/Big_12/history
+    else if (slug.length === 3 && slug[0] === "cfp" && slug[2] === "history") {
+      const [, conference] = slug;
+      backendPath = `/cfp/${conference}/history`;
+    }
     // Handle 2-part routes with history: football_conf_data/history
     else if (
       slug.length === 2 &&
