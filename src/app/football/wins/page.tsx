@@ -297,6 +297,9 @@ export default function FootballWinsPage() {
 
                 {/* Regular Season Box Whisker Chart Section */}
                 <div className="mb-8">
+                  <h1 className="text-2xl font-normal text-gray-600 mb-4">
+                    Projected Total Wins
+                  </h1>
                   <div className="regular-season-box-whisker-container">
                     <FootballRegularSeasonBoxWhiskerChart
                       standings={standingsResponse?.data || []}

@@ -119,6 +119,7 @@ export default function FootballConfChampPage() {
               selectedConference={selectedConference}
               onChange={handleConferenceChange}
               conferences={availableConferences}
+              excludeConferences={["Independent"]}
             />
           )
         }

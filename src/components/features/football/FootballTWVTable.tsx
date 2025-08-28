@@ -38,22 +38,8 @@ function FootballTWVTable({ twvData, className }: FootballTWVTableProps) {
   const rankedTwvData = useMemo(() => {
     if (!twvData || twvData.length === 0) return [];
 
-    // Sort by TWV in descending order (highest TWV gets rank 1)
-    const sortedData = [...twvData].sort((a, b) => b.twv - a.twv);
-
-    let currentRank = 1;
-
-    return sortedData.map((team, index) => {
-      // If this is not the first team and TWV is different from previous team
-      if (index > 0 && team.twv !== sortedData[index - 1].twv) {
-        currentRank = index + 1; // Set rank to position + 1
-      }
-
-      return {
-        ...team,
-        rank: currentRank,
-      };
-    });
+    // Sort by TWV descending for display, but keep backend global ranks
+    return [...twvData].sort((a, b) => b.twv - a.twv);
   }, [twvData]);
 
   // Calculate min/max for color scaling

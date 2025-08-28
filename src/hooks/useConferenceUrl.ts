@@ -19,19 +19,17 @@ export const useConferenceUrl = (
     return conferences.filter((conf) => conf !== "FCS");
   }, []);
 
-  // Check if current page supports Independent conference - FIXED
+  // Check if current page supports Independent conference
   const supportsIndependent = useCallback(() => {
     // Define EXACT pages that don't support Independent conference
     const pagesWithoutIndependent = [
       "/basketball/schedule",
       "/conf-schedule",
       "/cwv",
+      "/football/standings",
+      "/football/conf-schedule",
+      "/football/conf-champ", // Added conference championship page
     ];
-
-    // Football pages generally DO support Independent
-    if (pathname.includes("/football/")) {
-      return true;
-    }
 
     return !pagesWithoutIndependent.includes(pathname);
   }, [pathname]);
@@ -144,7 +142,24 @@ export const useConferenceUrl = (
     hasInitialized.current = true;
   }, [searchParams, setSelectedConference, getAppropriateConference]);
 
-  // REMOVED: The pathname effect that was causing resets
+  // NEW: Handle page navigation - redirect Independent when not supported
+  useEffect(() => {
+    if (hasInitialized.current && !supportsIndependent()) {
+      const confParam = searchParams.get("conf");
+      if (confParam === "Independent") {
+        const fallbackConference = getSafeFallbackConference();
+        setSelectedConference(fallbackConference);
+        updateUrl(fallbackConference);
+      }
+    }
+  }, [
+    pathname,
+    searchParams,
+    supportsIndependent,
+    getSafeFallbackConference,
+    setSelectedConference,
+    updateUrl,
+  ]);
 
   return {
     handleConferenceChange,
