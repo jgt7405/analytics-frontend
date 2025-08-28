@@ -26,37 +26,47 @@ ChartJS.register(
   Legend
 );
 
-interface HistoricalDataPoint {
+interface CFPHistoricalDataPoint {
   date: string;
-  projected_conf_wins: number;
-  projected_total_wins: number;
-  standings_with_ties: number;
-  standings_no_ties: number;
-  first_place_with_ties: number;
-  first_place_no_ties: number;
-  version_id: string;
-  is_current: boolean;
+  cfp_bid_pct: number;
+  average_seed: number;
+  team_name: string;
+  team_info: {
+    logo_url?: string;
+    primary_color?: string;
+    secondary_color?: string;
+  };
 }
 
-interface FootballTeamStandingsHistoryProps {
+interface AverageSeedDataPoint {
+  team_name: string;
+  average_seed?: number;
+  date: string;
+  team_info?: {
+    logo_url?: string;
+    primary_color?: string;
+    secondary_color?: string;
+  };
+}
+
+interface FootballTeamCFPBidHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
 }
 
-export default function FootballTeamStandingsHistory({
+export default function FootballTeamCFPBidHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
-}: FootballTeamStandingsHistoryProps) {
+}: FootballTeamCFPBidHistoryProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
     "line",
     Array<{ x: string; y: number }>,
     string
   > | null>(null);
-  const [data, setData] = useState<HistoricalDataPoint[]>([]);
-  const [conferenceSize, setConferenceSize] = useState(16);
+  const [data, setData] = useState<CFPHistoricalDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,40 +85,82 @@ export default function FootballTeamStandingsHistory({
     const fetchData = async () => {
       try {
         setLoading(true);
+        console.log("🔍 CFP: Fetching data for team:", teamName);
+
         const response = await fetch(
-          `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins`
+          `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history`
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch historical data");
+          throw new Error("Failed to fetch CFP bid history");
         }
 
         const result = await response.json();
-        const rawData: HistoricalDataPoint[] = result.data || [];
-        setConferenceSize(result.conference_size || 16);
+        console.log("🔍 CFP: API Response:", result);
+        console.log("🔍 CFP: Response keys:", Object.keys(result));
+        console.log("🔍 CFP: cfp_bid_data:", result.cfp_bid_data);
+        console.log("🔍 CFP: average_seed_data:", result.average_seed_data);
 
-        if (rawData.length === 0) {
+        const cfpBidData: CFPHistoricalDataPoint[] = result.cfp_bid_data || [];
+        const averageSeedData: AverageSeedDataPoint[] =
+          result.average_seed_data || [];
+
+        console.log("🔍 CFP: Parsed cfpBidData length:", cfpBidData.length);
+        console.log(
+          "🔍 CFP: Parsed averageSeedData length:",
+          averageSeedData.length
+        );
+
+        if (cfpBidData.length === 0 && averageSeedData.length === 0) {
+          console.log("🔍 CFP: No data available");
           setData([]);
           setError(null);
           return;
         }
 
-        // Filter data starting from 8/22
-        const cutoffDate = new Date("2025-08-22");
-        const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-          const itemDate = new Date(point.date);
-          return itemDate >= cutoffDate;
+        // Filter for the specific team
+        const teamCFPData = cfpBidData.filter(
+          (point) => point.team_name === teamName
+        );
+        const teamSeedData = averageSeedData.filter(
+          (point) => point.team_name === teamName
+        );
+
+        console.log("🔍 CFP: Filtered teamCFPData length:", teamCFPData.length);
+        console.log(
+          "🔍 CFP: Filtered teamSeedData length:",
+          teamSeedData.length
+        );
+
+        if (teamCFPData.length > 0) {
+          console.log("🔍 CFP: First CFP data point:", teamCFPData[0]);
+        }
+        if (teamSeedData.length > 0) {
+          console.log("🔍 CFP: First seed data point:", teamSeedData[0]);
+        }
+
+        // Create combined data by merging CFP and seed data by date
+        const dataByDate = new Map<string, CFPHistoricalDataPoint>();
+
+        teamCFPData.forEach((point) => {
+          dataByDate.set(point.date, {
+            ...point,
+            average_seed: 0, // Default value
+          });
         });
 
-        // Deduplicate by date, keeping earliest version_id
-        const dataByDate = new Map<string, HistoricalDataPoint>();
-        filteredData.forEach((point: HistoricalDataPoint) => {
-          const dateKey = point.date;
-          if (
-            !dataByDate.has(dateKey) ||
-            point.version_id < dataByDate.get(dateKey)!.version_id
-          ) {
-            dataByDate.set(dateKey, point);
+        teamSeedData.forEach((point: AverageSeedDataPoint) => {
+          const existing = dataByDate.get(point.date);
+          if (existing) {
+            existing.average_seed = point.average_seed || 0;
+          } else {
+            dataByDate.set(point.date, {
+              date: point.date,
+              cfp_bid_pct: 0,
+              average_seed: point.average_seed || 0,
+              team_name: point.team_name,
+              team_info: point.team_info || {},
+            });
           }
         });
 
@@ -118,10 +170,16 @@ export default function FootballTeamStandingsHistory({
           return dateA.getTime() - dateB.getTime();
         });
 
+        console.log(
+          "🔍 CFP: Final processed data length:",
+          processedData.length
+        );
+        console.log("🔍 CFP: Final processed data:", processedData);
+
         setData(processedData);
         setError(null);
       } catch (err) {
-        console.error("Error fetching standings history:", err);
+        console.error("🔍 CFP: Error fetching CFP bid history:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
         setData([]);
       } finally {
@@ -134,14 +192,12 @@ export default function FootballTeamStandingsHistory({
     }
   }, [teamName]);
 
-  // Determine colors - handle white secondary color properly
+  // Rest of component remains the same...
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
-      // No secondaryColor provided, use fallback logic
       return primaryColor === "#3b82f6" ? "#ef4444" : "#10b981";
     }
 
-    // Check if secondary color is white (various formats)
     const whiteValues = [
       "#ffffff",
       "#fff",
@@ -154,26 +210,26 @@ export default function FootballTeamStandingsHistory({
     ];
 
     if (whiteValues.includes(secondaryColor.toLowerCase().replace(/\s/g, ""))) {
-      return "#000000"; // Use black instead of white
+      return "#000000";
     }
 
     return secondaryColor;
   })();
 
   const labels = data.map((point) => formatDateForDisplay(point.date));
-  const standingsWithTiesData = data.map((point, index) => ({
+  const cfpBidData = data.map((point, index) => ({
     x: labels[index],
-    y: point.standings_with_ties,
+    y: point.cfp_bid_pct,
   }));
-  const standingsNoTiesData = data.map((point, index) => ({
+  const averageSeedData = data.map((point, index) => ({
     x: labels[index],
-    y: point.standings_no_ties,
+    y: point.average_seed,
   }));
 
   const datasets = [
     {
-      label: "Standing (With Ties)",
-      data: standingsWithTiesData,
+      label: "CFP Bid Probability",
+      data: cfpBidData,
       backgroundColor: `${primaryColor}20`,
       borderColor: primaryColor,
       borderWidth: 3,
@@ -183,10 +239,11 @@ export default function FootballTeamStandingsHistory({
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
+      yAxisID: "y",
     },
     {
-      label: "Standing (No Ties)",
-      data: standingsNoTiesData,
+      label: "Average Seed",
+      data: averageSeedData,
       backgroundColor: `${finalSecondaryColor}20`,
       borderColor: finalSecondaryColor,
       borderWidth: 3,
@@ -196,6 +253,7 @@ export default function FootballTeamStandingsHistory({
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
+      yAxisID: "y1",
     },
   ];
 
@@ -230,11 +288,11 @@ export default function FootballTeamStandingsHistory({
           const { tooltip: tooltipModel, chart } = args;
 
           let tooltipEl = document.getElementById(
-            "chartjs-tooltip-standings-history"
+            "chartjs-tooltip-cfp-bid-history"
           );
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-standings-history";
+            tooltipEl.id = "chartjs-tooltip-cfp-bid-history";
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
@@ -255,7 +313,6 @@ export default function FootballTeamStandingsHistory({
               maxWidth: "300px",
             });
 
-            // Add close functionality
             const handleClickOutside = (e: Event) => {
               if (!tooltipEl?.contains(e.target as Node)) {
                 tooltipEl!.style.opacity = "0";
@@ -284,37 +341,35 @@ export default function FootballTeamStandingsHistory({
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const currentDate = labels[dataIndex];
-            const withTies = data[dataIndex].standings_with_ties;
-            const noTies = data[dataIndex].standings_no_ties;
+            const cfpBidPct = data[dataIndex].cfp_bid_pct;
+            const avgSeed = data[dataIndex].average_seed;
 
-            // Standard header with close button
             let innerHtml = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-                <button id="tooltip-close" style="
-                  background: none; 
-                  border: none; 
-                  font-size: 16px; 
-                  cursor: pointer; 
-                  color: #6b7280;
-                  padding: 0;
-                  margin: 0;
-                  line-height: 1;
-                  width: 20px;
-                  height: 20px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">&times;</button>
-              </div>
-            `;
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+               <button id="tooltip-close" style="
+                 background: none; 
+                 border: none; 
+                 font-size: 16px; 
+                 cursor: pointer; 
+                 color: #6b7280;
+                 padding: 0;
+                 margin: 0;
+                 line-height: 1;
+                 width: 20px;
+                 height: 20px;
+                 display: flex;
+                 align-items: center;
+                 justify-content: center;
+               ">&times;</button>
+             </div>
+           `;
 
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Standing (With Ties): #${withTies.toFixed(1)}</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Standing (No Ties): #${noTies.toFixed(1)}</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">CFP Bid Probability: ${cfpBidPct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Average Seed: ${avgSeed.toFixed(1)}</div>`;
 
             tooltipEl.innerHTML = innerHtml;
 
-            // Add close button functionality
             const closeBtn = tooltipEl.querySelector("#tooltip-close");
             if (closeBtn) {
               closeBtn.addEventListener("click", (e) => {
@@ -324,14 +379,13 @@ export default function FootballTeamStandingsHistory({
             }
           }
 
-          // Smart positioning logic
+          // Positioning logic
           const position = chart.canvas.getBoundingClientRect();
           const chartWidth = chart.width;
           const tooltipWidth = tooltipEl.offsetWidth || 200;
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
-          // Determine positioning
           const isLeftSide = caretX < chartWidth / 2;
           let leftPosition: number;
           let arrowPosition: string;
@@ -345,7 +399,6 @@ export default function FootballTeamStandingsHistory({
             arrowPosition = "right";
           }
 
-          // Add/update arrow
           if (!tooltipEl.querySelector(".tooltip-arrow")) {
             const arrow = document.createElement("div");
             arrow.className = "tooltip-arrow";
@@ -368,31 +421,12 @@ export default function FootballTeamStandingsHistory({
             }
 
             tooltipEl.appendChild(arrow);
-          } else {
-            // Update existing arrow
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
           }
 
-          // Prevent off-screen positioning
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
 
-          // Position tooltip
           tooltipEl.style.opacity = "1";
           tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
@@ -400,7 +434,6 @@ export default function FootballTeamStandingsHistory({
             window.pageYOffset +
             caretY -
             tooltipEl.offsetHeight / 2 +
-            0 +
             "px";
         },
       },
@@ -416,12 +449,39 @@ export default function FootballTeamStandingsHistory({
         grid: { display: false },
       },
       y: {
-        beginAtZero: false,
-        min: 1,
-        max: conferenceSize,
-        reverse: true,
+        type: "linear" as const,
+        display: true,
+        position: "left" as const,
+        beginAtZero: true,
+        min: 0,
+        max: 100,
         grid: {
           color: "rgba(0, 0, 0, 0.1)",
+        },
+        ticks: {
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+          color: primaryColor, // Add this line
+          callback: function (value: string | number) {
+            return `${value}%`;
+          },
+        },
+        title: {
+          display: true,
+          text: "CFP Bid %",
+          color: primaryColor,
+        },
+      },
+      y1: {
+        type: "linear" as const,
+        display: true,
+        position: "right" as const,
+        min: 1,
+        max: 12,
+        reverse: true,
+        grid: {
+          drawOnChartArea: false,
         },
         ticks: {
           font: {
@@ -431,6 +491,11 @@ export default function FootballTeamStandingsHistory({
           callback: function (value: string | number) {
             return `#${value}`;
           },
+        },
+        title: {
+          display: true,
+          text: "Avg Seed",
+          color: finalSecondaryColor,
         },
       },
     },
@@ -442,7 +507,7 @@ export default function FootballTeamStandingsHistory({
     return (
       <div className="text-center py-8">
         <div className="animate-pulse text-gray-500">
-          Loading standings history...
+          Loading CFP bid history...
         </div>
       </div>
     );
@@ -452,7 +517,7 @@ export default function FootballTeamStandingsHistory({
     return (
       <div className="text-center py-8">
         <div className="text-red-500 text-sm">
-          Unable to load standings history
+          Unable to load CFP bid history
         </div>
         <div className="text-gray-400 text-xs mt-1">{error}</div>
       </div>
@@ -463,10 +528,10 @@ export default function FootballTeamStandingsHistory({
     return (
       <div className="text-center py-8">
         <div className="text-gray-500 text-sm">
-          No historical data available
+          No CFP bid history available
         </div>
         <div className="text-gray-400 text-xs mt-1">
-          Chart will show standings over time once data is collected
+          Chart will show CFP bid probability over time once data is collected
         </div>
       </div>
     );

@@ -1,5 +1,7 @@
 "use client";
 
+import FootballTeamCFPBidHistory from "@/components/features/football/FootballTeamCFPBidHistory";
+import FootballTeamCFPProgressionHistory from "@/components/features/football/FootballTeamCFPProgressionHistory";
 import FootballTeamFirstPlaceHistory from "@/components/features/football/FootballTeamFirstPlaceHistory";
 import FootballTeamSchedule from "@/components/features/football/FootballTeamSchedule";
 import FootballTeamSeedProjections from "@/components/features/football/FootballTeamSeedProjections";
@@ -357,6 +359,36 @@ export default function FootballTeamPage({
                   secondaryColor={team_info.secondary_color}
                 />
               </div>
+
+              {/* Mobile CFP Bid History */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  CFP Bid History
+                </h2>
+                <FootballTeamCFPBidHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                />
+              </div>
+
+              {/* Mobile CFP Progression History */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  CFP Progression History
+                </h2>
+                <FootballTeamCFPProgressionHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                />
+              </div>
             </div>
           ) : (
             // Desktop Layout
@@ -540,6 +572,36 @@ export default function FootballTeamPage({
                       First Place Probability History
                     </h2>
                     <FootballTeamFirstPlaceHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                    />
+                  </div>
+
+                  {/* Desktop CFP Bid History */}
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      CFP Bid History
+                    </h2>
+                    <FootballTeamCFPBidHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                    />
+                  </div>
+
+                  {/* Desktop CFP Progression History */}
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      CFP Progression History
+                    </h2>
+                    <FootballTeamCFPProgressionHistory
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}

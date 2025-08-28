@@ -62,6 +62,16 @@ export async function GET(
           );
       }
     }
+    // Handle 4-part CFP team history routes: football/cfp/BYU/history
+    else if (
+      slug.length === 4 &&
+      slug[0] === "football" &&
+      slug[1] === "cfp" &&
+      slug[3] === "history"
+    ) {
+      const [, , teamName] = slug;
+      backendPath = `/cfp/${teamName}/history`;
+    }
     // Handle 4-part routes with history: football/standings/Big_12/history
     else if (
       slug.length === 4 &&
@@ -69,8 +79,6 @@ export async function GET(
       slug[3] === "history"
     ) {
       const [, footballEndpoint, footballConference] = slug;
-
-      // Format conference name consistently
       const formattedConference = footballConference.replace(/\s+/g, "_");
 
       switch (footballEndpoint) {

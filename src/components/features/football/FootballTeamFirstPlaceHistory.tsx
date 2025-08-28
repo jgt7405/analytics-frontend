@@ -175,7 +175,7 @@ export default function FootballTeamFirstPlaceHistory({
       backgroundColor: `${primaryColor}20`,
       borderColor: primaryColor,
       borderWidth: 3,
-      pointRadius: 4,
+      pointRadius: 0,
       pointBackgroundColor: primaryColor,
       pointBorderColor: "#ffffff",
       pointBorderWidth: 2,
@@ -188,13 +188,12 @@ export default function FootballTeamFirstPlaceHistory({
       backgroundColor: `${finalSecondaryColor}20`,
       borderColor: finalSecondaryColor,
       borderWidth: 3,
-      pointRadius: 4,
+      pointRadius: 0,
       pointBackgroundColor: finalSecondaryColor,
       pointBorderColor: "#ffffff",
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
-      borderDash: [5, 5],
     },
   ];
 
