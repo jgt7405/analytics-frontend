@@ -218,6 +218,7 @@ export default function FootballConfChampionHistoryChart({
                       "touchstart",
                       handleClickOutside
                     );
+                    document.body.removeChild(tooltipEl);
                   }
                 }, 100);
               }

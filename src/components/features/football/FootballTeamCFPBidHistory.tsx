@@ -38,17 +38,6 @@ interface CFPHistoricalDataPoint {
   };
 }
 
-interface AverageSeedDataPoint {
-  team_name: string;
-  average_seed?: number;
-  date: string;
-  team_info?: {
-    logo_url?: string;
-    primary_color?: string;
-    secondary_color?: string;
-  };
-}
-
 interface FootballTeamCFPBidHistoryProps {
   teamName: string;
   primaryColor?: string;
@@ -85,7 +74,7 @@ export default function FootballTeamCFPBidHistory({
     const fetchData = async () => {
       try {
         setLoading(true);
-        console.log("🔍 CFP: Fetching data for team:", teamName);
+        console.log("🏈 CFP: Fetching data for team:", teamName);
 
         const response = await fetch(
           `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history`
@@ -96,90 +85,36 @@ export default function FootballTeamCFPBidHistory({
         }
 
         const result = await response.json();
-        console.log("🔍 CFP: API Response:", result);
-        console.log("🔍 CFP: Response keys:", Object.keys(result));
-        console.log("🔍 CFP: cfp_bid_data:", result.cfp_bid_data);
-        console.log("🔍 CFP: average_seed_data:", result.average_seed_data);
+        console.log("🏈 CFP: API Response:", result);
+        console.log("🏈 CFP: Response keys:", Object.keys(result));
+        console.log("🏈 CFP: Response data:", result.data);
 
-        const cfpBidData: CFPHistoricalDataPoint[] = result.cfp_bid_data || [];
-        const averageSeedData: AverageSeedDataPoint[] =
-          result.average_seed_data || [];
-
-        console.log("🔍 CFP: Parsed cfpBidData length:", cfpBidData.length);
-        console.log(
-          "🔍 CFP: Parsed averageSeedData length:",
-          averageSeedData.length
-        );
-
-        if (cfpBidData.length === 0 && averageSeedData.length === 0) {
-          console.log("🔍 CFP: No data available");
+        if (!result.data || result.data.length === 0) {
+          console.log("🏈 CFP: No data available");
           setData([]);
-          setError(null);
+          setError("No CFP bid history data available");
           return;
         }
 
-        // Filter for the specific team
-        const teamCFPData = cfpBidData.filter(
-          (point) => point.team_name === teamName
-        );
-        const teamSeedData = averageSeedData.filter(
-          (point) => point.team_name === teamName
-        );
-
-        console.log("🔍 CFP: Filtered teamCFPData length:", teamCFPData.length);
-        console.log(
-          "🔍 CFP: Filtered teamSeedData length:",
-          teamSeedData.length
-        );
-
-        if (teamCFPData.length > 0) {
-          console.log("🔍 CFP: First CFP data point:", teamCFPData[0]);
-        }
-        if (teamSeedData.length > 0) {
-          console.log("🔍 CFP: First seed data point:", teamSeedData[0]);
-        }
-
-        // Create combined data by merging CFP and seed data by date
-        const dataByDate = new Map<string, CFPHistoricalDataPoint>();
-
-        teamCFPData.forEach((point) => {
-          dataByDate.set(point.date, {
-            ...point,
-            average_seed: 0, // Default value
+        // Only keep data from 8/22 onward and sort by date
+        const cutoffDate = new Date("2025-08-22");
+        const validData = result.data
+          .filter((item: CFPHistoricalDataPoint) => {
+            const itemDate = parseDateCentralTime(item.date);
+            return itemDate >= cutoffDate;
+          })
+          .sort((a: CFPHistoricalDataPoint, b: CFPHistoricalDataPoint) => {
+            return (
+              parseDateCentralTime(a.date).getTime() -
+              parseDateCentralTime(b.date).getTime()
+            );
           });
-        });
 
-        teamSeedData.forEach((point: AverageSeedDataPoint) => {
-          const existing = dataByDate.get(point.date);
-          if (existing) {
-            existing.average_seed = point.average_seed || 0;
-          } else {
-            dataByDate.set(point.date, {
-              date: point.date,
-              cfp_bid_pct: 0,
-              average_seed: point.average_seed || 0,
-              team_name: point.team_name,
-              team_info: point.team_info || {},
-            });
-          }
-        });
-
-        const processedData = Array.from(dataByDate.values()).sort((a, b) => {
-          const dateA = parseDateCentralTime(a.date);
-          const dateB = parseDateCentralTime(b.date);
-          return dateA.getTime() - dateB.getTime();
-        });
-
-        console.log(
-          "🔍 CFP: Final processed data length:",
-          processedData.length
-        );
-        console.log("🔍 CFP: Final processed data:", processedData);
-
-        setData(processedData);
+        console.log("🏈 CFP: Valid filtered data:", validData);
+        setData(validData);
         setError(null);
       } catch (err) {
-        console.error("🔍 CFP: Error fetching CFP bid history:", err);
+        console.error("🏈 CFP: Error fetching data:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
         setData([]);
       } finally {
@@ -192,74 +127,44 @@ export default function FootballTeamCFPBidHistory({
     }
   }, [teamName]);
 
-  // Rest of component remains the same...
-  const finalSecondaryColor = (() => {
-    if (!secondaryColor) {
-      return primaryColor === "#3b82f6" ? "#ef4444" : "#10b981";
-    }
+  const finalSecondaryColor = secondaryColor || "#f97316";
 
-    const whiteValues = [
-      "#ffffff",
-      "#fff",
-      "white",
-      "rgb(255,255,255)",
-      "rgb(255, 255, 255)",
-      "#FFFFFF",
-      "#FFF",
-      "WHITE",
-    ];
-
-    if (whiteValues.includes(secondaryColor.toLowerCase().replace(/\s/g, ""))) {
-      return "#000000";
-    }
-
-    return secondaryColor;
-  })();
-
-  const labels = data.map((point) => formatDateForDisplay(point.date));
-  const cfpBidData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.cfp_bid_pct,
-  }));
-  const averageSeedData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.average_seed,
-  }));
-
-  const datasets = [
-    {
-      label: "CFP Bid Probability",
-      data: cfpBidData,
-      backgroundColor: `${primaryColor}20`,
-      borderColor: primaryColor,
-      borderWidth: 3,
-      pointRadius: 0,
-      pointBackgroundColor: primaryColor,
-      pointBorderColor: "#ffffff",
-      pointBorderWidth: 2,
-      tension: 0.1,
-      fill: false,
-      yAxisID: "y",
-    },
-    {
-      label: "Average Seed",
-      data: averageSeedData,
-      backgroundColor: `${finalSecondaryColor}20`,
-      borderColor: finalSecondaryColor,
-      borderWidth: 3,
-      pointRadius: 0,
-      pointBackgroundColor: finalSecondaryColor,
-      pointBorderColor: "#ffffff",
-      pointBorderWidth: 2,
-      tension: 0.1,
-      fill: false,
-      yAxisID: "y1",
-    },
-  ];
+  const labels = data.map((item) => formatDateForDisplay(item.date));
 
   const chartData = {
-    labels: labels,
-    datasets,
+    labels,
+    datasets: [
+      {
+        label: "CFP Bid Probability",
+        data: data.map((item, index) => ({
+          x: labels[index],
+          y: item.cfp_bid_pct,
+        })),
+        borderColor: primaryColor,
+        backgroundColor: primaryColor,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.1,
+        fill: false,
+        yAxisID: "y",
+      },
+      {
+        label: "Average Seed",
+        data: data.map((item, index) => ({
+          x: labels[index],
+          y: item.average_seed,
+        })),
+        borderColor: finalSecondaryColor,
+        backgroundColor: finalSecondaryColor,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.1,
+        fill: false,
+        yAxisID: "y1",
+      },
+    ],
   };
 
   const options = {
@@ -268,6 +173,16 @@ export default function FootballTeamCFPBidHistory({
     interaction: {
       mode: "index" as const,
       intersect: false,
+    },
+    elements: {
+      point: {
+        radius: 0,
+        hoverRadius: 6,
+        hitRadius: 10,
+      },
+      line: {
+        borderWidth: 2,
+      },
     },
     plugins: {
       title: { display: false },
@@ -278,8 +193,6 @@ export default function FootballTeamCFPBidHistory({
           font: {
             size: isMobile ? 10 : 12,
           },
-          usePointStyle: true,
-          padding: isMobile ? 15 : 20,
         },
       },
       tooltip: {
@@ -345,25 +258,25 @@ export default function FootballTeamCFPBidHistory({
             const avgSeed = data[dataIndex].average_seed;
 
             let innerHtml = `
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-               <button id="tooltip-close" style="
-                 background: none; 
-                 border: none; 
-                 font-size: 16px; 
-                 cursor: pointer; 
-                 color: #6b7280;
-                 padding: 0;
-                 margin: 0;
-                 line-height: 1;
-                 width: 20px;
-                 height: 20px;
-                 display: flex;
-                 align-items: center;
-                 justify-content: center;
-               ">&times;</button>
-             </div>
-           `;
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+              <button id="tooltip-close" style="
+                background: none; 
+                border: none; 
+                font-size: 16px; 
+                cursor: pointer; 
+                color: #6b7280;
+                padding: 0;
+                margin: 0;
+                line-height: 1;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">&times;</button>
+            </div>
+          `;
 
             innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">CFP Bid Probability: ${cfpBidPct.toFixed(1)}%</div>`;
             innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Average Seed: ${avgSeed.toFixed(1)}</div>`;
@@ -462,7 +375,6 @@ export default function FootballTeamCFPBidHistory({
           font: {
             size: isMobile ? 10 : 12,
           },
-          color: primaryColor, // Add this line
           callback: function (value: string | number) {
             return `${value}%`;
           },
@@ -501,7 +413,7 @@ export default function FootballTeamCFPBidHistory({
     },
   };
 
-  const chartHeight = isMobile ? 200 : 300;
+  const chartHeight = isMobile ? 300 : 400;
 
   if (loading) {
     return (

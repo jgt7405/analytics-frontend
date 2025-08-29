@@ -218,6 +218,7 @@ export default function FootballFirstPlaceChart({
                       "touchstart",
                       handleClickOutside
                     );
+                    document.body.removeChild(tooltipEl);
                   }
                 }, 100);
               }

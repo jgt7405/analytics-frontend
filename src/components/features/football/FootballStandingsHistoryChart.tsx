@@ -212,6 +212,7 @@ export default function FootballStandingsHistoryChart({
                       "touchstart",
                       handleClickOutside
                     );
+                    document.body.removeChild(tooltipEl); // Add this line
                   }
                 }, 100);
               }

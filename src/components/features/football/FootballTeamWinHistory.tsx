@@ -258,6 +258,7 @@ export default function FootballTeamWinHistory({
                       "touchstart",
                       handleClickOutside
                     );
+                    document.body.removeChild(tooltipEl);
                   }
                 }, 100);
               }

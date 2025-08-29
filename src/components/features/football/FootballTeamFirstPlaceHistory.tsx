@@ -264,6 +264,7 @@ export default function FootballTeamFirstPlaceHistory({
                       "touchstart",
                       handleClickOutside
                     );
+                    document.body.removeChild(tooltipEl);
                   }
                 }, 100);
               }

@@ -218,6 +218,7 @@ export default function FootballChampGameHistoryChart({
                       "touchstart",
                       handleClickOutside
                     );
+                    document.body.removeChild(tooltipEl);
                   }
                 }, 100);
               }
@@ -252,25 +253,25 @@ export default function FootballChampGameHistoryChart({
               .sort((a, b) => b.pct - a.pct);
 
             let innerHtml = `
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-               <button id="tooltip-close" style="
-                 background: none; 
-                 border: none; 
-                 font-size: 16px; 
-                 cursor: pointer; 
-                 color: #6b7280;
-                 padding: 0;
-                 margin: 0;
-                 line-height: 1;
-                 width: 20px;
-                 height: 20px;
-                 display: flex;
-                 align-items: center;
-                 justify-content: center;
-               ">&times;</button>
-             </div>
-           `;
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+              <button id="tooltip-close" style="
+                background: none; 
+                border: none; 
+                font-size: 16px; 
+                cursor: pointer; 
+                color: #6b7280;
+                padding: 0;
+                margin: 0;
+                line-height: 1;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">&times;</button>
+            </div>
+          `;
 
             teamsAtDate.forEach((team) => {
               innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${Math.round(team.pct)}%</div>`;
@@ -278,6 +279,7 @@ export default function FootballChampGameHistoryChart({
 
             tooltipEl.innerHTML = innerHtml;
 
+            // Add close button functionality
             const closeBtn = tooltipEl.querySelector("#tooltip-close");
             if (closeBtn) {
               closeBtn.addEventListener("click", (e) => {
