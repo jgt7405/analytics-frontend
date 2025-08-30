@@ -23,13 +23,11 @@ export async function createOptimizedScreenshot(
   options: ScreenshotOptions
 ): Promise<HTMLCanvasElement> {
   try {
-    // Dynamic import to reduce initial bundle size
     const { default: html2canvas } = await import("html2canvas");
 
     const wrapper = createScreenshotWrapper(element, options);
     document.body.appendChild(wrapper);
 
-    // Wait for all assets to load before capturing
     await waitForAssetsToLoad(wrapper);
 
     const canvasOptions: Html2CanvasOptions = {
@@ -38,12 +36,11 @@ export async function createOptimizedScreenshot(
       logging: false,
       backgroundColor: "#ffffff",
       foreignObjectRendering: true,
-      scale: 2, // Higher quality for better readability
+      scale: 2,
     };
 
     const canvas = await html2canvas(wrapper, canvasOptions);
 
-    // Clean up wrapper element
     document.body.removeChild(wrapper);
 
     return canvas;
@@ -59,11 +56,10 @@ async function waitForAssetsToLoad(element: HTMLElement): Promise<void> {
   const images = element.querySelectorAll("img");
   const fonts = document.fonts;
 
-  // Wait for images to load
   const imagePromises = Array.from(images).map((img) => {
     if (img.complete) return Promise.resolve();
     return new Promise<void>((resolve) => {
-      const timeout = setTimeout(() => resolve(), 3000); // 3 second timeout
+      const timeout = setTimeout(() => resolve(), 3000);
 
       img.onload = () => {
         clearTimeout(timeout);
@@ -71,20 +67,16 @@ async function waitForAssetsToLoad(element: HTMLElement): Promise<void> {
       };
       img.onerror = () => {
         clearTimeout(timeout);
-        resolve(); // Don't fail on broken images
+        resolve();
       };
     });
   });
 
-  // Wait for fonts to load
   const fontPromise = fonts.ready.catch(() => {
-    // Continue even if fonts fail to load
     console.warn("Fonts failed to load for screenshot");
   });
 
   await Promise.all([...imagePromises, fontPromise]);
-
-  // Additional small delay to ensure complete rendering
   await new Promise((resolve) => setTimeout(resolve, 100));
 }
 
@@ -94,26 +86,23 @@ function createScreenshotWrapper(
 ): HTMLElement {
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `
-    position: fixed;
-    left: -9999px;
-    top: 0;
-    background-color: #ffffff;
-    padding: 24px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-    min-width: ${Math.max(element.scrollWidth + 48, 800)}px;
-    box-sizing: border-box;
-    z-index: -1;
-  `;
+   position: fixed;
+   left: -9999px;
+   top: 0;
+   background-color: #ffffff;
+   padding: 24px;
+   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+   min-width: ${Math.max(element.scrollWidth + 48, 800)}px;
+   box-sizing: border-box;
+   z-index: -1;
+ `;
 
-  // Create header
   const header = createHeader(options);
   wrapper.appendChild(header);
 
-  // Clone and prepare the main element
   const clone = cleanElementForScreenshot(element);
   wrapper.appendChild(clone);
 
-  // Add explainer if requested
   if (options.includeExplainer) {
     const explainer = createExplainerSection();
     if (explainer) {
@@ -121,7 +110,6 @@ function createScreenshotWrapper(
     }
   }
 
-  // Add footer with generation info
   const footer = createFooter();
   wrapper.appendChild(footer);
 
@@ -131,109 +119,90 @@ function createScreenshotWrapper(
 function createHeader(options: ScreenshotOptions): HTMLElement {
   const header = document.createElement("div");
   header.style.cssText = `
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid #e5e7eb;
-    width: 100%;
-    min-height: 60px;
-  `;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 20px;
+   padding-bottom: 16px;
+   border-bottom: 2px solid #e5e7eb;
+   width: 100%;
+   min-height: 60px;
+ `;
 
-  // Logo section
   const logoSection = document.createElement("div");
   logoSection.style.cssText = `
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-  `;
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   flex-shrink: 0;
+ `;
 
   const logo = document.createElement("img");
-  logo.src = "/images/JThom_Logo.png";
+  const isFootball = window.location.pathname.includes("/football");
+  logo.src = isFootball
+    ? "/images/JThom_Logo_Football.png"
+    : "/images/JThom_Logo.png";
   logo.alt = "JThom Analytics";
   logo.style.cssText = `
-    height: 40px;
-    width: 40px;
-    object-fit: contain;
-    flex-shrink: 0;
-  `;
+   height: 50px;
+   width: auto;
+   object-fit: contain;
+   flex-shrink: 0;
+ `;
 
   const logoText = document.createElement("span");
   logoText.textContent = "JThom Analytics";
   logoText.style.cssText = `
-    font-size: 18px;
-    font-weight: 600;
-    color: #1f2937;
-    white-space: nowrap;
-  `;
+   font-size: 18px;
+   font-weight: 600;
+   color: #1f2937;
+   white-space: nowrap;
+ `;
 
   logoSection.appendChild(logo);
   logoSection.appendChild(logoText);
 
-  // Title section
-  const titleSection = document.createElement("div");
-  titleSection.style.cssText = `
-    flex: 1;
-    text-align: center;
-    padding: 0 20px;
-    min-width: 0;
-  `;
+  const title = document.createElement("h1");
+  title.textContent = options.pageTitle;
+  title.style.cssText = `
+   font-family: "Roboto Condensed", system-ui, sans-serif;
+   font-size: 1.25rem;
+   font-weight: 500;
+   color: #666666;
+   margin: 0;
+   text-align: center;
+   flex: 1;
+ `;
 
-  const titleElement = document.createElement("h1");
-  titleElement.textContent = options.pageTitle;
-  titleElement.style.cssText = `
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
-    color: #1f2937;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  `;
-  titleSection.appendChild(titleElement);
-
-  // Conference and date section
   const infoSection = document.createElement("div");
   infoSection.style.cssText = `
-    text-align: right;
-    min-width: 150px;
-    flex-shrink: 0;
-  `;
+   display: flex;
+   flex-direction: column;
+   align-items: flex-end;
+   gap: 4px;
+   flex-shrink: 0;
+ `;
 
-  if (
-    options.selectedConference &&
-    options.selectedConference !== "All Conferences"
-  ) {
-    const confText = document.createElement("div");
-    confText.textContent = options.selectedConference;
-    confText.style.cssText = `
-      font-size: 16px;
-      font-weight: 500;
-      color: #4b5563;
-      white-space: nowrap;
-    `;
-    infoSection.appendChild(confText);
-  }
+  const conference = document.createElement("div");
+  conference.textContent = options.selectedConference;
+  conference.style.cssText = `
+   font-size: 14px;
+   font-weight: 600;
+   color: #1f2937;
+ `;
 
-  const dateText = document.createElement("div");
-  dateText.textContent = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  dateText.style.cssText = `
-    font-size: 14px;
-    color: #9ca3af;
-    margin-top: 4px;
-    white-space: nowrap;
-  `;
-  infoSection.appendChild(dateText);
+  const date = document.createElement("div");
+  date.textContent = new Date().toLocaleDateString();
+  date.style.cssText = `
+   font-size: 12px;
+   color: #6b7280;
+ `;
 
-  // Assemble header
+  infoSection.appendChild(conference);
+  infoSection.appendChild(date);
+
   header.appendChild(logoSection);
-  header.appendChild(titleSection);
+  header.appendChild(title);
   header.appendChild(infoSection);
 
   return header;
@@ -242,53 +211,27 @@ function createHeader(options: ScreenshotOptions): HTMLElement {
 function cleanElementForScreenshot(element: HTMLElement): HTMLElement {
   const clone = element.cloneNode(true) as HTMLElement;
 
-  // Reset all positioning and z-index issues
-  const allElements = clone.querySelectorAll("*");
-  allElements.forEach((el) => {
-    const htmlEl = el as HTMLElement;
-
-    // Reset problematic CSS properties
-    htmlEl.style.position = "static";
-    htmlEl.style.transform = "none";
-    htmlEl.style.zIndex = "auto";
-    htmlEl.style.left = "auto";
-    htmlEl.style.top = "auto";
-    htmlEl.style.right = "auto";
-    htmlEl.style.bottom = "auto";
-    htmlEl.style.maxHeight = "none";
-    htmlEl.style.overflow = "visible";
+  clone.querySelectorAll("button, [role='button']").forEach((btn) => {
+    (btn as HTMLElement).style.display = "none";
   });
 
-  // Style the clone container
-  clone.style.cssText = `
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    overflow: visible;
-    width: auto;
-    display: block;
-    margin-bottom: 20px;
-    background: white;
-  `;
+  clone.querySelectorAll(".tooltip, [class*='tooltip']").forEach((tooltip) => {
+    (tooltip as HTMLElement).style.display = "none";
+  });
 
-  // Handle tables specifically
-  const tables = clone.querySelectorAll("table");
-  tables.forEach((table) => {
+  clone.querySelectorAll("table").forEach((table) => {
     table.style.cssText = `
-      border-collapse: separate;
-      border-spacing: 0;
-      width: 100%;
-      table-layout: auto;
-      font-size: 14px;
-      background: white;
-    `;
+     width: 100%;
+     border-collapse: collapse;
+     margin: 16px 0;
+     font-size: 12px;
+     border: 1px solid #d1d5db;
+   `;
 
-    // Reset all table cells
-    const cells = table.querySelectorAll("th, td");
-    cells.forEach((cell) => {
+    table.querySelectorAll("th, td").forEach((cell) => {
       const cellEl = cell as HTMLElement;
-      cellEl.style.position = "static";
-      cellEl.style.border = "1px solid #e5e7eb";
       cellEl.style.padding = "8px 12px";
+      cellEl.style.border = "1px solid #d1d5db";
       cellEl.style.textAlign = cell.tagName === "TH" ? "center" : "inherit";
       cellEl.style.verticalAlign = "middle";
       cellEl.style.backgroundColor =
@@ -296,7 +239,6 @@ function cleanElementForScreenshot(element: HTMLElement): HTMLElement {
       cellEl.style.fontWeight = cell.tagName === "TH" ? "600" : "normal";
     });
 
-    // Handle first column (team names) alignment
     const firstColumnCells = table.querySelectorAll(
       "th:first-child, td:first-child"
     );
@@ -317,19 +259,19 @@ function createExplainerSection(): HTMLElement | null {
 
   const explainerClone = explainerElement.cloneNode(true) as HTMLElement;
   explainerClone.style.cssText = `
-    margin-top: 20px;
-    padding: 16px;
-    background-color: #f0f9ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #1e40af;
-    line-height: 1.5;
-    width: 100%;
-    box-sizing: border-box;
-  `;
+   margin-top: 20px;
+   padding: 16px;
+   background-color: #f8fafc;
+   border: 1px solid #e5e7eb;
+   border-radius: 8px;
+   font-family: "Roboto Condensed", system-ui, sans-serif;
+   font-size: 12px;
+   color: #666666;
+   line-height: 1.3;
+   width: 100%;
+   box-sizing: border-box;
+ `;
 
-  // Clean up any problematic styles in explainer content
   const explainerElements = explainerClone.querySelectorAll("*");
   explainerElements.forEach((el) => {
     const element = el as HTMLElement;
@@ -343,20 +285,19 @@ function createExplainerSection(): HTMLElement | null {
 function createFooter(): HTMLElement {
   const footer = document.createElement("div");
   footer.style.cssText = `
-    margin-top: 20px;
-    padding-top: 12px;
-    border-top: 1px solid #e5e7eb;
-    font-size: 12px;
-    color: #9ca3af;
-    text-align: center;
-  `;
+   margin-top: 20px;
+   padding-top: 12px;
+   border-top: 1px solid #e5e7eb;
+   font-size: 12px;
+   color: #9ca3af;
+   text-align: center;
+ `;
 
   footer.textContent = `Generated by JThom Analytics • ${new Date().toLocaleString()}`;
 
   return footer;
 }
 
-// Utility function for downloading canvas
 export async function downloadCanvas(
   canvas: HTMLCanvasElement,
   filename: string,
@@ -391,10 +332,9 @@ async function handleMobileShare(
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({
               files: [file],
-              title: "Basketball Analytics Export",
+              title: "Sports Analytics Export",
             });
           } else {
-            // Fallback: create download link
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
@@ -432,7 +372,6 @@ function handleDesktopDownload(
   });
 }
 
-// Utility function to generate optimized filename
 export function generateScreenshotFilename(
   conference: string,
   pageName: string,
@@ -447,5 +386,4 @@ export function generateScreenshotFilename(
   return `${confName}_${pageNameClean}_${timestamp}.${extension}`;
 }
 
-// Export types for external use
 export type { ScreenshotOptions };

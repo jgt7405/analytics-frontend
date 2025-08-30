@@ -38,6 +38,17 @@ interface CFPHistoricalDataPoint {
   };
 }
 
+interface SeedDataPoint {
+  date: string;
+  team_name: string;
+  average_seed: number;
+  team_info: {
+    logo_url?: string;
+    primary_color?: string;
+    secondary_color?: string;
+  };
+}
+
 interface FootballTeamCFPBidHistoryProps {
   teamName: string;
   primaryColor?: string;
@@ -86,35 +97,97 @@ export default function FootballTeamCFPBidHistory({
 
         const result = await response.json();
         console.log("🏈 CFP: API Response:", result);
-        console.log("🏈 CFP: Response keys:", Object.keys(result));
-        console.log("🏈 CFP: Response data:", result.data);
+        console.log("🏈 CFP: cfp_bid_data:", result.cfp_bid_data);
+        console.log("🏈 CFP: average_seed_data:", result.average_seed_data);
 
-        if (!result.data || result.data.length === 0) {
+        const cfpBidData: CFPHistoricalDataPoint[] = result.cfp_bid_data || [];
+        const averageSeedData: SeedDataPoint[] = result.average_seed_data || [];
+
+        console.log("🏈 CFP: Parsed cfpBidData length:", cfpBidData.length);
+        console.log(
+          "🏈 CFP: Parsed averageSeedData length:",
+          averageSeedData.length
+        );
+
+        if (cfpBidData.length === 0 && averageSeedData.length === 0) {
           console.log("🏈 CFP: No data available");
           setData([]);
-          setError("No CFP bid history data available");
+          setError(null);
           return;
         }
 
-        // Only keep data from 8/22 onward and sort by date
+        // Filter for the specific team
+        const teamCFPData = cfpBidData.filter(
+          (point) => point.team_name === teamName
+        );
+        const teamSeedData = averageSeedData.filter(
+          (point) => point.team_name === teamName
+        );
+
+        console.log("🏈 CFP: Filtered teamCFPData length:", teamCFPData.length);
+        console.log(
+          "🏈 CFP: Filtered teamSeedData length:",
+          teamSeedData.length
+        );
+
+        // Create combined data by merging CFP and seed data by date
+        const dataByDate = new Map<string, CFPHistoricalDataPoint>();
+
+        teamCFPData.forEach((point) => {
+          dataByDate.set(point.date, {
+            ...point,
+            average_seed: 0, // Default value
+          });
+        });
+
+        teamSeedData.forEach((point: SeedDataPoint) => {
+          const existing = dataByDate.get(point.date);
+          if (existing) {
+            existing.average_seed = point.average_seed || 0;
+          } else {
+            dataByDate.set(point.date, {
+              date: point.date,
+              cfp_bid_pct: 0,
+              average_seed: point.average_seed || 0,
+              team_name: point.team_name,
+              team_info: point.team_info || {},
+            });
+          }
+        });
+
+        // Filter for dates from 8/22 onward and sort
         const cutoffDate = new Date("2025-08-22");
-        const validData = result.data
-          .filter((item: CFPHistoricalDataPoint) => {
+        const processedData = Array.from(dataByDate.values())
+          .filter((item) => {
             const itemDate = parseDateCentralTime(item.date);
             return itemDate >= cutoffDate;
           })
-          .sort((a: CFPHistoricalDataPoint, b: CFPHistoricalDataPoint) => {
-            return (
-              parseDateCentralTime(a.date).getTime() -
-              parseDateCentralTime(b.date).getTime()
-            );
+          .sort((a, b) => {
+            const dateA = parseDateCentralTime(a.date);
+            const dateB = parseDateCentralTime(b.date);
+            return dateA.getTime() - dateB.getTime();
           });
 
-        console.log("🏈 CFP: Valid filtered data:", validData);
-        setData(validData);
+        console.log(
+          "🏈 CFP: Final processed data length:",
+          processedData.length
+        );
+        console.log("🏈 CFP: Final processed data:", processedData);
+
+        // Debug: Check if average_seed values exist
+        processedData.forEach((item, index) => {
+          console.log(`🏈 CFP: Data point ${index}:`, {
+            date: item.date,
+            cfp_bid_pct: item.cfp_bid_pct,
+            average_seed: item.average_seed,
+            average_seed_type: typeof item.average_seed,
+          });
+        });
+
+        setData(processedData);
         setError(null);
       } catch (err) {
-        console.error("🏈 CFP: Error fetching data:", err);
+        console.error("🏈 CFP: Error fetching CFP bid history:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
         setData([]);
       } finally {
@@ -127,9 +200,30 @@ export default function FootballTeamCFPBidHistory({
     }
   }, [teamName]);
 
-  const finalSecondaryColor = secondaryColor || "#f97316";
+  const finalSecondaryColor = secondaryColor
+    ? secondaryColor.toLowerCase() === "#ffffff" ||
+      secondaryColor.toLowerCase() === "white"
+      ? "#000000" // fallback to black if white
+      : secondaryColor
+    : primaryColor === "#3b82f6"
+      ? "#ef4444"
+      : "#10b981";
 
   const labels = data.map((item) => formatDateForDisplay(item.date));
+
+  console.log("🏈 CFP: Chart labels:", labels);
+  console.log(
+    "🏈 CFP: Average seed chart data:",
+    data.map((item) => ({ date: item.date, seed: item.average_seed }))
+  );
+
+  console.log("🏈 CFP: Average Seed Dataset:", {
+    data: data.map((item, index) => ({
+      x: labels[index],
+      y: item.average_seed,
+    })),
+    yAxisID: "y1",
+  });
 
   const chartData = {
     labels,
@@ -254,8 +348,8 @@ export default function FootballTeamCFPBidHistory({
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const currentDate = labels[dataIndex];
-            const cfpBidPct = data[dataIndex].cfp_bid_pct;
-            const avgSeed = data[dataIndex].average_seed;
+            const cfpBidPct = data[dataIndex].cfp_bid_pct || 0;
+            const avgSeed = data[dataIndex].average_seed || 0;
 
             let innerHtml = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -389,7 +483,7 @@ export default function FootballTeamCFPBidHistory({
         type: "linear" as const,
         display: true,
         position: "right" as const,
-        min: 1,
+        min: 1, // Changed from 1
         max: 12,
         reverse: true,
         grid: {
