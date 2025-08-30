@@ -247,7 +247,12 @@ export default function FootballTeamCFPBidHistory({
         label: "Average Seed",
         data: data.map((item, index) => ({
           x: labels[index],
-          y: item.average_seed,
+          y:
+            item.average_seed === null ||
+            item.average_seed === undefined ||
+            item.average_seed === 0
+              ? null
+              : item.average_seed,
         })),
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
@@ -257,6 +262,7 @@ export default function FootballTeamCFPBidHistory({
         tension: 0.1,
         fill: false,
         yAxisID: "y1",
+        spanGaps: false, // This is key - it won't connect across null values
       },
     ],
   };
@@ -469,6 +475,7 @@ export default function FootballTeamCFPBidHistory({
           font: {
             size: isMobile ? 10 : 12,
           },
+          color: primaryColor, // Add this line
           callback: function (value: string | number) {
             return `${value}%`;
           },
@@ -483,7 +490,7 @@ export default function FootballTeamCFPBidHistory({
         type: "linear" as const,
         display: true,
         position: "right" as const,
-        min: 1, // Changed from 1
+        min: 1,
         max: 12,
         reverse: true,
         grid: {
@@ -493,6 +500,7 @@ export default function FootballTeamCFPBidHistory({
           font: {
             size: isMobile ? 10 : 12,
           },
+          color: finalSecondaryColor, // Add this line
           stepSize: 1,
           callback: function (value: string | number) {
             return `#${value}`;
