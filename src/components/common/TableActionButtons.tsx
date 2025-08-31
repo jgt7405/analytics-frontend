@@ -1,4 +1,3 @@
-// src/components/common/TableActionButtons.tsx
 "use client";
 
 import { Button } from "@/components/ui/Button";
@@ -9,7 +8,10 @@ import toast from "react-hot-toast";
 
 declare global {
   interface Window {
-    html2canvas: any;
+    html2canvas?: (
+      element: HTMLElement,
+      options?: object
+    ) => Promise<HTMLCanvasElement>;
   }
 }
 
@@ -46,7 +48,10 @@ export default function TableActionButtons({
   const [html2canvasLoaded, setHtml2canvasLoaded] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !window.html2canvas) {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.html2canvas !== "function"
+    ) {
       const script = document.createElement("script");
       script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
       script.async = true;
@@ -60,14 +65,14 @@ export default function TableActionButtons({
           document.body.removeChild(script);
         }
       };
-    } else if (window.html2canvas) {
+    } else if (typeof window.html2canvas === "function") {
       setHtml2canvasLoaded(true);
     }
   }, []);
 
   const handleDownload = async () => {
     if (downloading || disabled || !html2canvasLoaded) return;
-    if (!window.html2canvas) {
+    if (typeof window.html2canvas !== "function") {
       toast.error("Screenshot library not loaded. Please try again.");
       return;
     }
@@ -75,367 +80,210 @@ export default function TableActionButtons({
     try {
       setDownloading(true);
 
-      const contentElement = document.querySelector(
-        contentSelector
-      ) as HTMLElement;
-      if (!contentElement) {
-        throw new Error(`Element not found: ${contentSelector}`);
+      const targetElement = document.querySelector(contentSelector);
+      if (!targetElement) {
+        throw new Error("Target element not found");
       }
 
-      const explainerElement = document.querySelector(
-        explainerSelector || ".explainer-text, [class*='explainer']"
-      ) as HTMLElement;
+      const explainerElement = explainerSelector
+        ? document.querySelector(explainerSelector)
+        : null;
 
-      console.log("🔍 DEBUG: Starting screenshot process");
+      // Count teams and calculate width
+      const teamElements = targetElement.querySelectorAll(
+        '[alt*="logo"], img[src*="team_logos"]'
+      );
+      const teamCount = teamElements.length || 10;
+      const baseWidth = 350;
+      const widthPerTeam = 50;
+      const dynamicWidth = baseWidth + teamCount * widthPerTeam;
+      const desktopWidth = Math.min(dynamicWidth, 1400);
 
       const wrapper = document.createElement("div");
-      wrapper.style.backgroundColor = "#ffffff";
-      wrapper.style.padding = "24px";
-      wrapper.style.position = "absolute";
-      wrapper.style.left = "-9999px";
-      wrapper.style.fontFamily = "Arial, sans-serif";
-      wrapper.style.width = "auto";
-      wrapper.style.minWidth = "800px";
+      wrapper.style.cssText = `
+       position: fixed;
+       left: -9999px;
+       top: 0;
+       background-color: white;
+       padding: 20px;
+       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+       width: ${desktopWidth}px;
+       z-index: -1;
+     `;
 
-      // Header with proper logo aspect ratio and alignment
+      // Header
       const header = document.createElement("div");
-      header.style.display = "flex";
-      header.style.justifyContent = "space-between";
-      header.style.alignItems = "flex-start";
-      header.style.marginBottom = "20px";
-      header.style.paddingBottom = "16px";
-      header.style.borderBottom = "2px solid #e5e7eb";
-      header.style.width = "100%";
-      header.style.minHeight = "60px";
-      header.style.paddingTop = "0";
-
-      // Logo section
-      const logoDiv = document.createElement("div");
-      logoDiv.style.display = "flex";
-      logoDiv.style.alignItems = "flex-start";
-      logoDiv.style.justifyContent = "flex-start";
-      logoDiv.style.flexShrink = "0";
-      logoDiv.style.minWidth = "0";
+      header.style.cssText = `
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       margin-bottom: 20px;
+       padding-bottom: 12px;
+       border-bottom: 2px solid #e5e7eb;
+     `;
 
       const logo = document.createElement("img");
-      logo.src = "/images/JThom_Logo.png";
-      logo.alt = "JThom Analytics";
-      logo.style.height = "50px";
-      logo.style.width = "auto";
-      logo.style.objectFit = "contain";
-      logo.style.display = "block";
-      logo.style.maxWidth = "none";
-
-      logoDiv.appendChild(logo);
-
-      // Title section
-      const titleDiv = document.createElement("div");
-      titleDiv.style.flex = "1";
-      titleDiv.style.display = "flex";
-      titleDiv.style.alignItems = "flex-start";
-      titleDiv.style.justifyContent = "center";
-      titleDiv.style.paddingTop = "0";
-      titleDiv.style.marginTop = "0";
+      const isFootball = window.location.pathname.includes("/football");
+      logo.src = isFootball
+        ? "/images/JThom_Logo_Football.png"
+        : "/images/JThom_Logo.png";
+      logo.style.cssText = `height: 50px; width: auto;`;
 
       const titleElement = document.createElement("h1");
-      titleElement.textContent = pageTitle || title || "Basketball Analytics";
-      titleElement.style.margin = "0";
-      titleElement.style.padding = "0";
-      titleElement.style.fontSize = "22px";
-      titleElement.style.fontWeight = "400";
-      titleElement.style.color = "#1f2937";
-      titleElement.style.lineHeight = "1";
-      titleDiv.appendChild(titleElement);
+      titleElement.textContent = pageTitle || "Analytics";
+      titleElement.style.cssText = `
+       font-family: "Roboto Condensed", system-ui, sans-serif;
+       font-size: 1.25rem;
+       font-weight: 500;
+       color: #6b7280;
+       margin: 0;
+       text-align: center;
+       flex: 1;
+     `;
 
-      // Conference and date section
-      const confDiv = document.createElement("div");
-      confDiv.style.display = "flex";
-      confDiv.style.flexDirection = "column";
-      confDiv.style.alignItems = "flex-end";
-      confDiv.style.justifyContent = "flex-start";
-      confDiv.style.flexShrink = "0";
-      confDiv.style.minWidth = "150px";
-      confDiv.style.paddingTop = "0";
-      confDiv.style.marginTop = "0";
+      const infoSection = document.createElement("div");
+      infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-end; gap: 4px;`;
 
-      const conferenceParam = selectedConference || conference;
-      if (conferenceParam && conferenceParam !== "All Conferences") {
-        const confText = document.createElement("div");
-        confText.textContent = conferenceParam;
-        confText.style.fontSize = "16px";
-        confText.style.fontWeight = "500";
-        confText.style.color = "#4b5563";
-        confText.style.margin = "0";
-        confText.style.padding = "0";
-        confText.style.lineHeight = "1";
-        confDiv.appendChild(confText);
+      const confName = selectedConference || "All";
+      if (confName && confName !== "All") {
+        const formattedConfName = confName.replace(/ /g, "_");
+        const conferenceLogoUrl = `/images/conf_logos/${formattedConfName}.png`;
+
+        const confLogo = document.createElement("img");
+        confLogo.src = conferenceLogoUrl;
+        confLogo.style.cssText = `height: 30px; width: auto; max-width: 80px;`;
+
+        confLogo.onerror = () => {
+          confLogo.style.display = "none";
+          const conference = document.createElement("div");
+          conference.textContent = confName;
+          conference.style.cssText = `font-size: 14px; font-weight: 600; color: #1f2937;`;
+          infoSection.insertBefore(conference, infoSection.firstChild);
+        };
+
+        infoSection.appendChild(confLogo);
+      } else {
+        const conference = document.createElement("div");
+        conference.textContent = confName;
+        conference.style.cssText = `font-size: 14px; font-weight: 600; color: #1f2937;`;
+        infoSection.appendChild(conference);
       }
 
-      const dateText = document.createElement("div");
-      dateText.textContent = new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      dateText.style.fontSize = "14px";
-      dateText.style.color = "#9ca3af";
-      dateText.style.margin = "4px 0 0 0";
-      dateText.style.padding = "0";
-      dateText.style.lineHeight = "1";
-      confDiv.appendChild(dateText);
+      const date = document.createElement("div");
+      date.textContent = new Date().toLocaleDateString();
+      date.style.cssText = `font-size: 12px; color: #6b7280;`;
+      infoSection.appendChild(date);
 
-      header.appendChild(logoDiv);
-      header.appendChild(titleDiv);
-      header.appendChild(confDiv);
+      header.appendChild(logo);
+      header.appendChild(titleElement);
+      header.appendChild(infoSection);
       wrapper.appendChild(header);
 
-      // Table processing with extensive debugging
-      const tableClone = contentElement.cloneNode(true) as HTMLElement;
-      const table = tableClone.querySelector("table");
+      // Clone and force desktop layout
+      const clone = targetElement.cloneNode(true) as HTMLElement;
 
-      console.log("🔍 DEBUG: Original table found:", !!table);
+      // Override all mobile styles aggressively
+      const allElements = clone.querySelectorAll("*");
+      allElements.forEach((el) => {
+        const element = el as HTMLElement;
 
-      if (table) {
-        table.style.borderCollapse = "separate";
-        table.style.borderSpacing = "0";
-        table.style.width = "100%";
-        table.style.border = "1px solid #e5e7eb";
-        table.style.borderRadius = "8px";
-        table.style.overflow = "hidden";
-        table.style.marginBottom = "20px";
+        // Remove all responsive classes
+        element.className = element.className.replace(
+          /\b(sm|md|lg|xl):[^\s]*/g,
+          ""
+        );
+        element.classList.remove("flex-col", "md:flex-row", "sm:flex-col");
 
-        console.log("🔍 DEBUG: Table setup:", {
-          borderCollapse: table.style.borderCollapse,
-          computedBorderCollapse: window.getComputedStyle(table).borderCollapse,
-          tableLayout: window.getComputedStyle(table).tableLayout,
-        });
+        // Force desktop layout
+        if (element.style.flexDirection === "column") {
+          element.style.flexDirection = "row";
+        }
 
-        // Add thick border above summary rows
-        const summaryRows = table.querySelectorAll("tbody tr");
-        let foundFirstSummary = false;
+        // Chart containers
+        if (element.closest("svg") || element.tagName === "SVG") {
+          element.style.cssText = `
+      min-width: ${desktopWidth - 100}px !important;
+      width: 100% !important;
+      text-align: center !important;
+      display: block !important;
+    `;
+        }
 
-        summaryRows.forEach((row, index) => {
-          const rowEl = row as HTMLElement;
-          const firstCell = row.querySelector("td");
-          const cellText = firstCell?.textContent?.toLowerCase() || "";
+        // Team logos - force desktop size and centering
+        if (
+          element.tagName === "IMG" &&
+          (element as HTMLImageElement).src.includes("team_logos")
+        ) {
+          element.style.cssText = `
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px !important;
+      max-width: 24px !important;
+      object-fit: contain !important;
+      display: inline-block !important;
+      margin: 0 auto !important;
+    `;
+        }
 
-          const isSummary =
-            cellText.includes("conf win value") ||
-            cellText.includes("current record") ||
-            cellText.includes("est avg") ||
-            cellText.includes("avg finish") ||
-            cellText.includes("avg conf wins") ||
-            index >= summaryRows.length - 3;
+        // Center table cells and columns
+        if (element.tagName === "TD" || element.tagName === "TH") {
+          element.style.textAlign = "center";
+        }
 
-          if (isSummary && !foundFirstSummary) {
-            rowEl.style.borderTop = "3px solid #4b5563";
-            foundFirstSummary = true;
-          }
-        });
+        // Force center alignment for all table content
+        if (element.tagName === "TABLE") {
+          element.style.textAlign = "center";
+        }
 
-        // Process each cell with debugging
-        let cellIndex = 0;
-        table.querySelectorAll("td, th").forEach((cell) => {
-          const el = cell as HTMLElement;
-          cellIndex++;
+        // Force desktop font sizes
+        element.style.fontSize = "14px";
 
-          console.log(`🔍 DEBUG: Processing cell ${cellIndex}`);
-          console.log("Original cell:", {
-            tagName: cell.tagName,
-            innerHTML: el.innerHTML.substring(0, 100) + "...",
-            computedStyles: {
-              display: window.getComputedStyle(el).display,
-              verticalAlign: window.getComputedStyle(el).verticalAlign,
-              height: window.getComputedStyle(el).height,
-              padding: window.getComputedStyle(el).padding,
-              lineHeight: window.getComputedStyle(el).lineHeight,
-            },
-          });
+        // Center text elements
+        if (
+          element.tagName === "text" ||
+          element.classList.contains("chart-label")
+        ) {
+          element.style.textAlign = "center";
+        }
 
-          el.style.border = "1px solid #e5e7eb";
-          el.style.padding = "8px 12px";
-          el.style.verticalAlign = "middle";
-          el.style.fontSize = "14px";
-          el.style.fontWeight = "normal";
-          el.style.lineHeight = "1";
-          el.style.textAlign = "center";
+        // Center containers
+        if (
+          element.classList.contains("chart-container") ||
+          element.closest(".chart-container")
+        ) {
+          element.style.display = "flex";
+          element.style.justifyContent = "center";
+          element.style.alignItems = "center";
+        }
+      });
 
-          if (cell.tagName === "TH") {
-            el.style.backgroundColor = "#f8fafc";
-            el.style.color = "#374151";
-            el.style.fontWeight = "normal";
-          } else {
-            el.style.backgroundColor = "#ffffff";
-          }
+      // Force entire clone to desktop width and layout
+      clone.style.cssText = `
+       min-width: ${desktopWidth - 40}px !important;
+       width: 100% !important;
+       max-width: none !important;
+       font-size: 14px !important;
+       display: block !important;
+       text-align: center !important;
+     `;
 
-          // First column special handling
-          if (
-            cell.parentElement &&
-            Array.from(cell.parentElement.children).indexOf(cell) === 0
-          ) {
-            el.style.textAlign = "center";
-            el.style.fontWeight = "normal";
-            el.style.borderRight = "2px solid #d1d5db";
-          }
+      wrapper.appendChild(clone);
 
-          // Center images
-          const img = el.querySelector("img");
-          if (img) {
-            console.log(`🔍 DEBUG: Found image in cell ${cellIndex}`);
-            img.style.display = "block";
-            img.style.margin = "0 auto";
-            img.style.maxWidth = "32px";
-            img.style.maxHeight = "32px";
-            img.style.objectFit = "contain";
-          }
-
-          // Content extraction with fix for cells without absoluteDiv
-          let absoluteDiv: HTMLElement | null = null;
-          const childDivs = el.querySelectorAll("div");
-
-          // Check computed styles for absolute positioning
-          for (const div of childDivs) {
-            const computedStyle = window.getComputedStyle(div);
-            if (computedStyle.position === "absolute") {
-              absoluteDiv = div as HTMLElement;
-              break;
-            }
-          }
-
-          // Fallback to original selector
-          if (!absoluteDiv) {
-            absoluteDiv = el.querySelector(
-              'div[style*="position: absolute"]'
-            ) as HTMLElement;
-          }
-
-          if (absoluteDiv) {
-            const content = absoluteDiv.textContent?.trim() || "";
-            const bgColor =
-              window.getComputedStyle(absoluteDiv).backgroundColor;
-            const textColor = window.getComputedStyle(absoluteDiv).color;
-
-            console.log(`🔍 DEBUG: Cell ${cellIndex} - Found absoluteDiv:`, {
-              content: content,
-              originalStyles: {
-                position: absoluteDiv.style.position,
-                top: absoluteDiv.style.top,
-                left: absoluteDiv.style.left,
-                right: absoluteDiv.style.right,
-                bottom: absoluteDiv.style.bottom,
-                display: absoluteDiv.style.display,
-                alignItems: absoluteDiv.style.alignItems,
-                justifyContent: absoluteDiv.style.justifyContent,
-                height: absoluteDiv.style.height,
-                width: absoluteDiv.style.width,
-                transform: absoluteDiv.style.transform,
-              },
-              computedStyles: {
-                verticalAlign:
-                  window.getComputedStyle(absoluteDiv).verticalAlign,
-                display: window.getComputedStyle(absoluteDiv).display,
-                position: window.getComputedStyle(absoluteDiv).position,
-                top: window.getComputedStyle(absoluteDiv).top,
-                left: window.getComputedStyle(absoluteDiv).left,
-              },
-              backgroundColor: bgColor,
-              textColor: textColor,
-            });
-
-            el.innerHTML = content;
-
-            console.log(
-              `🔍 DEBUG: Cell ${cellIndex} after content extraction:`,
-              {
-                offsetHeight: el.offsetHeight,
-                clientHeight: el.clientHeight,
-                computedHeight: window.getComputedStyle(el).height,
-                verticalAlign: window.getComputedStyle(el).verticalAlign,
-                display: window.getComputedStyle(el).display,
-                padding: window.getComputedStyle(el).padding,
-                innerHTML: el.innerHTML,
-              }
-            );
-
-            el.style.verticalAlign = "middle";
-            el.style.textAlign = "center";
-
-            if (
-              bgColor &&
-              bgColor !== "transparent" &&
-              bgColor !== "rgba(0, 0, 0, 0)"
-            ) {
-              el.style.backgroundColor = bgColor;
-            }
-            if (textColor && textColor !== "rgba(0, 0, 0, 0)") {
-              el.style.color = textColor;
-            }
-          } else {
-            // ✅ FIX: Handle cells without absoluteDiv (summary rows)
-            const originalContent = el.textContent?.trim() || "";
-            if (originalContent) {
-              console.log(
-                `🔍 DEBUG: Cell ${cellIndex} - Adding padding for text-only cell:`,
-                originalContent
-              );
-
-              // Set minimum height and ensure proper centering
-              el.style.minHeight = "28px";
-              el.style.height = "28px";
-              el.style.lineHeight = "28px";
-              el.style.verticalAlign = "middle";
-              el.style.display = "table-cell";
-            }
-
-            console.log(`🔍 DEBUG: Cell ${cellIndex} - No absoluteDiv found:`, {
-              innerHTML: el.innerHTML.substring(0, 50),
-              textContent: el.textContent?.substring(0, 50),
-              offsetHeight: el.offsetHeight,
-              hasChildDivs: el.querySelectorAll("div").length,
-            });
-          }
-        });
-      }
-
-      wrapper.appendChild(tableClone);
-
-      // Add explainer text properly
       if (explainerElement) {
-        console.log("🔍 DEBUG: Adding explainer element");
         const explainerClone = explainerElement.cloneNode(true) as HTMLElement;
-        explainerClone.style.marginTop = "20px";
-        explainerClone.style.padding = "16px";
-        explainerClone.style.backgroundColor = "#f0f9ff";
-        explainerClone.style.border = "1px solid #bfdbfe";
-        explainerClone.style.borderRadius = "8px";
-        explainerClone.style.fontSize = "14px";
-        explainerClone.style.color = "#1e40af";
-        explainerClone.style.lineHeight = "1.5";
-        explainerClone.style.maxWidth = "100%";
-        explainerClone.style.display = "block";
-        explainerClone.style.visibility = "visible";
-
+        explainerClone.style.cssText = `
+         margin-top: 16px;
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+         font-size: 12px;
+         color: #6b7280;
+         line-height: 1.3;
+         width: 100%;
+       `;
         wrapper.appendChild(explainerClone);
       }
 
       document.body.appendChild(wrapper);
-
-      // Wait for images
-      const images = wrapper.querySelectorAll("img");
-      await Promise.all(
-        Array.from(images).map((img) => {
-          if (img.complete) return Promise.resolve();
-          return new Promise((resolve) => {
-            img.onload = () => resolve(void 0);
-            img.onerror = () => resolve(void 0);
-            setTimeout(() => resolve(void 0), 3000);
-          });
-        })
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("🔍 DEBUG: Taking screenshot...");
+      await new Promise((resolve) => setTimeout(resolve, 1500)); // Longer wait for mobile
 
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
@@ -443,51 +291,46 @@ export default function TableActionButtons({
         useCORS: true,
         allowTaint: true,
         logging: false,
-        width: wrapper.offsetWidth,
+        width: desktopWidth,
         height: wrapper.offsetHeight,
       });
 
       document.body.removeChild(wrapper);
 
       const timestamp = new Date().toISOString().split("T")[0];
-      const confFileName = (selectedConference || conference || "All")
-        .replace(/\s+/g, "_")
-        .replace(/[^a-zA-Z0-9_]/g, "");
-      const pageNameClean = (pageName || "analytics").replace(
-        /[^a-zA-Z0-9_]/g,
-        ""
-      );
-      const filename = `${confFileName}_${pageNameClean}_${timestamp}.png`;
+      const filename = `${selectedConference}_${pageName}_${timestamp}.png`;
 
-      if (isMobile && navigator.canShare) {
+      if (isMobile) {
         canvas.toBlob(async (blob: Blob | null) => {
           if (!blob) throw new Error("Failed to create image");
 
           const file = new File([blob], filename, { type: "image/png" });
-          try {
-            if (navigator.canShare({ files: [file] })) {
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
               await navigator.share({
                 files: [file],
-                title: pageTitle || title,
+                title: pageTitle || "Analytics",
               });
-            } else {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = filename;
-              a.click();
-              URL.revokeObjectURL(url);
-            }
-          } catch (shareError: any) {
-            if (shareError?.name !== "AbortError") {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = filename;
-              a.click();
-              URL.revokeObjectURL(url);
+              return;
+            } catch (shareError: unknown) {
+              if (
+                shareError &&
+                typeof shareError === "object" &&
+                "name" in shareError &&
+                shareError.name === "AbortError"
+              ) {
+                return;
+              }
             }
           }
+
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = filename;
+          link.click();
+          URL.revokeObjectURL(url);
         }, "image/png");
       } else {
         const link = document.createElement("a");
@@ -520,7 +363,7 @@ export default function TableActionButtons({
       }
 
       const shareText =
-        shareTitle || pageTitle || title || "Basketball Analytics";
+        shareTitle || pageTitle || title || "Football Analytics";
       const fullShareText = confShareParam
         ? `${confShareParam} ${shareText}`
         : shareText;
@@ -530,11 +373,16 @@ export default function TableActionButtons({
         try {
           await navigator.share({
             title: fullShareText,
-            text: `${fullShareText} - Basketball Analytics`,
+            text: `${fullShareText} - Sports Analytics`,
             url: url,
           });
-        } catch (shareError: any) {
-          if (shareError?.name !== "AbortError") {
+        } catch (shareError: unknown) {
+          if (
+            shareError &&
+            typeof shareError === "object" &&
+            "name" in shareError &&
+            shareError.name !== "AbortError"
+          ) {
             await navigator.clipboard.writeText(url);
             toast.success("Link copied to clipboard!");
           }
@@ -543,7 +391,7 @@ export default function TableActionButtons({
         const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
         window.open(twitterUrl, "_blank", "width=550,height=420");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Share failed:", error);
       try {
         const fallbackUrl = `${window.location.origin}${pathname || window.location.pathname}`;
@@ -568,9 +416,9 @@ export default function TableActionButtons({
         size="sm"
         variant="outline"
         className={`
-       bg-gray-700 text-white border-gray-700 hover:bg-gray-800 hover:border-gray-800 transition-colors duration-200 w-full
-       ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
-     `}
+         bg-gray-700 text-white border-gray-700 hover:bg-gray-800 hover:border-gray-800 transition-colors duration-200 w-full
+         ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
+       `}
         disabled={downloading || disabled || !html2canvasLoaded}
         aria-label={
           downloading ? "Creating image..." : "Download table as image"
@@ -591,9 +439,9 @@ export default function TableActionButtons({
         size="sm"
         variant="outline"
         className={`
-       bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 transition-colors duration-200 w-full
-       ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
-     `}
+         bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 transition-colors duration-200 w-full
+         ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
+       `}
         disabled={sharing || disabled}
         aria-label={sharing ? "Sharing..." : "Share this page"}
       >

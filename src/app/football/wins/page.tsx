@@ -244,8 +244,8 @@ export default function FootballWinsPage() {
                           contentSelector=".box-whisker-container"
                           selectedConference={selectedConference}
                           pageName="football-wins-chart"
-                          pageTitle={`Football Conference Wins Chart - ${selectedConference}`}
-                          shareTitle="Football Conference Wins Distribution"
+                          pageTitle={`Projected Conference Wins`}
+                          shareTitle="Projected Conference Wins Distribution"
                           explainerSelector=".box-whisker-explainer"
                         />
                       </div>
@@ -286,8 +286,8 @@ export default function FootballWinsPage() {
                           contentSelector=".wins-table"
                           selectedConference={selectedConference}
                           pageName="football-wins"
-                          pageTitle={`Football Wins - ${selectedConference}`}
-                          shareTitle="Football Conference Wins Analysis"
+                          pageTitle={`Projected Conference Wins`}
+                          shareTitle="Projected Conference Wins Analysis"
                           explainerSelector=".wins-explainer"
                         />
                       </div>
@@ -298,7 +298,7 @@ export default function FootballWinsPage() {
                 {/* Regular Season Box Whisker Chart Section */}
                 <div className="mb-8">
                   <h1 className="text-2xl font-normal text-gray-600 mb-4">
-                    Projected Total Wins
+                    Projected Regular Season Wins
                   </h1>
                   <div className="regular-season-box-whisker-container">
                     <FootballRegularSeasonBoxWhiskerChart
@@ -336,8 +336,8 @@ export default function FootballWinsPage() {
                           contentSelector=".regular-season-box-whisker-container"
                           selectedConference={selectedConference}
                           pageName="football-regular-season-wins-chart"
-                          pageTitle={`Football Regular Season Wins Chart - ${selectedConference}`}
-                          shareTitle="Football Regular Season Wins Distribution"
+                          pageTitle={`Projected Regular Season Wins`}
+                          shareTitle="Projected Regular Season Wins Distribution"
                           explainerSelector=".regular-season-box-whisker-explainer"
                         />
                       </div>
@@ -382,8 +382,8 @@ export default function FootballWinsPage() {
                           contentSelector=".regular-season-wins-table"
                           selectedConference={selectedConference}
                           pageName="football-regular-season-wins"
-                          pageTitle={`Football Regular Season Wins - ${selectedConference}`}
-                          shareTitle="Football Regular Season Wins Analysis"
+                          pageTitle={`Projected Regular Season Wins`}
+                          shareTitle="Projected Regular Season Wins Analysis"
                           explainerSelector=".regular-season-explainer"
                         />
                       </div>

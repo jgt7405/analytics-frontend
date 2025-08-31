@@ -125,7 +125,7 @@ export default function FootballTeamPage({
 
   const formatCFPPct = (value?: number) => {
     if (value === null || value === undefined) return "-";
-    if (value > 0 && value <= 1) return `${Math.round(value * 100)}%`;
+    if (value > 0 && value <= 1) return `${Math.round(value)}%`;
     return `${Math.round(value)}%`;
   };
 

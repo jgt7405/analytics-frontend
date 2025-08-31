@@ -54,13 +54,11 @@ export async function createOptimizedScreenshot(
 
 async function waitForAssetsToLoad(element: HTMLElement): Promise<void> {
   const images = element.querySelectorAll("img");
-  const fonts = document.fonts;
 
   const imagePromises = Array.from(images).map((img) => {
-    if (img.complete) return Promise.resolve();
+    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
     return new Promise<void>((resolve) => {
-      const timeout = setTimeout(() => resolve(), 3000);
-
+      const timeout = setTimeout(() => resolve(), 2000);
       img.onload = () => {
         clearTimeout(timeout);
         resolve();
@@ -72,12 +70,8 @@ async function waitForAssetsToLoad(element: HTMLElement): Promise<void> {
     });
   });
 
-  const fontPromise = fonts.ready.catch(() => {
-    console.warn("Fonts failed to load for screenshot");
-  });
-
-  await Promise.all([...imagePromises, fontPromise]);
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await Promise.all(imagePromises);
+  await new Promise((resolve) => setTimeout(resolve, 500));
 }
 
 function createScreenshotWrapper(
@@ -86,16 +80,17 @@ function createScreenshotWrapper(
 ): HTMLElement {
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `
-   position: fixed;
-   left: -9999px;
-   top: 0;
-   background-color: #ffffff;
-   padding: 24px;
-   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-   min-width: ${Math.max(element.scrollWidth + 48, 800)}px;
-   box-sizing: border-box;
-   z-index: -1;
- `;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: #ffffff;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    width: ${Math.max(element.scrollWidth + 48, 800)}px;
+    box-sizing: border-box;
+    z-index: -1000;
+    opacity: 0.01;
+  `;
 
   const header = createHeader(options);
   wrapper.appendChild(header);
@@ -116,48 +111,81 @@ function createScreenshotWrapper(
   return wrapper;
 }
 
+function getConferenceLogoPath(conference: string): string | null {
+  // Map common conference names to logo filenames
+  const conferenceLogos: { [key: string]: string } = {
+    "Big 12": "big_12.png",
+    SEC: "sec.png",
+    "Big Ten": "big_ten.png",
+    ACC: "acc.png",
+    "Pac-12": "pac_12.png",
+    "Mountain West": "mountain_west.png",
+    "American Athletic": "american.png",
+    "Conference USA": "cusa.png",
+    MAC: "mac.png",
+    "Sun Belt": "sun_belt.png",
+    WAC: "wac.png",
+    "Ivy League": "ivy.png",
+    "Patriot League": "patriot.png",
+    "Big Sky": "big_sky.png",
+    "Missouri Valley": "mvc.png",
+    "Southern Conference": "socon.png",
+    "Colonial Athletic": "caa.png",
+    "Ohio Valley": "ovc.png",
+    Southland: "southland.png",
+    "Big South": "big_south.png",
+    "Northeast Conference": "nec.png",
+    MEAC: "meac.png",
+    SWAC: "swac.png",
+  };
+
+  return conferenceLogos[conference] || null;
+}
+
 function createHeader(options: ScreenshotOptions): HTMLElement {
   const header = document.createElement("div");
   header.style.cssText = `
-   display: flex;
-   justify-content: space-between;
-   align-items: center;
-   margin-bottom: 20px;
-   padding-bottom: 16px;
-   border-bottom: 2px solid #e5e7eb;
-   width: 100%;
-   min-height: 60px;
- `;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e5e7eb;
+    width: 100%;
+    min-height: 60px;
+  `;
 
   const logoSection = document.createElement("div");
   logoSection.style.cssText = `
-   display: flex;
-   align-items: center;
-   gap: 12px;
-   flex-shrink: 0;
- `;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  `;
 
   const logo = document.createElement("img");
-  const isFootball = window.location.pathname.includes("/football");
+  const isFootball =
+    window.location.pathname.includes("/football") ||
+    options.pageName.includes("football");
   logo.src = isFootball
     ? "/images/JThom_Logo_Football.png"
     : "/images/JThom_Logo.png";
   logo.alt = "JThom Analytics";
   logo.style.cssText = `
-   height: 50px;
-   width: auto;
-   object-fit: contain;
-   flex-shrink: 0;
- `;
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+  `;
 
   const logoText = document.createElement("span");
   logoText.textContent = "JThom Analytics";
   logoText.style.cssText = `
-   font-size: 18px;
-   font-weight: 600;
-   color: #1f2937;
-   white-space: nowrap;
- `;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+  `;
 
   logoSection.appendChild(logo);
   logoSection.appendChild(logoText);
@@ -165,40 +193,69 @@ function createHeader(options: ScreenshotOptions): HTMLElement {
   const title = document.createElement("h1");
   title.textContent = options.pageTitle;
   title.style.cssText = `
-   font-family: "Roboto Condensed", system-ui, sans-serif;
-   font-size: 1.25rem;
-   font-weight: 500;
-   color: #666666;
-   margin: 0;
-   text-align: center;
-   flex: 1;
- `;
+    font-family: "Roboto Condensed", system-ui, sans-serif;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0;
+    text-align: center;
+    flex: 1;
+  `;
 
   const infoSection = document.createElement("div");
   infoSection.style.cssText = `
-   display: flex;
-   flex-direction: column;
-   align-items: flex-end;
-   gap: 4px;
-   flex-shrink: 0;
- `;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  `;
 
-  const conference = document.createElement("div");
-  conference.textContent = options.selectedConference;
-  conference.style.cssText = `
-   font-size: 14px;
-   font-weight: 600;
-   color: #1f2937;
- `;
+  // Try to show conference logo, fallback to text
+  const conferenceLogoPath = getConferenceLogoPath(options.selectedConference);
+  if (conferenceLogoPath) {
+    const conferenceLogo = document.createElement("img");
+    conferenceLogo.src = `/images/conf_logos/${conferenceLogoPath}`;
+    conferenceLogo.alt = options.selectedConference;
+    conferenceLogo.style.cssText = `
+      height: 30px;
+      width: auto;
+      object-fit: contain;
+      max-width: 80px;
+    `;
+
+    // Add error handler to fallback to text if logo fails to load
+    conferenceLogo.onerror = () => {
+      conferenceLogo.style.display = "none";
+      const conferenceText = document.createElement("div");
+      conferenceText.textContent = options.selectedConference;
+      conferenceText.style.cssText = `
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2937;
+      `;
+      infoSection.insertBefore(conferenceText, infoSection.firstChild);
+    };
+
+    infoSection.appendChild(conferenceLogo);
+  } else {
+    const conference = document.createElement("div");
+    conference.textContent = options.selectedConference;
+    conference.style.cssText = `
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+    `;
+    infoSection.appendChild(conference);
+  }
 
   const date = document.createElement("div");
   date.textContent = new Date().toLocaleDateString();
   date.style.cssText = `
-   font-size: 12px;
-   color: #6b7280;
- `;
+    font-size: 12px;
+    color: #6b7280;
+  `;
 
-  infoSection.appendChild(conference);
   infoSection.appendChild(date);
 
   header.appendChild(logoSection);
@@ -211,6 +268,7 @@ function createHeader(options: ScreenshotOptions): HTMLElement {
 function cleanElementForScreenshot(element: HTMLElement): HTMLElement {
   const clone = element.cloneNode(true) as HTMLElement;
 
+  // Remove buttons and tooltips
   clone.querySelectorAll("button, [role='button']").forEach((btn) => {
     (btn as HTMLElement).style.display = "none";
   });
@@ -219,34 +277,13 @@ function cleanElementForScreenshot(element: HTMLElement): HTMLElement {
     (tooltip as HTMLElement).style.display = "none";
   });
 
-  clone.querySelectorAll("table").forEach((table) => {
-    table.style.cssText = `
-     width: 100%;
-     border-collapse: collapse;
-     margin: 16px 0;
-     font-size: 12px;
-     border: 1px solid #d1d5db;
-   `;
-
-    table.querySelectorAll("th, td").forEach((cell) => {
-      const cellEl = cell as HTMLElement;
-      cellEl.style.padding = "8px 12px";
-      cellEl.style.border = "1px solid #d1d5db";
-      cellEl.style.textAlign = cell.tagName === "TH" ? "center" : "inherit";
-      cellEl.style.verticalAlign = "middle";
-      cellEl.style.backgroundColor =
-        cell.tagName === "TH" ? "#f8fafc" : "white";
-      cellEl.style.fontWeight = cell.tagName === "TH" ? "600" : "normal";
-    });
-
-    const firstColumnCells = table.querySelectorAll(
-      "th:first-child, td:first-child"
-    );
-    firstColumnCells.forEach((cell) => {
-      (cell as HTMLElement).style.textAlign = "left";
-      (cell as HTMLElement).style.borderRight = "2px solid #d1d5db";
-    });
-  });
+  // Ensure the clone retains its original styling
+  clone.style.position = "static";
+  clone.style.display = "block";
+  clone.style.visibility = "visible";
+  clone.style.opacity = "1";
+  clone.style.width = "100%";
+  clone.style.height = "auto";
 
   return clone;
 }
@@ -259,24 +296,32 @@ function createExplainerSection(): HTMLElement | null {
 
   const explainerClone = explainerElement.cloneNode(true) as HTMLElement;
   explainerClone.style.cssText = `
-   margin-top: 20px;
-   padding: 16px;
-   background-color: #f8fafc;
-   border: 1px solid #e5e7eb;
-   border-radius: 8px;
-   font-family: "Roboto Condensed", system-ui, sans-serif;
-   font-size: 12px;
-   color: #666666;
-   line-height: 1.3;
-   width: 100%;
-   box-sizing: border-box;
- `;
+    margin-top: 20px;
+    padding: 16px;
+    background-color: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.3;
+    width: 100%;
+    box-sizing: border-box;
+  `;
 
+  // Ensure all child elements maintain proper styling
   const explainerElements = explainerClone.querySelectorAll("*");
   explainerElements.forEach((el) => {
     const element = el as HTMLElement;
     element.style.position = "static";
     element.style.zIndex = "auto";
+    // Preserve the font and color inheritance
+    if (!element.style.color) {
+      element.style.color = "#6b7280";
+    }
+    if (!element.style.fontSize) {
+      element.style.fontSize = "12px";
+    }
   });
 
   return explainerClone;
@@ -285,13 +330,13 @@ function createExplainerSection(): HTMLElement | null {
 function createFooter(): HTMLElement {
   const footer = document.createElement("div");
   footer.style.cssText = `
-   margin-top: 20px;
-   padding-top: 12px;
-   border-top: 1px solid #e5e7eb;
-   font-size: 12px;
-   color: #9ca3af;
-   text-align: center;
- `;
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 12px;
+    color: #9ca3af;
+    text-align: center;
+  `;
 
   footer.textContent = `Generated by JThom Analytics • ${new Date().toLocaleString()}`;
 
