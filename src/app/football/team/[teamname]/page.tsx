@@ -117,6 +117,20 @@ export default function FootballTeamPage({
     fetchTeamData();
   }, [teamname]);
 
+  // Add this useEffect after the existing team data fetch useEffect
+  useEffect(() => {
+    // Set team's conference in URL for navigation to other tabs
+    if (teamData?.team_info?.conference) {
+      const params = new URLSearchParams(window.location.search);
+      params.set("conf", teamData.team_info.conference);
+      window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}?${params.toString()}`
+      );
+    }
+  }, [teamData]);
+
   const navigateToTeam = (targetTeam: string) => {
     if (targetTeam && targetTeam !== teamname) {
       router.push(`/football/team/${encodeURIComponent(targetTeam)}`);

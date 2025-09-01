@@ -22,9 +22,7 @@ export default function FootballStandingsPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
-  const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
-  );
+  const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     preferences.defaultConference,
   ]);

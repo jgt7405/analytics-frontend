@@ -96,7 +96,7 @@ export default function TableActionButtons({
       const logoImages = clone.querySelectorAll('img[src*="team_logos"]');
       console.log("🚀 DEBUG: Found", logoImages.length, "logos in clone");
 
-      const imageLoadPromises = Array.from(logoImages).map((img, index) => {
+      const imageLoadPromises = Array.from(logoImages).map((img, _index) => {
         const image = img as HTMLImageElement;
 
         // Force desktop logo size

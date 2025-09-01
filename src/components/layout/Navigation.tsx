@@ -20,11 +20,8 @@ function NavigationContent() {
   // Helper function to add conference to URL
   const addConferenceToUrl = useCallback(
     (basePath: string) => {
-      const currentConf = searchParams.get("conf");
-      if (currentConf) {
-        return `${basePath}?conf=${encodeURIComponent(currentConf)}`;
-      }
-      return basePath;
+      const currentConf = searchParams.get("conf") || "Big 12";
+      return `${basePath}?conf=${encodeURIComponent(currentConf)}`;
     },
     [searchParams]
   );

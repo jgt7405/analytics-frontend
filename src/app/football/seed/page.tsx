@@ -17,9 +17,7 @@ export default function FootballSeedPage() {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
-  const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
-  );
+  const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     "All Teams",
     preferences.defaultConference,

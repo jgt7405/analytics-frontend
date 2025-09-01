@@ -22,12 +22,10 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 
 export default function FootballWinsPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
-  const { preferences, updatePreference } = useUserPreferences();
+  const { updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
 
-  const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference || "Big 12"
-  );
+  const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>(
     []
   );

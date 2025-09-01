@@ -92,6 +92,19 @@ export default function FootballTeamWinValues({
     if (validGames.length === 0)
       return { continuousData: [], labels: [], twvData: [], cwvData: [] };
 
+    // 🔍 DEBUG: Log all game data
+    console.log(
+      "🔍 ALL VALID GAMES:",
+      validGames.map((g) => ({
+        opponent: g.opponent,
+        date: g.date,
+        status: g.status,
+        twv: g.twv,
+        cwv: g.cwv,
+        version_id: g.version_id,
+      }))
+    );
+
     // Deduplicate by date, keeping earliest version_id
     const dataByDate = new Map<string, FootballTeamGame>();
     validGames.forEach((game) => {
@@ -106,22 +119,66 @@ export default function FootballTeamWinValues({
       }
     });
 
+    // 🔍 DEBUG: Log deduplicated games
+    console.log(
+      "🔍 DEDUPLICATED GAMES:",
+      Array.from(dataByDate.entries()).map(([date, game]) => ({
+        date,
+        opponent: game.opponent,
+        twv: game.twv,
+        cwv: game.cwv,
+      }))
+    );
+
     const gameWithDates: GameWithDate[] = Array.from(dataByDate.values()).map(
       (game) => {
-        const [month, day] = game.date.split("/").map(Number);
-        const year = month >= 8 ? 2025 : 2026; // Changed to 2025/2026
-        const dateObj = new Date(year, month - 1, day);
+        let dateObj: Date;
+
+        // Handle both date formats: "MM/DD" or "YYYY-MM-DD"
+        if (game.date.includes("-")) {
+          // Format: "YYYY-MM-DD"
+          const [year, month, day] = game.date.split("-").map(Number);
+          dateObj = new Date(year, month - 1, day);
+          console.log(
+            `🔍 Parsed YYYY-MM-DD: ${game.date} -> ${dateObj.toDateString()}`
+          );
+        } else {
+          // Format: "MM/DD"
+          const [month, day] = game.date.split("/").map(Number);
+          const year = month >= 8 ? 2025 : 2026;
+          dateObj = new Date(year, month - 1, day);
+          console.log(
+            `🔍 Parsed MM/DD: ${game.date} -> ${dateObj.toDateString()} (year: ${year})`
+          );
+        }
+
         return { ...game, dateObj };
       }
     );
 
     gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
+    // 🔍 DEBUG: Log sorted games with dates
+    console.log(
+      "🔍 SORTED GAMES WITH DATES:",
+      gameWithDates.map((g) => ({
+        opponent: g.opponent,
+        originalDate: g.date,
+        parsedDate: g.dateObj.toDateString(),
+        twv: g.twv,
+        cwv: g.cwv,
+      }))
+    );
+
     // Filter to start from 8/22/2025 and end at current date
     const startDate = new Date(2025, 7, 22); // August 22, 2025
     const currentDate = new Date();
-    // Set current date to end of day to include today's data
     currentDate.setHours(23, 59, 59, 999);
+
+    console.log("🔍 DATE RANGE:", {
+      startDate: startDate.toDateString(),
+      currentDate: currentDate.toDateString(),
+    });
 
     const allDates: Date[] = [];
     const iterDate = new Date(startDate);
@@ -131,22 +188,54 @@ export default function FootballTeamWinValues({
       iterDate.setDate(iterDate.getDate() + 1);
     }
 
+    console.log(
+      "🔍 ALL CHART DATES:",
+      allDates.slice(0, 10).map((d) => d.toDateString()) +
+        "... (total: " +
+        allDates.length +
+        ")"
+    );
+
     let lastTWV = 0;
     let lastCWV = 0;
+
     const continuousData: ContinuousDataPoint[] = allDates.map((date) => {
-      const gameOnDate = gameWithDates.find(
+      // Check if there was a game the PREVIOUS day that would update values for today
+      const previousDate = new Date(date);
+      previousDate.setDate(previousDate.getDate() - 1);
+
+      const gameOnPreviousDate = gameWithDates.find(
         (game) =>
-          game.dateObj.getMonth() === date.getMonth() &&
-          game.dateObj.getDate() === date.getDate() &&
-          game.dateObj.getFullYear() === date.getFullYear()
+          game.dateObj.getMonth() === previousDate.getMonth() &&
+          game.dateObj.getDate() === previousDate.getDate() &&
+          game.dateObj.getFullYear() === previousDate.getFullYear()
       );
 
-      if (gameOnDate) {
-        if (gameOnDate.twv !== undefined && gameOnDate.twv !== null) {
-          lastTWV = gameOnDate.twv;
+      // Update values based on previous day's game results
+      if (gameOnPreviousDate) {
+        console.log(
+          `🔍 FOUND GAME ON PREVIOUS DAY: ${previousDate.toDateString()} - ${gameOnPreviousDate.opponent} (TWV: ${gameOnPreviousDate.twv}, CWV: ${gameOnPreviousDate.cwv})`
+        );
+
+        if (
+          gameOnPreviousDate.twv !== undefined &&
+          gameOnPreviousDate.twv !== null
+        ) {
+          const oldTWV = lastTWV;
+          lastTWV = gameOnPreviousDate.twv;
+          console.log(
+            `🔍 TWV UPDATE: ${oldTWV} -> ${lastTWV} for date ${date.toDateString()}`
+          );
         }
-        if (gameOnDate.cwv !== undefined && gameOnDate.cwv !== null) {
-          lastCWV = gameOnDate.cwv;
+        if (
+          gameOnPreviousDate.cwv !== undefined &&
+          gameOnPreviousDate.cwv !== null
+        ) {
+          const oldCWV = lastCWV;
+          lastCWV = gameOnPreviousDate.cwv;
+          console.log(
+            `🔍 CWV UPDATE: ${oldCWV} -> ${lastCWV} for date ${date.toDateString()}`
+          );
         }
       }
 
@@ -157,6 +246,16 @@ export default function FootballTeamWinValues({
         cwv: lastCWV,
       };
     });
+
+    // 🔍 DEBUG: Log final continuous data sample
+    console.log(
+      "🔍 FINAL CONTINUOUS DATA (first 10):",
+      continuousData.slice(0, 10).map((d) => ({
+        date: d.date,
+        twv: d.twv,
+        cwv: d.cwv,
+      }))
+    );
 
     const labels = continuousData.map((point) => point.date);
     const twvData = continuousData.map((point) => point.twv);

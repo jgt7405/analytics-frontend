@@ -21,25 +21,24 @@ export default function FootballSchedulePage() {
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
 
-  // Initialize with safe defaults
+  // Initialize with Big 12 default
   const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     "Big 12",
   ]);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // URL state management - no "All Teams" for football schedule
+  // URL state management - rename to avoid conflict
   const { handleConferenceChange: handleUrlConferenceChange } =
     useConferenceUrl(setSelectedConference, availableConferences, false);
 
-  // Handle URL parameter initialization WITHOUT hardcoded validation
+  // Handle URL parameter initialization
   useEffect(() => {
     if (!hasInitialized) {
       const confParam = searchParams.get("conf");
 
       if (confParam) {
         const decodedConf = decodeURIComponent(confParam);
-        // Accept any conference from URL initially
         setSelectedConference(decodedConf);
       }
       setHasInitialized(true);
@@ -68,18 +67,10 @@ export default function FootballSchedulePage() {
           : scheduleResponse.conferences[0];
 
         setSelectedConference(fallbackConference);
-
-        // Update URL to reflect the corrected conference
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("conf", fallbackConference);
-        window.history.replaceState(
-          {},
-          "",
-          `${window.location.pathname}?${params.toString()}`
-        );
+        handleUrlConferenceChange(fallbackConference);
       }
     }
-  }, [scheduleResponse, selectedConference, searchParams]);
+  }, [scheduleResponse, selectedConference, handleUrlConferenceChange]);
 
   // Memoized filtered data
   const filteredScheduleData = useMemo(() => {
@@ -135,7 +126,6 @@ export default function FootballSchedulePage() {
   const handleConferenceChange = useCallback(
     (newConference: string) => {
       startMeasurement("conference-change");
-      setSelectedConference(newConference);
       handleUrlConferenceChange(newConference);
       updatePreference("defaultConference", newConference);
 
