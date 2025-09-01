@@ -89,38 +89,85 @@ export default function TableActionButtons({
         ? document.querySelector(explainerSelector)
         : null;
 
-      // Count teams and calculate width
-      const teamElements = targetElement.querySelectorAll(
-        '[alt*="logo"], img[src*="team_logos"]'
-      );
-      const teamCount = teamElements.length || 10;
-      const baseWidth = 350;
-      const widthPerTeam = 50;
-      const dynamicWidth = baseWidth + teamCount * widthPerTeam;
-      const desktopWidth = Math.min(dynamicWidth, 1400);
+      // Clone immediately without viewport changes
+      const clone = targetElement.cloneNode(true) as HTMLElement;
 
+      // Force desktop layout with image reloading
+      const logoImages = clone.querySelectorAll('img[src*="team_logos"]');
+      console.log("🚀 DEBUG: Found", logoImages.length, "logos in clone");
+
+      const imageLoadPromises = Array.from(logoImages).map((img, index) => {
+        const image = img as HTMLImageElement;
+
+        // Force desktop logo size
+        image.style.cssText = `
+          width: 24px !important;
+          height: 24px !important;
+          object-fit: contain !important;
+          display: block !important;
+        `;
+
+        // Fix container
+        const container = image.closest("div");
+        if (container) {
+          container.style.cssText += `
+            width: 30px !important;
+            height: 30px !important;
+            min-width: 30px !important;
+          `;
+        }
+
+        // Force image reload in clone
+        return new Promise<void>((resolve) => {
+          if (image.complete && image.naturalWidth > 0) {
+            resolve();
+          } else {
+            const originalSrc = image.src;
+            image.onload = () => resolve();
+            image.onerror = () => resolve(); // Continue even if load fails
+            image.src = ""; // Clear src
+            image.src = originalSrc; // Reload
+
+            // Timeout fallback
+            setTimeout(resolve, 2000);
+          }
+        });
+      });
+
+      // Wait for all images to load
+      await Promise.all(imageLoadPromises);
+
+      // Calculate width based on team count and chart type
+      const teamCount = logoImages.length || 10;
+
+      // Dynamic width calculation without restrictive max limit
+      const baseWidth = 400;
+      const teamSpacing = 50; // Consistent spacing per team
+      const desktopWidth = Math.max(baseWidth + teamCount * teamSpacing, 600);
+
+      // Create wrapper
       const wrapper = document.createElement("div");
       wrapper.style.cssText = `
-       position: fixed;
-       left: -9999px;
-       top: 0;
-       background-color: white;
-       padding: 20px;
-       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-       width: ${desktopWidth}px;
-       z-index: -1;
-     `;
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        background-color: white;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        width: ${desktopWidth}px;
+        z-index: -1;
+      `;
 
       // Header
       const header = document.createElement("div");
       header.style.cssText = `
-       display: flex;
-       justify-content: space-between;
-       align-items: center;
-       margin-bottom: 20px;
-       padding-bottom: 12px;
-       border-bottom: 2px solid #e5e7eb;
-     `;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e5e7eb;
+      `;
 
       const logo = document.createElement("img");
       const isFootball = window.location.pathname.includes("/football");
@@ -132,14 +179,14 @@ export default function TableActionButtons({
       const titleElement = document.createElement("h1");
       titleElement.textContent = pageTitle || "Analytics";
       titleElement.style.cssText = `
-       font-family: "Roboto Condensed", system-ui, sans-serif;
-       font-size: 1.25rem;
-       font-weight: 500;
-       color: #6b7280;
-       margin: 0;
-       text-align: center;
-       flex: 1;
-     `;
+        font-family: "Roboto Condensed", system-ui, sans-serif;
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin: 0;
+        text-align: center;
+        flex: 1;
+      `;
 
       const infoSection = document.createElement("div");
       infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-end; gap: 4px;`;
@@ -179,111 +226,34 @@ export default function TableActionButtons({
       header.appendChild(infoSection);
       wrapper.appendChild(header);
 
-      // Clone and force desktop layout
-      const clone = targetElement.cloneNode(true) as HTMLElement;
-
-      // Override all mobile styles aggressively
-      const allElements = clone.querySelectorAll("*");
-      allElements.forEach((el) => {
-        const element = el as HTMLElement;
-
-        // Remove all responsive classes
-        element.className = element.className.replace(
-          /\b(sm|md|lg|xl):[^\s]*/g,
-          ""
-        );
-        element.classList.remove("flex-col", "md:flex-row", "sm:flex-col");
-
-        // Force desktop layout
-        if (element.style.flexDirection === "column") {
-          element.style.flexDirection = "row";
-        }
-
-        // Chart containers
-        if (element.closest("svg") || element.tagName === "SVG") {
-          element.style.cssText = `
-      min-width: ${desktopWidth - 100}px !important;
-      width: 100% !important;
-      text-align: center !important;
-      display: block !important;
-    `;
-        }
-
-        // Team logos - force desktop size and centering
-        if (
-          element.tagName === "IMG" &&
-          (element as HTMLImageElement).src.includes("team_logos")
-        ) {
-          element.style.cssText = `
-      width: 24px !important;
-      height: 24px !important;
-      min-width: 24px !important;
-      max-width: 24px !important;
-      object-fit: contain !important;
-      display: inline-block !important;
-      margin: 0 auto !important;
-    `;
-        }
-
-        // Center table cells and columns
-        if (element.tagName === "TD" || element.tagName === "TH") {
-          element.style.textAlign = "center";
-        }
-
-        // Force center alignment for all table content
-        if (element.tagName === "TABLE") {
-          element.style.textAlign = "center";
-        }
-
-        // Force desktop font sizes
-        element.style.fontSize = "14px";
-
-        // Center text elements
-        if (
-          element.tagName === "text" ||
-          element.classList.contains("chart-label")
-        ) {
-          element.style.textAlign = "center";
-        }
-
-        // Center containers
-        if (
-          element.classList.contains("chart-container") ||
-          element.closest(".chart-container")
-        ) {
-          element.style.display = "flex";
-          element.style.justifyContent = "center";
-          element.style.alignItems = "center";
-        }
-      });
-
-      // Force entire clone to desktop width and layout
+      // Add clone to wrapper with content-aware styling
       clone.style.cssText = `
-       min-width: ${desktopWidth - 40}px !important;
-       width: 100% !important;
-       max-width: none !important;
-       font-size: 14px !important;
-       display: block !important;
-       text-align: center !important;
-     `;
-
+        width: 100% !important;
+        max-width: ${desktopWidth - 40}px !important;
+        min-width: fit-content !important;
+        font-size: 14px !important;
+        display: block !important;
+        text-align: center !important;
+        overflow: visible !important;
+      `;
       wrapper.appendChild(clone);
 
+      // Add explainer if exists
       if (explainerElement) {
         const explainerClone = explainerElement.cloneNode(true) as HTMLElement;
         explainerClone.style.cssText = `
-         margin-top: 16px;
-         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-         font-size: 12px;
-         color: #6b7280;
-         line-height: 1.3;
-         width: 100%;
-       `;
+          margin-top: 16px;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+          font-size: 12px;
+          color: #6b7280;
+          line-height: 1.3;
+          width: 100%;
+        `;
         wrapper.appendChild(explainerClone);
       }
 
       document.body.appendChild(wrapper);
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Longer wait for mobile
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
@@ -416,9 +386,9 @@ export default function TableActionButtons({
         size="sm"
         variant="outline"
         className={`
-         bg-gray-700 text-white border-gray-700 hover:bg-gray-800 hover:border-gray-800 transition-colors duration-200 w-full
-         ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
-       `}
+          bg-gray-700 text-white border-gray-700 hover:bg-gray-800 hover:border-gray-800 transition-colors duration-200 w-full
+          ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
+        `}
         disabled={downloading || disabled || !html2canvasLoaded}
         aria-label={
           downloading ? "Creating image..." : "Download table as image"
@@ -439,9 +409,9 @@ export default function TableActionButtons({
         size="sm"
         variant="outline"
         className={`
-         bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 transition-colors duration-200 w-full
-         ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
-       `}
+          bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 transition-colors duration-200 w-full
+          ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
+        `}
         disabled={sharing || disabled}
         aria-label={sharing ? "Sharing..." : "Share this page"}
       >
