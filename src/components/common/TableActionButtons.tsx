@@ -140,10 +140,19 @@ export default function TableActionButtons({
       // Calculate width based on team count and chart type
       const teamCount = logoImages.length || 10;
 
-      // Dynamic width calculation without restrictive max limit
-      const baseWidth = 400;
-      const teamSpacing = 50; // Consistent spacing per team
-      const desktopWidth = Math.max(baseWidth + teamCount * teamSpacing, 600);
+      // Device-specific width calculation
+      let baseWidth, teamSpacing;
+      if (isMobile) {
+        baseWidth = 100;
+        teamSpacing = 45;
+      } else {
+        baseWidth = 425;
+        teamSpacing = 45;
+      }
+
+      // Calculate width with minimum of 400px
+      const calculatedWidth = baseWidth + teamCount * teamSpacing;
+      const desktopWidth = Math.max(calculatedWidth, 400);
 
       // Create wrapper
       const wrapper = document.createElement("div");
