@@ -140,9 +140,15 @@ export default function TableActionButtons({
       // Calculate width based on team count and chart type
       const teamCount = logoImages.length || 10;
 
+      // Detect mobile from user agent
+      const isMobileDevice =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+
       // Device-specific width calculation
       let baseWidth, teamSpacing;
-      if (isMobile) {
+      if (isMobileDevice) {
         baseWidth = 100;
         teamSpacing = 45;
       } else {
