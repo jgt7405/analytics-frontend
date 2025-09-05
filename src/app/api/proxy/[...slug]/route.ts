@@ -14,6 +14,7 @@ export async function GET(
     const BACKEND_BASE_URL =
       "https://jthomprodbackend-production.up.railway.app/api";
     //  "https://jthomprodbackend-production.up.railway.app/api";
+
     let backendPath = "";
 
     console.log("Proxy slug:", slug);
