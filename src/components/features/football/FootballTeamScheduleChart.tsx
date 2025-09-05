@@ -28,46 +28,35 @@ export default function FootballTeamScheduleChart({
   navigateToTeam,
 }: FootballTeamScheduleChartProps) {
   const formatDate = (dateStr: string) => {
-    if (!dateStr || dateStr.trim() === "") return "TBD";
+    if (!dateStr) return "TBD";
 
-    try {
-      // Handle MM/DD format - use current year
-      if (dateStr.includes("/") && !dateStr.includes("-")) {
-        const parts = dateStr.trim().split("/");
-        if (parts.length === 2) {
-          const month = parseInt(parts[0], 10);
-          const day = parseInt(parts[1], 10);
+    // For MM/DD format, manually construct date string
+    if (dateStr.includes("/")) {
+      const [month, day] = dateStr.split("/");
+      const m = parseInt(month);
+      const d = parseInt(day);
 
-          if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-            const currentYear = new Date().getFullYear();
-            const date = new Date(currentYear, month - 1, day);
-
-            if (!isNaN(date.getTime())) {
-              return date.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              });
-            }
-          }
-        }
+      if (m && d && m <= 12 && d <= 31) {
+        // Use month names array instead of Date constructor
+        const months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        return `${months[m - 1]} ${d}`;
       }
-
-      // Handle YYYY-MM-DD format
-      if (dateStr.includes("-")) {
-        const date = new Date(dateStr + "T00:00:00");
-        if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          });
-        }
-      }
-
-      return "TBD";
-    } catch (error) {
-      console.warn("Date parsing error:", error, "for date:", dateStr);
-      return "TBD";
     }
+
+    return "TBD";
   };
 
   const formatProbability = (prob?: number) => {
