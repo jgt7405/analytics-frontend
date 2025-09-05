@@ -28,7 +28,27 @@ export default function FootballTeamScheduleChart({
   navigateToTeam,
 }: FootballTeamScheduleChartProps) {
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return "TBD";
+
+    // Handle MM/DD format
+    if (dateStr.includes("/")) {
+      const [month, day] = dateStr.split("/");
+      const monthNum = parseInt(month, 10);
+      const dayNum = parseInt(day, 10);
+
+      if (isNaN(monthNum) || isNaN(dayNum)) return "TBD";
+
+      const date = new Date(2025, monthNum - 1, dayNum);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    }
+
+    // Handle other formats
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "TBD";
+
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
