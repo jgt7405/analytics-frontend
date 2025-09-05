@@ -28,31 +28,46 @@ export default function FootballTeamScheduleChart({
   navigateToTeam,
 }: FootballTeamScheduleChartProps) {
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return "TBD";
+    if (!dateStr || dateStr.trim() === "") return "TBD";
 
-    // Handle MM/DD format
-    if (dateStr.includes("/")) {
-      const [month, day] = dateStr.split("/");
-      const monthNum = parseInt(month, 10);
-      const dayNum = parseInt(day, 10);
+    try {
+      // Handle MM/DD format - use current year
+      if (dateStr.includes("/") && !dateStr.includes("-")) {
+        const parts = dateStr.trim().split("/");
+        if (parts.length === 2) {
+          const month = parseInt(parts[0], 10);
+          const day = parseInt(parts[1], 10);
 
-      if (isNaN(monthNum) || isNaN(dayNum)) return "TBD";
+          if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+            const currentYear = new Date().getFullYear();
+            const date = new Date(currentYear, month - 1, day);
 
-      const date = new Date(2025, monthNum - 1, dayNum);
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
+            if (!isNaN(date.getTime())) {
+              return date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              });
+            }
+          }
+        }
+      }
+
+      // Handle YYYY-MM-DD format
+      if (dateStr.includes("-")) {
+        const date = new Date(dateStr + "T00:00:00");
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
+        }
+      }
+
+      return "TBD";
+    } catch (error) {
+      console.warn("Date parsing error:", error, "for date:", dateStr);
+      return "TBD";
     }
-
-    // Handle other formats
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return "TBD";
-
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
   };
 
   const formatProbability = (prob?: number) => {
