@@ -4,6 +4,7 @@ import FootballTeamCFPBidHistory from "@/components/features/football/FootballTe
 import FootballTeamCFPProgressionHistory from "@/components/features/football/FootballTeamCFPProgressionHistory";
 import FootballTeamFirstPlaceHistory from "@/components/features/football/FootballTeamFirstPlaceHistory";
 import FootballTeamSchedule from "@/components/features/football/FootballTeamSchedule";
+import FootballTeamScheduleChart from "@/components/features/football/FootballTeamScheduleChart";
 import FootballTeamSeedProjections from "@/components/features/football/FootballTeamSeedProjections";
 import FootballTeamStandingsHistory from "@/components/features/football/FootballTeamStandingsHistory";
 import FootballTeamWinHistory from "@/components/features/football/FootballTeamWinHistory";
@@ -18,7 +19,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-// API response interfaces
 interface ApiSeedCount {
   Seed: string | number;
   Percentage: number;
@@ -55,6 +55,11 @@ interface FootballTeamGame {
   twv?: number;
   cwv?: number;
   sagarin_rank?: number;
+  opp_rnk?: number;
+  team_win_prob?: number;
+  sag12_win_prob?: number;
+  team_points?: number;
+  opp_points?: number;
 }
 
 interface FootballTeamData {
@@ -62,7 +67,6 @@ interface FootballTeamData {
   schedule: FootballTeamGame[];
 }
 
-// Component expected interface
 interface FootballWinSeedCount {
   Wins: number;
   Seed: string | number;
@@ -117,9 +121,7 @@ export default function FootballTeamPage({
     fetchTeamData();
   }, [teamname]);
 
-  // Add this useEffect after the existing team data fetch useEffect
   useEffect(() => {
-    // Set team's conference in URL for navigation to other tabs
     if (teamData?.team_info?.conference) {
       const params = new URLSearchParams(window.location.search);
       params.set("conf", teamData.team_info.conference);
@@ -143,7 +145,6 @@ export default function FootballTeamPage({
     return `${Math.round(value)}%`;
   };
 
-  // Transform API data to component expected format
   const transformFootballWinSeedCounts = (
     apiData: ApiSeedCount[]
   ): FootballWinSeedCount[] => {
@@ -191,7 +192,6 @@ export default function FootballTeamPage({
       <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
         <div className="space-y-3">
           {isMobile ? (
-            // Mobile Layout
             <div className="space-y-2">
               {/* Mobile Header */}
               <div className="bg-white rounded-lg px-2 py-4">
@@ -287,7 +287,7 @@ export default function FootballTeamPage({
                 </div>
               </div>
 
-              {/* Schedule */}
+              {/* Mobile Schedule */}
               <div
                 className="bg-white rounded-lg mx-2"
                 style={{ border: "1px solid #d1d5db" }}
@@ -304,7 +304,21 @@ export default function FootballTeamPage({
                 </div>
               </div>
 
-              {/* Charts */}
+              {/* Mobile Schedule Chart */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  Schedule Chart
+                </h2>
+                <FootballTeamScheduleChart
+                  schedule={schedule}
+                  navigateToTeam={navigateToTeam}
+                />
+              </div>
+
+              {/* Rest of mobile components... */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -329,7 +343,6 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Mobile Historical Wins Chart */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -344,7 +357,6 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Mobile Projected Standings History */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -359,7 +371,6 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Mobile First Place Probability History */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -374,7 +385,6 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Mobile CFP Bid History */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -389,7 +399,6 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Mobile CFP Progression History */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -405,9 +414,8 @@ export default function FootballTeamPage({
               </div>
             </div>
           ) : (
-            // Desktop Layout
             <div className="w-full">
-              {/* Desktop Header Row */}
+              {/* Desktop Header */}
               <div className="bg-white rounded-lg p-4 mb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -429,7 +437,6 @@ export default function FootballTeamPage({
                     </div>
                   </div>
 
-                  {/* Center: Records */}
                   <div className="flex gap-4">
                     <div
                       className="bg-white p-4 rounded-lg"
@@ -482,7 +489,6 @@ export default function FootballTeamPage({
                     </div>
                   </div>
 
-                  {/* Right: Conference Logo */}
                   <div className="flex flex-col items-center ml-4">
                     <Image
                       src={conferenceLogoUrl}
@@ -504,17 +510,34 @@ export default function FootballTeamPage({
 
               {/* Desktop Content Grid */}
               <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
-                {/* Schedule */}
-                <div
-                  className="bg-white rounded-lg"
-                  style={{ minWidth: "350px", border: "1px solid #d1d5db" }}
-                >
-                  <div className="pt-0 px-3 pb-3 border-b border-gray-200 -mt-2">
-                    <h2 className="text-lg font-semibold">Team Schedule</h2>
+                {/* Left Column - Schedules */}
+                <div className="space-y-3">
+                  {/* Existing Schedule */}
+                  <div
+                    className="bg-white rounded-lg"
+                    style={{ minWidth: "350px", border: "1px solid #d1d5db" }}
+                  >
+                    <div className="pt-0 px-3 pb-3 border-b border-gray-200 -mt-2">
+                      <h2 className="text-lg font-semibold">Team Schedule</h2>
+                    </div>
+                    <div className="border-b border-gray-200"></div>
+                    <div className="pt-0 px-3 pb-3 flex justify-center items-center min-h-[300px] -mt-6">
+                      <FootballTeamSchedule
+                        schedule={schedule}
+                        navigateToTeam={navigateToTeam}
+                      />
+                    </div>
                   </div>
-                  <div className="border-b border-gray-200"></div>
-                  <div className="pt-0 px-3 pb-3 flex justify-center items-center min-h-[300px] -mt-6">
-                    <FootballTeamSchedule
+
+                  {/* Schedule Chart underneath */}
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      Schedule Chart
+                    </h2>
+                    <FootballTeamScheduleChart
                       schedule={schedule}
                       navigateToTeam={navigateToTeam}
                     />
@@ -547,7 +570,6 @@ export default function FootballTeamPage({
                     />
                   </div>
 
-                  {/* Desktop Historical Wins Chart */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
@@ -562,7 +584,6 @@ export default function FootballTeamPage({
                     />
                   </div>
 
-                  {/* Desktop Projected Standings History */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
@@ -577,7 +598,6 @@ export default function FootballTeamPage({
                     />
                   </div>
 
-                  {/* Desktop First Place Probability History */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
@@ -592,7 +612,6 @@ export default function FootballTeamPage({
                     />
                   </div>
 
-                  {/* Desktop CFP Bid History */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
@@ -607,7 +626,6 @@ export default function FootballTeamPage({
                     />
                   </div>
 
-                  {/* Desktop CFP Progression History */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}

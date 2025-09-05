@@ -297,6 +297,15 @@ export interface FootballTeamGame {
   opponent_logo: string;
   location: string;
   status: string;
+  twv?: number;
+  cwv?: number;
+  sagarin_rank?: number;
+  // Add these new fields:
+  opp_rnk?: number;
+  team_win_prob?: number;
+  sag12_win_prob?: number;
+  team_points?: number;
+  opp_points?: number;
 }
 
 export interface FootballTeamData {
