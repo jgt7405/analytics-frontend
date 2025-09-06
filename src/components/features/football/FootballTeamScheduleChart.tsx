@@ -28,16 +28,31 @@ export default function FootballTeamScheduleChart({
   navigateToTeam,
 }: FootballTeamScheduleChartProps) {
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return "TBD";
+    console.log("Debug - Input dateStr:", dateStr, typeof dateStr);
 
-    // Handle MM/DD format
+    if (!dateStr) {
+      console.log("Debug - No dateStr, returning TBD");
+      return "TBD";
+    }
+
+    // Handle MM/DD format (this is what your backend sends)
     if (dateStr.includes("/")) {
-      const [month, day] = dateStr.split("/");
+      const parts = dateStr.split("/");
+      console.log("Debug - Split parts:", parts);
+
+      if (parts.length !== 2) {
+        console.log("Debug - Invalid parts length, returning TBD");
+        return "TBD";
+      }
+
+      const [month, day] = parts;
       const m = parseInt(month, 10);
       const d = parseInt(day, 10);
 
-      // Validate month and day values
+      console.log("Debug - Parsed month:", m, "day:", d);
+
       if (isNaN(m) || isNaN(d) || m < 1 || m > 12 || d < 1 || d > 31) {
+        console.log("Debug - Invalid month/day values, returning TBD");
         return "TBD";
       }
 
@@ -56,38 +71,12 @@ export default function FootballTeamScheduleChart({
         "Dec",
       ];
 
-      return `${months[m - 1]} ${d}`;
+      const result = `${months[m - 1]} ${d}`;
+      console.log("Debug - Final result:", result);
+      return result;
     }
 
-    // Handle YYYY-MM-DD format (if your data sometimes comes in this format)
-    if (dateStr.includes("-")) {
-      try {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) {
-          return "TBD";
-        }
-
-        const months = [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ];
-
-        return `${months[date.getMonth()]} ${date.getDate()}`;
-      } catch {
-        return "TBD";
-      }
-    }
-
+    console.log("Debug - No slash found, returning TBD");
     return "TBD";
   };
 
