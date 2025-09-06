@@ -3,10 +3,18 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useMemo, useState } from "react";
 
+// Constants
+const CHART_HEIGHT = 450;
+const CHART_WIDTH = 380;
+const MARGIN = { top: 20, right: 60, bottom: 40, left: 60 };
+const PLOT_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
+const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
+
 interface FootballTeamGame {
   date: string;
   opponent: string;
   opponent_logo?: string;
+  opponent_primary_color?: string;
   location: string;
   status: string;
   sag12_win_prob?: number;
@@ -17,10 +25,21 @@ interface FootballTeamGame {
 interface AllScheduleGame {
   team: string;
   opponent: string;
+  opponent_primary_color?: string;
   sag12_win_prob: number;
   team_conf: string;
   team_conf_catg: string;
   status: string;
+}
+
+interface GameWithPosition extends FootballTeamGame {
+  percentilePosition: number;
+  gameIndex: number;
+}
+
+interface PositionedGame extends GameWithPosition {
+  isRightSide: boolean;
+  adjustedY: number;
 }
 
 interface FootballTeamScheduleDifficultyProps {
@@ -54,8 +73,9 @@ export default function FootballTeamScheduleDifficulty({
   const [comparisonFilter, setComparisonFilter] =
     useState<ComparisonFilter>("all_fbs");
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
+  const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-  // Filter team's games based on game filter
   const teamGames = useMemo(() => {
     if (!allScheduleData) return [];
 
@@ -75,12 +95,12 @@ export default function FootballTeamScheduleDifficulty({
     });
   }, [schedule, gameFilter, allScheduleData]);
 
-  // Create comparison dataset based on comparison filter
   const comparisonDataset = useMemo(() => {
     if (!allScheduleData) return [];
 
     const filtered = allScheduleData.filter((game: AllScheduleGame) => {
-      // Filter by game completion status
+      if (game.team_conf === "FCS") return false;
+
       switch (gameFilter) {
         case "completed":
           if (!["W", "L"].includes(game.status)) return false;
@@ -93,12 +113,11 @@ export default function FootballTeamScheduleDifficulty({
           break;
       }
 
-      // Filter by comparison criteria
       switch (comparisonFilter) {
         case "conference":
           return game.team_conf === teamConference;
         case "all_fbs":
-          return game.team_conf_catg !== "FCS";
+          return game.team_conf !== "FCS";
         case "power_4":
           return game.team_conf_catg === "Power 4";
         case "non_power_4":
@@ -111,7 +130,6 @@ export default function FootballTeamScheduleDifficulty({
     return filtered;
   }, [allScheduleData, comparisonFilter, teamConference, gameFilter]);
 
-  // Calculate percentiles from comparison dataset
   const percentiles = useMemo(() => {
     const sag12Probs = comparisonDataset
       .map((game: AllScheduleGame) => game.sag12_win_prob)
@@ -120,6 +138,9 @@ export default function FootballTeamScheduleDifficulty({
     if (sag12Probs.length === 0) return [];
 
     const percentileValues = [];
+
+    percentileValues.push({ percentile: 0, value: sag12Probs[0] });
+
     for (let i = 10; i <= 100; i += 10) {
       const index = Math.floor((i / 100) * sag12Probs.length) - 1;
       const value = sag12Probs[Math.max(0, index)];
@@ -129,15 +150,16 @@ export default function FootballTeamScheduleDifficulty({
     return percentileValues;
   }, [comparisonDataset]);
 
-  // Position team games based on percentiles
-  const teamGamePositions = useMemo(() => {
+  const teamGamePositions = useMemo((): GameWithPosition[] => {
     return teamGames.map((game, index) => {
       const sag12Prob = game.sag12_win_prob!;
 
-      let percentilePosition = 0;
+      let percentilePosition = 100;
+
       for (let i = 0; i < percentiles.length; i++) {
         if (sag12Prob <= percentiles[i].value) {
-          const prevValue = i === 0 ? 0 : percentiles[i - 1].value;
+          const prevValue =
+            i === 0 ? percentiles[0].value : percentiles[i - 1].value;
           const currValue = percentiles[i].value;
           const prevPercentile = i === 0 ? 0 : percentiles[i - 1].percentile;
           const currPercentile = percentiles[i].percentile;
@@ -153,17 +175,138 @@ export default function FootballTeamScheduleDifficulty({
         }
       }
 
-      if (percentilePosition === 0) percentilePosition = 100;
+      if (sag12Prob < percentiles[0].value) {
+        percentilePosition = 0;
+      }
 
       return { ...game, percentilePosition, gameIndex: index };
     });
   }, [teamGames, percentiles]);
 
-  const chartHeight = 400;
-  const chartWidth = 300;
-  const margin = { top: 20, right: 60, bottom: 40, left: 60 };
-  const plotHeight = chartHeight - margin.top - margin.bottom;
-  const plotWidth = chartWidth - margin.left - margin.right;
+  const positionedGames = useMemo((): PositionedGame[] => {
+    const sortedByDifficulty = [...teamGamePositions].sort(
+      (a, b) => a.percentilePosition - b.percentilePosition
+    );
+
+    const positioned: PositionedGame[] = [];
+    const minSpacing = 36;
+
+    sortedByDifficulty.forEach((game, index) => {
+      const isRightSide = index % 2 === 0;
+
+      // Start with logo at same Y as the dot
+      const gameY = MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
+      let logoY = gameY;
+
+      // Check for collisions with existing logos on same side
+      const sameSideLogos = positioned.filter(
+        (p) => p.isRightSide === isRightSide
+      );
+
+      let hasCollision = true;
+      let attempts = 0;
+
+      while (hasCollision && attempts < 20) {
+        hasCollision = false;
+
+        for (const existingLogo of sameSideLogos) {
+          if (Math.abs(logoY - existingLogo.adjustedY) < minSpacing) {
+            hasCollision = true;
+
+            // Move based on difficulty order - harder games go up, easier go down
+            if (game.percentilePosition < existingLogo.percentilePosition) {
+              logoY = existingLogo.adjustedY - minSpacing; // Move up (harder)
+            } else {
+              logoY = existingLogo.adjustedY + minSpacing; // Move down (easier)
+            }
+            break;
+          }
+        }
+        attempts++;
+      }
+
+      // Keep within chart bounds
+      logoY = Math.max(
+        MARGIN.top + 16,
+        Math.min(MARGIN.top + PLOT_HEIGHT - 16, logoY)
+      );
+
+      positioned.push({
+        ...game,
+        isRightSide,
+        adjustedY: logoY,
+      });
+    });
+
+    return positioned;
+  }, [teamGamePositions]);
+
+  const getGameRank = (game: PositionedGame) => {
+    const allGamesInFilter = comparisonDataset
+      .map((g) => g.sag12_win_prob)
+      .sort((a, b) => a - b);
+
+    const gameProb = game.sag12_win_prob || 0;
+    const rank = allGamesInFilter.filter((prob) => prob <= gameProb).length;
+
+    return rank;
+  };
+
+  const getFilterDescription = () => {
+    switch (comparisonFilter) {
+      case "conference":
+        return `${teamConference} conference`;
+      case "all_fbs":
+        return "all FBS";
+      case "power_4":
+        return "Power 4 conferences";
+      case "non_power_4":
+        return "Non Power 4 conferences";
+      default:
+        return "all FBS";
+    }
+  };
+
+  const Tooltip = ({
+    game,
+    position,
+    onClose,
+  }: {
+    game: PositionedGame;
+    position: { x: number; y: number };
+    onClose: () => void;
+  }) => {
+    const rank = getGameRank(game);
+    const winProb = Math.round((game.sag12_win_prob || 0) * 100);
+    const percentile = Math.round(game.percentilePosition);
+
+    return (
+      <div
+        className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50 min-w-[220px]"
+        style={{
+          left: position.x,
+          top: position.y,
+          color: game.opponent_primary_color || "#1f2937",
+        }}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 w-4 h-4 flex items-center justify-center text-xs"
+        >
+          ×
+        </button>
+        <div className="text-sm font-semibold mb-1">{game.opponent}</div>
+        <div className="text-xs space-y-1">
+          <div>Location: {game.location}</div>
+          <div>{winProb}% Win Probability for #12 Rated Team</div>
+          <div>
+            #{rank} Most Difficult Game Out of {comparisonDataset.length} Games
+            in {getFilterDescription()} ({percentile} Percentile)
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   if (comparisonDataset.length === 0) {
     return (
@@ -174,8 +317,7 @@ export default function FootballTeamScheduleDifficulty({
   }
 
   return (
-    <div className="w-full">
-      {/* Filter Controls */}
+    <div className="w-full relative">
       <div className="mb-4 space-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -220,33 +362,29 @@ export default function FootballTeamScheduleDifficulty({
         </div>
       </div>
 
-      {/* Chart */}
       <div className="flex justify-center">
         <svg
-          width={chartWidth}
-          height={chartHeight}
+          width={CHART_WIDTH}
+          height={CHART_HEIGHT}
           className="border border-gray-200 rounded"
+          onClick={() => setHoveredGame(null)}
         >
-          <rect width={chartWidth} height={chartHeight} fill="white" />
+          <rect width={CHART_WIDTH} height={CHART_HEIGHT} fill="white" />
 
-          {/* Percentile Lines */}
           {percentiles.map((percentile) => {
-            const y =
-              margin.top +
-              plotHeight -
-              (percentile.percentile / 100) * plotHeight;
+            const y = MARGIN.top + (percentile.percentile / 100) * PLOT_HEIGHT;
             return (
               <g key={percentile.percentile}>
                 <line
-                  x1={margin.left}
-                  x2={margin.left + plotWidth}
+                  x1={MARGIN.left}
+                  x2={MARGIN.left + PLOT_WIDTH}
                   y1={y}
                   y2={y}
                   stroke="#e5e7eb"
                   strokeWidth={1}
                 />
                 <text
-                  x={margin.left - 10}
+                  x={MARGIN.left - 10}
                   y={y + 4}
                   textAnchor="end"
                   className="text-xs fill-gray-600"
@@ -254,7 +392,7 @@ export default function FootballTeamScheduleDifficulty({
                   {percentile.percentile}%
                 </text>
                 <text
-                  x={margin.left + plotWidth + 10}
+                  x={MARGIN.left + PLOT_WIDTH + 10}
                   y={y + 4}
                   textAnchor="start"
                   className="text-xs fill-gray-600"
@@ -265,40 +403,38 @@ export default function FootballTeamScheduleDifficulty({
             );
           })}
 
-          {/* Vertical axis line */}
           <line
-            x1={margin.left + plotWidth / 2}
-            x2={margin.left + plotWidth / 2}
-            y1={margin.top}
-            y2={margin.top + plotHeight}
+            x1={MARGIN.left + PLOT_WIDTH / 2}
+            x2={MARGIN.left + PLOT_WIDTH / 2}
+            y1={MARGIN.top}
+            y2={MARGIN.top + PLOT_HEIGHT}
             stroke="#374151"
             strokeWidth={2}
           />
 
-          {/* Team games */}
-          {teamGamePositions.map((game, index) => {
-            const y =
-              margin.top +
-              plotHeight -
-              (game.percentilePosition / 100) * plotHeight;
-            const circleX = margin.left + plotWidth / 2;
-            const logoX = circleX + 40 + (index % 2) * 20;
+          {positionedGames.map((game) => {
+            const gameY =
+              MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
+            const circleX = MARGIN.left + PLOT_WIDTH / 2;
+            const sideMultiplier = game.isRightSide ? 1 : -1;
+            const logoX = circleX + sideMultiplier * 80;
+            const opponentColor = game.opponent_primary_color || "#9ca3af";
 
             return (
               <g key={`${game.opponent}-${game.date}`}>
                 <line
-                  x1={circleX + 6}
-                  x2={logoX - 16}
-                  y1={y}
-                  y2={y}
-                  stroke="#9ca3af"
-                  strokeWidth={1}
+                  x1={circleX + (game.isRightSide ? 6 : -6)}
+                  x2={logoX + (game.isRightSide ? -16 : 16)}
+                  y1={gameY}
+                  y2={game.adjustedY}
+                  stroke={opponentColor}
+                  strokeWidth={1.5}
                   strokeDasharray="3,3"
                 />
 
                 <circle
                   cx={circleX}
-                  cy={y}
+                  cy={gameY}
                   r={6}
                   fill={
                     game.status === "W"
@@ -314,9 +450,23 @@ export default function FootballTeamScheduleDifficulty({
                 {game.opponent_logo && (
                   <foreignObject
                     x={logoX - 16}
-                    y={y - 16}
+                    y={game.adjustedY - 16}
                     width={32}
                     height={32}
+                    style={{ cursor: "pointer" }}
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTooltipPosition({
+                        x: rect.right + 10,
+                        y: rect.top - 10,
+                      });
+                      setHoveredGame(game);
+                    }}
+                    onMouseLeave={() => setHoveredGame(null)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHoveredGame(null);
+                    }}
                   >
                     <TeamLogo
                       logoUrl={game.opponent_logo}
@@ -329,8 +479,8 @@ export default function FootballTeamScheduleDifficulty({
                 {!game.opponent_logo && (
                   <text
                     x={logoX}
-                    y={y + 4}
-                    textAnchor="start"
+                    y={game.adjustedY + 4}
+                    textAnchor={game.isRightSide ? "start" : "end"}
                     className="text-xs fill-gray-700"
                   >
                     {game.opponent.length > 8
@@ -342,29 +492,54 @@ export default function FootballTeamScheduleDifficulty({
             );
           })}
 
-          {/* Y-axis labels */}
           <text
-            x={margin.left - 40}
-            y={margin.top + plotHeight / 2}
+            x={MARGIN.left - 45}
+            y={MARGIN.top + PLOT_HEIGHT / 2}
             textAnchor="middle"
-            transform={`rotate(-90, ${margin.left - 40}, ${margin.top + plotHeight / 2})`}
+            transform={`rotate(-90, ${MARGIN.left - 45}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
             Difficulty Percentile
           </text>
 
           <text
-            x={chartWidth / 2}
-            y={margin.top - 5}
+            x={MARGIN.left + PLOT_WIDTH + 45}
+            y={MARGIN.top + PLOT_HEIGHT / 2}
             textAnchor="middle"
+            transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 45}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Schedule Difficulty
+            Win Probability for #12 Rated Team
+          </text>
+
+          <text
+            x={MARGIN.left + PLOT_WIDTH + 15}
+            y={MARGIN.top - 8}
+            textAnchor="start"
+            className="text-xs fill-gray-500"
+          >
+            Hardest
+          </text>
+
+          <text
+            x={MARGIN.left + PLOT_WIDTH + 15}
+            y={MARGIN.top + PLOT_HEIGHT + 18}
+            textAnchor="start"
+            className="text-xs fill-gray-500"
+          >
+            Easiest
           </text>
         </svg>
+
+        {hoveredGame && (
+          <Tooltip
+            game={hoveredGame}
+            position={tooltipPosition}
+            onClose={() => setHoveredGame(null)}
+          />
+        )}
       </div>
 
-      {/* Legend and info */}
       <div className="mt-4 text-xs text-gray-600">
         <div className="flex flex-wrap gap-4 justify-center">
           <div className="flex items-center gap-1">
