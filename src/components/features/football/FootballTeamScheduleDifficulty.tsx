@@ -189,46 +189,44 @@ export default function FootballTeamScheduleDifficulty({
     );
 
     const positioned: PositionedGame[] = [];
-    const minSpacing = 36;
+    const minSpacing = 40; // Increased spacing
 
     sortedByDifficulty.forEach((game, index) => {
       const isRightSide = index % 2 === 0;
 
-      // Start with logo at same Y as the dot
       const gameY = MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
       let logoY = gameY;
 
-      // Check for collisions with existing logos on same side
+      // Get existing logos on same side
       const sameSideLogos = positioned.filter(
         (p) => p.isRightSide === isRightSide
       );
 
-      let hasCollision = true;
-      let attempts = 0;
-
-      while (hasCollision && attempts < 20) {
-        hasCollision = false;
+      // Find non-overlapping position
+      for (let attempts = 0; attempts < 50; attempts++) {
+        let hasCollision = false;
 
         for (const existingLogo of sameSideLogos) {
           if (Math.abs(logoY - existingLogo.adjustedY) < minSpacing) {
             hasCollision = true;
 
-            // Move based on difficulty order - harder games go up, easier go down
+            // Move away from collision while preserving difficulty order
             if (game.percentilePosition < existingLogo.percentilePosition) {
-              logoY = existingLogo.adjustedY - minSpacing; // Move up (harder)
+              logoY = existingLogo.adjustedY - minSpacing;
             } else {
-              logoY = existingLogo.adjustedY + minSpacing; // Move down (easier)
+              logoY = existingLogo.adjustedY + minSpacing;
             }
             break;
           }
         }
-        attempts++;
+
+        if (!hasCollision) break;
       }
 
-      // Keep within chart bounds
+      // Ensure within bounds
       logoY = Math.max(
-        MARGIN.top + 16,
-        Math.min(MARGIN.top + PLOT_HEIGHT - 16, logoY)
+        MARGIN.top + 20,
+        Math.min(MARGIN.top + PLOT_HEIGHT - 20, logoY)
       );
 
       positioned.push({
@@ -455,11 +453,35 @@ export default function FootballTeamScheduleDifficulty({
                     height={32}
                     style={{ cursor: "pointer" }}
                     onMouseEnter={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setTooltipPosition({
-                        x: rect.right + 10,
-                        y: rect.top - 10,
-                      });
+                      const mouseEvent = e.nativeEvent as MouseEvent;
+                      const chartRect = e.currentTarget
+                        .closest("svg")
+                        ?.getBoundingClientRect();
+
+                      if (chartRect) {
+                        const tooltipWidth = 220;
+                        const tooltipHeight = 80;
+
+                        let x = mouseEvent.clientX - chartRect.left + 10;
+                        let y = mouseEvent.clientY - chartRect.top + 100;
+
+                        // Keep within chart bounds
+                        if (x + tooltipWidth > chartRect.width) {
+                          x =
+                            mouseEvent.clientX -
+                            chartRect.left -
+                            tooltipWidth -
+                            10;
+                        }
+                        if (y < 0) {
+                          y = mouseEvent.clientY - chartRect.top + 20;
+                        }
+                        if (y + tooltipHeight > chartRect.height) {
+                          y = chartRect.height - tooltipHeight - 10;
+                        }
+
+                        setTooltipPosition({ x, y });
+                      }
                       setHoveredGame(game);
                     }}
                     onMouseLeave={() => setHoveredGame(null)}
@@ -513,7 +535,7 @@ export default function FootballTeamScheduleDifficulty({
           </text>
 
           <text
-            x={MARGIN.left + PLOT_WIDTH + 15}
+            x={MARGIN.left + PLOT_WIDTH - 150}
             y={MARGIN.top - 8}
             textAnchor="start"
             className="text-xs fill-gray-500"
@@ -522,7 +544,7 @@ export default function FootballTeamScheduleDifficulty({
           </text>
 
           <text
-            x={MARGIN.left + PLOT_WIDTH + 15}
+            x={MARGIN.left + PLOT_WIDTH - 150}
             y={MARGIN.top + PLOT_HEIGHT + 18}
             textAnchor="start"
             className="text-xs fill-gray-500"
