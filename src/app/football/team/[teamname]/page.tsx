@@ -5,6 +5,7 @@ import FootballTeamCFPProgressionHistory from "@/components/features/football/Fo
 import FootballTeamFirstPlaceHistory from "@/components/features/football/FootballTeamFirstPlaceHistory";
 import FootballTeamSchedule from "@/components/features/football/FootballTeamSchedule";
 import FootballTeamScheduleChart from "@/components/features/football/FootballTeamScheduleChart";
+import FootballTeamScheduleDifficulty from "@/components/features/football/FootballTeamScheduleDifficulty";
 import FootballTeamSeedProjections from "@/components/features/football/FootballTeamSeedProjections";
 import FootballTeamStandingsHistory from "@/components/features/football/FootballTeamStandingsHistory";
 import FootballTeamWinHistory from "@/components/features/football/FootballTeamWinHistory";
@@ -60,11 +61,21 @@ interface FootballTeamGame {
   sag12_win_prob?: number;
   team_points?: number;
   opp_points?: number;
+  team_conf?: string;
+  team_conf_catg?: string;
 }
 
 interface FootballTeamData {
   team_info: FootballTeamInfo;
   schedule: FootballTeamGame[];
+  all_schedule_data: Array<{
+    team: string;
+    opponent: string;
+    sag12_win_prob: number;
+    team_conf: string;
+    team_conf_catg: string;
+    status: string; // Add this missing property
+  }>;
 }
 
 interface FootballWinSeedCount {
@@ -318,7 +329,7 @@ export default function FootballTeamPage({
                 />
               </div>
 
-              {/* Rest of mobile components... */}
+              {/* Mobile Win Values */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -329,6 +340,22 @@ export default function FootballTeamPage({
                 <FootballTeamWinValues schedule={schedule} />
               </div>
 
+              {/* Mobile Schedule Difficulty */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  Schedule Difficulty
+                </h2>
+                <FootballTeamScheduleDifficulty
+                  schedule={schedule}
+                  allScheduleData={teamData.all_schedule_data}
+                  teamConference={team_info.conference}
+                />
+              </div>
+
+              {/* Rest of mobile components */}
               <div
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
@@ -512,7 +539,6 @@ export default function FootballTeamPage({
               <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
                 {/* Left Column - Schedules */}
                 <div className="space-y-3">
-                  {/* Existing Schedule */}
                   <div
                     className="bg-white rounded-lg"
                     style={{ minWidth: "350px", border: "1px solid #d1d5db" }}
@@ -529,7 +555,6 @@ export default function FootballTeamPage({
                     </div>
                   </div>
 
-                  {/* Schedule Chart underneath */}
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
@@ -540,6 +565,21 @@ export default function FootballTeamPage({
                     <FootballTeamScheduleChart
                       schedule={schedule}
                       navigateToTeam={navigateToTeam}
+                    />
+                  </div>
+
+                  {/* Desktop Schedule Difficulty */}
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      Schedule Difficulty
+                    </h2>
+                    <FootballTeamScheduleDifficulty
+                      schedule={schedule}
+                      allScheduleData={teamData.all_schedule_data}
+                      teamConference={team_info.conference}
                     />
                   </div>
                 </div>

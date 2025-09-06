@@ -14,13 +14,23 @@ interface FootballTeamGame {
   team_conf_catg?: string;
 }
 
+interface AllScheduleGame {
+  team: string;
+  opponent: string;
+  sag12_win_prob: number;
+  team_conf: string;
+  team_conf_catg: string;
+  status: string;
+}
+
 interface FootballTeamScheduleDifficultyProps {
   schedule: FootballTeamGame[];
+  allScheduleData: AllScheduleGame[];
   teamConference?: string;
 }
 
 type ComparisonFilter = "conference" | "all_fbs" | "power_4" | "non_power_4";
-type GameFilter = "all" | "completed";
+type GameFilter = "all" | "completed" | "wins" | "losses";
 
 const COMPARISON_OPTIONS = [
   { value: "conference" as ComparisonFilter, label: "Conference Only" },
@@ -32,10 +42,13 @@ const COMPARISON_OPTIONS = [
 const GAME_OPTIONS = [
   { value: "all" as GameFilter, label: "All Games" },
   { value: "completed" as GameFilter, label: "Completed Only" },
+  { value: "wins" as GameFilter, label: "Wins Only" },
+  { value: "losses" as GameFilter, label: "Losses Only" },
 ];
 
 export default function FootballTeamScheduleDifficulty({
   schedule,
+  allScheduleData,
   teamConference,
 }: FootballTeamScheduleDifficultyProps) {
   const [comparisonFilter, setComparisonFilter] =
@@ -44,20 +57,43 @@ export default function FootballTeamScheduleDifficulty({
 
   // Filter team's games based on game filter
   const teamGames = useMemo(() => {
+    if (!allScheduleData) return [];
+
     return schedule.filter((game) => {
       if (!game.sag12_win_prob) return false;
-      if (gameFilter === "completed" && !["W", "L"].includes(game.status)) {
-        return false;
+
+      switch (gameFilter) {
+        case "completed":
+          return ["W", "L"].includes(game.status);
+        case "wins":
+          return game.status === "W";
+        case "losses":
+          return game.status === "L";
+        default:
+          return true;
       }
-      return true;
     });
-  }, [schedule, gameFilter]);
+  }, [schedule, gameFilter, allScheduleData]);
 
   // Create comparison dataset based on comparison filter
   const comparisonDataset = useMemo(() => {
-    return schedule.filter((game) => {
-      if (!game.sag12_win_prob) return false;
+    if (!allScheduleData) return [];
 
+    const filtered = allScheduleData.filter((game: AllScheduleGame) => {
+      // Filter by game completion status
+      switch (gameFilter) {
+        case "completed":
+          if (!["W", "L"].includes(game.status)) return false;
+          break;
+        case "wins":
+          if (game.status !== "W") return false;
+          break;
+        case "losses":
+          if (game.status !== "L") return false;
+          break;
+      }
+
+      // Filter by comparison criteria
       switch (comparisonFilter) {
         case "conference":
           return game.team_conf === teamConference;
@@ -71,13 +107,15 @@ export default function FootballTeamScheduleDifficulty({
           return true;
       }
     });
-  }, [schedule, comparisonFilter, teamConference]);
+
+    return filtered;
+  }, [allScheduleData, comparisonFilter, teamConference, gameFilter]);
 
   // Calculate percentiles from comparison dataset
   const percentiles = useMemo(() => {
     const sag12Probs = comparisonDataset
-      .map((game) => game.sag12_win_prob!)
-      .sort((a, b) => a - b);
+      .map((game: AllScheduleGame) => game.sag12_win_prob)
+      .sort((a: number, b: number) => a - b);
 
     if (sag12Probs.length === 0) return [];
 
