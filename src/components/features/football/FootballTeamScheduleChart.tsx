@@ -30,14 +30,43 @@ export default function FootballTeamScheduleChart({
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "TBD";
 
-    // For MM/DD format, manually construct date string
+    // Handle MM/DD format
     if (dateStr.includes("/")) {
       const [month, day] = dateStr.split("/");
-      const m = parseInt(month);
-      const d = parseInt(day);
+      const m = parseInt(month, 10);
+      const d = parseInt(day, 10);
 
-      if (m && d && m <= 12 && d <= 31) {
-        // Use month names array instead of Date constructor
+      // Validate month and day values
+      if (isNaN(m) || isNaN(d) || m < 1 || m > 12 || d < 1 || d > 31) {
+        return "TBD";
+      }
+
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+
+      return `${months[m - 1]} ${d}`;
+    }
+
+    // Handle YYYY-MM-DD format (if your data sometimes comes in this format)
+    if (dateStr.includes("-")) {
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+          return "TBD";
+        }
+
         const months = [
           "Jan",
           "Feb",
@@ -52,7 +81,10 @@ export default function FootballTeamScheduleChart({
           "Nov",
           "Dec",
         ];
-        return `${months[m - 1]} ${d}`;
+
+        return `${months[date.getMonth()]} ${date.getDate()}`;
+      } catch {
+        return "TBD";
       }
     }
 
