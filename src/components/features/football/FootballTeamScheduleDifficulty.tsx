@@ -3,12 +3,11 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useMemo, useState } from "react";
 
-// Constants
+// Constants - Adjusted for mobile
 const CHART_HEIGHT = 450;
-const CHART_WIDTH = 380;
+const CHART_WIDTH_DESKTOP = 380;
+const CHART_WIDTH_MOBILE = 320;
 const MARGIN = { top: 20, right: 60, bottom: 40, left: 60 };
-const PLOT_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
-const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 
 interface FootballTeamGame {
   date: string;
@@ -48,21 +47,21 @@ interface FootballTeamScheduleDifficultyProps {
   teamConference?: string;
 }
 
-type ComparisonFilter = "conference" | "all_fbs" | "power_4" | "non_power_4";
+type ComparisonFilter = "all_fbs" | "power_4" | "non_power_4" | "conference";
 type GameFilter = "all" | "completed" | "wins" | "losses";
 
 const COMPARISON_OPTIONS = [
-  { value: "conference" as ComparisonFilter, label: "Conference Only" },
-  { value: "all_fbs" as ComparisonFilter, label: "All FBS" },
-  { value: "power_4" as ComparisonFilter, label: "Power 4 Only" },
-  { value: "non_power_4" as ComparisonFilter, label: "Non Power 4 Only" },
+  { value: "all_fbs" as ComparisonFilter, label: "FBS" },
+  { value: "power_4" as ComparisonFilter, label: "Power 4" },
+  { value: "non_power_4" as ComparisonFilter, label: "Non Pwr 4" },
+  { value: "conference" as ComparisonFilter, label: "Conference" },
 ];
 
 const GAME_OPTIONS = [
-  { value: "all" as GameFilter, label: "All Games" },
-  { value: "completed" as GameFilter, label: "Completed Only" },
-  { value: "wins" as GameFilter, label: "Wins Only" },
-  { value: "losses" as GameFilter, label: "Losses Only" },
+  { value: "all" as GameFilter, label: "All" },
+  { value: "completed" as GameFilter, label: "Completed" },
+  { value: "wins" as GameFilter, label: "Wins" },
+  { value: "losses" as GameFilter, label: "Losses" },
 ];
 
 export default function FootballTeamScheduleDifficulty({
@@ -75,6 +74,12 @@ export default function FootballTeamScheduleDifficulty({
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+  // Detect mobile
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
+  const CHART_WIDTH = isMobile ? CHART_WIDTH_MOBILE : CHART_WIDTH_DESKTOP;
+  const PLOT_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
+  const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 
   const teamGames = useMemo(() => {
     if (!allScheduleData) return [];
@@ -141,11 +146,16 @@ export default function FootballTeamScheduleDifficulty({
 
     percentileValues.push({ percentile: 0, value: sag12Probs[0] });
 
-    for (let i = 10; i <= 100; i += 10) {
-      const index = Math.floor((i / 100) * sag12Probs.length) - 1;
+    for (let i = 10; i <= 90; i += 10) {
+      const index = Math.ceil((i / 100) * sag12Probs.length) - 1;
       const value = sag12Probs[Math.max(0, index)];
       percentileValues.push({ percentile: i, value });
     }
+
+    percentileValues.push({
+      percentile: 100,
+      value: sag12Probs[sag12Probs.length - 1],
+    });
 
     return percentileValues;
   }, [comparisonDataset]);
@@ -189,7 +199,7 @@ export default function FootballTeamScheduleDifficulty({
     );
 
     const positioned: PositionedGame[] = [];
-    const minSpacing = 40; // Increased spacing
+    const minSpacing = 40;
 
     sortedByDifficulty.forEach((game, index) => {
       const isRightSide = index % 2 === 0;
@@ -197,12 +207,10 @@ export default function FootballTeamScheduleDifficulty({
       const gameY = MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
       let logoY = gameY;
 
-      // Get existing logos on same side
       const sameSideLogos = positioned.filter(
         (p) => p.isRightSide === isRightSide
       );
 
-      // Find non-overlapping position
       for (let attempts = 0; attempts < 50; attempts++) {
         let hasCollision = false;
 
@@ -210,7 +218,6 @@ export default function FootballTeamScheduleDifficulty({
           if (Math.abs(logoY - existingLogo.adjustedY) < minSpacing) {
             hasCollision = true;
 
-            // Move away from collision while preserving difficulty order
             if (game.percentilePosition < existingLogo.percentilePosition) {
               logoY = existingLogo.adjustedY - minSpacing;
             } else {
@@ -223,7 +230,6 @@ export default function FootballTeamScheduleDifficulty({
         if (!hasCollision) break;
       }
 
-      // Ensure within bounds
       logoY = Math.max(
         MARGIN.top + 20,
         Math.min(MARGIN.top + PLOT_HEIGHT - 20, logoY)
@@ -237,7 +243,7 @@ export default function FootballTeamScheduleDifficulty({
     });
 
     return positioned;
-  }, [teamGamePositions]);
+  }, [teamGamePositions, PLOT_HEIGHT]);
 
   const getGameRank = (game: PositionedGame) => {
     const allGamesInFilter = comparisonDataset
@@ -245,9 +251,9 @@ export default function FootballTeamScheduleDifficulty({
       .sort((a, b) => a - b);
 
     const gameProb = game.sag12_win_prob || 0;
-    const rank = allGamesInFilter.filter((prob) => prob <= gameProb).length;
+    const position = allGamesInFilter.findIndex((prob) => prob >= gameProb);
 
-    return rank;
+    return position === -1 ? allGamesInFilter.length : position + 1;
   };
 
   const getFilterDescription = () => {
@@ -326,9 +332,9 @@ export default function FootballTeamScheduleDifficulty({
               <button
                 key={option.value}
                 onClick={() => setComparisonFilter(option.value)}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
+                className={`px-3 py-1 ${isMobile ? "text-xs" : "text-sm"} rounded-md border transition-colors ${
                   comparisonFilter === option.value
-                    ? "bg-blue-500 text-white border-blue-500"
+                    ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 }`}
               >
@@ -347,9 +353,9 @@ export default function FootballTeamScheduleDifficulty({
               <button
                 key={option.value}
                 onClick={() => setGameFilter(option.value)}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
+                className={`px-3 py-1 ${isMobile ? "text-xs" : "text-sm"} rounded-md border transition-colors ${
                   gameFilter === option.value
-                    ? "bg-green-500 text-white border-green-500"
+                    ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 }`}
               >
@@ -415,7 +421,7 @@ export default function FootballTeamScheduleDifficulty({
               MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
             const circleX = MARGIN.left + PLOT_WIDTH / 2;
             const sideMultiplier = game.isRightSide ? 1 : -1;
-            const logoX = circleX + sideMultiplier * 80;
+            const logoX = circleX + sideMultiplier * 65; // Moved closer (was 80)
             const opponentColor = game.opponent_primary_color || "#9ca3af";
 
             return (
@@ -446,56 +452,105 @@ export default function FootballTeamScheduleDifficulty({
                 />
 
                 {game.opponent_logo && (
-                  <foreignObject
-                    x={logoX - 16}
-                    y={game.adjustedY - 16}
-                    width={32}
-                    height={32}
-                    style={{ cursor: "pointer" }}
-                    onMouseEnter={(e) => {
-                      const mouseEvent = e.nativeEvent as MouseEvent;
-                      const chartRect = e.currentTarget
-                        .closest("svg")
-                        ?.getBoundingClientRect();
+                  <g>
+                    <foreignObject
+                      x={logoX - 16}
+                      y={game.adjustedY - 16}
+                      width={32}
+                      height={32}
+                      style={{ cursor: "pointer" }}
+                      onMouseEnter={(e) => {
+                        const mouseEvent = e.nativeEvent as MouseEvent;
+                        const chartRect = e.currentTarget
+                          .closest("svg")
+                          ?.getBoundingClientRect();
 
-                      if (chartRect) {
-                        const tooltipWidth = 220;
-                        const tooltipHeight = 80;
+                        if (chartRect) {
+                          const tooltipWidth = 220;
+                          const tooltipHeight = 80;
 
-                        let x = mouseEvent.clientX - chartRect.left + 10;
-                        let y = mouseEvent.clientY - chartRect.top + 100;
+                          let x = mouseEvent.clientX - chartRect.left + 10;
+                          let y = mouseEvent.clientY - chartRect.top + 100;
 
-                        // Keep within chart bounds
-                        if (x + tooltipWidth > chartRect.width) {
-                          x =
-                            mouseEvent.clientX -
-                            chartRect.left -
-                            tooltipWidth -
-                            10;
+                          if (x + tooltipWidth > chartRect.width) {
+                            x =
+                              mouseEvent.clientX -
+                              chartRect.left -
+                              tooltipWidth -
+                              10;
+                          }
+                          if (y < 0) {
+                            y = mouseEvent.clientY - chartRect.top + 20;
+                          }
+                          if (y + tooltipHeight > chartRect.height) {
+                            y = chartRect.height - tooltipHeight - 10;
+                          }
+
+                          setTooltipPosition({ x, y });
                         }
-                        if (y < 0) {
-                          y = mouseEvent.clientY - chartRect.top + 20;
-                        }
-                        if (y + tooltipHeight > chartRect.height) {
-                          y = chartRect.height - tooltipHeight - 10;
-                        }
+                        setHoveredGame(game);
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setHoveredGame(null);
+                      }}
+                    >
+                      <TeamLogo
+                        logoUrl={game.opponent_logo}
+                        teamName={game.opponent}
+                        size={32}
+                      />
+                    </foreignObject>
 
-                        setTooltipPosition({ x, y });
-                      }
-                      setHoveredGame(game);
-                    }}
-                    onMouseLeave={() => setHoveredGame(null)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setHoveredGame(null);
-                    }}
-                  >
-                    <TeamLogo
-                      logoUrl={game.opponent_logo}
-                      teamName={game.opponent}
-                      size={32}
-                    />
-                  </foreignObject>
+                    {/* Win/Loss indicator */}
+                    {(game.status === "W" || game.status === "L") && (
+                      <g>
+                        {game.status === "W" ? (
+                          // Green checkmark
+                          <g
+                            transform={`translate(${logoX + (game.isRightSide ? 20 : -28)}, ${game.adjustedY - 8})`}
+                          >
+                            <circle
+                              cx="8"
+                              cy="8"
+                              r="8"
+                              fill="#10b981"
+                              stroke="white"
+                              strokeWidth="1"
+                            />
+                            <path
+                              d="M4.5 8l2 2 4-4"
+                              stroke="white"
+                              strokeWidth="2"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </g>
+                        ) : (
+                          // Red X
+                          <g
+                            transform={`translate(${logoX + (game.isRightSide ? 20 : -28)}, ${game.adjustedY - 8})`}
+                          >
+                            <circle
+                              cx="8"
+                              cy="8"
+                              r="8"
+                              fill="#ef4444"
+                              stroke="white"
+                              strokeWidth="1"
+                            />
+                            <path
+                              d="M5 5l6 6M11 5l-6 6"
+                              stroke="white"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </g>
+                        )}
+                      </g>
+                    )}
+                  </g>
                 )}
 
                 {!game.opponent_logo && (
@@ -581,7 +636,7 @@ export default function FootballTeamScheduleDifficulty({
           Comparing {teamGames.length} games against {comparisonDataset.length}{" "}
           total games
           <br />
-          Percentiles based on Sagarin #12 team win probability vs opponents in
+          Percentiles based on #12 rated team win probability vs opponents in
           selected dataset
         </div>
       </div>

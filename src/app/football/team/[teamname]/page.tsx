@@ -218,7 +218,11 @@ export default function FootballTeamPage({
                         className="text-xl font-semibold leading-tight -mb-1"
                         style={{ color: team_info.primary_color || "#1f2937" }}
                       >
-                        {team_info.team_name}
+                        {team_info.team_name}{" "}
+                        {team_info.sagarin_rank &&
+                        team_info.sagarin_rank !== 999
+                          ? `#${team_info.sagarin_rank}`
+                          : ""}
                       </h1>
                       <p className="text-gray-600 text-sm leading-tight -mt-0">
                         Team Page
@@ -456,7 +460,11 @@ export default function FootballTeamPage({
                         className="text-2xl font-semibold leading-tight -mb-1"
                         style={{ color: team_info.primary_color || "#1f2937" }}
                       >
-                        {team_info.team_name}
+                        {team_info.team_name}{" "}
+                        {team_info.sagarin_rank &&
+                        team_info.sagarin_rank !== 999
+                          ? `#${team_info.sagarin_rank}`
+                          : ""}
                       </h1>
                       <p className="text-gray-600 leading-tight -mt-0">
                         Team Page
