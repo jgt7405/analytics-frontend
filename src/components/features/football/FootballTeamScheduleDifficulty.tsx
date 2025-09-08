@@ -421,7 +421,7 @@ export default function FootballTeamScheduleDifficulty({
               MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
             const circleX = MARGIN.left + PLOT_WIDTH / 2;
             const sideMultiplier = game.isRightSide ? 1 : -1;
-            const logoX = circleX + sideMultiplier * 65; // Moved closer (was 80)
+            const logoX = circleX + sideMultiplier * 65;
             const opponentColor = game.opponent_primary_color || "#9ca3af";
 
             return (
@@ -502,13 +502,13 @@ export default function FootballTeamScheduleDifficulty({
                       />
                     </foreignObject>
 
-                    {/* Win/Loss indicator */}
+                    {/* Win/Loss indicator - CORRECTED */}
                     {(game.status === "W" || game.status === "L") && (
                       <g>
                         {game.status === "W" ? (
                           // Green checkmark
                           <g
-                            transform={`translate(${logoX + (game.isRightSide ? 20 : -28)}, ${game.adjustedY - 8})`}
+                            transform={`translate(${logoX + (game.isRightSide ? 20 : -32)}, ${game.adjustedY - 8})`}
                           >
                             <circle
                               cx="8"
@@ -530,7 +530,7 @@ export default function FootballTeamScheduleDifficulty({
                         ) : (
                           // Red X
                           <g
-                            transform={`translate(${logoX + (game.isRightSide ? 20 : -28)}, ${game.adjustedY - 8})`}
+                            transform={`translate(${logoX + (game.isRightSide ? 20 : -32)}, ${game.adjustedY - 8})`}
                           >
                             <circle
                               cx="8"

@@ -3,6 +3,7 @@
 import FootballTeamCFPBidHistory from "@/components/features/football/FootballTeamCFPBidHistory";
 import FootballTeamCFPProgressionHistory from "@/components/features/football/FootballTeamCFPProgressionHistory";
 import FootballTeamFirstPlaceHistory from "@/components/features/football/FootballTeamFirstPlaceHistory";
+import FootballTeamRankHistory from "@/components/features/football/FootballTeamRankHistory";
 import FootballTeamSchedule from "@/components/features/football/FootballTeamSchedule";
 import FootballTeamScheduleChart from "@/components/features/football/FootballTeamScheduleChart";
 import FootballTeamScheduleDifficulty from "@/components/features/football/FootballTeamScheduleDifficulty";
@@ -378,6 +379,20 @@ export default function FootballTeamPage({
                 className="bg-white rounded-lg p-3"
                 style={{ border: "1px solid #d1d5db" }}
               >
+                <h2 className="text-lg font-semibold mb-1 -mt-2">
+                  Rating Rank History
+                </h2>
+                <FootballTeamRankHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                />
+              </div>
+
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   Projected Wins History
                 </h2>
@@ -615,6 +630,20 @@ export default function FootballTeamPage({
                       winSeedCounts={transformFootballWinSeedCounts(
                         team_info.win_seed_counts
                       )}
+                    />
+                  </div>
+
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      Rating Rank History
+                    </h2>
+                    <FootballTeamRankHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
                     />
                   </div>
 

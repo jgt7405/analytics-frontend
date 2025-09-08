@@ -13,7 +13,6 @@ export async function GET(
 
     const BACKEND_BASE_URL =
       "https://jthomprodbackend-production.up.railway.app/api";
-    //  "https://jthomprodbackend-production.up.railway.app/api";
 
     let backendPath = "";
 
@@ -56,6 +55,9 @@ export async function GET(
       switch (historyType) {
         case "conf_wins":
           backendPath = `/football/team/${teamName}/history/conf_wins`;
+          break;
+        case "sagarin_rank": // ADD THIS CASE
+          backendPath = `/football/team/${teamName}/history/sagarin_rank`;
           break;
         default:
           return NextResponse.json(
