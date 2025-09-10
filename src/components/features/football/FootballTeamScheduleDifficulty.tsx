@@ -271,6 +271,21 @@ export default function FootballTeamScheduleDifficulty({
     }
   };
 
+  const handleGameClick = (game: PositionedGame) => {
+    if (
+      hoveredGame?.opponent === game.opponent &&
+      hoveredGame?.date === game.date
+    ) {
+      setHoveredGame(null);
+    } else {
+      const tooltipWidth = 180;
+      const x = (CHART_WIDTH - tooltipWidth) / 2 - 30;
+      const y = game.adjustedY + 20;
+      setTooltipPosition({ x, y });
+      setHoveredGame(game);
+    }
+  };
+
   const Tooltip = ({
     game,
     position,
@@ -286,16 +301,38 @@ export default function FootballTeamScheduleDifficulty({
 
     return (
       <div
-        className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50 min-w-[220px]"
+        className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50 min-w-[180px]"
         style={{
           left: position.x,
           top: position.y,
           color: game.opponent_primary_color || "#1f2937",
+          touchAction: "none",
         }}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
       >
         <button
-          onClick={onClose}
-          className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 w-4 h-4 flex items-center justify-center text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onClose();
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onClose();
+          }}
+          className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center text-lg font-bold border-none bg-transparent cursor-pointer"
+          style={{
+            lineHeight: "1",
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            touchAction: "manipulation",
+          }}
         >
           ×
         </button>
@@ -304,8 +341,9 @@ export default function FootballTeamScheduleDifficulty({
           <div>Location: {game.location}</div>
           <div>{winProb}% Win Probability for #12 Rated Team</div>
           <div>
-            #{rank} Most Difficult Game Out of {comparisonDataset.length} Games
-            in {getFilterDescription()} ({percentile} Percentile)
+            #{rank} Most Difficult Game Out of{" "}
+            {comparisonDataset.length.toLocaleString()} Games in{" "}
+            {getFilterDescription()} ({percentile} Percentile)
           </div>
         </div>
       </div>
@@ -321,8 +359,8 @@ export default function FootballTeamScheduleDifficulty({
   }
 
   return (
-    <div className="w-full relative">
-      <div className="mb-4 space-y-3">
+    <div className="w-full relative" onClick={() => setHoveredGame(null)}>
+      <div className="mb-4 space-y-3" onClick={(e) => e.stopPropagation()}>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Compare against:
@@ -366,12 +404,14 @@ export default function FootballTeamScheduleDifficulty({
         </div>
       </div>
 
-      <div className="flex justify-center">
+      <div
+        className="flex justify-center"
+        onMouseLeave={() => setHoveredGame(null)}
+      >
         <svg
           width={CHART_WIDTH}
           height={CHART_HEIGHT}
           className="border border-gray-200 rounded"
-          onClick={() => setHoveredGame(null)}
         >
           <rect width={CHART_WIDTH} height={CHART_HEIGHT} fill="white" />
 
@@ -416,16 +456,17 @@ export default function FootballTeamScheduleDifficulty({
             strokeWidth={2}
           />
 
-          {positionedGames.map((game) => {
+          {positionedGames.map((game, index) => {
             const gameY =
               MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
             const circleX = MARGIN.left + PLOT_WIDTH / 2;
             const sideMultiplier = game.isRightSide ? 1 : -1;
             const logoX = circleX + sideMultiplier * 65;
             const opponentColor = game.opponent_primary_color || "#9ca3af";
+            const uniqueKey = `${game.opponent}-${game.date}-${index}`;
 
             return (
-              <g key={`${game.opponent}-${game.date}`}>
+              <g key={uniqueKey}>
                 <line
                   x1={circleX + (game.isRightSide ? 6 : -6)}
                   x2={logoX + (game.isRightSide ? -16 : 16)}
@@ -460,39 +501,23 @@ export default function FootballTeamScheduleDifficulty({
                       height={32}
                       style={{ cursor: "pointer" }}
                       onMouseEnter={(e) => {
-                        const mouseEvent = e.nativeEvent as MouseEvent;
-                        const chartRect = e.currentTarget
-                          .closest("svg")
-                          ?.getBoundingClientRect();
-
-                        if (chartRect) {
-                          const tooltipWidth = 220;
-                          const tooltipHeight = 80;
-
-                          let x = mouseEvent.clientX - chartRect.left + 10;
-                          let y = mouseEvent.clientY - chartRect.top + 100;
-
-                          if (x + tooltipWidth > chartRect.width) {
-                            x =
-                              mouseEvent.clientX -
-                              chartRect.left -
-                              tooltipWidth -
-                              10;
-                          }
-                          if (y < 0) {
-                            y = mouseEvent.clientY - chartRect.top + 20;
-                          }
-                          if (y + tooltipHeight > chartRect.height) {
-                            y = chartRect.height - tooltipHeight - 10;
-                          }
-
-                          setTooltipPosition({ x, y });
-                        }
+                        const tooltipWidth = 180;
+                        const x = (CHART_WIDTH - tooltipWidth) / 2 - 30;
+                        const y = game.adjustedY + 20;
+                        setTooltipPosition({ x, y });
                         setHoveredGame(game);
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setHoveredGame(null);
+                        handleGameClick(game);
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleGameClick(game);
                       }}
                     >
                       <TeamLogo
@@ -502,11 +527,9 @@ export default function FootballTeamScheduleDifficulty({
                       />
                     </foreignObject>
 
-                    {/* Win/Loss indicator - CORRECTED */}
                     {(game.status === "W" || game.status === "L") && (
                       <g>
                         {game.status === "W" ? (
-                          // Green checkmark
                           <g
                             transform={`translate(${logoX + (game.isRightSide ? 20 : -32)}, ${game.adjustedY - 8})`}
                           >
@@ -528,7 +551,6 @@ export default function FootballTeamScheduleDifficulty({
                             />
                           </g>
                         ) : (
-                          // Red X
                           <g
                             transform={`translate(${logoX + (game.isRightSide ? 20 : -32)}, ${game.adjustedY - 8})`}
                           >
@@ -633,8 +655,8 @@ export default function FootballTeamScheduleDifficulty({
           </div>
         </div>
         <div className="text-center mt-2">
-          Comparing {teamGames.length} games against {comparisonDataset.length}{" "}
-          total games
+          Comparing {teamGames.length.toLocaleString()} games against{" "}
+          {comparisonDataset.length.toLocaleString()} total games
           <br />
           Percentiles based on #12 rated team win probability vs opponents in
           selected dataset
