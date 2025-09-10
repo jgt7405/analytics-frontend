@@ -130,6 +130,11 @@ function NavigationContent() {
       path: addConferenceToUrl("/football/teams"),
       description: "Football teams directory",
     },
+    {
+      name: "Compare",
+      path: addConferenceToUrl("/football/compare"),
+      description: "Compare teams side by side",
+    },
   ];
 
   const navItems = isFootball ? footballNavItems : basketballNavItems;
