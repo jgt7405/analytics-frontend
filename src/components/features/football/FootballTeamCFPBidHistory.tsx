@@ -1,7 +1,9 @@
+// src/components/features/football/FootballTeamCFPBidHistory.tsx
 "use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
-import type { Chart } from "chart.js";
+import { cleanupTooltip, createChartTooltip } from "@/lib/chartTooltip";
+import type { TooltipModel } from "chart.js";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -11,7 +13,6 @@ import {
   PointElement,
   Title,
   Tooltip,
-  TooltipModel,
 } from "chart.js";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
@@ -63,7 +64,7 @@ export default function FootballTeamCFPBidHistory({
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
     "line",
-    Array<{ x: string; y: number }>,
+    Array<{ x: string; y: number | null }>,
     string
   > | null>(null);
   const [data, setData] = useState<CFPHistoricalDataPoint[]>([]);
@@ -101,49 +102,30 @@ export default function FootballTeamCFPBidHistory({
         console.log("🏈 CFP: average_seed_data:", result.average_seed_data);
 
         const cfpBidData: CFPHistoricalDataPoint[] = result.cfp_bid_data || [];
-        const averageSeedData: SeedDataPoint[] = result.average_seed_data || [];
+        const avgSeedData = result.average_seed_data || [];
 
-        console.log("🏈 CFP: Parsed cfpBidData length:", cfpBidData.length);
-        console.log(
-          "🏈 CFP: Parsed averageSeedData length:",
-          averageSeedData.length
-        );
+        console.log("🏈 CFP: CFP bid data length:", cfpBidData.length);
+        console.log("🏈 CFP: Average seed data length:", avgSeedData.length);
 
-        if (cfpBidData.length === 0 && averageSeedData.length === 0) {
-          console.log("🏈 CFP: No data available");
-          setData([]);
-          setError(null);
-          return;
-        }
-
-        // Filter for the specific team
-        const teamCFPData = cfpBidData.filter(
-          (point) => point.team_name === teamName
-        );
-        const teamSeedData = averageSeedData.filter(
-          (point) => point.team_name === teamName
-        );
-
-        console.log("🏈 CFP: Filtered teamCFPData length:", teamCFPData.length);
-        console.log(
-          "🏈 CFP: Filtered teamSeedData length:",
-          teamSeedData.length
-        );
-
-        // Create combined data by merging CFP and seed data by date
+        // Create a map to merge the data by date
         const dataByDate = new Map<string, CFPHistoricalDataPoint>();
 
-        teamCFPData.forEach((point) => {
+        // First, add all CFP bid data
+        cfpBidData.forEach((point) => {
           dataByDate.set(point.date, {
-            ...point,
-            average_seed: 0, // Default value
+            date: point.date,
+            cfp_bid_pct: point.cfp_bid_pct || 0,
+            average_seed: 0,
+            team_name: point.team_name,
+            team_info: point.team_info || {},
           });
         });
 
-        teamSeedData.forEach((point: SeedDataPoint) => {
-          const existing = dataByDate.get(point.date);
-          if (existing) {
-            existing.average_seed = point.average_seed || 0;
+        // Then merge in the average seed data
+        avgSeedData.forEach((point: SeedDataPoint) => {
+          if (dataByDate.has(point.date)) {
+            const existingPoint = dataByDate.get(point.date)!;
+            existingPoint.average_seed = point.average_seed || 0;
           } else {
             dataByDate.set(point.date, {
               date: point.date,
@@ -174,16 +156,6 @@ export default function FootballTeamCFPBidHistory({
         );
         console.log("🏈 CFP: Final processed data:", processedData);
 
-        // Debug: Check if average_seed values exist
-        processedData.forEach((item, index) => {
-          console.log(`🏈 CFP: Data point ${index}:`, {
-            date: item.date,
-            cfp_bid_pct: item.cfp_bid_pct,
-            average_seed: item.average_seed,
-            average_seed_type: typeof item.average_seed,
-          });
-        });
-
         setData(processedData);
         setError(null);
       } catch (err) {
@@ -200,6 +172,13 @@ export default function FootballTeamCFPBidHistory({
     }
   }, [teamName]);
 
+  // Cleanup tooltip when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanupTooltip("chartjs-tooltip-cfp-bid-history");
+    };
+  }, []);
+
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
       secondaryColor.toLowerCase() === "white"
@@ -210,20 +189,6 @@ export default function FootballTeamCFPBidHistory({
       : "#10b981";
 
   const labels = data.map((item) => formatDateForDisplay(item.date));
-
-  console.log("🏈 CFP: Chart labels:", labels);
-  console.log(
-    "🏈 CFP: Average seed chart data:",
-    data.map((item) => ({ date: item.date, seed: item.average_seed }))
-  );
-
-  console.log("🏈 CFP: Average Seed Dataset:", {
-    data: data.map((item, index) => ({
-      x: labels[index],
-      y: item.average_seed,
-    })),
-    yAxisID: "y1",
-  });
 
   const chartData = {
     labels,
@@ -262,9 +227,31 @@ export default function FootballTeamCFPBidHistory({
         tension: 0.1,
         fill: false,
         yAxisID: "y1",
-        spanGaps: false, // This is key - it won't connect across null values
+        spanGaps: false,
       },
     ],
+  };
+
+  // Create the tooltip content generator
+  const getTooltipContent = (tooltipModel: TooltipModel<"line">) => {
+    if (!tooltipModel.body || !data.length) return "";
+
+    const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+    const currentDate = labels[dataIndex];
+    const cfpBidPct = data[dataIndex].cfp_bid_pct || 0;
+    const avgSeed = data[dataIndex].average_seed || 0;
+
+    return `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+      </div>
+      <div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">
+        CFP Bid Probability: ${cfpBidPct.toFixed(1)}%
+      </div>
+      <div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">
+        Average Seed: ${avgSeed > 0 ? avgSeed.toFixed(1) : "N/A"}
+      </div>
+    `;
   };
 
   const options = {
@@ -293,189 +280,50 @@ export default function FootballTeamCFPBidHistory({
           font: {
             size: isMobile ? 10 : 12,
           },
+          color: finalSecondaryColor,
         },
       },
       tooltip: {
         enabled: false,
-        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
-          const { tooltip: tooltipModel, chart } = args;
-
-          let tooltipEl = document.getElementById(
-            "chartjs-tooltip-cfp-bid-history"
-          );
-          if (!tooltipEl) {
-            tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-cfp-bid-history";
-
-            Object.assign(tooltipEl.style, {
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              color: "#1f2937",
-              fontFamily: "Inter, system-ui, sans-serif",
-              fontSize: "12px",
-              opacity: "0",
-              padding: "16px",
-              paddingTop: "8px",
-              pointerEvents: "auto",
-              position: "absolute",
-              transition: "all .1s ease",
-              zIndex: "1000",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              minWidth: "200px",
-              maxWidth: "300px",
-            });
-
-            const handleClickOutside = (e: Event) => {
-              if (!tooltipEl?.contains(e.target as Node)) {
-                tooltipEl!.style.opacity = "0";
-                setTimeout(() => {
-                  if (tooltipEl && tooltipEl.parentNode) {
-                    document.removeEventListener("click", handleClickOutside);
-                    document.removeEventListener(
-                      "touchstart",
-                      handleClickOutside
-                    );
-                  }
-                }, 100);
-              }
-            };
-
-            document.addEventListener("click", handleClickOutside);
-            document.addEventListener("touchstart", handleClickOutside);
-            document.body.appendChild(tooltipEl);
-          }
-
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
-          if (tooltipModel.body) {
-            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = labels[dataIndex];
-            const cfpBidPct = data[dataIndex].cfp_bid_pct || 0;
-            const avgSeed = data[dataIndex].average_seed || 0;
-
-            let innerHtml = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-              <button id="tooltip-close" style="
-                background: none; 
-                border: none; 
-                font-size: 16px; 
-                cursor: pointer; 
-                color: #6b7280;
-                padding: 0;
-                margin: 0;
-                line-height: 1;
-                width: 20px;
-                height: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              ">&times;</button>
-            </div>
-          `;
-
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">CFP Bid Probability: ${cfpBidPct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Average Seed: ${avgSeed.toFixed(1)}</div>`;
-
-            tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
-            }
-          }
-
-          // Positioning logic
-          const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
-          const tooltipWidth = tooltipEl.offsetWidth || 200;
-          const caretX = tooltipModel.caretX;
-          const caretY = tooltipModel.caretY;
-
-          const isLeftSide = caretX < chartWidth / 2;
-          let leftPosition: number;
-          let arrowPosition: string;
-
-          if (isLeftSide) {
-            leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
-          } else {
-            leftPosition =
-              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
-          }
-
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          }
-
-          const maxLeft = window.innerWidth - tooltipWidth - 10;
-          const minLeft = 10;
-          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
-
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.left = leftPosition + "px";
-          tooltipEl.style.top =
-            position.top +
-            window.pageYOffset +
-            caretY -
-            tooltipEl.offsetHeight / 2 +
-            "px";
-        },
+        external: createChartTooltip({
+          tooltipId: "chartjs-tooltip-cfp-bid-history",
+          getContent: getTooltipContent,
+          styling: {
+            minWidth: "200px",
+            maxWidth: "300px",
+            padding: "16px",
+            paddingTop: "8px",
+          },
+        }),
       },
     },
     scales: {
       x: {
-        title: { display: false },
+        display: true,
         ticks: {
+          color: finalSecondaryColor,
           font: {
-            size: isMobile ? 9 : 11,
+            size: isMobile ? 9 : 10,
           },
+          maxTicksLimit: isMobile ? 8 : 12,
         },
-        grid: { display: false },
+        grid: {
+          color: "#f3f4f6",
+          lineWidth: 1,
+        },
       },
       y: {
         type: "linear" as const,
         display: true,
         position: "left" as const,
-        beginAtZero: true,
         min: 0,
         max: 100,
-        grid: {
-          color: "rgba(0, 0, 0, 0.1)",
-        },
         ticks: {
+          color: finalSecondaryColor,
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 9 : 10,
           },
-          color: primaryColor, // Add this line
+          stepSize: 20,
           callback: function (value: string | number) {
             return `${value}%`;
           },
@@ -483,7 +331,7 @@ export default function FootballTeamCFPBidHistory({
         title: {
           display: true,
           text: "CFP Bid %",
-          color: primaryColor,
+          color: finalSecondaryColor,
         },
       },
       y1: {
@@ -492,15 +340,11 @@ export default function FootballTeamCFPBidHistory({
         position: "right" as const,
         min: 1,
         max: 12,
-        reverse: true,
-        grid: {
-          drawOnChartArea: false,
-        },
         ticks: {
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 9 : 10,
           },
-          color: finalSecondaryColor, // Add this line
+          color: finalSecondaryColor,
           stepSize: 1,
           callback: function (value: string | number) {
             return `#${value}`;

@@ -5,6 +5,7 @@ interface TooltipOptions {
   tooltipId: string;
   getContent: (tooltipModel: TooltipModel<"line">, chart: Chart) => string;
   styling?: Partial<CSSStyleDeclaration>;
+  showCloseButton?: boolean;
 }
 
 interface TooltipState {
@@ -16,7 +17,12 @@ interface TooltipState {
 const tooltipStates = new Map<string, TooltipState>();
 
 export function createChartTooltip(options: TooltipOptions) {
-  const { tooltipId, getContent, styling = {} } = options;
+  const {
+    tooltipId,
+    getContent,
+    styling = {},
+    showCloseButton = true,
+  } = options;
 
   return (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
     const { tooltip: tooltipModel, chart } = args;
@@ -87,16 +93,23 @@ export function createChartTooltip(options: TooltipOptions) {
 
     function handleTouchEnd(e: TouchEvent) {
       e.preventDefault();
-      // Only show tooltip on quick tap (< 200ms)
-      if (Date.now() - state.touchStartTime < 200) {
-        state.isHovering = true;
-        showTooltip();
+      // Show tooltip immediately on tap
+      if (Date.now() - state.touchStartTime < 300) {
+        state.isHovering = !state.isHovering; // Toggle state
+        if (state.isHovering) {
+          showTooltip();
+        } else {
+          hideTooltip();
+        }
       }
     }
 
     function handleDocumentTouch(e: TouchEvent) {
       const canvas = chart.canvas;
-      if (!canvas.contains(e.target as Node)) {
+      const target = e.target as Node;
+
+      // Only hide if touching outside both canvas and tooltip
+      if (!canvas.contains(target) && !tooltipEl?.contains(target)) {
         hideTooltip();
         state.isHovering = false;
       }
@@ -113,18 +126,49 @@ export function createChartTooltip(options: TooltipOptions) {
 
     function showTooltip() {
       if (tooltipEl && tooltipModel.opacity > 0) {
-        tooltipEl.innerHTML = getContent(tooltipModel, chart);
+        const content = getContent(tooltipModel, chart);
+
+        if (showCloseButton) {
+          // Wrap content with close button
+          tooltipEl.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div style="flex: 1;">
+                ${content}
+              </div>
+              <button 
+                class="tooltip-close-btn"
+                style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 0; margin-left: 8px; font-size: 16px; line-height: 1; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+              >
+                ×
+              </button>
+            </div>
+          `;
+
+          // Add close button functionality
+          const closeBtn = tooltipEl.querySelector(".tooltip-close-btn");
+          if (closeBtn) {
+            closeBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              hideTooltip();
+              state.isHovering = false;
+            });
+          }
+        } else {
+          tooltipEl.innerHTML = content;
+        }
 
         // Position tooltip
         positionTooltip(tooltipEl, tooltipModel, chart);
 
         tooltipEl.style.opacity = "1";
+        tooltipEl.style.pointerEvents = "auto";
       }
     }
 
     function hideTooltip() {
       if (tooltipEl) {
         tooltipEl.style.opacity = "0";
+        tooltipEl.style.pointerEvents = "none";
       }
     }
 
@@ -136,8 +180,8 @@ export function createChartTooltip(options: TooltipOptions) {
 
     // Show tooltip based on device and state
     if (isTouchDevice) {
-      // On mobile, only show if user has tapped and is hovering
-      if (state.isHovering && state.isTouch) {
+      // On mobile, show based on hover state (set by touch handlers)
+      if (state.isHovering) {
         showTooltip();
       }
     } else {
@@ -158,18 +202,68 @@ function positionTooltip(
   const tooltipWidth = tooltipEl.offsetWidth;
   const tooltipHeight = tooltipEl.offsetHeight;
 
-  let left = position.left + window.scrollX + tooltipModel.caretX;
-  let top = position.top + window.scrollY + tooltipModel.caretY;
+  // Get viewport dimensions
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const scrollX = window.scrollX || window.pageXOffset;
+  const scrollY = window.scrollY || window.pageYOffset;
 
-  // Prevent tooltip from going off-screen
-  if (left + tooltipWidth > window.innerWidth) {
-    left =
-      position.left + window.scrollX + tooltipModel.caretX - tooltipWidth - 10;
-  }
+  // Calculate base position
+  let left = position.left + scrollX + tooltipModel.caretX;
+  let top = position.top + scrollY + tooltipModel.caretY;
 
-  if (top + tooltipHeight > window.innerHeight + window.scrollY) {
-    top =
-      position.top + window.scrollY + tooltipModel.caretY - tooltipHeight - 10;
+  // Mobile-specific adjustments
+  const isMobile = viewportWidth <= 768;
+
+  if (isMobile) {
+    // On mobile, position tooltip near the touch point but ensure visibility
+    const touchX = tooltipModel.caretX;
+    const touchY = tooltipModel.caretY;
+
+    // Calculate position relative to chart
+    left = position.left + scrollX + touchX - tooltipWidth / 2;
+    top = position.top + scrollY + touchY - tooltipHeight - 20; // Position above touch point
+
+    // Horizontal constraints
+    const margin = 10;
+    if (left < margin + scrollX) {
+      left = margin + scrollX;
+    } else if (left + tooltipWidth > viewportWidth - margin + scrollX) {
+      left = viewportWidth - tooltipWidth - margin + scrollX;
+    }
+
+    // Vertical constraints - if tooltip would go above viewport, show below touch point
+    if (top < margin + scrollY) {
+      top = position.top + scrollY + touchY + 20; // Position below touch point
+    }
+
+    // Final check - ensure it doesn't go below viewport
+    if (top + tooltipHeight > viewportHeight - margin + scrollY) {
+      top = viewportHeight - tooltipHeight - margin + scrollY;
+    }
+  } else {
+    // Desktop positioning
+    const margin = 10;
+
+    // Horizontal positioning
+    if (left + tooltipWidth > viewportWidth - margin + scrollX) {
+      left = position.left + scrollX + tooltipModel.caretX - tooltipWidth - 20;
+    }
+
+    // Ensure it doesn't go off the left edge
+    if (left < margin + scrollX) {
+      left = margin + scrollX;
+    }
+
+    // Vertical positioning
+    if (top + tooltipHeight > viewportHeight - margin + scrollY) {
+      top = position.top + scrollY + tooltipModel.caretY - tooltipHeight - 10;
+    }
+
+    // Ensure it doesn't go off the top edge
+    if (top < margin + scrollY) {
+      top = margin + scrollY;
+    }
   }
 
   tooltipEl.style.left = `${left}px`;

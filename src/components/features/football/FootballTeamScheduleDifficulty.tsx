@@ -500,7 +500,7 @@ export default function FootballTeamScheduleDifficulty({
                       width={32}
                       height={32}
                       style={{ cursor: "pointer" }}
-                      onMouseEnter={(e) => {
+                      onMouseEnter={(_e) => {
                         const tooltipWidth = 180;
                         const x = (CHART_WIDTH - tooltipWidth) / 2 - 30;
                         const y = game.adjustedY + 20;
