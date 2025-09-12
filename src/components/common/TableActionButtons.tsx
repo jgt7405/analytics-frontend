@@ -89,91 +89,128 @@ export default function TableActionButtons({
         ? document.querySelector(explainerSelector)
         : null;
 
-      // Clone immediately without viewport changes
-      const clone = targetElement.cloneNode(true) as HTMLElement;
-
-      // Force desktop layout with image reloading
-      const logoImages = clone.querySelectorAll('img[src*="team_logos"]');
-      console.log("🚀 DEBUG: Found", logoImages.length, "logos in clone");
-
-      const imageLoadPromises = Array.from(logoImages).map((img, _index) => {
-        const image = img as HTMLImageElement;
-
-        // Force desktop logo size
-        image.style.cssText = `
-          width: 24px !important;
-          height: 24px !important;
-          object-fit: contain !important;
-          display: block !important;
-        `;
-
-        // Fix container
-        const container = image.closest("div");
-        if (container) {
-          container.style.cssText += `
-            width: 30px !important;
-            height: 30px !important;
-            min-width: 30px !important;
-          `;
-        }
-
-        // Force image reload in clone
-        return new Promise<void>((resolve) => {
-          if (image.complete && image.naturalWidth > 0) {
-            resolve();
-          } else {
-            const originalSrc = image.src;
-            image.onload = () => resolve();
-            image.onerror = () => resolve(); // Continue even if load fails
-            image.src = ""; // Clear src
-            image.src = originalSrc; // Reload
-
-            // Timeout fallback
-            setTimeout(resolve, 2000);
-          }
+      // Temporarily force element to show full width for measurement
+      const originalStyles = new Map();
+      const containers = targetElement.querySelectorAll(
+        '[style*="overflow"], .overflow-x-auto'
+      );
+      containers.forEach((container) => {
+        const el = container as HTMLElement;
+        originalStyles.set(el, {
+          overflow: el.style.overflow,
+          width: el.style.width,
         });
+        el.style.overflow = "visible";
+        el.style.width = "max-content";
       });
 
-      // Wait for all images to load
-      await Promise.all(imageLoadPromises);
+      // Check chart type and calculate width
+      const isLineChart = targetElement.querySelector("canvas") !== null;
+      const table = targetElement.querySelector("table");
+      let actualWidth;
 
-      // Calculate width based on team count and chart type
-      const teamCount = logoImages.length || 10;
+      if (table) {
+        actualWidth = (table as HTMLElement).offsetWidth + 200;
+      } else if (isLineChart) {
+        // Distinguish line charts from box plots
+        const isLineChartSpecific =
+          targetElement.textContent?.includes("Over Time") ||
+          targetElement.textContent?.includes("History") ||
+          pageTitle?.includes("History") ||
+          pageTitle?.includes("Over Time");
+        actualWidth = isLineChartSpecific ? 1475 : 800;
+      } else {
+        const teamLogos1 = targetElement.querySelectorAll(
+          'img[src*="team_logos"]'
+        );
+        const teamLogos2 = targetElement.querySelectorAll('img[alt*="logo"]');
+        const teamLogos3 = targetElement.querySelectorAll('img[src*="logos"]');
 
-      // Detect mobile from user agent
-      const isMobileDevice =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
+        let teamCount = Math.max(
+          teamLogos1.length,
+          teamLogos2.length,
+          teamLogos3.length
         );
 
-      // Device-specific width calculation
-      let baseWidth, teamSpacing;
-      if (isMobileDevice) {
-        baseWidth = 100;
-        teamSpacing = 45;
-      } else {
-        baseWidth = 425;
-        teamSpacing = 45;
+        if (teamCount === 0) {
+          const teamElements = targetElement.querySelectorAll(
+            '[data-team], .team-logo, [class*="team"]'
+          );
+          teamCount = teamElements.length;
+        }
+
+        if (teamCount === 0) {
+          teamCount = 10;
+        }
+
+        const baseWidth = isMobile ? 200 : 400;
+        const widthPerTeam = isMobile ? 40 : 50;
+        actualWidth = baseWidth + teamCount * widthPerTeam;
       }
 
-      // Calculate width with minimum of 400px
-      const calculatedWidth = baseWidth + teamCount * teamSpacing;
-      const desktopWidth = Math.max(calculatedWidth, 400);
+      // Restore original styles
+      containers.forEach((container) => {
+        const el = container as HTMLElement;
+        const original = originalStyles.get(el);
+        if (original) {
+          el.style.overflow = original.overflow || "";
+          el.style.width = original.width || "";
+        }
+      });
 
-      // Create wrapper
+      // Clone element first
+      const clone = targetElement.cloneNode(true) as HTMLElement;
+
+      // Handle canvas replacement
+      const originalCanvas = targetElement.querySelector(
+        "canvas"
+      ) as HTMLCanvasElement;
+      if (originalCanvas) {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = originalCanvas.width;
+        tempCanvas.height = originalCanvas.height;
+        tempCanvas.style.width = originalCanvas.style.width;
+        tempCanvas.style.height = originalCanvas.style.height;
+
+        const ctx = tempCanvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(originalCanvas, 0, 0);
+        }
+
+        const clonedCanvas = clone.querySelector("canvas");
+        if (clonedCanvas && clonedCanvas.parentNode) {
+          clonedCanvas.parentNode.replaceChild(tempCanvas, clonedCanvas);
+        }
+      }
+
+      // Simple fixes only
+      const style = document.createElement("style");
+      style.textContent = `
+        .overflow-x-auto { overflow: visible !important; }
+        .sticky { position: static !important; }
+        [style*="position: sticky"] { position: static !important; }
+        th img { width: 24px !important; height: 24px !important; }
+        canvas { display: block !important; }
+        .chartjs-render-monitor { display: block !important; }
+      `;
+      clone.appendChild(style);
+
+      // Create wrapper with dynamic width
       const wrapper = document.createElement("div");
       wrapper.style.cssText = `
         position: fixed;
         left: -9999px;
         top: 0;
         background-color: white;
-        padding: 20px;
+        padding: 24px 50px;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-        width: ${desktopWidth}px;
+        width: ${actualWidth}px;
         z-index: -1;
+        overflow: visible;
       `;
 
-      // Header
+      // Header with proper width alignment
+      const contentWidth = actualWidth - 100;
       const header = document.createElement("div");
       header.style.cssText = `
         display: flex;
@@ -182,6 +219,8 @@ export default function TableActionButtons({
         margin-bottom: 20px;
         padding-bottom: 12px;
         border-bottom: 2px solid #e5e7eb;
+        width: ${contentWidth}px;
+        margin-left: 0;
       `;
 
       const logo = document.createElement("img");
@@ -241,19 +280,18 @@ export default function TableActionButtons({
       header.appendChild(infoSection);
       wrapper.appendChild(header);
 
-      // Add clone to wrapper with content-aware styling
+      // Add clone with left alignment
       clone.style.cssText = `
-        width: 100% !important;
-        max-width: ${desktopWidth - 40}px !important;
-        min-width: fit-content !important;
+        width: ${contentWidth}px !important;
+        overflow: visible !important;
         font-size: 14px !important;
         display: block !important;
-        text-align: center !important;
-        overflow: visible !important;
+        margin-left: 0 !important;
+        padding-left: 0 !important;
       `;
       wrapper.appendChild(clone);
 
-      // Add explainer if exists
+      // Add explainer with left alignment
       if (explainerElement) {
         const explainerClone = explainerElement.cloneNode(true) as HTMLElement;
         explainerClone.style.cssText = `
@@ -262,13 +300,14 @@ export default function TableActionButtons({
           font-size: 12px;
           color: #6b7280;
           line-height: 1.3;
-          width: 100%;
+          width: ${contentWidth}px;
+          margin-left: 0;
         `;
         wrapper.appendChild(explainerClone);
       }
 
       document.body.appendChild(wrapper);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
@@ -276,8 +315,6 @@ export default function TableActionButtons({
         useCORS: true,
         allowTaint: true,
         logging: false,
-        width: desktopWidth,
-        height: wrapper.offsetHeight,
       });
 
       document.body.removeChild(wrapper);
