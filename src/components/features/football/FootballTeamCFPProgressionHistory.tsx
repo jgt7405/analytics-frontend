@@ -78,7 +78,6 @@ export default function FootballTeamCFPProgressionHistory({
     const fetchData = async () => {
       try {
         setLoading(true);
-        console.log("🏈 CFP Progression: Fetching data for team:", teamName);
 
         const response = await fetch(
           `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history`
@@ -143,7 +142,6 @@ export default function FootballTeamCFPProgressionHistory({
         setData(finalData);
         setError(null);
       } catch (err) {
-        console.error("🏈 CFP Progression: Error fetching data:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
         setData([]);
       } finally {

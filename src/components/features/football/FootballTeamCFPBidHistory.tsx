@@ -86,7 +86,6 @@ export default function FootballTeamCFPBidHistory({
     const fetchData = async () => {
       try {
         setLoading(true);
-        console.log("🏈 CFP: Fetching data for team:", teamName);
 
         const response = await fetch(
           `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history`
@@ -97,15 +96,9 @@ export default function FootballTeamCFPBidHistory({
         }
 
         const result = await response.json();
-        console.log("🏈 CFP: API Response:", result);
-        console.log("🏈 CFP: cfp_bid_data:", result.cfp_bid_data);
-        console.log("🏈 CFP: average_seed_data:", result.average_seed_data);
 
         const cfpBidData: CFPHistoricalDataPoint[] = result.cfp_bid_data || [];
         const avgSeedData = result.average_seed_data || [];
-
-        console.log("🏈 CFP: CFP bid data length:", cfpBidData.length);
-        console.log("🏈 CFP: Average seed data length:", avgSeedData.length);
 
         // Create a map to merge the data by date
         const dataByDate = new Map<string, CFPHistoricalDataPoint>();
@@ -150,16 +143,9 @@ export default function FootballTeamCFPBidHistory({
             return dateA.getTime() - dateB.getTime();
           });
 
-        console.log(
-          "🏈 CFP: Final processed data length:",
-          processedData.length
-        );
-        console.log("🏈 CFP: Final processed data:", processedData);
-
         setData(processedData);
         setError(null);
       } catch (err) {
-        console.error("🏈 CFP: Error fetching CFP bid history:", err);
         setError(err instanceof Error ? err.message : "Unknown error");
         setData([]);
       } finally {

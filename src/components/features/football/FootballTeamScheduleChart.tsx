@@ -28,20 +28,15 @@ export default function FootballTeamScheduleChart({
   navigateToTeam,
 }: FootballTeamScheduleChartProps) {
   const formatDate = (dateStr: string) => {
-    console.log("Debug - Input dateStr:", dateStr, typeof dateStr);
-
     if (!dateStr) {
-      console.log("Debug - No dateStr, returning TBD");
       return "TBD";
     }
 
     // Handle MM/DD format (this is what your backend sends)
     if (dateStr.includes("/")) {
       const parts = dateStr.split("/");
-      console.log("Debug - Split parts:", parts);
 
       if (parts.length !== 2) {
-        console.log("Debug - Invalid parts length, returning TBD");
         return "TBD";
       }
 
@@ -49,10 +44,7 @@ export default function FootballTeamScheduleChart({
       const m = parseInt(month, 10);
       const d = parseInt(day, 10);
 
-      console.log("Debug - Parsed month:", m, "day:", d);
-
       if (isNaN(m) || isNaN(d) || m < 1 || m > 12 || d < 1 || d > 31) {
-        console.log("Debug - Invalid month/day values, returning TBD");
         return "TBD";
       }
 
@@ -72,11 +64,9 @@ export default function FootballTeamScheduleChart({
       ];
 
       const result = `${months[m - 1]} ${d}`;
-      console.log("Debug - Final result:", result);
       return result;
     }
 
-    console.log("Debug - No slash found, returning TBD");
     return "TBD";
   };
 
