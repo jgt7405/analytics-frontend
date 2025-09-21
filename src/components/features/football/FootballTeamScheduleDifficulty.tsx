@@ -1,6 +1,7 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 
 // Constants - Adjusted for mobile
@@ -45,6 +46,7 @@ interface FootballTeamScheduleDifficultyProps {
   schedule: FootballTeamGame[];
   allScheduleData: AllScheduleGame[];
   teamConference?: string;
+  logoUrl?: string;
 }
 
 type ComparisonFilter = "all_fbs" | "power_4" | "non_power_4" | "conference";
@@ -68,6 +70,7 @@ export default function FootballTeamScheduleDifficulty({
   schedule,
   allScheduleData,
   teamConference,
+  logoUrl,
 }: FootballTeamScheduleDifficultyProps) {
   const [comparisonFilter, setComparisonFilter] =
     useState<ComparisonFilter>("all_fbs");
@@ -319,12 +322,10 @@ export default function FootballTeamScheduleDifficulty({
           }}
           onTouchStart={(e) => {
             e.stopPropagation();
-            e.preventDefault();
           }}
           onTouchEnd={(e) => {
             e.stopPropagation();
-            e.preventDefault();
-            onClose();
+            handleGameClick(game);
           }}
           className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center text-lg font-bold border-none bg-transparent cursor-pointer"
           style={{
@@ -360,6 +361,25 @@ export default function FootballTeamScheduleDifficulty({
 
   return (
     <div className="w-full relative" onClick={() => setHoveredGame(null)}>
+      {logoUrl && (
+        <div
+          className="absolute z-10"
+          style={{
+            top: "-30px",
+            right: "-5px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
+          }}
+        >
+          <Image
+            src={logoUrl}
+            alt="Team logo"
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
+          />
+        </div>
+      )}
       <div className="mb-4 space-y-3" onClick={(e) => e.stopPropagation()}>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -516,7 +536,6 @@ export default function FootballTeamScheduleDifficulty({
                       }}
                       onTouchEnd={(e) => {
                         e.stopPropagation();
-                        e.preventDefault();
                         handleGameClick(game);
                       }}
                     >

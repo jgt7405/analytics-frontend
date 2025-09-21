@@ -2,6 +2,7 @@
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
 });
+const path = require("path");
 
 // Conditional PWA setup
 const withPWA =
@@ -41,18 +42,81 @@ const withPWA =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Force all pages to be client-side rendered
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-    esmExternals: "loose",
-  },
+  // Development optimizations
+  ...(process.env.NODE_ENV === "development" && {
+    webpack: (config, { dev, isServer }) => {
+      if (dev && !isServer) {
+        // Increase chunk load timeout for development
+        config.output = {
+          ...config.output,
+          chunkLoadTimeout: 600000, // 10 minutes instead of 2 minutes
+        };
 
-  // Disable static generation
-  trailingSlash: false,
+        // Improve watch options
+        config.watchOptions = {
+          poll: 1000,
+          aggregateTimeout: 300,
+          ignored: ["**/node_modules", "**/.git", "**/.next"],
+        };
+
+        // Better resolve configuration
+        config.resolve.fallback = {
+          ...config.resolve.fallback,
+          fs: false,
+          path: false,
+          os: false,
+        };
+
+        // Improve module resolution
+        config.resolve.symlinks = false;
+
+        // Better cache configuration - FIX: Use absolute path
+        config.cache = {
+          type: "filesystem",
+          cacheDirectory: path.resolve(".next/cache/webpack"),
+        };
+      }
+      return config;
+    },
+  }),
+
+  // Production optimizations
+  ...(process.env.NODE_ENV === "production" && {
+    compress: true,
+    output: "export", // Only for production
+    trailingSlash: true, // Only for production
+    webpack: (config) => {
+      // Production webpack optimizations
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: "all",
+          cacheGroups: {
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: "vendors",
+              priority: -10,
+              chunks: "all",
+            },
+          },
+        },
+      };
+      return config;
+    },
+  }),
 
   // Universal settings
   poweredByHeader: false,
   reactStrictMode: true,
+
+  // MOVED: These options are no longer experimental
+  skipMiddlewareUrlNormalize: true,
+  skipTrailingSlashRedirect: true,
 
   // Force disable type checking and linting during builds
   typescript: {
@@ -62,11 +126,22 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Image optimization
+  // Experimental features - FIXED: Removed moved options
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+    optimizeCss: process.env.NODE_ENV === "production",
+    webpackBuildWorker: true,
+    missingSuspenseWithCSRBailout: false,
+  },
+
+  // Image optimization - conditional unoptimized for production only
   images: {
     formats: ["image/webp", "image/avif"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    ...(process.env.NODE_ENV === "production" && {
+      unoptimized: true,
+    }),
   },
 
   // Compiler optimizations
@@ -116,7 +191,7 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/football/wins",
+        destination: "/basketball/wins",
         permanent: false,
       },
     ];

@@ -1,5 +1,6 @@
 "use client";
 
+import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
@@ -13,6 +14,7 @@ import {
   Tooltip,
   TooltipModel,
 } from "chart.js";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
@@ -38,22 +40,28 @@ interface FootballTeamWinHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  logoUrl?: string;
 }
 
 export default function FootballTeamWinHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
+  logoUrl,
 }: FootballTeamWinHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number }>,
-    string
-  > | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
+
+  // Use the master history hook
+  const {
+    data: allHistoryData,
+    isLoading,
+    error: queryError,
+  } = useFootballTeamAllHistory(teamName);
+
+  const error = queryError?.message || null;
 
   const parseDateCentralTime = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
@@ -66,76 +74,54 @@ export default function FootballTeamWinHistory({
     return `${month}/${day}`;
   };
 
-  // Fetch historical data
+  // Process the data when allHistoryData changes
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch(
-          `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to load historical data");
-        }
-
-        const result = await response.json();
-        const rawData = result.data || [];
-
-        // Filter data starting from 8/22
-        const cutoffDate = new Date("2025-08-22");
-        const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-          const itemDate = new Date(point.date);
-          return itemDate >= cutoffDate;
-        });
-
-        // Group by date and take the FIRST entry per day (earliest version_id)
-        const dataByDate = new Map<string, HistoricalDataPoint>();
-
-        filteredData.forEach((point: HistoricalDataPoint) => {
-          const dateKey = point.date;
-
-          if (!dataByDate.has(dateKey)) {
-            dataByDate.set(dateKey, point);
-          } else {
-            const existing = dataByDate.get(dateKey)!;
-            if (point.version_id < existing.version_id) {
-              dataByDate.set(dateKey, point);
-            }
-          }
-        });
-
-        // Convert back to array and sort by date
-        const uniqueData = Array.from(dataByDate.values()).sort((a, b) => {
-          const dateA = parseDateCentralTime(a.date);
-          const dateB = parseDateCentralTime(b.date);
-          return dateA.getTime() - dateB.getTime();
-        });
-
-        setData(uniqueData);
-        setError(null);
-      } catch (err) {
-        console.error("Error in fetchData:", err);
-        setError(err instanceof Error ? err.message : "Failed to load data");
-        setData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (teamName) {
-      fetchData();
+    if (!allHistoryData?.confWins?.data) {
+      setData([]);
+      return;
     }
-  }, [teamName]);
+
+    const rawData = allHistoryData.confWins.data;
+
+    // Filter data starting from 8/22
+    const cutoffDate = new Date("2025-08-22");
+    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
+      const itemDate = new Date(point.date);
+      return itemDate >= cutoffDate;
+    });
+
+    // Group by date and take the FIRST entry per day (earliest version_id)
+    const dataByDate = new Map<string, HistoricalDataPoint>();
+
+    filteredData.forEach((point: HistoricalDataPoint) => {
+      const dateKey = point.date;
+
+      if (!dataByDate.has(dateKey)) {
+        dataByDate.set(dateKey, point);
+      } else {
+        const existing = dataByDate.get(dateKey)!;
+        if (point.version_id < existing.version_id) {
+          dataByDate.set(dateKey, point);
+        }
+      }
+    });
+
+    // Convert back to array and sort by date
+    const uniqueData = Array.from(dataByDate.values()).sort((a, b) => {
+      const dateA = parseDateCentralTime(a.date);
+      const dateB = parseDateCentralTime(b.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    setData(uniqueData);
+  }, [allHistoryData, teamName]);
 
   // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
-      // No secondaryColor provided, use fallback logic
       return primaryColor === "#3b82f6" ? "#ef4444" : "#10b981";
     }
 
-    // Check if secondary color is white (various formats)
     const whiteValues = [
       "#ffffff",
       "#fff",
@@ -148,7 +134,7 @@ export default function FootballTeamWinHistory({
     ];
 
     if (whiteValues.includes(secondaryColor.toLowerCase().replace(/\s/g, ""))) {
-      return "#000000"; // Use black instead of white
+      return "#000000";
     }
 
     return secondaryColor;
@@ -247,7 +233,6 @@ export default function FootballTeamWinHistory({
               maxWidth: "300px",
             });
 
-            // Add close functionality
             const handleClickOutside = (e: Event) => {
               if (!tooltipEl?.contains(e.target as Node)) {
                 tooltipEl!.style.opacity = "0";
@@ -280,7 +265,6 @@ export default function FootballTeamWinHistory({
             const totalWins = data[dataIndex].projected_total_wins;
             const confWins = data[dataIndex].projected_conf_wins;
 
-            // Standard header with close button
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
@@ -307,7 +291,6 @@ export default function FootballTeamWinHistory({
 
             tooltipEl.innerHTML = innerHtml;
 
-            // Add close button functionality
             const closeBtn = tooltipEl.querySelector("#tooltip-close");
             if (closeBtn) {
               closeBtn.addEventListener("click", (e) => {
@@ -324,7 +307,6 @@ export default function FootballTeamWinHistory({
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
-          // Determine positioning
           const isLeftSide = caretX < chartWidth / 2;
           let leftPosition: number;
           let arrowPosition: string;
@@ -338,7 +320,6 @@ export default function FootballTeamWinHistory({
             arrowPosition = "right";
           }
 
-          // Add/update arrow
           if (!tooltipEl.querySelector(".tooltip-arrow")) {
             const arrow = document.createElement("div");
             arrow.className = "tooltip-arrow";
@@ -361,31 +342,12 @@ export default function FootballTeamWinHistory({
             }
 
             tooltipEl.appendChild(arrow);
-          } else {
-            // Update existing arrow
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
           }
 
-          // Prevent off-screen positioning
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
 
-          // Position tooltip
           tooltipEl.style.opacity = "1";
           tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
@@ -467,6 +429,25 @@ export default function FootballTeamWinHistory({
         width: "100%",
       }}
     >
+      {logoUrl && (
+        <div
+          className="absolute z-10"
+          style={{
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
+          }}
+        >
+          <Image
+            src={logoUrl}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
+          />
+        </div>
+      )}
       <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
@@ -13,6 +14,7 @@ import {
   Tooltip,
   TooltipModel,
 } from "chart.js";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
@@ -34,30 +36,37 @@ interface HistoricalDataPoint {
   standings_no_ties: number;
   first_place_with_ties: number;
   first_place_no_ties: number;
+  sagarin_rank: number | null;
   version_id: string;
-  is_current: boolean;
+  is_current?: boolean;
 }
 
 interface FootballTeamFirstPlaceHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  logoUrl?: string;
 }
 
 export default function FootballTeamFirstPlaceHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
+  logoUrl,
 }: FootballTeamFirstPlaceHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number }>,
-    string
-  > | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // Use the master history hook
+  const {
+    data: allHistoryData,
+    isLoading: loading,
+    error: queryError,
+  } = useFootballTeamAllHistory(teamName);
+
+  const error = queryError?.message || null;
 
   const parseDateCentralTime = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
@@ -70,76 +79,54 @@ export default function FootballTeamFirstPlaceHistory({
     return `${month}/${day}`;
   };
 
+  // Process the data when allHistoryData changes
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch historical data");
-        }
-
-        const result = await response.json();
-        const rawData: HistoricalDataPoint[] = result.data || [];
-
-        if (rawData.length === 0) {
-          setData([]);
-          setError(null);
-          return;
-        }
-
-        // Filter data starting from 8/22
-        const cutoffDate = new Date("2025-08-22");
-        const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-          const itemDate = new Date(point.date);
-          return itemDate >= cutoffDate;
-        });
-
-        // Deduplicate by date, keeping earliest version_id
-        const dataByDate = new Map<string, HistoricalDataPoint>();
-        filteredData.forEach((point: HistoricalDataPoint) => {
-          const dateKey = point.date;
-          if (
-            !dataByDate.has(dateKey) ||
-            point.version_id < dataByDate.get(dateKey)!.version_id
-          ) {
-            dataByDate.set(dateKey, point);
-          }
-        });
-
-        const processedData = Array.from(dataByDate.values()).sort((a, b) => {
-          const dateA = parseDateCentralTime(a.date);
-          const dateB = parseDateCentralTime(b.date);
-          return dateA.getTime() - dateB.getTime();
-        });
-
-        setData(processedData);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching first place history:", err);
-        setError(err instanceof Error ? err.message : "Unknown error");
-        setData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (teamName) {
-      fetchData();
+    if (!allHistoryData?.confWins?.data) {
+      setData([]);
+      return;
     }
-  }, [teamName]);
+
+    const rawData: HistoricalDataPoint[] = allHistoryData.confWins.data;
+
+    if (rawData.length === 0) {
+      setData([]);
+      return;
+    }
+
+    // Filter data starting from 8/22
+    const cutoffDate = new Date("2025-08-22");
+    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
+      const itemDate = new Date(point.date);
+      return itemDate >= cutoffDate;
+    });
+
+    // Deduplicate by date, keeping earliest version_id
+    const dataByDate = new Map<string, HistoricalDataPoint>();
+    filteredData.forEach((point: HistoricalDataPoint) => {
+      const dateKey = point.date;
+      if (
+        !dataByDate.has(dateKey) ||
+        point.version_id < dataByDate.get(dateKey)!.version_id
+      ) {
+        dataByDate.set(dateKey, point);
+      }
+    });
+
+    const processedData = Array.from(dataByDate.values()).sort((a, b) => {
+      const dateA = parseDateCentralTime(a.date);
+      const dateB = parseDateCentralTime(b.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    setData(processedData);
+  }, [allHistoryData, teamName]);
 
   // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
-      // No secondaryColor provided, use fallback logic
       return primaryColor === "#3b82f6" ? "#ef4444" : "#10b981";
     }
 
-    // Check if secondary color is white (various formats)
     const whiteValues = [
       "#ffffff",
       "#fff",
@@ -152,13 +139,14 @@ export default function FootballTeamFirstPlaceHistory({
     ];
 
     if (whiteValues.includes(secondaryColor.toLowerCase().replace(/\s/g, ""))) {
-      return "#000000"; // Use black instead of white
+      return "#000000";
     }
 
     return secondaryColor;
   })();
 
   const labels = data.map((point) => formatDateForDisplay(point.date));
+
   const firstPlaceWithTiesData = data.map((point, index) => ({
     x: labels[index],
     y: point.first_place_with_ties,
@@ -170,7 +158,7 @@ export default function FootballTeamFirstPlaceHistory({
 
   const datasets = [
     {
-      label: "#1 % (With Ties)",
+      label: "First Place (with ties)",
       data: firstPlaceWithTiesData,
       backgroundColor: `${primaryColor}20`,
       borderColor: primaryColor,
@@ -183,7 +171,7 @@ export default function FootballTeamFirstPlaceHistory({
       fill: false,
     },
     {
-      label: "#1 % (No Ties)",
+      label: "First Place (no ties)",
       data: firstPlaceNoTiesData,
       backgroundColor: `${finalSecondaryColor}20`,
       borderColor: finalSecondaryColor,
@@ -194,6 +182,7 @@ export default function FootballTeamFirstPlaceHistory({
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
+      borderDash: [5, 5],
     },
   ];
 
@@ -227,12 +216,10 @@ export default function FootballTeamFirstPlaceHistory({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById(
-            "chartjs-tooltip-firstplace-history"
-          );
+          let tooltipEl = document.getElementById("chartjs-tooltip-firstplace");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-firstplace-history";
+            tooltipEl.id = "chartjs-tooltip-firstplace";
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
@@ -253,7 +240,6 @@ export default function FootballTeamFirstPlaceHistory({
               maxWidth: "300px",
             });
 
-            // Add close functionality
             const handleClickOutside = (e: Event) => {
               if (!tooltipEl?.contains(e.target as Node)) {
                 tooltipEl!.style.opacity = "0";
@@ -283,10 +269,9 @@ export default function FootballTeamFirstPlaceHistory({
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const currentDate = labels[dataIndex];
-            const withTies = data[dataIndex].first_place_with_ties;
-            const noTies = data[dataIndex].first_place_no_ties;
+            const firstPlaceWithTies = data[dataIndex].first_place_with_ties;
+            const firstPlaceNoTies = data[dataIndex].first_place_no_ties;
 
-            // Standard header with close button
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
@@ -308,12 +293,11 @@ export default function FootballTeamFirstPlaceHistory({
               </div>
             `;
 
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">#1 % (With Ties): ${withTies.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">#1 % (No Ties): ${noTies.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">First Place (with ties): ${firstPlaceWithTies.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">First Place (no ties): ${firstPlaceNoTies.toFixed(1)}%</div>`;
 
             tooltipEl.innerHTML = innerHtml;
 
-            // Add close button functionality
             const closeBtn = tooltipEl.querySelector("#tooltip-close");
             if (closeBtn) {
               closeBtn.addEventListener("click", (e) => {
@@ -330,7 +314,6 @@ export default function FootballTeamFirstPlaceHistory({
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
-          // Determine positioning
           const isLeftSide = caretX < chartWidth / 2;
           let leftPosition: number;
           let arrowPosition: string;
@@ -344,7 +327,6 @@ export default function FootballTeamFirstPlaceHistory({
             arrowPosition = "right";
           }
 
-          // Add/update arrow
           if (!tooltipEl.querySelector(".tooltip-arrow")) {
             const arrow = document.createElement("div");
             arrow.className = "tooltip-arrow";
@@ -367,39 +349,20 @@ export default function FootballTeamFirstPlaceHistory({
             }
 
             tooltipEl.appendChild(arrow);
-          } else {
-            // Update existing arrow
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
           }
 
-          // Prevent off-screen positioning
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
 
-          // Position tooltip
           tooltipEl.style.opacity = "1";
           tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
             position.top +
             window.pageYOffset +
             caretY -
-            tooltipEl.offsetHeight / 2 -
-            20 +
+            tooltipEl.offsetHeight / 2 +
+            40 +
             "px";
         },
       },
@@ -415,7 +378,6 @@ export default function FootballTeamFirstPlaceHistory({
         grid: { display: false },
       },
       y: {
-        beginAtZero: true,
         min: 0,
         max: 100,
         grid: {
@@ -425,8 +387,17 @@ export default function FootballTeamFirstPlaceHistory({
           font: {
             size: isMobile ? 10 : 12,
           },
+          stepSize: 20,
           callback: function (value: string | number) {
             return `${value}%`;
+          },
+        },
+        title: {
+          display: true,
+          text: "First Place Probability",
+          font: {
+            size: isMobile ? 11 : 12,
+            weight: 500,
           },
         },
       },
@@ -439,7 +410,7 @@ export default function FootballTeamFirstPlaceHistory({
     return (
       <div className="text-center py-8">
         <div className="animate-pulse text-gray-500">
-          Loading first place history...
+          Loading historical data...
         </div>
       </div>
     );
@@ -449,7 +420,7 @@ export default function FootballTeamFirstPlaceHistory({
     return (
       <div className="text-center py-8">
         <div className="text-red-500 text-sm">
-          Unable to load first place history
+          Unable to load historical data
         </div>
         <div className="text-gray-400 text-xs mt-1">{error}</div>
       </div>
@@ -459,9 +430,7 @@ export default function FootballTeamFirstPlaceHistory({
   if (data.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 text-sm">
-          No historical data available
-        </div>
+        <div className="text-gray-500 text-sm">Historical data coming soon</div>
         <div className="text-gray-400 text-xs mt-1">
           Chart will show first place probability over time once data is
           collected
@@ -478,6 +447,25 @@ export default function FootballTeamFirstPlaceHistory({
         width: "100%",
       }}
     >
+      {logoUrl && (
+        <div
+          className="absolute z-10"
+          style={{
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
+          }}
+        >
+          <Image
+            src={logoUrl}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
+          />
+        </div>
+      )}
       <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );

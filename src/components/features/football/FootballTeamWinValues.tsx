@@ -13,6 +13,7 @@ import {
   Tooltip,
   TooltipModel,
 } from "chart.js";
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { Line } from "react-chartjs-2";
 
@@ -40,6 +41,7 @@ interface FootballTeamGame {
 
 interface FootballTeamWinValuesProps {
   schedule: FootballTeamGame[];
+  logoUrl?: string;
 }
 
 interface GameWithDate extends FootballTeamGame {
@@ -55,6 +57,7 @@ interface ContinuousDataPoint {
 
 export default function FootballTeamWinValues({
   schedule,
+  logoUrl,
 }: FootballTeamWinValuesProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
@@ -497,6 +500,26 @@ export default function FootballTeamWinValues({
         width: "100%",
       }}
     >
+      {" "}
+      {logoUrl && (
+        <div
+          className="absolute z-10"
+          style={{
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
+          }}
+        >
+          <Image
+            src={logoUrl}
+            alt="Team logo"
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
+          />
+        </div>
+      )}
       <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );

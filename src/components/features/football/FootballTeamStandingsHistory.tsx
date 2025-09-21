@@ -1,5 +1,6 @@
 "use client";
 
+import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
@@ -13,6 +14,7 @@ import {
   Tooltip,
   TooltipModel,
 } from "chart.js";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
@@ -34,31 +36,38 @@ interface HistoricalDataPoint {
   standings_no_ties: number;
   first_place_with_ties: number;
   first_place_no_ties: number;
+  sagarin_rank: number | null;
   version_id: string;
-  is_current: boolean;
+  is_current?: boolean;
 }
 
 interface FootballTeamStandingsHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  logoUrl?: string;
 }
 
 export default function FootballTeamStandingsHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
+  logoUrl,
 }: FootballTeamStandingsHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number }>,
-    string
-  > | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
   const [conferenceSize, setConferenceSize] = useState(16);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // Use the master history hook
+  const {
+    data: allHistoryData,
+    isLoading: loading,
+    error: queryError,
+  } = useFootballTeamAllHistory(teamName);
+
+  const error = queryError?.message || null;
 
   const parseDateCentralTime = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
@@ -71,77 +80,56 @@ export default function FootballTeamStandingsHistory({
     return `${month}/${day}`;
   };
 
+  // Process the data when allHistoryData changes
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch historical data");
-        }
-
-        const result = await response.json();
-        const rawData: HistoricalDataPoint[] = result.data || [];
-        setConferenceSize(result.conference_size || 16);
-
-        if (rawData.length === 0) {
-          setData([]);
-          setError(null);
-          return;
-        }
-
-        // Filter data starting from 8/22
-        const cutoffDate = new Date("2025-08-22");
-        const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-          const itemDate = new Date(point.date);
-          return itemDate >= cutoffDate;
-        });
-
-        // Deduplicate by date, keeping earliest version_id
-        const dataByDate = new Map<string, HistoricalDataPoint>();
-        filteredData.forEach((point: HistoricalDataPoint) => {
-          const dateKey = point.date;
-          if (
-            !dataByDate.has(dateKey) ||
-            point.version_id < dataByDate.get(dateKey)!.version_id
-          ) {
-            dataByDate.set(dateKey, point);
-          }
-        });
-
-        const processedData = Array.from(dataByDate.values()).sort((a, b) => {
-          const dateA = parseDateCentralTime(a.date);
-          const dateB = parseDateCentralTime(b.date);
-          return dateA.getTime() - dateB.getTime();
-        });
-
-        setData(processedData);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching standings history:", err);
-        setError(err instanceof Error ? err.message : "Unknown error");
-        setData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (teamName) {
-      fetchData();
+    if (!allHistoryData?.confWins?.data) {
+      setData([]);
+      setConferenceSize(16);
+      return;
     }
-  }, [teamName]);
+
+    const rawData: HistoricalDataPoint[] = allHistoryData.confWins.data;
+    setConferenceSize(allHistoryData.confWins.conference_size || 16);
+
+    if (rawData.length === 0) {
+      setData([]);
+      return;
+    }
+
+    // Filter data starting from 8/22
+    const cutoffDate = new Date("2025-08-22");
+    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
+      const itemDate = new Date(point.date);
+      return itemDate >= cutoffDate;
+    });
+
+    // Deduplicate by date, keeping earliest version_id
+    const dataByDate = new Map<string, HistoricalDataPoint>();
+    filteredData.forEach((point: HistoricalDataPoint) => {
+      const dateKey = point.date;
+      if (
+        !dataByDate.has(dateKey) ||
+        point.version_id < dataByDate.get(dateKey)!.version_id
+      ) {
+        dataByDate.set(dateKey, point);
+      }
+    });
+
+    const processedData = Array.from(dataByDate.values()).sort((a, b) => {
+      const dateA = parseDateCentralTime(a.date);
+      const dateB = parseDateCentralTime(b.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    setData(processedData);
+  }, [allHistoryData, teamName]);
 
   // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
-      // No secondaryColor provided, use fallback logic
       return primaryColor === "#3b82f6" ? "#ef4444" : "#10b981";
     }
 
-    // Check if secondary color is white (various formats)
     const whiteValues = [
       "#ffffff",
       "#fff",
@@ -154,7 +142,7 @@ export default function FootballTeamStandingsHistory({
     ];
 
     if (whiteValues.includes(secondaryColor.toLowerCase().replace(/\s/g, ""))) {
-      return "#000000"; // Use black instead of white
+      return "#000000";
     }
 
     return secondaryColor;
@@ -172,7 +160,7 @@ export default function FootballTeamStandingsHistory({
 
   const datasets = [
     {
-      label: "Standing (With Ties)",
+      label: "Projected Standings (with ties)",
       data: standingsWithTiesData,
       backgroundColor: `${primaryColor}20`,
       borderColor: primaryColor,
@@ -185,7 +173,7 @@ export default function FootballTeamStandingsHistory({
       fill: false,
     },
     {
-      label: "Standing (No Ties)",
+      label: "Projected Standings (no ties)",
       data: standingsNoTiesData,
       backgroundColor: `${finalSecondaryColor}20`,
       borderColor: finalSecondaryColor,
@@ -196,6 +184,7 @@ export default function FootballTeamStandingsHistory({
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
+      borderDash: [5, 5],
     },
   ];
 
@@ -229,12 +218,10 @@ export default function FootballTeamStandingsHistory({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById(
-            "chartjs-tooltip-standings-history"
-          );
+          let tooltipEl = document.getElementById("chartjs-tooltip-standings");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-standings-history";
+            tooltipEl.id = "chartjs-tooltip-standings";
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
@@ -255,7 +242,6 @@ export default function FootballTeamStandingsHistory({
               maxWidth: "300px",
             });
 
-            // Add close functionality
             const handleClickOutside = (e: Event) => {
               if (!tooltipEl?.contains(e.target as Node)) {
                 tooltipEl!.style.opacity = "0";
@@ -285,10 +271,9 @@ export default function FootballTeamStandingsHistory({
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const currentDate = labels[dataIndex];
-            const withTies = data[dataIndex].standings_with_ties;
-            const noTies = data[dataIndex].standings_no_ties;
+            const standingsWithTies = data[dataIndex].standings_with_ties;
+            const standingsNoTies = data[dataIndex].standings_no_ties;
 
-            // Standard header with close button
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
@@ -310,12 +295,11 @@ export default function FootballTeamStandingsHistory({
               </div>
             `;
 
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Standing (With Ties): #${withTies.toFixed(1)}</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Standing (No Ties): #${noTies.toFixed(1)}</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Standings (with ties): ${standingsWithTies.toFixed(1)}</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Standings (no ties): ${standingsNoTies.toFixed(1)}</div>`;
 
             tooltipEl.innerHTML = innerHtml;
 
-            // Add close button functionality
             const closeBtn = tooltipEl.querySelector("#tooltip-close");
             if (closeBtn) {
               closeBtn.addEventListener("click", (e) => {
@@ -332,7 +316,6 @@ export default function FootballTeamStandingsHistory({
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
-          // Determine positioning
           const isLeftSide = caretX < chartWidth / 2;
           let leftPosition: number;
           let arrowPosition: string;
@@ -346,7 +329,6 @@ export default function FootballTeamStandingsHistory({
             arrowPosition = "right";
           }
 
-          // Add/update arrow
           if (!tooltipEl.querySelector(".tooltip-arrow")) {
             const arrow = document.createElement("div");
             arrow.className = "tooltip-arrow";
@@ -369,31 +351,12 @@ export default function FootballTeamStandingsHistory({
             }
 
             tooltipEl.appendChild(arrow);
-          } else {
-            // Update existing arrow
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
           }
 
-          // Prevent off-screen positioning
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
 
-          // Position tooltip
           tooltipEl.style.opacity = "1";
           tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
@@ -401,7 +364,7 @@ export default function FootballTeamStandingsHistory({
             window.pageYOffset +
             caretY -
             tooltipEl.offsetHeight / 2 +
-            0 +
+            40 +
             "px";
         },
       },
@@ -417,10 +380,9 @@ export default function FootballTeamStandingsHistory({
         grid: { display: false },
       },
       y: {
-        beginAtZero: false,
+        reverse: true, // Lower standings (better) show higher on chart
         min: 1,
         max: conferenceSize,
-        reverse: true,
         grid: {
           color: "rgba(0, 0, 0, 0.1)",
         },
@@ -430,7 +392,15 @@ export default function FootballTeamStandingsHistory({
           },
           stepSize: 1,
           callback: function (value: string | number) {
-            return `#${value}`;
+            return `${value}`;
+          },
+        },
+        title: {
+          display: true,
+          text: "Conference Standing",
+          font: {
+            size: isMobile ? 11 : 12,
+            weight: 500,
           },
         },
       },
@@ -443,7 +413,7 @@ export default function FootballTeamStandingsHistory({
     return (
       <div className="text-center py-8">
         <div className="animate-pulse text-gray-500">
-          Loading standings history...
+          Loading historical data...
         </div>
       </div>
     );
@@ -453,7 +423,7 @@ export default function FootballTeamStandingsHistory({
     return (
       <div className="text-center py-8">
         <div className="text-red-500 text-sm">
-          Unable to load standings history
+          Unable to load historical data
         </div>
         <div className="text-gray-400 text-xs mt-1">{error}</div>
       </div>
@@ -463,11 +433,9 @@ export default function FootballTeamStandingsHistory({
   if (data.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 text-sm">
-          No historical data available
-        </div>
+        <div className="text-gray-500 text-sm">Historical data coming soon</div>
         <div className="text-gray-400 text-xs mt-1">
-          Chart will show standings over time once data is collected
+          Chart will show projected standings over time once data is collected
         </div>
       </div>
     );
@@ -481,6 +449,25 @@ export default function FootballTeamStandingsHistory({
         width: "100%",
       }}
     >
+      {logoUrl && (
+        <div
+          className="absolute z-10"
+          style={{
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
+          }}
+        >
+          <Image
+            src={logoUrl}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
+          />
+        </div>
+      )}
       <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );

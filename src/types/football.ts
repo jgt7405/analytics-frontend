@@ -286,9 +286,20 @@ export interface FootballTeamInfo {
   cfp_bid_pct: number;
   average_seed?: number;
   seed_distribution: Record<string, number>;
-  conf_champ_overall_pct?: number; // NEW
-  at_large_overall_pct?: number; // NEW
-  no_bid_pct?: number; // NEW
+  conf_champ_overall_pct?: number;
+  at_large_overall_pct?: number;
+  no_bid_pct?: number;
+  // Add these missing properties:
+  sagarin_rank?: number;
+  win_seed_counts?: Array<{
+    Seed: string | number;
+    Percentage: number;
+    Tournament_Status: string;
+    Wins: number;
+    Count: number;
+    Conf_Champ_Pct?: number;
+    At_Large_Pct?: number;
+  }>;
 }
 
 export interface FootballTeamGame {

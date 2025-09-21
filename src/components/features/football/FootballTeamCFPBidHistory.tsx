@@ -1,9 +1,6 @@
-// src/components/features/football/FootballTeamCFPBidHistory.tsx
 "use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
-import { cleanupTooltip, createChartTooltip } from "@/lib/chartTooltip";
-import type { TooltipModel } from "chart.js";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -13,7 +10,9 @@ import {
   PointElement,
   Title,
   Tooltip,
+  type TooltipItem,
 } from "chart.js";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
@@ -62,11 +61,8 @@ export default function FootballTeamCFPBidHistory({
   secondaryColor,
 }: FootballTeamCFPBidHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number | null }>,
-    string
-  > | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<CFPHistoricalDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,13 +154,6 @@ export default function FootballTeamCFPBidHistory({
     }
   }, [teamName]);
 
-  // Cleanup tooltip when component unmounts
-  useEffect(() => {
-    return () => {
-      cleanupTooltip("chartjs-tooltip-cfp-bid-history");
-    };
-  }, []);
-
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
       secondaryColor.toLowerCase() === "white"
@@ -175,6 +164,9 @@ export default function FootballTeamCFPBidHistory({
       : "#10b981";
 
   const labels = data.map((item) => formatDateForDisplay(item.date));
+
+  // Get team logo from the first available data point
+  const teamLogo = data.length > 0 ? data[0].team_info.logo_url : null;
 
   const chartData = {
     labels,
@@ -218,28 +210,6 @@ export default function FootballTeamCFPBidHistory({
     ],
   };
 
-  // Create the tooltip content generator
-  const getTooltipContent = (tooltipModel: TooltipModel<"line">) => {
-    if (!tooltipModel.body || !data.length) return "";
-
-    const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-    const currentDate = labels[dataIndex];
-    const cfpBidPct = data[dataIndex].cfp_bid_pct || 0;
-    const avgSeed = data[dataIndex].average_seed || 0;
-
-    return `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-      </div>
-      <div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">
-        CFP Bid Probability: ${cfpBidPct.toFixed(1)}%
-      </div>
-      <div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">
-        Average Seed: ${avgSeed > 0 ? avgSeed.toFixed(1) : "N/A"}
-      </div>
-    `;
-  };
-
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -251,7 +221,7 @@ export default function FootballTeamCFPBidHistory({
       point: {
         radius: 0,
         hoverRadius: 6,
-        hitRadius: 10,
+        hitRadius: 15,
       },
       line: {
         borderWidth: 2,
@@ -270,32 +240,72 @@ export default function FootballTeamCFPBidHistory({
         },
       },
       tooltip: {
-        enabled: false,
-        external: createChartTooltip({
-          tooltipId: "chartjs-tooltip-cfp-bid-history",
-          getContent: getTooltipContent,
-          styling: {
-            minWidth: "200px",
-            maxWidth: "300px",
-            padding: "16px",
-            paddingTop: "8px",
+        enabled: true,
+        backgroundColor: "#ffffff",
+        titleColor: "#1f2937",
+        bodyColor: "#1f2937",
+        borderColor: "#e5e7eb",
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: false,
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: "bold" as const,
+        },
+        bodyFont: {
+          size: 12,
+        },
+        callbacks: {
+          title: function (context: TooltipItem<"line">[]) {
+            if (context.length > 0) {
+              const dataIndex = context[0].dataIndex;
+              return labels[dataIndex];
+            }
+            return "";
           },
-        }),
+          labelTextColor: function (context: TooltipItem<"line">) {
+            const datasetIndex = context.datasetIndex;
+
+            if (datasetIndex === 0) {
+              // CFP Bid Probability - use primary color
+              return primaryColor;
+            } else if (datasetIndex === 1) {
+              // Average Seed - use final secondary color (handles white fallback)
+              return finalSecondaryColor;
+            }
+            return "#1f2937"; // fallback color
+          },
+          label: function (context: TooltipItem<"line">) {
+            const dataIndex = context.dataIndex;
+            const datasetIndex = context.datasetIndex;
+
+            if (datasetIndex === 0) {
+              // CFP Bid Probability
+              const cfpBidPct = data[dataIndex].cfp_bid_pct || 0;
+              return `CFP Bid Probability: ${cfpBidPct.toFixed(1)}%`;
+            } else if (datasetIndex === 1) {
+              // Average Seed
+              const avgSeed = data[dataIndex].average_seed || 0;
+              return `Average Seed: ${avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A"}`;
+            }
+            return "";
+          },
+        },
       },
     },
     scales: {
       x: {
         display: true,
         ticks: {
-          color: finalSecondaryColor,
+          color: "#6b7280",
           font: {
             size: isMobile ? 9 : 10,
           },
           maxTicksLimit: isMobile ? 8 : 12,
         },
         grid: {
-          color: "#f3f4f6",
-          lineWidth: 1,
+          display: false, // Remove vertical grid lines
         },
       },
       y: {
@@ -305,7 +315,7 @@ export default function FootballTeamCFPBidHistory({
         min: 0,
         max: 100,
         ticks: {
-          color: finalSecondaryColor,
+          color: primaryColor, // Changed from finalSecondaryColor to primaryColor
           font: {
             size: isMobile ? 9 : 10,
           },
@@ -317,7 +327,11 @@ export default function FootballTeamCFPBidHistory({
         title: {
           display: true,
           text: "CFP Bid %",
-          color: finalSecondaryColor,
+          color: primaryColor, // Changed from finalSecondaryColor to primaryColor
+        },
+        grid: {
+          color: "#f3f4f6",
+          lineWidth: 1,
         },
       },
       y1: {
@@ -333,6 +347,7 @@ export default function FootballTeamCFPBidHistory({
           color: finalSecondaryColor,
           stepSize: 1,
           callback: function (value: string | number) {
+            // Remove the inversion logic - just show the value directly
             return `#${value}`;
           },
         },
@@ -341,6 +356,10 @@ export default function FootballTeamCFPBidHistory({
           text: "Avg Seed",
           color: finalSecondaryColor,
         },
+        grid: {
+          display: false, // Remove grid lines from right axis
+        },
+        reverse: true, // Keep this - it makes #1 appear at top, #12 at bottom
       },
     },
   };
@@ -389,6 +408,27 @@ export default function FootballTeamCFPBidHistory({
         width: "100%",
       }}
     >
+      {/* Team Logo in top right - moved further up and right */}
+      {teamLogo && (
+        <div
+          className="absolute z-10"
+          style={{
+            top: "-30px", // Moved up more from -5px
+            right: "-10px", // Moved right more from -5px
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
+          }}
+        >
+          <Image
+            src={teamLogo}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
+          />
+        </div>
+      )}
+
       <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );

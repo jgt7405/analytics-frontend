@@ -9,6 +9,7 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 interface Team {
@@ -66,6 +67,7 @@ interface TeamColumn {
 const MAX_TEAMS = 4;
 
 export default function FootballComparePage() {
+  const router = useRouter();
   const [availableConferences, setAvailableConferences] = useState<string[]>(
     []
   );
@@ -73,6 +75,10 @@ export default function FootballComparePage() {
   const [columns, setColumns] = useState<TeamColumn[]>([]);
   const [nextColumnId, setNextColumnId] = useState(1);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+
+  const navigateToTeamPage = (teamName: string) => {
+    router.push(`/football/team/${encodeURIComponent(teamName)}`);
+  };
 
   const loadTeamData = useCallback(
     async (teamName: string): Promise<TeamData | null> => {
@@ -269,11 +275,17 @@ export default function FootballComparePage() {
             logoUrl={column.teamData.team_info.logo_url}
             teamName={column.teamData.team_info.team_name}
             size={40}
+            onClick={() =>
+              navigateToTeamPage(column.teamData!.team_info.team_name)
+            }
           />
           <div>
             <h4
-              className="font-semibold text-lg"
+              className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors"
               style={{ color: column.teamData.team_info.primary_color }}
+              onClick={() =>
+                navigateToTeamPage(column.teamData!.team_info.team_name)
+              }
             >
               {column.teamData.team_info.team_name}
               {column.teamData.team_info.sagarin_rank &&
@@ -314,6 +326,7 @@ export default function FootballComparePage() {
               schedule={column.teamData.schedule}
               allScheduleData={column.teamData.all_schedule_data}
               teamConference={column.teamData.team_info.conference}
+              logoUrl={column.teamData.team_info.logo_url}
             />
           </div>
         </div>
@@ -324,6 +337,7 @@ export default function FootballComparePage() {
             teamName={column.teamData.team_info.team_name}
             primaryColor={column.teamData.team_info.primary_color}
             secondaryColor={column.teamData.team_info.secondary_color}
+            logoUrl={column.teamData.team_info.logo_url}
           />
         </div>
 
@@ -335,6 +349,7 @@ export default function FootballComparePage() {
             teamName={column.teamData.team_info.team_name}
             primaryColor={column.teamData.team_info.primary_color}
             secondaryColor={column.teamData.team_info.secondary_color}
+            logoUrl={column.teamData.team_info.logo_url}
           />
         </div>
 
@@ -398,17 +413,27 @@ export default function FootballComparePage() {
                 style={{ minWidth: `${columns.length * 20}rem` }}
               >
                 <div className="flex gap-4">
-                  {columns.map((column, index) =>
-                    renderTeamControls(column, index)
-                  )}
+                  {columns.map((column, index) => (
+                    <div key={column.id}>
+                      {renderTeamControls(column, index)}
+                    </div>
+                  ))}
                 </div>
 
                 <div className="flex gap-4 sticky top-0 bg-white z-40 py-1 -mx-4 px-4 shadow-sm">
-                  {columns.map((column) => renderTeamHeader(column))}
+                  {columns.map((column) => (
+                    <div key={`header-${column.id}`}>
+                      {renderTeamHeader(column)}
+                    </div>
+                  ))}
                 </div>
 
                 <div className="flex gap-4">
-                  {columns.map((column) => renderTeamContent(column))}
+                  {columns.map((column) => (
+                    <div key={`content-${column.id}`}>
+                      {renderTeamContent(column)}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

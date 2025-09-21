@@ -21,12 +21,67 @@ import {
   FootballScheduleResponse,
   FootballSeedApiResponse,
   FootballStandingsApiResponse,
-  FootballTeamApiResponse,
   FootballTeamsApiResponse,
   FootballTWVApiResponse,
 } from "@/types/football";
 
 const API_BASE_URL = "/api/proxy";
+
+// Add this interface near the top of your api.ts file, around line 30-80 with the other interfaces
+
+interface FootballTeamData {
+  team_info: {
+    team_name: string;
+    team_id: string;
+    conference: string;
+    logo_url: string;
+    primary_color: string;
+    secondary_color: string;
+    overall_record: string;
+    conference_record: string;
+    cfp_bid_pct?: number;
+    average_seed?: number;
+    sagarin_rank?: number;
+    rating?: number;
+    seed_distribution: Record<string, number>;
+    win_seed_counts: Array<{
+      Seed: string | number;
+      Percentage: number;
+      Tournament_Status: string;
+      Wins: number;
+      Count: number;
+      Conf_Champ_Pct?: number;
+      At_Large_Pct?: number;
+    }>;
+  };
+  schedule: Array<{
+    date: string;
+    opponent: string;
+    opponent_logo?: string;
+    opponent_primary_color?: string;
+    location: string;
+    status: string;
+    twv?: number;
+    cwv?: number;
+    sagarin_rank?: number;
+    opp_rnk?: number;
+    team_win_prob?: number;
+    sag12_win_prob?: number;
+    team_points?: number;
+    opp_points?: number;
+    team_conf?: string;
+    team_conf_catg?: string;
+  }>;
+  all_schedule_data: Array<{
+    team: string;
+    opponent: string;
+    opponent_primary_color?: string;
+    sag12_win_prob: number;
+    team_conf: string;
+    team_conf_catg: string;
+    status: string;
+  }>;
+}
 
 // Define specific API response types
 interface TWVApiResponse {
@@ -634,15 +689,17 @@ class ApiClient {
     return result;
   }
 
-  async getFootballTeam(teamName: string): Promise<FootballTeamApiResponse> {
-    const encoded = encodeURIComponent(teamName);
-    console.log(`🏈 Getting football team data for: ${teamName} -> ${encoded}`);
+  async getFootballTeam(teamName: string): Promise<FootballTeamData> {
+    const sanitizedTeamName = sanitizeInput(teamName);
+    const response = await fetch(
+      `${API_BASE_URL}/football_team/${encodeURIComponent(sanitizedTeamName)}`
+    );
 
-    return this.request(`/football_team/${encoded}`, (data) => ({
-      success: true,
-      data: data as FootballTeamApiResponse,
-      error: null,
-    }));
+    if (!response.ok) {
+      throw new Error(`Failed to fetch team data: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   // Health check endpoint
