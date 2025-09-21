@@ -53,6 +53,38 @@ interface TeamData {
   schedule: TeamGame[];
 }
 
+// Add this function for static generation
+export async function generateStaticParams() {
+  try {
+    // Use the same API endpoint structure as your other calls
+    const baseUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://jthomprodbackend-production.up.railway.app";
+    const response = await fetch(`${baseUrl}/basketball/teams`);
+
+    if (!response.ok) {
+      console.warn("Failed to fetch basketball teams for static generation");
+      return [];
+    }
+
+    const data = await response.json();
+
+    if (data?.data && Array.isArray(data.data)) {
+      return data.data.map((team: { team_name: string }) => ({
+        teamname: encodeURIComponent(team.team_name),
+      }));
+    }
+
+    return [];
+  } catch (error) {
+    console.error(
+      "Error generating static params for basketball teams:",
+      error
+    );
+    return [];
+  }
+}
+
 export default function TeamPage({
   params,
 }: {
