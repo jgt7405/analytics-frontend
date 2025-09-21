@@ -83,8 +83,6 @@ const nextConfig = {
   // Production optimizations
   ...(process.env.NODE_ENV === "production" && {
     compress: true,
-    output: "export", // Only for production
-    trailingSlash: true, // Only for production
     webpack: (config) => {
       // Production webpack optimizations
       config.optimization = {
