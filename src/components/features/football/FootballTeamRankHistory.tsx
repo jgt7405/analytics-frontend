@@ -2,6 +2,7 @@
 
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import type { Chart } from "chart.js";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -11,7 +12,7 @@ import {
   PointElement,
   Title,
   Tooltip,
-  type TooltipItem,
+  type TooltipModel,
 } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -137,23 +138,176 @@ export default function FootballTeamRankHistory({
         display: false,
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        titleColor: "#ffffff",
-        bodyColor: "#ffffff",
-        borderColor: primaryColor,
-        borderWidth: 1,
-        cornerRadius: 8,
-        padding: 12,
-        displayColors: false,
-        callbacks: {
-          title: function (context: TooltipItem<"line">[]) {
-            const dataIndex = context[0].dataIndex;
-            return formatDateForDisplay(data[dataIndex].date);
-          },
-          label: function (context: TooltipItem<"line">) {
-            const value = context.parsed.y;
-            return `Rating Rank: #${value}`;
-          },
+        enabled: false,
+        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+          const { tooltip: tooltipModel, chart } = args;
+
+          let tooltipEl = document.getElementById(
+            "chartjs-tooltip-rankhistory"
+          );
+          if (!tooltipEl) {
+            tooltipEl = document.createElement("div");
+            tooltipEl.id = "chartjs-tooltip-rankhistory";
+
+            Object.assign(tooltipEl.style, {
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              color: "#1f2937",
+              fontFamily: "Inter, system-ui, sans-serif",
+              fontSize: "12px",
+              opacity: "0",
+              padding: "16px",
+              paddingTop: "8px",
+              pointerEvents: "auto",
+              position: "absolute",
+              transition: "all .1s ease",
+              zIndex: "1000",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+              minWidth: "200px",
+              maxWidth: "300px",
+            });
+
+            const handleClickOutside = (e: Event) => {
+              if (!tooltipEl?.contains(e.target as Node)) {
+                tooltipEl!.style.opacity = "0";
+                setTimeout(() => {
+                  if (tooltipEl && tooltipEl.parentNode) {
+                    document.removeEventListener("click", handleClickOutside);
+                    document.removeEventListener(
+                      "touchstart",
+                      handleClickOutside
+                    );
+                  }
+                }, 100);
+              }
+            };
+
+            document.body.appendChild(tooltipEl);
+
+            // Add event listeners for mobile touch and desktop click
+            setTimeout(() => {
+              document.addEventListener("click", handleClickOutside);
+              document.addEventListener("touchstart", handleClickOutside);
+            }, 0);
+          }
+
+          if (tooltipModel.opacity === 0) {
+            tooltipEl.style.opacity = "0";
+            return;
+          }
+
+          if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
+            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+            const dataPoint = data[dataIndex];
+
+            let innerHtml = `
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #374151;">${formatDateForDisplay(dataPoint.date)}</div>
+                <button id="tooltip-close" style="background: none; border: none; font-size: 16px; color: #6b7280; cursor: pointer; padding: 0; margin-left: 12px;">&times;</button>
+              </div>
+            `;
+
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Rating Rank: #${dataPoint.sagarin_rank}</div>`;
+
+            tooltipEl.innerHTML = innerHtml;
+
+            const closeBtn = tooltipEl.querySelector("#tooltip-close");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                tooltipEl.style.opacity = "0";
+              });
+            }
+          }
+
+          // Smart positioning logic
+          const position = chart.canvas.getBoundingClientRect();
+          const chartWidth = chart.width;
+          const tooltipWidth = tooltipEl.offsetWidth || 200;
+          const caretX = tooltipModel.caretX;
+          const caretY = tooltipModel.caretY;
+
+          const isLeftSide = caretX < chartWidth / 2;
+          let leftPosition: number;
+          let arrowPosition: string;
+
+          if (isLeftSide) {
+            leftPosition = position.left + window.pageXOffset + caretX + 20;
+            arrowPosition = "left";
+          } else {
+            leftPosition =
+              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
+            arrowPosition = "right";
+          }
+
+          if (!tooltipEl.querySelector(".tooltip-arrow")) {
+            const arrow = document.createElement("div");
+            arrow.className = "tooltip-arrow";
+            Object.assign(arrow.style, {
+              position: "absolute",
+              width: "0",
+              height: "0",
+              borderStyle: "solid",
+              zIndex: "1001",
+            });
+
+            if (arrowPosition === "left") {
+              Object.assign(arrow.style, {
+                left: "-6px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                borderWidth: "6px 6px 6px 0",
+                borderColor: "transparent #e5e7eb transparent transparent",
+              });
+
+              const arrowInner = document.createElement("div");
+              Object.assign(arrowInner.style, {
+                position: "absolute",
+                left: "1px",
+                top: "-6px",
+                width: "0",
+                height: "0",
+                borderStyle: "solid",
+                borderWidth: "6px 6px 6px 0",
+                borderColor: "transparent #ffffff transparent transparent",
+              });
+              arrow.appendChild(arrowInner);
+            } else {
+              Object.assign(arrow.style, {
+                right: "-6px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                borderWidth: "6px 0 6px 6px",
+                borderColor: "transparent transparent transparent #e5e7eb",
+              });
+
+              const arrowInner = document.createElement("div");
+              Object.assign(arrowInner.style, {
+                position: "absolute",
+                right: "1px",
+                top: "-6px",
+                width: "0",
+                height: "0",
+                borderStyle: "solid",
+                borderWidth: "6px 0 6px 6px",
+                borderColor: "transparent transparent transparent #ffffff",
+              });
+              arrow.appendChild(arrowInner);
+            }
+
+            tooltipEl.appendChild(arrow);
+          }
+
+          tooltipEl.style.left = leftPosition + "px";
+          tooltipEl.style.top =
+            position.top +
+            window.pageYOffset +
+            caretY -
+            tooltipEl.offsetHeight -
+            10 +
+            "px";
+          tooltipEl.style.opacity = "1";
         },
       },
     },
