@@ -38,6 +38,53 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     return [...cwvData.teams].sort((a, b) => b.cwv - a.cwv);
   }, [cwvData?.teams]);
 
+  // Calculate min/max CWV for color scaling
+  const { minCWV, maxCWV } = useMemo(() => {
+    const cwvValues = sortedTeams.map((team) => team.cwv);
+    return {
+      minCWV: Math.min(...cwvValues, -1),
+      maxCWV: Math.max(...cwvValues, 1),
+    };
+  }, [sortedTeams]);
+
+  // Color function for CWV values - matches TWV table exactly
+  const getCWVColor = useCallback(
+    (cwv: number) => {
+      const blue = [24, 98, 123]; // Dark blue for positive values
+      const white = [255, 255, 255]; // White baseline
+      const yellow = [255, 230, 113]; // Yellow for negative values
+
+      let r: number, g: number, b: number;
+
+      if (cwv > 0) {
+        // Positive values: interpolate from white to dark blue
+        const ratio = Math.min(Math.abs(cwv / maxCWV), 1);
+        r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
+        g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
+        b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
+      } else if (cwv < 0) {
+        // Negative values: interpolate from white to yellow
+        const ratio = Math.min(Math.abs(cwv / minCWV), 1);
+        r = Math.round(white[0] + (yellow[0] - white[0]) * ratio);
+        g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
+        b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
+      } else {
+        // Zero values remain white
+        [r, g, b] = white;
+      }
+
+      // Calculate brightness for text color contrast
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      const textColor = brightness > 140 ? "#000000" : "#ffffff";
+
+      return {
+        backgroundColor: `rgb(${r}, ${g}, ${b})`,
+        color: textColor,
+      };
+    },
+    [maxCWV, minCWV]
+  );
+
   const { ranks, gamesByRankAndTeam, winProbsByRank } = useMemo(() => {
     if (!cwvData?.games || cwvData.games.length === 0) {
       return { ranks: [], gamesByRankAndTeam: {}, winProbsByRank: {} };
@@ -282,7 +329,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             </tr>
           ))}
 
-          {/* EXACT basketball summary rows format */}
+          {/* EXACT basketball summary rows format with CWV color shading */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
@@ -303,7 +350,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`cwv-${team.team_name}`}
-                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"} relative p-0`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -312,13 +359,21 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderLeft: "none",
-                  backgroundColor: "#f9fafb",
                 }}
               >
-                {team.cwv > 0 ? `+${team.cwv.toFixed(1)}` : team.cwv.toFixed(1)}
+                <div
+                  className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}
+                  style={getCWVColor(team.cwv)}
+                >
+                  {team.cwv > 0
+                    ? `+${team.cwv.toFixed(1)}`
+                    : team.cwv.toFixed(1)}
+                </div>
               </td>
             ))}
           </tr>
+
+          {/* Current Record row */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
@@ -339,7 +394,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`record-${team.team_name}`}
-                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -348,13 +403,15 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderLeft: "none",
-                  backgroundColor: "#f9fafb",
+                  padding: "2px",
                 }}
               >
                 {formatTeamRecord(team.current_record)}
               </td>
             ))}
           </tr>
+
+          {/* Est Avg Team Record row */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
@@ -375,7 +432,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`est-record-${team.team_name}`}
-                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -384,22 +441,15 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderLeft: "none",
-                  backgroundColor: "#f9fafb",
+                  padding: "2px",
                 }}
               >
-                {team.est_avg_record}
+                {formatTeamRecord(team.est_avg_record)}
               </td>
             ))}
           </tr>
         </tbody>
       </table>
-
-      {/* Virtualization message if needed */}
-      {shouldVirtualize && (
-        <div className="mt-2 text-xs text-gray-500 text-center">
-          Showing first {maxVisibleRows} of {ranks.length} games
-        </div>
-      )}
     </div>
   );
 }
