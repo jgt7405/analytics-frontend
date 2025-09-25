@@ -1,3 +1,4 @@
+// src/components/features/basketball/BballRegSeasonBoxWhiskerChart.tsx
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
@@ -8,20 +9,23 @@ import { Standing } from "@/types/basketball";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-interface BoxWhiskerChartProps {
+interface BballRegSeasonBoxWhiskerChartProps {
   standings: Standing[];
 }
 
-export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
+export default function BballRegSeasonBoxWhiskerChart({
+  standings,
+}: BballRegSeasonBoxWhiskerChartProps) {
   const router = useRouter();
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
 
+  // Sort teams by average projected total wins (highest first)
   const sortedTeams = useMemo(
     () =>
       [...standings].sort(
         (a, b) =>
-          (b.avg_projected_conf_wins || 0) - (a.avg_projected_conf_wins || 0)
+          (b.avg_projected_total_wins || 0) - (a.avg_projected_total_wins || 0)
       ),
     [standings]
   );
@@ -30,12 +34,7 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
     setMounted(true);
   }, []);
 
-  // Safe number conversion with NaN checking
-  const safeNumber = (value: any, fallback: number = 0): number => {
-    const num = Number(value);
-    return isNaN(num) || !isFinite(num) ? fallback : num;
-  };
-
+  // Helper function for white color adjustment - USED for box styling
   const adjustColorIfWhite = (color: string) => {
     if (!color) return "#000000";
     const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
@@ -49,7 +48,9 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
   if (!standings || standings.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500">No win distribution data available</p>
+        <p className="text-gray-500">
+          No total wins distribution data available
+        </p>
       </div>
     );
   }
@@ -62,7 +63,7 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
     );
   }
 
-  // Chart dimensions
+  // Chart dimensions - EXACT same as football
   const chartHeight = isMobile ? 300 : 400;
   const logoHeight = 50;
   const boxWidth = isMobile ? 28 : 30;
@@ -71,32 +72,29 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
   const teamSpacing = isMobile ? 15 : 35;
   const padding = { top: 20, right: 10, bottom: 10, left: 40 };
 
-  // Safe max wins calculation
-  const allP95Values = standings
-    .map((team) => safeNumber(team.wins_conf_percentiles?.p95, 0))
-    .filter((val) => val > 0);
-
-  const maxP95 = allP95Values.length > 0 ? Math.max(...allP95Values) : 18;
-  const rawMaxWins = Math.ceil(maxP95);
-  const adjustedMaxWins = Math.max(
-    rawMaxWins % 2 === 0 ? rawMaxWins : rawMaxWins + 1,
-    18
+  // Calculate max wins for scale - basketball total wins typically 15-35
+  const maxWins = Math.ceil(
+    Math.max(...standings.map((team) => team.wins_total_95 || 0), 0)
   );
 
-  // Safe scale function
-  const scale = (value: number): number => {
-    const safeValue = safeNumber(value, 0);
-    if (adjustedMaxWins === 0) return chartHeight;
-    const result = chartHeight - (safeValue / adjustedMaxWins) * chartHeight;
-    return safeNumber(result, chartHeight);
+  // Ensure scale goes to reasonable maximum, increment by 5
+  const adjustedMaxWins = Math.max(
+    maxWins % 5 === 0 ? maxWins : Math.ceil(maxWins / 5) * 5,
+    35
+  );
+
+  // Scale function
+  const scale = (value: number) => {
+    return chartHeight - (value / adjustedMaxWins) * chartHeight;
   };
 
-  // Y-axis ticks
+  // Y-axis ticks (increment by 5 for total wins)
   const yAxisTicks = [];
-  for (let i = 0; i <= adjustedMaxWins; i += 2) {
+  for (let i = 0; i <= adjustedMaxWins; i += 5) {
     yAxisTicks.push(i);
   }
 
+  // Calculate chart width
   const chartWidth =
     sortedTeams.length * boxWidth + (sortedTeams.length - 1) * teamSpacing + 40;
 
@@ -109,7 +107,7 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
           minWidth: chartWidth + padding.left + padding.right,
         }}
       >
-        {/* Y-axis container */}
+        {/* Y-axis container - EXACT same as football */}
         <div
           className="absolute left-0 top-0 bg-white z-30"
           style={{
@@ -145,7 +143,7 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
           </div>
         </div>
 
-        {/* Chart content area */}
+        {/* Chart content area - EXACT same structure as football */}
         <div
           className="absolute"
           style={{
@@ -169,35 +167,22 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
             ))}
           </div>
 
-          {/* Team box plots */}
+          {/* Team box plots - EXACT same structure as football */}
           <div
             className="relative flex items-start justify-start"
             style={{ paddingLeft: "10px" }}
           >
             {sortedTeams.map((team, index) => {
-              const percentiles = team.wins_conf_percentiles;
+              // Box and whisker data points - use total wins fields
+              const bottom = team.wins_total_05 || 0;
+              const q1 = team.wins_total_25 || 0;
+              const median = team.wins_total_50 || 0;
+              const q3 = team.wins_total_75 || 0;
+              const top = team.wins_total_95 || 0;
 
-              if (!percentiles) {
-                return null;
-              }
-
-              const bottom = safeNumber(percentiles.p5, 0);
-              const q1 = safeNumber(percentiles.p25, 0);
-              const median = safeNumber(percentiles.p50, 0);
-              const q3 = safeNumber(percentiles.p75, 0);
-              const top = safeNumber(percentiles.p95, 0);
-
-              // Calculate positions with safety checks
-              const bottomPos = scale(bottom);
-              const q1Pos = scale(q1);
-              const medianPos = scale(median);
-              const q3Pos = scale(q3);
-              const topPos = scale(top);
-
+              // Team colors - EXACT same as football
               const primaryColor = team.primary_color || "#1e40af";
-              const secondaryColor = adjustColorIfWhite(
-                team.secondary_color || "#64748b"
-              );
+              const secondaryColor = team.secondary_color || "#64748b";
 
               return (
                 <div
@@ -213,10 +198,10 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
                   <div
                     className="absolute"
                     style={{
-                      top: Math.min(topPos, bottomPos),
-                      height: Math.max(Math.abs(bottomPos - topPos), 1),
+                      top: scale(top),
+                      height: scale(bottom) - scale(top),
                       width: lineThickness,
-                      backgroundColor: secondaryColor,
+                      backgroundColor: adjustColorIfWhite(secondaryColor),
                       left: (boxWidth - lineThickness) / 2,
                     }}
                   />
@@ -225,10 +210,10 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
                   <div
                     className="absolute"
                     style={{
-                      top: topPos - lineThickness / 2,
+                      top: scale(top),
                       width: whiskerWidth,
                       height: lineThickness,
-                      backgroundColor: secondaryColor,
+                      backgroundColor: adjustColorIfWhite(secondaryColor),
                       left: (boxWidth - whiskerWidth) / 2,
                     }}
                   />
@@ -237,23 +222,23 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
                   <div
                     className="absolute"
                     style={{
-                      top: bottomPos - lineThickness / 2,
+                      top: scale(bottom),
                       width: whiskerWidth,
                       height: lineThickness,
-                      backgroundColor: secondaryColor,
+                      backgroundColor: adjustColorIfWhite(secondaryColor),
                       left: (boxWidth - whiskerWidth) / 2,
                     }}
                   />
 
-                  {/* Box */}
+                  {/* Box - EXACT same styling as football */}
                   <div
                     className="absolute"
                     style={{
-                      top: Math.min(q3Pos, q1Pos),
-                      height: Math.max(Math.abs(q1Pos - q3Pos), 1),
+                      top: scale(q3),
+                      height: scale(q1) - scale(q3),
                       width: boxWidth,
                       backgroundColor: primaryColor,
-                      border: `${lineThickness}px solid ${secondaryColor}`,
+                      border: `${lineThickness}px solid ${adjustColorIfWhite(secondaryColor)}`,
                     }}
                   />
 
@@ -261,14 +246,14 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
                   <div
                     className="absolute"
                     style={{
-                      top: medianPos - lineThickness / 2,
+                      top: scale(median),
                       width: boxWidth,
                       height: lineThickness,
                       backgroundColor: secondaryColor,
                     }}
                   />
 
-                  {/* Team logo */}
+                  {/* Team logo - EXACT same as football */}
                   <div
                     className="absolute flex justify-center items-center"
                     style={{

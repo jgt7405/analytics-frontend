@@ -8,6 +8,7 @@ export interface Standing {
   conference: string;
   primary_color?: string;
   secondary_color?: string;
+  total_scenarios: number;
 
   // Records
   conference_record: string;
@@ -46,6 +47,17 @@ export interface Standing {
   tournament_bid_pct?: number;
   avg_seed?: number;
   seed_distribution?: Record<number, number>;
+
+  // ADD these for total season wins:
+  total_wins_distribution?: Record<number, number>;
+  avg_projected_total_wins?: number;
+
+  // Total season wins percentiles for box whisker
+  wins_total_05?: number;
+  wins_total_25?: number;
+  wins_total_50?: number;
+  wins_total_75?: number;
+  wins_total_95?: number;
 }
 
 // CWV Related Types

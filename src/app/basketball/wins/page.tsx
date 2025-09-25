@@ -1,3 +1,4 @@
+// src/app/basketball/wins/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
@@ -22,34 +23,37 @@ const BoxWhiskerChart = lazy(
   () => import("@/components/features/basketball/BoxWhiskerChart")
 );
 
+const BballRegSeasonBoxWhiskerChart = lazy(
+  () => import("@/components/features/basketball/BballRegSeasonBoxWhiskerChart")
+);
+
+const BballRegSeasonWinsTable = lazy(
+  () => import("@/components/features/basketball/BballRegSeasonWinsTable")
+);
+
 export default function WinsPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
 
-  // CRITICAL: Start with Big 12 to avoid invalid API calls
   const [selectedConference, setSelectedConference] = useState("Big 12");
-  const [availableConferences, setAvailableConferences] = useState<string[]>([
-    "Big 12", // Always include Big 12 as default
-  ]);
+  const [availableConferences, setAvailableConferences] = useState<string[]>(
+    []
+  );
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // URL management hook
   const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
     setSelectedConference,
-    availableConferences
+    availableConferences,
+    false // Don't allow "All Teams" for basketball wins
   );
 
-  // IMPORTANT: Validate URL conference BEFORE making API calls
   useEffect(() => {
     if (!hasInitialized) {
       const confParam = searchParams.get("conf");
-
       if (confParam) {
         const decodedConf = decodeURIComponent(confParam);
-
-        // Define known basketball conferences to avoid API calls with invalid ones
         const knownBasketballConferences = [
           "Big 12",
           "SEC",
@@ -83,11 +87,7 @@ export default function WinsPage() {
         if (knownBasketballConferences.includes(decodedConf)) {
           setSelectedConference(decodedConf);
         } else {
-          console.log(
-            `Conference "${decodedConf}" not valid for basketball, using Big 12`
-          );
           setSelectedConference("Big 12");
-          // Update URL immediately to prevent subsequent bad API calls
           const params = new URLSearchParams(searchParams.toString());
           params.set("conf", "Big 12");
           const newUrl = `${window.location.pathname}?${params.toString()}`;
@@ -98,7 +98,6 @@ export default function WinsPage() {
     }
   }, [searchParams, hasInitialized]);
 
-  // Only make API call after initialization
   const {
     data: standingsResponse,
     isLoading: standingsLoading,
@@ -106,40 +105,36 @@ export default function WinsPage() {
     refetch,
   } = useStandings(hasInitialized ? selectedConference : "Big 12");
 
-  // Track page load start
+  // Update available conferences when data loads
   useEffect(() => {
-    if (hasInitialized) {
-      startMeasurement("wins-page-load");
-      trackEvent({
-        name: "page_view",
-        properties: {
-          page: "wins",
-          conference: selectedConference,
-        },
-      });
-      return () => {
-        endMeasurement("wins-page-load");
-      };
+    if (standingsResponse?.conferences) {
+      setAvailableConferences(standingsResponse.conferences);
     }
-  }, [
-    selectedConference,
-    startMeasurement,
-    endMeasurement,
-    trackEvent,
-    hasInitialized,
-  ]);
+  }, [standingsResponse]);
+
+  // Track page load
+  useEffect(() => {
+    startMeasurement("basketball-wins-page-load");
+    trackEvent({
+      name: "page_view",
+      properties: {
+        page: "basketball-wins",
+        conference: selectedConference,
+      },
+    });
+    return () => {
+      endMeasurement("basketball-wins-page-load");
+    };
+  }, [selectedConference, startMeasurement, endMeasurement, trackEvent]);
 
   // Track successful data loading
   useEffect(() => {
-    if (!standingsLoading && standingsResponse && hasInitialized) {
-      const loadTime = endMeasurement("wins-page-load");
-      if (process.env.NODE_ENV === "development" && loadTime > 10) {
-        console.log(`📊 Wins page loaded in ${loadTime.toFixed(2)}ms`);
-      }
+    if (!standingsLoading && standingsResponse) {
+      const loadTime = endMeasurement("basketball-wins-page-load");
       trackEvent({
         name: "data_load_success",
         properties: {
-          page: "wins",
+          page: "basketball-wins",
           conference: selectedConference,
           loadTime,
           teamsCount: standingsResponse.data?.length || 0,
@@ -152,10 +147,8 @@ export default function WinsPage() {
     selectedConference,
     endMeasurement,
     trackEvent,
-    hasInitialized,
   ]);
 
-  // Handle conference changes
   const handleConferenceChange = useCallback(
     (conference: string) => {
       startMeasurement("conference-change");
@@ -164,7 +157,7 @@ export default function WinsPage() {
       trackEvent({
         name: "conference_changed",
         properties: {
-          page: "wins",
+          page: "basketball-wins",
           fromConference: selectedConference,
           toConference: conference,
         },
@@ -181,34 +174,20 @@ export default function WinsPage() {
     ]
   );
 
-  // Update available conferences
-  useEffect(() => {
-    if (standingsResponse?.conferences) {
-      setAvailableConferences(standingsResponse.conferences);
-    }
-  }, [standingsResponse]);
-
   // Track errors
   useEffect(() => {
-    if (standingsError && hasInitialized) {
-      console.error("Wins error details:", {
-        error: standingsError,
-        message: standingsError.message,
-        conference: selectedConference,
-        timestamp: new Date().toISOString(),
-      });
+    if (standingsError) {
       trackEvent({
         name: "data_load_error",
         properties: {
-          page: "wins",
+          page: "basketball-wins",
           conference: selectedConference,
           errorMessage: standingsError.message,
         },
       });
     }
-  }, [standingsError, selectedConference, trackEvent, hasInitialized]);
+  }, [standingsError, selectedConference, trackEvent]);
 
-  // Error state
   if (standingsError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
@@ -225,17 +204,18 @@ export default function WinsPage() {
           isLoading={false}
         >
           <ErrorMessage
-            message={standingsError.message || "Failed to load wins data"}
+            message={
+              standingsError.message || "Failed to load basketball wins data"
+            }
             onRetry={() => refetch()}
-            retryLabel="Reload Wins Data"
+            retryLabel="Reload Basketball Wins Data"
           />
         </PageLayoutWrapper>
       </ErrorBoundary>
     );
   }
 
-  // No data state
-  if (!standingsLoading && !standingsResponse?.data && hasInitialized) {
+  if (!standingsLoading && !standingsResponse?.data) {
     return (
       <PageLayoutWrapper
         title="Projected Conference Wins"
@@ -250,17 +230,11 @@ export default function WinsPage() {
       >
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg mb-4">
-            No wins data available
+            No basketball wins data available
           </div>
           <p className="text-gray-400 text-sm mb-6">
             Try selecting a different conference or check back later.
           </p>
-          <button
-            onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Retry Loading
-          </button>
         </div>
       </PageLayoutWrapper>
     );
@@ -275,74 +249,39 @@ export default function WinsPage() {
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
-            loading={standingsLoading}
           />
         }
         isLoading={standingsLoading}
       >
         <div className="-mt-2 md:-mt-6">
           {standingsLoading ? (
-            <>
-              {/* Box Whisker Chart Skeleton */}
-              <div className="mb-8">
-                <BoxWhiskerChartSkeleton />
-                <div className="mt-4 flex gap-2">
-                  <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
-                  <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
-                </div>
-              </div>
-
-              {/* Wins Table Skeleton */}
-              <div className="mb-8">
-                <BasketballTableSkeleton
-                  tableType="wins"
-                  rows={12}
-                  teamCols={10}
-                  showSummaryRows={true}
-                />
-                <div className="mt-4 flex gap-2">
-                  <div className="h-8 w-20 bg-gray-200 animate-pulse rounded" />
-                  <div className="h-8 w-16 bg-gray-200 animate-pulse rounded" />
-                </div>
-              </div>
-
-              {/* Explainer and Buttons Skeleton */}
-              <div className="mt-6">
-                <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 pr-4">
-                    <div className="space-y-2">
-                      <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
-                      <div className="h-4 w-5/6 bg-gray-200 animate-pulse rounded" />
-                      <div className="h-4 w-4/5 bg-gray-200 animate-pulse rounded" />
-                    </div>
-                  </div>
-                  <div
-                    className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-20"}`}
-                  >
-                    <div className="flex flex-col gap-2">
-                      <div className="h-8 w-full bg-gray-200 animate-pulse rounded" />
-                      <div className="h-8 w-full bg-gray-200 animate-pulse rounded" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
+            <div className="space-y-6">
+              <BoxWhiskerChartSkeleton />
+              <BasketballTableSkeleton />
+            </div>
           ) : (
-            <>
-              {/* Box Whisker Chart Section */}
-              <ErrorBoundary level="component" onRetry={() => refetch()}>
+            <Suspense
+              fallback={
+                <div className="space-y-6">
+                  <BoxWhiskerChartSkeleton />
+                  <BasketballTableSkeleton />
+                </div>
+              }
+            >
+              <div className="space-y-6">
+                {/* Conference Wins Box Whisker Chart Section */}
                 <div className="mb-8">
                   <div className="box-whisker-container">
-                    <Suspense fallback={<BoxWhiskerChartSkeleton />}>
-                      {standingsResponse?.data && (
-                        <BoxWhiskerChart standings={standingsResponse.data} />
-                      )}
-                    </Suspense>
+                    <BoxWhiskerChart
+                      standings={standingsResponse?.data || []}
+                    />
                   </div>
 
+                  {/* Buttons and Explainer for Box Whisker Chart */}
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                      {/* Explainer text on the left */}
+                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 box-whisker-explainer">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Projected conference wins from 1,000 season
@@ -354,74 +293,150 @@ export default function WinsPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Action buttons on the right */}
                       <div
                         className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
                       >
                         <TableActionButtons
-                          selectedConference={selectedConference}
                           contentSelector=".box-whisker-container"
-                          pageName="wins-chart"
-                          pageTitle="Conference Wins Chart"
-                          shareTitle="Basketball Conference Wins Distribution"
-                          pathname="/basketball/wins"
+                          selectedConference={selectedConference}
+                          pageName="basketball-wins-chart"
+                          pageTitle={`Projected Conference Wins`}
+                          shareTitle="Projected Conference Wins Distribution"
+                          explainerSelector=".box-whisker-explainer"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
-              </ErrorBoundary>
 
-              {/* Wins Table Section */}
-              <ErrorBoundary level="component" onRetry={() => refetch()}>
-                {standingsResponse?.data && (
-                  <div className="mb-8">
-                    <div className="wins-table-container">
-                      <Suspense
-                        fallback={
-                          <BasketballTableSkeleton
-                            tableType="wins"
-                            rows={12}
-                            teamCols={10}
-                            showSummaryRows={true}
-                          />
-                        }
-                      >
-                        <WinsTable standings={standingsResponse.data} />
-                      </Suspense>
-                    </div>
+                {/* Conference Wins Table Section */}
+                <div className="mb-8">
+                  <div className="wins-table">
+                    <WinsTable standings={standingsResponse?.data || []} />
+                  </div>
 
-                    <div className="mt-6">
-                      <div className="flex flex-row items-start gap-4">
-                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                          <div style={{ lineHeight: "1.3" }}>
-                            <div>
-                              Projected conference wins from 1,000 season
-                              simulations using KenPom ratings.
-                            </div>
-                            <div style={{ marginTop: "6px" }}>
-                              Tournament projections are based on historical bid
-                              allocation patterns.
-                            </div>
+                  {/* Buttons and Explainer for Wins Table */}
+                  <div className="mt-6">
+                    <div className="flex flex-row items-start gap-4">
+                      {/* Explainer text on the left */}
+                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 wins-explainer">
+                        <div style={{ lineHeight: "1.3" }}>
+                          <div>
+                            Probabilities from 1,000 season simulations using
+                            KenPom ratings.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            Darker colors indicate higher probabilites.
                           </div>
                         </div>
-                        <div
-                          className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                        >
-                          <TableActionButtons
-                            selectedConference={selectedConference}
-                            contentSelector=".wins-table-container"
-                            pageName="wins-table"
-                            pageTitle="Conference Wins Table"
-                            shareTitle="Basketball Conference Wins Projections"
-                            pathname="/basketball/wins"
-                          />
-                        </div>
+                      </div>
+
+                      {/* Action buttons on the right */}
+                      <div
+                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                      >
+                        <TableActionButtons
+                          contentSelector=".wins-table"
+                          selectedConference={selectedConference}
+                          pageName="basketball-wins"
+                          pageTitle={`Projected Conference Wins`}
+                          shareTitle="Projected Conference Wins Analysis"
+                          explainerSelector=".wins-explainer"
+                        />
                       </div>
                     </div>
                   </div>
-                )}
-              </ErrorBoundary>
-            </>
+                </div>
+
+                {/* Regular Season Box Whisker Chart Section */}
+                <div className="mb-8">
+                  <h1 className="text-2xl font-normal text-gray-600 mb-4">
+                    Projected Regular Season Wins
+                  </h1>
+                  <div className="regular-season-box-whisker-container">
+                    <BballRegSeasonBoxWhiskerChart
+                      standings={standingsResponse?.data || []}
+                    />
+                  </div>
+
+                  {/* Buttons and Explainer for Regular Season Box Whisker Chart */}
+                  <div className="mt-6">
+                    <div className="flex flex-row items-start gap-4">
+                      {/* Explainer text on the left */}
+                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 regular-season-box-whisker-explainer">
+                        <div style={{ lineHeight: "1.3" }}>
+                          <div>
+                            Projected regular season wins from 1,000 season
+                            simulations using KenPom ratings.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            Box shows 25th to 75th percentile, whiskers show 5th
+                            to 95th percentile range.
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action buttons on the right */}
+                      <div
+                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                      >
+                        <TableActionButtons
+                          contentSelector=".regular-season-box-whisker-container"
+                          selectedConference={selectedConference}
+                          pageName="basketball-regular-season-wins-chart"
+                          pageTitle={`Projected Regular Season Wins`}
+                          shareTitle="Projected Regular Season Wins Distribution"
+                          explainerSelector=".regular-season-box-whisker-explainer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Regular Season Wins Table Section */}
+                <div className="mb-8">
+                  <div className="regular-season-wins-table">
+                    <BballRegSeasonWinsTable
+                      standings={standingsResponse?.data || []}
+                    />
+                  </div>
+
+                  {/* Buttons and Explainer for Regular Season Table */}
+                  <div className="mt-6">
+                    <div className="flex flex-row items-start gap-4">
+                      {/* Explainer text on the left */}
+                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 regular-season-explainer">
+                        <div style={{ lineHeight: "1.3" }}>
+                          <div>
+                            Probabilities from 1,000 season simulations using
+                            KenPom ratings.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            Darker colors indicate higher probabilites.
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action buttons on the right */}
+                      <div
+                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                      >
+                        <TableActionButtons
+                          contentSelector=".regular-season-wins-table"
+                          selectedConference={selectedConference}
+                          pageName="basketball-regular-season-wins"
+                          pageTitle={`Projected Regular Season Wins`}
+                          shareTitle="Projected Regular Season Wins Analysis"
+                          explainerSelector=".regular-season-explainer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Suspense>
           )}
         </div>
       </PageLayoutWrapper>
