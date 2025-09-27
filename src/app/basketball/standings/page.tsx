@@ -2,12 +2,15 @@
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
+import BballFirstPlaceHistoryChart from "@/components/features/basketball/BballFirstPlaceHistoryChart";
+import BballStandingsHistoryChart from "@/components/features/basketball/BballStandingsHistoryChart";
 import StandingsTable from "@/components/features/basketball/StandingsTable";
 import StandingsTableNoTies from "@/components/features/basketball/StandingsTableNoTies";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useBballStandingsHistory } from "@/hooks/useBballStandingsHistory";
 import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useStandings } from "@/hooks/useStandings";
@@ -33,12 +36,13 @@ export default function StandingsPage() {
     refetch,
   } = useStandings(selectedConference);
 
+  const { data: historyData } = useBballStandingsHistory(selectedConference);
+
   const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
     setSelectedConference,
     availableConferences
   );
 
-  // Track page load start
   useEffect(() => {
     startMeasurement("standings-page-load");
     trackEvent({
@@ -53,7 +57,6 @@ export default function StandingsPage() {
     };
   }, [endMeasurement, startMeasurement, trackEvent, selectedConference]);
 
-  // Track successful data loading
   useEffect(() => {
     if (!standingsLoading && standingsResponse) {
       const loadTime = endMeasurement("standings-page-load");
@@ -76,18 +79,17 @@ export default function StandingsPage() {
     selectedConference,
     endMeasurement,
     trackEvent,
-  ]); // Add endMeasurement and trackEvent
+  ]);
 
-  // Handle conference changes
   const handleConferenceChange = useCallback(
     (conference: string) => {
       startMeasurement("conference-change");
-      handleUrlChange(conference); // This replaces setSelectedConference and also updates the URL
+      handleUrlChange(conference);
       updatePreference("defaultConference", conference);
       trackEvent({
         name: "conference_changed",
         properties: {
-          page: "standings", // or "football-standings" for football pages
+          page: "standings",
           fromConference: selectedConference,
           toConference: conference,
         },
@@ -104,14 +106,12 @@ export default function StandingsPage() {
     ]
   );
 
-  // Update available conferences
   useEffect(() => {
     if (standingsResponse?.conferences) {
       setAvailableConferences(standingsResponse.conferences);
     }
   }, [standingsResponse]);
 
-  // Track errors
   useEffect(() => {
     if (standingsError) {
       console.error("Standings error details:", {
@@ -129,9 +129,8 @@ export default function StandingsPage() {
         },
       });
     }
-  }, [standingsError, selectedConference, trackEvent]); // Add trackEvent
+  }, [standingsError, selectedConference, trackEvent]);
 
-  // Error state
   if (standingsError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
@@ -158,7 +157,6 @@ export default function StandingsPage() {
     );
   }
 
-  // No data state
   if (!standingsLoading && !standingsResponse?.data) {
     return (
       <PageLayoutWrapper
@@ -209,7 +207,6 @@ export default function StandingsPage() {
         <div className="-mt-2 md:-mt-6">
           {standingsLoading ? (
             <>
-              {/* Standings with Ties Table Skeleton */}
               <div className="mb-8">
                 <BasketballTableSkeleton
                   tableType="standings"
@@ -223,7 +220,6 @@ export default function StandingsPage() {
                 </div>
               </div>
 
-              {/* Standings No Ties Table Skeleton */}
               <div className="mb-8">
                 <div className="h-7 w-80 bg-gray-300 animate-pulse rounded mb-4" />
                 <BasketballTableSkeleton
@@ -238,7 +234,6 @@ export default function StandingsPage() {
                 </div>
               </div>
 
-              {/* Explainer and Buttons Skeleton */}
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
                   <div className="flex-1 pr-4">
@@ -261,7 +256,6 @@ export default function StandingsPage() {
             </>
           ) : (
             <>
-              {/* Standings with Ties Table */}
               <ErrorBoundary level="component" onRetry={() => refetch()}>
                 <div className="mb-8">
                   <div className="standings-table">
@@ -311,7 +305,6 @@ export default function StandingsPage() {
                 </div>
               </ErrorBoundary>
 
-              {/* Standings No Ties Table */}
               <ErrorBoundary level="component" onRetry={() => refetch()}>
                 <div className="mb-8">
                   <h1 className="text-xl font-normal text-gray-500 mb-4">
@@ -365,6 +358,90 @@ export default function StandingsPage() {
                   </div>
                 </div>
               </ErrorBoundary>
+
+              {/* Historical Charts */}
+              {historyData && (
+                <div className="space-y-6 mb-8">
+                  <ErrorBoundary level="component">
+                    <div className="mb-8">
+                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                        Conference Rankings History{" "}
+                        <span className="text-base">(Over Time)</span>
+                      </h1>
+                      <div className="standings-history-chart">
+                        <BballStandingsHistoryChart
+                          timelineData={historyData.timeline_data}
+                          conferenceSize={standingsResponse?.data?.length || 12}
+                        />
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex flex-row items-start gap-4">
+                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                            <div style={{ lineHeight: "1.3" }}>
+                              <div>
+                                Progression of projected conference standings
+                                (with ties) from 1,000 season simulations using
+                                KenPom ratings.
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                          >
+                            <TableActionButtons
+                              selectedConference={selectedConference}
+                              contentSelector=".standings-history-chart"
+                              pageName="standings-history"
+                              pageTitle="Conference Rankings History Over Time"
+                              shareTitle="Conference Rankings History"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ErrorBoundary>
+
+                  <ErrorBoundary level="component">
+                    <div className="mb-8">
+                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                        First Place Probability History{" "}
+                        <span className="text-base">(Over Time)</span>
+                      </h1>
+                      <div className="first-place-chart">
+                        <BballFirstPlaceHistoryChart
+                          firstPlaceData={historyData.first_place_data}
+                        />
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex flex-row items-start gap-4">
+                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                            <div style={{ lineHeight: "1.3" }}>
+                              <div>
+                                Progression of projected probability of first
+                                place conference finish (with ties) from 1,000
+                                season simulations using KenPom ratings.
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                          >
+                            <TableActionButtons
+                              selectedConference={selectedConference}
+                              contentSelector=".first-place-chart"
+                              pageName="first-place-history"
+                              pageTitle="First Place Probability History Over Time"
+                              shareTitle="First Place Probability History"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ErrorBoundary>
+                </div>
+              )}
             </>
           )}
         </div>

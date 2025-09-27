@@ -31,7 +31,7 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
   }, []);
 
   // Safe number conversion with NaN checking
-  const safeNumber = (value: any, fallback: number = 0): number => {
+  const safeNumber = (value: unknown, fallback: number = 0): number => {
     const num = Number(value);
     return isNaN(num) || !isFinite(num) ? fallback : num;
   };
@@ -264,7 +264,7 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
                       top: medianPos - lineThickness / 2,
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: secondaryColor,
+                      backgroundColor: team.secondary_color || "#64748b", // <-- Apply the same function
                     }}
                   />
 

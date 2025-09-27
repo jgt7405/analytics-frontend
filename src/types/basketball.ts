@@ -58,6 +58,17 @@ export interface Standing {
   wins_total_50?: number;
   wins_total_75?: number;
   wins_total_95?: number;
+
+  // Regular season wins fields
+  reg_wins_distribution?: { [key: string]: number };
+  avg_reg_season_wins?: number;
+  avg_kp40_reg_season_wins?: number;
+  reg_season_twv?: number;
+  wins_reg_05?: number;
+  wins_reg_25?: number;
+  wins_reg_50?: number;
+  wins_reg_75?: number;
+  wins_reg_95?: number;
 }
 
 // CWV Related Types

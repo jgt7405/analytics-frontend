@@ -1,4 +1,3 @@
-// src/components/features/basketball/BballRegSeasonBoxWhiskerChart.tsx
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
@@ -16,25 +15,40 @@ interface BballRegSeasonBoxWhiskerChartProps {
 export default function BballRegSeasonBoxWhiskerChart({
   standings,
 }: BballRegSeasonBoxWhiskerChartProps) {
+  useEffect(() => {
+    console.log("BballRegSeasonBoxWhiskerChart - standings:", standings);
+    console.log("First team reg season fields:", {
+      avg_reg_season_wins: standings[0]?.avg_reg_season_wins,
+      wins_reg_05: standings[0]?.wins_reg_05,
+      wins_reg_25: standings[0]?.wins_reg_25,
+      wins_reg_50: standings[0]?.wins_reg_50,
+      wins_reg_75: standings[0]?.wins_reg_75,
+      wins_reg_95: standings[0]?.wins_reg_95,
+      avg_kp40_reg_season_wins: standings[0]?.avg_kp40_reg_season_wins,
+    });
+  }, [standings]);
+
   const router = useRouter();
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
 
-  // Sort teams by average projected total wins (highest first)
+  // Sort teams by average regular season wins (highest first)
   const sortedTeams = useMemo(
     () =>
       [...standings].sort(
-        (a, b) =>
-          (b.avg_projected_total_wins || 0) - (a.avg_projected_total_wins || 0)
+        (a, b) => (b.reg_season_twv || 0) - (a.reg_season_twv || 0)
       ),
     [standings]
   );
 
   useEffect(() => {
+    console.log("Component updated at:", new Date().toISOString());
+  }, []);
+
+  useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Helper function for white color adjustment - USED for box styling
   const adjustColorIfWhite = (color: string) => {
     if (!color) return "#000000";
     const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
@@ -48,9 +62,7 @@ export default function BballRegSeasonBoxWhiskerChart({
   if (!standings || standings.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500">
-          No total wins distribution data available
-        </p>
+        <p className="text-gray-500">No regular season wins data available</p>
       </div>
     );
   }
@@ -63,7 +75,6 @@ export default function BballRegSeasonBoxWhiskerChart({
     );
   }
 
-  // Chart dimensions - EXACT same as football
   const chartHeight = isMobile ? 300 : 400;
   const logoHeight = 50;
   const boxWidth = isMobile ? 28 : 30;
@@ -72,29 +83,27 @@ export default function BballRegSeasonBoxWhiskerChart({
   const teamSpacing = isMobile ? 15 : 35;
   const padding = { top: 20, right: 10, bottom: 10, left: 40 };
 
-  // Calculate max wins for scale - basketball total wins typically 15-35
+  // Calculate max wins using regular season percentiles
   const maxWins = Math.ceil(
-    Math.max(...standings.map((team) => team.wins_total_95 || 0), 0)
+    Math.max(...standings.map((team) => team.wins_reg_95 || 0), 0)
   );
 
-  // Ensure scale goes to reasonable maximum, increment by 5
+  // Scale for basketball (typically 15-35 wins), increment by 5
   const adjustedMaxWins = Math.max(
     maxWins % 5 === 0 ? maxWins : Math.ceil(maxWins / 5) * 5,
     35
   );
 
-  // Scale function
   const scale = (value: number) => {
     return chartHeight - (value / adjustedMaxWins) * chartHeight;
   };
 
-  // Y-axis ticks (increment by 5 for total wins)
+  // Y-axis ticks (increment by 5)
   const yAxisTicks = [];
   for (let i = 0; i <= adjustedMaxWins; i += 5) {
     yAxisTicks.push(i);
   }
 
-  // Calculate chart width
   const chartWidth =
     sortedTeams.length * boxWidth + (sortedTeams.length - 1) * teamSpacing + 40;
 
@@ -107,7 +116,7 @@ export default function BballRegSeasonBoxWhiskerChart({
           minWidth: chartWidth + padding.left + padding.right,
         }}
       >
-        {/* Y-axis container - EXACT same as football */}
+        {/* Y-axis container */}
         <div
           className="absolute left-0 top-0 bg-white z-30"
           style={{
@@ -143,7 +152,7 @@ export default function BballRegSeasonBoxWhiskerChart({
           </div>
         </div>
 
-        {/* Chart content area - EXACT same structure as football */}
+        {/* Chart content area */}
         <div
           className="absolute"
           style={{
@@ -167,22 +176,30 @@ export default function BballRegSeasonBoxWhiskerChart({
             ))}
           </div>
 
-          {/* Team box plots - EXACT same structure as football */}
+          {/* Team box plots */}
           <div
             className="relative flex items-start justify-start"
             style={{ paddingLeft: "10px" }}
           >
             {sortedTeams.map((team, index) => {
-              // Box and whisker data points - use total wins fields
-              const bottom = team.wins_total_05 || 0;
-              const q1 = team.wins_total_25 || 0;
-              const median = team.wins_total_50 || 0;
-              const q3 = team.wins_total_75 || 0;
-              const top = team.wins_total_95 || 0;
+              // Use regular season percentiles
+              const bottom = team.wins_reg_05 || 0;
+              const q1 = team.wins_reg_25 || 0;
+              const median = team.wins_reg_50 || 0;
+              const q3 = team.wins_reg_75 || 0;
+              const top = team.wins_reg_95 || 0;
+              const kp40Point = team.avg_kp40_reg_season_wins || 0;
 
-              // Team colors - EXACT same as football
               const primaryColor = team.primary_color || "#1e40af";
               const secondaryColor = team.secondary_color || "#64748b";
+
+              // Calculate positions
+              const topPos = scale(top);
+              const bottomPos = scale(bottom);
+              const q1Pos = scale(q1);
+              const q3Pos = scale(q3);
+              const medianPos = scale(median);
+              const kp40Pos = scale(kp40Point);
 
               return (
                 <div
@@ -198,8 +215,8 @@ export default function BballRegSeasonBoxWhiskerChart({
                   <div
                     className="absolute"
                     style={{
-                      top: scale(top),
-                      height: scale(bottom) - scale(top),
+                      top: topPos,
+                      height: Math.max(bottomPos - topPos, 1),
                       width: lineThickness,
                       backgroundColor: adjustColorIfWhite(secondaryColor),
                       left: (boxWidth - lineThickness) / 2,
@@ -210,7 +227,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                   <div
                     className="absolute"
                     style={{
-                      top: scale(top),
+                      top: topPos,
                       width: whiskerWidth,
                       height: lineThickness,
                       backgroundColor: adjustColorIfWhite(secondaryColor),
@@ -222,7 +239,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                   <div
                     className="absolute"
                     style={{
-                      top: scale(bottom),
+                      top: bottomPos,
                       width: whiskerWidth,
                       height: lineThickness,
                       backgroundColor: adjustColorIfWhite(secondaryColor),
@@ -230,12 +247,12 @@ export default function BballRegSeasonBoxWhiskerChart({
                     }}
                   />
 
-                  {/* Box - EXACT same styling as football */}
+                  {/* Box */}
                   <div
                     className="absolute"
                     style={{
-                      top: scale(q3),
-                      height: scale(q1) - scale(q3),
+                      top: q3Pos,
+                      height: Math.max(q1Pos - q3Pos, 1),
                       width: boxWidth,
                       backgroundColor: primaryColor,
                       border: `${lineThickness}px solid ${adjustColorIfWhite(secondaryColor)}`,
@@ -246,14 +263,34 @@ export default function BballRegSeasonBoxWhiskerChart({
                   <div
                     className="absolute"
                     style={{
-                      top: scale(median),
+                      top: medianPos,
                       width: boxWidth,
                       height: lineThickness,
                       backgroundColor: secondaryColor,
                     }}
                   />
 
-                  {/* Team logo - EXACT same as football */}
+                  {/* KP40 point - X marker */}
+                  <div
+                    className="absolute flex items-center justify-center"
+                    style={{
+                      top: kp40Pos - 6,
+                      left: (boxWidth - 12) / 2,
+                      width: 12,
+                      height: 12,
+                      color: adjustColorIfWhite(
+                        kp40Pos >= q3Pos && kp40Pos <= q1Pos
+                          ? secondaryColor
+                          : primaryColor
+                      ),
+                      fontSize: isMobile ? "12px" : "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    ×
+                  </div>
+
+                  {/* Team logo */}
                   <div
                     className="absolute flex justify-center items-center"
                     style={{
