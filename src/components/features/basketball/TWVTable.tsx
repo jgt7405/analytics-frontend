@@ -34,8 +34,30 @@ function TWVTable({ twvData, className }: TWVTableProps) {
     [router]
   );
 
-  // Calculate proper ranks with tie handling
-  const rankedTwvData = twvData;
+  // Calculate proper ranks with tie handling - matches football logic
+  const rankedTwvData = useMemo(() => {
+    if (!twvData || twvData.length === 0) return [];
+
+    // Sort by TWV descending, then alphabetically by team name for ties
+    const sorted = [...twvData].sort((a, b) => {
+      if (b.twv !== a.twv) {
+        return b.twv - a.twv;
+      }
+      return a.team_name.localeCompare(b.team_name);
+    });
+
+    // Assign ranks with tie handling
+    let currentRank = 1;
+    return sorted.map((team, index) => {
+      if (index > 0 && sorted[index - 1].twv !== team.twv) {
+        currentRank = index + 1;
+      }
+      return {
+        ...team,
+        rank: currentRank,
+      };
+    });
+  }, [twvData]);
 
   // Calculate min/max for color scaling
   const { minTWV, maxTWV } = useMemo(() => {
@@ -90,11 +112,11 @@ function TWVTable({ twvData, className }: TWVTableProps) {
     );
   }
 
-  // Responsive dimensions - Updated mobile widths for record columns
+  // Responsive dimensions - matches football
   const rankColWidth = isMobile ? 50 : 60;
   const teamColWidth = isMobile ? 150 : 220;
   const twvColWidth = isMobile ? 70 : 80;
-  const recordColWidth = isMobile ? 70 : 120; // Reduced from 90 to 70 on mobile
+  const recordColWidth = isMobile ? 70 : 120;
   const cellHeight = isMobile ? 32 : 36;
   const headerHeight = isMobile ? 40 : 48;
 
@@ -106,7 +128,7 @@ function TWVTable({ twvData, className }: TWVTableProps) {
       style={{
         overflowX: "auto",
         overflowY: "auto",
-        maxHeight: "80vh", // CRITICAL: Must set height for sticky to work
+        maxHeight: "80vh",
       }}
     >
       <table
@@ -173,7 +195,7 @@ function TWVTable({ twvData, className }: TWVTableProps) {
               TWV
             </th>
 
-            {/* Actual Record Column - Updated with line breaks for mobile */}
+            {/* Actual Record Column */}
             <th
               className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
@@ -198,7 +220,7 @@ function TWVTable({ twvData, className }: TWVTableProps) {
               )}
             </th>
 
-            {/* Expected Record Column - Updated with line breaks for mobile */}
+            {/* Expected Record Column */}
             <th
               className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{

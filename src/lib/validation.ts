@@ -1,3 +1,8 @@
+import type {
+  CWVApiResponse,
+  ScheduleApiResponse,
+  StandingsApiResponse,
+} from "@/types/basketball";
 import { z } from "zod";
 
 // Basic validation schemas
@@ -15,7 +20,7 @@ export const TeamNameSchema = z
 
 // Sanitization helpers
 export function sanitizeInput(input: string): string {
-  return input.trim().replace(/[<>\"']/g, "");
+  return input.trim().replace(/[<>"']/g, "");
 }
 
 export function validateConference(conference: string): boolean {
@@ -31,10 +36,18 @@ export function validateConference(conference: string): boolean {
   }
 }
 
+// Validation result type
+interface ValidationResult<T> {
+  success: boolean;
+  data: T | null;
+  error: string | null;
+}
+
 // Simple validation functions for API responses
-export function validateStandings(data: unknown) {
+export function validateStandings(
+  data: unknown
+): ValidationResult<StandingsApiResponse> {
   try {
-    // Basic validation - just check if it has the expected structure
     if (
       typeof data === "object" &&
       data !== null &&
@@ -43,7 +56,7 @@ export function validateStandings(data: unknown) {
     ) {
       return {
         success: true,
-        data: data as any,
+        data: data as StandingsApiResponse,
         error: null,
       };
     }
@@ -57,9 +70,8 @@ export function validateStandings(data: unknown) {
   }
 }
 
-export function validateCWV(data: unknown) {
+export function validateCWV(data: unknown): ValidationResult<CWVApiResponse> {
   try {
-    // Basic validation - just check if it has the expected structure
     if (
       typeof data === "object" &&
       data !== null &&
@@ -68,7 +80,7 @@ export function validateCWV(data: unknown) {
     ) {
       return {
         success: true,
-        data: data as any,
+        data: data as CWVApiResponse,
         error: null,
       };
     }
@@ -82,17 +94,26 @@ export function validateCWV(data: unknown) {
   }
 }
 
-export function validateSchedule(data: unknown) {
+export function validateSchedule(
+  data: unknown
+): ValidationResult<ScheduleApiResponse> {
   try {
+    // Basketball API returns: { conferences: [], data: [] }
+    // We'll transform it in api.ts to add teams, team_logos, summary
     if (
       typeof data === "object" &&
       data !== null &&
       "data" in data &&
-      "teams" in data &&
-      "conferences" in data
+      "conferences" in data &&
+      Array.isArray((data as Record<string, unknown>).data)
     ) {
-      return { success: true, data: data as any, error: null };
+      return {
+        success: true,
+        data: data as ScheduleApiResponse,
+        error: null,
+      };
     }
+
     throw new Error("Invalid schedule data structure");
   } catch (error) {
     return {

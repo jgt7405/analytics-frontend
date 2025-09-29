@@ -37,6 +37,7 @@ export default function StandingsPage() {
   } = useStandings(selectedConference);
 
   const { data: historyData } = useBballStandingsHistory(selectedConference);
+  console.log("History data:", historyData);
 
   const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
     setSelectedConference,

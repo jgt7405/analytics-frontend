@@ -25,7 +25,6 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
-  // ✅ ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const navigateToTeam = useCallback(
     (teamName: string) => {
       router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
@@ -37,6 +36,49 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     if (!cwvData?.teams) return [];
     return [...cwvData.teams].sort((a, b) => b.cwv - a.cwv);
   }, [cwvData?.teams]);
+
+  // Calculate min/max CWV for color scaling
+  const { minCWV, maxCWV } = useMemo(() => {
+    const cwvValues = sortedTeams.map((team) => team.cwv);
+    return {
+      minCWV: Math.min(...cwvValues, -1),
+      maxCWV: Math.max(...cwvValues, 1),
+    };
+  }, [sortedTeams]);
+
+  // Color function for CWV values
+  const getCWVColor = useCallback(
+    (cwv: number) => {
+      const blue = [24, 98, 123]; // Dark blue for positive values
+      const white = [255, 255, 255]; // White baseline
+      const yellow = [255, 230, 113]; // Yellow for negative values
+
+      let r: number, g: number, b: number;
+
+      if (cwv > 0) {
+        const ratio = Math.min(Math.abs(cwv / maxCWV), 1);
+        r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
+        g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
+        b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
+      } else if (cwv < 0) {
+        const ratio = Math.min(Math.abs(cwv / minCWV), 1);
+        r = Math.round(white[0] + (yellow[0] - white[0]) * ratio);
+        g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
+        b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
+      } else {
+        [r, g, b] = white;
+      }
+
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      const textColor = brightness > 140 ? "#000000" : "#ffffff";
+
+      return {
+        backgroundColor: `rgb(${r}, ${g}, ${b})`,
+        color: textColor,
+      };
+    },
+    [maxCWV, minCWV]
+  );
 
   const { ranks, gamesByRankAndTeam, winProbsByRank } = useMemo(() => {
     if (!cwvData?.games || cwvData.games.length === 0) {
@@ -65,15 +107,20 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     }
 
     return { ranks, gamesByRankAndTeam, winProbsByRank };
-  }, [cwvData, cwvData?.games, sortedTeams]);
+  }, [cwvData, sortedTeams]);
 
   const formatDate = useCallback((dateStr: string | undefined): string => {
     if (!dateStr) return "";
     try {
-      const date = new Date(dateStr);
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const day = date.getDate().toString().padStart(2, "0");
-      return `${month}/${day}`;
+      // Parse date in local timezone to avoid off-by-one errors
+      if (dateStr.includes("-")) {
+        // Format: "YYYY-MM-DD"
+        const [, month, day] = dateStr.split("-").map(Number);
+        return `${month.toString().padStart(2, "0")}/${day.toString().padStart(2, "0")}`;
+      } else {
+        // Already in MM/DD format
+        return dateStr;
+      }
     } catch {
       return dateStr;
     }
@@ -102,16 +149,17 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
         content = "L";
       } else if (game.date) {
         const currentDate = new Date();
-        const gameDate = new Date(game.date);
+
+        // Find the next game for this specific team
+        const teamGames = Object.values(gamesByRankAndTeam)
+          .map((rankGames) => rankGames[teamName])
+          .filter((g) => g && g.date && new Date(g.date) > currentDate)
+          .sort(
+            (a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime()
+          );
 
         const isNextGame =
-          gameDate > currentDate &&
-          !Object.values(gamesByRankAndTeam).some(
-            (teamGames) =>
-              teamGames[teamName]?.date &&
-              new Date(teamGames[teamName].date!) > currentDate &&
-              new Date(teamGames[teamName].date!) < gameDate
-          );
+          teamGames.length > 0 && teamGames[0].rank === game.rank;
 
         backgroundColor = isNextGame ? "#add8e6" : "#f0f0f0";
         content = formatDate(game.date);
@@ -132,7 +180,6 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     [gamesByRankAndTeam, formatDate, isMobile]
   );
 
-  // ✅ NOW check for missing data AFTER all hooks
   if (!cwvData || !cwvData.teams || !cwvData.games) {
     return (
       <div className="p-4 text-center text-gray-500">No CWV data available</div>
@@ -193,36 +240,28 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Win
-              <br />
-              Prob
+              Win Prob
             </th>
             {sortedTeams.map((team) => (
               <th
                 key={team.team_name}
-                className="bg-gray-50 text-center font-normal"
+                className="bg-gray-50 text-center font-normal p-0 cursor-pointer hover:bg-gray-100"
                 style={{
-                  height: headerHeight,
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
+                  height: headerHeight,
                   border: "1px solid #e5e7eb",
                   borderLeft: "none",
                 }}
+                onClick={() => navigateToTeam(team.team_name)}
               >
-                <div
-                  className="flex justify-center items-center h-full cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigateToTeam(team.team_name);
-                  }}
-                >
+                <div className="flex flex-col items-center justify-center h-full px-1">
                   <TeamLogo
                     logoUrl={team.logo_url}
                     teamName={team.team_name}
-                    size={isMobile ? 24 : 28}
+                    size={26}
                     className="flex-shrink-0"
-                    onClick={() => navigateToTeam(team.team_name)}
                   />
                 </div>
               </th>
@@ -231,7 +270,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
         </thead>
         <tbody>
           {visibleRanks.map((rank) => (
-            <tr key={`rank-${rank}`}>
+            <tr key={rank}>
               <td
                 className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
@@ -287,7 +326,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             </tr>
           ))}
 
-          {/* Summary rows */}
+          {/* CWV row with color shading */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
@@ -295,12 +334,11 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
               style={{
                 width: firstColWidth + secondColWidth,
                 minWidth: firstColWidth + secondColWidth,
-                maxWidth: firstColWidth + secondColWidth,
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
                 border: "1px solid #e5e7eb",
-                borderTop: "2px solid #4b5563",
+                borderTop: "none",
                 borderRight: "1px solid #e5e7eb",
               }}
             >
@@ -308,23 +346,31 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             </td>
             {sortedTeams.map((team) => (
               <td
-                key={`${team.team_name}-cwv`}
-                className="bg-gray-50 text-center"
+                key={`cwv-${team.team_name}`}
+                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"} relative p-0`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
                   border: "1px solid #e5e7eb",
-                  borderTop: "2px solid #4b5563",
+                  borderTop: "none",
                   borderLeft: "none",
-                  fontSize: isMobile ? "12px" : "14px",
                 }}
               >
-                {team.cwv > 0 ? `+${team.cwv.toFixed(1)}` : team.cwv.toFixed(1)}
+                <div
+                  className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}
+                  style={getCWVColor(team.cwv)}
+                >
+                  {team.cwv > 0
+                    ? `+${team.cwv.toFixed(1)}`
+                    : team.cwv.toFixed(1)}
+                </div>
               </td>
             ))}
           </tr>
+
+          {/* Current Record row */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
@@ -332,7 +378,6 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
               style={{
                 width: firstColWidth + secondColWidth,
                 minWidth: firstColWidth + secondColWidth,
-                maxWidth: firstColWidth + secondColWidth,
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
@@ -345,8 +390,8 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             </td>
             {sortedTeams.map((team) => (
               <td
-                key={`${team.team_name}-record`}
-                className="bg-gray-50 text-center"
+                key={`record-${team.team_name}`}
+                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -355,13 +400,15 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderLeft: "none",
-                  fontSize: isMobile ? "12px" : "14px",
+                  padding: "2px",
                 }}
               >
-                {team.current_record}
+                {formatTeamRecord(team.current_record)}
               </td>
             ))}
           </tr>
+
+          {/* Est Avg Team Record row */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
@@ -369,7 +416,6 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
               style={{
                 width: firstColWidth + secondColWidth,
                 minWidth: firstColWidth + secondColWidth,
-                maxWidth: firstColWidth + secondColWidth,
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
@@ -382,8 +428,8 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             </td>
             {sortedTeams.map((team) => (
               <td
-                key={`${team.team_name}-est-record`}
-                className="bg-gray-50 text-center"
+                key={`est-record-${team.team_name}`}
+                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -392,7 +438,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderLeft: "none",
-                  fontSize: isMobile ? "12px" : "14px",
+                  padding: "2px",
                 }}
               >
                 {formatTeamRecord(team.est_avg_record)}

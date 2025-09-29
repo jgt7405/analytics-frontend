@@ -8,7 +8,7 @@ import { ScheduleData } from "@/types/basketball";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
 
-// ✅ Define proper types for summary data
+// Basketball-specific summary interface
 interface BasketballScheduleSummary {
   total_games: number;
   expected_wins: number;
@@ -18,7 +18,8 @@ interface BasketballScheduleSummary {
   bottom_quartile: number;
 }
 
-interface ScheduleTableProps {
+// Basketball-specific props interface
+interface BasketballScheduleTableProps {
   scheduleData: ScheduleData[];
   teams: string[];
   teamLogos: Record<string, string>;
@@ -28,7 +29,7 @@ interface ScheduleTableProps {
   renderSummaryTable?: boolean;
 }
 
-function ScheduleTable({
+function BasketballScheduleTable({
   scheduleData,
   teams,
   teamLogos,
@@ -36,7 +37,7 @@ function ScheduleTable({
   className,
   renderMainTable = true,
   renderSummaryTable = true,
-}: ScheduleTableProps) {
+}: BasketballScheduleTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
@@ -201,6 +202,7 @@ function ScheduleTable({
     [summary]
   );
 
+  // Responsive dimensions
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
   const summaryRowHeight = isMobile ? 24 : 28;
@@ -253,7 +255,7 @@ function ScheduleTable({
             >
               <thead>
                 <tr>
-                  {/* Location Column - Fixed sticky positioning */}
+                  {/* Location Column */}
                   <th
                     className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
@@ -273,7 +275,7 @@ function ScheduleTable({
                     Location
                   </th>
 
-                  {/* Opponent Column - Fixed sticky positioning */}
+                  {/* Opponent Column */}
                   <th
                     className={`sticky z-30 bg-gray-50 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
@@ -302,7 +304,7 @@ function ScheduleTable({
                     )}
                   </th>
 
-                  {/* Win Probability Column - Fixed sticky positioning */}
+                  {/* Win Probability Column */}
                   <th
                     className={`sticky z-30 bg-gray-50 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
@@ -371,7 +373,7 @@ function ScheduleTable({
                 {/* Game Rows */}
                 {scheduleData.map((row, index) => (
                   <tr key={index}>
-                    {/* Location Cell - Capitalize and apply correct styling */}
+                    {/* Location Cell */}
                     <td
                       className={`sticky left-0 z-20 text-center ${
                         isMobile ? "text-xs" : "text-sm"
@@ -386,14 +388,12 @@ function ScheduleTable({
                         border: "1px solid #e5e7eb",
                         borderTop: "none",
                         borderRight: "1px solid #e5e7eb",
-                        // ✅ Use capitalized version for styling lookup
                         ...getLocationStyle(
                           row.Loc.charAt(0).toUpperCase() +
                             row.Loc.slice(1).toLowerCase()
                         ),
                       }}
                     >
-                      {/* ✅ Display capitalized location */}
                       {row.Loc.charAt(0).toUpperCase() +
                         row.Loc.slice(1).toLowerCase()}
                     </td>
@@ -469,9 +469,8 @@ function ScheduleTable({
                             border: "1px solid #e5e7eb",
                             borderTop: "none",
                             borderLeft: "none",
-                            // ✅ Made empty cells darker gray
                             backgroundColor: isEmpty
-                              ? "#d1d5db" // Darker gray for empty cells
+                              ? "#d1d5db"
                               : "transparent",
                           }}
                         >
@@ -481,7 +480,7 @@ function ScheduleTable({
                             }`}
                             style={
                               isEmpty
-                                ? {} // No additional styling for empty cells
+                                ? {}
                                 : getCellStyle(formattedValue, team, index)
                             }
                           >
@@ -493,7 +492,7 @@ function ScheduleTable({
                   </tr>
                 ))}
 
-                {/* Summary Rows - Added to the bottom of the main table */}
+                {/* Summary Rows */}
                 {summary && Object.keys(summary).length > 0 && (
                   <>
                     {/* Expected Wins Row */}
@@ -505,10 +504,6 @@ function ScheduleTable({
                         }`}
                         style={{
                           width:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          minWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          maxWidth:
                             firstColWidth + opponentColWidth + winProbColWidth,
                           height: summaryRowHeight,
                           position: "sticky",
@@ -560,10 +555,6 @@ function ScheduleTable({
                         style={{
                           width:
                             firstColWidth + opponentColWidth + winProbColWidth,
-                          minWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
-                          maxWidth:
-                            firstColWidth + opponentColWidth + winProbColWidth,
                           height: summaryRowHeight,
                           position: "sticky",
                           left: 0,
@@ -605,14 +596,6 @@ function ScheduleTable({
                             }`}
                             style={{
                               width:
-                                firstColWidth +
-                                opponentColWidth +
-                                winProbColWidth,
-                              minWidth:
-                                firstColWidth +
-                                opponentColWidth +
-                                winProbColWidth,
-                              maxWidth:
                                 firstColWidth +
                                 opponentColWidth +
                                 winProbColWidth,
@@ -669,10 +652,27 @@ function ScheduleTable({
               </tbody>
             </table>
           </div>
+
+          {/* Legend */}
+          <div className="mt-4 text-sm text-gray-600">
+            <p>
+              <strong>Legend:</strong>{" "}
+              <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
+              Win |{" "}
+              <span className="inline-block w-4 h-4 bg-yellow-100 border border-gray-300 mr-1 align-middle"></span>
+              Loss |{" "}
+              <span className="inline-block w-4 h-4 bg-blue-200 mr-1 align-middle"></span>
+              Next Game |{" "}
+              <span className="inline-block w-4 h-4 bg-gray-100 mr-1 align-middle"></span>
+              Future Games |{" "}
+              <span className="inline-block w-4 h-4 bg-gray-300 mr-1 align-middle"></span>
+              No Game
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Summary Table - Keep this for the separate summary view */}
+      {/* Separate Summary Table */}
       {renderSummaryTable && (
         <div className="mb-4">
           <div
@@ -725,7 +725,9 @@ function ScheduleTable({
                       borderLeft: "none",
                     }}
                   >
-                    {isMobile ? "Expected\nWins" : "Expected\nWins"}
+                    Expected
+                    <br />
+                    Wins
                   </th>
                   <th
                     className={`bg-gray-50 text-center font-normal sticky z-20 ${
@@ -830,13 +832,12 @@ function ScheduleTable({
               </thead>
 
               <tbody>
-                {/* ✅ Sort teams by expected wins (highest to lowest) */}
                 {teams
-                  .filter((team) => summary[team]) // Only include teams with summary data
+                  .filter((team) => summary[team])
                   .sort((a, b) => {
                     const aExpectedWins = summary[a]?.expected_wins || 0;
                     const bExpectedWins = summary[b]?.expected_wins || 0;
-                    return bExpectedWins - aExpectedWins; // Descending order (highest to lowest)
+                    return bExpectedWins - aExpectedWins;
                   })
                   .map((team) => {
                     const teamSummary = summary[team];
@@ -1007,4 +1008,4 @@ function ScheduleTable({
   );
 }
 
-export default memo(ScheduleTable);
+export default memo(BasketballScheduleTable);

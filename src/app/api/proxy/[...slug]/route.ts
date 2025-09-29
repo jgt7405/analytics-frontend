@@ -56,7 +56,7 @@ export async function GET(
         case "conf_wins":
           backendPath = `/football/team/${teamName}/history/conf_wins`;
           break;
-        case "sagarin_rank": // ADD THIS CASE
+        case "sagarin_rank":
           backendPath = `/football/team/${teamName}/history/sagarin_rank`;
           break;
         default:
@@ -101,13 +101,15 @@ export async function GET(
       const [, conference] = slug;
       backendPath = `/cfp/${conference}/history`;
     }
-    // Handle 2-part routes with history: football_conf_data/history
+    // Handle 3-part basketball history routes: standings/Big_12/history
     else if (
-      slug.length === 2 &&
-      slug[0] === "football_conf_data" &&
-      slug[1] === "history"
+      slug.length === 3 &&
+      slug[0] === "standings" &&
+      slug[2] === "history"
     ) {
-      backendPath = `/football_conf_data/history`;
+      const [, conference] = slug; // Get the conference from position 1
+      const formattedConference = conference.replace(/\s+/g, "_");
+      backendPath = `/standings/${formattedConference}/history`;
     }
     // Handle 3-part football routes: football/standings/Big_12
     else if (slug.length === 3 && slug[0] === "football") {
@@ -145,6 +147,14 @@ export async function GET(
             { status: 404 }
           );
       }
+    }
+    // Handle 2-part routes with history: football_conf_data/history
+    else if (
+      slug.length === 2 &&
+      slug[0] === "football_conf_data" &&
+      slug[1] === "history"
+    ) {
+      backendPath = `/football_conf_data/history`;
     }
     // Handle 2-part routes
     else if (slug.length === 2) {

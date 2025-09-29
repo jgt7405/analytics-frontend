@@ -437,7 +437,127 @@ class ApiClient {
       properties: { conference: formattedConf },
     });
 
-    return this.request(`/conf_schedule/${formattedConf}`, validateSchedule);
+    const rawResponse = await this.request(
+      `/conf_schedule/${formattedConf}`,
+      validateSchedule
+    );
+
+    interface RawScheduleRow {
+      Loc: string;
+      Team: string;
+      Win_Pct?: string;
+      Win_Pct_Raw?: number;
+      games: Record<string, string>;
+    }
+
+    interface RawScheduleResponse {
+      data: RawScheduleRow[];
+      conferences: string[];
+    }
+
+    const typedResponse = rawResponse as unknown as RawScheduleResponse;
+    let scheduleData = typedResponse.data || [];
+    const conferences = typedResponse.conferences || [];
+
+    // Sort by Win_Pct_Raw (ascending - hardest opponents first)
+    scheduleData = scheduleData.sort((a, b) => {
+      const aWinPct = a.Win_Pct_Raw ?? 1;
+      const bWinPct = b.Win_Pct_Raw ?? 1;
+      return aWinPct - bWinPct;
+    });
+
+    // Extract unique teams from the games data
+    const teamsSet = new Set<string>();
+    const teamLogos: Record<string, string> = {};
+
+    interface TeamSummary {
+      total_games: number;
+      expected_wins: number;
+      top_quartile: number;
+      second_quartile: number;
+      third_quartile: number;
+      bottom_quartile: number;
+    }
+
+    const summary: Record<string, TeamSummary> = {};
+
+    scheduleData.forEach((row) => {
+      if (row.games && typeof row.games === "object") {
+        Object.keys(row.games).forEach((team) => {
+          teamsSet.add(team);
+        });
+      }
+    });
+
+    const teams = Array.from(teamsSet).sort();
+
+    // Calculate quartile boundaries based on ALL schedule rows
+    const totalRows = scheduleData.length;
+    const quartileSize = Math.ceil(totalRows / 4);
+
+    // Assign quartile to each row based on position in sorted array
+    const rowsWithQuartile = scheduleData.map((row, index) => {
+      let quartile: "top" | "second" | "third" | "bottom";
+      if (index < quartileSize) {
+        quartile = "top"; // Hardest (lowest win %)
+      } else if (index < quartileSize * 2) {
+        quartile = "second";
+      } else if (index < quartileSize * 3) {
+        quartile = "third";
+      } else {
+        quartile = "bottom"; // Easiest (highest win %)
+      }
+      return { ...row, quartile };
+    });
+
+    // Calculate summary data for each team
+    teams.forEach((team) => {
+      let totalGames = 0;
+      let expectedWins = 0;
+      let topQuartile = 0;
+      let secondQuartile = 0;
+      let thirdQuartile = 0;
+      let bottomQuartile = 0;
+
+      rowsWithQuartile.forEach((row) => {
+        if (row.games && typeof row.games === "object") {
+          const gameValue = row.games[team];
+          if (gameValue && gameValue !== "") {
+            totalGames++;
+
+            // Calculate expected wins based on win probability
+            if (row.Win_Pct_Raw) {
+              expectedWins += row.Win_Pct_Raw;
+            }
+
+            // Count games by quartile
+            if (row.quartile === "top") topQuartile++;
+            else if (row.quartile === "second") secondQuartile++;
+            else if (row.quartile === "third") thirdQuartile++;
+            else if (row.quartile === "bottom") bottomQuartile++;
+          }
+        }
+      });
+
+      summary[team] = {
+        total_games: totalGames,
+        expected_wins: parseFloat(expectedWins.toFixed(1)),
+        top_quartile: topQuartile,
+        second_quartile: secondQuartile,
+        third_quartile: thirdQuartile,
+        bottom_quartile: bottomQuartile,
+      };
+
+      teamLogos[team] = `/images/team_logos/${team.replace(/\s+/g, "_")}.png`;
+    });
+
+    return {
+      data: scheduleData,
+      teams: teams,
+      team_logos: teamLogos,
+      summary: summary,
+      conferences: conferences,
+    };
   }
 
   async getTWV(conference: string): Promise<TWVApiResponse> {

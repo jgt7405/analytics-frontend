@@ -2,7 +2,6 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
-import type { Chart } from "chart.js";
 import {
   CategoryScale,
   ChartArea,
@@ -181,15 +180,13 @@ export default function BballFirstPlaceHistoryChart({
       legend: { display: false },
       tooltip: {
         enabled: false,
-        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+        external: (args: { chart: ChartJS; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById(
-            "chartjs-tooltip-bball-firstplace"
-          );
+          let tooltipEl = document.getElementById("chartjs-tooltip-firstplace");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-bball-firstplace";
+            tooltipEl.id = "chartjs-tooltip-firstplace";
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",

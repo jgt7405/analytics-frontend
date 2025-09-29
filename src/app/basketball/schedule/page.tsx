@@ -2,20 +2,20 @@
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
-import FootballScheduleTable from "@/components/features/football/ScheduleTable";
+import BasketballScheduleTable from "@/components/features/basketball/ScheduleTable"; // ✅ Basketball component
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useConferenceUrl } from "@/hooks/useConferenceUrl";
-import { useFootballSchedule } from "@/hooks/useFootballSchedule";
 import { useResponsive } from "@/hooks/useResponsive";
+import { useSchedule } from "@/hooks/useSchedule"; // ✅ Basketball hook
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
-export default function FootballSchedulePage() {
+export default function BasketballSchedulePage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -36,22 +36,25 @@ export default function FootballSchedulePage() {
 
       if (confParam) {
         const decodedConf = decodeURIComponent(confParam);
-        const knownFootballConferences = [
+        const knownBasketballConferences = [
           "Big 12",
           "SEC",
           "Big Ten",
           "ACC",
           "Pac-12",
+          "Big East",
           "Mountain West",
-          "American Athletic",
+          "American",
+          "Atlantic 10",
+          "WCC",
+          "West Coast",
           "Conference USA",
-          "Mid-American",
+          "MAC",
           "Sun Belt",
           "WAC",
-          "Independent",
         ];
 
-        if (knownFootballConferences.includes(decodedConf)) {
+        if (knownBasketballConferences.includes(decodedConf)) {
           setSelectedConference(decodedConf);
         } else {
           setSelectedConference("Big 12");
@@ -65,12 +68,13 @@ export default function FootballSchedulePage() {
     }
   }, [searchParams, hasInitialized]);
 
+  // ✅ Use basketball schedule hook
   const {
     data: scheduleResponse,
     isLoading: scheduleLoading,
     error: scheduleError,
     refetch,
-  } = useFootballSchedule(hasInitialized ? selectedConference : "Big 12");
+  } = useSchedule(hasInitialized ? selectedConference : "Big 12");
 
   useEffect(() => {
     if (scheduleResponse?.conferences) {
@@ -86,11 +90,11 @@ export default function FootballSchedulePage() {
   // Track page load
   useEffect(() => {
     if (hasInitialized) {
-      startMeasurement("football-schedule-page-load");
+      startMeasurement("basketball-schedule-page-load");
       trackEvent({
         name: "page_view",
         properties: {
-          page: "football-schedule",
+          page: "basketball-schedule",
           conference: selectedConference,
         },
       });
@@ -99,17 +103,17 @@ export default function FootballSchedulePage() {
 
   useEffect(() => {
     return () => {
-      endMeasurement("football-schedule-page-load");
+      endMeasurement("basketball-schedule-page-load");
     };
   }, [endMeasurement]);
 
   useEffect(() => {
     if (!scheduleLoading && scheduleResponse && hasInitialized) {
-      const loadTime = endMeasurement("football-schedule-page-load");
+      const loadTime = endMeasurement("basketball-schedule-page-load");
       trackEvent({
         name: "data_load_success",
         properties: {
-          page: "football-schedule",
+          page: "basketball-schedule",
           conference: selectedConference,
           loadTime,
           teamsCount: scheduleResponse?.teams?.length || 0,
@@ -133,7 +137,7 @@ export default function FootballSchedulePage() {
       trackEvent({
         name: "conference_changed",
         properties: {
-          page: "football-schedule",
+          page: "basketball-schedule",
           fromConference: selectedConference,
           toConference: newConference,
         },
@@ -258,7 +262,7 @@ export default function FootballSchedulePage() {
                   scheduleResponse?.team_logos &&
                   scheduleResponse?.summary && (
                     <div className="mb-8">
-                      <div className="football-schedule-table">
+                      <div className="basketball-schedule-table">
                         <Suspense
                           fallback={
                             <BasketballTableSkeleton
@@ -269,7 +273,7 @@ export default function FootballSchedulePage() {
                             />
                           }
                         >
-                          <FootballScheduleTable
+                          <BasketballScheduleTable
                             scheduleData={filteredScheduleData}
                             teams={scheduleResponse.teams}
                             teamLogos={scheduleResponse.team_logos}
@@ -313,11 +317,11 @@ export default function FootballSchedulePage() {
                           >
                             <TableActionButtons
                               selectedConference={selectedConference}
-                              contentSelector=".football-schedule-table"
-                              pageName="football-schedule"
+                              contentSelector=".basketball-schedule-table"
+                              pageName="basketball-schedule"
                               pageTitle="Team Schedules"
                               shareTitle="Team Schedule Analysis"
-                              pathname="/football/schedule"
+                              pathname="/basketball/schedule"
                             />
                           </div>
                         </div>
@@ -336,7 +340,7 @@ export default function FootballSchedulePage() {
                         <span className="text-base">(By Quartile)</span>
                       </h1>
 
-                      <div className="football-schedule-summary-table">
+                      <div className="basketball-schedule-summary-table">
                         <Suspense
                           fallback={
                             <BasketballTableSkeleton
@@ -347,7 +351,7 @@ export default function FootballSchedulePage() {
                             />
                           }
                         >
-                          <FootballScheduleTable
+                          <BasketballScheduleTable
                             scheduleData={filteredScheduleData}
                             teams={scheduleResponse.teams}
                             teamLogos={scheduleResponse.team_logos}
@@ -376,11 +380,11 @@ export default function FootballSchedulePage() {
                           >
                             <TableActionButtons
                               selectedConference={selectedConference}
-                              contentSelector=".football-schedule-summary-table"
-                              pageName="football-schedule-summary"
+                              contentSelector=".basketball-schedule-summary-table"
+                              pageName="basketball-schedule-summary"
                               pageTitle="Schedule Difficulty Summary"
                               shareTitle="Schedule Difficulty Summary"
-                              pathname="/football/schedule"
+                              pathname="/basketball/schedule"
                             />
                           </div>
                         </div>
