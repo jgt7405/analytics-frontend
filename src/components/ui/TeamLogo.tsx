@@ -35,7 +35,9 @@ export default function TeamLogo({
       title={showTooltip ? teamName : undefined} // Add tooltip here
       onError={(e) => {
         const target = e.target as HTMLImageElement;
-        target.src = "/images/default-logo.png";
+        // Simple gray circle SVG as base64
+        target.src =
+          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23cccccc'/%3E%3C/svg%3E";
       }}
     />
   );
