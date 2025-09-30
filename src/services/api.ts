@@ -27,8 +27,6 @@ import {
 
 const API_BASE_URL = "/api/proxy";
 
-// Add this interface near the top of your api.ts file, around line 30-80 with the other interfaces
-
 interface FootballTeamData {
   team_info: {
     team_name: string;
@@ -83,7 +81,6 @@ interface FootballTeamData {
   }>;
 }
 
-// Define specific API response types
 interface TWVApiResponse {
   data: Array<{
     team_name: string;
@@ -123,7 +120,6 @@ interface SeedApiResponse {
   conferences: string[];
 }
 
-// **NEW: NCAA Tournament Round Progression Response Type**
 interface NCAATeamResponse {
   data: Array<{
     team_name: string;
@@ -168,7 +164,6 @@ interface HealthCheckResponse {
 }
 
 class ApiClient {
-  // **FIXED: Consolidated error handling method**
   private createUserFriendlyError(
     error: unknown,
     endpoint: string
@@ -257,7 +252,6 @@ class ApiClient {
     );
   }
 
-  // **FIXED: Added endpoint validation with NCAA tournament endpoint**
   private validateEndpoint(endpoint: string): boolean {
     const validEndpoints = [
       "/standings/",
@@ -267,7 +261,7 @@ class ApiClient {
       "/conf_tourney/",
       "/seed/",
       "/ncaa_tourney/",
-      "/team/", // ← Added /ncaa_tourney/
+      "/team/",
       "/unified_conference_data",
       "/basketball_teams",
       "/football_teams",
@@ -288,7 +282,6 @@ class ApiClient {
     );
   }
 
-  // **FIXED: Enhanced request method with better error handling**
   private async request<T>(
     endpoint: string,
     validator: (data: unknown) => {
@@ -298,7 +291,6 @@ class ApiClient {
     },
     retries = 3
   ): Promise<T> {
-    // **NEW: Validate endpoint before making request**
     if (!this.validateEndpoint(endpoint)) {
       console.warn(`⚠️  Potentially invalid endpoint: ${endpoint}`);
     }
@@ -316,15 +308,14 @@ class ApiClient {
             Accept: "application/json",
             "Accept-Encoding": "gzip, deflate, br",
             "X-Requested-With": "XMLHttpRequest",
-            "Cache-Control": "public, max-age=300", // 5 minutes
+            "Cache-Control": "public, max-age=300",
           },
-          signal: AbortSignal.timeout(15000), // Increased timeout
+          signal: AbortSignal.timeout(15000),
         });
 
         const duration = Date.now() - startTime;
         monitoring.trackApiCall(endpoint, "GET", duration, response.status);
 
-        // **FIXED: Enhanced error logging**
         if (!response.ok) {
           console.error(`❌ API Error Details:`, {
             status: response.status,
@@ -442,133 +433,17 @@ class ApiClient {
       validateSchedule
     );
 
-    interface RawScheduleRow {
-      Loc: string;
-      Team: string;
-      Win_Pct?: string;
-      Win_Pct_Raw?: number;
-      games: Record<string, string>;
-    }
-
-    interface RawScheduleResponse {
-      data: RawScheduleRow[];
-      conferences: string[];
-    }
-
-    const typedResponse = rawResponse as unknown as RawScheduleResponse;
-    let scheduleData = typedResponse.data || [];
-    const conferences = typedResponse.conferences || [];
-
-    // Sort by Win_Pct_Raw (ascending - hardest opponents first)
-    scheduleData = scheduleData.sort((a, b) => {
-      const aWinPct = a.Win_Pct_Raw ?? 1;
-      const bWinPct = b.Win_Pct_Raw ?? 1;
-      return aWinPct - bWinPct;
-    });
-
-    // Extract unique teams from the games data
-    const teamsSet = new Set<string>();
-    const teamLogos: Record<string, string> = {};
-
-    interface TeamSummary {
-      total_games: number;
-      expected_wins: number;
-      top_quartile: number;
-      second_quartile: number;
-      third_quartile: number;
-      bottom_quartile: number;
-    }
-
-    const summary: Record<string, TeamSummary> = {};
-
-    scheduleData.forEach((row) => {
-      if (row.games && typeof row.games === "object") {
-        Object.keys(row.games).forEach((team) => {
-          teamsSet.add(team);
-        });
-      }
-    });
-
-    const teams = Array.from(teamsSet).sort();
-
-    // Calculate quartile boundaries based on ALL schedule rows
-    const totalRows = scheduleData.length;
-    const quartileSize = Math.ceil(totalRows / 4);
-
-    // Assign quartile to each row based on position in sorted array
-    const rowsWithQuartile = scheduleData.map((row, index) => {
-      let quartile: "top" | "second" | "third" | "bottom";
-      if (index < quartileSize) {
-        quartile = "top"; // Hardest (lowest win %)
-      } else if (index < quartileSize * 2) {
-        quartile = "second";
-      } else if (index < quartileSize * 3) {
-        quartile = "third";
-      } else {
-        quartile = "bottom"; // Easiest (highest win %)
-      }
-      return { ...row, quartile };
-    });
-
-    // Calculate summary data for each team
-    teams.forEach((team) => {
-      let totalGames = 0;
-      let expectedWins = 0;
-      let topQuartile = 0;
-      let secondQuartile = 0;
-      let thirdQuartile = 0;
-      let bottomQuartile = 0;
-
-      rowsWithQuartile.forEach((row) => {
-        if (row.games && typeof row.games === "object") {
-          const gameValue = row.games[team];
-          if (gameValue && gameValue !== "") {
-            totalGames++;
-
-            // Calculate expected wins based on win probability
-            if (row.Win_Pct_Raw) {
-              expectedWins += row.Win_Pct_Raw;
-            }
-
-            // Count games by quartile
-            if (row.quartile === "top") topQuartile++;
-            else if (row.quartile === "second") secondQuartile++;
-            else if (row.quartile === "third") thirdQuartile++;
-            else if (row.quartile === "bottom") bottomQuartile++;
-          }
-        }
-      });
-
-      summary[team] = {
-        total_games: totalGames,
-        expected_wins: parseFloat(expectedWins.toFixed(1)),
-        top_quartile: topQuartile,
-        second_quartile: secondQuartile,
-        third_quartile: thirdQuartile,
-        bottom_quartile: bottomQuartile,
-      };
-
-      teamLogos[team] = `/images/team_logos/${team.replace(/\s+/g, "_")}.png`;
-    });
-
-    return {
-      data: scheduleData,
-      teams: teams,
-      team_logos: teamLogos,
-      summary: summary,
-      conferences: conferences,
-    };
+    // Backend now returns teams, team_logos, and summary directly
+    return rawResponse as ScheduleApiResponse;
   }
 
   async getTWV(conference: string): Promise<TWVApiResponse> {
     const sanitized = sanitizeInput(conference);
 
-    // Allow "All Teams" as a special case
     if (sanitized !== "All Teams" && !validateConference(sanitized)) {
       throw new Error("Invalid conference name");
     }
 
-    // Format conference for API call
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
     console.log(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}`);
@@ -608,7 +483,6 @@ class ApiClient {
     }));
   }
 
-  // **FIXED: NCAA Tournament method - now uses correct endpoint for round progression data**
   async getNCAATourney(conference: string): Promise<NCAATeamResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
@@ -625,7 +499,6 @@ class ApiClient {
       properties: { conference: formattedConf },
     });
 
-    // **FIXED: Use /ncaa_tourney/ endpoint for round progression data**
     return this.request(`/ncaa_tourney/${formattedConf}`, (data) => ({
       success: true,
       data: data as NCAATeamResponse,
@@ -633,7 +506,6 @@ class ApiClient {
     }));
   }
 
-  // **FIXED: Seed data method - uses /seed/ endpoint for seed distribution data**
   async getSeedData(conference: string): Promise<SeedApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
@@ -738,7 +610,6 @@ class ApiClient {
     }));
   }
 
-  // **FIXED: Football Playoffs method - returns correct type**
   async getFootballPlayoffs(
     conference: string
   ): Promise<FootballPlayoffApiResponse> {
@@ -756,7 +627,6 @@ class ApiClient {
     }));
   }
 
-  // **FIXED: Separate CFP method for College Football Playoff data**
   async getCFP(conference: string): Promise<FootballCFPApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
@@ -822,7 +692,6 @@ class ApiClient {
     return response.json();
   }
 
-  // Health check endpoint
   async healthCheck(): Promise<HealthCheckResponse> {
     console.log("🏥 Performing health check");
 
@@ -858,7 +727,6 @@ class ApiClient {
     }
   }
 
-  // **FIXED: Enhanced generic GET request**
   async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
     let url = `${API_BASE_URL}${endpoint}`;
 
@@ -911,7 +779,6 @@ class ApiClient {
     }
   }
 
-  // **FIXED: Enhanced generic POST request**
   async post<T>(endpoint: string, body: unknown): Promise<T> {
     console.log(`🔄 Generic POST request to: ${API_BASE_URL}${endpoint}`);
     const startTime = Date.now();
@@ -984,7 +851,7 @@ export const getFootballCWV = (conference: string) =>
   api.getFootballCWV(conference);
 export const getFootballPlayoffs = (conference: string) =>
   api.getFootballPlayoffs(conference);
-export const getFootballCFP = (conference: string) => api.getCFP(conference); // **NEW: Added CFP export**
+export const getFootballCFP = (conference: string) => api.getCFP(conference);
 
 // Legacy function names for compatibility
 export const getConfScheduleData = (conference: string) =>
