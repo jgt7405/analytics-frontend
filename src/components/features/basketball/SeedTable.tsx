@@ -34,22 +34,34 @@ function SeedTable({ seedData, className }: SeedTableProps) {
 
   const sortedTeams = useMemo(() => {
     return [...seedData].sort((a, b) => {
+      // 1. Sort by In Tourney % (descending - highest first)
+      const aBidPct = a.tournament_bid_pct || 0;
+      const bBidPct = b.tournament_bid_pct || 0;
+      if (aBidPct !== bBidPct) return bBidPct - aBidPct;
+
+      // 2. Sort by Wgtd Avg Seed (ascending - lowest first)
       const aAvgSeed =
-        a.average_seed !== null && a.average_seed !== undefined
+        a.average_seed !== null &&
+        a.average_seed !== undefined &&
+        a.average_seed > 0
           ? a.average_seed
           : 999;
       const bAvgSeed =
-        b.average_seed !== null && b.average_seed !== undefined
+        b.average_seed !== null &&
+        b.average_seed !== undefined &&
+        b.average_seed > 0
           ? b.average_seed
           : 999;
       if (aAvgSeed !== bAvgSeed) return aAvgSeed - bAvgSeed;
 
+      // 3. Sort by 1st 4 Out (descending - highest first)
       const aFFO =
         (a.seed_distribution && a.seed_distribution["First Four Out"]) || 0;
       const bFFO =
         (b.seed_distribution && b.seed_distribution["First Four Out"]) || 0;
       if (aFFO !== bFFO) return bFFO - aFFO;
 
+      // 4. Sort by Nxt 4 Out (descending - highest first)
       const aNFO =
         (a.seed_distribution && a.seed_distribution["Next Four Out"]) || 0;
       const bNFO =

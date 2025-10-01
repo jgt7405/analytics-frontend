@@ -7,11 +7,19 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
+import { useBasketballConfTourneyHistory } from "@/hooks/useBasketballConfTourneyHistory";
 import { useConferenceTourney } from "@/hooks/useConferenceTourney";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+
+const BasketballConfChampionHistoryChart = lazy(
+  () =>
+    import(
+      "@/components/features/basketball/BasketballConfChampionHistoryChart"
+    )
+);
 
 export default function ConfTourneyPage() {
   const { trackEvent } = useMonitoring();
@@ -31,7 +39,9 @@ export default function ConfTourneyPage() {
     refetch,
   } = useConferenceTourney(selectedConference);
 
-  // Track page load
+  const { data: historyData } =
+    useBasketballConfTourneyHistory(selectedConference);
+
   useEffect(() => {
     trackEvent({
       name: "page_view",
@@ -39,7 +49,6 @@ export default function ConfTourneyPage() {
     });
   }, [selectedConference, trackEvent]);
 
-  // Update available conferences
   useEffect(() => {
     if (tourneyResponse?.conferences) {
       setAvailableConferences(tourneyResponse.conferences);
@@ -51,21 +60,19 @@ export default function ConfTourneyPage() {
     updatePreference("defaultConference", conference);
   };
 
-  // Error state
   if (tourneyError) {
     return (
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="Conference Tournament Projections"
+          isLoading={false}
           conferenceSelector={
             <ConferenceSelector
               conferences={availableConferences}
               selectedConference={selectedConference}
               onChange={handleConferenceChange}
-              error={tourneyError.message}
             />
           }
-          isLoading={false}
         >
           <ErrorMessage
             message={tourneyError.message || "Failed to load tournament data"}
@@ -77,53 +84,20 @@ export default function ConfTourneyPage() {
     );
   }
 
-  // No data state
-  if (!tourneyLoading && !tourneyResponse?.data) {
-    return (
-      <PageLayoutWrapper
-        title="Conference Tournament Projections"
-        conferenceSelector={
-          <ConferenceSelector
-            conferences={availableConferences}
-            selectedConference={selectedConference}
-            onChange={handleConferenceChange}
-          />
-        }
-        isLoading={false}
-      >
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-4">
-            No tournament data available
-          </div>
-          <p className="text-gray-400 text-sm mb-6">
-            Try selecting a different conference or check back later.
-          </p>
-          <button
-            onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Retry Loading
-          </button>
-        </div>
-      </PageLayoutWrapper>
-    );
-  }
-
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title="Conference Tournament Projections"
+        isLoading={tourneyLoading}
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
-            loading={tourneyLoading}
           />
         }
-        isLoading={tourneyLoading}
       >
-        <div className="-mt-2 md:-mt-6">
+        <div className="space-y-6">
           {tourneyLoading ? (
             <BasketballTableSkeleton
               tableType="standings"
@@ -132,47 +106,94 @@ export default function ConfTourneyPage() {
               showSummaryRows={false}
             />
           ) : (
-            <ErrorBoundary level="component" onRetry={() => refetch()}>
-              <div className="mb-8">
-                <div className="conf-tourney-table">
-                  <Suspense fallback={<BasketballTableSkeleton />}>
-                    {tourneyResponse?.data && (
-                      <ConferenceTourneyTable
-                        tourneyData={tourneyResponse.data}
-                      />
-                    )}
-                  </Suspense>
-                </div>
+            <>
+              <ErrorBoundary level="component" onRetry={() => refetch()}>
+                <div className="mb-8">
+                  <div className="conf-tourney-table">
+                    <Suspense fallback={<BasketballTableSkeleton />}>
+                      {tourneyResponse?.data && (
+                        <ConferenceTourneyTable
+                          tourneyData={tourneyResponse.data}
+                        />
+                      )}
+                    </Suspense>
+                  </div>
 
-                <div className="mt-6">
-                  <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
-                      <div style={{ lineHeight: "1.3" }}>
-                        <div>
-                          Probabilities from 1,000 season simulations using
-                          kenpom ratings.
-                        </div>
-                        <div style={{ marginTop: "6px" }}>
-                          Values show chance of reaching each round of the
-                          conference tournament.
+                  <div className="mt-6">
+                    <div className="flex flex-row items-start gap-4">
+                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                        <div style={{ lineHeight: "1.3" }}>
+                          <div>
+                            Probabilities from 1,000 season simulations using
+                            KenPom ratings.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            Values show chance of reaching each round of the
+                            conference tournament.
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div
-                      className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                    >
-                      <TableActionButtons
-                        selectedConference={selectedConference}
-                        contentSelector=".conf-tourney-table"
-                        pageName="conf-tourney"
-                        pageTitle="Conference Tournament Projections"
-                        shareTitle="Conference Tournament Analysis"
-                      />
+                      <div
+                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                      >
+                        <TableActionButtons
+                          selectedConference={selectedConference}
+                          contentSelector=".conf-tourney-table"
+                          pageName="conf-tourney"
+                          pageTitle="Conference Tournament Projections"
+                          shareTitle="Conference Tournament Analysis"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </ErrorBoundary>
+              </ErrorBoundary>
+
+              {historyData && (
+                <div className="space-y-6 mb-8">
+                  <ErrorBoundary level="component">
+                    <div className="mb-8">
+                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                        Conference Champion Probability History{" "}
+                        <span className="text-base">(Over Time)</span>
+                      </h1>
+                      <div className="champion-chart">
+                        <Suspense fallback={<BasketballTableSkeleton />}>
+                          <BasketballConfChampionHistoryChart
+                            championData={historyData.champion_data}
+                          />
+                        </Suspense>
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex flex-row items-start gap-4">
+                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                            <div style={{ lineHeight: "1.3" }}>
+                              <div>
+                                Progression of projected probability of
+                                conference tournament championship from 1,000
+                                season simulations using KenPom ratings.
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                          >
+                            <TableActionButtons
+                              selectedConference={selectedConference}
+                              contentSelector=".champion-chart"
+                              pageName="champion-history"
+                              pageTitle="Conference Champion Probability History Over Time"
+                              shareTitle="Conference Champion Probability History"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ErrorBoundary>
+                </div>
+              )}
+            </>
           )}
         </div>
       </PageLayoutWrapper>

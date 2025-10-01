@@ -66,6 +66,36 @@ export async function GET(
           );
       }
     }
+    // Handle 5-part basketball team history routes: basketball/team/Duke/history/conf_wins
+    else if (
+      slug.length === 5 &&
+      slug[0] === "basketball" &&
+      slug[1] === "team" &&
+      slug[3] === "history"
+    ) {
+      const [, , teamName, , historyType] = slug;
+
+      switch (historyType) {
+        case "conf_wins":
+          backendPath = `/basketball/team/${teamName}/history/conf_wins`;
+          break;
+        default:
+          return NextResponse.json(
+            { error: "Unknown basketball team history endpoint" },
+            { status: 404 }
+          );
+      }
+    }
+    // Handle 4-part basketball NCAA history routes: basketball/ncaa/Duke/history
+    else if (
+      slug.length === 4 &&
+      slug[0] === "basketball" &&
+      slug[1] === "ncaa" &&
+      slug[3] === "history"
+    ) {
+      const [, , teamName] = slug;
+      backendPath = `/basketball/ncaa/${teamName}/history`;
+    }
     // Handle 4-part CFP team history routes: football/cfp/BYU/history
     else if (
       slug.length === 4 &&
@@ -110,6 +140,14 @@ export async function GET(
       const [, conference] = slug; // Get the conference from position 1
       const formattedConference = conference.replace(/\s+/g, "_");
       backendPath = `/standings/${formattedConference}/history`;
+    } else if (
+      slug.length === 3 &&
+      slug[0] === "conf_tourney" &&
+      slug[2] === "history"
+    ) {
+      const [, conference] = slug;
+      const formattedConference = conference.replace(/\s+/g, "_");
+      backendPath = `/conf_tourney/${formattedConference}/history`;
     }
     // Handle 3-part football routes: football/standings/Big_12
     else if (slug.length === 3 && slug[0] === "football") {
