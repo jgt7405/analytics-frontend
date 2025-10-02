@@ -9,7 +9,7 @@ import { memo, useMemo, useState } from "react";
 
 interface ConferenceData {
   conference_name: string;
-  logo_url: string;
+  logo_url?: string;
   average_bids: number;
   bid_distribution: Record<string, number>;
 }

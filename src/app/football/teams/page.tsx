@@ -125,7 +125,11 @@ export default function FootballTeamsPage() {
           }
         );
 
-        setTeamsData(transformedTeams);
+        setTeamsData(
+          transformedTeams.sort((a, b) =>
+            a.team_name.localeCompare(b.team_name)
+          )
+        );
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load teams data"

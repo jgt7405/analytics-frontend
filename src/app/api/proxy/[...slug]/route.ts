@@ -193,6 +193,12 @@ export async function GET(
       slug[1] === "history"
     ) {
       backendPath = `/football_conf_data/history`;
+    } else if (
+      slug.length === 2 &&
+      slug[0] === "unified_conference_data" &&
+      slug[1] === "history"
+    ) {
+      backendPath = `/unified_conference_data/history`;
     }
     // Handle 2-part routes
     else if (slug.length === 2) {

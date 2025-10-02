@@ -29,18 +29,18 @@ ChartJS.register(
 );
 
 interface ConfHistoryData {
-  conference_name: string;
+  conference: string;
   date: string;
   avg_bids: number;
-  version_id?: string;
-  conf_info: {
+  bid_distribution?: Record<string, number>;
+  conference_info: {
     primary_color?: string;
     secondary_color?: string;
     logo_url?: string;
   };
 }
 
-interface FootballConfBidsHistoryChartProps {
+interface BballConfBidsHistoryChartProps {
   timelineData: ConfHistoryData[];
 }
 
@@ -51,16 +51,16 @@ interface ChartDimensions {
 
 type ConferenceData = {
   data: Array<{ x: string; y: number }>;
-  conf_info: {
+  conference_info: {
     primary_color?: string;
     secondary_color?: string;
     logo_url?: string;
   };
 };
 
-export default function FootballConfBidsHistoryChart({
+export default function BballConfBidsHistoryChart({
   timelineData,
-}: FootballConfBidsHistoryChartProps) {
+}: BballConfBidsHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
     "line",
@@ -90,59 +90,34 @@ export default function FootballConfBidsHistoryChart({
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
-  const filteredData = timelineData.filter((item) => {
-    const confName = item.conference_name.toLowerCase();
-    const itemDate = new Date(item.date);
-    const cutoffDate = new Date("2025-08-22");
-
-    return !confName.includes("fcs") && itemDate >= cutoffDate;
-  });
-
-  const sortedData = filteredData.sort(
+  // Filter and sort data
+  const sortedData = timelineData.sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  // Deduplicate by conference and date, keeping earliest version_id
-  const dataByConfAndDate = new Map<string, ConfHistoryData>();
-  sortedData.forEach((item) => {
-    const key = `${item.conference_name}-${item.date}`;
-    if (
-      !dataByConfAndDate.has(key) ||
-      (item.version_id &&
-        dataByConfAndDate.get(key)?.version_id &&
-        item.version_id < dataByConfAndDate.get(key)!.version_id!)
-    ) {
-      dataByConfAndDate.set(key, item);
-    }
-  });
-
-  // Build conference data from deduplicated items
+  // Build conference data
   const confData: Record<string, ConferenceData> = {};
-  Array.from(dataByConfAndDate.values()).forEach((item) => {
-    if (!confData[item.conference_name]) {
-      confData[item.conference_name] = {
+  sortedData.forEach((item) => {
+    if (!confData[item.conference]) {
+      confData[item.conference] = {
         data: [],
-        conf_info: item.conf_info,
+        conference_info: item.conference_info,
       };
     }
-    confData[item.conference_name].data.push({
+    confData[item.conference].data.push({
       x: formatDate(item.date),
       y: item.avg_bids,
     });
   });
 
   const allDates = [
-    ...new Set(
-      Array.from(dataByConfAndDate.values()).map((item) =>
-        formatDate(item.date)
-      )
-    ),
+    ...new Set(sortedData.map((item) => formatDate(item.date))),
   ];
 
   const datasets = Object.entries(confData).map(([confName, conf]) => ({
     label: confName,
     data: conf.data,
-    borderColor: conf.conf_info.primary_color || "#666666",
+    borderColor: conf.conference_info.primary_color || "#666666",
     backgroundColor: "transparent",
     borderWidth: 2,
     pointRadius: 0,
@@ -151,17 +126,17 @@ export default function FootballConfBidsHistoryChart({
     fill: false,
   }));
 
+  // Only show conferences with >= 1.1 bids
   const conferencesForLogos = Object.entries(confData)
     .map(([confName, conf]) => {
       const finalBids = conf.data[conf.data.length - 1]?.y || 0;
       return {
-        conference_name: confName,
+        conference: confName,
         final_bids: finalBids,
-        conf_info: conf.conf_info,
-        should_show: true,
+        conference_info: conf.conference_info,
       };
     })
-    .filter((conf) => conf.final_bids > 0.3)
+    .filter((conf) => conf.final_bids >= 1.1)
     .sort((a, b) => b.final_bids - a.final_bids);
 
   const chartData = {
@@ -191,10 +166,10 @@ export default function FootballConfBidsHistoryChart({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-conf");
+          let tooltipEl = document.getElementById("chartjs-tooltip-bball-conf");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-conf";
+            tooltipEl.id = "chartjs-tooltip-bball-conf";
             tooltipEl.style.background = "#ffffff";
             tooltipEl.style.border = "1px solid #e5e7eb";
             tooltipEl.style.borderRadius = "8px";
@@ -212,7 +187,6 @@ export default function FootballConfBidsHistoryChart({
             tooltipEl.style.minWidth = "200px";
             tooltipEl.style.maxWidth = "300px";
 
-            // Add close functionality
             const handleClickOutside = (e: Event) => {
               if (!tooltipEl?.contains(e.target as Node)) {
                 tooltipEl!.style.opacity = "0";
@@ -252,32 +226,31 @@ export default function FootballConfBidsHistoryChart({
                 return {
                   name: confName,
                   bids: dataPoint?.y || 0,
-                  color: conf.conf_info.primary_color || "#666666",
+                  color: conf.conference_info.primary_color || "#666666",
                 };
               })
               .sort((a, b) => b.bids - a.bids);
 
-            // Close button
             let innerHtml = `
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-               <button id="tooltip-close" style="
-                 background: none; 
-                 border: none; 
-                 font-size: 16px; 
-                 cursor: pointer; 
-                 color: #6b7280;
-                 padding: 0;
-                 margin: 0;
-                 line-height: 1;
-                 width: 20px;
-                 height: 20px;
-                 display: flex;
-                 align-items: center;
-                 justify-content: center;
-               ">&times;</button>
-             </div>
-           `;
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <button id="tooltip-close" style="
+                  background: none; 
+                  border: none; 
+                  font-size: 16px; 
+                  cursor: pointer; 
+                  color: #6b7280;
+                  padding: 0;
+                  margin: 0;
+                  line-height: 1;
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                ">&times;</button>
+              </div>
+            `;
 
             confsAtDate.forEach((conf) => {
               innerHtml += `<div style="color: ${conf.color}; margin: 2px 0; font-weight: 400;">${conf.name}: ${conf.bids.toFixed(1)} bids</div>`;
@@ -285,7 +258,6 @@ export default function FootballConfBidsHistoryChart({
 
             tooltipEl.innerHTML = innerHtml;
 
-            // Add close button functionality
             const closeBtn = tooltipEl.querySelector("#tooltip-close");
             if (closeBtn) {
               closeBtn.addEventListener("click", (e) => {
@@ -295,31 +267,27 @@ export default function FootballConfBidsHistoryChart({
             }
           }
 
-          // Smart positioning logic
+          // Smart positioning
           const position = chart.canvas.getBoundingClientRect();
           const chartWidth = chart.width;
           const tooltipWidth = tooltipEl.offsetWidth || 200;
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
-          // Determine if point is on left or right side of chart
           const isLeftSide = caretX < chartWidth / 2;
 
           let leftPosition: number;
           let arrowPosition: string;
 
           if (isLeftSide) {
-            // Point on left, show tooltip to the right
             leftPosition = position.left + window.pageXOffset + caretX + 20;
             arrowPosition = "left";
           } else {
-            // Point on right, show tooltip to the left
             leftPosition =
               position.left + window.pageXOffset + caretX - tooltipWidth - 20;
             arrowPosition = "right";
           }
 
-          // Add arrow styling
           if (!tooltipEl.querySelector(".tooltip-arrow")) {
             const arrow = document.createElement("div");
             arrow.className = "tooltip-arrow";
@@ -343,7 +311,6 @@ export default function FootballConfBidsHistoryChart({
 
             tooltipEl.appendChild(arrow);
           } else {
-            // Update existing arrow position
             const arrow = tooltipEl.querySelector(
               ".tooltip-arrow"
             ) as HTMLElement;
@@ -361,7 +328,6 @@ export default function FootballConfBidsHistoryChart({
             }
           }
 
-          // Ensure tooltip doesn't go off screen
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
@@ -385,7 +351,7 @@ export default function FootballConfBidsHistoryChart({
         grid: { display: false },
       },
       y: {
-        title: { display: true, text: "Projected CFP Bids" },
+        title: { display: true, text: "Projected NCAA Tournament Bids" },
         min: 0,
         max: (() => {
           const allValues = datasets.flatMap((dataset) =>
@@ -490,11 +456,11 @@ export default function FootballConfBidsHistoryChart({
             }}
           >
             {logoPositions.map(({ conf, idealY, adjustedY }) => {
-              const confColor = conf.conf_info.primary_color || "#94a3b8";
-              const logoUrl = conf.conf_info.logo_url;
+              const confColor = conf.conference_info.primary_color || "#94a3b8";
+              const logoUrl = conf.conference_info.logo_url;
 
               return (
-                <div key={`end-${conf.conference_name}`}>
+                <div key={`end-${conf.conference}`}>
                   <svg
                     className="absolute"
                     style={{
@@ -527,7 +493,7 @@ export default function FootballConfBidsHistoryChart({
                     {logoUrl ? (
                       <Image
                         src={logoUrl}
-                        alt={conf.conference_name}
+                        alt={conf.conference}
                         width={24}
                         height={24}
                         className="object-contain"
@@ -544,17 +510,17 @@ export default function FootballConfBidsHistoryChart({
                             fallback.className =
                               "w-6 h-6 rounded border fallback-square";
                             fallback.style.backgroundColor = confColor;
-                            fallback.title = conf.conference_name;
+                            fallback.title = conf.conference;
                             parent.appendChild(fallback);
                           }
                         }}
-                        title={conf.conference_name}
+                        title={conf.conference}
                       />
                     ) : (
                       <div
                         className="w-6 h-6 rounded border"
                         style={{ backgroundColor: confColor }}
-                        title={conf.conference_name}
+                        title={conf.conference}
                       />
                     )}
                     <span

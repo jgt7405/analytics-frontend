@@ -77,6 +77,11 @@ function NavigationContent() {
       path: addConferenceToUrl("/basketball/teams"),
       description: "Teams directory",
     },
+    {
+      name: "Compare",
+      path: addConferenceToUrl("/basketball/compare"),
+      description: "Compare teams side by side",
+    },
   ];
 
   const footballNavItems = [

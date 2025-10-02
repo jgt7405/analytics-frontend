@@ -368,12 +368,12 @@ export default function BasketballConfChampionHistoryChart({
         ticks: {
           maxTicksLimit: isMobile ? 5 : 10,
           font: {
-            size: 11, // Add consistent font size
+            size: 11,
           },
         },
         grid: {
           display: false,
-          drawBorder: true, // Add border
+          drawBorder: true,
         },
       },
       y: {
@@ -387,12 +387,12 @@ export default function BasketballConfChampionHistoryChart({
           return Math.max(20, Math.ceil(maxValue / 10) * 10);
         })(),
         ticks: {
-          callback: (value: string | number) => `${Math.round(Number(value))}%`,
+          callback: (value: string | number) => `${value}%`,
         },
       },
     },
     layout: {
-      padding: { left: 10, right: 10 },
+      padding: { left: 10, right: 70 },
     },
     animation: {
       onComplete: () => {
