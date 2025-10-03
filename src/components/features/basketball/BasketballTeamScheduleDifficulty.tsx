@@ -211,17 +211,13 @@ export default function BasketballTeamScheduleDifficulty({
     );
 
     const positioned: PositionedGame[] = [];
-    const minSpacing = 28; // Reduced from 40 for tighter spacing
+    const minSpacing = 28;
 
-    // Column assignment pattern: 2, 3, 1, 4, 2, 3, 1, 4...
-    // Column 0 = far left, 1 = near left, 2 = near right, 3 = far right
-    const columnPattern = [1, 2, 0, 3]; // Maps to: near-left, near-right, far-left, far-right
+    // Column assignment pattern
+    const columnPattern = [1, 2, 0, 3];
 
     sortedByDifficulty.forEach((game, index) => {
-      // Determine column based on pattern
       const columnIndex = columnPattern[index % 4];
-
-      // Columns 0 and 1 are on the left side, 2 and 3 are on the right side
       const isRightSide = columnIndex >= 2;
 
       const gameY = MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
@@ -232,17 +228,28 @@ export default function BasketballTeamScheduleDifficulty({
         (p) => p.columnIndex === columnIndex
       );
 
+      // Only move if there's an actual collision
       for (let attempts = 0; attempts < 50; attempts++) {
         let hasCollision = false;
 
         for (const existingLogo of sameColumnLogos) {
-          if (Math.abs(logoY - existingLogo.adjustedY) < minSpacing) {
+          const distance = Math.abs(logoY - existingLogo.adjustedY);
+
+          if (distance < minSpacing) {
             hasCollision = true;
 
+            // Prefer moving down over moving up to keep logos near their dots
+            // But check if there's space in the preferred direction
+            const moveDown = existingLogo.adjustedY + minSpacing;
+            const moveUp = existingLogo.adjustedY - minSpacing;
+
+            // Check which direction has more space
             if (game.percentilePosition < existingLogo.percentilePosition) {
-              logoY = existingLogo.adjustedY - minSpacing;
+              // This game is above, prefer moving up
+              logoY = moveUp;
             } else {
-              logoY = existingLogo.adjustedY + minSpacing;
+              // This game is below, prefer moving down
+              logoY = moveDown;
             }
             break;
           }
@@ -251,12 +258,10 @@ export default function BasketballTeamScheduleDifficulty({
         if (!hasCollision) break;
       }
 
-      // Apply staggered offset based on column to prevent vertical alignment
-      // Columns 1 and 2 (inner columns) get no offset
-      // Columns 0 and 3 (outer columns) get half-logo offset (12px)
+      // Apply staggered offset based on column
       let staggerOffset = 0;
       if (columnIndex === 0 || columnIndex === 3) {
-        staggerOffset = 12; // Half of 24px logo size
+        staggerOffset = 12;
       }
 
       logoY = logoY + staggerOffset;
@@ -371,7 +376,7 @@ export default function BasketballTeamScheduleDifficulty({
           <div>Location: {game.location}</div>
           <div>{winProb}% Win Probability</div>
           <div>
-            #{rank} Most Difficult Game Out of{" "}
+            #{rank.toLocaleString()} Most Difficult Game Out of{" "}
             {comparisonDataset.length.toLocaleString()} Games in{" "}
             {getFilterDescription()} ({percentile} Percentile)
           </div>
@@ -522,7 +527,7 @@ export default function BasketballTeamScheduleDifficulty({
               <g key={uniqueKey}>
                 {/* Connection line with opponent's primary color */}
                 <line
-                  x1={circleX + (game.isRightSide ? 6 : -6)}
+                  x1={circleX + (game.isRightSide ? 4 : -4)}
                   x2={logoX + (game.isRightSide ? -12 : 12)}
                   y1={gameY}
                   y2={game.adjustedY}
@@ -534,7 +539,7 @@ export default function BasketballTeamScheduleDifficulty({
                 <circle
                   cx={circleX}
                   cy={gameY}
-                  r={6}
+                  r={4}
                   fill={
                     game.status === "W"
                       ? "#10b981"
@@ -543,7 +548,7 @@ export default function BasketballTeamScheduleDifficulty({
                         : "#6b7280"
                   }
                   stroke="white"
-                  strokeWidth={2}
+                  strokeWidth={1}
                 />
 
                 {game.opponent_logo && (
