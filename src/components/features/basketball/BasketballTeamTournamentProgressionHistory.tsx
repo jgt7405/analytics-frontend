@@ -1,4 +1,3 @@
-// src/components/features/basketball/BasketballTeamTournamentProgressionHistory.tsx
 "use client";
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
@@ -70,14 +69,10 @@ export default function BasketballTeamTournamentProgressionHistory({
   secondaryColor,
 }: BasketballTeamTournamentProgressionHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number }>,
-    string
-  > | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<TournamentProgressionDataPoint[]>([]);
 
-  // Use the master history hook for basketball
   const {
     data: allHistoryData,
     isLoading: loading,
@@ -91,7 +86,6 @@ export default function BasketballTeamTournamentProgressionHistory({
     return `${month}/${day}`;
   };
 
-  // Process the data when allHistoryData changes
   useEffect(() => {
     if (!allHistoryData?.ncaa) {
       setData([]);
@@ -99,35 +93,17 @@ export default function BasketballTeamTournamentProgressionHistory({
     }
 
     const ncaaData = allHistoryData.ncaa;
-
-    // Process the data similar to football CFP
     const dataByDate = new Map<
       string,
       Partial<TournamentProgressionDataPoint>
     >();
 
-    // Merge all the different data arrays
     [
-      {
-        data: ncaaData.sweet_sixteen_data || [],
-        field: "sweet_sixteen_pct",
-      },
-      {
-        data: ncaaData.elite_eight_data || [],
-        field: "elite_eight_pct",
-      },
-      {
-        data: ncaaData.final_four_data || [],
-        field: "final_four_pct",
-      },
-      {
-        data: ncaaData.championship_data || [],
-        field: "championship_pct",
-      },
-      {
-        data: ncaaData.champion_data || [],
-        field: "champion_pct",
-      },
+      { data: ncaaData.sweet_sixteen_data || [], field: "sweet_sixteen_pct" },
+      { data: ncaaData.elite_eight_data || [], field: "elite_eight_pct" },
+      { data: ncaaData.final_four_data || [], field: "final_four_pct" },
+      { data: ncaaData.championship_data || [], field: "championship_pct" },
+      { data: ncaaData.champion_data || [], field: "champion_pct" },
     ].forEach(({ data: sourceData, field }) => {
       sourceData.forEach((point: TournamentRoundDataPoint) => {
         if (!dataByDate.has(point.date)) {
@@ -179,8 +155,6 @@ export default function BasketballTeamTournamentProgressionHistory({
       : "#10b981";
 
   const labels = data.map((item) => formatDateForDisplay(item.date));
-
-  // Get team logo from the first available data point
   const teamLogo = data.length > 0 ? data[0].team_info.logo_url : null;
 
   const chartData = {
@@ -296,37 +270,31 @@ export default function BasketballTeamTournamentProgressionHistory({
               ChartJS.defaults.plugins.legend.labels.generateLabels;
             const labels = original.call(this, chart);
 
-            // Customize legend appearance for each round
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             labels.forEach((label: any, index: number) => {
               if (index === 0) {
-                // Sweet Sixteen - dashed outline circle
                 label.pointStyle = "circle";
                 label.fillStyle = "transparent";
                 label.strokeStyle = finalSecondaryColor;
                 label.lineWidth = 2;
                 label.lineDash = [5, 5];
               } else if (index === 1) {
-                // Elite Eight - solid circle
                 label.pointStyle = "circle";
                 label.fillStyle = finalSecondaryColor;
                 label.strokeStyle = finalSecondaryColor;
                 label.lineWidth = 2;
               } else if (index === 2) {
-                // Final Four - dotted outline circle
                 label.pointStyle = "circle";
                 label.fillStyle = "transparent";
                 label.strokeStyle = primaryColor;
                 label.lineWidth = 2;
                 label.lineDash = [3, 3];
               } else if (index === 3) {
-                // Championship Game - solid circle
                 label.pointStyle = "circle";
                 label.fillStyle = primaryColor;
                 label.strokeStyle = primaryColor;
                 label.lineWidth = 2;
               } else if (index === 4) {
-                // Champion - bold solid circle
                 label.pointStyle = "circle";
                 label.fillStyle = primaryColor;
                 label.strokeStyle = primaryColor;
@@ -365,94 +333,170 @@ export default function BasketballTeamTournamentProgressionHistory({
               transition: "all .1s ease",
               zIndex: "1000",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              minWidth: "220px",
+              minWidth: "200px",
+              maxWidth: "300px",
             });
 
+            const handleClickOutside = (e: Event) => {
+              if (!tooltipEl?.contains(e.target as Node)) {
+                tooltipEl!.style.opacity = "0";
+                setTimeout(() => {
+                  if (tooltipEl && tooltipEl.parentNode) {
+                    document.removeEventListener("click", handleClickOutside);
+                    document.removeEventListener(
+                      "touchstart",
+                      handleClickOutside
+                    );
+                    document.body.removeChild(tooltipEl);
+                  }
+                }, 100);
+              }
+            };
+
+            document.addEventListener("click", handleClickOutside);
+            document.addEventListener("touchstart", handleClickOutside);
             document.body.appendChild(tooltipEl);
           }
 
           if (tooltipModel.opacity === 0) {
             tooltipEl.style.opacity = "0";
-            setTimeout(() => {
-              if (tooltipEl && tooltipEl.style.opacity === "0") {
-                tooltipEl.style.display = "none";
-              }
-            }, 100);
             return;
           }
 
-          tooltipEl.style.display = "block";
-
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const dataPoint = data[dataIndex];
-            const date = formatDateForDisplay(dataPoint.date);
+            const currentDate = labels[dataIndex];
+            const point = data[dataIndex];
 
             let innerHtml = `
-              <div style="font-weight: 600; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
-                ${date}
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <button id="tooltip-close" style="
+                  background: none; 
+                  border: none; 
+                  font-size: 16px; 
+                  cursor: pointer; 
+                  color: #6b7280;
+                  padding: 0;
+                  margin: 0;
+                  line-height: 1;
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                ">&times;</button>
               </div>
             `;
 
-            innerHtml += `<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Sweet Sixteen:</span><span style="font-weight: 600; margin-left: 12px;">${dataPoint.sweet_sixteen_pct.toFixed(1)}%</span></div>`;
-            innerHtml += `<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Elite Eight:</span><span style="font-weight: 600; margin-left: 12px;">${dataPoint.elite_eight_pct.toFixed(1)}%</span></div>`;
-            innerHtml += `<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Final Four:</span><span style="font-weight: 600; margin-left: 12px;">${dataPoint.final_four_pct.toFixed(1)}%</span></div>`;
-            innerHtml += `<div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Championship:</span><span style="font-weight: 600; margin-left: 12px;">${dataPoint.championship_pct.toFixed(1)}%</span></div>`;
-            innerHtml += `<div style="display: flex; justify-content: space-between;"><span>Champion:</span><span style="font-weight: 600; margin-left: 12px;">${dataPoint.champion_pct.toFixed(1)}%</span></div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Champion: ${point.champion_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Championship: ${point.championship_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Final Four: ${point.final_four_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Elite Eight: ${point.elite_eight_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Sweet Sixteen: ${point.sweet_sixteen_pct.toFixed(1)}%</div>`;
 
             tooltipEl.innerHTML = innerHtml;
+
+            const closeBtn = tooltipEl.querySelector("#tooltip-close");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                tooltipEl.style.opacity = "0";
+              });
+            }
           }
 
           const position = chart.canvas.getBoundingClientRect();
-          const scrollTop =
-            window.pageYOffset || document.documentElement.scrollTop;
-          const scrollLeft =
-            window.pageXOffset || document.documentElement.scrollLeft;
+          const chartWidth = chart.width;
+          const tooltipWidth = tooltipEl.offsetWidth || 200;
+          const caretX = tooltipModel.caretX;
+          const caretY = tooltipModel.caretY;
+
+          const isLeftSide = caretX < chartWidth / 2;
+          let leftPosition: number;
+          let arrowPosition: string;
+
+          if (isLeftSide) {
+            leftPosition = position.left + window.pageXOffset + caretX + 20;
+            arrowPosition = "left";
+          } else {
+            leftPosition =
+              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
+            arrowPosition = "right";
+          }
+
+          if (!tooltipEl.querySelector(".tooltip-arrow")) {
+            const arrow = document.createElement("div");
+            arrow.className = "tooltip-arrow";
+            arrow.style.position = "absolute";
+            arrow.style.width = "0";
+            arrow.style.height = "0";
+            arrow.style.top = "50%";
+            arrow.style.transform = "translateY(-50%)";
+
+            if (arrowPosition === "left") {
+              arrow.style.left = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderRight = "8px solid #ffffff";
+            } else {
+              arrow.style.right = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderLeft = "8px solid #ffffff";
+            }
+
+            tooltipEl.appendChild(arrow);
+          }
+
+          const maxLeft = window.innerWidth - tooltipWidth - 10;
+          const minLeft = 10;
+          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
 
           tooltipEl.style.opacity = "1";
-          tooltipEl.style.position = "absolute";
-          tooltipEl.style.left =
-            position.left + scrollLeft + tooltipModel.caretX + "px";
+          tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
-            position.top + scrollTop + tooltipModel.caretY + "px";
+            position.top +
+            window.pageYOffset +
+            caretY -
+            tooltipEl.offsetHeight / 2 -
+            20 +
+            "px";
         },
       },
     },
     scales: {
       x: {
+        display: true,
+        ticks: {
+          color: "#6b7280",
+          font: {
+            size: isMobile ? 9 : 10,
+          },
+          maxTicksLimit: isMobile ? 8 : 12,
+        },
         grid: {
           display: false,
         },
-        ticks: {
-          maxRotation: 45,
-          minRotation: 45,
-          autoSkip: true,
-          maxTicksLimit: isMobile ? 8 : 15,
-          font: {
-            size: isMobile ? 9 : 11,
-          },
-        },
       },
       y: {
+        display: true,
         min: 0,
         max: 100,
-        title: {
-          display: true,
-          text: "Probability (%)",
-          font: {
-            size: isMobile ? 11 : 13,
-          },
-        },
         ticks: {
+          color: "#6b7280",
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 9 : 10,
           },
+          stepSize: 20,
           callback: function (value: string | number) {
             return `${value}%`;
           },
         },
-        grid: {
-          color: "#f3f4f6",
+        title: {
+          display: true,
+          text: "NCAA Progression %",
+          color: "#6b7280",
         },
       },
     },
@@ -462,12 +506,9 @@ export default function BasketballTeamTournamentProgressionHistory({
 
   if (loading) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-gray-500">
-          Loading tournament progression history...
+      <div className="text-center py-8">
+        <div className="animate-pulse text-gray-500">
+          Loading NCAA progression history...
         </div>
       </div>
     );
@@ -475,55 +516,56 @@ export default function BasketballTeamTournamentProgressionHistory({
 
   if (error) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-red-500">
-          Error loading tournament progression history
+      <div className="text-center py-8">
+        <div className="text-red-500 text-sm">
+          Unable to load NCAA progression history
         </div>
+        <div className="text-gray-400 text-xs mt-1">{error}</div>
       </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-gray-500">
-          No tournament progression data available
+      <div className="text-center py-8">
+        <div className="text-gray-500 text-sm">
+          No NCAA progression history available
+        </div>
+        <div className="text-gray-400 text-xs mt-1">
+          Chart will show NCAA progression over time once data is collected
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative bg-white rounded-lg">
+    <div
+      style={{
+        height: `${chartHeight}px`,
+        position: "relative",
+        width: "100%",
+      }}
+    >
       {teamLogo && (
         <div
+          className="absolute z-10"
           style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            opacity: 0.15,
-            zIndex: 1,
-            pointerEvents: "none",
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
           }}
         >
           <Image
             src={teamLogo}
-            alt="Team Logo"
-            width={isMobile ? 60 : 80}
-            height={isMobile ? 60 : 80}
-            style={{ objectFit: "contain" }}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
           />
         </div>
       )}
-      <div style={{ height: `${chartHeight}px`, position: "relative" }}>
-        <Line ref={chartRef} data={chartData} options={options} />
-      </div>
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 }

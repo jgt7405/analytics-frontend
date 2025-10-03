@@ -1,4 +1,3 @@
-// src/components/features/basketball/BasketballTeamTournamentBidHistory.tsx
 "use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
@@ -62,11 +61,8 @@ export default function BasketballTeamTournamentBidHistory({
   secondaryColor,
 }: BasketballTeamTournamentBidHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number }>,
-    string
-  > | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<TournamentHistoricalDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,10 +97,8 @@ export default function BasketballTeamTournamentBidHistory({
           result.ncaa?.tournament_bid_data || [];
         const avgSeedData = result.ncaa?.average_seed_data || [];
 
-        // Create a map to merge the data by date
         const dataByDate = new Map<string, TournamentHistoricalDataPoint>();
 
-        // First, add all tournament bid data
         tournamentBidData.forEach((point) => {
           dataByDate.set(point.date, {
             date: point.date,
@@ -115,7 +109,6 @@ export default function BasketballTeamTournamentBidHistory({
           });
         });
 
-        // Then merge in the average seed data
         avgSeedData.forEach((point: SeedDataPoint) => {
           if (dataByDate.has(point.date)) {
             const existingPoint = dataByDate.get(point.date)!;
@@ -131,7 +124,6 @@ export default function BasketballTeamTournamentBidHistory({
           }
         });
 
-        // Filter for dates from 11/1 onward (basketball season) and sort
         const cutoffDate = new Date("2024-11-01");
         const processedData = Array.from(dataByDate.values())
           .filter((item) => {
@@ -162,15 +154,13 @@ export default function BasketballTeamTournamentBidHistory({
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
       secondaryColor.toLowerCase() === "white"
-      ? "#000000" // fallback to black if white
+      ? "#000000"
       : secondaryColor
     : primaryColor === "#3b82f6"
       ? "#ef4444"
       : "#10b981";
 
   const labels = data.map((item) => formatDateForDisplay(item.date));
-
-  // Get team logo from the first available data point
   const teamLogo = data.length > 0 ? data[0].team_info.logo_url : null;
 
   const chartData = {
@@ -210,7 +200,7 @@ export default function BasketballTeamTournamentBidHistory({
         tension: 0.1,
         fill: false,
         yAxisID: "y1",
-        borderDash: [5, 5],
+        spanGaps: false,
       },
     ],
   };
@@ -222,7 +212,18 @@ export default function BasketballTeamTournamentBidHistory({
       mode: "index" as const,
       intersect: false,
     },
+    elements: {
+      point: {
+        radius: 0,
+        hoverRadius: 6,
+        hitRadius: 15,
+      },
+      line: {
+        borderWidth: 2,
+      },
+    },
     plugins: {
+      title: { display: false },
       legend: {
         display: true,
         position: "top" as const,
@@ -230,40 +231,71 @@ export default function BasketballTeamTournamentBidHistory({
           font: {
             size: isMobile ? 10 : 12,
           },
-          usePointStyle: true,
-          padding: isMobile ? 8 : 15,
+          color: finalSecondaryColor,
         },
       },
       tooltip: {
+        enabled: true,
+        backgroundColor: "#ffffff",
+        titleColor: "#1f2937",
+        bodyColor: "#1f2937",
+        borderColor: "#e5e7eb",
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: false,
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: "bold" as const,
+        },
+        bodyFont: {
+          size: 12,
+        },
         callbacks: {
-          label: function (context: TooltipItem<"line">) {
-            const label = context.dataset.label || "";
-            const value = context.parsed.y;
-
-            if (context.datasetIndex === 0) {
-              // Tournament Bid Probability
-              return `${label}: ${value !== null ? value.toFixed(1) : "N/A"}%`;
-            } else {
-              // Average Seed
-              return `${label}: ${value !== null ? value.toFixed(1) : "N/A"}`;
+          title: function (context: TooltipItem<"line">[]) {
+            if (context.length > 0) {
+              const dataIndex = context[0].dataIndex;
+              return labels[dataIndex];
             }
+            return "";
+          },
+          labelTextColor: function (context: TooltipItem<"line">) {
+            const datasetIndex = context.datasetIndex;
+            if (datasetIndex === 0) {
+              return primaryColor;
+            } else if (datasetIndex === 1) {
+              return finalSecondaryColor;
+            }
+            return "#1f2937";
+          },
+          label: function (context: TooltipItem<"line">) {
+            const dataIndex = context.dataIndex;
+            const datasetIndex = context.datasetIndex;
+
+            if (datasetIndex === 0) {
+              const bidPct = data[dataIndex].tournament_bid_pct || 0;
+              return `NCAA Bid Probability: ${bidPct.toFixed(1)}%`;
+            } else if (datasetIndex === 1) {
+              const avgSeed = data[dataIndex].average_seed || 0;
+              return `Average Seed: ${avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A"}`;
+            }
+            return "";
           },
         },
       },
     },
     scales: {
       x: {
+        display: true,
+        ticks: {
+          color: "#6b7280",
+          font: {
+            size: isMobile ? 9 : 10,
+          },
+          maxTicksLimit: isMobile ? 8 : 12,
+        },
         grid: {
           display: false,
-        },
-        ticks: {
-          maxRotation: 45,
-          minRotation: 45,
-          autoSkip: true,
-          maxTicksLimit: isMobile ? 8 : 15,
-          font: {
-            size: isMobile ? 9 : 11,
-          },
         },
       },
       y: {
@@ -272,23 +304,24 @@ export default function BasketballTeamTournamentBidHistory({
         position: "left" as const,
         min: 0,
         max: 100,
-        title: {
-          display: true,
-          text: "NCAA Tournament Bid %",
-          font: {
-            size: isMobile ? 11 : 13,
-          },
-        },
         ticks: {
+          color: primaryColor,
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 9 : 10,
           },
+          stepSize: 20,
           callback: function (value: string | number) {
             return `${value}%`;
           },
         },
+        title: {
+          display: true,
+          text: "NCAA Bid %",
+          color: primaryColor,
+        },
         grid: {
           color: "#f3f4f6",
+          lineWidth: 1,
         },
       },
       y1: {
@@ -297,26 +330,25 @@ export default function BasketballTeamTournamentBidHistory({
         position: "right" as const,
         min: 1,
         max: 16,
-        reverse: true, // Lower seed is better
-        title: {
-          display: true,
-          text: "Average Seed",
-          font: {
-            size: isMobile ? 11 : 13,
-          },
-        },
         ticks: {
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 9 : 10,
           },
+          color: finalSecondaryColor,
           stepSize: 1,
           callback: function (value: string | number) {
-            return Number(value);
+            return `#${value}`;
           },
         },
-        grid: {
-          drawOnChartArea: false,
+        title: {
+          display: true,
+          text: "Avg Seed",
+          color: finalSecondaryColor,
         },
+        grid: {
+          display: false,
+        },
+        reverse: true,
       },
     },
   };
@@ -325,64 +357,66 @@ export default function BasketballTeamTournamentBidHistory({
 
   if (loading) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-gray-500">Loading tournament bid history...</div>
+      <div className="text-center py-8">
+        <div className="animate-pulse text-gray-500">
+          Loading NCAA bid history...
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-red-500">Error loading tournament bid history</div>
+      <div className="text-center py-8">
+        <div className="text-red-500 text-sm">
+          Unable to load NCAA bid history
+        </div>
+        <div className="text-gray-400 text-xs mt-1">{error}</div>
       </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-gray-500">
-          No tournament bid history data available
+      <div className="text-center py-8">
+        <div className="text-gray-500 text-sm">
+          No NCAA bid history available
+        </div>
+        <div className="text-gray-400 text-xs mt-1">
+          Chart will show NCAA bid probability over time once data is collected
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative bg-white rounded-lg">
+    <div
+      style={{
+        height: `${chartHeight}px`,
+        position: "relative",
+        width: "100%",
+      }}
+    >
       {teamLogo && (
         <div
+          className="absolute z-10"
           style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            opacity: 0.15,
-            zIndex: 1,
-            pointerEvents: "none",
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
           }}
         >
           <Image
             src={teamLogo}
-            alt="Team Logo"
-            width={isMobile ? 60 : 80}
-            height={isMobile ? 60 : 80}
-            style={{ objectFit: "contain" }}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
           />
         </div>
       )}
-      <div style={{ height: `${chartHeight}px`, position: "relative" }}>
-        <Line ref={chartRef} data={chartData} options={options} />
-      </div>
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 }

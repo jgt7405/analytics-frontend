@@ -1,4 +1,3 @@
-// src/components/features/basketball/BasketballTeamRankHistory.tsx
 "use client";
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
@@ -55,14 +54,11 @@ export default function BasketballTeamRankHistory({
   logoUrl,
 }: BasketballTeamRankHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number | null }>,
-    string
-  > | null>(null);
+  const chartRef = useRef<ChartJS<"line", (number | null)[], string> | null>(
+    null
+  );
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
 
-  // Use the master history hook for basketball
   const {
     data: allHistoryData,
     isLoading,
@@ -82,7 +78,6 @@ export default function BasketballTeamRankHistory({
     return `${month}/${day}`;
   };
 
-  // Process the data when allHistoryData changes
   useEffect(() => {
     if (!allHistoryData?.confWins?.data) {
       setData([]);
@@ -90,8 +85,6 @@ export default function BasketballTeamRankHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-
-    // Filter data starting from 11/1 (basketball season start) and only include entries with kenpom_rank
     const cutoffDate = new Date("2024-11-01");
     const filteredData = rawData.filter((point: HistoricalDataPoint) => {
       const itemDate = new Date(point.date);
@@ -102,7 +95,6 @@ export default function BasketballTeamRankHistory({
       );
     });
 
-    // Group by date and take the FIRST entry per day (earliest version_id)
     const dataByDate = new Map<string, HistoricalDataPoint>();
 
     filteredData.forEach((point: HistoricalDataPoint) => {
@@ -118,7 +110,6 @@ export default function BasketballTeamRankHistory({
       }
     });
 
-    // Convert to sorted array
     const processedData = Array.from(dataByDate.values()).sort((a, b) => {
       const dateA = parseDateCentralTime(a.date);
       const dateB = parseDateCentralTime(b.date);
@@ -128,7 +119,6 @@ export default function BasketballTeamRankHistory({
     setData(processedData);
   }, [allHistoryData, teamName]);
 
-  // Chart options
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -171,127 +161,206 @@ export default function BasketballTeamRankHistory({
               maxWidth: "300px",
             });
 
-            const handleClickOutside = (e: MouseEvent) => {
-              if (tooltipEl && !tooltipEl.contains(e.target as Node)) {
-                tooltipEl.style.opacity = "0";
+            const handleClickOutside = (e: Event) => {
+              if (!tooltipEl?.contains(e.target as Node)) {
+                tooltipEl!.style.opacity = "0";
                 setTimeout(() => {
-                  if (tooltipEl && tooltipEl.style.opacity === "0") {
-                    tooltipEl.style.display = "none";
+                  if (tooltipEl && tooltipEl.parentNode) {
+                    document.removeEventListener("click", handleClickOutside);
+                    document.removeEventListener(
+                      "touchstart",
+                      handleClickOutside
+                    );
                   }
                 }, 100);
               }
             };
 
-            document.addEventListener("click", handleClickOutside);
             document.body.appendChild(tooltipEl);
+
+            setTimeout(() => {
+              document.addEventListener("click", handleClickOutside);
+              document.addEventListener("touchstart", handleClickOutside);
+            }, 0);
           }
 
           if (tooltipModel.opacity === 0) {
             tooltipEl.style.opacity = "0";
-            setTimeout(() => {
-              if (tooltipEl && tooltipEl.style.opacity === "0") {
-                tooltipEl.style.display = "none";
-              }
-            }, 100);
             return;
           }
 
-          tooltipEl.style.display = "block";
-
-          if (tooltipModel.body) {
+          if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const dataPoint = data[dataIndex];
 
-            const date = formatDateForDisplay(dataPoint.date);
-            const rank = dataPoint.kenpom_rank;
-
-            const innerHTML = `
-              <div style="font-weight: 600; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
-                ${date}
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span>KenPom Rank:</span>
-                <span style="font-weight: 600; margin-left: 16px;">${rank !== null ? rank : "N/A"}</span>
+            let innerHtml = `
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #374151;">${formatDateForDisplay(dataPoint.date)}</div>
+                <button id="tooltip-close" style="background: none; border: none; font-size: 16px; color: #6b7280; cursor: pointer; padding: 0; margin-left: 12px;">&times;</button>
               </div>
             `;
 
-            tooltipEl.innerHTML = innerHTML;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">KenPom Rank: #${dataPoint.kenpom_rank}</div>`;
+
+            tooltipEl.innerHTML = innerHtml;
+
+            const closeBtn = tooltipEl.querySelector("#tooltip-close");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                tooltipEl.style.opacity = "0";
+              });
+            }
           }
 
           const position = chart.canvas.getBoundingClientRect();
-          const scrollTop =
-            window.pageYOffset || document.documentElement.scrollTop;
-          const scrollLeft =
-            window.pageXOffset || document.documentElement.scrollLeft;
+          const chartWidth = chart.width;
+          const tooltipWidth = tooltipEl.offsetWidth || 200;
+          const caretX = tooltipModel.caretX;
+          const caretY = tooltipModel.caretY;
 
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.position = "absolute";
-          tooltipEl.style.left =
-            position.left + scrollLeft + tooltipModel.caretX + "px";
+          const isLeftSide = caretX < chartWidth / 2;
+          let leftPosition: number;
+          let arrowPosition: string;
+
+          if (isLeftSide) {
+            leftPosition = position.left + window.pageXOffset + caretX + 20;
+            arrowPosition = "left";
+          } else {
+            leftPosition =
+              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
+            arrowPosition = "right";
+          }
+
+          if (!tooltipEl.querySelector(".tooltip-arrow")) {
+            const arrow = document.createElement("div");
+            arrow.className = "tooltip-arrow";
+            Object.assign(arrow.style, {
+              position: "absolute",
+              width: "0",
+              height: "0",
+              borderStyle: "solid",
+              zIndex: "1001",
+            });
+
+            if (arrowPosition === "left") {
+              Object.assign(arrow.style, {
+                left: "-6px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                borderWidth: "6px 6px 6px 0",
+                borderColor: "transparent #e5e7eb transparent transparent",
+              });
+
+              const arrowInner = document.createElement("div");
+              Object.assign(arrowInner.style, {
+                position: "absolute",
+                left: "1px",
+                top: "-6px",
+                width: "0",
+                height: "0",
+                borderStyle: "solid",
+                borderWidth: "6px 6px 6px 0",
+                borderColor: "transparent #ffffff transparent transparent",
+              });
+              arrow.appendChild(arrowInner);
+            } else {
+              Object.assign(arrow.style, {
+                right: "-6px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                borderWidth: "6px 0 6px 6px",
+                borderColor: "transparent transparent transparent #e5e7eb",
+              });
+
+              const arrowInner = document.createElement("div");
+              Object.assign(arrowInner.style, {
+                position: "absolute",
+                right: "1px",
+                top: "-6px",
+                width: "0",
+                height: "0",
+                borderStyle: "solid",
+                borderWidth: "6px 0 6px 6px",
+                borderColor: "transparent transparent transparent #ffffff",
+              });
+              arrow.appendChild(arrowInner);
+            }
+
+            tooltipEl.appendChild(arrow);
+          }
+
+          tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
-            position.top + scrollTop + tooltipModel.caretY + "px";
+            position.top +
+            window.pageYOffset +
+            caretY -
+            tooltipEl.offsetHeight -
+            10 +
+            "px";
+          tooltipEl.style.opacity = "1";
         },
       },
     },
     scales: {
       x: {
+        display: true,
         grid: {
           display: false,
         },
         ticks: {
-          maxRotation: 45,
-          minRotation: 45,
-          autoSkip: true,
-          maxTicksLimit: isMobile ? 8 : 15,
+          color: "#6b7280",
           font: {
-            size: isMobile ? 9 : 11,
+            size: isMobile ? 9 : 10,
           },
+          maxTicksLimit: isMobile ? 6 : 10,
         },
       },
       y: {
-        reverse: true, // Lower rank number is better
+        display: true,
+        reverse: true,
+        min: 1,
+        max: 365,
+        grid: {
+          color: "rgba(0, 0, 0, 0.1)",
+        },
+        ticks: {
+          color: "#6b7280",
+          font: {
+            size: isMobile ? 10 : 11,
+          },
+          stepSize: 50,
+          callback: function (value: string | number) {
+            return `#${value}`;
+          },
+        },
         title: {
           display: true,
           text: "KenPom Rank",
+          color: "#374151",
           font: {
-            size: isMobile ? 11 : 13,
+            size: isMobile ? 11 : 12,
+            weight: 500,
           },
-        },
-        ticks: {
-          font: {
-            size: isMobile ? 10 : 12,
-          },
-          callback: function (value: string | number) {
-            return Number(value);
-          },
-        },
-        grid: {
-          color: "#f3f4f6",
         },
       },
     },
-  };
-
-  const labels = data.map((point) => formatDateForDisplay(point.date));
-  const rankData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.kenpom_rank,
-  }));
+  } as const;
 
   const chartData = {
-    labels: labels,
+    labels: data.map((point) => formatDateForDisplay(point.date)),
     datasets: [
       {
         label: "KenPom Rank",
-        data: rankData,
+        data: data.map((point) => point.kenpom_rank),
         borderColor: primaryColor,
         backgroundColor: primaryColor,
-        borderWidth: 3,
-        pointRadius: 2,
+        borderWidth: isMobile ? 2 : 3,
+        pointRadius: 0,
+        pointHoverRadius: isMobile ? 5 : 6,
         pointBackgroundColor: primaryColor,
         pointBorderColor: "#ffffff",
         pointBorderWidth: 2,
-        pointHoverRadius: 6,
         tension: 0.1,
         fill: false,
       },
@@ -301,10 +370,10 @@ export default function BasketballTeamRankHistory({
   if (isLoading) {
     return (
       <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: isMobile ? "300px" : "400px" }}
+        className="flex items-center justify-center"
+        style={{ height: isMobile ? "200px" : "280px" }}
       >
-        <div className="text-gray-500">Loading rank history...</div>
+        <div className="text-gray-500 text-sm">Loading rank history...</div>
       </div>
     );
   }
@@ -312,10 +381,10 @@ export default function BasketballTeamRankHistory({
   if (error) {
     return (
       <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: isMobile ? "300px" : "400px" }}
+        className="flex items-center justify-center"
+        style={{ height: isMobile ? "200px" : "280px" }}
       >
-        <div className="text-red-500">Error loading rank history</div>
+        <div className="text-red-500 text-sm">{error}</div>
       </div>
     );
   }
@@ -323,41 +392,44 @@ export default function BasketballTeamRankHistory({
   if (data.length === 0) {
     return (
       <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: isMobile ? "300px" : "400px" }}
+        className="flex items-center justify-center"
+        style={{ height: isMobile ? "200px" : "280px" }}
       >
-        <div className="text-gray-500">No rank history data available</div>
+        <div className="text-gray-500 text-sm">
+          No ranking data available for the selected period
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative bg-white rounded-lg">
+    <div
+      style={{
+        height: isMobile ? "240px" : "320px",
+        width: "100%",
+        position: "relative",
+      }}
+    >
       {logoUrl && (
         <div
+          className="absolute z-10"
           style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            opacity: 0.15,
-            zIndex: 1,
-            pointerEvents: "none",
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
           }}
         >
           <Image
             src={logoUrl}
-            alt="Team Logo"
-            width={isMobile ? 60 : 80}
-            height={isMobile ? 60 : 80}
-            style={{ objectFit: "contain" }}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
           />
         </div>
       )}
-      <div
-        style={{ height: isMobile ? "300px" : "400px", position: "relative" }}
-      >
-        <Line ref={chartRef} data={chartData} options={options} />
-      </div>
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 }

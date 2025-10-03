@@ -1,16 +1,6 @@
 // src/app/basketball/team/[teamname]/page.tsx
 "use client";
 
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import ErrorMessage from "@/components/ui/ErrorMessage";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import TeamLogo from "@/components/ui/TeamLogo";
-import { useMonitoring } from "@/lib/unified-monitoring";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-// Import all basketball components
 import BasketballTeamFirstPlaceHistory from "@/components/features/basketball/BasketballTeamFirstPlaceHistory";
 import BasketballTeamRankHistory from "@/components/features/basketball/BasketballTeamRankHistory";
 import BasketballTeamScheduleChart from "@/components/features/basketball/BasketballTeamScheduleChart";
@@ -22,6 +12,15 @@ import BasketballTeamWinHistory from "@/components/features/basketball/Basketbal
 import TeamSchedule from "@/components/features/basketball/TeamSchedule";
 import TeamSeedProjections from "@/components/features/basketball/TeamSeedProjections";
 import TeamWinValues from "@/components/features/basketball/TeamWinValues";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import TeamLogo from "@/components/ui/TeamLogo";
+import { useResponsive } from "@/hooks/useResponsive";
+import { useMonitoring } from "@/lib/unified-monitoring";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface WinSeedCountEntry {
   Wins: number;
@@ -82,6 +81,7 @@ export default function BasketballTeamPage({
   params: { teamname: string };
 }) {
   const { trackEvent } = useMonitoring();
+  const { isMobile } = useResponsive();
   const router = useRouter();
 
   const teamname = decodeURIComponent(params.teamname);
@@ -91,7 +91,6 @@ export default function BasketballTeamPage({
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  // Fix hydration by waiting for client mount
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -140,12 +139,11 @@ export default function BasketballTeamPage({
     return `${Math.round(value)}%`;
   };
 
-  // Show loading state until mounted to avoid hydration mismatch
   if (!mounted || loading || !teamData) {
     return (
       <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
         <div className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner size="lg" />
+          <LoadingSpinner size="lg" message="Loading team data..." />
         </div>
       </div>
     );
@@ -173,51 +171,71 @@ export default function BasketballTeamPage({
     <ErrorBoundary level="page">
       <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
         <div className="space-y-3">
-          <div className="w-full">
-            {/* Desktop Header */}
-            <div className="bg-white rounded-lg p-4 mb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <TeamLogo
-                    logoUrl={team_info.logo_url}
-                    teamName={team_info.team_name}
-                    size={64}
-                  />
-                  <div className="flex flex-col justify-center">
-                    <h1
-                      className="text-2xl font-semibold leading-tight -mb-1"
-                      style={{ color: team_info.primary_color || "#1f2937" }}
-                    >
-                      {team_info.team_name}{" "}
-                      {team_info.kenpom_rank && team_info.kenpom_rank !== 999
-                        ? `#${team_info.kenpom_rank}`
-                        : ""}
-                    </h1>
-                    <p className="text-gray-600 leading-tight -mt-0">
-                      Team Page
-                    </p>
+          {isMobile ? (
+            <div className="space-y-2">
+              {/* Mobile Header */}
+              <div className="bg-white rounded-lg px-2 py-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <TeamLogo
+                      logoUrl={team_info.logo_url}
+                      teamName={team_info.team_name}
+                      size={40}
+                    />
+                    <div className="flex flex-col justify-center">
+                      <h1
+                        className="text-xl font-semibold leading-tight -mb-1"
+                        style={{ color: team_info.primary_color || "#1f2937" }}
+                      >
+                        {team_info.team_name}{" "}
+                        {team_info.kenpom_rank && team_info.kenpom_rank !== 999
+                          ? `#${team_info.kenpom_rank}`
+                          : ""}
+                      </h1>
+                      <p className="text-gray-600 text-sm leading-tight -mt-0">
+                        Team Page
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <Image
+                      src={conferenceLogoUrl}
+                      alt={`${team_info.conference} logo`}
+                      width={32}
+                      height={32}
+                      className="h-8 w-auto object-contain"
+                      unoptimized
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <div className="text-xs font-medium text-gray-700 mt-1">
+                      {team_info.conference}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                {/* Mobile Stats */}
+                <div className="flex gap-2 -mt-2 mx-0">
                   <div
-                    className="bg-white p-4 rounded-lg"
+                    className="bg-white p-3 rounded-lg flex-1"
                     style={{ border: "1px solid #d1d5db" }}
                   >
-                    <div className="flex gap-4">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-700">
+                    <div className="flex gap-3">
+                      <div className="text-center flex-1">
+                        <div className="text-base font-semibold text-gray-700">
                           {team_info.overall_record}
                         </div>
-                        <div className="text-sm text-gray-600 italic">
+                        <div className="text-xs text-gray-600 italic">
                           Overall
                         </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-700">
+                      <div className="text-center flex-1">
+                        <div className="text-base font-semibold text-gray-700">
                           {team_info.conference_record}
                         </div>
-                        <div className="text-sm text-gray-600 italic">
+                        <div className="text-xs text-gray-600 italic">
                           Conference
                         </div>
                       </div>
@@ -225,262 +243,553 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white p-4 rounded-lg"
+                    className="bg-white p-3 rounded-lg flex-1"
                     style={{ border: "1px solid #d1d5db" }}
                   >
-                    <div className="flex gap-4">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-700">
+                    <div className="flex gap-3">
+                      <div className="text-center flex-1">
+                        <div className="text-base font-semibold text-gray-700">
                           {formatTournamentPct(team_info.tournament_bid_pct)}
                         </div>
-                        <div className="text-sm text-gray-600 italic">
+                        <div className="text-xs text-gray-600 italic">
                           NCAA Bid
                         </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-gray-700">
+                      <div className="text-center flex-1">
+                        <div className="text-base font-semibold text-gray-700">
                           {team_info.average_seed
                             ? team_info.average_seed.toFixed(1)
                             : "-"}
                         </div>
-                        <div className="text-sm text-gray-600 italic">
+                        <div className="text-xs text-gray-600 italic">
                           Avg Seed
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                <div className="flex flex-col items-center ml-4">
-                  <Image
-                    src={conferenceLogoUrl}
-                    alt={`${team_info.conference} logo`}
-                    width={48}
-                    height={48}
-                    style={{ width: "auto", height: "48px" }}
-                    className="object-contain"
-                    unoptimized
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                  <div className="text-sm font-medium text-gray-700 mt-2">
-                    {team_info.conference}
-                  </div>
-                </div>
               </div>
-            </div>
 
-            {/* Desktop Content Grid */}
-            <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
-              {/* Left Column - Schedules */}
-              <div className="space-y-3">
-                <div
-                  className="bg-white rounded-lg relative"
-                  style={{ minWidth: "350px", border: "1px solid #d1d5db" }}
-                >
-                  <div className="pt-0 px-3 pb-3 border-b border-gray-200 -mt-2 relative">
-                    <h2 className="text-lg font-semibold">Team Schedule</h2>
-                    {team_info.logo_url && (
-                      <div
-                        className="absolute"
-                        style={{
-                          top: "-5px",
-                          right: "5px",
-                          width: "32px",
-                          height: "32px",
-                        }}
-                      >
-                        <Image
-                          src={team_info.logo_url}
-                          alt={`${team_info.team_name} logo`}
-                          width={32}
-                          height={32}
-                          className="object-contain opacity-80"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="border-b border-gray-200"></div>
-                  <div className="pt-0 px-3 pb-3 flex justify-center items-center min-h-[300px] -mt-6">
-                    <TeamSchedule
-                      schedule={schedule}
-                      teamName={team_info.team_name}
-                      navigateToTeam={navigateToTeam}
-                    />
-                  </div>
+              {/* Mobile Schedule */}
+              <div
+                className="bg-white rounded-lg mx-2 relative"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <div className="px-2 py-1 border-b border-gray-200 -mt-4 relative">
+                  <h2 className="text-base font-semibold">Team Schedule</h2>
+                  {team_info.logo_url && (
+                    <div
+                      className="absolute"
+                      style={{
+                        top: "20px",
+                        right: "5px",
+                        width: "24px",
+                        height: "24px",
+                      }}
+                    >
+                      <Image
+                        src={team_info.logo_url}
+                        alt={`${team_info.team_name} logo`}
+                        width={24}
+                        height={24}
+                        className="object-contain opacity-80"
+                      />
+                    </div>
+                  )}
                 </div>
-
-                <div
-                  className="bg-white rounded-lg p-3 relative"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <div className="relative">
-                    <h2 className="text-lg font-semibold mb-1 -mt-2">
-                      Schedule Chart
-                    </h2>
-                    {team_info.logo_url && (
-                      <div
-                        className="absolute"
-                        style={{
-                          top: "0px",
-                          right: "-5px",
-                          width: "32px",
-                          height: "32px",
-                        }}
-                      >
-                        <Image
-                          src={team_info.logo_url}
-                          alt={`${team_info.team_name} logo`}
-                          width={32}
-                          height={32}
-                          className="object-contain opacity-80"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <BasketballTeamScheduleChart
+                <div className="border-b border-gray-200"></div>
+                <div className="px-1 pb-1 -mt-8 flex justify-center items-center min-h-[300px]">
+                  <TeamSchedule
                     schedule={schedule}
+                    teamName={team_info.team_name}
                     navigateToTeam={navigateToTeam}
                   />
                 </div>
+              </div>
 
-                {teamData.all_schedule_data && (
+              {/* Mobile Schedule Chart */}
+              <div
+                className="bg-white rounded-lg p-3 relative"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <div className="relative">
+                  <h2 className="text-base font-semibold mb-1 -mt-2">
+                    Schedule Chart
+                  </h2>
+                  {team_info.logo_url && (
+                    <div
+                      className="absolute"
+                      style={{
+                        top: "0px",
+                        right: "-5px",
+                        width: "24px",
+                        height: "24px",
+                      }}
+                    >
+                      <Image
+                        src={team_info.logo_url}
+                        alt={`${team_info.team_name} logo`}
+                        width={24}
+                        height={24}
+                        className="object-contain opacity-80"
+                      />
+                    </div>
+                  )}
+                </div>
+                <BasketballTeamScheduleChart
+                  schedule={schedule}
+                  navigateToTeam={navigateToTeam}
+                />
+              </div>
+
+              {/* Mobile Win Values */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  Win Values Over Time
+                </h2>
+                <TeamWinValues
+                  schedule={schedule}
+                  logoUrl={team_info.logo_url}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                />
+              </div>
+
+              {/* Mobile Schedule Difficulty */}
+              {teamData.all_schedule_data && (
+                <div
+                  className="bg-white rounded-lg p-3"
+                  style={{ border: "1px solid #d1d5db" }}
+                >
+                  <h2 className="text-base font-semibold mb-1 -mt-2">
+                    Schedule Difficulty
+                  </h2>
+                  <BasketballTeamScheduleDifficulty
+                    schedule={schedule}
+                    allScheduleData={teamData.all_schedule_data}
+                    teamConference={team_info.conference}
+                    logoUrl={team_info.logo_url}
+                  />
+                </div>
+              )}
+
+              {/* Mobile Seed Projections */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  NCAA Tournament Seed Projections
+                </h2>
+                <TeamSeedProjections
+                  winSeedCounts={team_info.win_seed_counts}
+                  logoUrl={team_info.logo_url}
+                />
+              </div>
+
+              {/* Mobile History Components */}
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  KenPom Rank History
+                </h2>
+                <BasketballTeamRankHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                  logoUrl={team_info.logo_url}
+                />
+              </div>
+
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  Projected Wins History
+                </h2>
+                <BasketballTeamWinHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                  logoUrl={team_info.logo_url}
+                />
+              </div>
+
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  Projected Standings History
+                </h2>
+                <BasketballTeamStandingsHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                  logoUrl={team_info.logo_url}
+                />
+              </div>
+
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  First Place Probability History
+                </h2>
+                <BasketballTeamFirstPlaceHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                  logoUrl={team_info.logo_url}
+                />
+              </div>
+
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  NCAA Tournament Bid History
+                </h2>
+                <BasketballTeamTournamentBidHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                />
+              </div>
+
+              <div
+                className="bg-white rounded-lg p-3"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  NCAA Tournament Progression History
+                </h2>
+                <BasketballTeamTournamentProgressionHistory
+                  teamName={team_info.team_name}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="w-full">
+              {/* Desktop Header */}
+              <div className="bg-white rounded-lg p-4 mb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <TeamLogo
+                      logoUrl={team_info.logo_url}
+                      teamName={team_info.team_name}
+                      size={64}
+                    />
+                    <div className="flex flex-col justify-center">
+                      <h1
+                        className="text-2xl font-semibold leading-tight -mb-1"
+                        style={{ color: team_info.primary_color || "#1f2937" }}
+                      >
+                        {team_info.team_name}{" "}
+                        {team_info.kenpom_rank && team_info.kenpom_rank !== 999
+                          ? `#${team_info.kenpom_rank}`
+                          : ""}
+                      </h1>
+                      <p className="text-gray-600 leading-tight -mt-0">
+                        Team Page
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div
+                      className="bg-white p-4 rounded-lg"
+                      style={{ border: "1px solid #d1d5db" }}
+                    >
+                      <div className="flex gap-4">
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-gray-700">
+                            {team_info.overall_record}
+                          </div>
+                          <div className="text-sm text-gray-600 italic">
+                            Overall
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-gray-700">
+                            {team_info.conference_record}
+                          </div>
+                          <div className="text-sm text-gray-600 italic">
+                            Conference
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      className="bg-white p-4 rounded-lg"
+                      style={{ border: "1px solid #d1d5db" }}
+                    >
+                      <div className="flex gap-4">
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-gray-700">
+                            {formatTournamentPct(team_info.tournament_bid_pct)}
+                          </div>
+                          <div className="text-sm text-gray-600 italic">
+                            NCAA Bid
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold text-gray-700">
+                            {team_info.average_seed
+                              ? team_info.average_seed.toFixed(1)
+                              : "-"}
+                          </div>
+                          <div className="text-sm text-gray-600 italic">
+                            Avg Seed
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center ml-4">
+                    <Image
+                      src={conferenceLogoUrl}
+                      alt={`${team_info.conference} logo`}
+                      width={48}
+                      height={48}
+                      className="h-12 w-auto object-contain"
+                      unoptimized
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <div className="text-sm font-medium text-gray-700 mt-2">
+                      {team_info.conference}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Desktop Content Grid */}
+              <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
+                {/* Left Column - Schedules */}
+                <div className="space-y-3">
+                  <div
+                    className="bg-white rounded-lg relative"
+                    style={{ minWidth: "350px", border: "1px solid #d1d5db" }}
+                  >
+                    <div className="pt-0 px-3 pb-3 border-b border-gray-200 -mt-2 relative">
+                      <h2 className="text-lg font-semibold">Team Schedule</h2>
+                      {team_info.logo_url && (
+                        <div
+                          className="absolute"
+                          style={{
+                            top: "-5px",
+                            right: "5px",
+                            width: "32px",
+                            height: "32px",
+                          }}
+                        >
+                          <Image
+                            src={team_info.logo_url}
+                            alt={`${team_info.team_name} logo`}
+                            width={32}
+                            height={32}
+                            className="object-contain opacity-80"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="border-b border-gray-200"></div>
+                    <div className="pt-0 px-3 pb-3 flex justify-center items-center min-h-[300px] -mt-6">
+                      <TeamSchedule
+                        schedule={schedule}
+                        teamName={team_info.team_name}
+                        navigateToTeam={navigateToTeam}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    className="bg-white rounded-lg p-3 relative"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <div className="relative">
+                      <h2 className="text-lg font-semibold mb-1 -mt-2">
+                        Schedule Chart
+                      </h2>
+                      {team_info.logo_url && (
+                        <div
+                          className="absolute"
+                          style={{
+                            top: "0px",
+                            right: "-5px",
+                            width: "32px",
+                            height: "32px",
+                          }}
+                        >
+                          <Image
+                            src={team_info.logo_url}
+                            alt={`${team_info.team_name} logo`}
+                            width={32}
+                            height={32}
+                            className="object-contain opacity-80"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <BasketballTeamScheduleChart
+                      schedule={schedule}
+                      navigateToTeam={navigateToTeam}
+                    />
+                  </div>
+
+                  {teamData.all_schedule_data && (
+                    <div
+                      className="bg-white rounded-lg p-3"
+                      style={{ border: "1px solid #d1d5db" }}
+                    >
+                      <h2 className="text-lg font-semibold mb-1 -mt-2">
+                        Schedule Difficulty
+                      </h2>
+                      <BasketballTeamScheduleDifficulty
+                        schedule={schedule}
+                        allScheduleData={teamData.all_schedule_data}
+                        teamConference={team_info.conference}
+                        logoUrl={team_info.logo_url}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column - Charts */}
+                <div className="space-y-3 col-span-2">
                   <div
                     className="bg-white rounded-lg p-3"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
-                      Schedule Difficulty
+                      Win Values Over Time
                     </h2>
-                    <BasketballTeamScheduleDifficulty
+                    <TeamWinValues
                       schedule={schedule}
-                      allScheduleData={teamData.all_schedule_data}
-                      teamConference={team_info.conference}
+                      logoUrl={team_info.logo_url}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                    />
+                  </div>
+
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      NCAA Tournament Seed Projections
+                    </h2>
+                    <TeamSeedProjections
+                      winSeedCounts={team_info.win_seed_counts}
                       logoUrl={team_info.logo_url}
                     />
                   </div>
-                )}
-              </div>
 
-              {/* Right Column - Charts */}
-              <div className="space-y-3 col-span-2">
-                <div
-                  className="bg-white rounded-lg p-3"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <h2 className="text-lg font-semibold mb-1 -mt-2">
-                    Win Values Over Time
-                  </h2>
-                  <TeamWinValues
-                    schedule={schedule}
-                    primaryColor={team_info.primary_color}
-                    secondaryColor={team_info.secondary_color}
-                  />
-                </div>
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      KenPom Rank History
+                    </h2>
+                    <BasketballTeamRankHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                      logoUrl={team_info.logo_url}
+                    />
+                  </div>
 
-                <div
-                  className="bg-white rounded-lg p-3"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <h2 className="text-lg font-semibold mb-1 -mt-2">
-                    NCAA Tournament Seed Projections
-                  </h2>
-                  <TeamSeedProjections
-                    winSeedCounts={team_info.win_seed_counts}
-                  />
-                </div>
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      Projected Wins History
+                    </h2>
+                    <BasketballTeamWinHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                      logoUrl={team_info.logo_url}
+                    />
+                  </div>
 
-                <div
-                  className="bg-white rounded-lg p-3"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <h2 className="text-lg font-semibold mb-1 -mt-2">
-                    KenPom Rank History
-                  </h2>
-                  <BasketballTeamRankHistory
-                    teamName={team_info.team_name}
-                    primaryColor={team_info.primary_color}
-                    secondaryColor={team_info.secondary_color}
-                    logoUrl={team_info.logo_url}
-                  />
-                </div>
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      Projected Standings History
+                    </h2>
+                    <BasketballTeamStandingsHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                      logoUrl={team_info.logo_url}
+                    />
+                  </div>
 
-                <div
-                  className="bg-white rounded-lg p-3"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <h2 className="text-lg font-semibold mb-1 -mt-2">
-                    Projected Wins History
-                  </h2>
-                  <BasketballTeamWinHistory
-                    teamName={team_info.team_name}
-                    primaryColor={team_info.primary_color}
-                    secondaryColor={team_info.secondary_color}
-                    logoUrl={team_info.logo_url}
-                  />
-                </div>
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      First Place Probability History
+                    </h2>
+                    <BasketballTeamFirstPlaceHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                      logoUrl={team_info.logo_url}
+                    />
+                  </div>
 
-                <div
-                  className="bg-white rounded-lg p-3"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <h2 className="text-lg font-semibold mb-1 -mt-2">
-                    Projected Standings History
-                  </h2>
-                  <BasketballTeamStandingsHistory
-                    teamName={team_info.team_name}
-                    primaryColor={team_info.primary_color}
-                    secondaryColor={team_info.secondary_color}
-                    logoUrl={team_info.logo_url}
-                  />
-                </div>
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      NCAA Tournament Bid History
+                    </h2>
+                    <BasketballTeamTournamentBidHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                    />
+                  </div>
 
-                <div
-                  className="bg-white rounded-lg p-3"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <h2 className="text-lg font-semibold mb-1 -mt-2">
-                    First Place Probability History
-                  </h2>
-                  <BasketballTeamFirstPlaceHistory
-                    teamName={team_info.team_name}
-                    primaryColor={team_info.primary_color}
-                    secondaryColor={team_info.secondary_color}
-                    logoUrl={team_info.logo_url}
-                  />
-                </div>
-
-                <div
-                  className="bg-white rounded-lg p-3"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <h2 className="text-lg font-semibold mb-1 -mt-2">
-                    NCAA Tournament Bid History
-                  </h2>
-                  <BasketballTeamTournamentBidHistory
-                    teamName={team_info.team_name}
-                    primaryColor={team_info.primary_color}
-                    secondaryColor={team_info.secondary_color}
-                  />
-                </div>
-
-                <div
-                  className="bg-white rounded-lg p-3"
-                  style={{ border: "1px solid #d1d5db" }}
-                >
-                  <h2 className="text-lg font-semibold mb-1 -mt-2">
-                    NCAA Tournament Progression History
-                  </h2>
-                  <BasketballTeamTournamentProgressionHistory
-                    teamName={team_info.team_name}
-                    primaryColor={team_info.primary_color}
-                    secondaryColor={team_info.secondary_color}
-                  />
+                  <div
+                    className="bg-white rounded-lg p-3"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      NCAA Tournament Progression History
+                    </h2>
+                    <BasketballTeamTournamentProgressionHistory
+                      teamName={team_info.team_name}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </ErrorBoundary>

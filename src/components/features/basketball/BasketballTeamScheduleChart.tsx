@@ -112,67 +112,59 @@ export default function BasketballTeamScheduleChart({
           {schedule.map((game, index) => (
             <tr
               key={index}
-              className={`border-b hover:bg-gray-50 transition-colors ${
+              className={`hover:bg-gray-50 transition-colors ${
                 game.status === "W"
-                  ? "bg-green-50"
+                  ? "border-2 border-green-500 bg-green-50"
                   : game.status === "L"
-                    ? "bg-red-50"
-                    : ""
+                    ? "border-2 border-red-500 bg-red-50"
+                    : "border-b"
               }`}
             >
-              <td className="p-2 text-left whitespace-nowrap">
-                {formatDate(game.date)}
-              </td>
-              <td className="p-2 text-left">
+              <td className="p-2">{formatDate(game.date)}</td>
+              <td className="p-2">
                 <span
-                  className={`inline-block w-1 h-1 rounded-full mr-1 ${
+                  className={`px-1 py-0.5 rounded text-xs ${
                     game.location === "Home"
-                      ? "bg-blue-500"
+                      ? "bg-green-100 text-green-800"
                       : game.location === "Away"
-                        ? "bg-red-500"
-                        : "bg-gray-500"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
                   }`}
-                />
-                {game.location === "Home"
-                  ? "vs"
-                  : game.location === "Away"
-                    ? "@"
-                    : "N"}
+                >
+                  {game.location}
+                </span>
               </td>
-              <td
-                className="p-2 text-left cursor-pointer hover:underline"
-                onClick={() => navigateToTeam(game.opponent)}
-              >
-                <div className="flex items-center gap-2">
-                  {game.opponent_logo && (
-                    <TeamLogo
-                      logoUrl={game.opponent_logo}
-                      teamName={game.opponent}
-                      size={20}
-                    />
-                  )}
-                  <span className="truncate max-w-[150px]">
-                    {game.opponent}
-                  </span>
+              <td className="p-2">
+                <div
+                  className="flex items-center cursor-pointer hover:text-blue-600"
+                  onClick={() => navigateToTeam(game.opponent)}
+                >
+                  <TeamLogo
+                    logoUrl={
+                      game.opponent_logo || "/images/team_logos/default.png"
+                    }
+                    teamName={game.opponent}
+                    size={20}
+                  />
                 </div>
               </td>
-              <td className="p-2 text-center">
+              <td className="text-center p-2">
                 {formatRank(game.opp_kp_rank || game.kenpom_rank)}
               </td>
-              <td className="p-2 text-center font-medium">
+              <td className="text-center p-2">
                 {formatProbability(game.team_win_prob)}
               </td>
-              <td className="p-2 text-center">
+              <td className="text-center p-2">
                 {formatProbability(game.kenpom_win_prob)}
               </td>
-              <td className="p-2 text-center">
+              <td className="text-center p-2">
                 <span
                   className={`font-medium ${
                     game.status === "W"
                       ? "text-green-600"
                       : game.status === "L"
                         ? "text-red-600"
-                        : ""
+                        : "text-gray-600"
                   }`}
                 >
                   {formatScore(game.team_points, game.opp_points, game.status)}

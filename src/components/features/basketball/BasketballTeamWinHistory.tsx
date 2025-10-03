@@ -1,4 +1,3 @@
-// src/components/features/basketball/BasketballTeamWinHistory.tsx
 "use client";
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
@@ -51,14 +50,10 @@ export default function BasketballTeamWinHistory({
   logoUrl,
 }: BasketballTeamWinHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number }>,
-    string
-  > | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
 
-  // Use the master history hook for basketball
   const {
     data: allHistoryData,
     isLoading,
@@ -78,7 +73,6 @@ export default function BasketballTeamWinHistory({
     return `${month}/${day}`;
   };
 
-  // Process the data when allHistoryData changes
   useEffect(() => {
     if (!allHistoryData?.confWins?.data) {
       setData([]);
@@ -86,15 +80,12 @@ export default function BasketballTeamWinHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-
-    // Filter data starting from 11/1 (basketball season start)
     const cutoffDate = new Date("2024-11-01");
     const filteredData = rawData.filter((point: HistoricalDataPoint) => {
       const itemDate = new Date(point.date);
       return itemDate >= cutoffDate;
     });
 
-    // Group by date and take the FIRST entry per day (earliest version_id)
     const dataByDate = new Map<string, HistoricalDataPoint>();
 
     filteredData.forEach((point: HistoricalDataPoint) => {
@@ -110,7 +101,6 @@ export default function BasketballTeamWinHistory({
       }
     });
 
-    // Convert back to array and sort by date
     const uniqueData = Array.from(dataByDate.values()).sort((a, b) => {
       const dateA = parseDateCentralTime(a.date);
       const dateB = parseDateCentralTime(b.date);
@@ -120,7 +110,6 @@ export default function BasketballTeamWinHistory({
     setData(uniqueData);
   }, [allHistoryData, teamName]);
 
-  // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
       return primaryColor === "#3b82f6" ? "#ef4444" : "#10b981";
@@ -205,7 +194,7 @@ export default function BasketballTeamWinHistory({
             size: isMobile ? 10 : 12,
           },
           usePointStyle: true,
-          padding: isMobile ? 8 : 15,
+          padding: isMobile ? 15 : 20,
         },
       },
       tooltip: {
@@ -239,172 +228,221 @@ export default function BasketballTeamWinHistory({
               maxWidth: "300px",
             });
 
-            const handleClickOutside = (e: MouseEvent) => {
-              if (tooltipEl && !tooltipEl.contains(e.target as Node)) {
-                tooltipEl.style.opacity = "0";
+            const handleClickOutside = (e: Event) => {
+              if (!tooltipEl?.contains(e.target as Node)) {
+                tooltipEl!.style.opacity = "0";
                 setTimeout(() => {
-                  if (tooltipEl && tooltipEl.style.opacity === "0") {
-                    tooltipEl.style.display = "none";
+                  if (tooltipEl && tooltipEl.parentNode) {
+                    document.removeEventListener("click", handleClickOutside);
+                    document.removeEventListener(
+                      "touchstart",
+                      handleClickOutside
+                    );
+                    document.body.removeChild(tooltipEl);
                   }
                 }, 100);
               }
             };
 
             document.addEventListener("click", handleClickOutside);
+            document.addEventListener("touchstart", handleClickOutside);
             document.body.appendChild(tooltipEl);
           }
 
           if (tooltipModel.opacity === 0) {
             tooltipEl.style.opacity = "0";
-            setTimeout(() => {
-              if (tooltipEl && tooltipEl.style.opacity === "0") {
-                tooltipEl.style.display = "none";
-              }
-            }, 100);
             return;
           }
 
-          tooltipEl.style.display = "block";
-
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const dataPoint = data[dataIndex];
+            const currentDate = labels[dataIndex];
+            const totalWins = data[dataIndex].projected_total_wins;
+            const confWins = data[dataIndex].projected_conf_wins;
 
-            const date = formatDateForDisplay(dataPoint.date);
-            const confWins = dataPoint.projected_conf_wins.toFixed(1);
-            const totalWins = dataPoint.projected_total_wins.toFixed(1);
-
-            const innerHTML = `
-              <div style="font-weight: 600; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">
-                ${date}
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span>Total Wins:</span>
-                <span style="font-weight: 600; margin-left: 16px;">${totalWins}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span>Conf Wins:</span>
-                <span style="font-weight: 600; margin-left: 16px;">${confWins}</span>
+            let innerHtml = `
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <button id="tooltip-close" style="
+                  background: none; 
+                  border: none; 
+                  font-size: 16px; 
+                  cursor: pointer; 
+                  color: #6b7280;
+                  padding: 0;
+                  margin: 0;
+                  line-height: 1;
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                ">&times;</button>
               </div>
             `;
 
-            tooltipEl.innerHTML = innerHTML;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Projected Total Wins: ${totalWins.toFixed(1)}</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Projected Conference Wins: ${confWins.toFixed(1)}</div>`;
+
+            tooltipEl.innerHTML = innerHtml;
+
+            const closeBtn = tooltipEl.querySelector("#tooltip-close");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                tooltipEl.style.opacity = "0";
+              });
+            }
           }
 
           const position = chart.canvas.getBoundingClientRect();
-          const scrollTop =
-            window.pageYOffset || document.documentElement.scrollTop;
-          const scrollLeft =
-            window.pageXOffset || document.documentElement.scrollLeft;
+          const chartWidth = chart.width;
+          const tooltipWidth = tooltipEl.offsetWidth || 200;
+          const caretX = tooltipModel.caretX;
+          const caretY = tooltipModel.caretY;
+
+          const isLeftSide = caretX < chartWidth / 2;
+          let leftPosition: number;
+          let arrowPosition: string;
+
+          if (isLeftSide) {
+            leftPosition = position.left + window.pageXOffset + caretX + 20;
+            arrowPosition = "left";
+          } else {
+            leftPosition =
+              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
+            arrowPosition = "right";
+          }
+
+          if (!tooltipEl.querySelector(".tooltip-arrow")) {
+            const arrow = document.createElement("div");
+            arrow.className = "tooltip-arrow";
+            arrow.style.position = "absolute";
+            arrow.style.width = "0";
+            arrow.style.height = "0";
+            arrow.style.top = "50%";
+            arrow.style.transform = "translateY(-50%)";
+
+            if (arrowPosition === "left") {
+              arrow.style.left = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderRight = "8px solid #ffffff";
+            } else {
+              arrow.style.right = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderLeft = "8px solid #ffffff";
+            }
+
+            tooltipEl.appendChild(arrow);
+          }
+
+          const maxLeft = window.innerWidth - tooltipWidth - 10;
+          const minLeft = 10;
+          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
 
           tooltipEl.style.opacity = "1";
-          tooltipEl.style.position = "absolute";
-          tooltipEl.style.left =
-            position.left + scrollLeft + tooltipModel.caretX + "px";
+          tooltipEl.style.left = leftPosition + "px";
           tooltipEl.style.top =
-            position.top + scrollTop + tooltipModel.caretY + "px";
+            position.top +
+            window.pageYOffset +
+            caretY -
+            tooltipEl.offsetHeight / 2 +
+            40 +
+            "px";
         },
       },
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-        },
+        title: { display: false },
         ticks: {
-          maxRotation: 45,
-          minRotation: 45,
-          autoSkip: true,
-          maxTicksLimit: isMobile ? 8 : 15,
           font: {
             size: isMobile ? 9 : 11,
           },
         },
+        grid: { display: false },
       },
       y: {
-        title: {
-          display: true,
-          text: "Projected Wins",
-          font: {
-            size: isMobile ? 11 : 13,
-          },
-        },
         beginAtZero: true,
+        grid: {
+          color: "rgba(0, 0, 0, 0.1)",
+        },
         ticks: {
           font: {
             size: isMobile ? 10 : 12,
           },
           callback: function (value: string | number) {
-            return Number(value).toFixed(0);
+            return `${value}`;
           },
-        },
-        grid: {
-          color: "#f3f4f6",
         },
       },
     },
   };
 
+  const chartHeight = isMobile ? 200 : 300;
+
   if (isLoading) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: isMobile ? "300px" : "400px" }}
-      >
-        <div className="text-gray-500">Loading win history...</div>
+      <div className="text-center py-8">
+        <div className="animate-pulse text-gray-500">
+          Loading historical data...
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: isMobile ? "300px" : "400px" }}
-      >
-        <div className="text-red-500">Error loading win history</div>
+      <div className="text-center py-8">
+        <div className="text-red-500 text-sm">
+          Unable to load historical data
+        </div>
+        <div className="text-gray-400 text-xs mt-1">{error}</div>
       </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: isMobile ? "300px" : "400px" }}
-      >
-        <div className="text-gray-500">No win history data available</div>
+      <div className="text-center py-8">
+        <div className="text-gray-500 text-sm">Historical data coming soon</div>
+        <div className="text-gray-400 text-xs mt-1">
+          Chart will show projected wins over time once data is collected
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative bg-white rounded-lg">
+    <div
+      style={{
+        height: `${chartHeight}px`,
+        position: "relative",
+        width: "100%",
+      }}
+    >
       {logoUrl && (
         <div
+          className="absolute z-10"
           style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            opacity: 0.15,
-            zIndex: 1,
-            pointerEvents: "none",
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
           }}
         >
           <Image
             src={logoUrl}
-            alt="Team Logo"
-            width={isMobile ? 60 : 80}
-            height={isMobile ? 60 : 80}
-            style={{ objectFit: "contain" }}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
           />
         </div>
       )}
-      <div
-        style={{ height: isMobile ? "300px" : "400px", position: "relative" }}
-      >
-        <Line ref={chartRef} data={chartData} options={options} />
-      </div>
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 }

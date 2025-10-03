@@ -182,7 +182,6 @@ export default function FootballTeamFirstPlaceHistory({
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
-      borderDash: [5, 5],
     },
   ];
 

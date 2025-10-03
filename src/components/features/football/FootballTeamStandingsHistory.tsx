@@ -184,7 +184,6 @@ export default function FootballTeamStandingsHistory({
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
-      borderDash: [5, 5],
     },
   ];
 

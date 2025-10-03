@@ -1,8 +1,31 @@
 "use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
-import { Chart, ChartConfiguration } from "chart.js/auto";
-import { useEffect, useRef, useState } from "react";
+import type { Chart } from "chart.js";
+import {
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  TooltipModel,
+} from "chart.js";
+import Image from "next/image";
+import { useEffect, useRef } from "react";
+import { Line } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface TeamGame {
   date: string;
@@ -17,6 +40,7 @@ interface TeamGame {
 
 interface TeamWinValuesProps {
   schedule: TeamGame[];
+  logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
 }
@@ -27,279 +51,438 @@ interface GameWithDate extends TeamGame {
 
 interface ContinuousDataPoint {
   date: string;
+  dateObj: Date;
   twv: number;
   cwv: number;
 }
 
 export default function TeamWinValues({
   schedule,
-  primaryColor,
-  secondaryColor,
+  logoUrl,
 }: TeamWinValuesProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<Chart | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const chartRef = useRef<ChartJS<
+    "line",
+    Array<{ x: string; y: number }>,
+    string
+  > | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (isLoading || !isMounted) return;
-
-    const loadChart = async () => {
-      setIsLoading(true);
-
-      if (!chartRef.current) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
+    const updateDimensions = () => {
+      if (chartRef.current?.chartArea && chartRef.current?.canvas) {
+        // Chart is ready
       }
+    };
 
-      if (typeof window === "undefined") {
-        setIsLoading(false);
-        return;
-      }
+    const timeout = setTimeout(updateDimensions, 500);
+    return () => clearTimeout(timeout);
+  }, [schedule]);
 
-      if (chartRef.current) {
-        chartRef.current.destroy();
-        chartRef.current = null;
-      }
+  const formatDate = (dateStr: string) => {
+    const [month, day] = dateStr.split("/").map(Number);
+    return `${month}/${day}`;
+  };
 
-      const container = containerRef.current;
-      if (!container) {
-        setIsLoading(false);
-        return;
-      }
+  const processScheduleData = () => {
+    if (!schedule || schedule.length === 0)
+      return { continuousData: [], labels: [], twvData: [], cwvData: [] };
 
-      const existingCanvas = container.querySelector("canvas");
-      if (existingCanvas) {
-        container.removeChild(existingCanvas);
-      }
+    const validGames = schedule.filter(
+      (game): game is TeamGame =>
+        Boolean(game.date) && (game.twv !== undefined || game.cwv !== undefined)
+    );
 
-      if (!schedule || schedule.length === 0) {
-        setIsLoading(false);
-        return;
-      }
+    if (validGames.length === 0)
+      return { continuousData: [], labels: [], twvData: [], cwvData: [] };
 
-      const validGames = schedule.filter(
-        (game): game is TeamGame =>
-          Boolean(game.date) &&
-          (game.twv !== undefined || game.cwv !== undefined)
+    const gameWithDates: GameWithDate[] = validGames.map((game) => {
+      const [month, day] = game.date.split("/").map(Number);
+      const year = month >= 9 ? 2024 : 2025;
+      const dateObj = new Date(year, month - 1, day);
+      return { ...game, dateObj };
+    });
+
+    gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+
+    const startDate = new Date(2024, 8, 22); // September 22, 2024
+    const currentDate = new Date();
+    currentDate.setHours(23, 59, 59, 999);
+
+    const allDates: Date[] = [];
+    const iterDate = new Date(startDate);
+
+    while (iterDate <= currentDate) {
+      allDates.push(new Date(iterDate));
+      iterDate.setDate(iterDate.getDate() + 1);
+    }
+
+    let lastTWV = 0;
+    let lastCWV = 0;
+
+    const continuousData: ContinuousDataPoint[] = allDates.map((date) => {
+      const previousDate = new Date(date);
+      previousDate.setDate(previousDate.getDate() - 1);
+
+      const gameOnPreviousDate = gameWithDates.find(
+        (game) =>
+          game.dateObj.getMonth() === previousDate.getMonth() &&
+          game.dateObj.getDate() === previousDate.getDate() &&
+          game.dateObj.getFullYear() === previousDate.getFullYear()
       );
 
-      if (validGames.length === 0) {
-        setIsLoading(false);
-        return;
-      }
-
-      const gameWithDates: GameWithDate[] = validGames.map((game) => {
-        const [month, day] = game.date.split("/").map(Number);
-        const year = month >= 9 ? 2024 : 2025;
-        const dateObj = new Date(year, month - 1, day);
-        return { ...game, dateObj };
-      });
-
-      gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
-
-      const startDate = new Date(2024, 10, 1);
-      const endDate = new Date(2025, 2, 15);
-
-      const allDates: Date[] = [];
-      const currentDate = new Date(startDate);
-
-      while (currentDate <= endDate) {
-        allDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      let lastTWV = 0;
-      let lastCWV = 0;
-      const continuousData: ContinuousDataPoint[] = allDates.map((date) => {
-        const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
-
-        const gameOnDate = gameWithDates.find(
-          (game) =>
-            game.dateObj.getMonth() === date.getMonth() &&
-            game.dateObj.getDate() === date.getDate()
-        );
-
-        if (gameOnDate) {
-          if (gameOnDate.twv !== undefined && gameOnDate.twv !== null) {
-            lastTWV = gameOnDate.twv;
-          }
-          if (gameOnDate.cwv !== undefined && gameOnDate.cwv !== null) {
-            lastCWV = gameOnDate.cwv;
-          }
+      if (gameOnPreviousDate) {
+        if (
+          gameOnPreviousDate.twv !== undefined &&
+          gameOnPreviousDate.twv !== null
+        ) {
+          lastTWV = gameOnPreviousDate.twv;
         }
-
-        return {
-          date: formattedDate,
-          twv: lastTWV,
-          cwv: lastCWV,
-        };
-      });
-
-      const labels = continuousData.map((game) => game.date);
-      const twvData = continuousData.map((game) => game.twv);
-      const cwvData = continuousData.map((game) => game.cwv);
-
-      const canvas = document.createElement("canvas");
-      canvas.style.width = "100%";
-      canvas.style.height = "100%";
-      container.appendChild(canvas);
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        setIsLoading(false);
-        return;
+        if (
+          gameOnPreviousDate.cwv !== undefined &&
+          gameOnPreviousDate.cwv !== null
+        ) {
+          lastCWV = gameOnPreviousDate.cwv;
+        }
       }
 
-      const config: ChartConfiguration = {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: "TWV (True Win Value)",
-              data: twvData,
-              backgroundColor: "rgba(0, 151, 178, 0.1)",
-              borderColor: "rgb(0, 151, 178)",
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.1,
-            },
-            {
-              label: "CWV (Conference Win Value)",
-              data: cwvData,
-              backgroundColor: "rgba(255, 230, 113, 0.1)",
-              borderColor: "rgb(255, 230, 113)",
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.1,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          elements: {
-            point: {
-              radius: 0,
-            },
-          },
-          interaction: {
-            intersect: false,
-            mode: "index",
-          },
-          scales: {
-            y: {
-              grid: {
-                color: (context) => {
-                  if (context.tick.value === 0) {
-                    return "rgba(0, 0, 0, 0.5)";
-                  }
-                  return "transparent";
-                },
-                display: true,
-                drawOnChartArea: true,
-                drawTicks: true,
-              },
-              ticks: {
-                font: {
-                  size: isMobile ? 10 : 12,
-                },
-              },
-            },
-            x: {
-              grid: {
-                display: false,
-              },
-              ticks: {
-                maxTicksLimit: isMobile ? 5 : 10,
-                font: {
-                  size: isMobile ? 9 : 11,
-                },
-              },
-            },
-          },
-          plugins: {
-            legend: {
-              position: "top" as const,
-              labels: {
-                font: {
-                  size: isMobile ? 10 : 12,
-                },
-              },
-            },
-            tooltip: {
-              callbacks: {
-                label: function (context) {
-                  let label = context.dataset.label || "";
-                  if (label) {
-                    label += ": ";
-                  }
-                  if (context.parsed.y !== null) {
-                    label += context.parsed.y.toFixed(1);
-                  }
-                  return label;
-                },
-              },
-            },
-          },
-        },
+      return {
+        date: formatDate(`${date.getMonth() + 1}/${date.getDate()}`),
+        dateObj: date,
+        twv: lastTWV,
+        cwv: lastCWV,
       };
+    });
 
-      chartRef.current = new Chart(ctx, config);
-      setIsLoading(false);
-    };
+    const labels = continuousData.map((point) => point.date);
+    const twvData = continuousData.map((point) => point.twv);
+    const cwvData = continuousData.map((point) => point.cwv);
 
-    loadChart();
+    return { continuousData, labels, twvData, cwvData };
+  };
 
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy();
-        chartRef.current = null;
-      }
-    };
-  }, [schedule, isMobile, primaryColor, secondaryColor, isMounted, isLoading]);
+  const { continuousData, labels, twvData, cwvData } = processScheduleData();
+
+  const datasets = [
+    {
+      label: "TWV (True Win Value)",
+      data: twvData.map((value, index) => ({ x: labels[index], y: value })),
+      backgroundColor: "rgba(0, 151, 178, 0.1)",
+      borderColor: "rgb(0, 151, 178)",
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.1,
+      fill: false,
+    },
+    {
+      label: "CWV (Conference Win Value)",
+      data: cwvData.map((value, index) => ({ x: labels[index], y: value })),
+      backgroundColor: "rgba(255, 230, 113, 0.1)",
+      borderColor: "rgb(255, 230, 113)",
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.1,
+      fill: false,
+    },
+  ];
+
+  const chartData = {
+    labels: labels,
+    datasets,
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
+    },
+    plugins: {
+      title: { display: false },
+      legend: {
+        display: true,
+        position: "top" as const,
+        labels: {
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+        },
+      },
+      tooltip: {
+        enabled: false,
+        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+          const { tooltip: tooltipModel, chart } = args;
+
+          let tooltipEl = document.getElementById("chartjs-tooltip-winvalues");
+          if (!tooltipEl) {
+            tooltipEl = document.createElement("div");
+            tooltipEl.id = "chartjs-tooltip-winvalues";
+
+            Object.assign(tooltipEl.style, {
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              color: "#1f2937",
+              fontFamily: "Inter, system-ui, sans-serif",
+              fontSize: "12px",
+              opacity: "0",
+              padding: "16px",
+              paddingTop: "8px",
+              pointerEvents: "auto",
+              position: "absolute",
+              transition: "all .1s ease",
+              zIndex: "1000",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+              minWidth: "200px",
+              maxWidth: "300px",
+            });
+
+            const handleClickOutside = (e: Event) => {
+              if (!tooltipEl?.contains(e.target as Node)) {
+                tooltipEl!.style.opacity = "0";
+                setTimeout(() => {
+                  if (tooltipEl && tooltipEl.parentNode) {
+                    document.removeEventListener("click", handleClickOutside);
+                    document.removeEventListener(
+                      "touchstart",
+                      handleClickOutside
+                    );
+                  }
+                }, 100);
+              }
+            };
+
+            document.addEventListener("click", handleClickOutside);
+            document.addEventListener("touchstart", handleClickOutside);
+            document.body.appendChild(tooltipEl);
+          }
+
+          if (tooltipModel.opacity === 0) {
+            tooltipEl.style.opacity = "0";
+            return;
+          }
+
+          if (tooltipModel.body) {
+            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+            const currentDate = labels[dataIndex];
+            const twvValue = twvData[dataIndex];
+            const cwvValue = cwvData[dataIndex];
+
+            let innerHtml = `
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+               <button id="tooltip-close" style="
+                 background: none; 
+                 border: none; 
+                 font-size: 16px; 
+                 cursor: pointer; 
+                 color: #6b7280;
+                 padding: 0;
+                 margin: 0;
+                 line-height: 1;
+                 width: 20px;
+                 height: 20px;
+                 display: flex;
+                 align-items: center;
+                 justify-content: center;
+               ">&times;</button>
+             </div>
+           `;
+
+            innerHtml += `<div style="color: rgb(0, 151, 178); margin: 2px 0; font-weight: 400;">TWV: ${twvValue.toFixed(1)}</div>`;
+            innerHtml += `<div style="color: rgb(255, 230, 113); margin: 2px 0; font-weight: 400;">CWV: ${cwvValue.toFixed(1)}</div>`;
+
+            tooltipEl.innerHTML = innerHtml;
+
+            const closeBtn = tooltipEl.querySelector("#tooltip-close");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                tooltipEl.style.opacity = "0";
+              });
+            }
+          }
+
+          const position = chart.canvas.getBoundingClientRect();
+          const chartWidth = chart.width;
+          const tooltipWidth = tooltipEl.offsetWidth || 200;
+          const caretX = tooltipModel.caretX;
+          const caretY = tooltipModel.caretY;
+
+          const isLeftSide = caretX < chartWidth / 2;
+          let leftPosition: number;
+          let arrowPosition: string;
+
+          if (isLeftSide) {
+            leftPosition = position.left + window.pageXOffset + caretX + 20;
+            arrowPosition = "left";
+          } else {
+            leftPosition =
+              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
+            arrowPosition = "right";
+          }
+
+          if (!tooltipEl.querySelector(".tooltip-arrow")) {
+            const arrow = document.createElement("div");
+            arrow.className = "tooltip-arrow";
+            arrow.style.position = "absolute";
+            arrow.style.width = "0";
+            arrow.style.height = "0";
+            arrow.style.top = "50%";
+            arrow.style.transform = "translateY(-50%)";
+
+            if (arrowPosition === "left") {
+              arrow.style.left = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderRight = "8px solid #ffffff";
+            } else {
+              arrow.style.right = "-8px";
+              arrow.style.borderTop = "8px solid transparent";
+              arrow.style.borderBottom = "8px solid transparent";
+              arrow.style.borderLeft = "8px solid #ffffff";
+            }
+
+            tooltipEl.appendChild(arrow);
+          } else {
+            const arrow = tooltipEl.querySelector(
+              ".tooltip-arrow"
+            ) as HTMLElement;
+            if (arrow) {
+              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
+              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
+
+              if (arrowPosition === "left") {
+                arrow.style.borderLeft = "none";
+                arrow.style.borderRight = "8px solid #ffffff";
+              } else {
+                arrow.style.borderRight = "none";
+                arrow.style.borderLeft = "8px solid #ffffff";
+              }
+            }
+          }
+
+          const maxLeft = window.innerWidth - tooltipWidth - 10;
+          const minLeft = 10;
+          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
+
+          tooltipEl.style.opacity = "1";
+          tooltipEl.style.left = leftPosition + "px";
+          tooltipEl.style.top =
+            position.top +
+            window.pageYOffset +
+            caretY -
+            tooltipEl.offsetHeight / 2 -
+            0 +
+            "px";
+        },
+      },
+    },
+    scales: {
+      x: {
+        title: { display: false },
+        ticks: {
+          maxTicksLimit: isMobile ? 5 : 10,
+          font: {
+            size: isMobile ? 9 : 11,
+          },
+        },
+        grid: { display: false },
+      },
+      y: {
+        grid: {
+          color: (context: { tick: { value: number } }) => {
+            if (context.tick.value === 0) {
+              return "rgba(0, 0, 0, 0.5)";
+            }
+            return "transparent";
+          },
+          display: true,
+          drawOnChartArea: true,
+        },
+        ticks: {
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+        },
+      },
+    },
+    elements: {
+      point: {
+        radius: 0,
+      },
+    },
+    animation: {
+      duration: 750,
+    },
+  };
+
+  const chartHeight = isMobile ? 200 : 250;
+
+  if (!schedule || schedule.length === 0) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: chartHeight,
+          color: "#999",
+        }}
+      >
+        No win value data available
+      </div>
+    );
+  }
+
+  if (continuousData.length === 0) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: chartHeight,
+          color: "#999",
+        }}
+      >
+        No data available for the selected date range
+      </div>
+    );
+  }
 
   return (
     <div
-      ref={containerRef}
       style={{
-        height: isMobile ? "200px" : "250px",
+        height: `${chartHeight}px`,
         position: "relative",
         width: "100%",
-        display: "block",
       }}
     >
-      {isLoading && (
+      {" "}
+      {logoUrl && (
         <div
           style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%",
-            color: "#999",
+            position: "absolute",
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
+            zIndex: 10,
           }}
         >
-          Loading chart...
+          <Image
+            src={logoUrl}
+            alt="Team logo"
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            style={{ objectFit: "contain", opacity: 0.8 }}
+          />
         </div>
       )}
-      {(!schedule || schedule.length === 0) && !isLoading && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%",
-            color: "#999",
-          }}
-        >
-          No win value data available
-        </div>
-      )}
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 }

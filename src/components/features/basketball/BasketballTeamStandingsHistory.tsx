@@ -1,4 +1,3 @@
-// src/components/features/basketball/BasketballTeamStandingsHistory.tsx
 "use client";
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
@@ -56,15 +55,11 @@ export default function BasketballTeamStandingsHistory({
   logoUrl,
 }: BasketballTeamStandingsHistoryProps) {
   const { isMobile } = useResponsive();
-  const chartRef = useRef<ChartJS<
-    "line",
-    Array<{ x: string; y: number }>,
-    string
-  > | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
   const [conferenceSize, setConferenceSize] = useState(16);
 
-  // Use the master history hook for basketball
   const {
     data: allHistoryData,
     isLoading: loading,
@@ -84,7 +79,6 @@ export default function BasketballTeamStandingsHistory({
     return `${month}/${day}`;
   };
 
-  // Process the data when allHistoryData changes
   useEffect(() => {
     if (!allHistoryData?.confWins?.data) {
       setData([]);
@@ -100,14 +94,12 @@ export default function BasketballTeamStandingsHistory({
       return;
     }
 
-    // Filter data starting from 11/1 (basketball season start)
     const cutoffDate = new Date("2024-11-01");
     const filteredData = rawData.filter((point: HistoricalDataPoint) => {
       const itemDate = new Date(point.date);
       return itemDate >= cutoffDate;
     });
 
-    // Deduplicate by date, keeping earliest version_id
     const dataByDate = new Map<string, HistoricalDataPoint>();
     filteredData.forEach((point: HistoricalDataPoint) => {
       const dateKey = point.date;
@@ -128,7 +120,6 @@ export default function BasketballTeamStandingsHistory({
     setData(processedData);
   }, [allHistoryData, teamName]);
 
-  // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
       return primaryColor === "#3b82f6" ? "#ef4444" : "#10b981";
@@ -188,7 +179,6 @@ export default function BasketballTeamStandingsHistory({
       pointBorderWidth: 2,
       tension: 0.1,
       fill: false,
-      borderDash: [5, 5],
     },
   ];
 
@@ -315,7 +305,6 @@ export default function BasketballTeamStandingsHistory({
             }
           }
 
-          // Smart positioning logic
           const position = chart.canvas.getBoundingClientRect();
           const chartWidth = chart.width;
           const tooltipWidth = tooltipEl.offsetWidth || 200;
@@ -386,7 +375,7 @@ export default function BasketballTeamStandingsHistory({
         grid: { display: false },
       },
       y: {
-        reverse: true, // Lower standings (better) show higher on chart
+        reverse: true,
         min: 1,
         max: conferenceSize,
         grid: {
@@ -413,66 +402,68 @@ export default function BasketballTeamStandingsHistory({
     },
   };
 
-  const chartHeight = isMobile ? 300 : 400;
+  const chartHeight = isMobile ? 200 : 300;
 
   if (loading) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-gray-500">Loading standings history...</div>
+      <div className="text-center py-8">
+        <div className="animate-pulse text-gray-500">
+          Loading historical data...
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-red-500">Error loading standings history</div>
+      <div className="text-center py-8">
+        <div className="text-red-500 text-sm">
+          Unable to load historical data
+        </div>
+        <div className="text-gray-400 text-xs mt-1">{error}</div>
       </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <div
-        className="flex items-center justify-center bg-white rounded-lg"
-        style={{ height: `${chartHeight}px` }}
-      >
-        <div className="text-gray-500">No standings history data available</div>
+      <div className="text-center py-8">
+        <div className="text-gray-500 text-sm">Historical data coming soon</div>
+        <div className="text-gray-400 text-xs mt-1">
+          Chart will show projected standings over time once data is collected
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative bg-white rounded-lg">
+    <div
+      style={{
+        height: `${chartHeight}px`,
+        position: "relative",
+        width: "100%",
+      }}
+    >
       {logoUrl && (
         <div
+          className="absolute z-10"
           style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            opacity: 0.15,
-            zIndex: 1,
-            pointerEvents: "none",
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
           }}
         >
           <Image
             src={logoUrl}
-            alt="Team Logo"
-            width={isMobile ? 60 : 80}
-            height={isMobile ? 60 : 80}
-            style={{ objectFit: "contain" }}
+            alt={`${teamName} logo`}
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
           />
         </div>
       )}
-      <div style={{ height: `${chartHeight}px`, position: "relative" }}>
-        <Line ref={chartRef} data={chartData} options={options} />
-      </div>
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 }

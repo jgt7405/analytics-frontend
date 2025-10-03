@@ -2,6 +2,7 @@
 
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 // Define proper types
@@ -10,10 +11,13 @@ interface WinSeedCountEntry {
   Seed?: string;
   Tournament_Status?: string;
   Count: number;
+  Auto_Bid_Pct?: number;
+  At_Large_Pct?: number;
 }
 
 interface TeamSeedProjectionsProps {
   winSeedCounts: WinSeedCountEntry[];
+  logoUrl?: string;
 }
 
 interface StylesConfig {
@@ -30,14 +34,21 @@ interface DistributionData {
   [key: string]: number;
 }
 
+interface BidCategoryDistribution {
+  "Auto Bid": number;
+  "At Large": number;
+}
+
 interface RawCounts {
   seedDistribution: DistributionData;
   statusDistribution: DistributionData;
+  bidCategoryDistribution: BidCategoryDistribution;
 }
 
 interface WinRowData {
   seedDistribution: DistributionData;
   statusDistribution: DistributionData;
+  bidCategoryDistribution: BidCategoryDistribution;
   rawCounts: RawCounts;
   total: number;
   percentOfTotal: number;
@@ -50,6 +61,7 @@ interface WinData {
 interface TotalRowData {
   seedDistribution: DistributionData;
   statusDistribution: DistributionData;
+  bidCategoryDistribution: BidCategoryDistribution;
   rawCounts: RawCounts;
   total: number;
 }
@@ -70,6 +82,7 @@ interface ColorStyle {
 
 export default function TeamSeedProjections({
   winSeedCounts,
+  logoUrl,
 }: TeamSeedProjectionsProps) {
   const { isMobile } = useResponsive();
   const [styles, setStyles] = useState<StylesConfig>({
@@ -191,9 +204,17 @@ export default function TeamSeedProjections({
           "Next Four Out": 0,
           "Out of Tourney": 0,
         },
+        bidCategoryDistribution: {
+          "Auto Bid": 0,
+          "At Large": 0,
+        },
         rawCounts: {
           seedDistribution: {},
           statusDistribution: {},
+          bidCategoryDistribution: {
+            "Auto Bid": 0,
+            "At Large": 0,
+          },
         },
         total: 0,
         percentOfTotal: 0,
@@ -214,12 +235,13 @@ export default function TeamSeedProjections({
       const winsValue = entry.Wins.toString();
       const status = entry.Tournament_Status || "Out of Tourney";
       const count = entry.Count || 0;
+      const autoBidPct = entry.Auto_Bid_Pct || 0;
+      const atLargePct = entry.At_Large_Pct || 0;
 
-      if (!winData[winsValue]) return; // Skip if wins value not initialized
+      if (!winData[winsValue]) return;
 
       winData[winsValue].total += count;
 
-      // Handle seed distribution - FIXED: Only add to seed distribution if it's a valid tournament seed
       if (
         entry.Seed &&
         !isNaN(parseInt(entry.Seed)) &&
@@ -230,7 +252,6 @@ export default function TeamSeedProjections({
           count;
       }
 
-      // Handle status distribution
       if (status === "In Tourney") {
         winData[winsValue].rawCounts.statusDistribution["In Tourney %"] +=
           count;
@@ -244,14 +265,27 @@ export default function TeamSeedProjections({
         winData[winsValue].rawCounts.statusDistribution["Out of Tourney"] +=
           count;
       }
+
+      if (
+        status === "In Tourney" &&
+        entry.Seed &&
+        !isNaN(parseInt(entry.Seed))
+      ) {
+        const autoBidCount = (autoBidPct / 100) * count;
+        const atLargeCount = (atLargePct / 100) * count;
+
+        winData[winsValue].rawCounts.bidCategoryDistribution["Auto Bid"] +=
+          autoBidCount;
+        winData[winsValue].rawCounts.bidCategoryDistribution["At Large"] +=
+          atLargeCount;
+      }
     });
 
-    // Calculate percentages - FIXED: Use proper totals for seed distribution
+    // Calculate percentages
     winTotals.forEach((winsValue) => {
       const rowData = winData[winsValue];
       rowData.percentOfTotal = (rowData.total / grandTotal) * 100;
 
-      // Calculate seed distribution percentages based on row total
       Object.entries(rowData.rawCounts.seedDistribution).forEach(
         ([seed, count]) => {
           rowData.seedDistribution[seed] =
@@ -259,13 +293,23 @@ export default function TeamSeedProjections({
         }
       );
 
-      // Calculate status distribution percentages based on row total
       Object.entries(rowData.rawCounts.statusDistribution).forEach(
         ([status, count]) => {
           rowData.statusDistribution[status] =
             rowData.total > 0 ? (count / rowData.total) * 100 : 0;
         }
       );
+
+      const autoBidCount =
+        rowData.rawCounts.bidCategoryDistribution["Auto Bid"];
+      const atLargeCount =
+        rowData.rawCounts.bidCategoryDistribution["At Large"];
+      const totalBidCount = autoBidCount + atLargeCount;
+
+      rowData.bidCategoryDistribution["Auto Bid"] =
+        totalBidCount > 0 ? (autoBidCount / totalBidCount) * 100 : 0;
+      rowData.bidCategoryDistribution["At Large"] =
+        totalBidCount > 0 ? (atLargeCount / totalBidCount) * 100 : 0;
     });
 
     // Calculate total row
@@ -277,9 +321,17 @@ export default function TeamSeedProjections({
         "Next Four Out": 0,
         "Out of Tourney": 0,
       },
+      bidCategoryDistribution: {
+        "Auto Bid": 0,
+        "At Large": 0,
+      },
       rawCounts: {
         seedDistribution: {},
         statusDistribution: {},
+        bidCategoryDistribution: {
+          "Auto Bid": 0,
+          "At Large": 0,
+        },
       },
       total: 0,
     };
@@ -293,7 +345,6 @@ export default function TeamSeedProjections({
       totalRow.rawCounts.statusDistribution[status] = 0;
     });
 
-    // Sum up totals across all win values
     Object.entries(winData).forEach(([, data]) => {
       totalRow.total += data.total;
 
@@ -310,9 +361,19 @@ export default function TeamSeedProjections({
             (totalRow.rawCounts.statusDistribution[status] || 0) + count;
         }
       );
+
+      Object.entries(data.rawCounts.bidCategoryDistribution).forEach(
+        ([category, count]) => {
+          totalRow.rawCounts.bidCategoryDistribution[
+            category as keyof BidCategoryDistribution
+          ] =
+            (totalRow.rawCounts.bidCategoryDistribution[
+              category as keyof BidCategoryDistribution
+            ] || 0) + count;
+        }
+      );
     });
 
-    // Calculate total row percentages
     Object.entries(totalRow.rawCounts.seedDistribution).forEach(
       ([seed, count]) => {
         totalRow.seedDistribution[seed] =
@@ -324,6 +385,14 @@ export default function TeamSeedProjections({
       ([status, count]) => {
         totalRow.statusDistribution[status] =
           grandTotal > 0 ? (count / grandTotal) * 100 : 0;
+      }
+    );
+
+    Object.entries(totalRow.rawCounts.bidCategoryDistribution).forEach(
+      ([category, count]) => {
+        totalRow.bidCategoryDistribution[
+          category as keyof BidCategoryDistribution
+        ] = grandTotal > 0 ? (count / grandTotal) * 100 : 0;
       }
     );
 
@@ -346,6 +415,10 @@ export default function TeamSeedProjections({
     "Next Four Out",
     "Out of Tourney",
   ];
+  const bidCategoryColumns: Array<keyof BidCategoryDistribution> = [
+    "Auto Bid",
+    "At Large",
+  ];
   const seedColumns = data.hasNumericSeeds ? data.seeds : [];
 
   const getCompactHeader = (label: string): string => {
@@ -353,242 +426,329 @@ export default function TeamSeedProjections({
     if (label === "First Four Out") return "First\nFour Out";
     if (label === "Next Four Out") return "Next\nFour Out";
     if (label === "Out of Tourney") return "Out of\nTourney";
+    if (label === "Auto Bid") return "Auto\nBid";
+    if (label === "At Large") return "At\nLarge";
     return label;
   };
 
   const winsColWidth = "40px";
   const seedColWidth = isMobile ? "33px" : "38px";
   const statusColWidth = isMobile ? "45px" : "60px";
+  const bidColWidth = isMobile ? "40px" : "50px";
   const totalColWidth = isMobile ? "35px" : "45px";
 
   return (
-    <div style={styles.container}>
-      <table style={styles.table}>
-        <thead style={styles.thead}>
-          <tr>
-            <th
-              rowSpan={2}
-              style={{
-                ...styles.headerCell,
-                ...styles.stickyHeaderCell,
-                width: winsColWidth,
-                minWidth: winsColWidth,
-                maxWidth: winsColWidth,
-              }}
-            >
-              Wins
-            </th>
-
-            {seedColumns.length > 0 && (
-              <th colSpan={seedColumns.length} style={styles.headerCell}>
-                Seed
-              </th>
-            )}
-
-            <th colSpan={statusColumns.length} style={styles.headerCell}>
-              NCAA Tourney Status
-            </th>
-
-            <th
-              rowSpan={2}
-              style={{
-                ...styles.headerCell,
-                width: totalColWidth,
-                minWidth: totalColWidth,
-                maxWidth: totalColWidth,
-              }}
-            >
-              Total
-            </th>
-          </tr>
-
-          <tr>
-            {seedColumns.map((seed) => (
+    <div style={{ position: "relative" }}>
+      {logoUrl && (
+        <div
+          className="absolute z-10"
+          style={{
+            top: "-30px",
+            right: "-10px",
+            width: isMobile ? "24px" : "32px",
+            height: isMobile ? "24px" : "32px",
+          }}
+        >
+          <Image
+            src={logoUrl}
+            alt="Team logo"
+            width={isMobile ? 24 : 32}
+            height={isMobile ? 24 : 32}
+            className="object-contain opacity-80"
+          />
+        </div>
+      )}
+      <div style={styles.container}>
+        <table style={styles.table}>
+          {/* Rest of table code remains exactly the same */}
+          <thead style={styles.thead}>
+            <tr>
               <th
-                key={`seed-${seed}`}
+                rowSpan={2}
                 style={{
                   ...styles.headerCell,
-                  width: seedColWidth,
-                  minWidth: seedColWidth,
-                  maxWidth: seedColWidth,
+                  ...styles.stickyHeaderCell,
+                  width: winsColWidth,
+                  minWidth: winsColWidth,
+                  maxWidth: winsColWidth,
                 }}
               >
-                {seed}
+                Wins
               </th>
-            ))}
 
-            {statusColumns.map((status) => (
+              {seedColumns.length > 0 && (
+                <th colSpan={seedColumns.length} style={styles.headerCell}>
+                  Seed
+                </th>
+              )}
+
+              <th colSpan={statusColumns.length} style={styles.headerCell}>
+                NCAA Tourney Status
+              </th>
+
+              <th colSpan={bidCategoryColumns.length} style={styles.headerCell}>
+                Bid Category
+              </th>
+
               <th
-                key={`status-${status}`}
+                rowSpan={2}
                 style={{
                   ...styles.headerCell,
-                  width: statusColWidth,
-                  minWidth: statusColWidth,
-                  maxWidth: statusColWidth,
-                  whiteSpace: "normal",
-                  fontSize: isMobile ? "10px" : "11px",
-                  lineHeight: "1.1",
+                  width: totalColWidth,
+                  minWidth: totalColWidth,
+                  maxWidth: totalColWidth,
                 }}
               >
-                {getCompactHeader(status)}
+                Total
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.winTotals.map((winsValue: string) => {
-            const rowData = data.winData[winsValue];
-            const percentOfTotal = rowData.percentOfTotal;
-            const totalColorStyle = getCellColor(percentOfTotal);
+            </tr>
 
-            return (
-              <tr key={`win-${winsValue}`}>
-                <td
+            <tr>
+              {seedColumns.map((seed) => (
+                <th
+                  key={`seed-${seed}`}
                   style={{
-                    ...styles.dataCell,
-                    ...styles.stickyCell,
-                    width: winsColWidth,
-                    minWidth: winsColWidth,
-                    maxWidth: winsColWidth,
-                  }}
-                >
-                  {winsValue}
-                </td>
-
-                {seedColumns.map((seed) => {
-                  const pct = rowData.seedDistribution[seed] || 0;
-                  return (
-                    <td
-                      key={`win-${winsValue}-seed-${seed}`}
-                      style={{
-                        ...styles.dataCell,
-                        ...getCellColor(pct),
-                        width: seedColWidth,
-                        minWidth: seedColWidth,
-                        maxWidth: seedColWidth,
-                      }}
-                    >
-                      {pct > 0 ? `${Math.round(pct)}%` : ""}
-                    </td>
-                  );
-                })}
-
-                {statusColumns.map((status) => {
-                  const pct = rowData.statusDistribution[status] || 0;
-                  const isOutCategory =
-                    status === "Out of Tourney" ||
-                    status === "First Four Out" ||
-                    status === "Next Four Out";
-                  const colorStyle = getStatusColor(pct, isOutCategory);
-
-                  return (
-                    <td
-                      key={`win-${winsValue}-status-${status}`}
-                      style={{
-                        ...styles.dataCell,
-                        ...colorStyle,
-                        width: statusColWidth,
-                        minWidth: statusColWidth,
-                        maxWidth: statusColWidth,
-                      }}
-                    >
-                      {pct > 0 ? `${Math.round(pct)}%` : ""}
-                    </td>
-                  );
-                })}
-
-                <td
-                  style={{
-                    ...styles.dataCell,
-                    ...totalColorStyle,
-                    width: totalColWidth,
-                    minWidth: totalColWidth,
-                    maxWidth: totalColWidth,
-                  }}
-                >
-                  {Math.round(percentOfTotal)}%
-                </td>
-              </tr>
-            );
-          })}
-
-          {/* Total row */}
-          <tr
-            style={{ borderTop: "2px solid #444", backgroundColor: "#f8f9fa" }}
-          >
-            <td
-              style={{
-                ...styles.dataCell,
-                ...styles.stickyCell,
-                width: winsColWidth,
-                minWidth: winsColWidth,
-                maxWidth: winsColWidth,
-                backgroundColor: "#f8f9fa",
-              }}
-            >
-              Total
-            </td>
-
-            {seedColumns.map((seed) => {
-              const pct = data.totalRow.seedDistribution[seed] || 0;
-              const colorStyle = getCellColor(pct);
-
-              return (
-                <td
-                  key={`total-seed-${seed}`}
-                  style={{
-                    ...styles.dataCell,
-                    ...colorStyle,
-                    backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
+                    ...styles.headerCell,
                     width: seedColWidth,
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
                   }}
                 >
-                  {pct > 0 ? `${Math.round(pct)}%` : ""}
-                </td>
-              );
-            })}
+                  {seed}
+                </th>
+              ))}
 
-            {statusColumns.map((status) => {
-              const pct = data.totalRow.statusDistribution[status] || 0;
-              const isOutCategory =
-                status === "Out of Tourney" ||
-                status === "First Four Out" ||
-                status === "Next Four Out";
-              const colorStyle = getStatusColor(pct, isOutCategory);
-
-              return (
-                <td
-                  key={`total-status-${status}`}
+              {statusColumns.map((status) => (
+                <th
+                  key={`status-${status}`}
                   style={{
-                    ...styles.dataCell,
-                    ...colorStyle,
-                    backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
+                    ...styles.headerCell,
                     width: statusColWidth,
                     minWidth: statusColWidth,
                     maxWidth: statusColWidth,
+                    whiteSpace: "normal",
+                    fontSize: isMobile ? "10px" : "11px",
+                    lineHeight: "1.1",
                   }}
                 >
-                  {pct > 0 ? `${Math.round(pct)}%` : ""}
-                </td>
+                  {getCompactHeader(status)}
+                </th>
+              ))}
+
+              {bidCategoryColumns.map((category) => (
+                <th
+                  key={`bid-${category}`}
+                  style={{
+                    ...styles.headerCell,
+                    width: bidColWidth,
+                    minWidth: bidColWidth,
+                    maxWidth: bidColWidth,
+                    whiteSpace: "normal",
+                    fontSize: isMobile ? "10px" : "11px",
+                    lineHeight: "1.1",
+                  }}
+                >
+                  {getCompactHeader(category)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.winTotals.map((winsValue: string) => {
+              const rowData = data.winData[winsValue];
+              const percentOfTotal = rowData.percentOfTotal;
+              const totalColorStyle = getCellColor(percentOfTotal);
+
+              return (
+                <tr key={`win-${winsValue}`}>
+                  <td
+                    style={{
+                      ...styles.dataCell,
+                      ...styles.stickyCell,
+                      width: winsColWidth,
+                      minWidth: winsColWidth,
+                      maxWidth: winsColWidth,
+                    }}
+                  >
+                    {winsValue}
+                  </td>
+
+                  {seedColumns.map((seed) => {
+                    const pct = rowData.seedDistribution[seed] || 0;
+                    return (
+                      <td
+                        key={`win-${winsValue}-seed-${seed}`}
+                        style={{
+                          ...styles.dataCell,
+                          ...getCellColor(pct),
+                          width: seedColWidth,
+                          minWidth: seedColWidth,
+                          maxWidth: seedColWidth,
+                        }}
+                      >
+                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                      </td>
+                    );
+                  })}
+
+                  {statusColumns.map((status) => {
+                    const pct = rowData.statusDistribution[status] || 0;
+                    const isOutCategory =
+                      status === "Out of Tourney" ||
+                      status === "First Four Out" ||
+                      status === "Next Four Out";
+                    const colorStyle = getStatusColor(pct, isOutCategory);
+
+                    return (
+                      <td
+                        key={`win-${winsValue}-status-${status}`}
+                        style={{
+                          ...styles.dataCell,
+                          ...colorStyle,
+                          width: statusColWidth,
+                          minWidth: statusColWidth,
+                          maxWidth: statusColWidth,
+                        }}
+                      >
+                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                      </td>
+                    );
+                  })}
+
+                  {bidCategoryColumns.map((category) => {
+                    const pct = rowData.bidCategoryDistribution[category] || 0;
+                    return (
+                      <td
+                        key={`win-${winsValue}-bid-${category}`}
+                        style={{
+                          ...styles.dataCell,
+                          ...getCellColor(pct),
+                          width: bidColWidth,
+                          minWidth: bidColWidth,
+                          maxWidth: bidColWidth,
+                        }}
+                      >
+                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                      </td>
+                    );
+                  })}
+
+                  <td
+                    style={{
+                      ...styles.dataCell,
+                      ...totalColorStyle,
+                      width: totalColWidth,
+                      minWidth: totalColWidth,
+                      maxWidth: totalColWidth,
+                    }}
+                  >
+                    {Math.round(percentOfTotal)}%
+                  </td>
+                </tr>
               );
             })}
 
-            <td
+            <tr
               style={{
-                ...styles.dataCell,
+                borderTop: "2px solid #444",
                 backgroundColor: "#f8f9fa",
-                width: totalColWidth,
-                minWidth: totalColWidth,
-                maxWidth: totalColWidth,
               }}
             >
-              {/* Empty cell */}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <td
+                style={{
+                  ...styles.dataCell,
+                  ...styles.stickyCell,
+                  width: winsColWidth,
+                  minWidth: winsColWidth,
+                  maxWidth: winsColWidth,
+                  backgroundColor: "#f8f9fa",
+                }}
+              >
+                Total
+              </td>
+
+              {seedColumns.map((seed) => {
+                const pct = data.totalRow.seedDistribution[seed] || 0;
+                const colorStyle = getCellColor(pct);
+
+                return (
+                  <td
+                    key={`total-seed-${seed}`}
+                    style={{
+                      ...styles.dataCell,
+                      ...colorStyle,
+                      backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
+                      width: seedColWidth,
+                      minWidth: seedColWidth,
+                      maxWidth: seedColWidth,
+                    }}
+                  >
+                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                  </td>
+                );
+              })}
+
+              {statusColumns.map((status) => {
+                const pct = data.totalRow.statusDistribution[status] || 0;
+                const isOutCategory =
+                  status === "Out of Tourney" ||
+                  status === "First Four Out" ||
+                  status === "Next Four Out";
+                const colorStyle = getStatusColor(pct, isOutCategory);
+
+                return (
+                  <td
+                    key={`total-status-${status}`}
+                    style={{
+                      ...styles.dataCell,
+                      ...colorStyle,
+                      backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
+                      width: statusColWidth,
+                      minWidth: statusColWidth,
+                      maxWidth: statusColWidth,
+                    }}
+                  >
+                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                  </td>
+                );
+              })}
+
+              {bidCategoryColumns.map((category) => {
+                const pct =
+                  data.totalRow.bidCategoryDistribution[category] || 0;
+                return (
+                  <td
+                    key={`total-bid-${category}`}
+                    style={{
+                      ...styles.dataCell,
+                      ...getCellColor(pct),
+                      backgroundColor:
+                        getCellColor(pct).backgroundColor || "#f8f9fa",
+                      width: bidColWidth,
+                      minWidth: bidColWidth,
+                      maxWidth: bidColWidth,
+                    }}
+                  >
+                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                  </td>
+                );
+              })}
+
+              <td
+                style={{
+                  ...styles.dataCell,
+                  backgroundColor: "#f8f9fa",
+                  width: totalColWidth,
+                  minWidth: totalColWidth,
+                  maxWidth: totalColWidth,
+                }}
+              >
+                {/* Empty cell */}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
