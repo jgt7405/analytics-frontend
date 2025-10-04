@@ -162,9 +162,8 @@ function StandingsTableNoTies({
                 {position}
               </td>
               {sortedTeams.map((team) => {
-                // Use the available property from Standing type
-                const percentage =
-                  (team as any).standings_distribution?.[position] || 0;
+                // Use the correct property name with proper typing
+                const percentage = team.Standing_Dist_No_Ties?.[position] || 0;
                 const colorStyle = getCellColor(percentage);
 
                 return (
