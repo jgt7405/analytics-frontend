@@ -652,23 +652,6 @@ function BasketballScheduleTable({
               </tbody>
             </table>
           </div>
-
-          {/* Legend */}
-          <div className="mt-4 text-sm text-gray-600">
-            <p>
-              <strong>Legend:</strong>{" "}
-              <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
-              Win |{" "}
-              <span className="inline-block w-4 h-4 bg-yellow-100 border border-gray-300 mr-1 align-middle"></span>
-              Loss |{" "}
-              <span className="inline-block w-4 h-4 bg-blue-200 mr-1 align-middle"></span>
-              Next Game |{" "}
-              <span className="inline-block w-4 h-4 bg-gray-100 mr-1 align-middle"></span>
-              Future Games |{" "}
-              <span className="inline-block w-4 h-4 bg-gray-300 mr-1 align-middle"></span>
-              No Game
-            </p>
-          </div>
         </div>
       )}
 

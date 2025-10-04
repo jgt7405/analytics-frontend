@@ -294,7 +294,9 @@ export default function BasketballSchedulePage() {
                           <span className="inline-block w-4 h-4 bg-[#add8e6] mr-1 align-middle"></span>
                           Next Game |{" "}
                           <span className="inline-block w-4 h-4 bg-[#f0f0f0] mr-1 align-middle"></span>
-                          Future Games
+                          Future Games |{" "}
+                          <span className="inline-block w-4 h-4 bg-gray-300 mr-1 align-middle"></span>
+                          No Game
                         </p>
                       </div>
 
