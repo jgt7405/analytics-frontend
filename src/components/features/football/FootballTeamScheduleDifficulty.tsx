@@ -1,7 +1,5 @@
 "use client";
 
-import TeamLogo from "@/components/ui/TeamLogo";
-import Image from "next/image";
 import { useMemo, useState } from "react";
 
 // Constants - Adjusted for mobile
@@ -371,12 +369,16 @@ export default function FootballTeamScheduleDifficulty({
             height: isMobile ? "24px" : "32px",
           }}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={logoUrl}
             alt="Team logo"
-            width={isMobile ? 24 : 32}
-            height={isMobile ? 24 : 32}
-            className="object-contain opacity-80"
+            style={{
+              width: isMobile ? "24px" : "32px",
+              height: isMobile ? "24px" : "32px",
+              objectFit: "contain",
+              opacity: 0.8,
+            }}
           />
         </div>
       )}
@@ -488,7 +490,7 @@ export default function FootballTeamScheduleDifficulty({
             return (
               <g key={uniqueKey}>
                 <line
-                  x1={circleX + (game.isRightSide ? 6 : -6)}
+                  x1={circleX + (game.isRightSide ? 4 : -4)}
                   x2={logoX + (game.isRightSide ? -16 : 16)}
                   y1={gameY}
                   y2={game.adjustedY}
@@ -500,7 +502,7 @@ export default function FootballTeamScheduleDifficulty({
                 <circle
                   cx={circleX}
                   cy={gameY}
-                  r={6}
+                  r={4}
                   fill={
                     game.status === "W"
                       ? "#10b981"
@@ -509,7 +511,7 @@ export default function FootballTeamScheduleDifficulty({
                         : "#6b7280"
                   }
                   stroke="white"
-                  strokeWidth={2}
+                  strokeWidth={1}
                 />
 
                 {game.opponent_logo && (
@@ -539,10 +541,15 @@ export default function FootballTeamScheduleDifficulty({
                         handleGameClick(game);
                       }}
                     >
-                      <TeamLogo
-                        logoUrl={game.opponent_logo}
-                        teamName={game.opponent}
-                        size={32}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={game.opponent_logo}
+                        alt={game.opponent}
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          objectFit: "contain",
+                        }}
                       />
                     </foreignObject>
 

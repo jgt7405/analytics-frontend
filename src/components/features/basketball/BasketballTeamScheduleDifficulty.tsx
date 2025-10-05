@@ -1,8 +1,6 @@
 // src/components/features/basketball/BasketballTeamScheduleDifficulty.tsx
 "use client";
 
-import TeamLogo from "@/components/ui/TeamLogo";
-import Image from "next/image";
 import { useMemo, useState } from "react";
 
 // Constants - Adjusted for basketball (more games, smaller logos)
@@ -405,12 +403,16 @@ export default function BasketballTeamScheduleDifficulty({
             height: isMobile ? "24px" : "32px",
           }}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={logoUrl}
             alt="Team logo"
-            width={isMobile ? 24 : 32}
-            height={isMobile ? 24 : 32}
-            className="object-contain opacity-80"
+            style={{
+              width: isMobile ? "24px" : "32px",
+              height: isMobile ? "24px" : "32px",
+              objectFit: "contain",
+              opacity: 0.8,
+            }}
           />
         </div>
       )}
@@ -578,10 +580,15 @@ export default function BasketballTeamScheduleDifficulty({
                         handleGameClick(game);
                       }}
                     >
-                      <TeamLogo
-                        logoUrl={game.opponent_logo}
-                        teamName={game.opponent}
-                        size={24}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={game.opponent_logo}
+                        alt={game.opponent}
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          objectFit: "contain",
+                        }}
                       />
                     </foreignObject>
 

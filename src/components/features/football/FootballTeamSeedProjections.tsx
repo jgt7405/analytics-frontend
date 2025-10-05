@@ -217,6 +217,7 @@ export default function FootballTeamSeedProjections({
       const count = entry.Count || 0;
       const confChampPct = entry.Conf_Champ_Pct || 0;
       const atLargePct = entry.At_Large_Pct || 0;
+      const seedValue = entry.Seed?.toString() || "None"; // ADD THIS LINE
 
       if (!winData[winsValue]) return;
 
@@ -244,11 +245,11 @@ export default function FootballTeamSeedProjections({
         winData[winsValue].rawCounts.statusDistribution["In Playoffs %"] +=
           count;
       } else {
-        // No numeric seed - track First/Next Four Out only
-        if (status === "First Four Out") {
+        // UPDATED: Check the Seed field for First/Next Four Out
+        if (seedValue === "First Four Out") {
           winData[winsValue].rawCounts.statusDistribution["First Four Out"] +=
             count;
-        } else if (status === "Next Four Out") {
+        } else if (seedValue === "Next Four Out") {
           winData[winsValue].rawCounts.statusDistribution["Next Four Out"] +=
             count;
         }
@@ -288,18 +289,6 @@ export default function FootballTeamSeedProjections({
         rowData.rawCounts.statusDistribution["First Four Out"];
       const nextFourOutCount =
         rowData.rawCounts.statusDistribution["Next Four Out"];
-
-      // Calculate bid category distribution percentages
-      const confChampCount =
-        rowData.rawCounts.bidCategoryDistribution["Conference Champion"];
-      const atLargeCount =
-        rowData.rawCounts.bidCategoryDistribution["At Large"];
-      const totalBidCount = confChampCount + atLargeCount;
-
-      rowData.bidCategoryDistribution["Conference Champion"] =
-        totalBidCount > 0 ? (confChampCount / totalBidCount) * 100 : 0;
-      rowData.bidCategoryDistribution["At Large"] =
-        totalBidCount > 0 ? (atLargeCount / totalBidCount) * 100 : 0;
 
       if (rowData.total > 0) {
         const inPlayoffsPct = (inPlayoffsCount / rowData.total) * 100;
