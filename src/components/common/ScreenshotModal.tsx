@@ -82,26 +82,33 @@ export default function ScreenshotModal({
   };
 
   const handleScreenshot = async (selector: string, label: string) => {
+    console.log("Screenshot started for selector:", selector);
+
     if (!html2canvasLoaded || typeof window.html2canvas !== "function") {
+      console.error("html2canvas not loaded");
       alert("Screenshot library not loaded.");
       return;
     }
 
+    console.log("html2canvas is loaded");
     setIsCapturing(true);
 
     try {
+      console.log("Looking for element:", selector);
       const targetElement = document.querySelector(selector);
+      console.log("Element found:", targetElement);
+
       if (!targetElement) throw new Error("Element not found");
 
       // Extract all Next.js image URLs and convert to base64
       const images = targetElement.querySelectorAll("img");
       const imageMap = new Map<HTMLImageElement, string>();
 
+      console.log("Converting images to base64...");
       for (const img of Array.from(images)) {
         const imgEl = img as HTMLImageElement;
         let originalUrl = imgEl.src;
 
-        // Extract original path from Next.js URL
         if (originalUrl.includes("/_next/image")) {
           try {
             const url = new URL(originalUrl);
@@ -120,18 +127,26 @@ export default function ScreenshotModal({
           const base64 = await imageToBase64(originalUrl);
           imageMap.set(imgEl, base64);
         } catch (e) {
-          console.error("Base64 conversion failed:", e);
+          console.error("Base64 conversion failed for:", originalUrl, e);
         }
       }
 
-      // Calculate width
-      const isChart = targetElement.querySelector("canvas") !== null;
+      console.log("Images converted, creating clone...");
+
+      // Calculate width based on actual content
       const table = targetElement.querySelector("table");
-      const actualWidth = table
-        ? (table as HTMLElement).offsetWidth + 200
-        : isChart
-          ? 1475
-          : 1200;
+      const isChart = targetElement.querySelector("canvas") !== null;
+
+      let actualWidth: number;
+      if (table) {
+        // Get the full scrollWidth of the table to include all columns
+        const tableScrollWidth = (table as HTMLElement).scrollWidth;
+        actualWidth = tableScrollWidth + 100; // Add padding
+      } else if (isChart) {
+        actualWidth = targetElement.scrollWidth + 100;
+      } else {
+        actualWidth = Math.max(targetElement.scrollWidth, 600) + 100;
+      }
 
       // Clone and replace images with base64
       const clone = targetElement.cloneNode(true) as HTMLElement;
@@ -141,6 +156,7 @@ export default function ScreenshotModal({
         "canvas"
       ) as HTMLCanvasElement;
       if (originalCanvas) {
+        console.log("Cloning canvas...");
         const tempCanvas = document.createElement("canvas");
         tempCanvas.width = originalCanvas.width;
         tempCanvas.height = originalCanvas.height;
@@ -164,6 +180,52 @@ export default function ScreenshotModal({
         }
       });
 
+      // Hide the component's internal title and logo
+      const componentTitle = clone.querySelector("h2");
+      if (componentTitle) {
+        componentTitle.style.display = "none";
+      }
+
+      const componentLogos = clone.querySelectorAll(".absolute img");
+      componentLogos.forEach((logo) => {
+        (logo as HTMLElement).style.display = "none";
+      });
+
+      // HANDLE SCROLLABLE TABLES: Remove overflow and sticky positioning
+      // Find and remove overflow from scrollable containers
+      const scrollableContainer = clone.querySelector('[style*="overflow"]');
+      if (scrollableContainer) {
+        (scrollableContainer as HTMLElement).style.overflow = "visible";
+        (scrollableContainer as HTMLElement).style.overflowX = "visible";
+      }
+
+      // Remove sticky positioning from all elements (this prevents layout issues)
+      const stickyElements = clone.querySelectorAll('[style*="sticky"]');
+      stickyElements.forEach((element) => {
+        (element as HTMLElement).style.position = "relative";
+      });
+
+      // Also remove sticky from table cells
+      const clonedTable = clone.querySelector("table");
+      if (clonedTable) {
+        // Remove sticky from all th and td elements
+        const stickyCells = clonedTable.querySelectorAll(
+          'th[style*="sticky"], td[style*="sticky"]'
+        );
+        stickyCells.forEach((cell) => {
+          (cell as HTMLElement).style.position = "relative";
+        });
+
+        // Ensure parent containers don't hide content
+        let parent = clonedTable.parentElement;
+        while (parent && parent !== clone) {
+          (parent as HTMLElement).style.overflow = "visible";
+          (parent as HTMLElement).style.overflowX = "visible";
+          parent = parent.parentElement;
+        }
+      }
+
+      console.log("Creating wrapper...");
       // Create wrapper
       const wrapper = document.createElement("div");
       wrapper.style.cssText = `position: fixed; left: -9999px; top: 0; background-color: white; padding: 24px 50px; width: ${actualWidth}px; z-index: -1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;`;
@@ -216,12 +278,30 @@ export default function ScreenshotModal({
       document.body.appendChild(wrapper);
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const canvas = await window.html2canvas(wrapper, {
+      console.log("Starting html2canvas render...");
+
+      // Add timeout to html2canvas
+      const renderPromise = window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
         scale: 2,
         logging: false,
+        useCORS: true,
+        allowTaint: false,
       });
 
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Screenshot timed out after 30 seconds")),
+          30000
+        )
+      );
+
+      const canvas = (await Promise.race([
+        renderPromise,
+        timeoutPromise,
+      ])) as HTMLCanvasElement;
+
+      console.log("Render complete, cleaning up...");
       document.body.removeChild(wrapper);
 
       const filename = teamName
@@ -232,6 +312,7 @@ export default function ScreenshotModal({
       link.href = canvas.toDataURL("image/png");
       link.click();
 
+      console.log("Download triggered");
       setIsCapturing(false);
       onClose();
     } catch (error) {

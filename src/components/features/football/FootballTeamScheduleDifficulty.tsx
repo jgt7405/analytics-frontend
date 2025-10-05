@@ -364,7 +364,7 @@ export default function FootballTeamScheduleDifficulty({
           className="absolute z-10"
           style={{
             top: "-30px",
-            right: "-5px",
+            right: "0px",
             width: isMobile ? "24px" : "32px",
             height: isMobile ? "24px" : "32px",
           }}
