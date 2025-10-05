@@ -144,7 +144,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
         textColor = "white";
         content = "W";
       } else if (game.status === "L") {
-        backgroundColor = "#fff7d6";
+        backgroundColor = "#ffe671";
         textColor = "black";
         content = "L";
       } else if (game.date) {
@@ -161,7 +161,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
         const isNextGame =
           teamGames.length > 0 && teamGames[0].rank === game.rank;
 
-        backgroundColor = isNextGame ? "#add8e6" : "#f0f0f0";
+        backgroundColor = isNextGame ? "#d6ebf2" : "#f0f0f0";
         content = formatDate(game.date);
         textColor = "#4b5563";
       }

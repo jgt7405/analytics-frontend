@@ -132,7 +132,7 @@ function BasketballScheduleTable({
 
       // Game results
       if (value === "W") return { backgroundColor: "#18627b", color: "white" }; // CWV win color
-      if (value === "L") return { backgroundColor: "#fff7d6", color: "black" }; // CWV loss color
+      if (value === "L") return { backgroundColor: "#ffe671", color: "black" }; // CWV loss color
 
       // Future games (dates)
       if (/^\d{1,2}\/\d{1,2}$/.test(value)) {
@@ -141,7 +141,7 @@ function BasketballScheduleTable({
           nextGame && nextGame.date === value && nextGame.rowIndex === rowIndex;
 
         if (isNextGame) {
-          return { backgroundColor: "#add8e6", color: "#4b5563" }; // Next game color (light blue)
+          return { backgroundColor: "#d6ebf2", color: "#4b5563" }; // Next game color (light blue)
         } else {
           return { backgroundColor: "#f0f0f0", color: "#4b5563" }; // Future games color (light gray)
         }

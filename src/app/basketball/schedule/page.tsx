@@ -289,14 +289,12 @@ export default function BasketballSchedulePage() {
                           <strong>Legend:</strong>{" "}
                           <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
                           Win |{" "}
-                          <span className="inline-block w-4 h-4 bg-[#fff7d6] border border-gray-300 mr-1 align-middle"></span>
+                          <span className="inline-block w-4 h-4 bg-[#ffe671] border border-gray-300 mr-1 align-middle"></span>
                           Loss |{" "}
-                          <span className="inline-block w-4 h-4 bg-[#add8e6] mr-1 align-middle"></span>
+                          <span className="inline-block w-4 h-4 bg-[#d6ebf2] mr-1 align-middle"></span>
                           Next Game |{" "}
                           <span className="inline-block w-4 h-4 bg-[#f0f0f0] mr-1 align-middle"></span>
-                          Future Games |{" "}
-                          <span className="inline-block w-4 h-4 bg-gray-300 mr-1 align-middle"></span>
-                          No Game
+                          Future Games
                         </p>
                       </div>
 

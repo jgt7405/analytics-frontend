@@ -134,7 +134,7 @@ function FootballScheduleTable({
       if (!value || typeof value !== "string") return {};
 
       if (value === "W") return { backgroundColor: "#18627b", color: "white" };
-      if (value === "L") return { backgroundColor: "#fff7d6", color: "black" };
+      if (value === "L") return { backgroundColor: "#ffe671", color: "black" };
 
       if (/^\d{1,2}\/\d{1,2}$/.test(value)) {
         const nextGame = nextGamesForTeams[teamName];
@@ -142,7 +142,7 @@ function FootballScheduleTable({
           nextGame && nextGame.date === value && nextGame.rowIndex === rowIndex;
 
         if (isNextGame) {
-          return { backgroundColor: "#add8e6", color: "#4b5563" };
+          return { backgroundColor: "#d6ebf2", color: "#4b5563" };
         } else {
           return { backgroundColor: "#f0f0f0", color: "#4b5563" };
         }
