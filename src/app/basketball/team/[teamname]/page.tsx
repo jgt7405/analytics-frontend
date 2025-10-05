@@ -1,6 +1,6 @@
-// src/app/basketball/team/[teamname]/page.tsx
 "use client";
 
+import ScreenshotModal from "@/components/common/ScreenshotModal";
 import BasketballTeamFirstPlaceHistory from "@/components/features/basketball/BasketballTeamFirstPlaceHistory";
 import BasketballTeamRankHistory from "@/components/features/basketball/BasketballTeamRankHistory";
 import BasketballTeamScheduleChart from "@/components/features/basketball/BasketballTeamScheduleChart";
@@ -18,6 +18,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
+import { Download } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -83,6 +84,7 @@ export default function BasketballTeamPage({
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
   const router = useRouter();
+  const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
 
   const teamname = decodeURIComponent(params.teamname);
 
@@ -138,6 +140,65 @@ export default function BasketballTeamPage({
     if (value === null || value === undefined) return "-";
     return `${Math.round(value)}%`;
   };
+
+  // Screenshot options
+  const screenshotOptions = [
+    {
+      id: "schedule",
+      label: "Team Schedule",
+      selector: ".basketball-team-schedule",
+    },
+    {
+      id: "schedule-chart",
+      label: "Schedule Chart",
+      selector: ".basketball-schedule-chart",
+    },
+    {
+      id: "schedule-difficulty",
+      label: "Schedule Difficulty",
+      selector: ".basketball-schedule-difficulty",
+    },
+    {
+      id: "win-values",
+      label: "Win Values Over Time",
+      selector: ".basketball-win-values",
+    },
+    {
+      id: "seed-projections",
+      label: "NCAA Tournament Seed Projections",
+      selector: ".basketball-seed-projections",
+    },
+    {
+      id: "rank-history",
+      label: "KenPom Rank History",
+      selector: ".basketball-rank-history",
+    },
+    {
+      id: "win-history",
+      label: "Projected Wins History",
+      selector: ".basketball-win-history",
+    },
+    {
+      id: "standings-history",
+      label: "Projected Standings History",
+      selector: ".basketball-standings-history",
+    },
+    {
+      id: "first-place-history",
+      label: "First Place Probability History",
+      selector: ".basketball-first-place-history",
+    },
+    {
+      id: "tournament-bid-history",
+      label: "NCAA Tournament Bid History",
+      selector: ".basketball-tournament-bid-history",
+    },
+    {
+      id: "tournament-progression-history",
+      label: "NCAA Tournament Progression History",
+      selector: ".basketball-tournament-progression-history",
+    },
+  ];
 
   if (!mounted || loading || !teamData) {
     return (
@@ -272,7 +333,7 @@ export default function BasketballTeamPage({
 
               {/* Mobile Schedule */}
               <div
-                className="bg-white rounded-lg mx-2 relative"
+                className="bg-white rounded-lg mx-2 relative basketball-team-schedule"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <div className="px-2 py-1 border-b border-gray-200 -mt-4 relative">
@@ -309,7 +370,7 @@ export default function BasketballTeamPage({
 
               {/* Mobile Schedule Chart */}
               <div
-                className="bg-white rounded-lg p-3 relative"
+                className="bg-white rounded-lg p-3 relative basketball-schedule-chart"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <div className="relative">
@@ -344,7 +405,7 @@ export default function BasketballTeamPage({
 
               {/* Mobile Win Values */}
               <div
-                className="bg-white rounded-lg p-3"
+                className="bg-white rounded-lg p-3 basketball-win-values"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -361,7 +422,7 @@ export default function BasketballTeamPage({
               {/* Mobile Schedule Difficulty */}
               {teamData.all_schedule_data && (
                 <div
-                  className="bg-white rounded-lg p-3"
+                  className="bg-white rounded-lg p-3 basketball-schedule-difficulty"
                   style={{ border: "1px solid #d1d5db" }}
                 >
                   <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -376,9 +437,23 @@ export default function BasketballTeamPage({
                 </div>
               )}
 
+              {/* Screenshot Button - Mobile */}
+              <div className="flex justify-end px-2 mt-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsScreenshotModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-xs bg-gray-700 text-white rounded-md hover:bg-gray-800 transition-colors border border-gray-700"
+                >
+                  <Download className="h-3 w-3" />
+                  Download
+                </button>
+              </div>
+
               {/* Mobile Seed Projections */}
               <div
-                className="bg-white rounded-lg p-3"
+                className="bg-white rounded-lg p-3 basketball-seed-projections"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -392,7 +467,7 @@ export default function BasketballTeamPage({
 
               {/* Mobile History Components */}
               <div
-                className="bg-white rounded-lg p-3"
+                className="bg-white rounded-lg p-3 basketball-rank-history"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -407,7 +482,7 @@ export default function BasketballTeamPage({
               </div>
 
               <div
-                className="bg-white rounded-lg p-3"
+                className="bg-white rounded-lg p-3 basketball-win-history"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -422,7 +497,7 @@ export default function BasketballTeamPage({
               </div>
 
               <div
-                className="bg-white rounded-lg p-3"
+                className="bg-white rounded-lg p-3 basketball-standings-history"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -437,7 +512,7 @@ export default function BasketballTeamPage({
               </div>
 
               <div
-                className="bg-white rounded-lg p-3"
+                className="bg-white rounded-lg p-3 basketball-first-place-history"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -452,7 +527,7 @@ export default function BasketballTeamPage({
               </div>
 
               <div
-                className="bg-white rounded-lg p-3"
+                className="bg-white rounded-lg p-3 basketball-tournament-bid-history"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -466,7 +541,7 @@ export default function BasketballTeamPage({
               </div>
 
               <div
-                className="bg-white rounded-lg p-3"
+                className="bg-white rounded-lg p-3 basketball-tournament-progression-history"
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -582,7 +657,7 @@ export default function BasketballTeamPage({
                 {/* Left Column - Schedules */}
                 <div className="space-y-3">
                   <div
-                    className="bg-white rounded-lg relative"
+                    className="bg-white rounded-lg relative basketball-team-schedule"
                     style={{ minWidth: "350px", border: "1px solid #d1d5db" }}
                   >
                     <div className="pt-0 px-3 pb-3 border-b border-gray-200 -mt-2 relative">
@@ -618,7 +693,7 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white rounded-lg p-3 relative"
+                    className="bg-white rounded-lg p-3 relative basketball-schedule-chart"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <div className="relative">
@@ -653,7 +728,7 @@ export default function BasketballTeamPage({
 
                   {teamData.all_schedule_data && (
                     <div
-                      className="bg-white rounded-lg p-3"
+                      className="bg-white rounded-lg p-3 basketball-schedule-difficulty"
                       style={{ border: "1px solid #d1d5db" }}
                     >
                       <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -667,12 +742,23 @@ export default function BasketballTeamPage({
                       />
                     </div>
                   )}
+
+                  {/* Screenshot Button - Desktop */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setIsScreenshotModalOpen(true)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs bg-gray-700 text-white rounded-md hover:bg-gray-800 transition-colors border border-gray-700"
+                    >
+                      <Download className="h-3 w-3" />
+                      Download
+                    </button>
+                  </div>
                 </div>
 
                 {/* Right Column - Charts */}
                 <div className="space-y-3 col-span-2">
                   <div
-                    className="bg-white rounded-lg p-3"
+                    className="bg-white rounded-lg p-3 basketball-win-values"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -687,7 +773,7 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white rounded-lg p-3"
+                    className="bg-white rounded-lg p-3 basketball-seed-projections"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -700,7 +786,7 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white rounded-lg p-3"
+                    className="bg-white rounded-lg p-3 basketball-rank-history"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -715,7 +801,7 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white rounded-lg p-3"
+                    className="bg-white rounded-lg p-3 basketball-win-history"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -730,7 +816,7 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white rounded-lg p-3"
+                    className="bg-white rounded-lg p-3 basketball-standings-history"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -745,7 +831,7 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white rounded-lg p-3"
+                    className="bg-white rounded-lg p-3 basketball-first-place-history"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -760,7 +846,7 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white rounded-lg p-3"
+                    className="bg-white rounded-lg p-3 basketball-tournament-bid-history"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -774,7 +860,7 @@ export default function BasketballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white rounded-lg p-3"
+                    className="bg-white rounded-lg p-3 basketball-tournament-progression-history"
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -791,6 +877,15 @@ export default function BasketballTeamPage({
             </div>
           )}
         </div>
+
+        {/* Screenshot Modal */}
+        <ScreenshotModal
+          isOpen={isScreenshotModalOpen}
+          onClose={() => setIsScreenshotModalOpen(false)}
+          options={screenshotOptions}
+          teamName={team_info.team_name}
+          teamLogoUrl={team_info.logo_url}
+        />
       </div>
     </ErrorBoundary>
   );
