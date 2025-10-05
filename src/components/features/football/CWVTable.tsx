@@ -47,7 +47,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
     };
   }, [sortedTeams]);
 
-  // Color function for CWV values - matches TWV table exactly
+  // Color function for CWV values
   const getCWVColor = useCallback(
     (cwv: number) => {
       const blue = [24, 98, 123]; // Dark blue for positive values
@@ -57,23 +57,19 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
       let r: number, g: number, b: number;
 
       if (cwv > 0) {
-        // Positive values: interpolate from white to dark blue
         const ratio = Math.min(Math.abs(cwv / maxCWV), 1);
         r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
         g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
         b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
       } else if (cwv < 0) {
-        // Negative values: interpolate from white to yellow
         const ratio = Math.min(Math.abs(cwv / minCWV), 1);
         r = Math.round(white[0] + (yellow[0] - white[0]) * ratio);
         g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
         b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
       } else {
-        // Zero values remain white
         [r, g, b] = white;
       }
 
-      // Calculate brightness for text color contrast
       const brightness = (r * 299 + g * 587 + b * 114) / 1000;
       const textColor = brightness > 140 ? "#000000" : "#ffffff";
 
@@ -122,7 +118,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
       const day = date.getDate().toString().padStart(2, "0");
       return `${month}/${day}`;
     } catch {
-      return dateStr;
+      return "";
     }
   }, []);
 
@@ -144,26 +140,43 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
         textColor = "white";
         content = "W";
       } else if (game.status === "L") {
-        backgroundColor = "#ffe671"; // Dark yellow matching lowest CWV values
+        backgroundColor = "#ffe671";
         textColor = "black";
         content = "L";
-      } else if (game.date) {
-        const currentDate = new Date();
+      } else if (game.status && game.status !== "W" && game.status !== "L") {
+        // Status contains a date string for future games
+        try {
+          const gameDate = new Date(game.status);
+          content = formatDate(game.status);
 
-        // Find the next game for this specific team
-        const teamGames = Object.values(gamesByRankAndTeam)
-          .map((rankGames) => rankGames[teamName])
-          .filter((g) => g && g.date && new Date(g.date) > currentDate)
-          .sort(
-            (a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime()
-          );
+          // Find all future games for this team (status is a date, not W/L)
+          const currentDate = new Date();
+          const teamGames = Object.values(gamesByRankAndTeam)
+            .map((rankGames) => rankGames[teamName])
+            .filter(
+              (g) =>
+                g &&
+                g.status &&
+                g.status !== "W" &&
+                g.status !== "L" &&
+                new Date(g.status) > currentDate
+            )
+            .sort(
+              (a, b) =>
+                new Date(a.status!).getTime() - new Date(b.status!).getTime()
+            );
 
-        const isNextGame =
-          teamGames.length > 0 && teamGames[0].rank === game.rank;
+          const isNextGame =
+            teamGames.length > 0 &&
+            teamGames[0].rank === game.rank &&
+            gameDate > currentDate;
 
-        backgroundColor = isNextGame ? "#d6ebf2" : "#f0f0f0"; // Lighter blue for next game
-        content = formatDate(game.date);
-        textColor = "#4b5563";
+          backgroundColor = isNextGame ? "#d6ebf2" : "#f0f0f0";
+          textColor = "#4b5563";
+        } catch (error) {
+          // If date parsing fails, leave blank
+          content = "";
+        }
       }
 
       return (
@@ -191,7 +204,6 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
   const maxVisibleRows = shouldVirtualize ? 50 : ranks.length;
   const visibleRanks = ranks.slice(0, maxVisibleRows);
 
-  // EXACT basketball CWV dimensions
   const firstColWidth = isMobile ? 32 : 40;
   const secondColWidth = isMobile ? 50 : 70;
   const teamColWidth = isMobile ? 40 : 64;
@@ -262,10 +274,9 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
                   <TeamLogo
                     logoUrl={team.logo_url}
                     teamName={team.team_name}
-                    size={26} // EXACT basketball size
+                    size={26}
                     className="flex-shrink-0"
                   />
-                  {/* NO team name text - logos only like basketball */}
                 </div>
               </th>
             ))}
@@ -329,7 +340,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             </tr>
           ))}
 
-          {/* EXACT basketball summary rows format with CWV color shading */}
+          {/* Summary rows */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
@@ -373,7 +384,6 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             ))}
           </tr>
 
-          {/* Current Record row */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
@@ -411,7 +421,6 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
             ))}
           </tr>
 
-          {/* Est Avg Team Record row */}
           <tr className="bg-gray-50">
             <td
               colSpan={2}
