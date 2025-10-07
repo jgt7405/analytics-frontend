@@ -170,7 +170,7 @@ export default function BasketballTeamTournamentBidHistory({
         label: "NCAA Tournament Bid Probability",
         data: data.map((item, index) => ({
           x: labels[index],
-          y: item.tournament_bid_pct,
+          y: item.tournament_bid_pct * 100,
         })),
         borderColor: primaryColor,
         backgroundColor: primaryColor,
@@ -273,7 +273,7 @@ export default function BasketballTeamTournamentBidHistory({
             const datasetIndex = context.datasetIndex;
 
             if (datasetIndex === 0) {
-              const bidPct = data[dataIndex].tournament_bid_pct || 0;
+              const bidPct = (data[dataIndex].tournament_bid_pct || 0) * 100;
               return `NCAA Bid Probability: ${bidPct.toFixed(1)}%`;
             } else if (datasetIndex === 1) {
               const avgSeed = data[dataIndex].average_seed || 0;
