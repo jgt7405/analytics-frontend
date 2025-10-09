@@ -97,21 +97,35 @@ export default function TeamWinValues({
 
     const gameWithDates: GameWithDate[] = validGames.map((game) => {
       const [month, day] = game.date.split("/").map(Number);
-      const year = month >= 9 ? 2024 : 2025;
+      // Changed: Use 2025 for months 9-12, 2026 for months 1-8
+      const year = month >= 9 ? 2025 : 2026;
       const dateObj = new Date(year, month - 1, day);
       return { ...game, dateObj };
     });
 
     gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
-    const startDate = new Date(2024, 8, 22); // September 22, 2024
+    const startDate = new Date(2025, 8, 22); // Changed to September 22, 2025
+
+    // Find the last game with actual data (status W or L)
+    const completedGames = gameWithDates.filter(
+      (game) => game.status === "W" || game.status === "L"
+    );
+
+    // Use either the last completed game date or today, whichever is earlier
+    const lastGameDate =
+      completedGames.length > 0
+        ? completedGames[completedGames.length - 1].dateObj
+        : new Date();
+
     const currentDate = new Date();
-    currentDate.setHours(23, 59, 59, 999);
+    const endDate = lastGameDate < currentDate ? lastGameDate : currentDate;
+    endDate.setHours(23, 59, 59, 999);
 
     const allDates: Date[] = [];
     const iterDate = new Date(startDate);
 
-    while (iterDate <= currentDate) {
+    while (iterDate <= endDate) {
       allDates.push(new Date(iterDate));
       iterDate.setDate(iterDate.getDate() + 1);
     }

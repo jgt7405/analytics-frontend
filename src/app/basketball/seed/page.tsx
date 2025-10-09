@@ -1,3 +1,4 @@
+// src/app/basketball/seed/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
@@ -140,7 +141,10 @@ export default function SeedPage() {
                 <div className="seed-table">
                   <Suspense fallback={<BasketballTableSkeleton />}>
                     {seedResponse?.data && (
-                      <SeedTable seedData={seedResponse.data} />
+                      <SeedTable
+                        seedData={seedResponse.data}
+                        showAllTeams={selectedConference === "All Teams"}
+                      />
                     )}
                   </Suspense>
                 </div>

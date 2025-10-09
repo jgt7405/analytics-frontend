@@ -183,6 +183,7 @@ export default function NCAATeamPage() {
                         <NCAATeamTable
                           ncaaData={ncaaData}
                           className="ncaa-table"
+                          showAllTeams={selectedConference === "All Teams"}
                         />
                       )}
                     </Suspense>

@@ -135,7 +135,10 @@ export default function FootballCFPPage() {
                 <div className="cfp-table">
                   <Suspense fallback={<BasketballTableSkeleton />}>
                     {cfpResponse?.data && (
-                      <FootballCFPTable cfpData={cfpResponse.data} />
+                      <FootballCFPTable
+                        cfpData={cfpResponse.data}
+                        showAllTeams={selectedConference === "All Teams"}
+                      />
                     )}
                   </Suspense>
                 </div>

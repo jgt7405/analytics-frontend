@@ -1,3 +1,4 @@
+// src/app/football/seed/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
@@ -112,12 +113,13 @@ export default function FootballSeedPage() {
                     <FootballSeedTable
                       seedData={seedResponse.data}
                       className="seed-table"
+                      showAllTeams={selectedConference === "All Teams"}
                     />
                   )}
                 </Suspense>
               </div>
 
-              {/* Buttons and Explainer in side-by-side layout - FIXED POSITIONING */}
+              {/* Buttons and Explainer in side-by-side layout */}
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
                   {/* Explainer text on the left - takes remaining space */}
@@ -137,7 +139,7 @@ export default function FootballSeedPage() {
                     </div>
                   </div>
 
-                  {/* Action buttons on the right - FIXED: better spacing from edge */}
+                  {/* Action buttons on the right */}
                   <div
                     className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
                   >
