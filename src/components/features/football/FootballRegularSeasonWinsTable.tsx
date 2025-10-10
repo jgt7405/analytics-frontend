@@ -275,6 +275,43 @@ function FootballRegularSeasonWinsTable({
               </td>
             ))}
           </tr>
+
+          {/* Curr Record row */}
+          <tr className="bg-gray-50" key="curr-record-row">
+            <td
+              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: firstColWidth,
+                height: summaryRowHeight,
+                position: "sticky",
+                left: 0,
+                border: "1px solid #e5e7eb",
+                borderTop: "none",
+              }}
+            >
+              Curr Record
+            </td>
+            {sortedTeams.map((team, index) => {
+              const wins = team.actual_total_wins || 0;
+              const losses = team.actual_total_losses || 0;
+              return (
+                <td
+                  key={`${team.team_id}-${team.team_name}-curr-record-${index}`}
+                  className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  style={{
+                    height: summaryRowHeight,
+                    width: teamColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    backgroundColor: "#f9fafb",
+                  }}
+                >
+                  {wins}-{losses}
+                </td>
+              );
+            })}
+          </tr>
         </tbody>
       </table>
     </div>

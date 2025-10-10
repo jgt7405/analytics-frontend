@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { Standing } from "@/types/basketball";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 
 interface BballRegSeasonWinsTableProps {
   standings: Standing[];
@@ -52,16 +52,6 @@ function BballRegSeasonWinsTable({
     [maxWins]
   );
 
-  useEffect(() => {
-    console.log("BballRegSeasonWinsTable - standings:", standings);
-    console.log(
-      "First team reg_wins_distribution:",
-      standings[0]?.reg_wins_distribution
-    );
-    console.log("Max wins calculation:", maxWins);
-    console.log("Win columns:", winColumns);
-  }, [standings, maxWins, winColumns]);
-
   if (!standings || standings.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">
@@ -102,7 +92,7 @@ function BballRegSeasonWinsTable({
                 maxWidth: firstColWidth,
                 height: headerHeight,
                 border: "1px solid #e5e7eb",
-                borderBottom: "2px solid #d1d5db",
+                borderRight: "1px solid #e5e7eb",
               }}
             >
               Wins
@@ -110,7 +100,7 @@ function BballRegSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <th
                 key={`header-${team.team_name}-${index}`}
-                className={`text-center font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 text-center font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
@@ -118,8 +108,6 @@ function BballRegSeasonWinsTable({
                   height: headerHeight,
                   border: "1px solid #e5e7eb",
                   borderLeft: "none",
-                  borderBottom: "2px solid #d1d5db",
-                  backgroundColor: "#f9fafb",
                 }}
               >
                 <div className="flex justify-center items-center h-full">
@@ -129,7 +117,7 @@ function BballRegSeasonWinsTable({
                     size={isMobile ? 20 : 24}
                     className="flex-shrink-0"
                     onClick={() => navigateToTeam(team.team_name)}
-                    showTooltip={false} // Add this line
+                    showTooltip={false}
                   />
                 </div>
               </th>
@@ -158,7 +146,7 @@ function BballRegSeasonWinsTable({
               {sortedTeams.map((team, index) => {
                 const percentage =
                   team.reg_wins_distribution?.[wins.toString()] || 0;
-                const colorStyle = getCellColor(percentage / 100);
+                const colorStyle = getCellColor(percentage);
 
                 return (
                   <td
@@ -197,7 +185,8 @@ function BballRegSeasonWinsTable({
                 position: "sticky",
                 left: 0,
                 border: "1px solid #e5e7eb",
-                borderTop: "2px solid #d1d5db",
+                borderTop: "2px solid #4b5563",
+                borderRight: "1px solid #e5e7eb",
               }}
             >
               Avg
@@ -205,14 +194,13 @@ function BballRegSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_name}-avg-reg-${index}`}
-                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
                   border: "1px solid #e5e7eb",
-                  borderTop: "2px solid #d1d5db",
+                  borderTop: "2px solid #4b5563",
                   borderLeft: "none",
-                  backgroundColor: "#f9fafb",
                 }}
               >
                 {(team.avg_reg_season_wins || 0).toFixed(1)}
@@ -231,6 +219,7 @@ function BballRegSeasonWinsTable({
                 left: 0,
                 border: "1px solid #e5e7eb",
                 borderTop: "none",
+                borderRight: "1px solid #e5e7eb",
               }}
             >
               Est #40 Wins
@@ -238,14 +227,13 @@ function BballRegSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_name}-kp40-reg-${index}`}
-                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderLeft: "none",
-                  backgroundColor: "#f9fafb",
                 }}
               >
                 {(team.avg_kp40_reg_season_wins || 0).toFixed(1)}
@@ -264,6 +252,7 @@ function BballRegSeasonWinsTable({
                 left: 0,
                 border: "1px solid #e5e7eb",
                 borderTop: "none",
+                borderRight: "1px solid #e5e7eb",
               }}
             >
               TWV
@@ -271,19 +260,54 @@ function BballRegSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_name}-twv-reg-${index}`}
-                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
                   border: "1px solid #e5e7eb",
                   borderTop: "none",
                   borderLeft: "none",
-                  backgroundColor: "#f9fafb",
                 }}
               >
                 {(team.reg_season_twv || 0).toFixed(1)}
               </td>
             ))}
+          </tr>
+
+          {/* Curr Record row */}
+          <tr className="bg-gray-50">
+            <td
+              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: firstColWidth,
+                height: summaryRowHeight,
+                position: "sticky",
+                left: 0,
+                border: "1px solid #e5e7eb",
+                borderTop: "none",
+                borderRight: "1px solid #e5e7eb",
+              }}
+            >
+              Curr Record
+            </td>
+            {sortedTeams.map((team, index) => {
+              const record = team.overall_record || "0-0";
+              return (
+                <td
+                  key={`${team.team_name}-curr-record-${index}`}
+                  className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  style={{
+                    height: summaryRowHeight,
+                    width: teamColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                  }}
+                >
+                  {record}
+                </td>
+              );
+            })}
           </tr>
         </tbody>
       </table>

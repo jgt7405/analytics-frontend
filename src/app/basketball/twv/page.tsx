@@ -210,6 +210,7 @@ export default function TWVPage() {
                         <TWVTable
                           twvData={twvResponse.data}
                           className="twv-table"
+                          showAllTeams={selectedConference === "All Teams"}
                         />
                       )}
                     </Suspense>

@@ -173,6 +173,7 @@ function FootballWinsTable({ standings, className }: FootballWinsTableProps) {
             </tr>
           ))}
 
+          {/* Average Wins Row */}
           <tr className="bg-gray-50">
             <td
               className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
@@ -208,6 +209,48 @@ function FootballWinsTable({ standings, className }: FootballWinsTableProps) {
                   }}
                 >
                   {avgWins.toFixed(1)}
+                </td>
+              );
+            })}
+          </tr>
+
+          {/* Current Conference Record Row */}
+          <tr className="bg-gray-50">
+            <td
+              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: firstColWidth,
+                minWidth: firstColWidth,
+                maxWidth: firstColWidth,
+                height: summaryRowHeight,
+                position: "sticky",
+                left: 0,
+                border: "1px solid #e5e7eb",
+                borderTop: "none",
+                borderRight: "1px solid #e5e7eb",
+              }}
+            >
+              Curr Conf Record
+            </td>
+            {sortedTeams.map((team) => {
+              const confWins = team.actual_conference_wins || 0;
+              const confLosses = team.actual_conference_losses || 0;
+              return (
+                <td
+                  key={`${team.team_id}-${team.team_name}-curr`}
+                  className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  style={{
+                    height: summaryRowHeight,
+                    width: teamColWidth,
+                    minWidth: teamColWidth,
+                    maxWidth: teamColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    backgroundColor: "#f9fafb",
+                  }}
+                >
+                  {confWins}-{confLosses}
                 </td>
               );
             })}

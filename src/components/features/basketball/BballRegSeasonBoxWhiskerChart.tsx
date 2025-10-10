@@ -15,19 +15,6 @@ interface BballRegSeasonBoxWhiskerChartProps {
 export default function BballRegSeasonBoxWhiskerChart({
   standings,
 }: BballRegSeasonBoxWhiskerChartProps) {
-  useEffect(() => {
-    console.log("BballRegSeasonBoxWhiskerChart - standings:", standings);
-    console.log("First team reg season fields:", {
-      avg_reg_season_wins: standings[0]?.avg_reg_season_wins,
-      wins_reg_05: standings[0]?.wins_reg_05,
-      wins_reg_25: standings[0]?.wins_reg_25,
-      wins_reg_50: standings[0]?.wins_reg_50,
-      wins_reg_75: standings[0]?.wins_reg_75,
-      wins_reg_95: standings[0]?.wins_reg_95,
-      avg_kp40_reg_season_wins: standings[0]?.avg_kp40_reg_season_wins,
-    });
-  }, [standings]);
-
   const router = useRouter();
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
@@ -40,10 +27,6 @@ export default function BballRegSeasonBoxWhiskerChart({
       ),
     [standings]
   );
-
-  useEffect(() => {
-    console.log("Component updated at:", new Date().toISOString());
-  }, []);
 
   useEffect(() => {
     setMounted(true);

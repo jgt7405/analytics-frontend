@@ -8,7 +8,7 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
-import { useConferenceUrl } from "@/hooks/useConferenceUrl"; // ADD THIS
+import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useFootballTWV } from "@/hooks/useFootballTWV";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -32,7 +32,7 @@ export default function FootballTWVPage() {
     refetch,
   } = useFootballTWV(selectedConference);
 
-  // ADD THIS: Use the conference URL hook for consistent URL state management
+  // Use the conference URL hook for consistent URL state management
   const { handleConferenceChange: handleUrlConferenceChange } =
     useConferenceUrl(setSelectedConference, availableConferences);
 
@@ -44,7 +44,7 @@ export default function FootballTWVPage() {
     }
   }, [twvResponse]);
 
-  // Handle conference changes - REPLACE the existing handleConferenceChange
+  // Handle conference changes
   const handleConferenceChange = (conference: string) => {
     // Use the URL-aware conference change handler
     handleUrlConferenceChange(conference);
@@ -193,6 +193,7 @@ export default function FootballTWVPage() {
                         <FootballTWVTable
                           twvData={twvResponse.data}
                           className="twv-table"
+                          showAllTeams={selectedConference === "All Teams"}
                         />
                       )}
                     </Suspense>
