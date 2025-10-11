@@ -1,12 +1,14 @@
 // src/app/football/compare/page.tsx
 "use client";
 
+import CompareScreenshotModal from "@/components/common/CompareScreenshotModal";
 import FootballTeamCFPBidHistory from "@/components/features/football/FootballTeamCFPBidHistory";
 import FootballTeamScheduleDifficulty from "@/components/features/football/FootballTeamScheduleDifficulty";
 import FootballTeamStandingsHistory from "@/components/features/football/FootballTeamStandingsHistory";
 import FootballTeamWinHistory from "@/components/features/football/FootballTeamWinHistory";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useRouter } from "next/navigation";
@@ -75,6 +77,7 @@ export default function FootballComparePage() {
   const [columns, setColumns] = useState<TeamColumn[]>([]);
   const [nextColumnId, setNextColumnId] = useState(1);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
 
   const navigateToTeamPage = (teamName: string) => {
     router.push(`/football/team/${encodeURIComponent(teamName)}`);
@@ -180,6 +183,11 @@ export default function FootballComparePage() {
       )
     );
   };
+
+  // Get visible team names for the screenshot modal
+  const visibleTeamNames = columns
+    .filter((col) => col.teamData)
+    .map((col) => col.teamData!.team_info.team_name);
 
   const renderTeamControls = (column: TeamColumn, index: number) => {
     const teams =
@@ -310,10 +318,14 @@ export default function FootballComparePage() {
     }
 
     return (
-      <div className="flex-shrink-0 w-80 space-y-2">
+      <div
+        className="flex-shrink-0 w-80 space-y-2"
+        data-team-name={column.teamData.team_info.team_name}
+      >
         <div className="border border-gray-300 rounded-lg p-3">
           <h5 className="text-sm font-semibold mb-2">Schedule Difficulty</h5>
           <div
+            data-component="schedule-difficulty"
             style={{
               width: "400px",
               height: "525px",
@@ -333,33 +345,39 @@ export default function FootballComparePage() {
 
         <div className="border border-gray-300 rounded-lg p-3">
           <h5 className="text-sm font-semibold mb-2">Projected Wins History</h5>
-          <FootballTeamWinHistory
-            teamName={column.teamData.team_info.team_name}
-            primaryColor={column.teamData.team_info.primary_color}
-            secondaryColor={column.teamData.team_info.secondary_color}
-            logoUrl={column.teamData.team_info.logo_url}
-          />
+          <div data-component="win-history">
+            <FootballTeamWinHistory
+              teamName={column.teamData.team_info.team_name}
+              primaryColor={column.teamData.team_info.primary_color}
+              secondaryColor={column.teamData.team_info.secondary_color}
+              logoUrl={column.teamData.team_info.logo_url}
+            />
+          </div>
         </div>
 
         <div className="border border-gray-300 rounded-lg p-3">
           <h5 className="text-sm font-semibold mb-2">
             Projected Standings History
           </h5>
-          <FootballTeamStandingsHistory
-            teamName={column.teamData.team_info.team_name}
-            primaryColor={column.teamData.team_info.primary_color}
-            secondaryColor={column.teamData.team_info.secondary_color}
-            logoUrl={column.teamData.team_info.logo_url}
-          />
+          <div data-component="standings-history">
+            <FootballTeamStandingsHistory
+              teamName={column.teamData.team_info.team_name}
+              primaryColor={column.teamData.team_info.primary_color}
+              secondaryColor={column.teamData.team_info.secondary_color}
+              logoUrl={column.teamData.team_info.logo_url}
+            />
+          </div>
         </div>
 
         <div className="border border-gray-300 rounded-lg p-3">
           <h5 className="text-sm font-semibold mb-2">CFP Bid History</h5>
-          <FootballTeamCFPBidHistory
-            teamName={column.teamData.team_info.team_name}
-            primaryColor={column.teamData.team_info.primary_color}
-            secondaryColor={column.teamData.team_info.secondary_color}
-          />
+          <div data-component="cfp-bid-history">
+            <FootballTeamCFPBidHistory
+              teamName={column.teamData.team_info.team_name}
+              primaryColor={column.teamData.team_info.primary_color}
+              secondaryColor={column.teamData.team_info.secondary_color}
+            />
+          </div>
         </div>
       </div>
     );
@@ -379,26 +397,40 @@ export default function FootballComparePage() {
     <PageLayoutWrapper title="Compare Teams" isLoading={false}>
       <ErrorBoundary level="page">
         <div className="h-screen flex flex-col">
-          <div className="flex-shrink-0 p-4 -mt-8">
-            {columns.length > 0 && (
-              <div className="flex justify-end -mt-12 mb-0">
-                <button
-                  onClick={clearAllColumns}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                >
-                  Clear All
-                </button>
-              </div>
-            )}
+          {/* Button section at top */}
+          {columns.length > 0 && (
+            <div className="flex justify-end gap-3 px-4 py-2 bg-white border-b border-gray-200 -mt-6">
+              <button
+                onClick={() => setIsScreenshotModalOpen(true)}
+                disabled={visibleTeamNames.length === 0}
+                className="px-4 py-2 text-xs bg-gray-700 text-white rounded-md hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 transition-colors border border-gray-700"
+                title={
+                  visibleTeamNames.length === 0
+                    ? "Select teams to enable download"
+                    : "Download comparison"
+                }
+              >
+                <Download className="w-3 h-3" />
+                Download
+              </button>
+              <button
+                onClick={clearAllColumns}
+                className="px-4 py-2 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-800 transition-colors"
+              >
+                Clear All
+              </button>
+            </div>
+          )}
 
+          <div className="flex-shrink-0 p-4">
             {columns.length === 0 && (
-              <div className="text-center py-8 -mt-8">
+              <div className="text-center py-8">
                 <p className="text-gray-500 mb-4">
                   No teams selected for comparison
                 </p>
                 <button
                   onClick={addColumn}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Add First Team
                 </button>
@@ -439,6 +471,13 @@ export default function FootballComparePage() {
             </div>
           )}
         </div>
+
+        {/* Screenshot Modal */}
+        <CompareScreenshotModal
+          isOpen={isScreenshotModalOpen}
+          onClose={() => setIsScreenshotModalOpen(false)}
+          visibleTeams={visibleTeamNames}
+        />
       </ErrorBoundary>
     </PageLayoutWrapper>
   );

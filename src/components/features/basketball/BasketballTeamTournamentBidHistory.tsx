@@ -231,7 +231,9 @@ export default function BasketballTeamTournamentBidHistory({
           font: {
             size: isMobile ? 10 : 12,
           },
-          color: finalSecondaryColor,
+          color: "#6b7280",
+          usePointStyle: true,
+          padding: isMobile ? 15 : 20,
         },
       },
       tooltip: {
