@@ -375,6 +375,9 @@ export default function WinsPage() {
                             Box shows 25th to 75th percentile, whiskers show 5th
                             to 95th percentile range.
                           </div>
+                          <div style={{ marginTop: "6px" }}>
+                            X indicates estimated victories for 30th rated team.
+                          </div>
                         </div>
                       </div>
 

@@ -72,6 +72,7 @@ export default function FootballChampGameHistoryChart({
   );
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -152,17 +153,44 @@ export default function FootballChampGameHistoryChart({
     .filter((team) => team.should_show)
     .sort((a, b) => b.final_pct - a.final_pct);
 
-  const datasets = Object.entries(teamData).map(([teamName, team]) => ({
-    label: teamName,
-    data: team.data,
-    borderColor: team.team_info.primary_color || "#000000",
-    backgroundColor: team.team_info.primary_color || "#000000",
-    borderWidth: 2,
-    pointRadius: 0,
-    pointHoverRadius: 4,
-    tension: 0.1,
-    fill: false,
-  }));
+  // All teams sorted by final percentage for bottom logos
+  const allTeamsSorted = Object.entries(teamData)
+    .map(([teamName, team]) => {
+      const finalPct = team.data[team.data.length - 1]?.y || 0;
+      return {
+        team_name: teamName,
+        final_pct: finalPct,
+        team_info: team.team_info,
+      };
+    })
+    .sort((a, b) => b.final_pct - a.final_pct);
+
+  const handleTeamClick = (teamName: string) => {
+    if (selectedTeam === teamName) {
+      setSelectedTeam(null);
+    } else {
+      setSelectedTeam(teamName);
+    }
+  };
+
+  const datasets = Object.entries(teamData).map(([teamName, team]) => {
+    const isSelected = selectedTeam === null || selectedTeam === teamName;
+    const color = isSelected
+      ? team.team_info.primary_color || "#000000"
+      : "#d1d5db";
+
+    return {
+      label: teamName,
+      data: team.data,
+      borderColor: color,
+      backgroundColor: color,
+      borderWidth: isSelected ? 2 : 1,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.1,
+      fill: false,
+    };
+  });
 
   const chartData = {
     labels: dates,
@@ -428,7 +456,13 @@ export default function FootballChampGameHistoryChart({
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom - 15;
 
-    const positions = teamsForLogos.map((team) => ({
+    // Include teams that are either above threshold OR selected
+    const visibleTeams =
+      selectedTeam === null
+        ? teamsForLogos
+        : allTeamsSorted.filter((t) => t.team_name === selectedTeam);
+
+    const positions = visibleTeams.map((team) => ({
       team,
       idealY: getChartJsYPosition(team.final_pct) || 0,
       adjustedY: getChartJsYPosition(team.final_pct) || 0,
@@ -478,72 +512,127 @@ export default function FootballChampGameHistoryChart({
   }
 
   return (
-    <div className="relative" style={{ height: chartHeight }}>
-      <Line ref={chartRef} data={chartData} options={options} />
+    <div>
+      <div className="relative" style={{ height: chartHeight }}>
+        <Line ref={chartRef} data={chartData} options={options} />
 
-      {chartDimensions && (
-        <div
-          className="absolute left-0 top-0 pointer-events-none"
-          style={{ width: "100%", height: "100%" }}
-        >
-          {getAdjustedLogoPositions().map(
-            ({ team, idealY, adjustedY, endX }) => {
-              const teamColor = team.team_info.primary_color || "#94a3b8";
-              return (
-                <div key={`end-${team.team_name}`}>
-                  <svg
-                    className="absolute top-0 left-0"
+        {chartDimensions && (
+          <div
+            className="absolute left-0 top-0 pointer-events-none"
+            style={{ width: "100%", height: "100%" }}
+          >
+            {getAdjustedLogoPositions().map(
+              ({ team, idealY, adjustedY, endX }) => {
+                const isSelected =
+                  selectedTeam === null || selectedTeam === team.team_name;
+                const teamColor = isSelected
+                  ? team.team_info.primary_color || "#94a3b8"
+                  : "#d1d5db";
+                return (
+                  <div key={`end-${team.team_name}`}>
+                    <svg
+                      className="absolute top-0 left-0"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <line
+                        x1={endX}
+                        y1={idealY}
+                        x2={endX + 12}
+                        y2={adjustedY}
+                        stroke={teamColor}
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                        opacity="0.7"
+                      />
+                    </svg>
+                  </div>
+                );
+              }
+            )}
+
+            <div className="absolute right-0 top-0">
+              {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
+                const isSelected =
+                  selectedTeam === null || selectedTeam === team.team_name;
+                return (
+                  <div
+                    key={`logo-${team.team_name}`}
+                    className="absolute flex items-center"
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      pointerEvents: "none",
+                      right: "0px",
+                      top: `${adjustedY - 12}px`,
+                      zIndex: 10,
+                      opacity: isSelected ? 1 : 0.3,
                     }}
                   >
-                    <line
-                      x1={endX}
-                      y1={idealY}
-                      x2={endX + 12}
-                      y2={adjustedY}
-                      stroke={teamColor}
-                      strokeWidth="1"
-                      strokeDasharray="2,2"
-                      opacity="0.7"
+                    <TeamLogo
+                      logoUrl={
+                        team.team_info.logo_url ||
+                        "/images/team_logos/default.png"
+                      }
+                      teamName={team.team_name}
+                      size={24}
                     />
-                  </svg>
-                </div>
-              );
-            }
-          )}
-
-          <div className="absolute right-0 top-0">
-            {getAdjustedLogoPositions().map(({ team, adjustedY }) => (
-              <div
-                key={`logo-${team.team_name}`}
-                className="absolute flex items-center"
-                style={{ right: "0px", top: `${adjustedY - 12}px`, zIndex: 10 }}
-              >
-                <TeamLogo
-                  logoUrl={
-                    team.team_info.logo_url || "/images/team_logos/default.png"
-                  }
-                  teamName={team.team_name}
-                  size={24}
-                />
-                <span
-                  className="text-xs font-medium ml-2"
-                  style={{
-                    color: team.team_info.primary_color || "#000000",
-                    minWidth: "35px",
-                    textAlign: "left",
-                  }}
-                >
-                  {Math.round(team.final_pct)}%
-                </span>
-              </div>
-            ))}
+                    <span
+                      className="text-xs font-medium ml-2"
+                      style={{
+                        color: isSelected
+                          ? team.team_info.primary_color || "#000000"
+                          : "#d1d5db",
+                        minWidth: "35px",
+                        textAlign: "left",
+                      }}
+                    >
+                      {Math.round(team.final_pct)}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Bottom logo selector - smaller size */}
+      <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
+        {allTeamsSorted.map((team) => {
+          const isSelected =
+            selectedTeam === null || selectedTeam === team.team_name;
+          return (
+            <button
+              key={team.team_name}
+              onClick={() => handleTeamClick(team.team_name)}
+              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+              style={{
+                opacity: isSelected ? 1 : 0.3,
+                filter: isSelected ? "none" : "grayscale(100%)",
+              }}
+            >
+              <TeamLogo
+                logoUrl={
+                  team.team_info.logo_url || "/images/team_logos/default.png"
+                }
+                teamName={team.team_name}
+                size={isMobile ? 24 : 28}
+              />
+              <span
+                className="text-[10px] font-medium"
+                style={{
+                  color: isSelected
+                    ? team.team_info.primary_color || "#000000"
+                    : "#9ca3af",
+                }}
+              >
+                {Math.round(team.final_pct)}%
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -231,12 +231,18 @@ export default function CWVPage() {
                           style={{ lineHeight: "1.3" }}
                         >
                           <div>
-                            Conference Win Value (CWV) shows the expected win
-                            probability for each game ranked by difficulty.
+                            Win Prob is an allocation of probabilities that a
+                            team that finishes .500 in conference would win each
+                            game, favoring easier matchups.
                           </div>
                           <div style={{ marginTop: "6px" }}>
-                            Games are color-coded: blue for wins, yellow for
-                            losses, and gray for upcoming games.
+                            Conf Win Value (CWV) compares the actual wins to
+                            expected wins for a .500 team with that same
+                            schedule.
+                          </div>
+                          <div style={{ marginTop: "6px" }}>
+                            This only reflects past results, not future
+                            projections or predictions of final standings.
                           </div>
                         </div>
                       </div>

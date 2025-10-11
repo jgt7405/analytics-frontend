@@ -226,8 +226,8 @@ export default function TWVPage() {
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Positive values indicate overperformance, negative
-                            values indicate underperformance relative to a
-                            top-30 team.
+                            values indicate underperformance relative to the
+                            30th rated team.
                           </div>
                         </div>
                       </div>

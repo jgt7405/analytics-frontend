@@ -145,8 +145,9 @@ export default function FootballCWVPage() {
                             game, favoring easier matchups.
                           </div>
                           <div style={{ marginTop: "6px" }}>
-                            Conf Win Value compares the actual wins to expected
-                            wins for a .500 team with that same schedule.
+                            Conf Win Value (CWV) compares the actual wins to
+                            expected wins for a .500 team with that same
+                            schedule.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             This only reflects past results, not future

@@ -95,7 +95,7 @@ function BballRegSeasonWinsTable({
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Wins
+              Reg Season Wins
             </th>
             {sortedTeams.map((team, index) => (
               <th
@@ -189,7 +189,7 @@ function BballRegSeasonWinsTable({
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Avg
+              Avg Reg Season Wins
             </td>
             {sortedTeams.map((team, index) => (
               <td
@@ -222,7 +222,7 @@ function BballRegSeasonWinsTable({
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Est #40 Wins
+              Est #30 Wins
             </td>
             {sortedTeams.map((team, index) => (
               <td
