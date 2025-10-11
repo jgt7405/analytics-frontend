@@ -194,12 +194,12 @@ export default function NCAATeamPage() {
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
-                            NCAA Tournament round advancement probabilities for
-                            all teams.
+                            Probabilities to reach each round of the NCAA
+                            touranment based on 1,000 season simulations using
+                            KenPom ratings.
                           </div>
                           <div style={{ marginTop: "6px" }}>
-                            Shows the probability of reaching each tournament
-                            round from First Round to Championship.
+                            Darker colors indicate higher probabilities.
                           </div>
                         </div>
                       </div>

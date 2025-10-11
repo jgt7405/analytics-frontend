@@ -69,6 +69,9 @@ export default function FootballConfBidsHistoryChart({
   > | null>(null);
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
+  const [selectedConferences, setSelectedConferences] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -139,18 +142,6 @@ export default function FootballConfBidsHistoryChart({
     ),
   ];
 
-  const datasets = Object.entries(confData).map(([confName, conf]) => ({
-    label: confName,
-    data: conf.data,
-    borderColor: conf.conf_info.primary_color || "#666666",
-    backgroundColor: "transparent",
-    borderWidth: 2,
-    pointRadius: 0,
-    pointHoverRadius: 4,
-    tension: 0.1,
-    fill: false,
-  }));
-
   const conferencesForLogos = Object.entries(confData)
     .map(([confName, conf]) => {
       const finalBids = conf.data[conf.data.length - 1]?.y || 0;
@@ -163,6 +154,63 @@ export default function FootballConfBidsHistoryChart({
     })
     .filter((conf) => conf.final_bids > 0.3)
     .sort((a, b) => b.final_bids - a.final_bids);
+
+  // All conferences sorted by final bids for bottom logos
+  const allConferencesSorted = Object.entries(confData)
+    .map(([confName, conf]) => {
+      const finalBids = conf.data[conf.data.length - 1]?.y || 0;
+      return {
+        conference_name: confName,
+        final_bids: finalBids,
+        conf_info: conf.conf_info,
+      };
+    })
+    .sort((a, b) => b.final_bids - a.final_bids);
+
+  const handleConferenceClick = (confName: string) => {
+    setSelectedConferences((prev) => {
+      const newSet = new Set(prev);
+
+      // If all conferences are currently selected (none explicitly selected)
+      if (newSet.size === 0) {
+        // Select only this conference
+        newSet.add(confName);
+      } else if (newSet.has(confName)) {
+        // If this conference is selected, deselect it
+        newSet.delete(confName);
+        // If no conferences left selected, show all conferences
+        if (newSet.size === 0) {
+          return new Set();
+        }
+      } else {
+        // Add this conference to the selection
+        newSet.add(confName);
+      }
+
+      return newSet;
+    });
+  };
+
+  const datasets = Object.entries(confData).map(([confName, conf]) => {
+    // Show conference if no conferences are selected OR this conference is in the selected set
+    const isSelected =
+      selectedConferences.size === 0 || selectedConferences.has(confName);
+    const color = isSelected
+      ? conf.conf_info.primary_color || "#666666"
+      : "#d1d5db";
+
+    return {
+      label: confName,
+      data: conf.data,
+      borderColor: color,
+      backgroundColor: "transparent",
+      borderWidth: isSelected ? 2 : 1,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.1,
+      fill: false,
+    };
+  });
 
   const chartData = {
     labels: allDates,
@@ -429,29 +477,56 @@ export default function FootballConfBidsHistoryChart({
 
   const getAdjustedLogoPositions = () => {
     if (!chartDimensions) return [];
-    const minSpacing = 40;
+    const minSpacing = 28;
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom;
     const logoHeight = 24;
 
-    const positions = conferencesForLogos.map((conf) => ({
+    // Show logos for conferences that are either:
+    // 1. Above threshold AND (no selection OR in selection)
+    // 2. Below threshold but IN selection
+    const visibleConferences =
+      selectedConferences.size === 0
+        ? conferencesForLogos
+        : allConferencesSorted.filter((c) =>
+            selectedConferences.has(c.conference_name)
+          );
+
+    const positions = visibleConferences.map((conf) => ({
       conf,
       idealY: getChartJsYPosition(conf.final_bids) || 0,
       adjustedY: getChartJsYPosition(conf.final_bids) || 0,
     }));
 
-    positions.sort((a, b) => a.conf.final_bids - b.conf.final_bids);
+    // If only one conference visible, don't adjust - use ideal position
+    if (positions.length === 1) {
+      return positions;
+    }
 
+    // Sort by final_bids descending (highest to lowest) to stack from top
+    positions.sort((a, b) => b.conf.final_bids - a.conf.final_bids);
+
+    // First pass: try to place all logos at their ideal positions
     for (let i = 0; i < positions.length; i++) {
-      if (i === 0) {
+      positions[i].adjustedY = positions[i].idealY;
+    }
+
+    // Second pass: adjust for collisions, working from top to bottom
+    for (let i = positions.length - 1; i >= 0; i--) {
+      // Ensure within chart bounds
+      if (positions[i].adjustedY > chartBottom - logoHeight) {
         positions[i].adjustedY = chartBottom - logoHeight;
-      } else {
-        const previousY = positions[i - 1].adjustedY;
-        const proposedY = previousY - minSpacing;
-        const idealY = positions[i].idealY;
-        positions[i].adjustedY = Math.min(idealY, proposedY);
-        if (positions[i].adjustedY < chartTop) {
-          positions[i].adjustedY = chartTop;
+      }
+      if (positions[i].adjustedY < chartTop) {
+        positions[i].adjustedY = chartTop;
+      }
+
+      // Check for collision with logo below (higher index, lower on chart)
+      if (i < positions.length - 1) {
+        const lowerLogo = positions[i + 1];
+        const minY = lowerLogo.adjustedY - minSpacing;
+        if (positions[i].adjustedY > minY) {
+          positions[i].adjustedY = minY;
         }
       }
     }
@@ -490,7 +565,12 @@ export default function FootballConfBidsHistoryChart({
             }}
           >
             {logoPositions.map(({ conf, idealY, adjustedY }) => {
-              const confColor = conf.conf_info.primary_color || "#94a3b8";
+              const isSelected =
+                selectedConferences.size === 0 ||
+                selectedConferences.has(conf.conference_name);
+              const confColor = isSelected
+                ? conf.conf_info.primary_color || "#94a3b8"
+                : "#d1d5db";
               const logoUrl = conf.conf_info.logo_url;
 
               return (
@@ -522,6 +602,7 @@ export default function FootballConfBidsHistoryChart({
                     style={{
                       top: `${adjustedY - 12}px`,
                       right: "25px",
+                      opacity: isSelected ? 1 : 0.3,
                     }}
                   >
                     {logoUrl ? (
@@ -532,6 +613,9 @@ export default function FootballConfBidsHistoryChart({
                         height={24}
                         className="object-contain"
                         unoptimized
+                        style={{
+                          filter: isSelected ? "none" : "grayscale(100%)",
+                        }}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = "none";
@@ -560,7 +644,7 @@ export default function FootballConfBidsHistoryChart({
                     <span
                       className="text-xs font-medium ml-2"
                       style={{
-                        color: confColor,
+                        color: isSelected ? confColor : "#d1d5db",
                         minWidth: "35px",
                         textAlign: "left",
                       }}
@@ -573,6 +657,73 @@ export default function FootballConfBidsHistoryChart({
             })}
           </div>
         )}
+      </div>
+
+      {/* Bottom logo selector */}
+      <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
+        {allConferencesSorted.map((conf) => {
+          const isSelected =
+            selectedConferences.size === 0 ||
+            selectedConferences.has(conf.conference_name);
+          const logoUrl = conf.conf_info.logo_url;
+          const confColor = conf.conf_info.primary_color || "#666666";
+
+          return (
+            <button
+              key={conf.conference_name}
+              onClick={() => handleConferenceClick(conf.conference_name)}
+              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+              style={{
+                opacity: isSelected ? 1 : 0.3,
+                filter: isSelected ? "none" : "grayscale(100%)",
+              }}
+            >
+              {logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt={conf.conference_name}
+                  width={isMobile ? 24 : 28}
+                  height={isMobile ? 24 : 28}
+                  className="object-contain"
+                  unoptimized
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    const parent = target.parentElement;
+                    if (parent && !parent.querySelector(".fallback-square")) {
+                      const fallback = document.createElement("div");
+                      fallback.className = "rounded border fallback-square";
+                      fallback.style.width = isMobile ? "24px" : "28px";
+                      fallback.style.height = isMobile ? "24px" : "28px";
+                      fallback.style.backgroundColor = confColor;
+                      fallback.title = conf.conference_name;
+                      parent.appendChild(fallback);
+                    }
+                  }}
+                  title={conf.conference_name}
+                />
+              ) : (
+                <div
+                  className="rounded border"
+                  style={{
+                    width: isMobile ? "24px" : "28px",
+                    height: isMobile ? "24px" : "28px",
+                    backgroundColor: confColor,
+                  }}
+                  title={conf.conference_name}
+                />
+              )}
+              <span
+                className="text-[10px] font-medium"
+                style={{
+                  color: isSelected ? confColor : "#9ca3af",
+                }}
+              >
+                {conf.final_bids.toFixed(1)}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

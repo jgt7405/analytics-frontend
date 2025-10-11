@@ -74,6 +74,7 @@ export default function BballStandingsHistoryChart({
   );
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
+  const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -147,16 +148,55 @@ export default function BballStandingsHistoryChart({
     .filter((item) => item.date === lastDate)
     .sort((a, b) => a.avg_standing - b.avg_standing);
 
-  const datasets = Object.entries(teamData).map(([teamName, team]) => ({
-    label: teamName,
-    data: team.data,
-    borderColor: team.team_info.primary_color || "#000000",
-    backgroundColor: team.team_info.primary_color || "#000000",
-    borderWidth: 2,
-    pointRadius: 0,
-    pointHoverRadius: 4,
-    tension: 0.1,
+  // All teams sorted by final standing for bottom logos
+  const allTeamsSorted = finalStandings.map((item) => ({
+    team_name: item.team_name,
+    avg_standing: item.avg_standing,
+    team_info: item.team_info,
   }));
+
+  const handleTeamClick = (teamName: string) => {
+    setSelectedTeams((prev) => {
+      const newSet = new Set(prev);
+
+      // If all teams are currently selected (none explicitly selected)
+      if (newSet.size === 0) {
+        // Select only this team
+        newSet.add(teamName);
+      } else if (newSet.has(teamName)) {
+        // If this team is selected, deselect it
+        newSet.delete(teamName);
+        // If no teams left selected, show all teams
+        if (newSet.size === 0) {
+          return new Set();
+        }
+      } else {
+        // Add this team to the selection
+        newSet.add(teamName);
+      }
+
+      return newSet;
+    });
+  };
+
+  const datasets = Object.entries(teamData).map(([teamName, team]) => {
+    // Show team if no teams are selected OR this team is in the selected set
+    const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
+    const color = isSelected
+      ? team.team_info.primary_color || "#000000"
+      : "#d1d5db";
+
+    return {
+      label: teamName,
+      data: team.data,
+      borderColor: color,
+      backgroundColor: color,
+      borderWidth: isSelected ? 2 : 1,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      tension: 0.1,
+    };
+  });
 
   const chartData = {
     labels: dates,
@@ -405,7 +445,13 @@ export default function BballStandingsHistoryChart({
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom - 15;
 
-    const positions = finalStandings.map((team) => {
+    // Show logos for teams that are either all teams OR selected teams
+    const visibleTeams =
+      selectedTeams.size === 0
+        ? finalStandings
+        : finalStandings.filter((team) => selectedTeams.has(team.team_name));
+
+    const positions = visibleTeams.map((team) => {
       const teamDataPoint = teamData[team.team_name];
       const lastPoint = teamDataPoint?.data[teamDataPoint.data.length - 1];
       const idealY =
@@ -417,6 +463,11 @@ export default function BballStandingsHistoryChart({
         adjustedY: idealY,
       };
     });
+
+    // If only one team visible, don't adjust - use ideal position
+    if (positions.length === 1) {
+      return positions;
+    }
 
     positions.sort((a, b) => a.team.avg_standing - b.team.avg_standing);
 
@@ -456,7 +507,11 @@ export default function BballStandingsHistoryChart({
             style={{ width: "100%", height: "100%" }}
           >
             {getAdjustedLogoPositions().map(({ team, idealY, adjustedY }) => {
-              const teamColor = team.team_info.primary_color || "#94a3b8";
+              const isSelected =
+                selectedTeams.size === 0 || selectedTeams.has(team.team_name);
+              const teamColor = isSelected
+                ? team.team_info.primary_color || "#94a3b8"
+                : "#d1d5db";
 
               return (
                 <div key={`end-${team.team_name}`}>
@@ -485,6 +540,8 @@ export default function BballStandingsHistoryChart({
 
             <div className="absolute right-0 top-0">
               {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
+                const isSelected =
+                  selectedTeams.size === 0 || selectedTeams.has(team.team_name);
                 const teamDataPoint = teamData[team.team_name];
                 const lastPoint =
                   teamDataPoint?.data[teamDataPoint.data.length - 1];
@@ -497,20 +554,29 @@ export default function BballStandingsHistoryChart({
                       right: "25px",
                       top: `${adjustedY - 10}px`,
                       zIndex: 10,
+                      opacity: isSelected ? 1 : 0.3,
                     }}
                   >
-                    <TeamLogo
-                      logoUrl={
-                        team.team_info.logo_url ||
-                        "/images/team_logos/default.png"
-                      }
-                      teamName={team.team_name}
-                      size={20}
-                    />
+                    <div
+                      style={{
+                        filter: isSelected ? "none" : "grayscale(100%)",
+                      }}
+                    >
+                      <TeamLogo
+                        logoUrl={
+                          team.team_info.logo_url ||
+                          "/images/team_logos/default.png"
+                        }
+                        teamName={team.team_name}
+                        size={20}
+                      />
+                    </div>
                     <span
                       className="text-xs font-medium ml-2"
                       style={{
-                        color: team.team_info.primary_color || "#000000",
+                        color: isSelected
+                          ? team.team_info.primary_color || "#000000"
+                          : "#d1d5db",
                         minWidth: "35px",
                         textAlign: "left",
                       }}
@@ -523,6 +589,43 @@ export default function BballStandingsHistoryChart({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Bottom logo selector */}
+      <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
+        {allTeamsSorted.map((team) => {
+          const isSelected =
+            selectedTeams.size === 0 || selectedTeams.has(team.team_name);
+          return (
+            <button
+              key={team.team_name}
+              onClick={() => handleTeamClick(team.team_name)}
+              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+              style={{
+                opacity: isSelected ? 1 : 0.3,
+                filter: isSelected ? "none" : "grayscale(100%)",
+              }}
+            >
+              <TeamLogo
+                logoUrl={
+                  team.team_info.logo_url || "/images/team_logos/default.png"
+                }
+                teamName={team.team_name}
+                size={isMobile ? 24 : 28}
+              />
+              <span
+                className="text-[10px] font-medium"
+                style={{
+                  color: isSelected
+                    ? team.team_info.primary_color || "#000000"
+                    : "#9ca3af",
+                }}
+              >
+                {team.avg_standing.toFixed(1)}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
