@@ -72,7 +72,7 @@ export default function FootballChampGameHistoryChart({
   );
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -166,15 +166,32 @@ export default function FootballChampGameHistoryChart({
     .sort((a, b) => b.final_pct - a.final_pct);
 
   const handleTeamClick = (teamName: string) => {
-    if (selectedTeam === teamName) {
-      setSelectedTeam(null);
-    } else {
-      setSelectedTeam(teamName);
-    }
+    setSelectedTeams((prev) => {
+      const newSet = new Set(prev);
+
+      // If all teams are currently selected (none explicitly selected)
+      if (newSet.size === 0) {
+        // Select only this team
+        newSet.add(teamName);
+      } else if (newSet.has(teamName)) {
+        // If this team is selected, deselect it
+        newSet.delete(teamName);
+        // If no teams left selected, show all teams
+        if (newSet.size === 0) {
+          return new Set();
+        }
+      } else {
+        // Add this team to the selection
+        newSet.add(teamName);
+      }
+
+      return newSet;
+    });
   };
 
   const datasets = Object.entries(teamData).map(([teamName, team]) => {
-    const isSelected = selectedTeam === null || selectedTeam === teamName;
+    // Show team if no teams are selected OR this team is in the selected set
+    const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
     const color = isSelected
       ? team.team_info.primary_color || "#000000"
       : "#d1d5db";
@@ -456,11 +473,13 @@ export default function FootballChampGameHistoryChart({
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom - 15;
 
-    // Include teams that are either above threshold OR selected
+    // Show logos for teams that are either:
+    // 1. Above threshold AND (no selection OR in selection)
+    // 2. Below threshold but IN selection
     const visibleTeams =
-      selectedTeam === null
+      selectedTeams.size === 0
         ? teamsForLogos
-        : allTeamsSorted.filter((t) => t.team_name === selectedTeam);
+        : allTeamsSorted.filter((t) => selectedTeams.has(t.team_name));
 
     const positions = visibleTeams.map((team) => ({
       team,
@@ -524,7 +543,7 @@ export default function FootballChampGameHistoryChart({
             {getAdjustedLogoPositions().map(
               ({ team, idealY, adjustedY, endX }) => {
                 const isSelected =
-                  selectedTeam === null || selectedTeam === team.team_name;
+                  selectedTeams.size === 0 || selectedTeams.has(team.team_name);
                 const teamColor = isSelected
                   ? team.team_info.primary_color || "#94a3b8"
                   : "#d1d5db";
@@ -557,7 +576,7 @@ export default function FootballChampGameHistoryChart({
             <div className="absolute right-0 top-0">
               {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
                 const isSelected =
-                  selectedTeam === null || selectedTeam === team.team_name;
+                  selectedTeams.size === 0 || selectedTeams.has(team.team_name);
                 return (
                   <div
                     key={`logo-${team.team_name}`}
@@ -601,7 +620,7 @@ export default function FootballChampGameHistoryChart({
       <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
         {allTeamsSorted.map((team) => {
           const isSelected =
-            selectedTeam === null || selectedTeam === team.team_name;
+            selectedTeams.size === 0 || selectedTeams.has(team.team_name);
           return (
             <button
               key={team.team_name}

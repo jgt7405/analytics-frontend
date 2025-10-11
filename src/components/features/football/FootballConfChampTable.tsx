@@ -33,18 +33,15 @@ function FootballConfChampTable({
   };
 
   // Only show columns that have data (mirroring basketball logic)
-  const columns = ["Champ_Game", "Champion"];
-
   const fieldToLabel: Record<string, string> = {
     Champ_Game: "Champ\nGame",
     Champion: "Champion",
   };
 
   const activeColumns = useMemo(() => {
+    const columns = ["Champ_Game", "Champion"] as const;
     return columns.filter((column) =>
-      confChampData.some(
-        (team) => (team as any)[column] && (team as any)[column] > 0
-      )
+      confChampData.some((team) => team[column] && team[column]! > 0)
     );
   }, [confChampData]);
 
@@ -159,7 +156,7 @@ function FootballConfChampTable({
                 </div>
               </td>
               {activeColumns.map((column) => {
-                const value = (team as any)[column] || 0;
+                const value = team[column] || 0;
                 const colorStyle = getCellColor(value);
 
                 return (
