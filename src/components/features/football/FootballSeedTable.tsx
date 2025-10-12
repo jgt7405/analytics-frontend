@@ -18,6 +18,8 @@ interface FootballSeedTeam {
   cfp_bid_pct?: number;
   first_four_out?: number;
   next_four_out?: number;
+  conf_champ_overall_pct?: number;
+  at_large_overall_pct?: number;
 }
 
 interface FootballSeedTableProps {
@@ -31,6 +33,9 @@ type SortColumn =
   | "cfp_pct"
   | "first_four_out"
   | "next_four_out"
+  | "out_of_playoffs"
+  | "conf_champ"
+  | "at_large"
   | `seed_${number}`
   | null;
 
@@ -83,6 +88,18 @@ function FootballSeedTable({
         } else if (sortColumn === "next_four_out") {
           aVal = a.seed_distribution?.["Next Four Out"] || 0;
           bVal = b.seed_distribution?.["Next Four Out"] || 0;
+          if (aVal !== bVal) return bVal - aVal; // Higher % is better
+        } else if (sortColumn === "out_of_playoffs") {
+          aVal = 100 - (a.cfp_bid_pct || 0);
+          bVal = 100 - (b.cfp_bid_pct || 0);
+          if (aVal !== bVal) return bVal - aVal; // Higher % is better (more likely out)
+        } else if (sortColumn === "conf_champ") {
+          aVal = a.conf_champ_overall_pct || 0;
+          bVal = b.conf_champ_overall_pct || 0;
+          if (aVal !== bVal) return bVal - aVal; // Higher % is better
+        } else if (sortColumn === "at_large") {
+          aVal = a.at_large_overall_pct || 0;
+          bVal = b.at_large_overall_pct || 0;
           if (aVal !== bVal) return bVal - aVal; // Higher % is better
         } else if (sortColumn.startsWith("seed_")) {
           const seedNum = sortColumn.replace("seed_", "");
@@ -159,8 +176,8 @@ function FootballSeedTable({
   const firstColWidth = isMobile ? 60 : 140;
   const avgSeedColWidth = isMobile ? 50 : 70;
   const seedColWidth = isMobile ? 25 : 35;
-  const cfpColWidth = isMobile ? 50 : 70;
-  const outColWidth = isMobile ? 40 : 50;
+  const statusColWidth = isMobile ? 45 : 60;
+  const bidColWidth = isMobile ? 40 : 50;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
 
@@ -192,6 +209,16 @@ function FootballSeedTable({
     const b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
 
     return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: "black" };
+  };
+
+  const getCompactHeader = (label: string) => {
+    if (label === "In Playoffs %") return "In\nPlayoffs %";
+    if (label === "First Four Out") return "First\nFour Out";
+    if (label === "Next Four Out") return "Next\nFour Out";
+    if (label === "Out of Playoffs") return "Out of\nPlayoffs";
+    if (label === "Conference Champion") return "Conf\nChamp";
+    if (label === "At Large") return "At\nLarge";
+    return label;
   };
 
   if (!seedData || seedData.length === 0) {
@@ -240,11 +267,12 @@ function FootballSeedTable({
             borderSpacing: 0,
           }}
         >
-          {/* Rest of the table code remains exactly the same as before */}
           <thead>
+            {/* First header row - group headers */}
             <tr>
               {/* Rank Column */}
               <th
+                rowSpan={2}
                 className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: rankColWidth,
@@ -263,6 +291,7 @@ function FootballSeedTable({
 
               {/* Team Column */}
               <th
+                rowSpan={2}
                 className={`sticky z-30 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
@@ -280,9 +309,54 @@ function FootballSeedTable({
                 Team
               </th>
 
+              {/* Seed Group Header */}
+              <th
+                colSpan={seedColumns.length + 1}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid #e5e7eb",
+                  borderLeft: "none",
+                }}
+              >
+                Seed
+              </th>
+
+              {/* CFP Status Group Header */}
+              <th
+                colSpan={4}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid #e5e7eb",
+                  borderLeft: "none",
+                }}
+              >
+                CFP Status
+              </th>
+
+              {/* Bid Category Group Header */}
+              <th
+                colSpan={2}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid #e5e7eb",
+                  borderLeft: "none",
+                }}
+              >
+                Bid Category
+              </th>
+            </tr>
+
+            {/* Second header row - individual column headers */}
+            <tr>
               {/* Average Seed Column - Clickable */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   sortColumn === "avg_seed" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("avg_seed")}
@@ -291,15 +365,14 @@ function FootballSeedTable({
                   minWidth: avgSeedColWidth,
                   maxWidth: avgSeedColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
                   border: "1px solid #e5e7eb",
+                  borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
                 }}
                 title="Click to sort by average seed"
               >
-                Wgtd Avg{"\n"}Seed
+                Avg
                 {sortColumn === "avg_seed" && (
                   <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
@@ -309,7 +382,7 @@ function FootballSeedTable({
               {seedColumns.map((seed) => (
                 <th
                   key={`seed-${seed}`}
-                  className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                     sortColumn === `seed_${seed}` ? "bg-blue-100" : ""
                   } ${isMobile ? "text-xs" : "text-sm"}`}
                   onClick={() =>
@@ -320,9 +393,8 @@ function FootballSeedTable({
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
                     height: headerHeight,
-                    position: "sticky",
-                    top: 0,
                     border: "1px solid #e5e7eb",
+                    borderTop: "none",
                     borderLeft: "none",
                   }}
                   title={`Click to sort by seed ${seed}`}
@@ -334,26 +406,27 @@ function FootballSeedTable({
                 </th>
               ))}
 
-              {/* CFP % Column - Clickable */}
+              {/* In CFP % Column - Clickable */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   sortColumn === "cfp_pct" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("cfp_pct")}
                 style={{
-                  width: cfpColWidth,
-                  minWidth: cfpColWidth,
-                  maxWidth: cfpColWidth,
+                  width: statusColWidth,
+                  minWidth: statusColWidth,
+                  maxWidth: statusColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
                   border: "1px solid #e5e7eb",
+                  borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
                 }}
-                title="Click to sort by CFP %"
+                title="Click to sort by In Playoffs %"
               >
-                In{"\n"}CFP %
+                {getCompactHeader("In Playoffs %")}
                 {sortColumn === "cfp_pct" && (
                   <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
@@ -361,24 +434,25 @@ function FootballSeedTable({
 
               {/* First Four Out Column - Clickable */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   sortColumn === "first_four_out" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("first_four_out")}
                 style={{
-                  width: outColWidth,
-                  minWidth: outColWidth,
-                  maxWidth: outColWidth,
+                  width: statusColWidth,
+                  minWidth: statusColWidth,
+                  maxWidth: statusColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
                   border: "1px solid #e5e7eb",
+                  borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
                 }}
                 title="Click to sort by First Four Out"
               >
-                1st 4{"\n"}Out
+                {getCompactHeader("First Four Out")}
                 {sortColumn === "first_four_out" && (
                   <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
@@ -386,204 +460,356 @@ function FootballSeedTable({
 
               {/* Next Four Out Column - Clickable */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   sortColumn === "next_four_out" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("next_four_out")}
                 style={{
-                  width: outColWidth,
-                  minWidth: outColWidth,
-                  maxWidth: outColWidth,
+                  width: statusColWidth,
+                  minWidth: statusColWidth,
+                  maxWidth: statusColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
                   border: "1px solid #e5e7eb",
+                  borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
                 }}
                 title="Click to sort by Next Four Out"
               >
-                Nxt 4{"\n"}Out
+                {getCompactHeader("Next Four Out")}
                 {sortColumn === "next_four_out" && (
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                )}
+              </th>
+
+              {/* Out of Playoffs Column - Clickable */}
+              <th
+                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  sortColumn === "out_of_playoffs" ? "bg-blue-100" : ""
+                } ${isMobile ? "text-xs" : "text-sm"}`}
+                onClick={() => handleColumnClick("out_of_playoffs")}
+                style={{
+                  width: statusColWidth,
+                  minWidth: statusColWidth,
+                  maxWidth: statusColWidth,
+                  height: headerHeight,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
+                }}
+                title="Click to sort by Out of Playoffs"
+              >
+                {getCompactHeader("Out of Playoffs")}
+                {sortColumn === "out_of_playoffs" && (
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                )}
+              </th>
+
+              {/* Conference Champion Column - Clickable */}
+              <th
+                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  sortColumn === "conf_champ" ? "bg-blue-100" : ""
+                } ${isMobile ? "text-xs" : "text-sm"}`}
+                onClick={() => handleColumnClick("conf_champ")}
+                style={{
+                  width: bidColWidth,
+                  minWidth: bidColWidth,
+                  maxWidth: bidColWidth,
+                  height: headerHeight,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
+                }}
+                title="Click to sort by Conference Champion"
+              >
+                {getCompactHeader("Conference Champion")}
+                {sortColumn === "conf_champ" && (
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                )}
+              </th>
+
+              {/* At Large Column - Clickable */}
+              <th
+                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  sortColumn === "at_large" ? "bg-blue-100" : ""
+                } ${isMobile ? "text-xs" : "text-sm"}`}
+                onClick={() => handleColumnClick("at_large")}
+                style={{
+                  width: bidColWidth,
+                  minWidth: bidColWidth,
+                  maxWidth: bidColWidth,
+                  height: headerHeight,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
+                }}
+                title="Click to sort by At Large"
+              >
+                {getCompactHeader("At Large")}
+                {sortColumn === "at_large" && (
                   <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
               </th>
             </tr>
           </thead>
           <tbody>
-            {displayedTeams.map((team, index) => (
-              <tr key={`${team.team_name}-${index}`}>
-                {/* Rank Cell */}
-                <td
-                  className={`sticky left-0 z-20 bg-white text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  } font-medium`}
-                  style={{
-                    width: rankColWidth,
-                    minWidth: rankColWidth,
-                    maxWidth: rankColWidth,
-                    height: cellHeight,
-                    position: "sticky",
-                    left: 0,
-                    border: "1px solid #e5e7eb",
-                    borderTop: "none",
-                    borderRight: "1px solid #e5e7eb",
-                  }}
-                >
-                  {index + 1}
-                </td>
+            {displayedTeams.map((team, index) => {
+              const outOfPlayoffsPct = 100 - (team.cfp_bid_pct || 0);
 
-                {/* Team Cell */}
-                <td
-                  className={`sticky z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                  style={{
-                    width: firstColWidth,
-                    minWidth: firstColWidth,
-                    maxWidth: firstColWidth,
-                    height: cellHeight,
-                    position: "sticky",
-                    left: rankColWidth,
-                    border: "1px solid #e5e7eb",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderRight: "1px solid #e5e7eb",
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <TeamLogo
-                      logoUrl={team.logo_url}
-                      teamName={team.team_name}
-                      size={isMobile ? 20 : 22}
-                      onClick={() => navigateToTeam(team.team_name)}
-                    />
-                    {!isMobile && (
-                      <span className="truncate">{team.team_name}</span>
-                    )}
-                  </div>
-                </td>
+              return (
+                <tr key={`${team.team_name}-${index}`}>
+                  {/* Rank Cell */}
+                  <td
+                    className={`sticky left-0 z-20 bg-white text-center ${
+                      isMobile ? "text-xs" : "text-sm"
+                    } font-medium`}
+                    style={{
+                      width: rankColWidth,
+                      minWidth: rankColWidth,
+                      maxWidth: rankColWidth,
+                      height: cellHeight,
+                      position: "sticky",
+                      left: 0,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderRight: "1px solid #e5e7eb",
+                    }}
+                  >
+                    {index + 1}
+                  </td>
 
-                {/* Average Seed Cell */}
-                <td
-                  className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                  style={{
-                    width: avgSeedColWidth,
-                    minWidth: avgSeedColWidth,
-                    maxWidth: avgSeedColWidth,
-                    height: cellHeight,
-                    border: "1px solid #e5e7eb",
-                    borderTop: "none",
-                    borderLeft: "none",
-                  }}
-                >
-                  {team.average_seed ? team.average_seed.toFixed(1) : "-"}
-                </td>
+                  {/* Team Cell */}
+                  <td
+                    className={`sticky z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                    style={{
+                      width: firstColWidth,
+                      minWidth: firstColWidth,
+                      maxWidth: firstColWidth,
+                      height: cellHeight,
+                      position: "sticky",
+                      left: rankColWidth,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      borderRight: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <TeamLogo
+                        logoUrl={team.logo_url}
+                        teamName={team.team_name}
+                        size={isMobile ? 20 : 22}
+                        onClick={() => navigateToTeam(team.team_name)}
+                      />
+                      {!isMobile && (
+                        <span className="truncate">{team.team_name}</span>
+                      )}
+                    </div>
+                  </td>
 
-                {/* Seed Cells 1-12 */}
-                {seedColumns.map((seedNum) => {
-                  const value =
-                    team.seed_distribution &&
-                    team.seed_distribution[seedNum.toString()]
-                      ? team.seed_distribution[seedNum.toString()]
-                      : 0;
+                  {/* Average Seed Cell */}
+                  <td
+                    className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    style={{
+                      width: avgSeedColWidth,
+                      minWidth: avgSeedColWidth,
+                      maxWidth: avgSeedColWidth,
+                      height: cellHeight,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderLeft: "none",
+                    }}
+                  >
+                    {team.average_seed ? team.average_seed.toFixed(1) : "-"}
+                  </td>
 
-                  const cellColorStyle = getCellColor(value);
+                  {/* Seed Cells 1-12 */}
+                  {seedColumns.map((seedNum) => {
+                    const value =
+                      team.seed_distribution &&
+                      team.seed_distribution[seedNum.toString()]
+                        ? team.seed_distribution[seedNum.toString()]
+                        : 0;
 
-                  return (
-                    <td
-                      key={`${team.team_name}-seed-${seedNum}`}
-                      className="relative p-0"
-                      style={{
-                        height: cellHeight,
-                        width: seedColWidth,
-                        minWidth: seedColWidth,
-                        maxWidth: seedColWidth,
-                        border: "1px solid #e5e7eb",
-                        borderTop: "none",
-                        borderLeft: "none",
-                        ...cellColorStyle,
-                      }}
-                    >
-                      <div
-                        className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    const cellColorStyle = getCellColor(value);
+
+                    return (
+                      <td
+                        key={`${team.team_name}-seed-${seedNum}`}
+                        className="relative p-0"
+                        style={{
+                          height: cellHeight,
+                          width: seedColWidth,
+                          minWidth: seedColWidth,
+                          maxWidth: seedColWidth,
+                          border: "1px solid #e5e7eb",
+                          borderTop: "none",
+                          borderLeft: "none",
+                          ...cellColorStyle,
+                        }}
                       >
-                        {value > 0 ? `${Math.round(value)}%` : ""}
-                      </div>
-                    </td>
-                  );
-                })}
+                        <div
+                          className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                        >
+                          {value > 0 ? `${Math.round(value)}%` : ""}
+                        </div>
+                      </td>
+                    );
+                  })}
 
-                {/* CFP % Cell with blue coloring */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: cfpColWidth,
-                    minWidth: cfpColWidth,
-                    maxWidth: cfpColWidth,
-                    border: "1px solid #e5e7eb",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getCellColor(team.cfp_bid_pct || 0),
-                  }}
-                >
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                  {/* In CFP % Cell with blue coloring */}
+                  <td
+                    className="relative p-0"
+                    style={{
+                      height: cellHeight,
+                      width: statusColWidth,
+                      minWidth: statusColWidth,
+                      maxWidth: statusColWidth,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      ...getCellColor(team.cfp_bid_pct || 0),
+                    }}
                   >
-                    {formatCFPPct(team.cfp_bid_pct)}
-                  </div>
-                </td>
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    >
+                      {formatCFPPct(team.cfp_bid_pct)}
+                    </div>
+                  </td>
 
-                {/* First Four Out Cell */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: outColWidth,
-                    minWidth: outColWidth,
-                    maxWidth: outColWidth,
-                    border: "1px solid #e5e7eb",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getOutColor(
-                      team.seed_distribution?.["First Four Out"] || 0
-                    ),
-                  }}
-                >
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                  {/* First Four Out Cell */}
+                  <td
+                    className="relative p-0"
+                    style={{
+                      height: cellHeight,
+                      width: statusColWidth,
+                      minWidth: statusColWidth,
+                      maxWidth: statusColWidth,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      ...getOutColor(
+                        team.seed_distribution?.["First Four Out"] || 0
+                      ),
+                    }}
                   >
-                    {(team.seed_distribution?.["First Four Out"] || 0) > 0
-                      ? `${Math.round(team.seed_distribution["First Four Out"])}%`
-                      : ""}
-                  </div>
-                </td>
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    >
+                      {(team.seed_distribution?.["First Four Out"] || 0) > 0
+                        ? `${Math.round(team.seed_distribution["First Four Out"])}%`
+                        : ""}
+                    </div>
+                  </td>
 
-                {/* Next Four Out Cell */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: outColWidth,
-                    minWidth: outColWidth,
-                    maxWidth: outColWidth,
-                    border: "1px solid #e5e7eb",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getOutColor(
-                      team.seed_distribution?.["Next Four Out"] || 0
-                    ),
-                  }}
-                >
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                  {/* Next Four Out Cell */}
+                  <td
+                    className="relative p-0"
+                    style={{
+                      height: cellHeight,
+                      width: statusColWidth,
+                      minWidth: statusColWidth,
+                      maxWidth: statusColWidth,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      ...getOutColor(
+                        team.seed_distribution?.["Next Four Out"] || 0
+                      ),
+                    }}
                   >
-                    {(team.seed_distribution?.["Next Four Out"] || 0) > 0
-                      ? `${Math.round(team.seed_distribution["Next Four Out"])}%`
-                      : ""}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    >
+                      {(team.seed_distribution?.["Next Four Out"] || 0) > 0
+                        ? `${Math.round(team.seed_distribution["Next Four Out"])}%`
+                        : ""}
+                    </div>
+                  </td>
+
+                  {/* Out of Playoffs Cell */}
+                  <td
+                    className="relative p-0"
+                    style={{
+                      height: cellHeight,
+                      width: statusColWidth,
+                      minWidth: statusColWidth,
+                      maxWidth: statusColWidth,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      ...getOutColor(outOfPlayoffsPct),
+                    }}
+                  >
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    >
+                      {outOfPlayoffsPct > 0
+                        ? `${Math.round(outOfPlayoffsPct)}%`
+                        : ""}
+                    </div>
+                  </td>
+
+                  {/* Conference Champion Cell */}
+                  <td
+                    className="relative p-0"
+                    style={{
+                      height: cellHeight,
+                      width: bidColWidth,
+                      minWidth: bidColWidth,
+                      maxWidth: bidColWidth,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      ...getCellColor(team.conf_champ_overall_pct || 0),
+                    }}
+                  >
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    >
+                      {(team.conf_champ_overall_pct || 0) > 0
+                        ? `${Math.round(team.conf_champ_overall_pct || 0)}%`
+                        : ""}
+                    </div>
+                  </td>
+
+                  {/* At Large Cell */}
+                  <td
+                    className="relative p-0"
+                    style={{
+                      height: cellHeight,
+                      width: bidColWidth,
+                      minWidth: bidColWidth,
+                      maxWidth: bidColWidth,
+                      border: "1px solid #e5e7eb",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      ...getCellColor(team.at_large_overall_pct || 0),
+                    }}
+                  >
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    >
+                      {(team.at_large_overall_pct || 0) > 0
+                        ? `${Math.round(team.at_large_overall_pct || 0)}%`
+                        : ""}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

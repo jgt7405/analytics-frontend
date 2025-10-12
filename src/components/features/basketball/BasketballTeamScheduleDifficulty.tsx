@@ -3,8 +3,8 @@
 
 import { useMemo, useState } from "react";
 
-// Constants - Adjusted for basketball (more games, smaller logos)
-const CHART_HEIGHT = 450;
+// Constants - Adjusted height
+const CHART_HEIGHT = 700;
 const CHART_WIDTH_DESKTOP = 380;
 const CHART_WIDTH_MOBILE = 320;
 const MARGIN = { top: 20, right: 60, bottom: 40, left: 60 };
@@ -204,70 +204,86 @@ export default function BasketballTeamScheduleDifficulty({
   }, [teamGames, percentiles]);
 
   const positionedGames = useMemo((): PositionedGame[] => {
+    // Sort by difficulty (hardest first)
     const sortedByDifficulty = [...teamGamePositions].sort(
       (a, b) => a.percentilePosition - b.percentilePosition
     );
 
     const positioned: PositionedGame[] = [];
-    const minSpacing = 28;
+    const minSpacing = 28; // Minimum vertical spacing between logos
 
-    // Column assignment pattern
-    const columnPattern = [1, 2, 0, 3];
+    // Column assignment pattern: #1->column 0, #2->column 3, #3->column 1, #4->column 2
+    const columnPattern = [0, 3, 1, 2];
 
+    // Process games in difficulty order (hardest to easiest)
     sortedByDifficulty.forEach((game, index) => {
+      // Assign to columns based on pattern
       const columnIndex = columnPattern[index % 4];
       const isRightSide = columnIndex >= 2;
 
+      // Calculate the ideal Y position based on difficulty percentile
       const gameY = MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
-      let logoY = gameY;
+      let logoY = gameY; // Start at ideal position
 
-      // Check collisions only with games in the same column
-      const sameColumnLogos = positioned.filter(
-        (p) => p.columnIndex === columnIndex
-      );
+      // Get all previously placed logos in this column, sorted by Y position
+      const sameColumnLogos = positioned
+        .filter((p) => p.columnIndex === columnIndex)
+        .sort((a, b) => a.adjustedY - b.adjustedY);
 
-      // Only move if there's an actual collision
-      for (let attempts = 0; attempts < 50; attempts++) {
-        let hasCollision = false;
+      if (sameColumnLogos.length > 0) {
+        // Find the best position that minimizes total displacement
+        let bestY = logoY;
+        let minTotalDisplacement = Infinity;
 
-        for (const existingLogo of sameColumnLogos) {
-          const distance = Math.abs(logoY - existingLogo.adjustedY);
+        // Try different positions around the ideal position
+        const searchRange = 100; // Search 100 pixels up and down
+        const step = 2; // Check every 2 pixels
 
-          if (distance < minSpacing) {
-            hasCollision = true;
-
-            // Prefer moving down over moving up to keep logos near their dots
-            // But check if there's space in the preferred direction
-            const moveDown = existingLogo.adjustedY + minSpacing;
-            const moveUp = existingLogo.adjustedY - minSpacing;
-
-            // Check which direction has more space
-            if (game.percentilePosition < existingLogo.percentilePosition) {
-              // This game is above, prefer moving up
-              logoY = moveUp;
-            } else {
-              // This game is below, prefer moving down
-              logoY = moveDown;
+        for (
+          let testY = Math.max(MARGIN.top + 15, logoY - searchRange);
+          testY <= Math.min(MARGIN.top + PLOT_HEIGHT - 15, logoY + searchRange);
+          testY += step
+        ) {
+          // Check if this position has minimum spacing from all existing logos
+          let hasCollision = false;
+          for (const existing of sameColumnLogos) {
+            if (Math.abs(testY - existing.adjustedY) < minSpacing) {
+              hasCollision = true;
+              break;
             }
-            break;
+          }
+
+          if (!hasCollision) {
+            // Calculate total displacement if we use this position
+            const displacement = Math.abs(testY - gameY);
+
+            // Calculate what the total displacement would be for all games so far
+            const totalDisplacement =
+              displacement +
+              positioned.reduce(
+                (sum, p) =>
+                  sum +
+                  Math.abs(
+                    p.adjustedY -
+                      (MARGIN.top + (p.percentilePosition / 100) * PLOT_HEIGHT)
+                  ),
+                0
+              );
+
+            if (totalDisplacement < minTotalDisplacement) {
+              minTotalDisplacement = totalDisplacement;
+              bestY = testY;
+            }
           }
         }
 
-        if (!hasCollision) break;
+        logoY = bestY;
       }
 
-      // Apply staggered offset based on column
-      let staggerOffset = 0;
-      if (columnIndex === 0 || columnIndex === 3) {
-        staggerOffset = 12;
-      }
-
-      logoY = logoY + staggerOffset;
-
-      // Keep within bounds
+      // Ensure logo stays within chart bounds
       logoY = Math.max(
-        MARGIN.top + 20,
-        Math.min(MARGIN.top + PLOT_HEIGHT - 20, logoY)
+        MARGIN.top + 15,
+        Math.min(MARGIN.top + PLOT_HEIGHT - 15, logoY)
       );
 
       positioned.push({
@@ -518,7 +534,6 @@ export default function BasketballTeamScheduleDifficulty({
             const circleX = MARGIN.left + PLOT_WIDTH / 2;
 
             // Calculate logoX based on columnIndex
-            // Column 0 = far left (-85), 1 = near left (-45), 2 = near right (+45), 3 = far right (+85)
             const columnOffsets = [-85, -45, 45, 85];
             const logoX = circleX + columnOffsets[game.columnIndex];
 

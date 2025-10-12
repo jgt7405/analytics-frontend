@@ -18,6 +18,8 @@ interface SeedTeam {
   tournament_bid_pct?: number;
   first_four_out: number;
   next_four_out: number;
+  auto_bid_overall_pct?: number;
+  at_large_overall_pct?: number;
 }
 
 interface SeedTableProps {
@@ -29,8 +31,11 @@ interface SeedTableProps {
 type SortColumn =
   | "tournament_bid_pct"
   | "average_seed"
+  | "auto_bid_overall_pct"
+  | "at_large_overall_pct"
   | "first_four_out"
   | "next_four_out"
+  | "out_of_tourney"
   | string; // For seed columns like "1", "2", etc.
 
 function SeedTable({
@@ -85,6 +90,16 @@ function SeedTable({
               : 999;
           // Sort ascending (lowest first)
           if (aVal !== bVal) return aVal - bVal;
+        } else if (sortColumn === "auto_bid_overall_pct") {
+          aVal = a.auto_bid_overall_pct || 0;
+          bVal = b.auto_bid_overall_pct || 0;
+          // Sort descending (highest first)
+          if (aVal !== bVal) return bVal - aVal;
+        } else if (sortColumn === "at_large_overall_pct") {
+          aVal = a.at_large_overall_pct || 0;
+          bVal = b.at_large_overall_pct || 0;
+          // Sort descending (highest first)
+          if (aVal !== bVal) return bVal - aVal;
         } else if (sortColumn === "first_four_out") {
           aVal = a.seed_distribution?.["First Four Out"] || 0;
           bVal = b.seed_distribution?.["First Four Out"] || 0;
@@ -93,6 +108,22 @@ function SeedTable({
         } else if (sortColumn === "next_four_out") {
           aVal = a.seed_distribution?.["Next Four Out"] || 0;
           bVal = b.seed_distribution?.["Next Four Out"] || 0;
+          // Sort descending (highest first)
+          if (aVal !== bVal) return bVal - aVal;
+        } else if (sortColumn === "out_of_tourney") {
+          // Calculate Out of Tourney percentage: 100% - In Tourney %
+          const aInTourney =
+            a.tournament_bid_pct && a.tournament_bid_pct <= 1
+              ? a.tournament_bid_pct * 100
+              : a.tournament_bid_pct || 0;
+          aVal = 100 - aInTourney;
+
+          const bInTourney =
+            b.tournament_bid_pct && b.tournament_bid_pct <= 1
+              ? b.tournament_bid_pct * 100
+              : b.tournament_bid_pct || 0;
+          bVal = 100 - bInTourney;
+
           // Sort descending (highest first)
           if (aVal !== bVal) return bVal - aVal;
         } else {
@@ -192,6 +223,7 @@ function SeedTable({
   const seedColWidth = isMobile ? 25 : 35;
   const tourneyColWidth = isMobile ? 50 : 70;
   const outColWidth = isMobile ? 40 : 50;
+  const bidColWidth = isMobile ? 40 : 50;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
 
@@ -222,6 +254,17 @@ function SeedTable({
     return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: "black" };
   };
 
+  // Helper function for compact headers
+  const getCompactHeader = (label: string): string => {
+    if (label === "In Tourney") return "In\nTourney";
+    if (label === "First Four Out") return "First\nFour Out";
+    if (label === "Next Four Out") return "Next\nFour Out";
+    if (label === "Out of Tourney") return "Out of\nTourney";
+    if (label === "Auto Bid") return "Auto\nBid";
+    if (label === "At Large") return "At\nLarge";
+    return label;
+  };
+
   if (!seedData || seedData.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">
@@ -229,6 +272,17 @@ function SeedTable({
       </div>
     );
   }
+
+  // Tournament status columns
+  const tournamentStatusColumns = [
+    "In Tourney",
+    "First Four Out",
+    "Next Four Out",
+    "Out of Tourney",
+  ];
+
+  // Bid category columns
+  const bidCategoryColumns = ["Auto Bid", "At Large"];
 
   return (
     <div className="space-y-3">
@@ -269,9 +323,10 @@ function SeedTable({
           }}
         >
           <thead>
+            {/* First header row - category groupings */}
             <tr>
-              {/* Rank Column */}
               <th
+                rowSpan={2}
                 className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
@@ -290,8 +345,8 @@ function SeedTable({
                 #
               </th>
 
-              {/* Team Column */}
               <th
+                rowSpan={2}
                 className={`sticky z-30 bg-gray-50 text-left font-normal px-2 ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
@@ -311,7 +366,61 @@ function SeedTable({
                 Team
               </th>
 
-              {/* Average Seed Column */}
+              {/* Seed Category Header - INCLUDES Wgtd Avg Seed + Seeds 1-16 */}
+              <th
+                colSpan={seedColumns.length + 1}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${
+                  isMobile ? "text-xs" : "text-sm"
+                }`}
+                style={{
+                  height: headerHeight / 2,
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid #e5e7eb",
+                  borderLeft: "none",
+                }}
+              >
+                Seed
+              </th>
+
+              {/* NCAA Tournament Status Category Header */}
+              <th
+                colSpan={tournamentStatusColumns.length}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${
+                  isMobile ? "text-xs" : "text-sm"
+                }`}
+                style={{
+                  height: headerHeight / 2,
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid #e5e7eb",
+                  borderLeft: "none",
+                }}
+              >
+                NCAA Tournament Status
+              </th>
+
+              {/* Bid Category Header */}
+              <th
+                colSpan={bidCategoryColumns.length}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${
+                  isMobile ? "text-xs" : "text-sm"
+                }`}
+                style={{
+                  height: headerHeight / 2,
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid #e5e7eb",
+                  borderLeft: "none",
+                }}
+              >
+                Bid Category
+              </th>
+            </tr>
+
+            {/* Second header row - individual columns */}
+            <tr>
+              {/* Wgtd Avg Seed Column - FIRST under Seed category */}
               <th
                 className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
@@ -321,12 +430,15 @@ function SeedTable({
                   width: avgSeedColWidth,
                   minWidth: avgSeedColWidth,
                   maxWidth: avgSeedColWidth,
-                  height: headerHeight,
+                  height: headerHeight / 2,
                   position: "sticky",
-                  top: 0,
+                  top: headerHeight / 2,
                   border: "1px solid #e5e7eb",
+                  borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
                 }}
                 title="Click to sort by average seed"
               >
@@ -348,10 +460,11 @@ function SeedTable({
                     width: seedColWidth,
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
-                    height: headerHeight,
+                    height: headerHeight / 2,
                     position: "sticky",
-                    top: 0,
+                    top: headerHeight / 2,
                     border: "1px solid #e5e7eb",
+                    borderTop: "none",
                     borderLeft: "none",
                   }}
                   title={`Click to sort by seed ${seed}`}
@@ -363,7 +476,7 @@ function SeedTable({
                 </th>
               ))}
 
-              {/* Tournament % Column */}
+              {/* In Tourney Column */}
               <th
                 className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
@@ -373,16 +486,19 @@ function SeedTable({
                   width: tourneyColWidth,
                   minWidth: tourneyColWidth,
                   maxWidth: tourneyColWidth,
-                  height: headerHeight,
+                  height: headerHeight / 2,
                   position: "sticky",
-                  top: 0,
+                  top: headerHeight / 2,
                   border: "1px solid #e5e7eb",
+                  borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
                 }}
                 title="Click to sort by tournament probability"
               >
-                In{"\n"}Tourney %
+                {getCompactHeader("In Tourney")}
                 {sortColumn === "tournament_bid_pct" && (
                   <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
@@ -398,16 +514,19 @@ function SeedTable({
                   width: outColWidth,
                   minWidth: outColWidth,
                   maxWidth: outColWidth,
-                  height: headerHeight,
+                  height: headerHeight / 2,
                   position: "sticky",
-                  top: 0,
+                  top: headerHeight / 2,
                   border: "1px solid #e5e7eb",
+                  borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
                 }}
                 title="Click to sort by First Four Out"
               >
-                1st 4{"\n"}Out
+                {getCompactHeader("First Four Out")}
                 {sortColumn === "first_four_out" && (
                   <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
@@ -423,17 +542,104 @@ function SeedTable({
                   width: outColWidth,
                   minWidth: outColWidth,
                   maxWidth: outColWidth,
-                  height: headerHeight,
+                  height: headerHeight / 2,
                   position: "sticky",
-                  top: 0,
+                  top: headerHeight / 2,
                   border: "1px solid #e5e7eb",
+                  borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
                 }}
                 title="Click to sort by Next Four Out"
               >
-                Nxt 4{"\n"}Out
+                {getCompactHeader("Next Four Out")}
                 {sortColumn === "next_four_out" && (
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                )}
+              </th>
+
+              {/* Out of Tourney Column */}
+              <th
+                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  isMobile ? "text-xs" : "text-sm"
+                } ${sortColumn === "out_of_tourney" ? "bg-blue-100" : ""}`}
+                onClick={() => handleColumnClick("out_of_tourney")}
+                style={{
+                  width: outColWidth,
+                  minWidth: outColWidth,
+                  maxWidth: outColWidth,
+                  height: headerHeight / 2,
+                  position: "sticky",
+                  top: headerHeight / 2,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
+                }}
+                title="Click to sort by Out of Tourney"
+              >
+                {getCompactHeader("Out of Tourney")}
+                {sortColumn === "out_of_tourney" && (
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                )}
+              </th>
+
+              {/* Auto Bid Column */}
+              <th
+                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  isMobile ? "text-xs" : "text-sm"
+                } ${sortColumn === "auto_bid_overall_pct" ? "bg-blue-100" : ""}`}
+                onClick={() => handleColumnClick("auto_bid_overall_pct")}
+                style={{
+                  width: bidColWidth,
+                  minWidth: bidColWidth,
+                  maxWidth: bidColWidth,
+                  height: headerHeight / 2,
+                  position: "sticky",
+                  top: headerHeight / 2,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
+                }}
+                title="Click to sort by Auto Bid percentage"
+              >
+                {getCompactHeader("Auto Bid")}
+                {sortColumn === "auto_bid_overall_pct" && (
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                )}
+              </th>
+
+              {/* At Large Column */}
+              <th
+                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  isMobile ? "text-xs" : "text-sm"
+                } ${sortColumn === "at_large_overall_pct" ? "bg-blue-100" : ""}`}
+                onClick={() => handleColumnClick("at_large_overall_pct")}
+                style={{
+                  width: bidColWidth,
+                  minWidth: bidColWidth,
+                  maxWidth: bidColWidth,
+                  height: headerHeight / 2,
+                  position: "sticky",
+                  top: headerHeight / 2,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  fontSize: isMobile ? "10px" : "11px",
+                  lineHeight: "1.1",
+                }}
+                title="Click to sort by At Large percentage"
+              >
+                {getCompactHeader("At Large")}
+                {sortColumn === "at_large_overall_pct" && (
                   <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
               </th>
@@ -542,7 +748,7 @@ function SeedTable({
                   );
                 })}
 
-                {/* Tournament % Cell */}
+                {/* In Tourney Cell */}
                 <td
                   className="relative p-0"
                   style={{
@@ -619,6 +825,93 @@ function SeedTable({
                   >
                     {(team.seed_distribution?.["Next Four Out"] || 0) > 0
                       ? `${Math.round(team.seed_distribution["Next Four Out"])}%`
+                      : ""}
+                  </div>
+                </td>
+
+                {/* Out of Tourney Cell */}
+                <td
+                  className="relative p-0"
+                  style={{
+                    height: cellHeight,
+                    width: outColWidth,
+                    minWidth: outColWidth,
+                    maxWidth: outColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    ...getOutColor(
+                      100 -
+                        (team.tournament_bid_pct && team.tournament_bid_pct <= 1
+                          ? team.tournament_bid_pct * 100
+                          : team.tournament_bid_pct || 0)
+                    ),
+                  }}
+                >
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
+                  >
+                    {(() => {
+                      const outOfTourneyPct =
+                        100 -
+                        (team.tournament_bid_pct && team.tournament_bid_pct <= 1
+                          ? team.tournament_bid_pct * 100
+                          : team.tournament_bid_pct || 0);
+                      return outOfTourneyPct > 0
+                        ? `${Math.round(outOfTourneyPct)}%`
+                        : "";
+                    })()}
+                  </div>
+                </td>
+
+                {/* Auto Bid Cell */}
+                <td
+                  className="relative p-0"
+                  style={{
+                    height: cellHeight,
+                    width: bidColWidth,
+                    minWidth: bidColWidth,
+                    maxWidth: bidColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    ...getCellColor(team.auto_bid_overall_pct ?? 0),
+                  }}
+                >
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
+                  >
+                    {(team.auto_bid_overall_pct ?? 0) > 0
+                      ? `${Math.round(team.auto_bid_overall_pct!)}%`
+                      : ""}
+                  </div>
+                </td>
+
+                {/* At Large Cell */}
+                <td
+                  className="relative p-0"
+                  style={{
+                    height: cellHeight,
+                    width: bidColWidth,
+                    minWidth: bidColWidth,
+                    maxWidth: bidColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    ...getCellColor(team.at_large_overall_pct ?? 0),
+                  }}
+                >
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center ${
+                      isMobile ? "text-xs" : "text-sm"
+                    }`}
+                  >
+                    {(team.at_large_overall_pct ?? 0) > 0
+                      ? `${Math.round(team.at_large_overall_pct!)}%`
                       : ""}
                   </div>
                 </td>
