@@ -295,8 +295,20 @@ export default function TeamSeedProjections({
 
       Object.entries(rowData.rawCounts.statusDistribution).forEach(
         ([status, count]) => {
-          rowData.statusDistribution[status] =
-            rowData.total > 0 ? (count / rowData.total) * 100 : 0;
+          if (status === "In Tourney %") {
+            // Calculate In Tourney % from raw count
+            rowData.statusDistribution[status] =
+              rowData.total > 0 ? (count / rowData.total) * 100 : 0;
+          } else if (status === "Out of Tourney") {
+            // Out of Tourney should be 100% minus In Tourney %
+            const inTourneyPct =
+              rowData.statusDistribution["In Tourney %"] || 0;
+            rowData.statusDistribution[status] = 100 - inTourneyPct;
+          } else {
+            // First Four Out and Next Four Out calculated from raw counts
+            rowData.statusDistribution[status] =
+              rowData.total > 0 ? (count / rowData.total) * 100 : 0;
+          }
         }
       );
 
@@ -383,8 +395,17 @@ export default function TeamSeedProjections({
 
     Object.entries(totalRow.rawCounts.statusDistribution).forEach(
       ([status, count]) => {
-        totalRow.statusDistribution[status] =
-          grandTotal > 0 ? (count / grandTotal) * 100 : 0;
+        if (status === "In Tourney %") {
+          totalRow.statusDistribution[status] =
+            grandTotal > 0 ? (count / grandTotal) * 100 : 0;
+        } else if (status === "Out of Tourney") {
+          // Out of Tourney should be 100% minus In Tourney %
+          const inTourneyPct = totalRow.statusDistribution["In Tourney %"] || 0;
+          totalRow.statusDistribution[status] = 100 - inTourneyPct;
+        } else {
+          totalRow.statusDistribution[status] =
+            grandTotal > 0 ? (count / grandTotal) * 100 : 0;
+        }
       }
     );
 
