@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 
 // Constants - Adjusted height
-const CHART_HEIGHT = 700;
+const CHART_HEIGHT = 600;
 const CHART_WIDTH_DESKTOP = 380;
 const CHART_WIDTH_MOBILE = 320;
 const MARGIN = { top: 20, right: 60, bottom: 40, left: 60 };
@@ -51,8 +51,8 @@ type GameFilter = "all" | "completed" | "wins" | "losses";
 
 const COMPARISON_OPTIONS = [
   { value: "all_d1" as ComparisonFilter, label: "All D1" },
-  { value: "power_6" as ComparisonFilter, label: "Power 6" },
-  { value: "non_power_6" as ComparisonFilter, label: "Non Pwr 6" },
+  { value: "power_6" as ComparisonFilter, label: "Power 5" },
+  { value: "non_power_6" as ComparisonFilter, label: "Non Pwr 5" },
   { value: "conference" as ComparisonFilter, label: "Conference" },
 ];
 
@@ -122,23 +122,13 @@ export default function BasketballTeamScheduleDifficulty({
         case "all_d1":
           return true;
         case "power_6":
-          return [
-            "Big 12",
-            "SEC",
-            "Big Ten",
-            "ACC",
-            "Big East",
-            "Pac-12",
-          ].includes(game.team_conf);
+          return ["Big 12", "SEC", "Big Ten", "ACC", "Big East"].includes(
+            game.team_conf
+          );
         case "non_power_6":
-          return ![
-            "Big 12",
-            "SEC",
-            "Big Ten",
-            "ACC",
-            "Big East",
-            "Pac-12",
-          ].includes(game.team_conf);
+          return !["Big 12", "SEC", "Big Ten", "ACC", "Big East"].includes(
+            game.team_conf
+          );
         default:
           return true;
       }
@@ -315,9 +305,9 @@ export default function BasketballTeamScheduleDifficulty({
       case "all_d1":
         return "all D1";
       case "power_6":
-        return "Power 6 conferences";
+        return "Power 5 conferences";
       case "non_power_6":
-        return "Non Power 6 conferences";
+        return "Non Power 5 conferences";
       default:
         return "all D1";
     }
