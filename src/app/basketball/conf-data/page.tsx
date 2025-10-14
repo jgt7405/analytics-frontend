@@ -127,7 +127,8 @@ export default function BasketballConfDataPage() {
                     >
                       <div>
                         Conference bid distribution based on 1,000 season
-                        simulations using KenPom ratings.
+                        simulations using composite ratings based on kenpom,
+                        barttorvik and evanmiya.
                       </div>
                     </div>
                   </div>
@@ -164,8 +165,8 @@ export default function BasketballConfDataPage() {
                   <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        Net rating distribution by conference showing the
-                        strength of teams within each conference.
+                        Rating distribution by conference showing the strength
+                        of teams within each conference.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         Box shows 25th to 75th percentile teams in conference,
@@ -251,7 +252,8 @@ export default function BasketballConfDataPage() {
                       <div>
                         Progression of projected NCAA tournament bids by
                         conference over time from 1,000 season simulations using
-                        KenPom ratings.
+                        composite ratings based on kenpom, barttorvik and
+                        evanmiya.
                       </div>
                     </div>
                   </div>

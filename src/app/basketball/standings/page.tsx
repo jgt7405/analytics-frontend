@@ -282,7 +282,8 @@ export default function StandingsPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Probabilities from 1,000 season simulations using
-                            kenpom ratings.
+                            composite ratings based on kenpom, barttorvik and
+                            evanmiya.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Shows likelihood of finishing in each position
@@ -383,7 +384,8 @@ export default function StandingsPage() {
                               <div>
                                 Progression of projected conference standings
                                 (with ties) from 1,000 season simulations using
-                                KenPom ratings.
+                                composite ratings based on kenpom, barttorvik
+                                and evanmiya.
                               </div>
                             </div>
                           </div>
@@ -422,7 +424,8 @@ export default function StandingsPage() {
                               <div>
                                 Progression of projected probability of first
                                 place conference finish (with ties) from 1,000
-                                season simulations using KenPom ratings.
+                                season simulations using composite ratings based
+                                on kenpom, barttorvik and evanmiya.
                               </div>
                             </div>
                           </div>

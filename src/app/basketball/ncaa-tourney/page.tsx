@@ -196,7 +196,8 @@ export default function NCAATeamPage() {
                           <div>
                             Probabilities to reach each round of the NCAA
                             touranment based on 1,000 season simulations using
-                            KenPom ratings.
+                            composite ratings based on kenpom, barttorvik and
+                            evanmiya.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Darker colors indicate higher probabilities.

@@ -155,7 +155,8 @@ export default function SeedPage() {
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           NCAA tournament seed probabilities based on 1,000
-                          simulations.
+                          simulations using composite ratings based on kenpom,
+                          barttorvik and evanmiya.
                         </div>
                         <div style={{ marginTop: "6px" }}>
                           Projections consider current resume, remaining

@@ -125,7 +125,8 @@ export default function ConfTourneyPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Probabilities from 1,000 season simulations using
-                            KenPom ratings.
+                            composite ratings based on kenpom, barttorvik and
+                            evanmiya.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Values show chance of reaching each round of the
@@ -172,7 +173,8 @@ export default function ConfTourneyPage() {
                               <div>
                                 Progression of projected probability of
                                 conference tournament championship from 1,000
-                                season simulations using KenPom ratings.
+                                season simulations using composite ratings based
+                                on kenpom, barttorvik and evanmiya.
                               </div>
                             </div>
                           </div>

@@ -222,7 +222,8 @@ export default function TWVPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             TWV (True Win Value) shows actual wins compared to
-                            expected wins for a team ranked 30th by KenPom.
+                            expected wins for a team ranked 30th by composite
+                            ratings based on kenpom, barttorvik and evanmiya
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Positive values indicate overperformance, negative

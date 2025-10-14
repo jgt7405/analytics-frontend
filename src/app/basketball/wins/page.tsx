@@ -285,7 +285,8 @@ export default function WinsPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Projected conference wins from 1,000 season
-                            simulations using KenPom ratings.
+                            simulations using composite ratings based on kenpom,
+                            barttorvik and evanmiya.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Box shows 25th to 75th percentile, line shows
@@ -325,7 +326,8 @@ export default function WinsPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Probabilities from 1,000 season simulations using
-                            KenPom ratings.
+                            composite ratings based on kenpom, barttorvik and
+                            evanmiya.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Darker colors indicate higher probabilites.
@@ -369,7 +371,8 @@ export default function WinsPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Projected regular season wins from 1,000 season
-                            simulations using KenPom ratings.
+                            simulations using composite ratings based on kenpom,
+                            barttorvik and evanmiya.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Box shows 25th to 75th percentile, whiskers show 5th
@@ -414,7 +417,8 @@ export default function WinsPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Probabilities from 1,000 season simulations using
-                            KenPom ratings.
+                            composite ratings based on kenpom, barttorvik and
+                            evanmiya.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Darker colors indicate higher probabilites.
