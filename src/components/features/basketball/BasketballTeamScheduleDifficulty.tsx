@@ -678,7 +678,7 @@ export default function BasketballTeamScheduleDifficulty({
             transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 45}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            KenPom Win Probability
+            Win Probability of 40th Rated Team
           </text>
 
           <text
@@ -728,8 +728,6 @@ export default function BasketballTeamScheduleDifficulty({
           Comparing {teamGames.length.toLocaleString()} games against{" "}
           {comparisonDataset.length.toLocaleString()} total games
           <br />
-          Percentiles based on KenPom win probability vs opponents in selected
-          dataset
         </div>
       </div>
     </div>
