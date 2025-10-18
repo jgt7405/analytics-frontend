@@ -678,7 +678,7 @@ export default function BasketballTeamScheduleDifficulty({
             transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 45}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Win Probability of 40th Rated Team
+            Win Probability of 30th Rated Team
           </text>
 
           <text
