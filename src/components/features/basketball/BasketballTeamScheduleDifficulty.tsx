@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 
 // Constants - Adjusted height
-const CHART_HEIGHT = 600;
+const CHART_HEIGHT = 450;
 const CHART_WIDTH_DESKTOP = 380;
 const CHART_WIDTH_MOBILE = 320;
 const MARGIN = { top: 20, right: 60, bottom: 40, left: 60 };
