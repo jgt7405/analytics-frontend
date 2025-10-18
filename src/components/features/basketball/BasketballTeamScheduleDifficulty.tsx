@@ -668,7 +668,7 @@ export default function BasketballTeamScheduleDifficulty({
             transform={`rotate(-90, ${MARGIN.left - 45}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Difficulty Percentile
+            Difficulty Percentile Rating All Games in Dataset
           </text>
 
           <text
