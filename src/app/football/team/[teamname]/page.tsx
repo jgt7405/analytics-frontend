@@ -222,7 +222,10 @@ export default function FootballTeamPage({
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center">
+                  <div
+                    className="flex flex-col items-center"
+                    title={team_info.conference}
+                  >
                     <Image
                       src={conferenceLogoUrl}
                       alt={`${team_info.conference} logo`}
@@ -234,9 +237,6 @@ export default function FootballTeamPage({
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                    <div className="text-xs font-medium text-gray-700 mt-1">
-                      {team_info.conference}
-                    </div>
                   </div>
                 </div>
 
@@ -593,7 +593,10 @@ export default function FootballTeamPage({
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center ml-4">
+                  <div
+                    className="flex flex-col items-center ml-4"
+                    title={team_info.conference}
+                  >
                     <Image
                       src={conferenceLogoUrl}
                       alt={`${team_info.conference} logo`}
@@ -605,9 +608,6 @@ export default function FootballTeamPage({
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                    <div className="text-sm font-medium text-gray-700 mt-2">
-                      {team_info.conference}
-                    </div>
                   </div>
                 </div>
               </div>

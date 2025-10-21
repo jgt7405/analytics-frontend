@@ -200,7 +200,7 @@ export default function BasketballTeamRankHistory({
               </div>
             `;
 
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">KenPom Rank: #${dataPoint.kenpom_rank}</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Rating: #${dataPoint.kenpom_rank}</div>`;
 
             tooltipEl.innerHTML = innerHtml;
 
@@ -336,7 +336,7 @@ export default function BasketballTeamRankHistory({
         },
         title: {
           display: true,
-          text: "KenPom Rank",
+          text: "Rating",
           color: "#374151",
           font: {
             size: isMobile ? 11 : 12,
@@ -351,7 +351,7 @@ export default function BasketballTeamRankHistory({
     labels: data.map((point) => formatDateForDisplay(point.date)),
     datasets: [
       {
-        label: "KenPom Rank",
+        label: "Rating",
         data: data.map((point) => point.kenpom_rank),
         borderColor: primaryColor,
         backgroundColor: primaryColor,

@@ -170,7 +170,7 @@ export default function BasketballTeamPage({
     },
     {
       id: "rank-history",
-      label: "KenPom Rank History",
+      label: "Rating History",
       selector: ".basketball-rank-history",
     },
     {
@@ -259,7 +259,10 @@ export default function BasketballTeamPage({
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center">
+                  <div
+                    className="flex flex-col items-center"
+                    title={team_info.conference}
+                  >
                     <Image
                       src={conferenceLogoUrl}
                       alt={`${team_info.conference} logo`}
@@ -271,9 +274,6 @@ export default function BasketballTeamPage({
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                    <div className="text-xs font-medium text-gray-700 mt-1">
-                      {team_info.conference}
-                    </div>
                   </div>
                 </div>
 
@@ -471,7 +471,7 @@ export default function BasketballTeamPage({
                 style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
-                  KenPom Rank History
+                  Rating History
                 </h2>
                 <BasketballTeamRankHistory
                   teamName={team_info.team_name}
@@ -633,7 +633,10 @@ export default function BasketballTeamPage({
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-center ml-4">
+                  <div
+                    className="flex flex-col items-center ml-4"
+                    title={team_info.conference}
+                  >
                     <Image
                       src={conferenceLogoUrl}
                       alt={`${team_info.conference} logo`}
@@ -645,9 +648,6 @@ export default function BasketballTeamPage({
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                    <div className="text-sm font-medium text-gray-700 mt-2">
-                      {team_info.conference}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -790,7 +790,7 @@ export default function BasketballTeamPage({
                     style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
-                      KenPom Rank History
+                      Rating History
                     </h2>
                     <BasketballTeamRankHistory
                       teamName={team_info.team_name}

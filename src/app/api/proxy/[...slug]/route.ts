@@ -179,6 +179,9 @@ export async function GET(
         case "team":
           backendPath = `/football_team/${footballConference}`;
           break;
+        case "playoff_rankings":
+          backendPath = `/football/playoff_rankings`;
+          break;
         default:
           return NextResponse.json(
             { error: "Unknown football endpoint" },

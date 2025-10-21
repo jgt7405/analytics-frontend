@@ -346,6 +346,31 @@ export interface ConferenceData {
   is_current: boolean;
 }
 
+export interface PlayoffTeam {
+  rank: number;
+  team_name: string;
+  logo_url: string;
+  conference: string;
+  twv: number;
+  record: string;
+  bid_type: "Conference Champion" | "At-Large";
+}
+
+export interface BubbleTeam {
+  position: number;
+  team_name: string;
+  logo_url: string;
+  conference: string;
+  twv: number;
+  record: string;
+}
+
+export interface PlayoffRankingsResponse {
+  playoff_teams: PlayoffTeam[];
+  first_four_out: BubbleTeam[];
+  next_four_out: BubbleTeam[];
+}
+
 export interface ConferenceApiResponse {
   data: ConferenceData[];
 }
