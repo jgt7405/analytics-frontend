@@ -102,20 +102,19 @@ function BasketballScheduleTable({
         const formattedValue = formatCellValue(cellValue);
 
         // Check if this is a date (future game)
-        if (/^\d{1,2}\/\d{1,2}$/.test(formattedValue)) {
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(formattedValue)) {
           futureGames.push({ date: formattedValue, rowIndex });
         }
       });
 
       // Sort by date to find the earliest upcoming game
       futureGames.sort((a, b) => {
-        const [aMonth, aDay] = a.date.split("/").map(Number);
-        const [bMonth, bDay] = b.date.split("/").map(Number);
+        const aDateParts = a.date.split("/").map(Number);
+        const bDateParts = b.date.split("/").map(Number);
 
-        // Create dates for comparison (assuming current academic year)
-        const currentYear = new Date().getFullYear();
-        const aDate = new Date(currentYear, aMonth - 1, aDay);
-        const bDate = new Date(currentYear, bMonth - 1, bDay);
+        // Parse date format: MM/DD/YYYY
+        const aDate = new Date(aDateParts[2], aDateParts[0] - 1, aDateParts[1]);
+        const bDate = new Date(bDateParts[2], bDateParts[0] - 1, bDateParts[1]);
 
         return aDate.getTime() - bDate.getTime();
       });
@@ -135,7 +134,7 @@ function BasketballScheduleTable({
       if (value === "L") return { backgroundColor: "#ffe671", color: "black" }; // CWV loss color
 
       // Future games (dates)
-      if (/^\d{1,2}\/\d{1,2}$/.test(value)) {
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) {
         const nextGame = nextGamesForTeams[teamName];
         const isNextGame =
           nextGame && nextGame.date === value && nextGame.rowIndex === rowIndex;

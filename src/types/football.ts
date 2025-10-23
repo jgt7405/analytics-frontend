@@ -375,6 +375,48 @@ export interface ConferenceApiResponse {
   data: ConferenceData[];
 }
 
+// frontend/src/types/football.ts - Add these interfaces
+
+export interface GameSelection {
+  game_id: number;
+  winner_team_id: string;
+}
+
+export interface WhatIfGame {
+  game_id: number;
+  date: string;
+  home_team: string;
+  away_team: string;
+  home_team_logo?: string;
+  away_team_logo?: string;
+  home_probability: number;
+  away_probability: number;
+  completed: boolean;
+  conf_game: boolean;
+}
+
+export interface WhatIfTeamResult {
+  team_name: string;
+  team_id: string;
+  conference: string;
+  logo_url: string;
+  projected_total_wins: number;
+  projected_conf_wins: number;
+  avg_conf_standing: number | null;
+  cfp_probability: number;
+}
+
+export interface WhatIfResponse {
+  success: boolean;
+  data: WhatIfTeamResult[];
+  metadata: {
+    num_scenarios: number;
+    num_selections: number;
+    calculation_time: number;
+    selections: GameSelection[];
+  };
+}
+
 // Filter and UI Types
 export interface FootballFilterOption {
   value: string;

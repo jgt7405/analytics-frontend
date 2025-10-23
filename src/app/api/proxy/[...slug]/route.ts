@@ -232,6 +232,9 @@ export async function GET(
           case "conf-data":
             backendPath = `/football_conf_data`;
             break;
+          case "future_games": // 👈 ADD THIS
+            backendPath = `/football/future_games`; // 👈 ADD THIS
+            break; // 👈 ADD THIS
           default:
             return NextResponse.json(
               { error: "Unknown football endpoint" },
@@ -393,6 +396,102 @@ export async function GET(
       {
         error: "Internal proxy error",
         details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// 👇 ADD THE POST HANDLER HERE 👇
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string[] }> }
+) {
+  try {
+    const { slug } = await params;
+    const body = await request.json();
+
+    const BACKEND_BASE_URL =
+      "https://jthomprodbackend-production.up.railway.app/api";
+
+    let backendPath = "";
+
+    console.log("Proxy POST slug:", slug);
+
+    // Handle football what-if route
+    if (slug.length === 2 && slug[0] === "football" && slug[1] === "whatif") {
+      backendPath = `/football/whatif`;
+    } else {
+      return NextResponse.json(
+        { error: "Unknown POST endpoint" },
+        { status: 404 }
+      );
+    }
+
+    const backendUrl = `${BACKEND_BASE_URL}${backendPath}`;
+    console.log("Backend POST URL:", backendUrl);
+
+    const response = await fetch(backendUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000), // 60 second timeout for calculations
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Backend POST request failed: ${response.status} ${response.statusText}`
+      );
+      return NextResponse.json(
+        {
+          error: `Backend request failed: ${response.status}`,
+          details: response.statusText,
+          url: backendPath,
+        },
+        { status: response.status }
+      );
+    }
+
+    const responseText = await response.text();
+    console.log("📦 PROXY POST: Response size:", responseText.length, "bytes");
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("📦 PROXY POST: JSON parse error:", parseError);
+      console.error(
+        "📦 PROXY POST: Raw response preview:",
+        responseText.substring(0, 500)
+      );
+      return NextResponse.json(
+        { error: "Failed to parse backend response" },
+        { status: 500 }
+      );
+    }
+
+    console.log("📦 PROXY POST: What-If calculation completed:", {
+      teams: data.data?.length || 0,
+      calculation_time: data.metadata?.calculation_time || 0,
+    });
+
+    return NextResponse.json(data, {
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
+  } catch (error) {
+    console.error("POST proxy error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to process POST request",
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
