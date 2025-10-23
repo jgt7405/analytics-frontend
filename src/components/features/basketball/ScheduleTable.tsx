@@ -67,6 +67,23 @@ function BasketballScheduleTable({
     return String(value).trim();
   }, []);
 
+  const formatDateForDisplay = useCallback((dateStr: string): string => {
+    // If date includes year (M/D/YYYY or MM/DD/YYYY), strip it and format with leading zeros
+    const parts = dateStr.split("/");
+    if (parts.length === 3) {
+      const month = parts[0].padStart(2, "0");
+      const day = parts[1].padStart(2, "0");
+      return `${month}/${day}`; // Return MM/DD with leading zeros
+    }
+    // If already MM/DD format, ensure leading zeros
+    if (parts.length === 2) {
+      const month = parts[0].padStart(2, "0");
+      const day = parts[1].padStart(2, "0");
+      return `${month}/${day}`;
+    }
+    return dateStr; // Return as-is for other formats (W, L, etc.)
+  }, []);
+
   const getCellValue = useCallback(
     (row: ScheduleData, team: string): unknown => {
       if (!row.games) return undefined;
@@ -483,7 +500,7 @@ function BasketballScheduleTable({
                                 : getCellStyle(formattedValue, team, index)
                             }
                           >
-                            {formattedValue}
+                            {formatDateForDisplay(formattedValue)}
                           </div>
                         </td>
                       );

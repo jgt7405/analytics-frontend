@@ -65,6 +65,23 @@ function FootballScheduleTable({
     return String(value).trim();
   }, []);
 
+  const formatDateForDisplay = useCallback((dateStr: string): string => {
+    // If date includes year (M/D/YYYY or MM/DD/YYYY), strip it and format with leading zeros
+    const parts = dateStr.split("/");
+    if (parts.length === 3) {
+      const month = parts[0].padStart(2, "0");
+      const day = parts[1].padStart(2, "0");
+      return `${month}/${day}`; // Return MM/DD with leading zeros
+    }
+    // If already MM/DD format, ensure leading zeros
+    if (parts.length === 2) {
+      const month = parts[0].padStart(2, "0");
+      const day = parts[1].padStart(2, "0");
+      return `${month}/${day}`;
+    }
+    return dateStr; // Return as-is for other formats (W, L, etc.)
+  }, []);
+
   const getCellValue = useCallback(
     (row: FootballScheduleData, team: string): unknown => {
       if (!row.games) return undefined;
@@ -109,17 +126,19 @@ function FootballScheduleTable({
         const cellValue = getCellValue(row, team);
         const formattedValue = formatCellValue(cellValue);
 
-        if (/^\d{1,2}\/\d{1,2}$/.test(formattedValue)) {
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(formattedValue)) {
           futureGames.push({ date: formattedValue, rowIndex });
         }
       });
 
       futureGames.sort((a, b) => {
-        const [aMonth, aDay] = a.date.split("/").map(Number);
-        const [bMonth, bDay] = b.date.split("/").map(Number);
-        const currentYear = new Date().getFullYear();
-        const aDate = new Date(currentYear, aMonth - 1, aDay);
-        const bDate = new Date(currentYear, bMonth - 1, bDay);
+        const aDateParts = a.date.split("/").map(Number);
+        const bDateParts = b.date.split("/").map(Number);
+
+        // Parse date format: MM/DD/YYYY
+        const aDate = new Date(aDateParts[2], aDateParts[0] - 1, aDateParts[1]);
+        const bDate = new Date(bDateParts[2], bDateParts[0] - 1, bDateParts[1]);
+
         return aDate.getTime() - bDate.getTime();
       });
 
@@ -136,7 +155,7 @@ function FootballScheduleTable({
       if (value === "W") return { backgroundColor: "#18627b", color: "white" };
       if (value === "L") return { backgroundColor: "#ffe671", color: "black" };
 
-      if (/^\d{1,2}\/\d{1,2}$/.test(value)) {
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) {
         const nextGame = nextGamesForTeams[teamName];
         const isNextGame =
           nextGame && nextGame.date === value && nextGame.rowIndex === rowIndex;
@@ -469,7 +488,7 @@ function FootballScheduleTable({
                                 : getCellStyle(formattedValue, team, index)
                             }
                           >
-                            {formattedValue}
+                            {formatDateForDisplay(formattedValue)}
                           </div>
                         </td>
                       );
