@@ -397,13 +397,25 @@ export interface WhatIfGame {
 
 export interface WhatIfTeamResult {
   team_name: string;
-  team_id: string;
+  team_id: number;
+  teamid?: number;
   conference: string;
   logo_url: string;
+  avg_projected_conf_wins: number;
+  avg_reg_season_wins: number;
+  avg_conference_standing: number;
+  conf_champ_game_played: number;
+  conf_champ_game_won: number;
+  conf_champ_pct: number;
+  playoff_bid_pct: number;
+  cfp_bid_pct: number;
+  totalscenarios: number;
+  // Computed fields for UI
   projected_total_wins: number;
-  projected_conf_wins: number;
-  avg_conf_standing: number | null;
   cfp_probability: number;
+  // Aliases for compatibility
+  projected_conf_wins?: number;
+  avg_conf_standing?: number;
 }
 
 export interface WhatIfResponse {

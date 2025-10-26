@@ -182,6 +182,17 @@ export async function GET(
         case "playoff_rankings":
           backendPath = `/football/playoff_rankings`;
           break;
+        case "debug":
+          // Handle debug sub-routes: football/debug/probability_check
+          if (slug.length === 3 && slug[2]) {
+            backendPath = `/football/debug/${slug[2]}`;
+          } else {
+            return NextResponse.json(
+              { error: "Invalid debug endpoint" },
+              { status: 404 }
+            );
+          }
+          break;
         default:
           return NextResponse.json(
             { error: "Unknown football endpoint" },
@@ -232,9 +243,9 @@ export async function GET(
           case "conf-data":
             backendPath = `/football_conf_data`;
             break;
-          case "future_games": // 👈 ADD THIS
-            backendPath = `/football/future_games`; // 👈 ADD THIS
-            break; // 👈 ADD THIS
+          case "future_games": // ðŸ‘ˆ ADD THIS
+            backendPath = `/football/future_games`; // ðŸ‘ˆ ADD THIS
+            break; // ðŸ‘ˆ ADD THIS
           default:
             return NextResponse.json(
               { error: "Unknown football endpoint" },
@@ -327,15 +338,15 @@ export async function GET(
 
     // Get raw text first to ensure we're not losing data
     const responseText = await response.text();
-    console.log("🔍 PROXY: Response size:", responseText.length, "bytes");
+    console.log("ðŸ” PROXY: Response size:", responseText.length, "bytes");
 
     let data;
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error("🔍 PROXY: JSON parse error:", parseError);
+      console.error("ðŸ” PROXY: JSON parse error:", parseError);
       console.error(
-        "🔍 PROXY: Raw response preview:",
+        "ðŸ” PROXY: Raw response preview:",
         responseText.substring(0, 500)
       );
       return NextResponse.json(
@@ -346,8 +357,8 @@ export async function GET(
 
     // Enhanced debug logging for football_conf_data
     if (backendPath.includes("football_conf_data")) {
-      console.log("🔍 PROXY: Successfully parsed JSON");
-      console.log("🔍 PROXY: Data structure:", {
+      console.log("ðŸ” PROXY: Successfully parsed JSON");
+      console.log("ðŸ” PROXY: Data structure:", {
         hasData: !!data.data,
         isArray: Array.isArray(data.data),
         length: data.data?.length,
@@ -358,7 +369,7 @@ export async function GET(
 
       if (data.data?.[0]) {
         const firstItem = data.data[0];
-        console.log("🔍 PROXY: Sagarin fields check:", {
+        console.log("ðŸ” PROXY: Sagarin fields check:", {
           sagarin_min:
             "sagarin_min" in firstItem ? firstItem.sagarin_min : "MISSING",
           sagarin_max:
@@ -375,10 +386,10 @@ export async function GET(
 
         // Count total fields
         console.log(
-          "🔍 PROXY: Total fields in first item:",
+          "ðŸ” PROXY: Total fields in first item:",
           Object.keys(firstItem).length
         );
-        console.log("🔍 PROXY: All fields:", Object.keys(firstItem));
+        console.log("ðŸ” PROXY: All fields:", Object.keys(firstItem));
       }
     }
 
@@ -402,7 +413,7 @@ export async function GET(
   }
 }
 
-// 👇 ADD THE POST HANDLER HERE 👇
+// ðŸ‘‡ ADD THE POST HANDLER HERE ðŸ‘‡
 
 export async function POST(
   request: NextRequest,
@@ -457,15 +468,19 @@ export async function POST(
     }
 
     const responseText = await response.text();
-    console.log("📦 PROXY POST: Response size:", responseText.length, "bytes");
+    console.log(
+      "ðŸ“¦ PROXY POST: Response size:",
+      responseText.length,
+      "bytes"
+    );
 
     let data;
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error("📦 PROXY POST: JSON parse error:", parseError);
+      console.error("ðŸ“¦ PROXY POST: JSON parse error:", parseError);
       console.error(
-        "📦 PROXY POST: Raw response preview:",
+        "ðŸ“¦ PROXY POST: Raw response preview:",
         responseText.substring(0, 500)
       );
       return NextResponse.json(
@@ -474,7 +489,7 @@ export async function POST(
       );
     }
 
-    console.log("📦 PROXY POST: What-If calculation completed:", {
+    console.log("ðŸ“¦ PROXY POST: What-If calculation completed:", {
       teams: data.data?.length || 0,
       calculation_time: data.metadata?.calculation_time || 0,
     });

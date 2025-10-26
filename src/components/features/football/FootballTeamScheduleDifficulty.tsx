@@ -48,7 +48,7 @@ interface FootballTeamScheduleDifficultyProps {
 }
 
 type ComparisonFilter = "all_fbs" | "power_4" | "non_power_4" | "conference";
-type GameFilter = "all" | "completed" | "wins" | "losses";
+type GameFilter = "all" | "completed" | "wins" | "losses" | "remaining";
 
 const COMPARISON_OPTIONS = [
   { value: "all_fbs" as ComparisonFilter, label: "FBS" },
@@ -62,13 +62,14 @@ const GAME_OPTIONS = [
   { value: "completed" as GameFilter, label: "Completed" },
   { value: "wins" as GameFilter, label: "Wins" },
   { value: "losses" as GameFilter, label: "Losses" },
+  { value: "remaining" as GameFilter, label: "Remaining" },
 ];
 
 export default function FootballTeamScheduleDifficulty({
   schedule,
   allScheduleData,
   teamConference,
-  logoUrl,
+  logoUrl: _logoUrl,
 }: FootballTeamScheduleDifficultyProps) {
   const [comparisonFilter, setComparisonFilter] =
     useState<ComparisonFilter>("all_fbs");
@@ -95,6 +96,8 @@ export default function FootballTeamScheduleDifficulty({
           return game.status === "W";
         case "losses":
           return game.status === "L";
+        case "remaining":
+          return !["W", "L"].includes(game.status);
         default:
           return true;
       }
@@ -116,6 +119,9 @@ export default function FootballTeamScheduleDifficulty({
           break;
         case "losses":
           if (game.status !== "L") return false;
+          break;
+        case "remaining":
+          if (["W", "L"].includes(game.status)) return false;
           break;
       }
 
@@ -200,7 +206,7 @@ export default function FootballTeamScheduleDifficulty({
     );
 
     const positioned: PositionedGame[] = [];
-    const minSpacing = 40;
+    const minSpacing = 45; // Increased spacing for better separation
 
     sortedByDifficulty.forEach((game, index) => {
       const isRightSide = index % 2 === 0;
@@ -212,25 +218,35 @@ export default function FootballTeamScheduleDifficulty({
         (p) => p.isRightSide === isRightSide
       );
 
-      for (let attempts = 0; attempts < 50; attempts++) {
+      // Try to find a collision-free position
+      for (let attempts = 0; attempts < 100; attempts++) {
         let hasCollision = false;
 
+        // Check against ALL logos on the same side
         for (const existingLogo of sameSideLogos) {
           if (Math.abs(logoY - existingLogo.adjustedY) < minSpacing) {
             hasCollision = true;
 
-            if (game.percentilePosition < existingLogo.percentilePosition) {
+            // Push away from the collision
+            if (logoY < existingLogo.adjustedY) {
               logoY = existingLogo.adjustedY - minSpacing;
             } else {
               logoY = existingLogo.adjustedY + minSpacing;
             }
-            break;
           }
         }
 
+        // If no collision found, we're done
         if (!hasCollision) break;
+
+        // Clamp to bounds to prevent infinite loops
+        logoY = Math.max(
+          MARGIN.top + 20,
+          Math.min(MARGIN.top + PLOT_HEIGHT - 20, logoY)
+        );
       }
 
+      // Final bounds check
       logoY = Math.max(
         MARGIN.top + 20,
         Math.min(MARGIN.top + PLOT_HEIGHT - 20, logoY)
@@ -349,17 +365,9 @@ export default function FootballTeamScheduleDifficulty({
     );
   };
 
-  if (comparisonDataset.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        No games found for selected filters
-      </div>
-    );
-  }
-
   return (
     <div className="w-full relative" onClick={() => setHoveredGame(null)}>
-      {logoUrl && (
+      {_logoUrl && (
         <div
           className="absolute z-10"
           style={{
@@ -371,7 +379,7 @@ export default function FootballTeamScheduleDifficulty({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={logoUrl}
+            src={_logoUrl}
             alt="Team logo"
             style={{
               width: isMobile ? "24px" : "32px",
@@ -665,27 +673,20 @@ export default function FootballTeamScheduleDifficulty({
         )}
       </div>
 
-      <div className="mt-4 text-xs text-gray-600">
-        <div className="flex flex-wrap gap-4 justify-center">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span>Win</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span>Loss</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-            <span>Future Game</span>
-          </div>
+      <div className="mt-4 text-xs text-gray-600 text-center">
+        <div className="mb-2">
+          <span className="font-medium">
+            {teamGames.length.toLocaleString()}
+          </span>{" "}
+          {teamGames.length === 1 ? "game" : "games"} compared to{" "}
+          <span className="font-medium">
+            {comparisonDataset.length.toLocaleString()}
+          </span>{" "}
+          {comparisonDataset.length === 1 ? "game" : "games"} in{" "}
+          {getFilterDescription()}
         </div>
-        <div className="text-center mt-2">
-          Comparing {teamGames.length.toLocaleString()} games against{" "}
-          {comparisonDataset.length.toLocaleString()} total games
-          <br />
-          Percentiles based on #12 rated team win probability vs opponents in
-          selected dataset
+        <div className="text-gray-500">
+          Win probabilities based on Sagarin ratings for #12 ranked team
         </div>
       </div>
     </div>

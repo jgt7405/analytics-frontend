@@ -47,7 +47,7 @@ interface BasketballTeamScheduleDifficultyProps {
 }
 
 type ComparisonFilter = "all_d1" | "power_6" | "non_power_6" | "conference";
-type GameFilter = "all" | "completed" | "wins" | "losses";
+type GameFilter = "all" | "completed" | "wins" | "losses" | "remaining";
 
 const COMPARISON_OPTIONS = [
   { value: "all_d1" as ComparisonFilter, label: "All D1" },
@@ -61,13 +61,14 @@ const GAME_OPTIONS = [
   { value: "completed" as GameFilter, label: "Completed" },
   { value: "wins" as GameFilter, label: "Wins" },
   { value: "losses" as GameFilter, label: "Losses" },
+  { value: "remaining" as GameFilter, label: "Remaining" },
 ];
 
 export default function BasketballTeamScheduleDifficulty({
   schedule,
   allScheduleData,
   teamConference,
-  logoUrl,
+  logoUrl: _logoUrl,
 }: BasketballTeamScheduleDifficultyProps) {
   const [comparisonFilter, setComparisonFilter] =
     useState<ComparisonFilter>("all_d1");
@@ -94,6 +95,8 @@ export default function BasketballTeamScheduleDifficulty({
           return game.status === "W";
         case "losses":
           return game.status === "L";
+        case "remaining":
+          return !["W", "L"].includes(game.status);
         default:
           return true;
       }
@@ -113,6 +116,9 @@ export default function BasketballTeamScheduleDifficulty({
           break;
         case "losses":
           if (game.status !== "L") return false;
+          break;
+        case "remaining":
+          if (["W", "L"].includes(game.status)) return false;
           break;
       }
 
@@ -200,7 +206,7 @@ export default function BasketballTeamScheduleDifficulty({
     );
 
     const positioned: PositionedGame[] = [];
-    const minSpacing = 28; // Minimum vertical spacing between logos
+    const minSpacing = 32; // Increased minimum vertical spacing between logos
 
     // Column assignment pattern: #1->column 0, #2->column 3, #3->column 1, #4->column 2
     const columnPattern = [0, 3, 1, 2];
@@ -226,7 +232,7 @@ export default function BasketballTeamScheduleDifficulty({
         let minTotalDisplacement = Infinity;
 
         // Try different positions around the ideal position
-        const searchRange = 100; // Search 100 pixels up and down
+        const searchRange = 120; // Increased search range
         const step = 2; // Check every 2 pixels
 
         for (
@@ -234,7 +240,7 @@ export default function BasketballTeamScheduleDifficulty({
           testY <= Math.min(MARGIN.top + PLOT_HEIGHT - 15, logoY + searchRange);
           testY += step
         ) {
-          // Check if this position has minimum spacing from all existing logos
+          // Check if this position has minimum spacing from ALL existing logos in this column
           let hasCollision = false;
           for (const existing of sameColumnLogos) {
             if (Math.abs(testY - existing.adjustedY) < minSpacing) {
@@ -347,6 +353,7 @@ export default function BasketballTeamScheduleDifficulty({
         style={{
           left: position.x,
           top: position.y,
+          color: game.opponent_primary_color || "#1f2937",
           touchAction: "none",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -378,9 +385,9 @@ export default function BasketballTeamScheduleDifficulty({
         <div className="text-sm font-semibold mb-1">{game.opponent}</div>
         <div className="text-xs space-y-1">
           <div>Location: {game.location}</div>
-          <div>{winProb}% Win Probability</div>
+          <div>{winProb}% Win Probability for 30th Rated Team</div>
           <div>
-            #{rank.toLocaleString()} Most Difficult Game Out of{" "}
+            #{rank} Most Difficult Game Out of{" "}
             {comparisonDataset.length.toLocaleString()} Games in{" "}
             {getFilterDescription()} ({percentile} Percentile)
           </div>
@@ -389,29 +396,21 @@ export default function BasketballTeamScheduleDifficulty({
     );
   };
 
-  if (comparisonDataset.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        No games found for selected filters
-      </div>
-    );
-  }
-
   return (
     <div className="w-full relative" onClick={() => setHoveredGame(null)}>
-      {logoUrl && (
+      {_logoUrl && (
         <div
           className="absolute z-10"
           style={{
             top: "-30px",
-            right: "-5px",
+            right: "0px",
             width: isMobile ? "24px" : "32px",
             height: isMobile ? "24px" : "32px",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={logoUrl}
+            src={_logoUrl}
             alt="Team logo"
             style={{
               width: isMobile ? "24px" : "32px",
