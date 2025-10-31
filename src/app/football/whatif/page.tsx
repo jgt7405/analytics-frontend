@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFootballConfData } from "@/hooks/useFootballConfData";
@@ -11,6 +10,9 @@ import { WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+type SortColumn = "team" | "current" | "whatif" | "change";
+type SortOrder = "asc" | "desc";
+
 export default function WhatIfCalculator() {
   const [selectedConference, setSelectedConference] = useState<string>("");
   const [gameSelections, setGameSelections] = useState<Map<number, string>>(
@@ -21,6 +23,8 @@ export default function WhatIfCalculator() {
     WhatIfTeamResult[]
   >([]);
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
+  const [sortColumn, setSortColumn] = useState<SortColumn>("team");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   // Fetch conference list
   const { data: conferenceData, isLoading: isLoadingConferences } =
@@ -44,7 +48,6 @@ export default function WhatIfCalculator() {
     if (selectedConference) {
       console.log("Loading data for conference:", selectedConference);
 
-      // Call API with empty selections to get games and current projections
       whatIfMutation.mutate(
         { conference: selectedConference, selections: [] },
         {
@@ -56,11 +59,9 @@ export default function WhatIfCalculator() {
               response.current_projections?.length || 0
             );
 
-            // Extract projections and games from response
             setCurrentProjections(response.current_projections || []);
             setGames(response.games || []);
 
-            // Log sample current projection data
             if (
               response.current_projections &&
               response.current_projections.length > 0
@@ -79,7 +80,6 @@ export default function WhatIfCalculator() {
         }
       );
     } else {
-      // Clear data when no conference is selected
       setGames([]);
       setCurrentProjections([]);
       setWhatIfResults([]);
@@ -92,6 +92,8 @@ export default function WhatIfCalculator() {
     setSelectedConference(conference);
     setGameSelections(new Map());
     setWhatIfResults([]);
+    setSortColumn("team");
+    setSortOrder("asc");
   };
 
   const handleGameSelection = (gameId: number, winnerId: string) => {
@@ -132,10 +134,120 @@ export default function WhatIfCalculator() {
     setWhatIfResults([]);
   };
 
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortOrder("asc");
+    }
+  };
+
   const calculateTop2Probability = (team: WhatIfTeamResult) => {
     const probability =
       team.conf_champ_game_played / (team.totalscenarios || 1000);
-    return probability;
+    return probability * 100;
+  };
+
+  // Group games by date
+  const gamesByDate: { [key: string]: WhatIfGame[] } = {};
+  games.forEach((game) => {
+    if (!gamesByDate[game.date]) {
+      gamesByDate[game.date] = [];
+    }
+    gamesByDate[game.date].push(game);
+  });
+
+  // Combine current and what-if results
+  const combineResults = () => {
+    if (whatIfResults.length === 0) {
+      return currentProjections.map((team) => ({
+        team_id: team.team_id,
+        team_name: team.team_name,
+        logo_url: team.logo_url,
+        currentProb: calculateTop2Probability(team),
+        whatIfProb: 0,
+        change: 0,
+        isZero: calculateTop2Probability(team) === 0,
+      }));
+    }
+
+    return currentProjections
+      .map((current) => {
+        const whatIf = whatIfResults.find(
+          (w) => w.team_id === current.team_id
+        );
+        const currentProb = calculateTop2Probability(current);
+        const whatIfProb = whatIf ? calculateTop2Probability(whatIf) : 0;
+        const change = whatIfProb - currentProb;
+
+        return {
+          team_id: current.team_id,
+          team_name: current.team_name,
+          logo_url: current.logo_url,
+          currentProb,
+          whatIfProb,
+          change,
+          isZero: currentProb === 0 && whatIfProb === 0,
+        };
+      });
+  };
+
+  // Sort results
+  const sortResults = (results: ReturnType<typeof combineResults>) => {
+    const zeroTeams = results.filter((r) => r.isZero);
+    const nonZeroTeams = results.filter((r) => !r.isZero);
+
+    let sorted = [...nonZeroTeams];
+
+    sorted.sort((a, b) => {
+      let compareValue = 0;
+
+      switch (sortColumn) {
+        case "team":
+          compareValue = a.team_name.localeCompare(b.team_name);
+          break;
+        case "current":
+          compareValue = a.currentProb - b.currentProb;
+          break;
+        case "whatif":
+          compareValue = a.whatIfProb - b.whatIfProb;
+          break;
+        case "change":
+          compareValue = a.change - b.change;
+          break;
+      }
+
+      return sortOrder === "asc" ? compareValue : -compareValue;
+    });
+
+    // Sort zero teams alphabetically
+    const sortedZeroTeams = zeroTeams.sort((a, b) =>
+      a.team_name.localeCompare(b.team_name)
+    );
+
+    return [...sorted, ...sortedZeroTeams];
+  };
+
+  const combinedResults = sortResults(combineResults());
+
+  const SortHeader = ({ column, label }: { column: SortColumn; label: string }) => {
+    const isActive = sortColumn === column;
+    return (
+      <button
+        onClick={() => handleSort(column)}
+        className={`flex items-center gap-1 font-medium transition-colors ${
+          isActive ? "text-blue-600" : "text-gray-700 hover:text-gray-900"
+        }`}
+      >
+        {label}
+        {isActive && (
+          <span className="text-sm">
+            {sortOrder === "asc" ? "↑" : "↓"}
+          </span>
+        )}
+      </button>
+    );
   };
 
   return (
@@ -146,10 +258,10 @@ export default function WhatIfCalculator() {
         probability of making the conference championship game (top 2 seeds).
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left Column: Conference & Game Selection */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow p-6 sticky top-6">
             <h2 className="text-xl font-semibold mb-4">
               Select Conference & Games
             </h2>
@@ -178,17 +290,17 @@ export default function WhatIfCalculator() {
               {gameSelections.size} games selected
             </p>
 
-            {/* Future Games List - Visual Grid Layout */}
+            {/* Future Games List - Horizontal Grid */}
             <div className="max-h-96 overflow-y-auto">
               {!selectedConference && (
-                <p className="text-gray-500 text-center py-8">
+                <p className="text-gray-500 text-center py-8 text-sm">
                   Select a conference to view games
                 </p>
               )}
               {selectedConference &&
                 whatIfMutation.isPending &&
                 games.length === 0 && (
-                  <p className="text-gray-500 text-center py-8">
+                  <p className="text-gray-500 text-center py-8 text-sm">
                     Loading games...
                   </p>
                 )}
@@ -196,138 +308,124 @@ export default function WhatIfCalculator() {
                 !whatIfMutation.isPending &&
                 games.length === 0 && (
                   <div className="text-center py-8">
-                    <p className="text-gray-500 mb-2">
+                    <p className="text-gray-500 mb-2 text-sm">
                       No future games available
                     </p>
                     <p className="text-xs text-gray-400">
-                      This conference may not have any upcoming games, or the
-                      season may be complete.
+                      Season may be complete.
                     </p>
                   </div>
                 )}
 
-              {/* Game Cards Grid */}
-              {games.length > 0 && (
-                <div className="space-y-4">
-                  {games.map((game) => {
-                    const selectedTeam = gameSelections.get(game.game_id);
-
-                    return (
-                      <div
-                        key={game.game_id}
-                        className="bg-gray-50 rounded-lg p-3 border border-gray-200"
-                      >
-                        {/* Date */}
-                        <div className="text-xs text-gray-500 mb-3 text-center font-medium">
-                          {game.date}
+              {/* Games Grouped by Date */}
+              {Object.keys(gamesByDate).length > 0 && (
+                <div className="space-y-6">
+                  {Object.keys(gamesByDate)
+                    .sort()
+                    .map((date) => (
+                      <div key={date}>
+                        {/* Date Header - Only Once */}
+                        <div className="text-xs font-semibold text-gray-600 mb-2 px-1">
+                          {date}
                         </div>
 
-                        {/* Game Matchup with Team Logos */}
-                        <div className="flex items-center justify-center gap-2">
-                          {/* Away Team Button */}
-                          <button
-                            onClick={() =>
-                              handleGameSelection(
-                                game.game_id,
-                                String(game.away_team_id)
-                              )
-                            }
-                            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 ${
-                              selectedTeam === String(game.away_team_id)
-                                ? "bg-blue-500 ring-2 ring-blue-600 shadow-md"
-                                : "hover:bg-gray-200"
-                            }`}
-                          >
-                            {game.away_team_logo ? (
-                              <Image
-                                src={game.away_team_logo}
-                                alt={game.away_team}
-                                width={40}
-                                height={40}
-                                className="object-contain"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
-                                {game.away_team.substring(0, 2).toUpperCase()}
-                              </div>
-                            )}
-                            <span
-                              className={`text-xs font-semibold text-center leading-tight w-14 ${
-                                selectedTeam === String(game.away_team_id)
-                                  ? "text-white"
-                                  : "text-gray-700"
-                              }`}
-                            >
-                              {game.away_team}
-                            </span>
-                            <span
-                              className={`text-xs font-medium ${
-                                selectedTeam === String(game.away_team_id)
-                                  ? "text-blue-100"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {(game.away_probability * 100).toFixed(0)}%
-                            </span>
-                          </button>
+                        {/* Games Horizontal Grid */}
+                        <div className="grid grid-cols-2 gap-2">
+                          {gamesByDate[date].map((game) => {
+                            const selectedTeam = gameSelections.get(game.game_id);
+                            const isNeutral = !game.away_team_logo || !game.home_team_logo;
+                            const separator = isNeutral ? "vs" : "@";
 
-                          {/* Separator (vs) */}
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span className="text-xs font-bold text-gray-400">
-                              vs
-                            </span>
-                          </div>
+                            return (
+                              <div
+                                key={game.game_id}
+                                className="bg-gray-50 rounded p-2 border border-gray-200"
+                              >
+                                {/* Game Matchup with Logos Only */}
+                                <div className="flex items-center justify-center gap-1">
+                                  {/* Away Team */}
+                                  <button
+                                    onClick={() =>
+                                      handleGameSelection(
+                                        game.game_id,
+                                        String(game.away_team_id)
+                                      )
+                                    }
+                                    className={`flex flex-col items-center gap-0.5 p-1 rounded transition-all duration-200 ${
+                                      selectedTeam === String(game.away_team_id)
+                                        ? "bg-blue-500 ring-2 ring-blue-600"
+                                        : "hover:bg-gray-200"
+                                    }`}
+                                  >
+                                    {game.away_team_logo ? (
+                                      <Image
+                                        src={game.away_team_logo}
+                                        alt={game.away_team}
+                                        width={28}
+                                        height={28}
+                                        className="object-contain"
+                                      />
+                                    ) : (
+                                      <div className="w-7 h-7 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
+                                        {game.away_team
+                                          .substring(0, 2)
+                                          .toUpperCase()}
+                                      </div>
+                                    )}
+                                    <span className="text-xs font-medium text-gray-600">
+                                      {(
+                                        game.away_probability * 100
+                                      ).toFixed(0)}%
+                                    </span>
+                                  </button>
 
-                          {/* Home Team Button */}
-                          <button
-                            onClick={() =>
-                              handleGameSelection(
-                                game.game_id,
-                                String(game.home_team_id)
-                              )
-                            }
-                            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 ${
-                              selectedTeam === String(game.home_team_id)
-                                ? "bg-blue-500 ring-2 ring-blue-600 shadow-md"
-                                : "hover:bg-gray-200"
-                            }`}
-                          >
-                            {game.home_team_logo ? (
-                              <Image
-                                src={game.home_team_logo}
-                                alt={game.home_team}
-                                width={40}
-                                height={40}
-                                className="object-contain"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
-                                {game.home_team.substring(0, 2).toUpperCase()}
+                                  {/* Separator */}
+                                  <div className="text-xs font-bold text-gray-400">
+                                    {separator}
+                                  </div>
+
+                                  {/* Home Team */}
+                                  <button
+                                    onClick={() =>
+                                      handleGameSelection(
+                                        game.game_id,
+                                        String(game.home_team_id)
+                                      )
+                                    }
+                                    className={`flex flex-col items-center gap-0.5 p-1 rounded transition-all duration-200 ${
+                                      selectedTeam === String(game.home_team_id)
+                                        ? "bg-blue-500 ring-2 ring-blue-600"
+                                        : "hover:bg-gray-200"
+                                    }`}
+                                  >
+                                    {game.home_team_logo ? (
+                                      <Image
+                                        src={game.home_team_logo}
+                                        alt={game.home_team}
+                                        width={28}
+                                        height={28}
+                                        className="object-contain"
+                                      />
+                                    ) : (
+                                      <div className="w-7 h-7 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
+                                        {game.home_team
+                                          .substring(0, 2)
+                                          .toUpperCase()}
+                                      </div>
+                                    )}
+                                    <span className="text-xs font-medium text-gray-600">
+                                      {(
+                                        game.home_probability * 100
+                                      ).toFixed(0)}%
+                                    </span>
+                                  </button>
+                                </div>
                               </div>
-                            )}
-                            <span
-                              className={`text-xs font-semibold text-center leading-tight w-14 ${
-                                selectedTeam === String(game.home_team_id)
-                                  ? "text-white"
-                                  : "text-gray-700"
-                              }`}
-                            >
-                              {game.home_team}
-                            </span>
-                            <span
-                              className={`text-xs font-medium ${
-                                selectedTeam === String(game.home_team_id)
-                                  ? "text-blue-100"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {(game.home_probability * 100).toFixed(0)}%
-                            </span>
-                          </button>
+                            );
+                          })}
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
                 </div>
               )}
             </div>
@@ -336,183 +434,146 @@ export default function WhatIfCalculator() {
             <div className="mt-4 space-y-2">
               <button
                 onClick={handleCalculateImpact}
-                disabled={gameSelections.size === 0 || whatIfMutation.isPending}
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                disabled={
+                  gameSelections.size === 0 || whatIfMutation.isPending
+                }
+                className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {whatIfMutation.isPending
                   ? "Calculating..."
-                  : `Calculate Impact (${gameSelections.size} games)`}
+                  : `Calculate (${gameSelections.size})`}
               </button>
               <button
                 onClick={handleReset}
-                className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm font-medium"
               >
-                Reset All
+                Reset
               </button>
             </div>
           </div>
         </div>
 
-        {/* Middle Column: Current Projections */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Current Projections</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Probability of making Conference Championship Game (Top 2 Seed)
-          </p>
-          {!selectedConference ? (
-            <p className="text-gray-500 text-center py-8">
-              Select a conference to view projections
+        {/* Right Column: Combined Results */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Results</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Championship Game Probability Comparison
             </p>
-          ) : currentProjections.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Loading...</p>
-          ) : (
-            <div className="space-y-4">
+
+            {!selectedConference ? (
+              <p className="text-gray-500 text-center py-12">
+                Select a conference to view results
+              </p>
+            ) : combinedResults.length === 0 ? (
+              <p className="text-gray-500 text-center py-12">Loading...</p>
+            ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="text-left p-2">Team</th>
-                      <th className="text-right p-2">Champ Game %</th>
+                      <th className="text-left p-3">
+                        <SortHeader column="team" label="Team" />
+                      </th>
+                      <th className="text-right p-3">
+                        <SortHeader column="current" label="Current %" />
+                      </th>
+                      <th className="text-right p-3">
+                        <SortHeader column="whatif" label="What-If %" />
+                      </th>
+                      <th className="text-right p-3">
+                        <SortHeader column="change" label="Change" />
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {currentProjections
-                      .sort((a, b) => {
-                        const aProb = calculateTop2Probability(a);
-                        const bProb = calculateTop2Probability(b);
-                        return bProb - aProb;
-                      })
-                      .map((team) => {
-                        const champGameProb = calculateTop2Probability(team);
-                        return (
-                          <tr
-                            key={team.team_id}
-                            className="border-b hover:bg-gray-50"
-                          >
-                            <td className="p-2">
-                              <div className="flex items-center gap-2">
-                                {team.logo_url && (
-                                  <Image
-                                    src={team.logo_url}
-                                    alt={team.team_name}
-                                    width={24}
-                                    height={24}
-                                  />
-                                )}
-                                <span className="font-medium">
-                                  {team.team_name}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="text-right p-2">
-                              {(champGameProb * 100).toFixed(1)}%
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: What-If Results */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">What-If Results</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Change in Conference Championship Game probability
-          </p>
-          {whatIfResults.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              No calculations yet
-              <br />
-              <span className="text-sm">
-                Select games and click Calculate Impact
-              </span>
-            </p>
-          ) : (
-            <div className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="text-left p-2">Team</th>
-                      <th className="text-right p-2">Champ Game Δ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {whatIfResults
-                      .map((team: WhatIfTeamResult) => {
-                        const current = currentProjections.find(
-                          (t: WhatIfTeamResult) => t.team_id === team.team_id
-                        );
-                        if (!current) return null;
-
-                        const currentProb = calculateTop2Probability(current);
-                        const whatIfProb = calculateTop2Probability(team);
-                        const delta = (whatIfProb - currentProb) * 100;
-
-                        return {
-                          team,
-                          delta,
-                          whatIfProb,
-                        };
-                      })
-                      .filter(Boolean)
-                      .sort((a, b) => {
-                        if (!a || !b) return 0;
-                        return Math.abs(b.delta) - Math.abs(a.delta);
-                      })
-                      .map((data) => {
-                        if (!data) return null;
-                        const { team, delta, whatIfProb } = data;
-
-                        return (
-                          <tr
-                            key={team.team_id}
-                            className="border-b hover:bg-gray-50"
-                          >
-                            <td className="p-2">
-                              <div className="flex items-center gap-2">
-                                {team.logo_url && (
-                                  <Image
-                                    src={team.logo_url}
-                                    alt={team.team_name}
-                                    width={24}
-                                    height={24}
-                                  />
-                                )}
-                                <div>
-                                  <span className="font-medium block">
-                                    {team.team_name}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {(whatIfProb * 100).toFixed(1)}%
-                                  </span>
+                    {combinedResults.map((row) => (
+                      <tr
+                        key={row.team_id}
+                        className={`border-b transition-colors ${
+                          row.isZero
+                            ? "bg-gray-100 hover:bg-gray-150"
+                            : "hover:bg-blue-50"
+                        }`}
+                      >
+                        {/* Team Column */}
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={
+                                row.isZero ? "opacity-40" : "opacity-100"
+                              }
+                            >
+                              {row.logo_url ? (
+                                <Image
+                                  src={row.logo_url}
+                                  alt={row.team_name}
+                                  width={32}
+                                  height={32}
+                                  className="object-contain"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
+                                  {row.team_name
+                                    .substring(0, 2)
+                                    .toUpperCase()}
                                 </div>
-                              </div>
-                            </td>
-                            <td
-                              className={`text-right p-2 font-medium ${
-                                delta > 0
-                                  ? "text-green-600"
-                                  : delta < 0
-                                    ? "text-red-600"
-                                    : ""
+                              )}
+                            </div>
+                            <span
+                              className={`font-medium text-sm ${
+                                row.isZero
+                                  ? "text-gray-400"
+                                  : "text-gray-900"
                               }`}
                             >
-                              {delta > 0 ? "+" : ""}
-                              {delta.toFixed(1)}%
-                            </td>
-                          </tr>
-                        );
-                      })}
+                              {row.team_name}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Current Probability */}
+                        <td className="text-right p-3 text-sm font-medium">
+                          {row.currentProb.toFixed(1)}%
+                        </td>
+
+                        {/* What-If Probability */}
+                        <td className="text-right p-3 text-sm font-medium">
+                          {whatIfResults.length > 0 ? (
+                            row.whatIfProb.toFixed(1) + "%"
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+
+                        {/* Change */}
+                        <td
+                          className={`text-right p-3 text-sm font-medium ${
+                            whatIfResults.length > 0
+                              ? row.change > 0
+                                ? "text-green-600"
+                                : row.change < 0
+                                  ? "text-red-600"
+                                  : "text-gray-500"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          {whatIfResults.length > 0 ? (
+                            <>
+                              {row.change > 0 ? "+" : ""}
+                              {row.change.toFixed(1)}%
+                            </>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
