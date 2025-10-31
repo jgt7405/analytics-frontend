@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFootballConfData } from "@/hooks/useFootballConfData";
@@ -354,92 +353,98 @@ export default function WhatIfCalculator() {
                             const isNeutral = !game.away_team_logo || !game.home_team_logo;
                             const separator = isNeutral ? "vs" : "@";
 
-                            return (
-                              <div
-                                key={game.game_id}
-                                className="bg-white rounded p-1.5 border-2 border-gray-300"
+                        return (
+                          <div
+                            key={game.game_id}
+                            className="bg-white rounded p-2 border-2 border-gray-300"
+                          >
+                            {/* Game Matchup with Logos and Percentages */}
+                            <div className="flex items-center justify-center gap-1.5">
+                              {/* Away Team */}
+                              <button
+                                onClick={() =>
+                                  handleGameSelection(
+                                    game.game_id,
+                                    String(game.away_team_id)
+                                  )
+                                }
+                                className="flex flex-col items-center gap-0.5 transition-all duration-200"
                               >
-                                {/* Game Matchup with Logos Only */}
-                                <div className="flex items-center justify-center gap-1">
-                                  {/* Away Team */}
-                                  <button
-                                    onClick={() =>
-                                      handleGameSelection(
-                                        game.game_id,
-                                        String(game.away_team_id)
-                                      )
-                                    }
-                                    className={`flex flex-col items-center gap-0.5 p-1 rounded transition-all duration-200 ${
-                                      selectedTeam === String(game.away_team_id)
-                                        ? "ring-2 ring-[#2563eb]"
-                                        : "hover:bg-gray-100"
-                                    }`}
-                                  >
-                                    {game.away_team_logo ? (
-                                      <Image
-                                        src={game.away_team_logo}
-                                        alt={game.away_team}
-                                        width={24}
-                                        height={24}
-                                        className="object-contain"
-                                      />
-                                    ) : (
-                                      <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center text-[10px] font-bold">
-                                        {game.away_team
-                                          .substring(0, 2)
-                                          .toUpperCase()}
-                                      </div>
-                                    )}
-                                    <span className="text-[10px] font-medium text-gray-500">
-                                      {(
-                                        game.away_probability * 100
-                                      ).toFixed(0)}%
-                                    </span>
-                                  </button>
-
-                                  {/* Separator */}
-                                  <div className="text-[10px] font-bold text-gray-400">
-                                    {separator}
-                                  </div>
-
-                                  {/* Home Team */}
-                                  <button
-                                    onClick={() =>
-                                      handleGameSelection(
-                                        game.game_id,
-                                        String(game.home_team_id)
-                                      )
-                                    }
-                                    className={`flex flex-col items-center gap-0.5 p-1 rounded transition-all duration-200 ${
-                                      selectedTeam === String(game.home_team_id)
-                                        ? "ring-2 ring-[#2563eb]"
-                                        : "hover:bg-gray-100"
-                                    }`}
-                                  >
-                                    {game.home_team_logo ? (
-                                      <Image
-                                        src={game.home_team_logo}
-                                        alt={game.home_team}
-                                        width={24}
-                                        height={24}
-                                        className="object-contain"
-                                      />
-                                    ) : (
-                                      <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center text-[10px] font-bold">
-                                        {game.home_team
-                                          .substring(0, 2)
-                                          .toUpperCase()}
-                                      </div>
-                                    )}
-                                    <span className="text-[10px] font-medium text-gray-500">
-                                      {(
-                                        game.home_probability * 100
-                                      ).toFixed(0)}%
-                                    </span>
-                                  </button>
+                                <div className={`p-0.5 rounded ${
+                                  selectedTeam === String(game.away_team_id)
+                                    ? "ring-2 ring-[#2563eb]"
+                                    : ""
+                                }`}>
+                                  {game.away_team_logo ? (
+                                    <Image
+                                      src={game.away_team_logo}
+                                      alt={game.away_team}
+                                      width={24}
+                                      height={24}
+                                      className="object-contain"
+                                    />
+                                  ) : (
+                                    <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center text-[10px] font-bold">
+                                      {game.away_team
+                                        .substring(0, 2)
+                                        .toUpperCase()}
+                                    </div>
+                                  )}
                                 </div>
+                                <span className="text-[10px] font-medium text-gray-500">
+                                  {(
+                                    game.away_probability * 100
+                                  ).toFixed(0)}%
+                                </span>
+                              </button>
+                        
+                              {/* Separator */}
+                              <div className="text-[10px] font-bold text-gray-400">
+                                {separator}
                               </div>
-                            );
+                        
+                              {/* Home Team */}
+                              <button
+                                onClick={() =>
+                                  handleGameSelection(
+                                    game.game_id,
+                                    String(game.home_team_id)
+                                  )
+                                }
+                                className="flex flex-col items-center gap-0.5 transition-all duration-200"
+                              >
+                                <div className={`p-0.5 rounded ${
+                                  selectedTeam === String(game.home_team_id)
+                                    ? "ring-2 ring-[#2563eb]"
+                                    : ""
+                                }`}>
+                                  {game.home_team_logo ? (
+                                    <Image
+                                      src={game.home_team_logo}
+                                      alt={game.home_team}
+                                      width={24}
+                                      height={24}
+                                      className="object-contain"
+                                    />
+                                  ) : (
+                                    <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center text-[10px] font-bold">
+                                      {game.home_team
+                                        .substring(0, 2)
+                                        .toUpperCase()}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-[10px] font-medium text-gray-500">
+                                  {(
+                                    game.home_probability * 100
+                                  ).toFixed(0)}%
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+
+
                           })}
                         </div>
                       </div>
