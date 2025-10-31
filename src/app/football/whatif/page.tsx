@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFootballConfData } from "@/hooks/useFootballConfData";
@@ -84,7 +85,7 @@ export default function WhatIfCalculator() {
       setWhatIfResults([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedConference]); // Only depend on selectedConference
+  }, [selectedConference]);
 
   const handleConferenceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const conference = e.target.value;
@@ -96,7 +97,7 @@ export default function WhatIfCalculator() {
   const handleGameSelection = (gameId: number, winnerId: string) => {
     const newSelections = new Map(gameSelections);
     if (newSelections.get(gameId) === winnerId) {
-      newSelections.delete(gameId); // Deselect if clicking same team
+      newSelections.delete(gameId);
     } else {
       newSelections.set(gameId, winnerId);
     }
@@ -131,13 +132,9 @@ export default function WhatIfCalculator() {
     setWhatIfResults([]);
   };
 
-  // Calculate top 2 probability (conference championship game eligibility)
   const calculateTop2Probability = (team: WhatIfTeamResult) => {
-    // conf_champ_game_played is the COUNT of scenarios where team made championship game
-    // totalscenarios is always 1000
     const probability =
       team.conf_champ_game_played / (team.totalscenarios || 1000);
-
     return probability;
   };
 
@@ -181,8 +178,8 @@ export default function WhatIfCalculator() {
               {gameSelections.size} games selected
             </p>
 
-            {/* Future Games List */}
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+            {/* Future Games List - Visual Grid Layout */}
+            <div className="max-h-96 overflow-y-auto">
               {!selectedConference && (
                 <p className="text-gray-500 text-center py-8">
                   Select a conference to view games
@@ -208,58 +205,131 @@ export default function WhatIfCalculator() {
                     </p>
                   </div>
                 )}
-              {games.map((game) => (
-                <div
-                  key={game.game_id}
-                  className="border rounded-lg p-3 bg-gray-50"
-                >
-                  <div className="text-xs text-gray-500 mb-2">{game.date}</div>
-                  <div className="space-y-1">
-                    <button
-                      onClick={() =>
-                        handleGameSelection(
-                          game.game_id,
-                          String(game.away_team_id)
-                        )
-                      }
-                      className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                        gameSelections.get(game.game_id) ===
-                        String(game.away_team_id)
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">@ {game.away_team}</span>
-                        <span className="text-sm">
-                          {(game.away_probability * 100).toFixed(0)}%
-                        </span>
+
+              {/* Game Cards Grid */}
+              {games.length > 0 && (
+                <div className="space-y-4">
+                  {games.map((game) => {
+                    const selectedTeam = gameSelections.get(game.game_id);
+
+                    return (
+                      <div
+                        key={game.game_id}
+                        className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                      >
+                        {/* Date */}
+                        <div className="text-xs text-gray-500 mb-3 text-center font-medium">
+                          {game.date}
+                        </div>
+
+                        {/* Game Matchup with Team Logos */}
+                        <div className="flex items-center justify-center gap-2">
+                          {/* Away Team Button */}
+                          <button
+                            onClick={() =>
+                              handleGameSelection(
+                                game.game_id,
+                                String(game.away_team_id)
+                              )
+                            }
+                            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 ${
+                              selectedTeam === String(game.away_team_id)
+                                ? "bg-blue-500 ring-2 ring-blue-600 shadow-md"
+                                : "hover:bg-gray-200"
+                            }`}
+                          >
+                            {game.away_team_logo ? (
+                              <Image
+                                src={game.away_team_logo}
+                                alt={game.away_team}
+                                width={40}
+                                height={40}
+                                className="object-contain"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
+                                {game.away_team.substring(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <span
+                              className={`text-xs font-semibold text-center leading-tight w-14 ${
+                                selectedTeam === String(game.away_team_id)
+                                  ? "text-white"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              {game.away_team}
+                            </span>
+                            <span
+                              className={`text-xs font-medium ${
+                                selectedTeam === String(game.away_team_id)
+                                  ? "text-blue-100"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {(game.away_probability * 100).toFixed(0)}%
+                            </span>
+                          </button>
+
+                          {/* Separator (vs) */}
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-xs font-bold text-gray-400">
+                              vs
+                            </span>
+                          </div>
+
+                          {/* Home Team Button */}
+                          <button
+                            onClick={() =>
+                              handleGameSelection(
+                                game.game_id,
+                                String(game.home_team_id)
+                              )
+                            }
+                            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 ${
+                              selectedTeam === String(game.home_team_id)
+                                ? "bg-blue-500 ring-2 ring-blue-600 shadow-md"
+                                : "hover:bg-gray-200"
+                            }`}
+                          >
+                            {game.home_team_logo ? (
+                              <Image
+                                src={game.home_team_logo}
+                                alt={game.home_team}
+                                width={40}
+                                height={40}
+                                className="object-contain"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
+                                {game.home_team.substring(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <span
+                              className={`text-xs font-semibold text-center leading-tight w-14 ${
+                                selectedTeam === String(game.home_team_id)
+                                  ? "text-white"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              {game.home_team}
+                            </span>
+                            <span
+                              className={`text-xs font-medium ${
+                                selectedTeam === String(game.home_team_id)
+                                  ? "text-blue-100"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {(game.home_probability * 100).toFixed(0)}%
+                            </span>
+                          </button>
+                        </div>
                       </div>
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleGameSelection(
-                          game.game_id,
-                          String(game.home_team_id)
-                        )
-                      }
-                      className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                        gameSelections.get(game.game_id) ===
-                        String(game.home_team_id)
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{game.home_team}</span>
-                        <span className="text-sm">
-                          {(game.home_probability * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                    </button>
-                  </div>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Action Buttons */}
