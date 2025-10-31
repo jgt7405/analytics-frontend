@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useFootballConfData } from "@/hooks/useFootballConfData";
@@ -23,8 +24,9 @@ export default function WhatIfCalculator() {
     WhatIfTeamResult[]
   >([]);
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
-  const [sortColumn, setSortColumn] = useState<SortColumn>("team");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [sortColumn, setSortColumn] = useState<SortColumn>("current");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
   // Fetch conference list
   const { data: conferenceData, isLoading: isLoadingConferences } =
@@ -47,6 +49,7 @@ export default function WhatIfCalculator() {
   useEffect(() => {
     if (selectedConference) {
       console.log("Loading data for conference:", selectedConference);
+      setIsLoadingData(true);
 
       whatIfMutation.mutate(
         { conference: selectedConference, selections: [] },
@@ -61,6 +64,7 @@ export default function WhatIfCalculator() {
 
             setCurrentProjections(response.current_projections || []);
             setGames(response.games || []);
+            setIsLoadingData(false);
 
             if (
               response.current_projections &&
@@ -76,6 +80,7 @@ export default function WhatIfCalculator() {
           },
           onError: (error: Error) => {
             console.error("❌ API Error:", error);
+            setIsLoadingData(false);
           },
         }
       );
@@ -83,6 +88,7 @@ export default function WhatIfCalculator() {
       setGames([]);
       setCurrentProjections([]);
       setWhatIfResults([]);
+      setIsLoadingData(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConference]);
@@ -92,8 +98,11 @@ export default function WhatIfCalculator() {
     setSelectedConference(conference);
     setGameSelections(new Map());
     setWhatIfResults([]);
-    setSortColumn("team");
-    setSortOrder("asc");
+    setSortColumn("current");
+    setSortOrder("desc");
+    // Clear data immediately
+    setGames([]);
+    setCurrentProjections([]);
   };
 
   const handleGameSelection = (gameId: number, winnerId: string) => {
@@ -139,7 +148,8 @@ export default function WhatIfCalculator() {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortColumn(column);
-      setSortOrder("asc");
+      // Team starts with ascending, all others start with descending
+      setSortOrder(column === "team" ? "asc" : "desc");
     }
   };
 
@@ -147,6 +157,16 @@ export default function WhatIfCalculator() {
     const probability =
       team.conf_champ_game_played / (team.totalscenarios || 1000);
     return probability * 100;
+  };
+
+  // Helper function to get color based on percentage (similar to seed projections)
+  const getPercentageColor = (percentage: number): string => {
+    if (percentage >= 75) return "bg-[#2563eb] text-white";
+    if (percentage >= 50) return "bg-[#60a5fa] text-white";
+    if (percentage >= 25) return "bg-[#93c5fd] text-gray-900";
+    if (percentage >= 10) return "bg-[#dbeafe] text-gray-900";
+    if (percentage > 0) return "bg-[#eff6ff] text-gray-900";
+    return "bg-white text-gray-400";
   };
 
   // Group games by date
@@ -236,7 +256,7 @@ export default function WhatIfCalculator() {
     return (
       <button
         onClick={() => handleSort(column)}
-        className={`flex items-center gap-1 font-medium transition-colors ${
+        className={`flex items-center justify-center gap-1 font-medium transition-colors w-full ${
           isActive ? "text-blue-600" : "text-gray-700 hover:text-gray-900"
         }`}
       >
@@ -258,7 +278,7 @@ export default function WhatIfCalculator() {
         probability of making the conference championship game (top 2 seeds).
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Conference & Game Selection */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-6 sticky top-6">
@@ -297,15 +317,13 @@ export default function WhatIfCalculator() {
                   Select a conference to view games
                 </p>
               )}
+              {selectedConference && isLoadingData && (
+                <p className="text-gray-500 text-center py-8 text-sm">
+                  Loading games...
+                </p>
+              )}
               {selectedConference &&
-                whatIfMutation.isPending &&
-                games.length === 0 && (
-                  <p className="text-gray-500 text-center py-8 text-sm">
-                    Loading games...
-                  </p>
-                )}
-              {selectedConference &&
-                !whatIfMutation.isPending &&
+                !isLoadingData &&
                 games.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-gray-500 mb-2 text-sm">
@@ -330,7 +348,7 @@ export default function WhatIfCalculator() {
                         </div>
 
                         {/* Games Horizontal Grid */}
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                           {gamesByDate[date].map((game) => {
                             const selectedTeam = gameSelections.get(game.game_id);
                             const isNeutral = !game.away_team_logo || !game.home_team_logo;
@@ -339,7 +357,7 @@ export default function WhatIfCalculator() {
                             return (
                               <div
                                 key={game.game_id}
-                                className="bg-gray-50 rounded p-2 border border-gray-200"
+                                className="bg-white rounded p-1.5 border-2 border-gray-300"
                               >
                                 {/* Game Matchup with Logos Only */}
                                 <div className="flex items-center justify-center gap-1">
@@ -353,26 +371,26 @@ export default function WhatIfCalculator() {
                                     }
                                     className={`flex flex-col items-center gap-0.5 p-1 rounded transition-all duration-200 ${
                                       selectedTeam === String(game.away_team_id)
-                                        ? "bg-blue-500 ring-2 ring-blue-600"
-                                        : "hover:bg-gray-200"
+                                        ? "ring-2 ring-[#2563eb]"
+                                        : "hover:bg-gray-100"
                                     }`}
                                   >
                                     {game.away_team_logo ? (
                                       <Image
                                         src={game.away_team_logo}
                                         alt={game.away_team}
-                                        width={28}
-                                        height={28}
+                                        width={24}
+                                        height={24}
                                         className="object-contain"
                                       />
                                     ) : (
-                                      <div className="w-7 h-7 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
+                                      <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center text-[10px] font-bold">
                                         {game.away_team
                                           .substring(0, 2)
                                           .toUpperCase()}
                                       </div>
                                     )}
-                                    <span className="text-xs font-medium text-gray-600">
+                                    <span className="text-[10px] font-medium text-gray-500">
                                       {(
                                         game.away_probability * 100
                                       ).toFixed(0)}%
@@ -380,7 +398,7 @@ export default function WhatIfCalculator() {
                                   </button>
 
                                   {/* Separator */}
-                                  <div className="text-xs font-bold text-gray-400">
+                                  <div className="text-[10px] font-bold text-gray-400">
                                     {separator}
                                   </div>
 
@@ -394,26 +412,26 @@ export default function WhatIfCalculator() {
                                     }
                                     className={`flex flex-col items-center gap-0.5 p-1 rounded transition-all duration-200 ${
                                       selectedTeam === String(game.home_team_id)
-                                        ? "bg-blue-500 ring-2 ring-blue-600"
-                                        : "hover:bg-gray-200"
+                                        ? "ring-2 ring-[#2563eb]"
+                                        : "hover:bg-gray-100"
                                     }`}
                                   >
                                     {game.home_team_logo ? (
                                       <Image
                                         src={game.home_team_logo}
                                         alt={game.home_team}
-                                        width={28}
-                                        height={28}
+                                        width={24}
+                                        height={24}
                                         className="object-contain"
                                       />
                                     ) : (
-                                      <div className="w-7 h-7 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">
+                                      <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center text-[10px] font-bold">
                                         {game.home_team
                                           .substring(0, 2)
                                           .toUpperCase()}
                                       </div>
                                     )}
-                                    <span className="text-xs font-medium text-gray-600">
+                                    <span className="text-[10px] font-medium text-gray-500">
                                       {(
                                         game.home_probability * 100
                                       ).toFixed(0)}%
@@ -454,7 +472,7 @@ export default function WhatIfCalculator() {
         </div>
 
         {/* Right Column: Combined Results */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Results</h2>
             <p className="text-sm text-gray-600 mb-4">
@@ -465,23 +483,39 @@ export default function WhatIfCalculator() {
               <p className="text-gray-500 text-center py-12">
                 Select a conference to view results
               </p>
+            ) : isLoadingData ? (
+              <p className="text-gray-500 text-center py-12">Loading...</p>
             ) : combinedResults.length === 0 ? (
               <p className="text-gray-500 text-center py-12">Loading...</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
+                <table className="w-full border-collapse">
+                  <thead className="bg-gray-50 border-b-2 border-gray-300">
                     <tr>
                       <th className="text-left p-3">
-                        <SortHeader column="team" label="Team" />
+                        <button
+                          onClick={() => handleSort("team")}
+                          className={`flex items-center gap-1 font-medium transition-colors ${
+                            sortColumn === "team"
+                              ? "text-blue-600"
+                              : "text-gray-700 hover:text-gray-900"
+                          }`}
+                        >
+                          Team
+                          {sortColumn === "team" && (
+                            <span className="text-sm">
+                              {sortOrder === "asc" ? "↑" : "↓"}
+                            </span>
+                          )}
+                        </button>
                       </th>
-                      <th className="text-right p-3">
+                      <th className="text-center p-3">
                         <SortHeader column="current" label="Current %" />
                       </th>
-                      <th className="text-right p-3">
+                      <th className="text-center p-3">
                         <SortHeader column="whatif" label="What-If %" />
                       </th>
-                      <th className="text-right p-3">
+                      <th className="text-center p-3">
                         <SortHeader column="change" label="Change" />
                       </th>
                     </tr>
@@ -490,9 +524,9 @@ export default function WhatIfCalculator() {
                     {combinedResults.map((row) => (
                       <tr
                         key={row.team_id}
-                        className={`border-b transition-colors ${
+                        className={`border-b border-gray-200 transition-colors ${
                           row.isZero
-                            ? "bg-gray-100 hover:bg-gray-150"
+                            ? "bg-gray-50"
                             : "hover:bg-blue-50"
                         }`}
                       >
@@ -533,38 +567,52 @@ export default function WhatIfCalculator() {
                         </td>
 
                         {/* Current Probability */}
-                        <td className="text-right p-3 text-sm font-medium">
-                          {row.currentProb.toFixed(1)}%
+                        <td className="text-center p-2">
+                          <div className="flex justify-center">
+                            <span
+                              className={`px-3 py-1 rounded text-sm font-semibold ${getPercentageColor(
+                                row.currentProb
+                              )}`}
+                            >
+                              {row.currentProb.toFixed(1)}%
+                            </span>
+                          </div>
                         </td>
 
                         {/* What-If Probability */}
-                        <td className="text-right p-3 text-sm font-medium">
+                        <td className="text-center p-2">
                           {whatIfResults.length > 0 ? (
-                            row.whatIfProb.toFixed(1) + "%"
+                            <div className="flex justify-center">
+                              <span
+                                className={`px-3 py-1 rounded text-sm font-semibold ${getPercentageColor(
+                                  row.whatIfProb
+                                )}`}
+                              >
+                                {row.whatIfProb.toFixed(1)}%
+                              </span>
+                            </div>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-400 text-sm">-</span>
                           )}
                         </td>
 
                         {/* Change */}
-                        <td
-                          className={`text-right p-3 text-sm font-medium ${
-                            whatIfResults.length > 0
-                              ? row.change > 0
-                                ? "text-green-600"
-                                : row.change < 0
-                                  ? "text-red-600"
-                                  : "text-gray-500"
-                              : "text-gray-400"
-                          }`}
-                        >
+                        <td className="text-center p-2">
                           {whatIfResults.length > 0 ? (
-                            <>
+                            <span
+                              className={`text-sm font-semibold ${
+                                row.change > 0
+                                  ? "text-green-600"
+                                  : row.change < 0
+                                    ? "text-red-600"
+                                    : "text-gray-500"
+                              }`}
+                            >
                               {row.change > 0 ? "+" : ""}
                               {row.change.toFixed(1)}%
-                            </>
+                            </span>
                           ) : (
-                            "-"
+                            <span className="text-gray-400 text-sm">-</span>
                           )}
                         </td>
                       </tr>
