@@ -387,6 +387,8 @@ export interface WhatIfGame {
   date: string;
   home_team: string;
   away_team: string;
+  home_team_id: number;
+  away_team_id: number;
   home_team_logo?: string;
   away_team_logo?: string;
   home_probability: number;
