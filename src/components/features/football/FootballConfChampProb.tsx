@@ -27,6 +27,7 @@ interface FootballConfChampProbProps {
 }
 
 type SortColumn = "team" | "current" | "whatif" | "change" | null;
+type SortDirection = "asc" | "desc";
 
 function FootballConfChampProb({
   currentData,
@@ -37,6 +38,7 @@ function FootballConfChampProb({
   const { isMobile } = useResponsive();
   const router = useRouter();
   const [sortColumn, setSortColumn] = useState<SortColumn>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const navigateToTeam = (teamName: string) => {
     router.push(`/football/team/${encodeURIComponent(teamName)}`);
@@ -83,7 +85,8 @@ function FootballConfChampProb({
             break;
         }
 
-        return compareValue;
+        // Apply sort direction
+        return sortDirection === "asc" ? compareValue : -compareValue;
       });
 
       // Sort zero teams alphabetically
@@ -122,16 +125,23 @@ function FootballConfChampProb({
     zeroTeams.sort((a, b) => a.team_name.localeCompare(b.team_name));
 
     return [...nonZeroTeams, ...zeroTeams];
-  }, [combinedData, sortColumn, hasCalculated]);
+  }, [combinedData, sortColumn, sortDirection, hasCalculated]);
 
   const handleColumnClick = (column: SortColumn) => {
-    setSortColumn(sortColumn === column ? null : column);
+    if (sortColumn === column) {
+      // Toggle direction if same column is clicked
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Default to descending for new column
+      setSortColumn(column);
+      setSortDirection("desc");
+    }
   };
 
   // Responsive dimensions
-  const rankColWidth = isMobile ? 35 : 45;
-  const teamColWidth = isMobile ? 120 : 180;
-  const probColWidth = isMobile ? 80 : 100;
+  const rankColWidth = isMobile ? 30 : 45;
+  const teamColWidth = isMobile ? 40 : 180;
+  const probColWidth = isMobile ? 60 : 100;
   const cellHeight = isMobile ? 32 : 36;
   const headerHeight = isMobile ? 48 : 56;
 
@@ -248,7 +258,9 @@ function FootballConfChampProb({
               >
                 Team
                 {sortColumn === "team" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className="text-blue-600 text-xs mt-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </div>
                 )}
               </th>
 
@@ -274,7 +286,9 @@ function FootballConfChampProb({
               >
                 {isMobile ? "Current\n%" : "Current %"}
                 {sortColumn === "current" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className="text-blue-600 text-xs mt-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </div>
                 )}
               </th>
 
@@ -300,7 +314,9 @@ function FootballConfChampProb({
               >
                 {isMobile ? "What-If\n%" : "What-If %"}
                 {sortColumn === "whatif" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className="text-blue-600 text-xs mt-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </div>
                 )}
               </th>
 
@@ -324,7 +340,9 @@ function FootballConfChampProb({
               >
                 Change
                 {sortColumn === "change" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className="text-blue-600 text-xs mt-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </div>
                 )}
               </th>
             </tr>
@@ -371,14 +389,18 @@ function FootballConfChampProb({
                     borderRight: "1px solid #e5e7eb",
                   }}
                 >
-                  <div className="flex items-center gap-2">
+                  <div
+                    className={`flex items-center gap-2 ${isMobile ? "justify-center" : "justify-start"}`}
+                  >
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
                       size={isMobile ? 20 : 24}
                       onClick={() => navigateToTeam(team.team_name)}
                     />
-                    <span className="truncate">{team.team_name}</span>
+                    {!isMobile && (
+                      <span className="truncate">{team.team_name}</span>
+                    )}
                   </div>
                 </td>
 

@@ -58,6 +58,11 @@ function NavigationContent() {
       description: "Conference tournament projections",
     },
     {
+      name: "Conf Tourney",
+      path: addConferenceToUrl("/basketball/conf-tourney"),
+      description: "Conference tournament projections",
+    },
+    {
       name: "Seed",
       path: addConferenceToUrl("/basketball/seed"),
       description: "NCAA tournament seed projections",
@@ -114,6 +119,11 @@ function NavigationContent() {
       name: "Conf Champ",
       path: addConferenceToUrl("/football/conf-champ"),
       description: "Conference championship projections",
+    },
+    {
+      name: "What If",
+      path: addConferenceToUrl("/football/whatif"),
+      description: "What If Conference Championship Scenarios",
     },
     {
       name: "Seed",
