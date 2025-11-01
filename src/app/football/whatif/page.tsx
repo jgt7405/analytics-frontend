@@ -1,5 +1,6 @@
 "use client";
 
+import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import {
   GameSelection,
@@ -8,7 +9,10 @@ import {
 } from "@/hooks/useFootballWhatIf";
 import { WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+// Color from schedule difficulty component
+const TEAL_COLOR = "rgb(0, 151, 178)";
 
 export default function WhatIfCalculator() {
   const [selectedConference, setSelectedConference] = useState<string>("");
@@ -20,6 +24,7 @@ export default function WhatIfCalculator() {
     WhatIfTeamResult[]
   >([]);
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
   // Fetch conference list
   const { data: conferenceData, isLoading: isLoadingConferences } =
@@ -41,62 +46,43 @@ export default function WhatIfCalculator() {
   // Load games and current projections when conference is selected
   useEffect(() => {
     if (selectedConference) {
-      console.log("Loading data for conference:", selectedConference);
+      setIsLoadingData(true);
 
-      // Call API with empty selections to get games and current projections
       whatIfMutation.mutate(
         { conference: selectedConference, selections: [] },
         {
           onSuccess: (response: WhatIfResponse) => {
-            console.log("✅ API Response:", response);
-            console.log("📊 Games received:", response.games?.length || 0);
-            console.log(
-              "📊 Current projections received:",
-              response.current_projections?.length || 0
-            );
-
-            // Extract projections and games from response
             setCurrentProjections(response.current_projections || []);
             setGames(response.games || []);
-
-            // Log sample current projection data
-            if (
-              response.current_projections &&
-              response.current_projections.length > 0
-            ) {
-              console.log("📊 Sample current projection:", {
-                team: response.current_projections[0].team_name,
-                conf_champ_game_played:
-                  response.current_projections[0].conf_champ_game_played,
-                totalscenarios: response.current_projections[0].totalscenarios,
-              });
-            }
+            setIsLoadingData(false);
           },
-          onError: (error: Error) => {
-            console.error("❌ API Error:", error);
+          onError: () => {
+            setIsLoadingData(false);
           },
         }
       );
     } else {
-      // Clear data when no conference is selected
       setGames([]);
       setCurrentProjections([]);
       setWhatIfResults([]);
+      setIsLoadingData(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedConference]); // Only depend on selectedConference
+  }, [selectedConference]);
 
   const handleConferenceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const conference = e.target.value;
     setSelectedConference(conference);
     setGameSelections(new Map());
     setWhatIfResults([]);
+    setGames([]);
+    setCurrentProjections([]);
   };
 
   const handleGameSelection = (gameId: number, winnerId: string) => {
     const newSelections = new Map(gameSelections);
     if (newSelections.get(gameId) === winnerId) {
-      newSelections.delete(gameId); // Deselect if clicking same team
+      newSelections.delete(gameId);
     } else {
       newSelections.set(gameId, winnerId);
     }
@@ -113,13 +99,10 @@ export default function WhatIfCalculator() {
       winner_team_id,
     }));
 
-    console.log("🔄 Calculating impact with selections:", selections);
-
     whatIfMutation.mutate(
       { conference: selectedConference, selections },
       {
         onSuccess: (response: WhatIfResponse) => {
-          console.log("✅ What-if results received:", response.data.length);
           setWhatIfResults(response.data);
         },
       }
@@ -131,325 +114,508 @@ export default function WhatIfCalculator() {
     setWhatIfResults([]);
   };
 
-  // Calculate top 2 probability (conference championship game eligibility)
   const calculateTop2Probability = (team: WhatIfTeamResult) => {
-    // conf_champ_game_played is the COUNT of scenarios where team made championship game
-    // totalscenarios is always 1000
     const probability =
       team.conf_champ_game_played / (team.totalscenarios || 1000);
-
-    return probability;
+    return probability * 100;
   };
+
+  // Prepare data for the table component
+  const currentTableData = useMemo(() => {
+    return currentProjections.map((team) => ({
+      team_id: team.team_id,
+      team_name: team.team_name,
+      logo_url: team.logo_url,
+      currentProb: calculateTop2Probability(team),
+      whatIfProb: 0,
+      change: 0,
+    }));
+  }, [currentProjections]);
+
+  const whatIfTableData = useMemo(() => {
+    if (whatIfResults.length === 0) return undefined;
+
+    return whatIfResults.map((team) => ({
+      team_id: team.team_id,
+      team_name: team.team_name,
+      logo_url: team.logo_url,
+      currentProb: 0,
+      whatIfProb: calculateTop2Probability(team),
+      change: 0,
+    }));
+  }, [whatIfResults]);
+
+  // Group games by date
+  const gamesByDate: { [key: string]: WhatIfGame[] } = {};
+  games.forEach((game) => {
+    if (!gamesByDate[game.date]) {
+      gamesByDate[game.date] = [];
+    }
+    gamesByDate[game.date].push(game);
+  });
+
+  // Get selected games with full game details
+  const selectedGamesWithDetails = useMemo(() => {
+    const result = [];
+    for (const [gameId, winnerId] of gameSelections.entries()) {
+      const game = games.find((g) => g.game_id === gameId);
+      if (game) {
+        result.push({
+          gameId,
+          game,
+          winnerId,
+          // Left side is always away team
+          leftTeam: game.away_team,
+          leftLogo: game.away_team_logo,
+          leftIsWinner: String(game.away_team_id) === winnerId,
+          // Right side is always home team
+          rightTeam: game.home_team,
+          rightLogo: game.home_team_logo,
+          rightIsWinner: String(game.home_team_id) === winnerId,
+        });
+      }
+    }
+    return result.sort((a, b) => a.game.date.localeCompare(b.game.date));
+  }, [gameSelections, games]);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-2">What If Calculator</h1>
       <p className="text-gray-600 mb-8">
-        Select a conference and game outcomes to see how they impact each team's
-        probability of making the conference championship game (top 2 seeds).
+        See how game outcomes impact team's probabilities to make conference
+        championship game.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Conference & Game Selection */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              Select Conference & Games
-            </h2>
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow p-6 sticky top-6">
+            {/* Top Section: Conference Dropdown + Buttons */}
+            <div className="mb-3 flex gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Conference
+                </label>
+                <select
+                  value={selectedConference}
+                  onChange={handleConferenceChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 text-sm"
+                  style={
+                    { "--tw-ring-color": TEAL_COLOR } as React.CSSProperties
+                  }
+                  disabled={isLoadingConferences}
+                >
+                  <option value="">Select a conference...</option>
+                  {conferences.map((conference) => (
+                    <option key={conference} value={conference}>
+                      {conference}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Conference Dropdown */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Conference (Required)
-              </label>
-              <select
-                value={selectedConference}
-                onChange={handleConferenceChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoadingConferences}
-              >
-                <option value="">Select a conference...</option>
-                {conferences.map((conference) => (
-                  <option key={conference} value={conference}>
-                    {conference}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={handleReset}
+                  className="px-3 py-1 text-gray-700 bg-gray-300 rounded text-sm font-medium transition-colors hover:bg-gray-400"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={handleCalculateImpact}
+                  disabled={
+                    gameSelections.size === 0 || whatIfMutation.isPending
+                  }
+                  className="px-3 py-1 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: TEAL_COLOR,
+                  }}
+                >
+                  {whatIfMutation.isPending
+                    ? "Calculating..."
+                    : `Calculate (${gameSelections.size})`}
+                </button>
+              </div>
             </div>
 
-            <p className="text-sm text-gray-600 mb-4">
-              {gameSelections.size} games selected
-            </p>
+            <div className="mb-3 flex items-baseline gap-2">
+              <h2 className="text-xl font-semibold">Select Games</h2>
+              <p className="text-xs text-gray-600">
+                {gameSelections.size}{" "}
+                {gameSelections.size === 1 ? "game" : "games"} selected
+              </p>
+            </div>
 
             {/* Future Games List */}
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+            <div className="max-h-screen overflow-y-auto">
               {!selectedConference && (
-                <p className="text-gray-500 text-center py-8">
+                <p className="text-gray-500 text-center py-8 text-sm">
                   Select a conference to view games
                 </p>
               )}
-              {selectedConference &&
-                whatIfMutation.isPending &&
-                games.length === 0 && (
-                  <p className="text-gray-500 text-center py-8">
-                    Loading games...
+              {selectedConference && isLoadingData && (
+                <p className="text-gray-500 text-center py-8 text-sm">
+                  Loading games...
+                </p>
+              )}
+              {selectedConference && !isLoadingData && games.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-2 text-sm">
+                    No future games available
                   </p>
-                )}
-              {selectedConference &&
-                !whatIfMutation.isPending &&
-                games.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 mb-2">
-                      No future games available
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      This conference may not have any upcoming games, or the
-                      season may be complete.
-                    </p>
-                  </div>
-                )}
-              {games.map((game) => (
-                <div
-                  key={game.game_id}
-                  className="border rounded-lg p-3 bg-gray-50"
-                >
-                  <div className="text-xs text-gray-500 mb-2">{game.date}</div>
-                  <div className="space-y-1">
-                    <button
-                      onClick={() =>
-                        handleGameSelection(
-                          game.game_id,
-                          String(game.away_team_id)
-                        )
-                      }
-                      className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                        gameSelections.get(game.game_id) ===
-                        String(game.away_team_id)
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">@ {game.away_team}</span>
-                        <span className="text-sm">
-                          {(game.away_probability * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleGameSelection(
-                          game.game_id,
-                          String(game.home_team_id)
-                        )
-                      }
-                      className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                        gameSelections.get(game.game_id) ===
-                        String(game.home_team_id)
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{game.home_team}</span>
-                        <span className="text-sm">
-                          {(game.home_probability * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                    </button>
-                  </div>
+                  <p className="text-xs text-gray-400">
+                    Season may be complete.
+                  </p>
                 </div>
-              ))}
-            </div>
+              )}
 
-            {/* Action Buttons */}
-            <div className="mt-4 space-y-2">
-              <button
-                onClick={handleCalculateImpact}
-                disabled={gameSelections.size === 0 || whatIfMutation.isPending}
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
-                {whatIfMutation.isPending
-                  ? "Calculating..."
-                  : `Calculate Impact (${gameSelections.size} games)`}
-              </button>
-              <button
-                onClick={handleReset}
-                className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-              >
-                Reset All
-              </button>
+              {/* Games Grouped by Date */}
+              {Object.keys(gamesByDate).length > 0 && (
+                <div className="space-y-3">
+                  {Object.keys(gamesByDate)
+                    .sort()
+                    .map((date) => (
+                      <div key={date}>
+                        <div className="text-xs font-semibold text-gray-600 mb-1 px-1">
+                          {date}
+                        </div>
+
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-1">
+                          {gamesByDate[date].map((game) => {
+                            const selectedTeam = gameSelections.get(
+                              game.game_id
+                            );
+                            const isNeutral =
+                              !game.away_team_logo || !game.home_team_logo;
+                            const separator = isNeutral ? "vs" : "@";
+
+                            return (
+                              <div
+                                key={game.game_id}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: "6px",
+                                  padding: "4px 4px",
+                                  borderRadius: "12px",
+                                  border: `${selectedTeam ? "3px" : "2px"} solid ${selectedTeam ? TEAL_COLOR : "#9ca3af"}`,
+                                  backgroundColor: "white",
+                                  transition: "all 0.2s",
+                                }}
+                                title={`Game ${game.game_id}: selected=${selectedTeam}`}
+                              >
+                                {/* Away Team */}
+                                <button
+                                  onClick={() =>
+                                    handleGameSelection(
+                                      game.game_id,
+                                      String(game.away_team_id)
+                                    )
+                                  }
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    transition: "all 0.2s",
+                                    background: "none",
+                                    border: "none",
+                                    padding: "0",
+                                    cursor: "pointer",
+                                    marginRight: "4px",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      transition: "border 0.2s",
+                                      border:
+                                        selectedTeam ===
+                                        String(game.away_team_id)
+                                          ? `3px solid ${TEAL_COLOR}`
+                                          : "2px solid transparent",
+                                      borderRadius: "8px",
+                                      display: "inline-block",
+                                      lineHeight: 0,
+                                      padding: "2px",
+                                    }}
+                                  >
+                                    {game.away_team_logo ? (
+                                      <Image
+                                        src={game.away_team_logo}
+                                        alt={game.away_team}
+                                        width={24}
+                                        height={24}
+                                        className="object-contain"
+                                      />
+                                    ) : (
+                                      <div
+                                        style={{
+                                          width: "24px",
+                                          height: "24px",
+                                          borderRadius: "4px",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          fontSize: "10px",
+                                          fontWeight: "bold",
+                                          color: "#374151",
+                                        }}
+                                      >
+                                        {game.away_team
+                                          .substring(0, 2)
+                                          .toUpperCase()}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "500",
+                                      color: "#4b5563",
+                                    }}
+                                  >
+                                    {(game.away_probability * 100).toFixed(0)}%
+                                  </span>
+                                </button>
+
+                                <div
+                                  style={{
+                                    fontSize: "10px",
+                                    fontWeight: "bold",
+                                    color: "#9ca3af",
+                                  }}
+                                >
+                                  {separator}
+                                </div>
+
+                                {/* Home Team */}
+                                <button
+                                  onClick={() =>
+                                    handleGameSelection(
+                                      game.game_id,
+                                      String(game.home_team_id)
+                                    )
+                                  }
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    transition: "all 0.2s",
+                                    background: "none",
+                                    border: "none",
+                                    padding: "0",
+                                    cursor: "pointer",
+                                    marginLeft: "4px",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      transition: "border 0.2s",
+                                      border:
+                                        selectedTeam ===
+                                        String(game.home_team_id)
+                                          ? `3px solid ${TEAL_COLOR}`
+                                          : "2px solid transparent",
+                                      borderRadius: "8px",
+                                      display: "inline-block",
+                                      lineHeight: 0,
+                                      padding: "2px",
+                                    }}
+                                  >
+                                    {game.home_team_logo ? (
+                                      <Image
+                                        src={game.home_team_logo}
+                                        alt={game.home_team}
+                                        width={24}
+                                        height={24}
+                                        className="object-contain"
+                                      />
+                                    ) : (
+                                      <div
+                                        style={{
+                                          width: "24px",
+                                          height: "24px",
+                                          borderRadius: "4px",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          fontSize: "10px",
+                                          fontWeight: "bold",
+                                          color: "#374151",
+                                        }}
+                                      >
+                                        {game.home_team
+                                          .substring(0, 2)
+                                          .toUpperCase()}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "500",
+                                      color: "#4b5563",
+                                    }}
+                                  >
+                                    {(game.home_probability * 100).toFixed(0)}%
+                                  </span>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Middle Column: Current Projections */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Current Projections</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Probability of making Conference Championship Game (Top 2 Seed)
-          </p>
-          {!selectedConference ? (
-            <p className="text-gray-500 text-center py-8">
-              Select a conference to view projections
+        {/* Right Column: Results Table */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-2">Results</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Probability to Play in Conference Championship Game (Top 2 Finish)
             </p>
-          ) : currentProjections.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Loading...</p>
-          ) : (
-            <div className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="text-left p-2">Team</th>
-                      <th className="text-right p-2">Champ Game %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentProjections
-                      .sort((a, b) => {
-                        const aProb = calculateTop2Probability(a);
-                        const bProb = calculateTop2Probability(b);
-                        return bProb - aProb;
-                      })
-                      .map((team) => {
-                        const champGameProb = calculateTop2Probability(team);
-                        return (
-                          <tr
-                            key={team.team_id}
-                            className="border-b hover:bg-gray-50"
+
+            {!selectedConference ? (
+              <p className="text-gray-500 text-center py-12">
+                Select a conference to view results
+              </p>
+            ) : isLoadingData ? (
+              <p className="text-gray-500 text-center py-12">Loading...</p>
+            ) : currentTableData.length === 0 ? (
+              <p className="text-gray-500 text-center py-12">Loading...</p>
+            ) : (
+              <FootballConfChampProb
+                currentData={currentTableData}
+                whatIfData={whatIfTableData}
+                hasWhatIf={whatIfResults.length > 0}
+                hasCalculated={whatIfResults.length > 0}
+              />
+            )}
+
+            {/* Game Selection Summary */}
+            {selectedGamesWithDetails.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <p className="text-sm text-gray-700 mb-3">
+                  {selectedGamesWithDetails.length}{" "}
+                  {selectedGamesWithDetails.length === 1
+                    ? "outcome"
+                    : "outcomes"}{" "}
+                  selected:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedGamesWithDetails.map((selection) => (
+                    <div
+                      key={selection.gameId}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "2px",
+                        padding: "2px 2px",
+                        borderRadius: "6px",
+                        border: `1px solid #9ca3af`,
+                        backgroundColor: "white",
+                      }}
+                    >
+                      {/* Left Team (Away) */}
+                      <div
+                        style={{
+                          lineHeight: 0,
+                          border: selection.leftIsWinner
+                            ? `1px solid ${TEAL_COLOR}`
+                            : "1px solid transparent",
+                          borderRadius: "4px",
+                          display: "inline-block",
+                          padding: selection.leftIsWinner ? "1px" : "0",
+                        }}
+                      >
+                        {selection.leftLogo ? (
+                          <Image
+                            src={selection.leftLogo}
+                            alt={selection.leftTeam}
+                            width={12}
+                            height={12}
+                            className="object-contain"
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "12px",
+                              height: "12px",
+                              borderRadius: "2px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "6px",
+                              fontWeight: "bold",
+                              color: "#374151",
+                            }}
                           >
-                            <td className="p-2">
-                              <div className="flex items-center gap-2">
-                                {team.logo_url && (
-                                  <Image
-                                    src={team.logo_url}
-                                    alt={team.team_name}
-                                    width={24}
-                                    height={24}
-                                  />
-                                )}
-                                <span className="font-medium">
-                                  {team.team_name}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="text-right p-2">
-                              {(champGameProb * 100).toFixed(1)}%
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
+                            {selection.leftTeam.substring(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
 
-        {/* Right Column: What-If Results */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">What-If Results</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Change in Conference Championship Game probability
-          </p>
-          {whatIfResults.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              No calculations yet
-              <br />
-              <span className="text-sm">
-                Select games and click Calculate Impact
-              </span>
-            </p>
-          ) : (
-            <div className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="text-left p-2">Team</th>
-                      <th className="text-right p-2">Champ Game Δ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {whatIfResults
-                      .map((team: WhatIfTeamResult) => {
-                        const current = currentProjections.find(
-                          (t: WhatIfTeamResult) => t.team_id === team.team_id
-                        );
-                        if (!current) return null;
+                      <div style={{ fontSize: "6px", color: "#9ca3af" }}>@</div>
 
-                        const currentProb = calculateTop2Probability(current);
-                        const whatIfProb = calculateTop2Probability(team);
-                        const delta = (whatIfProb - currentProb) * 100;
-
-                        return {
-                          team,
-                          delta,
-                          whatIfProb,
-                        };
-                      })
-                      .filter(Boolean)
-                      .sort((a, b) => {
-                        if (!a || !b) return 0;
-                        return Math.abs(b.delta) - Math.abs(a.delta);
-                      })
-                      .map((data) => {
-                        if (!data) return null;
-                        const { team, delta, whatIfProb } = data;
-
-                        return (
-                          <tr
-                            key={team.team_id}
-                            className="border-b hover:bg-gray-50"
+                      {/* Right Team (Home) */}
+                      <div
+                        style={{
+                          lineHeight: 0,
+                          border: selection.rightIsWinner
+                            ? `1px solid ${TEAL_COLOR}`
+                            : "1px solid transparent",
+                          borderRadius: "4px",
+                          display: "inline-block",
+                          padding: selection.rightIsWinner ? "1px" : "0",
+                        }}
+                      >
+                        {selection.rightLogo ? (
+                          <Image
+                            src={selection.rightLogo}
+                            alt={selection.rightTeam}
+                            width={12}
+                            height={12}
+                            className="object-contain"
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "12px",
+                              height: "12px",
+                              borderRadius: "2px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "6px",
+                              fontWeight: "bold",
+                              color: "#374151",
+                            }}
                           >
-                            <td className="p-2">
-                              <div className="flex items-center gap-2">
-                                {team.logo_url && (
-                                  <Image
-                                    src={team.logo_url}
-                                    alt={team.team_name}
-                                    width={24}
-                                    height={24}
-                                  />
-                                )}
-                                <div>
-                                  <span className="font-medium block">
-                                    {team.team_name}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {(whatIfProb * 100).toFixed(1)}%
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-                            <td
-                              className={`text-right p-2 font-medium ${
-                                delta > 0
-                                  ? "text-green-600"
-                                  : delta < 0
-                                    ? "text-red-600"
-                                    : ""
-                              }`}
-                            >
-                              {delta > 0 ? "+" : ""}
-                              {delta.toFixed(1)}%
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
+                            {selection.rightTeam.substring(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       {/* Error Display */}
       {whatIfMutation.isError && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">
+          <p className="text-red-800 text-sm">
             {whatIfMutation.error.message ||
               "An error occurred while calculating scenarios"}
           </p>
