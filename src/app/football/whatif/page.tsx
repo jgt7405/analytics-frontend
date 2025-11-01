@@ -1,5 +1,6 @@
 "use client";
 
+import ScreenshotModal from "@/components/common/ScreenshotModal";
 import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import {
@@ -8,8 +9,9 @@ import {
   WhatIfResponse,
 } from "@/hooks/useFootballWhatIf";
 import { WhatIfGame, WhatIfTeamResult } from "@/types/football";
+import { Download } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Color from schedule difficulty component
 const TEAL_COLOR = "rgb(0, 151, 178)";
@@ -25,6 +27,9 @@ export default function WhatIfCalculator() {
   >([]);
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
+  const [isScreenshotMode, setIsScreenshotMode] = useState(false);
+  const resultsContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch conference list
   const { data: conferenceData, isLoading: isLoadingConferences } =
@@ -114,6 +119,16 @@ export default function WhatIfCalculator() {
     setWhatIfResults([]);
   };
 
+  const handleCloseScreenshotModal = () => {
+    setIsScreenshotModalOpen(false);
+    setIsScreenshotMode(false);
+  };
+
+  const handleOpenScreenshotModal = () => {
+    setIsScreenshotMode(true);
+    setIsScreenshotModalOpen(true);
+  };
+
   const calculateTop2Probability = (team: WhatIfTeamResult) => {
     const probability =
       team.conf_champ_game_played / (team.totalscenarios || 1000);
@@ -179,9 +194,13 @@ export default function WhatIfCalculator() {
   }, [gameSelections, games]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">What If Calculator</h1>
-      <p className="text-gray-600 mb-8">
+    <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="mb-4 page-header">
+        <h1 className="text-xl font-normal text-gray-500">
+          What If Calculator
+        </h1>
+      </div>
+      <p className="text-gray-600 mb-6 text-sm">
         See how game outcomes impact team's probabilities to make conference
         championship game.
       </p>
@@ -192,9 +211,6 @@ export default function WhatIfCalculator() {
           <div className="bg-white rounded-lg shadow p-6 sticky top-6 flex flex-col h-fit max-h-[calc(100vh-120px)]">
             {/* Top Section: Conference Dropdown */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Conference
-              </label>
               <select
                 value={selectedConference}
                 onChange={handleConferenceChange}
@@ -218,6 +234,12 @@ export default function WhatIfCalculator() {
                 {gameSelections.size === 1 ? "game" : "games"} selected
               </p>
             </div>
+
+            {/* Explainer text */}
+            <p className="text-xs text-gray-600 mb-4">
+              Percentage represents probability team will win based on composite
+              of multiple college football rating models.
+            </p>
 
             {/* Future Games List - Scrollable */}
             <div className="flex-1 overflow-y-auto mb-4 pr-2">
@@ -471,147 +493,200 @@ export default function WhatIfCalculator() {
 
         {/* Right Column: Results Table */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-2">Results</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Probability to Play in Conference Championship Game (Top 2 Finish)
-            </p>
+          <div className="bg-white rounded-lg shadow p-6 flex flex-col h-fit">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold mb-2">
+                What If Results to Play in Conference Championship
+              </h2>
+            </div>
 
-            {!selectedConference ? (
-              <p className="text-gray-500 text-center py-12">
-                Select a conference to view results
-              </p>
-            ) : isLoadingData ? (
-              <p className="text-gray-500 text-center py-12">Loading...</p>
-            ) : currentTableData.length === 0 ? (
-              <p className="text-gray-500 text-center py-12">Loading...</p>
-            ) : (
-              <FootballConfChampProb
-                currentData={currentTableData}
-                whatIfData={whatIfTableData}
-                hasWhatIf={whatIfResults.length > 0}
-                hasCalculated={whatIfResults.length > 0}
-              />
-            )}
-
-            {/* Game Selection Summary */}
-            {selectedGamesWithDetails.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                <p className="text-sm text-gray-700 mb-3">
-                  {selectedGamesWithDetails.length}{" "}
-                  {selectedGamesWithDetails.length === 1
-                    ? "outcome"
-                    : "outcomes"}{" "}
-                  selected:
+            <div
+              ref={resultsContainerRef}
+              className="flex-1"
+              data-component="whatif-results"
+              data-screenshot={isScreenshotMode ? "true" : "false"}
+            >
+              {!selectedConference ? (
+                <p className="text-gray-500 text-center py-12">
+                  Select a conference to view results
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedGamesWithDetails.map((selection) => (
-                    <div
-                      key={selection.gameId}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "2px",
-                        padding: "2px 2px",
-                        borderRadius: "6px",
-                        border: `1px solid #9ca3af`,
-                        backgroundColor: "white",
-                      }}
-                    >
-                      {/* Left Team (Away) */}
+              ) : isLoadingData ? (
+                <p className="text-gray-500 text-center py-12">Loading...</p>
+              ) : currentTableData.length === 0 ? (
+                <p className="text-gray-500 text-center py-12">Loading...</p>
+              ) : (
+                <FootballConfChampProb
+                  currentData={currentTableData}
+                  whatIfData={whatIfTableData}
+                  hasWhatIf={whatIfResults.length > 0}
+                  hasCalculated={whatIfResults.length > 0}
+                  isScreenshotMode={isScreenshotMode}
+                />
+              )}
+
+              {/* Game Selection Summary */}
+              {selectedGamesWithDetails.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-sm text-gray-700 mb-3 font-semibold">
+                    {selectedGamesWithDetails.length}{" "}
+                    {selectedGamesWithDetails.length === 1
+                      ? "outcome"
+                      : "outcomes"}{" "}
+                    selected:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedGamesWithDetails.map((selection) => (
                       <div
+                        key={selection.gameId}
                         style={{
-                          lineHeight: 0,
-                          border: selection.leftIsWinner
-                            ? `1px solid ${TEAL_COLOR}`
-                            : "1px solid transparent",
-                          borderRadius: "4px",
-                          display: "inline-block",
-                          padding: selection.leftIsWinner ? "1px" : "0",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "2px",
+                          padding: "2px 2px",
+                          borderRadius: "6px",
+                          border: `1px solid #9ca3af`,
+                          backgroundColor: "white",
                         }}
                       >
-                        {selection.leftLogo ? (
-                          <Image
-                            src={selection.leftLogo}
-                            alt={selection.leftTeam}
-                            width={12}
-                            height={12}
-                            className="object-contain"
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: "12px",
-                              height: "12px",
-                              borderRadius: "2px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "6px",
-                              fontWeight: "bold",
-                              color: "#374151",
-                            }}
-                          >
-                            {selection.leftTeam.substring(0, 1).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
+                        {/* Left Team (Away) */}
+                        <div
+                          style={{
+                            lineHeight: 0,
+                            border: selection.leftIsWinner
+                              ? `1px solid ${TEAL_COLOR}`
+                              : "1px solid transparent",
+                            borderRadius: "4px",
+                            display: "inline-block",
+                            padding: selection.leftIsWinner ? "1px" : "0",
+                          }}
+                        >
+                          {selection.leftLogo ? (
+                            <Image
+                              src={selection.leftLogo}
+                              alt={selection.leftTeam}
+                              width={12}
+                              height={12}
+                              className="object-contain"
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: "12px",
+                                height: "12px",
+                                borderRadius: "2px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "6px",
+                                fontWeight: "bold",
+                                color: "#374151",
+                              }}
+                            >
+                              {selection.leftTeam.substring(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
 
-                      <div style={{ fontSize: "6px", color: "#9ca3af" }}>@</div>
+                        <div style={{ fontSize: "6px", color: "#9ca3af" }}>
+                          @
+                        </div>
 
-                      {/* Right Team (Home) */}
-                      <div
-                        style={{
-                          lineHeight: 0,
-                          border: selection.rightIsWinner
-                            ? `1px solid ${TEAL_COLOR}`
-                            : "1px solid transparent",
-                          borderRadius: "4px",
-                          display: "inline-block",
-                          padding: selection.rightIsWinner ? "1px" : "0",
-                        }}
-                      >
-                        {selection.rightLogo ? (
-                          <Image
-                            src={selection.rightLogo}
-                            alt={selection.rightTeam}
-                            width={12}
-                            height={12}
-                            className="object-contain"
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: "12px",
-                              height: "12px",
-                              borderRadius: "2px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "6px",
-                              fontWeight: "bold",
-                              color: "#374151",
-                            }}
-                          >
-                            {selection.rightTeam.substring(0, 1).toUpperCase()}
-                          </div>
-                        )}
+                        {/* Right Team (Home) */}
+                        <div
+                          style={{
+                            lineHeight: 0,
+                            border: selection.rightIsWinner
+                              ? `1px solid ${TEAL_COLOR}`
+                              : "1px solid transparent",
+                            borderRadius: "4px",
+                            display: "inline-block",
+                            padding: selection.rightIsWinner ? "1px" : "0",
+                          }}
+                        >
+                          {selection.rightLogo ? (
+                            <Image
+                              src={selection.rightLogo}
+                              alt={selection.rightTeam}
+                              width={12}
+                              height={12}
+                              className="object-contain"
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: "12px",
+                                height: "12px",
+                                borderRadius: "2px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "6px",
+                                fontWeight: "bold",
+                                color: "#374151",
+                              }}
+                            >
+                              {selection.rightTeam
+                                .substring(0, 1)
+                                .toUpperCase()}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Explainer text below results */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-xs text-gray-600 mb-4">
+                Probability that teams will finish season as top 2 rating after
+                applying tiebreak scenarios. For selected games, assumes 100%
+                probability for outcome selected.
+              </p>
+            </div>
+
+            {/* Download Button - Bottom Right */}
+            <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={handleOpenScreenshotModal}
+                disabled={!whatIfResults.length && !currentTableData.length}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded text-sm font-medium transition-colors flex items-center gap-2"
+                title="Download screenshot of results"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Screenshot Modal */}
+      <ScreenshotModal
+        isOpen={isScreenshotModalOpen}
+        onClose={handleCloseScreenshotModal}
+        options={[
+          {
+            id: "whatif-results",
+            label: "What If Results",
+            selector: "[data-component='whatif-results']",
+          },
+        ]}
+        teamLogoUrl={
+          conferenceData?.data?.find(
+            (conf) => conf.conference_name === selectedConference
+          )?.logo_url
+        }
+      />
 
       {/* Error Display */}
       {whatIfMutation.isError && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-800 text-sm">
-            {whatIfMutation.error.message ||
+            {whatIfMutation.error?.message ||
               "An error occurred while calculating scenarios"}
           </p>
         </div>

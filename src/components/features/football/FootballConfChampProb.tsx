@@ -24,6 +24,7 @@ interface FootballConfChampProbProps {
   className?: string;
   hasWhatIf: boolean;
   hasCalculated: boolean;
+  isScreenshotMode?: boolean;
 }
 
 type SortColumn = "team" | "current" | "whatif" | "change" | null;
@@ -34,6 +35,7 @@ function FootballConfChampProb({
   whatIfData,
   className,
   hasCalculated,
+  isScreenshotMode = false,
 }: FootballConfChampProbProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -220,15 +222,19 @@ function FootballConfChampProb({
             <tr>
               {/* Rank Column */}
               <th
-                className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`${isScreenshotMode ? "" : "sticky left-0 z-30"} bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: rankColWidth,
                   minWidth: rankColWidth,
                   maxWidth: rankColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  left: 0,
+                  ...(isScreenshotMode
+                    ? {}
+                    : {
+                        position: "sticky" as const,
+                        top: 0,
+                        left: 0,
+                      }),
                   border: "1px solid #e5e7eb",
                   borderRight: "1px solid #e5e7eb",
                 }}
@@ -238,7 +244,7 @@ function FootballConfChampProb({
 
               {/* Team Column */}
               <th
-                className={`sticky z-30 bg-gray-50 text-left font-normal px-2 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`${isScreenshotMode ? "" : "sticky z-30"} bg-gray-50 text-left font-normal px-2 cursor-pointer hover:bg-gray-100 transition-colors ${
                   sortColumn === "team" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("team")}
@@ -247,9 +253,13 @@ function FootballConfChampProb({
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  left: rankColWidth,
+                  ...(isScreenshotMode
+                    ? {}
+                    : {
+                        position: "sticky" as const,
+                        top: 0,
+                        left: rankColWidth,
+                      }),
                   border: "1px solid #e5e7eb",
                   borderLeft: "none",
                   borderRight: "1px solid #e5e7eb",
@@ -355,7 +365,7 @@ function FootballConfChampProb({
               >
                 {/* Rank Cell */}
                 <td
-                  className={`sticky left-0 z-20 bg-white text-center ${
+                  className={`${isScreenshotMode ? "" : "sticky left-0 z-20"} bg-white text-center ${
                     isMobile ? "text-xs" : "text-sm"
                   } font-medium`}
                   style={{
@@ -363,8 +373,13 @@ function FootballConfChampProb({
                     minWidth: rankColWidth,
                     maxWidth: rankColWidth,
                     height: cellHeight,
-                    position: "sticky",
-                    left: 0,
+                    ...(isScreenshotMode
+                      ? {}
+                      : {
+                          position: "sticky" as const,
+                          left: 0,
+                          zIndex: 20,
+                        }),
                     border: "1px solid #e5e7eb",
                     borderTop: "none",
                     borderRight: "1px solid #e5e7eb",
@@ -375,14 +390,19 @@ function FootballConfChampProb({
 
                 {/* Team Cell */}
                 <td
-                  className={`sticky z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`${isScreenshotMode ? "" : "sticky z-20"} bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     width: teamColWidth,
                     minWidth: teamColWidth,
                     maxWidth: teamColWidth,
                     height: cellHeight,
-                    position: "sticky",
-                    left: rankColWidth,
+                    ...(isScreenshotMode
+                      ? {}
+                      : {
+                          position: "sticky" as const,
+                          left: rankColWidth,
+                          zIndex: 20,
+                        }),
                     border: "1px solid #e5e7eb",
                     borderTop: "none",
                     borderLeft: "none",
