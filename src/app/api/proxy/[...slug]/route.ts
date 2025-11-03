@@ -243,9 +243,9 @@ export async function GET(
           case "conf-data":
             backendPath = `/football_conf_data`;
             break;
-          case "future_games": // ðŸ‘ˆ ADD THIS
-            backendPath = `/football/future_games`; // ðŸ‘ˆ ADD THIS
-            break; // ðŸ‘ˆ ADD THIS
+          case "future_games":
+            backendPath = `/football/future_games`;
+            break;
           default:
             return NextResponse.json(
               { error: "Unknown football endpoint" },
@@ -338,15 +338,15 @@ export async function GET(
 
     // Get raw text first to ensure we're not losing data
     const responseText = await response.text();
-    console.log("ðŸ” PROXY: Response size:", responseText.length, "bytes");
+    console.log("🔗 PROXY: Response size:", responseText.length, "bytes");
 
     let data;
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error("ðŸ” PROXY: JSON parse error:", parseError);
+      console.error("🔗 PROXY: JSON parse error:", parseError);
       console.error(
-        "ðŸ” PROXY: Raw response preview:",
+        "🔗 PROXY: Raw response preview:",
         responseText.substring(0, 500)
       );
       return NextResponse.json(
@@ -357,8 +357,8 @@ export async function GET(
 
     // Enhanced debug logging for football_conf_data
     if (backendPath.includes("football_conf_data")) {
-      console.log("ðŸ” PROXY: Successfully parsed JSON");
-      console.log("ðŸ” PROXY: Data structure:", {
+      console.log("🔗 PROXY: Successfully parsed JSON");
+      console.log("🔗 PROXY: Data structure:", {
         hasData: !!data.data,
         isArray: Array.isArray(data.data),
         length: data.data?.length,
@@ -369,7 +369,7 @@ export async function GET(
 
       if (data.data?.[0]) {
         const firstItem = data.data[0];
-        console.log("ðŸ” PROXY: Sagarin fields check:", {
+        console.log("🔗 PROXY: Sagarin fields check:", {
           sagarin_min:
             "sagarin_min" in firstItem ? firstItem.sagarin_min : "MISSING",
           sagarin_max:
@@ -386,10 +386,10 @@ export async function GET(
 
         // Count total fields
         console.log(
-          "ðŸ” PROXY: Total fields in first item:",
+          "🔗 PROXY: Total fields in first item:",
           Object.keys(firstItem).length
         );
-        console.log("ðŸ” PROXY: All fields:", Object.keys(firstItem));
+        console.log("🔗 PROXY: All fields:", Object.keys(firstItem));
       }
     }
 
@@ -413,8 +413,16 @@ export async function GET(
   }
 }
 
-// ðŸ‘‡ ADD THE POST HANDLER HERE ðŸ‘‡
-
+/**
+ * POST Handler for proxying POST requests to the backend
+ *
+ * Supported routes:
+ * - POST /api/proxy/football/whatif
+ *   Calculates what-if scenarios
+ *
+ * - POST /api/proxy/football/whatif/export
+ *   Exports what-if scenarios as CSV
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> }
@@ -430,10 +438,26 @@ export async function POST(
 
     console.log("Proxy POST slug:", slug);
 
-    // Handle football what-if route
+    // ===== HANDLE WHAT-IF ROUTES =====
+
+    // Handle football what-if route (calculation)
     if (slug.length === 2 && slug[0] === "football" && slug[1] === "whatif") {
       backendPath = `/football/whatif`;
-    } else {
+      console.log("📤 PROXY POST: What-If calculation request");
+    }
+    // Handle football what-if export route (CSV export) ← NEW!
+    else if (
+      slug.length === 3 &&
+      slug[0] === "football" &&
+      slug[1] === "whatif" &&
+      slug[2] === "export"
+    ) {
+      backendPath = `/football/whatif/export`;
+      console.log("📥 PROXY POST: What-If CSV export request");
+    }
+    // ===== UNKNOWN ROUTE =====
+    else {
+      console.error("Unknown POST endpoint:", slug);
       return NextResponse.json(
         { error: "Unknown POST endpoint" },
         { status: 404 }
@@ -443,6 +467,7 @@ export async function POST(
     const backendUrl = `${BACKEND_BASE_URL}${backendPath}`;
     console.log("Backend POST URL:", backendUrl);
 
+    // Make request to backend
     const response = await fetch(backendUrl, {
       method: "POST",
       headers: {
@@ -450,7 +475,10 @@ export async function POST(
         Accept: "application/json",
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(60000), // 60 second timeout for calculations
+      // Longer timeout for CSV export (calculations can take 20-30s)
+      signal: AbortSignal.timeout(
+        backendPath.includes("export") ? 120000 : 60000
+      ),
     });
 
     if (!response.ok) {
@@ -468,19 +496,15 @@ export async function POST(
     }
 
     const responseText = await response.text();
-    console.log(
-      "ðŸ“¦ PROXY POST: Response size:",
-      responseText.length,
-      "bytes"
-    );
+    console.log("🔗 PROXY POST: Response size:", responseText.length, "bytes");
 
     let data;
     try {
       data = JSON.parse(responseText);
     } catch (parseError) {
-      console.error("ðŸ“¦ PROXY POST: JSON parse error:", parseError);
+      console.error("🔗 PROXY POST: JSON parse error:", parseError);
       console.error(
-        "ðŸ“¦ PROXY POST: Raw response preview:",
+        "🔗 PROXY POST: Raw response preview:",
         responseText.substring(0, 500)
       );
       return NextResponse.json(
@@ -489,10 +513,19 @@ export async function POST(
       );
     }
 
-    console.log("ðŸ“¦ PROXY POST: What-If calculation completed:", {
-      teams: data.data?.length || 0,
-      calculation_time: data.metadata?.calculation_time || 0,
-    });
+    // Log response based on endpoint type
+    if (backendPath.includes("export")) {
+      console.log("🔗 PROXY POST: CSV export completed:", {
+        success: data.success,
+        csv_size: data.csv_data?.length || 0,
+        filename: data.filename,
+      });
+    } else {
+      console.log("🔗 PROXY POST: What-If calculation completed:", {
+        teams: data.data?.length || 0,
+        calculation_time: data.metadata?.calculation_time || 0,
+      });
+    }
 
     return NextResponse.json(data, {
       headers: {

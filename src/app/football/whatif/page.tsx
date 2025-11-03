@@ -1,6 +1,7 @@
 "use client";
 
 import ScreenshotModal from "@/components/common/ScreenshotModal";
+import { downloadWhatIfAsCSV } from "@/components/common/csvDownload";
 import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import {
@@ -29,6 +30,7 @@ export default function WhatIfCalculator() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
+  const [isDownloadingCSV, setIsDownloadingCSV] = useState(false);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch conference list
@@ -101,7 +103,7 @@ export default function WhatIfCalculator() {
       gameSelections.entries()
     ).map(([game_id, winner_team_id]) => ({
       game_id,
-      winner_team_id,
+      winner_team_id: String(winner_team_id),
     }));
 
     whatIfMutation.mutate(
@@ -127,6 +129,31 @@ export default function WhatIfCalculator() {
   const handleOpenScreenshotModal = () => {
     setIsScreenshotMode(true);
     setIsScreenshotModalOpen(true);
+  };
+
+  // CSV Download Handler
+  const handleDownloadCSV = async () => {
+    try {
+      setIsDownloadingCSV(true);
+      const selections: GameSelection[] = Array.from(
+        gameSelections.entries()
+      ).map(([game_id, winner_team_id]) => ({
+        game_id,
+        winner_team_id,
+      }));
+      await downloadWhatIfAsCSV(
+        selectedConference,
+        selections.map((s) => ({
+          ...s,
+          winner_team_id: Number(s.winner_team_id),
+        }))
+      );
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Failed to download CSV. Please try again.");
+    } finally {
+      setIsDownloadingCSV(false);
+    }
   };
 
   const calculateTop2Probability = (team: WhatIfTeamResult) => {
@@ -648,8 +675,20 @@ export default function WhatIfCalculator() {
               </p>
             </div>
 
-            {/* Download Button - Bottom Right */}
-            <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+            {/* Download Buttons */}
+            <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end gap-3">
+              {/* CSV Download Button */}
+              <button
+                onClick={handleDownloadCSV}
+                disabled={!whatIfResults.length || isDownloadingCSV}
+                className="px-4 py-2 bg-white hover:bg-white disabled:bg-white disabled:cursor-not-allowed text-white disabled:text-white rounded text-sm font-medium transition-colors flex items-center gap-2 border-0"
+                title="Download what-if data as CSV"
+              >
+                <Download className="w-4 h-4" />
+                {isDownloadingCSV ? "Downloading..." : "CSV"}
+              </button>
+
+              {/* Screenshot Download Button */}
               <button
                 onClick={handleOpenScreenshotModal}
                 disabled={!whatIfResults.length && !currentTableData.length}

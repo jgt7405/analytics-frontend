@@ -1,4 +1,6 @@
 // src/types/football.ts
+
+import type { GameSelection } from "@/hooks/useFootballWhatIf";
 export interface FootballStanding {
   team_name: string;
   team_id: string;
@@ -376,11 +378,6 @@ export interface ConferenceApiResponse {
 }
 
 // frontend/src/types/football.ts - Add these interfaces
-
-export interface GameSelection {
-  game_id: number;
-  winner_team_id: string;
-}
 
 export interface WhatIfGame {
   game_id: number;
