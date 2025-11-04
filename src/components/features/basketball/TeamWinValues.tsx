@@ -105,7 +105,7 @@ export default function TeamWinValues({
 
     gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
-    const startDate = new Date(2025, 8, 22); // Changed to September 22, 2025
+    const startDate = new Date(2025, 10, 1); // Changed to September 22, 2025
 
     // Find the last game with actual data (status W or L)
     const completedGames = gameWithDates.filter(
