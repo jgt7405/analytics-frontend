@@ -58,11 +58,6 @@ function NavigationContent() {
       description: "Conference tournament projections",
     },
     {
-      name: "Conf Tourney",
-      path: addConferenceToUrl("/basketball/conf-tourney"),
-      description: "Conference tournament projections",
-    },
-    {
       name: "Seed",
       path: addConferenceToUrl("/basketball/seed"),
       description: "NCAA tournament seed projections",

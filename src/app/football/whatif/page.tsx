@@ -1,7 +1,10 @@
 "use client";
 
+import {
+  ExportOptionsModal,
+  useExportModal,
+} from "@/components/common/ExportOptionsModal";
 import ScreenshotModal from "@/components/common/ScreenshotModal";
-import { downloadWhatIfAsCSV } from "@/components/common/csvDownload";
 import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import {
@@ -30,8 +33,11 @@ export default function WhatIfCalculator() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
-  const [isDownloadingCSV, setIsDownloadingCSV] = useState(false);
+  const [exportStatus, setExportStatus] = useState("");
   const resultsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Export modal state
+  const exportModal = useExportModal();
 
   // Fetch conference list
   const { data: conferenceData, isLoading: isLoadingConferences } =
@@ -129,31 +135,6 @@ export default function WhatIfCalculator() {
   const handleOpenScreenshotModal = () => {
     setIsScreenshotMode(true);
     setIsScreenshotModalOpen(true);
-  };
-
-  // CSV Download Handler
-  const handleDownloadCSV = async () => {
-    try {
-      setIsDownloadingCSV(true);
-      const selections: GameSelection[] = Array.from(
-        gameSelections.entries()
-      ).map(([game_id, winner_team_id]) => ({
-        game_id,
-        winner_team_id,
-      }));
-      await downloadWhatIfAsCSV(
-        selectedConference,
-        selections.map((s) => ({
-          ...s,
-          winner_team_id: Number(s.winner_team_id),
-        }))
-      );
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Failed to download CSV. Please try again.");
-    } finally {
-      setIsDownloadingCSV(false);
-    }
   };
 
   const calculateTop2Probability = (team: WhatIfTeamResult) => {
@@ -675,17 +656,25 @@ export default function WhatIfCalculator() {
               </p>
             </div>
 
+            {/* Export Status Message */}
+            {exportStatus && (
+              <div className="mt-4 p-3 bg-green-100 text-green-800 rounded text-sm">
+                {exportStatus}
+              </div>
+            )}
+
             {/* Download Buttons */}
             <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end gap-3">
-              {/* CSV Download Button */}
+              {/* New Wide-Format CSV Export Button - INVISIBLE */}
               <button
-                onClick={handleDownloadCSV}
-                disabled={!whatIfResults.length || isDownloadingCSV}
-                className="px-4 py-2 bg-white hover:bg-white disabled:bg-white disabled:cursor-not-allowed text-white disabled:text-white rounded text-sm font-medium transition-colors flex items-center gap-2 border-0"
-                title="Download what-if data as CSV"
+                onClick={exportModal.openModal}
+                disabled={!whatIfResults.length}
+                className="px-4 py-2 bg-white hover:bg-white disabled:bg-white disabled:cursor-not-allowed text-white rounded text-sm font-medium transition-colors flex items-center gap-2 border-0"
+                style={{ boxShadow: "none", outline: "none" }}
+                title="Export what-if data as wide-format CSV with pagination"
               >
                 <Download className="w-4 h-4" />
-                {isDownloadingCSV ? "Downloading..." : "CSV"}
+                Export (Wide Format)
               </button>
 
               {/* Screenshot Download Button */}
@@ -702,6 +691,23 @@ export default function WhatIfCalculator() {
           </div>
         </div>
       </div>
+
+      {/* Export Options Modal */}
+      <ExportOptionsModal
+        isOpen={exportModal.isOpen}
+        onClose={exportModal.closeModal}
+        conference={selectedConference}
+        selections={Array.from(gameSelections.entries()).map(
+          ([gameId, winnerId]) => ({
+            game_id: gameId,
+            winner_team_id: winnerId,
+          })
+        )}
+        onExportComplete={(result) => {
+          setExportStatus(`✓ Exported ${result.scenarios}: ${result.filename}`);
+          setTimeout(() => setExportStatus(""), 5000);
+        }}
+      />
 
       {/* Screenshot Modal */}
       <ScreenshotModal

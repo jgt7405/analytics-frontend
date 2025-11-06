@@ -341,6 +341,8 @@ export interface TeamGame {
   twv?: number;
   cwv?: number;
   kenpom_rank?: number;
+  team_points?: number;
+  opp_points?: number;
 }
 
 export interface TeamApiResponse {
