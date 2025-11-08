@@ -119,7 +119,7 @@ export default function TeamWinValues({
         : new Date();
 
     const currentDate = new Date();
-    const endDate = lastGameDate < currentDate ? lastGameDate : currentDate;
+    const endDate = lastGameDate > currentDate ? lastGameDate : currentDate;
     endDate.setHours(23, 59, 59, 999);
 
     const allDates: Date[] = [];
