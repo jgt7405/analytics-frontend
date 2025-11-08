@@ -477,7 +477,7 @@ export async function POST(
       body: JSON.stringify(body),
       // Longer timeout for CSV export (calculations can take 20-30s)
       signal: AbortSignal.timeout(
-        backendPath.includes("export") ? 120000 : 60000
+        backendPath.includes("export") ? 300000 : 60000
       ),
     });
 
