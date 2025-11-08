@@ -91,7 +91,7 @@ export default function BasketballTeamScheduleChart({
       oppPts === undefined
     )
       return "";
-    return `${oppPts}-${teamPts}`;
+    return `${teamPts}-${oppPts}`;
   };
 
   return (
