@@ -650,7 +650,7 @@ export default function FootballCompareSchedulesChart({
               textAnchor="end"
               className="text-xs font-medium fill-gray-600"
             >
-              Expected:
+              #12 Fcst:
             </text>
             <text
               x={MARGIN.left - 50}
@@ -784,7 +784,7 @@ export default function FootballCompareSchedulesChart({
             transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Win Probability
+            Win Probability for #12 Rated Team
           </text>
 
           {/* Team Columns */}
