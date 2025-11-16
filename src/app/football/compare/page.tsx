@@ -2,16 +2,11 @@
 "use client";
 
 import CompareScreenshotModal from "@/components/common/CompareScreenshotModal";
-import FootballTeamCFPBidHistory from "@/components/features/football/FootballTeamCFPBidHistory";
-import FootballTeamScheduleDifficulty from "@/components/features/football/FootballTeamScheduleDifficulty";
-import FootballTeamStandingsHistory from "@/components/features/football/FootballTeamStandingsHistory";
-import FootballTeamWinHistory from "@/components/features/football/FootballTeamWinHistory";
+import FootballCompareSchedulesChart from "@/components/features/football/FootballCompareSchedulesChart";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import TeamLogo from "@/components/ui/TeamLogo";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 interface Team {
@@ -58,59 +53,66 @@ interface TeamData {
   all_schedule_data: AllScheduleGame[];
 }
 
-interface TeamColumn {
-  id: string;
-  selectedConference: string;
-  selectedTeam: string | null;
-  teamData: TeamData | null;
-  isLoading: boolean;
+interface SelectedTeam {
+  teamName: string;
+  teamLogo: string;
+  teamColor: string;
+  teamConference: string;
+  teamConfCategory?: string;
+  games: {
+    date: string;
+    opponent: string;
+    opponentLogo?: string;
+    opponentColor: string;
+    winProb: number;
+    status: string;
+  }[];
+  allScheduleData: {
+    team: string;
+    opponent: string;
+    opponentColor: string;
+    winProb: number;
+    teamConference: string;
+    teamConfCategory?: string;
+    status: string;
+  }[];
 }
 
-const MAX_TEAMS = 4;
+const MAX_SELECTED_TEAMS = 12;
 
 export default function FootballComparePage() {
-  const router = useRouter();
   const [availableConferences, setAvailableConferences] = useState<string[]>(
     []
   );
   const [allTeams, setAllTeams] = useState<Team[]>([]);
-  const [columns, setColumns] = useState<TeamColumn[]>([]);
-  const [nextColumnId, setNextColumnId] = useState(1);
+  const [selectedTeams, setSelectedTeams] = useState<SelectedTeam[]>([]);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [teamDataCache, setTeamDataCache] = useState<{
+    [key: string]: TeamData;
+  }>({});
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
-
-  const navigateToTeamPage = (teamName: string) => {
-    router.push(`/football/team/${encodeURIComponent(teamName)}`);
-  };
+  const [loadingTeams, setLoadingTeams] = useState<Set<string>>(new Set());
 
   const loadTeamData = useCallback(
     async (teamName: string): Promise<TeamData | null> => {
+      if (teamDataCache[teamName]) {
+        return teamDataCache[teamName];
+      }
+
       try {
         const response = await fetch(
           `/api/proxy/football_team/${encodeURIComponent(teamName)}`
         );
-        return await response.json();
+        const data = await response.json();
+        setTeamDataCache((prev) => ({ ...prev, [teamName]: data }));
+        return data;
       } catch (error) {
         console.error("Error loading team data:", error);
         return null;
       }
     },
-    []
+    [teamDataCache]
   );
-
-  const addColumn = useCallback(() => {
-    if (columns.length >= MAX_TEAMS) return;
-
-    const newColumn: TeamColumn = {
-      id: `column-${nextColumnId}`,
-      selectedConference: "All Teams",
-      selectedTeam: null,
-      teamData: null,
-      isLoading: false,
-    };
-    setColumns((prev) => [...prev, newColumn]);
-    setNextColumnId((prev) => prev + 1);
-  }, [columns.length, nextColumnId]);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -123,10 +125,10 @@ export default function FootballComparePage() {
           const conferences = [
             ...new Set(data.data.map((team: Team) => team.conference)),
           ] as string[];
-          setAvailableConferences([
-            "All Teams",
-            ...conferences.filter((conf) => conf !== "FCS"),
-          ]);
+          const sortedConferences = conferences
+            .filter((conf) => conf !== "FCS")
+            .sort();
+          setAvailableConferences(sortedConferences);
         }
       } catch (error) {
         console.error("Error loading initial data:", error);
@@ -138,254 +140,71 @@ export default function FootballComparePage() {
     loadInitialData();
   }, []);
 
-  useEffect(() => {
-    if (isLoadingInitial || availableConferences.length === 0) return;
-    addColumn();
-  }, [isLoadingInitial, availableConferences, addColumn]);
+  const handleTeamClick = async (team: Team) => {
+    const isSelected = selectedTeams.some((t) => t.teamName === team.team_name);
 
-  const removeColumn = (columnId: string) => {
-    setColumns((prev) => prev.filter((col) => col.id !== columnId));
-  };
-
-  const clearAllColumns = () => {
-    setColumns([]);
-    setNextColumnId(1);
-  };
-
-  const handleConferenceChange = (columnId: string, conference: string) => {
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.id === columnId
-          ? {
-              ...col,
-              selectedConference: conference,
-              selectedTeam: null,
-              teamData: null,
-            }
-          : col
-      )
-    );
-  };
-
-  const handleTeamChange = async (columnId: string, teamName: string) => {
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.id === columnId
-          ? { ...col, selectedTeam: teamName, isLoading: true }
-          : col
-      )
-    );
-
-    const teamData = await loadTeamData(teamName);
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.id === columnId ? { ...col, teamData, isLoading: false } : col
-      )
-    );
-  };
-
-  // Get visible team names for the screenshot modal
-  const visibleTeamNames = columns
-    .filter((col) => col.teamData)
-    .map((col) => col.teamData!.team_info.team_name);
-
-  const renderTeamControls = (column: TeamColumn, index: number) => {
-    const teams =
-      column.selectedConference === "All Teams"
-        ? allTeams
-        : allTeams.filter(
-            (team) => team.conference === column.selectedConference
-          );
-
-    const sortedTeams = teams.sort((a, b) =>
-      a.team_name.localeCompare(b.team_name)
-    );
-
-    return (
-      <div
-        key={column.id}
-        className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-300 p-3"
-      >
-        <div className="flex items-center justify-between mb-0">
-          <h3 className="text-lg font-semibold">Team {index + 1}</h3>
-          <button
-            onClick={() => removeColumn(column.id)}
-            className="text-gray-500 hover:text-gray-700 text-lg bg-transparent border-none p-0 m-0"
-            title="Remove column"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="mb-2">
-          <label className="block text-sm font-medium mb-1">Conference</label>
-          <select
-            value={column.selectedConference}
-            onChange={(e) => handleConferenceChange(column.id, e.target.value)}
-            className="px-3 py-1.5 border rounded-md bg-white min-w-[200px] transition-colors text-xs border-gray-300 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-400 focus:ring-2 focus:outline-none w-full"
-          >
-            {availableConferences
-              .slice()
-              .sort((a, b) => {
-                if (a === "All Teams") return -1;
-                if (b === "All Teams") return 1;
-                return a.localeCompare(b);
-              })
-              .map((conference) => (
-                <option key={conference} value={conference} className="text-xs">
-                  {conference}
-                </option>
-              ))}
-          </select>
-        </div>
-
-        <div className="mb-2">
-          <label className="block text-sm font-medium mb-1">Team</label>
-          <select
-            value={column.selectedTeam || ""}
-            onChange={(e) => handleTeamChange(column.id, e.target.value)}
-            className="px-3 py-1.5 border rounded-md bg-white min-w-[200px] transition-colors text-xs border-gray-300 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-400 focus:ring-2 focus:outline-none w-full"
-            disabled={sortedTeams.length === 0}
-          >
-            <option value="" className="text-xs">
-              Select a team...
-            </option>
-            {sortedTeams.map((team) => (
-              <option
-                key={team.team_name}
-                value={team.team_name}
-                className="text-xs"
-              >
-                {team.team_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {column.isLoading && (
-          <div className="flex justify-center py-4">
-            <LoadingSpinner />
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderTeamHeader = (column: TeamColumn) => {
-    if (!column.teamData || column.isLoading) {
-      return <div className="flex-shrink-0 w-80" />;
+    if (isSelected) {
+      setSelectedTeams((prev) =>
+        prev.filter((t) => t.teamName !== team.team_name)
+      );
+      return;
     }
 
-    return (
-      <div className="flex-shrink-0 w-80">
-        <div className="flex items-center gap-3 p-1 border border-gray-300 rounded-lg bg-white shadow-sm">
-          <TeamLogo
-            logoUrl={column.teamData.team_info.logo_url}
-            teamName={column.teamData.team_info.team_name}
-            size={40}
-            onClick={() =>
-              navigateToTeamPage(column.teamData!.team_info.team_name)
-            }
-          />
-          <div>
-            <h4
-              className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors"
-              style={{ color: column.teamData.team_info.primary_color }}
-              onClick={() =>
-                navigateToTeamPage(column.teamData!.team_info.team_name)
-              }
-            >
-              {column.teamData.team_info.team_name}
-              {column.teamData.team_info.sagarin_rank &&
-                column.teamData.team_info.sagarin_rank !== 999 && (
-                  <span
-                    className="ml-2"
-                    style={{ color: column.teamData.team_info.primary_color }}
-                  >
-                    #{column.teamData.team_info.sagarin_rank}
-                  </span>
-                )}
-            </h4>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTeamContent = (column: TeamColumn) => {
-    if (!column.teamData || column.isLoading) {
-      return <div className="flex-shrink-0 w-80" />;
+    if (selectedTeams.length >= MAX_SELECTED_TEAMS) {
+      return;
     }
 
-    return (
-      <div
-        className="flex-shrink-0 w-80 space-y-2"
-        data-team-name={column.teamData.team_info.team_name}
-      >
-        <div className="border border-gray-300 rounded-lg p-3">
-          <h5 className="text-sm font-semibold mb-2">Schedule Difficulty</h5>
-          <div
-            data-component="schedule-difficulty"
-            style={{
-              width: "400px",
-              height: "525px",
-              overflow: "visible",
-              transform: "scale(0.8)",
-              transformOrigin: "top left",
-            }}
-          >
-            <FootballTeamScheduleDifficulty
-              schedule={column.teamData.schedule}
-              allScheduleData={column.teamData.all_schedule_data}
-              teamConference={column.teamData.team_info.conference}
-              logoUrl={column.teamData.team_info.logo_url}
-            />
-          </div>
-        </div>
+    setLoadingTeams((prev) => new Set([...prev, team.team_name]));
 
-        <div className="border border-gray-300 rounded-lg p-3">
-          <h5 className="text-sm font-semibold mb-2">Projected Wins History</h5>
-          <div data-component="win-history">
-            <FootballTeamWinHistory
-              teamName={column.teamData.team_info.team_name}
-              primaryColor={column.teamData.team_info.primary_color}
-              secondaryColor={column.teamData.team_info.secondary_color}
-              logoUrl={column.teamData.team_info.logo_url}
-            />
-          </div>
-        </div>
+    const teamData = await loadTeamData(team.team_name);
+    setLoadingTeams((prev) => {
+      const next = new Set(prev);
+      next.delete(team.team_name);
+      return next;
+    });
 
-        <div className="border border-gray-300 rounded-lg p-3">
-          <h5 className="text-sm font-semibold mb-2">
-            Projected Standings History
-          </h5>
-          <div data-component="standings-history">
-            <FootballTeamStandingsHistory
-              teamName={column.teamData.team_info.team_name}
-              primaryColor={column.teamData.team_info.primary_color}
-              secondaryColor={column.teamData.team_info.secondary_color}
-              logoUrl={column.teamData.team_info.logo_url}
-            />
-          </div>
-        </div>
+    if (!teamData) return;
 
-        <div className="border border-gray-300 rounded-lg p-3">
-          <h5 className="text-sm font-semibold mb-2">CFP Bid History</h5>
-          <div data-component="cfp-bid-history">
-            <FootballTeamCFPBidHistory
-              teamName={column.teamData.team_info.team_name}
-              primaryColor={column.teamData.team_info.primary_color}
-              secondaryColor={column.teamData.team_info.secondary_color}
-            />
-          </div>
-        </div>
-      </div>
-    );
+    const newTeam: SelectedTeam = {
+      teamName: teamData.team_info.team_name,
+      teamLogo: teamData.team_info.logo_url,
+      teamColor: teamData.team_info.primary_color || "#000000",
+      teamConference: teamData.team_info.conference,
+      games: teamData.schedule.map((game) => ({
+        date: game.date,
+        opponent: game.opponent,
+        opponentLogo: game.opponent_logo,
+        opponentColor: game.opponent_primary_color || "#9ca3af",
+        winProb: game.sag12_win_prob || 0.5,
+        status: game.status,
+      })),
+      allScheduleData: teamData.all_schedule_data.map((game) => ({
+        team: game.team,
+        opponent: game.opponent,
+        opponentColor: game.opponent_primary_color || "#9ca3af",
+        winProb: game.sag12_win_prob,
+        teamConference: game.team_conf,
+        teamConfCategory: game.team_conf_catg,
+        status: game.status,
+      })),
+    };
+
+    setSelectedTeams((prev) => [...prev, newTeam]);
   };
+
+  const removeTeam = (teamName: string) => {
+    setSelectedTeams((prev) => prev.filter((t) => t.teamName !== teamName));
+  };
+
+  const clearAllTeams = () => {
+    setSelectedTeams([]);
+  };
+
+  const selectedTeamNames = new Set(selectedTeams.map((t) => t.teamName));
 
   if (isLoadingInitial) {
     return (
-      <PageLayoutWrapper title="Compare Teams" isLoading={true}>
+      <PageLayoutWrapper title="Compare Schedules" isLoading={true}>
         <div className="flex justify-center py-12">
           <LoadingSpinner />
         </div>
@@ -394,80 +213,130 @@ export default function FootballComparePage() {
   }
 
   return (
-    <PageLayoutWrapper title="Compare Teams" isLoading={false}>
+    <PageLayoutWrapper title="Compare Schedules" isLoading={false}>
       <ErrorBoundary level="page">
-        <div className="h-screen flex flex-col">
-          {/* Button section at top */}
-          {columns.length > 0 && (
-            <div className="flex justify-end gap-3 px-4 py-2 bg-white border-b border-gray-200 -mt-6">
-              <button
-                onClick={() => setIsScreenshotModalOpen(true)}
-                disabled={visibleTeamNames.length === 0}
-                className="px-4 py-2 text-xs bg-gray-700 text-white rounded-md hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 transition-colors border border-gray-700"
-                title={
-                  visibleTeamNames.length === 0
-                    ? "Select teams to enable download"
-                    : "Download comparison"
-                }
-              >
-                <Download className="w-3 h-3" />
-                Download
-              </button>
-              <button
-                onClick={clearAllColumns}
-                className="px-4 py-2 text-xs bg-gray-500 text-white rounded-md hover:bg-gray-800 transition-colors"
-              >
-                Clear All
-              </button>
+        <div className="space-y-6 p-4">
+          {/* Team Selection Grid */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold mb-6">Select Teams</h2>
+
+            {/* Horizontally scrollable conference sections */}
+            <div className="overflow-x-auto pb-2">
+              <div className="flex gap-12 min-w-max">
+                {availableConferences.map((conference) => {
+                  const teamsInConf = allTeams
+                    .filter((team) => team.conference === conference)
+                    .sort((a, b) => a.team_name.localeCompare(b.team_name));
+
+                  return (
+                    <div
+                      key={conference}
+                      className="flex flex-col items-center"
+                    >
+                      {/* Conference Label */}
+                      <div className="text-sm font-semibold text-gray-700 mb-3 text-center h-10 flex items-center">
+                        {conference}
+                      </div>
+
+                      {/* Teams Grid - 3 across with minimal gap */}
+                      <div className="grid grid-cols-3 gap-1 border border-gray-300 p-2 bg-gray-50">
+                        {teamsInConf.map((team) => (
+                          <button
+                            key={team.team_name}
+                            onClick={() => handleTeamClick(team)}
+                            disabled={
+                              selectedTeams.length >= MAX_SELECTED_TEAMS &&
+                              !selectedTeamNames.has(team.team_name)
+                            }
+                            className={`relative flex items-center justify-center h-10 w-10 border border-gray-400 transition-all ${
+                              selectedTeamNames.has(team.team_name)
+                                ? "ring-2 ring-blue-500 border-blue-500"
+                                : "bg-white hover:bg-gray-100"
+                            } ${
+                              selectedTeams.length >= MAX_SELECTED_TEAMS &&
+                              !selectedTeamNames.has(team.team_name)
+                                ? "opacity-40 cursor-not-allowed"
+                                : "cursor-pointer"
+                            }`}
+                            title={team.team_name}
+                          >
+                            <img
+                              src={team.logo_url}
+                              alt={team.team_name}
+                              className="h-8 w-8 object-contain"
+                            />
+                            {loadingTeams.has(team.team_name) && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-60">
+                                <div className="w-2 h-2 border border-blue-600 border-t-transparent rounded-full animate-spin" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Selected Teams Section */}
+          {selectedTeams.length > 0 && (
+            <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">
+                  Selected Teams ({selectedTeams.length}/{MAX_SELECTED_TEAMS})
+                </h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsScreenshotModalOpen(true)}
+                    className="px-4 py-2 text-sm bg-gray-700 text-white rounded-md hover:bg-gray-800 flex items-center gap-2 transition-colors"
+                    title="Download comparison"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                  <button
+                    onClick={clearAllTeams}
+                    className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+
+              {/* Selected Teams List */}
+              <div className="flex flex-wrap gap-2">
+                {selectedTeams.map((team, index) => (
+                  <div
+                    key={team.teamName}
+                    className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border-2 border-blue-600 shadow-sm"
+                  >
+                    <span className="text-xs font-bold text-blue-600 w-5 h-5 flex items-center justify-center bg-blue-100 rounded-full">
+                      {index + 1}
+                    </span>
+                    <img
+                      src={team.teamLogo}
+                      alt={team.teamName}
+                      className="h-6 w-6 object-contain"
+                    />
+                    <span className="text-sm font-medium">{team.teamName}</span>
+                    <button
+                      onClick={() => removeTeam(team.teamName)}
+                      className="text-gray-400 hover:text-red-600 font-bold ml-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          <div className="flex-shrink-0 p-4">
-            {columns.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">
-                  No teams selected for comparison
-                </p>
-                <button
-                  onClick={addColumn}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Add First Team
-                </button>
-              </div>
-            )}
-          </div>
-
-          {columns.length > 0 && (
-            <div className="flex-1 overflow-auto px-4">
-              <div
-                className="flex flex-col gap-4"
-                style={{ minWidth: `${columns.length * 20}rem` }}
-              >
-                <div className="flex gap-4">
-                  {columns.map((column, index) => (
-                    <div key={column.id}>
-                      {renderTeamControls(column, index)}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex gap-4 sticky top-0 bg-white z-40 py-1 -mx-4 px-4 shadow-sm">
-                  {columns.map((column) => (
-                    <div key={`header-${column.id}`}>
-                      {renderTeamHeader(column)}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex gap-4">
-                  {columns.map((column) => (
-                    <div key={`content-${column.id}`}>
-                      {renderTeamContent(column)}
-                    </div>
-                  ))}
-                </div>
-              </div>
+          {/* Schedule Comparison Chart */}
+          {selectedTeams.length > 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-auto">
+              <FootballCompareSchedulesChart teams={selectedTeams} />
             </div>
           )}
         </div>
@@ -476,7 +345,7 @@ export default function FootballComparePage() {
         <CompareScreenshotModal
           isOpen={isScreenshotModalOpen}
           onClose={() => setIsScreenshotModalOpen(false)}
-          visibleTeams={visibleTeamNames}
+          visibleTeams={selectedTeams.map((t) => t.teamName)}
         />
       </ErrorBoundary>
     </PageLayoutWrapper>
