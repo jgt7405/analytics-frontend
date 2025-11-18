@@ -24,22 +24,24 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-interface ApiSeedCount {
+interface ApiRecordSeedCount {
+  Record: string;
   Seed: string | number;
   Percentage: number;
-  Tournament_Status: string;
-  Wins: number;
+  Playoff_Status: string;
   Count: number;
   Conf_Champ_Pct?: number;
   At_Large_Pct?: number;
 }
 
-interface FootballWinSeedCount {
-  Wins: number;
+interface FootballRecordSeedCount {
+  Record: string;
   Seed: string | number;
-  Tournament_Status: string;
+  Playoff_Status: string;
   Count: number;
-  Percentage?: number;
+  Percentage: number;
+  Conf_Champ_Pct?: number;
+  At_Large_Pct?: number;
 }
 
 export default function FootballTeamPage({
@@ -84,17 +86,17 @@ export default function FootballTeamPage({
     return `${Math.round(value)}%`;
   };
 
-  const transformFootballWinSeedCounts = (
-    apiData: ApiSeedCount[]
-  ): FootballWinSeedCount[] => {
+  const transformFootballRecordSeedCounts = (
+    apiData: ApiRecordSeedCount[]
+  ): FootballRecordSeedCount[] => {
     if (!Array.isArray(apiData) || apiData.length === 0) {
       return [];
     }
 
     return apiData.map((item) => ({
-      Wins: item.Wins,
+      Record: item.Record,
       Seed: item.Seed,
-      Tournament_Status: item.Tournament_Status,
+      Playoff_Status: item.Playoff_Status,
       Count: item.Count,
       Percentage: item.Percentage,
       Conf_Champ_Pct: item.Conf_Champ_Pct || 0,
@@ -417,8 +419,8 @@ export default function FootballTeamPage({
                   CFP Seed Projections
                 </h2>
                 <FootballTeamSeedProjections
-                  winSeedCounts={transformFootballWinSeedCounts(
-                    team_info.win_seed_counts || []
+                  recordSeedCounts={transformFootballRecordSeedCounts(
+                    team_info.record_seed_counts || []
                   )}
                   logoUrl={team_info.logo_url}
                 />
@@ -734,8 +736,8 @@ export default function FootballTeamPage({
                       CFP Seed Projections
                     </h2>
                     <FootballTeamSeedProjections
-                      winSeedCounts={transformFootballWinSeedCounts(
-                        team_info.win_seed_counts || []
+                      recordSeedCounts={transformFootballRecordSeedCounts(
+                        team_info.record_seed_counts || []
                       )}
                       logoUrl={team_info.logo_url}
                     />

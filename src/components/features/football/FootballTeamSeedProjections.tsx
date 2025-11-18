@@ -6,12 +6,12 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 // TypeScript interfaces
-interface FootballWinSeedCount {
-  Wins: number;
+interface FootballRecordSeedCount {
+  Record: string;
   Seed: string | number;
-  Tournament_Status: string;
+  Playoff_Status: string;
   Count: number;
-  Percentage?: number;
+  Percentage: number;
   Conf_Champ_Pct?: number;
   At_Large_Pct?: number;
 }
@@ -66,12 +66,12 @@ interface FootballStyles {
 }
 
 interface FootballTeamSeedProjectionsProps {
-  winSeedCounts: FootballWinSeedCount[];
+  recordSeedCounts: FootballRecordSeedCount[];
   logoUrl?: string;
 }
 
 export default function FootballTeamSeedProjections({
-  winSeedCounts,
+  recordSeedCounts,
   logoUrl,
 }: FootballTeamSeedProjectionsProps) {
   const { isMobile } = useResponsive();
@@ -146,20 +146,46 @@ export default function FootballTeamSeedProjections({
     return getCellColor(value);
   };
 
+  const parseRecord = (record: string): { wins: number; losses: number } => {
+    const parts = record.split("-");
+    if (parts.length === 2) {
+      return {
+        wins: parseInt(parts[0], 10),
+        losses: parseInt(parts[1], 10),
+      };
+    }
+    return { wins: 0, losses: 0 };
+  };
+
+  const sortRecords = (records: string[]): string[] => {
+    return records.sort((a, b) => {
+      const parsedA = parseRecord(a);
+      const parsedB = parseRecord(b);
+
+      // First sort by wins (descending)
+      if (parsedA.wins !== parsedB.wins) {
+        return parsedB.wins - parsedA.wins;
+      }
+
+      // Then sort by losses (ascending)
+      return parsedA.losses - parsedB.losses;
+    });
+  };
+
   const processData = () => {
-    if (!Array.isArray(winSeedCounts) || winSeedCounts.length === 0)
+    if (!Array.isArray(recordSeedCounts) || recordSeedCounts.length === 0)
       return null;
 
-    const winTotalsSet = new Set<string>();
+    const recordsSet = new Set<string>();
     const seedsSet = new Set<string>();
 
-    const grandTotal = winSeedCounts.reduce(
+    const grandTotal = recordSeedCounts.reduce(
       (sum, entry) => sum + (entry.Count || 0),
       0
     );
 
-    winSeedCounts.forEach((entry) => {
-      if (entry.Wins !== undefined) winTotalsSet.add(entry.Wins.toString());
+    recordSeedCounts.forEach((entry) => {
+      if (entry.Record !== undefined) recordsSet.add(entry.Record);
 
       if (entry.Seed && !isNaN(parseInt(entry.Seed.toString()))) {
         seedsSet.add(entry.Seed.toString());
@@ -167,15 +193,15 @@ export default function FootballTeamSeedProjections({
     });
 
     const hasNumericSeeds = seedsSet.size > 0;
-    const winData: Record<string, FootballWinData> = {};
-    const winTotals = [...winTotalsSet].sort((a, b) => Number(b) - Number(a));
+    const recordData: Record<string, FootballWinData> = {};
+    const records = sortRecords([...recordsSet]);
     const seeds = hasNumericSeeds
       ? [...seedsSet].sort((a, b) => Number(a) - Number(b))
       : [];
 
-    // Initialize winData structure
-    winTotals.forEach((winsValue) => {
-      winData[winsValue] = {
+    // Initialize recordData structure
+    records.forEach((recordValue) => {
+      recordData[recordValue] = {
         seedDistribution: {},
         statusDistribution: {
           "In Playoffs %": 0,
@@ -205,33 +231,33 @@ export default function FootballTeamSeedProjections({
       };
 
       seeds.forEach((seed) => {
-        winData[winsValue].seedDistribution[seed] = 0;
-        winData[winsValue].rawCounts.seedDistribution[seed] = 0;
+        recordData[recordValue].seedDistribution[seed] = 0;
+        recordData[recordValue].rawCounts.seedDistribution[seed] = 0;
       });
     });
 
     // Process each entry to populate the data
-    winSeedCounts.forEach((entry) => {
-      const winsValue = entry.Wins.toString();
-      const status = entry.Tournament_Status || "Out of Playoffs";
+    recordSeedCounts.forEach((entry) => {
+      const recordValue = entry.Record;
+      const status = entry.Playoff_Status || "Out of Playoffs";
       const count = entry.Count || 0;
       const confChampPct = entry.Conf_Champ_Pct || 0;
       const atLargePct = entry.At_Large_Pct || 0;
-      const seedValue = entry.Seed?.toString() || "None"; // ADD THIS LINE
+      const seedValue = entry.Seed?.toString() || "None";
 
-      if (!winData[winsValue]) return;
+      if (!recordData[recordValue]) return;
 
-      winData[winsValue].total += count;
+      recordData[recordValue].total += count;
 
       // Handle bid category distribution
       if (status === "In Playoffs" || !isNaN(parseInt(entry.Seed.toString()))) {
         const confChampCount = Math.round((confChampPct / 100) * count);
         const atLargeCount = Math.round((atLargePct / 100) * count);
 
-        winData[winsValue].rawCounts.bidCategoryDistribution[
+        recordData[recordValue].rawCounts.bidCategoryDistribution[
           "Conference Champion"
         ] += confChampCount;
-        winData[winsValue].rawCounts.bidCategoryDistribution["At Large"] +=
+        recordData[recordValue].rawCounts.bidCategoryDistribution["At Large"] +=
           atLargeCount;
       }
 
@@ -239,27 +265,30 @@ export default function FootballTeamSeedProjections({
       if (entry.Seed && !isNaN(parseInt(entry.Seed.toString()))) {
         // This scenario has a numeric seed - IN PLAYOFFS
         const seedKey = entry.Seed.toString();
-        winData[winsValue].rawCounts.seedDistribution[seedKey] =
-          (winData[winsValue].rawCounts.seedDistribution[seedKey] || 0) + count;
+        recordData[recordValue].rawCounts.seedDistribution[seedKey] =
+          (recordData[recordValue].rawCounts.seedDistribution[seedKey] || 0) +
+          count;
 
-        winData[winsValue].rawCounts.statusDistribution["In Playoffs %"] +=
+        recordData[recordValue].rawCounts.statusDistribution["In Playoffs %"] +=
           count;
       } else {
         // UPDATED: Check the Seed field for First/Next Four Out
         if (seedValue === "First Four Out") {
-          winData[winsValue].rawCounts.statusDistribution["First Four Out"] +=
-            count;
+          recordData[recordValue].rawCounts.statusDistribution[
+            "First Four Out"
+          ] += count;
         } else if (seedValue === "Next Four Out") {
-          winData[winsValue].rawCounts.statusDistribution["Next Four Out"] +=
-            count;
+          recordData[recordValue].rawCounts.statusDistribution[
+            "Next Four Out"
+          ] += count;
         }
         // Don't add to "Out of Playoffs" - it's calculated as complement
       }
     });
 
     // Calculate percentages
-    winTotals.forEach((winsValue) => {
-      const rowData = winData[winsValue];
+    records.forEach((recordValue) => {
+      const rowData = recordData[recordValue];
       rowData.percentOfTotal = (rowData.total / grandTotal) * 100;
 
       // Calculate seed distribution percentages
@@ -306,7 +335,7 @@ export default function FootballTeamSeedProjections({
       }
     });
 
-    // Calculate total row
+    // Calculate totals
     const totalRow: FootballTotalRow = {
       seedDistribution: {},
       statusDistribution: {
@@ -332,81 +361,58 @@ export default function FootballTeamSeedProjections({
           "At Large": 0,
         },
       },
-      total: 0,
+      total: grandTotal,
     };
 
     seeds.forEach((seed) => {
-      totalRow.seedDistribution[seed] = 0;
-      totalRow.rawCounts.seedDistribution[seed] = 0;
-    });
-
-    // Sum up totals across all win values
-    Object.entries(winData).forEach(([, data]) => {
-      totalRow.total += data.total;
-
-      Object.entries(data.rawCounts.seedDistribution).forEach(
-        ([seed, count]) => {
-          totalRow.rawCounts.seedDistribution[seed] =
-            (totalRow.rawCounts.seedDistribution[seed] || 0) + count;
-        }
-      );
-
-      // Only sum In Playoffs, First Four Out, Next Four Out
-      totalRow.rawCounts.statusDistribution["In Playoffs %"] +=
-        data.rawCounts.statusDistribution["In Playoffs %"];
-      totalRow.rawCounts.statusDistribution["First Four Out"] +=
-        data.rawCounts.statusDistribution["First Four Out"];
-      totalRow.rawCounts.statusDistribution["Next Four Out"] +=
-        data.rawCounts.statusDistribution["Next Four Out"];
-
-      const bidCategoryEntries = Object.entries(
-        data.rawCounts.bidCategoryDistribution
-      ) as Array<[keyof FootballBidCategoryDistribution, number]>;
-      bidCategoryEntries.forEach(([category, count]) => {
-        totalRow.rawCounts.bidCategoryDistribution[category] =
-          (totalRow.rawCounts.bidCategoryDistribution[category] || 0) + count;
+      let seedTotal = 0;
+      records.forEach((recordValue) => {
+        seedTotal +=
+          recordData[recordValue].rawCounts.seedDistribution[seed] || 0;
       });
+      totalRow.rawCounts.seedDistribution[seed] = seedTotal;
+      totalRow.seedDistribution[seed] =
+        grandTotal > 0 ? (seedTotal / grandTotal) * 100 : 0;
     });
 
-    // Calculate total row percentages
-    Object.entries(totalRow.rawCounts.seedDistribution).forEach(
-      ([seed, count]) => {
-        totalRow.seedDistribution[seed] =
-          grandTotal > 0 ? (count / grandTotal) * 100 : 0;
+    Object.entries(totalRow.rawCounts.statusDistribution).forEach(
+      ([status, _]) => {
+        const statusKey = status as keyof FootballStatusDistribution;
+        let statusTotal = 0;
+        records.forEach((recordValue) => {
+          statusTotal +=
+            recordData[recordValue].rawCounts.statusDistribution[statusKey] ||
+            0;
+        });
+        totalRow.rawCounts.statusDistribution[statusKey] = statusTotal;
+        totalRow.statusDistribution[statusKey] =
+          grandTotal > 0 ? (statusTotal / grandTotal) * 100 : 0;
       }
     );
 
-    const totalBidCategoryEntries = Object.entries(
-      totalRow.rawCounts.bidCategoryDistribution
-    ) as Array<[keyof FootballBidCategoryDistribution, number]>;
-    totalBidCategoryEntries.forEach(([category, count]) => {
-      totalRow.bidCategoryDistribution[category] =
-        grandTotal > 0 ? (count / grandTotal) * 100 : 0;
-    });
+    Object.entries(totalRow.rawCounts.bidCategoryDistribution).forEach(
+      ([category, _]) => {
+        const catKey = category as keyof FootballBidCategoryDistribution;
+        let catTotal = 0;
+        records.forEach((recordValue) => {
+          catTotal +=
+            recordData[recordValue].rawCounts.bidCategoryDistribution[catKey] ||
+            0;
+        });
+        totalRow.rawCounts.bidCategoryDistribution[catKey] = catTotal;
+        totalRow.bidCategoryDistribution[catKey] =
+          grandTotal > 0 ? (catTotal / grandTotal) * 100 : 0;
+      }
+    );
 
-    const totalInPlayoffs =
-      totalRow.rawCounts.statusDistribution["In Playoffs %"];
-    const totalFirstFourOut =
-      totalRow.rawCounts.statusDistribution["First Four Out"];
-    const totalNextFourOut =
-      totalRow.rawCounts.statusDistribution["Next Four Out"];
-
-    if (grandTotal > 0) {
-      const totalInPlayoffsPct = (totalInPlayoffs / grandTotal) * 100;
-      totalRow.statusDistribution["In Playoffs %"] = totalInPlayoffsPct;
-      totalRow.statusDistribution["Out of Playoffs"] = 100 - totalInPlayoffsPct; // Complement
-      totalRow.statusDistribution["First Four Out"] =
-        (totalFirstFourOut / grandTotal) * 100;
-      totalRow.statusDistribution["Next Four Out"] =
-        (totalNextFourOut / grandTotal) * 100;
-    } else {
-      totalRow.statusDistribution["In Playoffs %"] = 0;
-      totalRow.statusDistribution["Out of Playoffs"] = 100;
-      totalRow.statusDistribution["First Four Out"] = 0;
-      totalRow.statusDistribution["Next Four Out"] = 0;
-    }
-
-    return { winData, winTotals, seeds, totalRow, hasNumericSeeds, grandTotal };
+    return {
+      recordData,
+      records,
+      seeds,
+      totalRow,
+      hasNumericSeeds,
+      grandTotal,
+    };
   };
 
   const data = processData();
@@ -441,7 +447,7 @@ export default function FootballTeamSeedProjections({
     return label;
   };
 
-  const winsColWidth = "40px";
+  const winsColWidth = "60px";
   const seedColWidth = isMobile ? "33px" : "38px";
   const statusColWidth = isMobile ? "45px" : "60px";
   const bidColWidth = isMobile ? "40px" : "50px";
@@ -482,7 +488,7 @@ export default function FootballTeamSeedProjections({
                   maxWidth: winsColWidth,
                 }}
               >
-                Wins
+                Record
               </th>
 
               {seedColumns.length > 0 && (
@@ -563,13 +569,13 @@ export default function FootballTeamSeedProjections({
             </tr>
           </thead>
           <tbody>
-            {data.winTotals.map((winsValue: string) => {
-              const rowData = data.winData[winsValue];
+            {data.records.map((recordValue: string) => {
+              const rowData = data.recordData[recordValue];
               const percentOfTotal = rowData.percentOfTotal;
               const totalColorStyle = getCellColor(percentOfTotal);
 
               return (
-                <tr key={`win-${winsValue}`}>
+                <tr key={`record-${recordValue}`}>
                   <td
                     style={{
                       ...styles.dataCell,
@@ -579,14 +585,14 @@ export default function FootballTeamSeedProjections({
                       maxWidth: winsColWidth,
                     }}
                   >
-                    {winsValue}
+                    {recordValue}
                   </td>
 
                   {seedColumns.map((seed) => {
                     const pct = rowData.seedDistribution[seed] || 0;
                     return (
                       <td
-                        key={`win-${winsValue}-seed-${seed}`}
+                        key={`record-${recordValue}-seed-${seed}`}
                         style={{
                           ...styles.dataCell,
                           ...getCellColor(pct),
@@ -601,19 +607,17 @@ export default function FootballTeamSeedProjections({
                   })}
 
                   {statusColumns.map((status) => {
-                    const pct = rowData.statusDistribution[status] || 0;
                     const isOutCategory =
-                      status === "Out of Playoffs" ||
                       status === "First Four Out" ||
-                      status === "Next Four Out";
-                    const colorStyle = getStatusColor(pct, isOutCategory);
-
+                      status === "Next Four Out" ||
+                      status === "Out of Playoffs";
+                    const pct = rowData.statusDistribution[status] || 0;
                     return (
                       <td
-                        key={`win-${winsValue}-status-${status}`}
+                        key={`record-${recordValue}-status-${status}`}
                         style={{
                           ...styles.dataCell,
-                          ...colorStyle,
+                          ...getStatusColor(pct, isOutCategory),
                           width: statusColWidth,
                           minWidth: statusColWidth,
                           maxWidth: statusColWidth,
@@ -628,7 +632,7 @@ export default function FootballTeamSeedProjections({
                     const pct = rowData.bidCategoryDistribution[category] || 0;
                     return (
                       <td
-                        key={`win-${winsValue}-bid-${category}`}
+                        key={`record-${recordValue}-bid-${category}`}
                         style={{
                           ...styles.dataCell,
                           ...getCellColor(pct),
@@ -651,14 +655,14 @@ export default function FootballTeamSeedProjections({
                       maxWidth: totalColWidth,
                     }}
                   >
-                    {percentOfTotal > 0 ? `${Math.round(percentOfTotal)}%` : ""}
+                    {`${Math.round(percentOfTotal)}%`}
                   </td>
                 </tr>
               );
             })}
 
-            {/* Total row */}
-            <tr style={{ borderTop: "2px solid #333" }}>
+            {/* Totals Row */}
+            <tr>
               <td
                 style={{
                   ...styles.dataCell,
@@ -690,19 +694,17 @@ export default function FootballTeamSeedProjections({
               })}
 
               {statusColumns.map((status) => {
-                const pct = data.totalRow.statusDistribution[status] || 0;
                 const isOutCategory =
-                  status === "Out of Playoffs" ||
                   status === "First Four Out" ||
-                  status === "Next Four Out";
-                const colorStyle = getStatusColor(pct, isOutCategory);
-
+                  status === "Next Four Out" ||
+                  status === "Out of Playoffs";
+                const pct = data.totalRow.statusDistribution[status] || 0;
                 return (
                   <td
                     key={`total-status-${status}`}
                     style={{
                       ...styles.dataCell,
-                      ...colorStyle,
+                      ...getStatusColor(pct, isOutCategory),
                       width: statusColWidth,
                       minWidth: statusColWidth,
                       maxWidth: statusColWidth,
@@ -735,13 +737,12 @@ export default function FootballTeamSeedProjections({
               <td
                 style={{
                   ...styles.dataCell,
-                  backgroundColor: "#f8f9fa",
                   width: totalColWidth,
                   minWidth: totalColWidth,
                   maxWidth: totalColWidth,
                 }}
               >
-                100%
+                {`${Math.round((data.totalRow.total / data.grandTotal) * 100)}%`}
               </td>
             </tr>
           </tbody>

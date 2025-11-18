@@ -25,6 +25,15 @@ interface FootballTeamInfo {
     Conf_Champ_Pct?: number;
     At_Large_Pct?: number;
   }>;
+  record_seed_counts?: Array<{
+    Record: string;
+    Seed: string | number;
+    Percentage: number;
+    Playoff_Status: string;
+    Count: number;
+    Conf_Champ_Pct?: number;
+    At_Large_Pct?: number;
+  }>;
 }
 
 interface FootballTeamGame {
