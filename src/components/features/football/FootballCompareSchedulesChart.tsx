@@ -263,7 +263,7 @@ export default function FootballCompareSchedulesChart({
   const teamStats = useMemo(() => {
     const stats: { [teamIndex: number]: TeamStats } = {};
 
-    teams.forEach((team, teamIndex) => {
+    teams.forEach((_team, teamIndex) => {
       const teamGamesList = teamGames.filter((g) => g.teamIndex === teamIndex);
 
       // Check if showing remaining games only
@@ -398,7 +398,7 @@ export default function FootballCompareSchedulesChart({
     );
   }, [positionedGames, opponentComparisonDataset, teamGames, teams]);
 
-  const renderTeamColumn = (team: TeamSchedule, teamIndex: number) => {
+  const renderTeamColumn = (teamIndex: number) => {
     const columnX = MARGIN.left + teamIndex * columnWidth + columnWidth / 2;
     const dividerX = MARGIN.left + teamIndex * columnWidth + columnWidth;
     const columnGames = positionedGames.filter(
@@ -414,7 +414,7 @@ export default function FootballCompareSchedulesChart({
           y={MARGIN.top - 50}
           width="44"
           height="44"
-          href={team.teamLogo}
+          href={teams[teamIndex].teamLogo}
           style={{
             border: "2px solid #e5e7eb",
             borderRadius: "4px",
@@ -788,7 +788,7 @@ export default function FootballCompareSchedulesChart({
           </text>
 
           {/* Team Columns */}
-          {teams.map((team, index) => renderTeamColumn(team, index))}
+          {teams.map((_team, index) => renderTeamColumn(index))}
         </svg>
       </div>
 

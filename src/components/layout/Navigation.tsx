@@ -1,3 +1,4 @@
+// src/components/layout/Navigation.tsx
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -16,14 +17,24 @@ function NavigationContent() {
   const lastItemRef = useRef<HTMLAnchorElement>(null);
 
   const isFootball = pathname.startsWith("/football");
+  const isTeamPage = pathname.includes("/team/");
 
-  // Helper function to add conference to URL
+  // Helper function to add conference to URL following all rules
   const addConferenceToUrl = useCallback(
     (basePath: string) => {
-      const currentConf = searchParams.get("conf") || "Big 12";
-      return `${basePath}?conf=${encodeURIComponent(currentConf)}`;
+      // Rule 4: If on team page, use team's conference
+      const teamConf = searchParams.get("teamConf");
+      if (teamConf && isTeamPage) {
+        return `${basePath}?conf=${encodeURIComponent(teamConf)}`;
+      }
+
+      // Rule 3: Preserve current conf (but use Big 12 if All Teams)
+      const currentConf = searchParams.get("conf");
+      const confToUse =
+        currentConf && currentConf !== "All Teams" ? currentConf : "Big 12";
+      return `${basePath}?conf=${encodeURIComponent(confToUse)}`;
     },
-    [searchParams]
+    [searchParams, isTeamPage]
   );
 
   const basketballNavItems = [
@@ -150,12 +161,14 @@ function NavigationContent() {
   const navItems = isFootball ? footballNavItems : basketballNavItems;
 
   // Helper for sport switching links
+  // Rule 2: Always use Big 12 when switching sports
   const getSportSwitchUrl = useCallback(() => {
-    const currentConf = searchParams.get("conf") || "Big 12";
     return isFootball
-      ? `/basketball/wins?conf=${encodeURIComponent(currentConf)}`
-      : `/football/wins?conf=${encodeURIComponent(currentConf)}`;
-  }, [isFootball, searchParams]);
+      ? `/basketball/wins?conf=${encodeURIComponent("Big 12")}`
+      : `/football/wins?conf=${encodeURIComponent("Big 12")}`;
+  }, [isFootball]);
+
+  // ... rest of the component stays the same (keyboard handlers, etc)
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -228,7 +241,6 @@ function NavigationContent() {
         aria-label="Main navigation"
       >
         {navItems.map((item) => {
-          // FIX: Compare only the pathname portion, not the full URL with query params
           const isActive = pathname === item.path.split("?")[0];
           return (
             <Link
@@ -294,7 +306,6 @@ function NavigationContent() {
         >
           <nav role="navigation" aria-label="Mobile navigation">
             {navItems.map((item, index) => {
-              // FIX: Same fix for mobile navigation
               const isActive = pathname === item.path.split("?")[0];
               const isFirst = index === 0;
               const isLast = index === navItems.length - 1;

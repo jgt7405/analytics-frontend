@@ -2,14 +2,14 @@
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
-import BasketballScheduleTable from "@/components/features/basketball/ScheduleTable"; // ✅ Basketball component
+import BasketballScheduleTable from "@/components/features/basketball/ScheduleTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useResponsive } from "@/hooks/useResponsive";
-import { useSchedule } from "@/hooks/useSchedule"; // ✅ Basketball hook
+import { useSchedule } from "@/hooks/useSchedule";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
@@ -17,70 +17,73 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 export default function BasketballSchedulePage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
-  const { updatePreference } = useUserPreferences();
+  const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
 
-  const [selectedConference, setSelectedConference] = useState("Big 12");
+  // Initialize with user's default conference, not hardcoded Big 12
+  const [selectedConference, setSelectedConference] = useState(
+    preferences.defaultConference || "Big 12"
+  );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
-    "Big 12",
+    preferences.defaultConference || "Big 12",
   ]);
   const [hasInitialized, setHasInitialized] = useState(false);
 
   const { handleConferenceChange: handleUrlConferenceChange } =
     useConferenceUrl(setSelectedConference, availableConferences, false);
 
+  // Initialize from URL - trust the conf parameter directly
   useEffect(() => {
     if (!hasInitialized) {
       const confParam = searchParams.get("conf");
 
       if (confParam) {
         const decodedConf = decodeURIComponent(confParam);
-        const knownBasketballConferences = [
-          "Big 12",
-          "SEC",
-          "Big Ten",
-          "ACC",
-          "Pac-12",
-          "Big East",
-          "Mountain West",
-          "American",
-          "Atlantic 10",
-          "WCC",
-          "West Coast",
-          "Conference USA",
-          "MAC",
-          "Sun Belt",
-          "WAC",
-        ];
-
-        if (knownBasketballConferences.includes(decodedConf)) {
-          setSelectedConference(decodedConf);
-        } else {
-          setSelectedConference("Big 12");
-          const params = new URLSearchParams(searchParams.toString());
-          params.set("conf", "Big 12");
-          const newUrl = `${window.location.pathname}?${params.toString()}`;
-          window.history.replaceState({}, "", newUrl);
-        }
+        // Trust the conf parameter directly - let the API validate it
+        setSelectedConference(decodedConf);
       }
       setHasInitialized(true);
     }
   }, [searchParams, hasInitialized]);
 
-  // ✅ Use basketball schedule hook
   const {
     data: scheduleResponse,
     isLoading: scheduleLoading,
     error: scheduleError,
     refetch,
-  } = useSchedule(hasInitialized ? selectedConference : "Big 12");
+  } = useSchedule(
+    hasInitialized
+      ? selectedConference
+      : preferences.defaultConference || "Big 12"
+  );
 
+  // Update available conferences when API loads
   useEffect(() => {
     if (scheduleResponse?.conferences) {
       setAvailableConferences(scheduleResponse.conferences);
     }
   }, [scheduleResponse]);
+
+  // Validate selected conference against available conferences after API loads
+  useEffect(() => {
+    if (scheduleResponse?.conferences && selectedConference && hasInitialized) {
+      if (!scheduleResponse.conferences.includes(selectedConference)) {
+        const fallbackConf = preferences.defaultConference || "Big 12";
+        setSelectedConference(fallbackConf);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("conf", fallbackConf);
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, [
+    scheduleResponse?.conferences,
+    selectedConference,
+    hasInitialized,
+    searchParams,
+    preferences.defaultConference,
+  ]);
 
   const filteredScheduleData = useMemo(() => {
     if (!scheduleResponse?.data) return [];

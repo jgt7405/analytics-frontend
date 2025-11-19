@@ -39,29 +39,12 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
     [router]
   );
 
-  // Calculate proper ranks with tie handling - matches football logic
+  // Use ranks from backend - no recalculation
   const rankedTwvData = useMemo(() => {
     if (!twvData || twvData.length === 0) return [];
 
-    // Sort by TWV descending, then alphabetically by team name for ties
-    const sorted = [...twvData].sort((a, b) => {
-      if (b.twv !== a.twv) {
-        return b.twv - a.twv;
-      }
-      return a.team_name.localeCompare(b.team_name);
-    });
-
-    // Assign ranks with tie handling
-    let currentRank = 1;
-    return sorted.map((team, index) => {
-      if (index > 0 && sorted[index - 1].twv !== team.twv) {
-        currentRank = index + 1;
-      }
-      return {
-        ...team,
-        rank: currentRank,
-      };
-    });
+    // Sort by TWV descending for display order, but preserve global rank from backend
+    return [...twvData].sort((a, b) => b.twv - a.twv);
   }, [twvData]);
 
   // Apply row limit filter
