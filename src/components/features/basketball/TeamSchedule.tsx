@@ -53,13 +53,27 @@ export default function TeamSchedule({
       }
     });
 
-    // Sort by kenpom rank
+    // Sort by kenpom rank: ranked teams first (ascending), then Non D1 (alphabetized)
     Object.keys(groups).forEach((location) => {
       const loc = location as LocationType;
       groups[loc].sort((a, b) => {
-        if (a.kenpom_rank && b.kenpom_rank) {
-          return a.kenpom_rank - b.kenpom_rank;
+        const aRanked = a.kenpom_rank && a.kenpom_rank !== 999;
+        const bRanked = b.kenpom_rank && b.kenpom_rank !== 999;
+
+        // Both ranked: sort by rank ascending
+        if (aRanked && bRanked) {
+          return a.kenpom_rank! - b.kenpom_rank!;
         }
+
+        // One ranked, one not: ranked comes first
+        if (aRanked && !bRanked) {
+          return -1;
+        }
+        if (!aRanked && bRanked) {
+          return 1;
+        }
+
+        // Both non-ranked: alphabetize by opponent name
         return a.opponent.localeCompare(b.opponent);
       });
     });
@@ -108,7 +122,7 @@ export default function TeamSchedule({
                     border: `2px solid ${getBorderColor(game.status)}`,
                   }}
                   onClick={() => navigateToTeam(game.opponent)}
-                  title={`${game.opponent} (${game.kenpom_rank ? `#${game.kenpom_rank}` : "Unranked"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
+                  title={`${game.opponent} (${game.kenpom_rank ? (game.kenpom_rank === 999 ? "Non D1" : `#${game.kenpom_rank}`) : "Non D1"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
                 >
                   <TeamLogo
                     logoUrl={
@@ -117,8 +131,12 @@ export default function TeamSchedule({
                     teamName={game.opponent}
                     size={logoSize}
                   />
-                  <span className="text-xs text-gray-600 font-medium">
-                    {game.kenpom_rank ? `#${game.kenpom_rank}` : ""}
+                  <span className="text-xs text-gray-600 font-medium text-right">
+                    {game.kenpom_rank
+                      ? game.kenpom_rank === 999
+                        ? "Non D1"
+                        : `#${game.kenpom_rank}`
+                      : "Non D1"}
                   </span>
                 </div>
               ))

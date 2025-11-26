@@ -15,12 +15,14 @@ import {
 import { WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import { Download } from "lucide-react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 // Color from schedule difficulty component
 const TEAL_COLOR = "rgb(0, 151, 178)";
 
 export default function WhatIfCalculator() {
+  const searchParams = useSearchParams();
   const [selectedConference, setSelectedConference] = useState<string>("");
   const [gameSelections, setGameSelections] = useState<Map<number, string>>(
     new Map()
@@ -55,6 +57,14 @@ export default function WhatIfCalculator() {
           name !== "All_Teams" && name !== "FCS" && name !== "Independent"
       )
       .sort() || [];
+
+  useEffect(() => {
+    const confParam = searchParams.get("conf");
+    if (confParam) {
+      const decodedConf = decodeURIComponent(confParam);
+      setSelectedConference(decodedConf);
+    }
+  }, [searchParams]);
 
   // Load games and current projections when conference is selected
   useEffect(() => {

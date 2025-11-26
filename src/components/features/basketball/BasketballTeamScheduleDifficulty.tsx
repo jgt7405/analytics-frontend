@@ -557,7 +557,7 @@ export default function BasketballTeamScheduleDifficulty({
                   strokeWidth={1}
                 />
 
-                {game.opponent_logo && (
+                {(game.opponent_logo || "/images/team_logos/default.png") && (
                   <g>
                     <foreignObject
                       x={logoX - 12}
@@ -586,7 +586,9 @@ export default function BasketballTeamScheduleDifficulty({
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={game.opponent_logo}
+                        src={
+                          game.opponent_logo || "/images/team_logos/default.png"
+                        }
                         alt={game.opponent}
                         style={{
                           width: "24px",
@@ -642,19 +644,6 @@ export default function BasketballTeamScheduleDifficulty({
                       </g>
                     )}
                   </g>
-                )}
-
-                {!game.opponent_logo && (
-                  <text
-                    x={logoX}
-                    y={game.adjustedY + 4}
-                    textAnchor={game.isRightSide ? "start" : "end"}
-                    className="text-xs fill-gray-700"
-                  >
-                    {game.opponent.length > 8
-                      ? `${game.opponent.slice(0, 8)}...`
-                      : game.opponent}
-                  </text>
                 )}
               </g>
             );

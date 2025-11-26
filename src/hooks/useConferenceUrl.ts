@@ -91,38 +91,62 @@ export const useConferenceUrl = (
     [setSelectedConference, updateUrl, getAppropriateConference]
   );
 
-  // Initialize from URL on mount - only once
+  // ============================================================================
+  // TASK 1.1: Initialize from URL on mount - only once
+  // Implements Rule 1 (Big 12 default) and Rule 4 (teamConf parameter priority)
+  // ============================================================================
   useEffect(() => {
     if (hasInitialized.current) return;
 
-    const confParam = searchParams.get("conf");
+    // Rule 4: Check for teamConf parameter FIRST (when navigating FROM a team page)
+    // teamConf takes absolute priority over conf parameter
+    const teamConfParam = searchParams.get("teamConf");
+    if (teamConfParam) {
+      const decodedTeamConf = decodeURIComponent(teamConfParam);
+      const appropriateConference = getAppropriateConference(decodedTeamConf);
+      setSelectedConference(appropriateConference);
+      hasInitialized.current = true;
+      return; // CRITICAL: Early exit prevents conf parameter from being checked
+    }
 
+    // Rule 1: Check for regular conf parameter
+    const confParam = searchParams.get("conf");
     if (confParam) {
       const decodedConf = decodeURIComponent(confParam);
       const appropriateConference = getAppropriateConference(decodedConf);
       setSelectedConference(appropriateConference);
     } else {
-      // No conference in URL, use default Big 12
+      // Rule 1: No conference in URL, default to Big 12
       setSelectedConference("Big 12");
     }
 
     hasInitialized.current = true;
   }, [searchParams, setSelectedConference, getAppropriateConference]);
 
-  // Handle page navigation - redirect Invalid conferences
+  // ============================================================================
+  // Validate against page constraints AFTER initialization
+  // Ensures URL parameters are respected but invalid values are corrected
+  // ============================================================================
   useEffect(() => {
     if (!hasInitialized.current) return;
 
     const confParam = searchParams.get("conf");
+    const teamConfParam = searchParams.get("teamConf");
 
-    // Handle Independent not supported
-    if (confParam === "Independent" && !supportsIndependent()) {
+    // Handle Independent not supported on certain pages
+    if (
+      (confParam === "Independent" || teamConfParam === "Independent") &&
+      !supportsIndependent()
+    ) {
       setSelectedConference("Big 12");
       updateUrl("Big 12");
     }
 
-    // Handle All Teams not allowed
-    if (confParam === "All Teams" && !allowAllTeams) {
+    // Handle All Teams not allowed on certain pages
+    if (
+      (confParam === "All Teams" || teamConfParam === "All Teams") &&
+      !allowAllTeams
+    ) {
       setSelectedConference("Big 12");
       updateUrl("Big 12");
     }

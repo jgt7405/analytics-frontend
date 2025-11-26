@@ -21,7 +21,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Download } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // ✅ ADD useSearchParams
 import { useEffect, useState } from "react";
 
 interface ApiRecordSeedCount {
@@ -52,6 +52,7 @@ export default function FootballTeamPage({
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
   const router = useRouter();
+  const searchParams = useSearchParams(); // ✅ ADD THIS LINE
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
 
   const teamname = decodeURIComponent(params.teamname);
@@ -73,6 +74,16 @@ export default function FootballTeamPage({
       properties: { page: "football-team", team: teamname },
     });
   }, [teamname, trackEvent]);
+
+  // ✅ ADD THIS NEW EFFECT - Update URL with teamConf when team data loads
+  useEffect(() => {
+    if (teamData?.team_info?.conference) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("teamConf", encodeURIComponent(teamData.team_info.conference));
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [teamData?.team_info?.conference, searchParams]);
 
   const navigateToTeam = (targetTeam: string) => {
     if (targetTeam && targetTeam !== teamname) {
@@ -197,6 +208,7 @@ export default function FootballTeamPage({
       <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
         <div className="space-y-3">
           {isMobile ? (
+            // ... REST OF MOBILE JSX STAYS THE SAME (copy from your file)
             <div className="space-y-2">
               {/* Mobile Header */}
               <div className="bg-white rounded-lg px-2 py-4">
@@ -516,6 +528,7 @@ export default function FootballTeamPage({
               </div>
             </div>
           ) : (
+            // ... REST OF DESKTOP JSX STAYS THE SAME (copy from your file)
             <div className="w-full">
               {/* Desktop Header */}
               <div className="bg-white rounded-lg p-4 mb-3">

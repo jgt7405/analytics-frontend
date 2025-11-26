@@ -13,18 +13,22 @@ import { useCWV } from "@/hooks/useCWV";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
+import { useSearchParams } from "next/navigation"; // ✅ ADD THIS LINE
 import { Suspense, useEffect, useState } from "react";
 
 export default function CWVPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
+  const searchParams = useSearchParams(); // ✅ ADD THIS LINE
+
   const [selectedConference, setSelectedConference] = useState(
     preferences.defaultConference
   );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     preferences.defaultConference,
   ]);
+  const [hasInitialized, setHasInitialized] = useState(false); // ✅ ADD THIS LINE
 
   const {
     data: cwvResponse,
@@ -40,6 +44,28 @@ export default function CWVPage() {
       availableConferences,
       false // NO "All Teams" for CWV
     );
+
+  // ✅ UPDATE THIS EFFECT - Initialize from URL on mount
+  useEffect(() => {
+    if (!hasInitialized) {
+      // Check teamConf FIRST (from team page)
+      const teamConfParam = searchParams.get("teamConf");
+      if (teamConfParam) {
+        const decodedTeamConf = decodeURIComponent(teamConfParam);
+        setSelectedConference(decodedTeamConf);
+        setHasInitialized(true);
+        return;
+      }
+
+      // Then check regular conf parameter
+      const confParam = searchParams.get("conf");
+      if (confParam) {
+        const decodedConf = decodeURIComponent(confParam);
+        setSelectedConference(decodedConf);
+      }
+      setHasInitialized(true);
+    }
+  }, [searchParams, hasInitialized]);
 
   // Track page load
   useEffect(() => {

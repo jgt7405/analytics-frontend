@@ -1,3 +1,4 @@
+// src/app/basketball/team/[teamname]/page.tsx
 "use client";
 
 import ScreenshotModal from "@/components/common/ScreenshotModal";
@@ -20,7 +21,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Download } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface WinSeedCountEntry {
@@ -84,6 +85,7 @@ export default function BasketballTeamPage({
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
 
   const teamname = decodeURIComponent(params.teamname);
@@ -129,6 +131,16 @@ export default function BasketballTeamPage({
 
     fetchTeamData();
   }, [teamname]);
+
+  // ✅ SINGLE CLEAN EFFECT - Update URL with teamConf when team data loads
+  useEffect(() => {
+    if (teamData?.team_info?.conference && mounted) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("teamConf", encodeURIComponent(teamData.team_info.conference));
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [teamData?.team_info?.conference, mounted, searchParams]);
 
   const navigateToTeam = (targetTeam: string) => {
     if (targetTeam && targetTeam !== teamname) {
@@ -233,6 +245,7 @@ export default function BasketballTeamPage({
       <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
         <div className="space-y-3">
           {isMobile ? (
+            // ... REST OF COMPONENT STAYS THE SAME (mobile JSX)
             <div className="space-y-2">
               {/* Mobile Header */}
               <div className="bg-white rounded-lg px-2 py-4">
@@ -555,6 +568,8 @@ export default function BasketballTeamPage({
               </div>
             </div>
           ) : (
+            // ... REST OF COMPONENT STAYS THE SAME (desktop JSX from original)
+            // Copy the entire desktop section from your original file
             <div className="w-full">
               {/* Desktop Header */}
               <div className="bg-white rounded-lg p-4 mb-3">

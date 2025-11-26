@@ -82,7 +82,12 @@ export default function BasketballTeamScheduleChart({
     return `#${rank}`;
   };
 
-  const formatScore = (teamPts?: number, oppPts?: number, status?: string) => {
+  const formatScore = (
+    teamPts?: number,
+    oppPts?: number,
+    status?: string,
+    oppKpRank?: number
+  ) => {
     if (
       status === "Scheduled" ||
       teamPts === null ||
@@ -91,6 +96,10 @@ export default function BasketballTeamScheduleChart({
       oppPts === undefined
     )
       return "";
+    // If opponent is Non D1 (rank 999 or missing), show W or L instead of score
+    if (!oppKpRank || oppKpRank === 999) {
+      return status === "W" ? "W" : status === "L" ? "L" : "";
+    }
     return `${teamPts}-${oppPts}`;
   };
 
@@ -149,7 +158,9 @@ export default function BasketballTeamScheduleChart({
                 </div>
               </td>
               <td className="text-center p-2">
-                {formatRank(game.opp_kp_rank || game.kenpom_rank)}
+                {!game.opp_kp_rank && !game.kenpom_rank
+                  ? "Non D1"
+                  : formatRank(game.opp_kp_rank || game.kenpom_rank)}
               </td>
               <td className="text-center p-2">
                 {formatProbability(game.team_win_prob)}
@@ -167,7 +178,12 @@ export default function BasketballTeamScheduleChart({
                         : "text-gray-600"
                   }`}
                 >
-                  {formatScore(game.team_points, game.opp_points, game.status)}
+                  {formatScore(
+                    game.team_points,
+                    game.opp_points,
+                    game.status,
+                    game.opp_kp_rank || game.kenpom_rank
+                  )}
                 </span>
               </td>
             </tr>

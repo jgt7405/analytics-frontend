@@ -25,14 +25,17 @@ function NavigationContent() {
       // Rule 4: If on team page, use team's conference
       const teamConf = searchParams.get("teamConf");
       if (teamConf && isTeamPage) {
-        return `${basePath}?conf=${encodeURIComponent(teamConf)}`;
+        // ✅ FIXED: Don't encode - searchParams.get() returns decoded value
+        // Link href will handle encoding automatically
+        return `${basePath}?conf=${teamConf}`;
       }
 
       // Rule 3: Preserve current conf (but use Big 12 if All Teams)
       const currentConf = searchParams.get("conf");
       const confToUse =
         currentConf && currentConf !== "All Teams" ? currentConf : "Big 12";
-      return `${basePath}?conf=${encodeURIComponent(confToUse)}`;
+      // ✅ FIXED: Don't encode - Link href will handle encoding automatically
+      return `${basePath}?conf=${confToUse}`;
     },
     [searchParams, isTeamPage]
   );
@@ -164,11 +167,9 @@ function NavigationContent() {
   // Rule 2: Always use Big 12 when switching sports
   const getSportSwitchUrl = useCallback(() => {
     return isFootball
-      ? `/basketball/wins?conf=${encodeURIComponent("Big 12")}`
-      : `/football/wins?conf=${encodeURIComponent("Big 12")}`;
+      ? `/basketball/wins?conf=Big 12`
+      : `/football/wins?conf=Big 12`;
   }, [isFootball]);
-
-  // ... rest of the component stays the same (keyboard handlers, etc)
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
