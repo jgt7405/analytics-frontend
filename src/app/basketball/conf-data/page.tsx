@@ -3,6 +3,7 @@
 import TableActionButtons from "@/components/common/TableActionButtons";
 import BballConfBidsHistoryChart from "@/components/features/basketball/BballConfBidsHistoryChart";
 import BballConfBoxWhiskerChart from "@/components/features/basketball/BballConfBoxWhiskerChart";
+import BballNonConfAnalysisTable from "@/components/features/basketball/BballNonConfAnalysisTable";
 import ConferenceBidsTable from "@/components/features/basketball/ConferenceBidsTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -35,6 +36,10 @@ export default function BasketballConfDataPage() {
     error: historyError,
   } = useBasketballConfDataHistory();
 
+  // Destructure the combined response
+  const conferenceData = confResponse?.conferenceData;
+  const nonconfData = confResponse?.nonconfData;
+
   // Debug logging
   useEffect(() => {
     console.log("=== Basketball History Debug ===");
@@ -49,6 +54,15 @@ export default function BasketballConfDataPage() {
     console.log("================================");
   }, [historyData, historyLoading, historyError]);
 
+  // Debug logging for nonconf data
+  useEffect(() => {
+    console.log("=== Basketball Non-Conf Debug ===");
+    console.log("Nonconf Data:", nonconfData);
+    console.log("Has data:", nonconfData?.data ? "YES" : "NO");
+    console.log("Data length:", nonconfData?.data?.length);
+    console.log("================================");
+  }, [nonconfData]);
+
   useEffect(() => {
     trackEvent({
       name: "page_view",
@@ -58,14 +72,14 @@ export default function BasketballConfDataPage() {
 
   // Filter conference data based on showAll state
   const filteredConfData = useMemo(() => {
-    if (!confResponse?.data) return [];
+    if (!conferenceData?.data) return [];
 
-    const sorted = [...confResponse.data].sort(
+    const sorted = [...conferenceData.data].sort(
       (a, b) => b.average_bids - a.average_bids
     );
 
     return showAll ? sorted : sorted.slice(0, 12);
-  }, [confResponse?.data, showAll]);
+  }, [conferenceData?.data, showAll]);
 
   // Filter history data based on showAll state
   const filteredHistoryData = useMemo(() => {
@@ -150,9 +164,18 @@ export default function BasketballConfDataPage() {
               <div className="mb-8">
                 <div className="h-96 bg-gray-200 animate-pulse rounded" />
               </div>
+              <div className="mb-8">
+                <BasketballTableSkeleton
+                  tableType="standings"
+                  rows={15}
+                  teamCols={13}
+                  showSummaryRows={false}
+                />
+              </div>
             </>
           ) : (
             <>
+              {/* Conference Bids Section */}
               <div className="mb-8">
                 <div className="conf-data-table">
                   <Suspense
@@ -203,6 +226,7 @@ export default function BasketballConfDataPage() {
                 </div>
               </div>
 
+              {/* Conference Net Rating Distribution Section */}
               <div className="mb-8">
                 <h3 className="text-xl font-normal text-gray-600 mb-4">
                   Conference Net Rating Distribution
@@ -244,6 +268,7 @@ export default function BasketballConfDataPage() {
                 </div>
               </div>
 
+              {/* Conference Tournament Bid Trends Section */}
               <div className="mb-8">
                 <h3 className="text-xl font-normal text-gray-600 mb-4">
                   Conference Tournament Bid Trends Over Time
@@ -319,6 +344,81 @@ export default function BasketballConfDataPage() {
                         pageName="conference-bids-history-chart"
                         pageTitle="Conference Tournament Bids History"
                         shareTitle="Conference Tournament Bid Trends Over Time"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Non-Conference Opponent Analysis Section */}
+              <div className="mb-8">
+                <h3 className="text-xl font-normal text-gray-600 mb-4">
+                  Non-Conference Opponent Analysis
+                </h3>
+                <div className="nonconf-analysis-table">
+                  <Suspense
+                    fallback={
+                      <BasketballTableSkeleton
+                        tableType="standings"
+                        rows={15}
+                        teamCols={13}
+                        showSummaryRows={false}
+                      />
+                    }
+                  >
+                    {confLoading ? (
+                      <div className="p-8 text-center">
+                        <div className="animate-pulse">
+                          Loading non-conference data...
+                        </div>
+                      </div>
+                    ) : confError ? (
+                      <div className="p-8 text-center">
+                        <p className="text-red-600 mb-2">Error loading data:</p>
+                        <p className="text-sm text-gray-600">
+                          {String(confError)}
+                        </p>
+                      </div>
+                    ) : nonconfData?.data && nonconfData.data.length > 0 ? (
+                      <BballNonConfAnalysisTable className="nonconf-analysis-table" />
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        No non-conference data available
+                      </div>
+                    )}
+                  </Suspense>
+                </div>
+
+                <div className="mt-6">
+                  <div className="flex flex-row items-start gap-4">
+                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                      <div
+                        className="nonconf-analysis-explainer"
+                        style={{ lineHeight: "1.3" }}
+                      >
+                        <div>
+                          Power conferences include ACC, Big 12, Big East, Big
+                          Ten, and SEC.
+                        </div>
+                        <div style={{ marginTop: "6px" }}>
+                          Exp Win % reflects the projected record of the #30
+                          rated team vs the schedule of that conference or team.
+                        </div>
+                        <div style={{ marginTop: "6px" }}>
+                          TWV reflects # of wins above or below the projected
+                          wins for the #30 rated team vs that schedule.
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
+                    >
+                      <TableActionButtons
+                        contentSelector=".nonconf-analysis-table"
+                        pageName="nonconf-analysis"
+                        pageTitle="Non-Conference Opponent Analysis"
+                        shareTitle="Non-Conference Performance Analysis"
+                        explainerSelector=".nonconf-analysis-explainer"
                       />
                     </div>
                   </div>

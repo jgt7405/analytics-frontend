@@ -53,27 +53,13 @@ export default function TeamSchedule({
       }
     });
 
-    // Sort by kenpom rank: ranked teams first (ascending), then Non D1 (alphabetized)
+    // Sort by kenpom rank
     Object.keys(groups).forEach((location) => {
       const loc = location as LocationType;
       groups[loc].sort((a, b) => {
-        const aRanked = a.kenpom_rank && a.kenpom_rank !== 999;
-        const bRanked = b.kenpom_rank && b.kenpom_rank !== 999;
-
-        // Both ranked: sort by rank ascending
-        if (aRanked && bRanked) {
-          return a.kenpom_rank! - b.kenpom_rank!;
+        if (a.kenpom_rank && b.kenpom_rank) {
+          return a.kenpom_rank - b.kenpom_rank;
         }
-
-        // One ranked, one not: ranked comes first
-        if (aRanked && !bRanked) {
-          return -1;
-        }
-        if (!aRanked && bRanked) {
-          return 1;
-        }
-
-        // Both non-ranked: alphabetize by opponent name
         return a.opponent.localeCompare(b.opponent);
       });
     });

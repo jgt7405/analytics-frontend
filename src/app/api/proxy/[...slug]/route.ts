@@ -149,6 +149,15 @@ export async function GET(
       const formattedConference = conference.replace(/\s+/g, "_");
       backendPath = `/conf_tourney/${formattedConference}/history`;
     }
+    // Handle 3-part basketball nonconf analysis routes: basketball/nonconf_analysis/All_Teams
+    else if (
+      slug.length === 3 &&
+      slug[0] === "basketball" &&
+      slug[1] === "nonconf_analysis"
+    ) {
+      const [, , conference] = slug;
+      backendPath = `/basketball/nonconf_analysis/${conference}`;
+    }
     // Handle 3-part football routes: football/standings/Big_12
     else if (slug.length === 3 && slug[0] === "football") {
       const [, footballEndpoint, footballConference] = slug;
