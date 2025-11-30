@@ -66,6 +66,7 @@ type SortField =
   | "total_exp_win_pct"
   | "total_twv";
 type SortOrder = "asc" | "desc";
+type ColumnType = "power" | "nonpower" | "total";
 
 function BballNonConfAnalysisTable({
   className: _className = "",
@@ -86,82 +87,183 @@ function BballNonConfAnalysisTable({
   const minMaxValues = useMemo(() => {
     if (tableData.length === 0) {
       return {
-        confMinTWV: -1,
-        confMaxTWV: 1,
-        teamMinTWV: -1,
-        teamMaxTWV: 1,
-        confMinWinPct: 0,
-        confMaxWinPct: 100,
-        teamMinWinPct: 0,
-        teamMaxWinPct: 100,
+        powerConfMinTWV: -1,
+        powerConfMaxTWV: 1,
+        nonpowerConfMinTWV: -1,
+        nonpowerConfMaxTWV: 1,
+        totalConfMinTWV: -1,
+        totalConfMaxTWV: 1,
+        powerTeamMinTWV: -1,
+        powerTeamMaxTWV: 1,
+        nonpowerTeamMinTWV: -1,
+        nonpowerTeamMaxTWV: 1,
+        totalTeamMinTWV: -1,
+        totalTeamMaxTWV: 1,
+        powerConfMinWinPct: 0,
+        powerConfMaxWinPct: 100,
+        nonpowerConfMinWinPct: 0,
+        nonpowerConfMaxWinPct: 100,
+        totalConfMinWinPct: 0,
+        totalConfMaxWinPct: 100,
+        powerTeamMinWinPct: 0,
+        powerTeamMaxWinPct: 100,
+        nonpowerTeamMinWinPct: 0,
+        nonpowerTeamMaxWinPct: 100,
+        totalTeamMinWinPct: 0,
+        totalTeamMaxWinPct: 100,
       };
     }
 
-    let confMinTwv = Infinity;
-    let confMaxTwv = -Infinity;
-    let teamMinTwv = Infinity;
-    let teamMaxTwv = -Infinity;
-    let confMinWp = Infinity;
-    let confMaxWp = -Infinity;
-    let teamMinWp = Infinity;
-    let teamMaxWp = -Infinity;
+    let powerConfMinTwv = Infinity;
+    let powerConfMaxTwv = -Infinity;
+    let nonpowerConfMinTwv = Infinity;
+    let nonpowerConfMaxTwv = -Infinity;
+    let totalConfMinTwv = Infinity;
+    let totalConfMaxTwv = -Infinity;
+    let powerTeamMinTwv = Infinity;
+    let powerTeamMaxTwv = -Infinity;
+    let nonpowerTeamMinTwv = Infinity;
+    let nonpowerTeamMaxTwv = -Infinity;
+    let totalTeamMinTwv = Infinity;
+    let totalTeamMaxTwv = -Infinity;
+    // eslint-disable-next-line prefer-const
+    let powerConfMinWp = Infinity;
+    // eslint-disable-next-line prefer-const
+    let powerConfMaxWp = -Infinity;
+    // eslint-disable-next-line prefer-const
+    let nonpowerConfMinWp = Infinity;
+    // eslint-disable-next-line prefer-const
+    let nonpowerConfMaxWp = -Infinity;
+    // eslint-disable-next-line prefer-const
+    let totalConfMinWp = Infinity;
+    // eslint-disable-next-line prefer-const
+    let totalConfMaxWp = -Infinity;
+    let powerTeamMinWp = Infinity;
+    let powerTeamMaxWp = -Infinity;
+    let nonpowerTeamMinWp = Infinity;
+    let nonpowerTeamMaxWp = -Infinity;
+    let totalTeamMinWp = Infinity;
+    let totalTeamMaxWp = -Infinity;
 
-    // Conference-level values
+    // Conference-level values (averaged by team count)
     tableData.forEach((conf: Conference) => {
-      [conf.power_twv, conf.nonpower_twv, conf.total_twv].forEach((v) => {
-        confMinTwv = Math.min(confMinTwv, v);
-        confMaxTwv = Math.max(confMaxTwv, v);
-      });
-      [conf.power_win_pct, conf.nonpower_win_pct, conf.total_win_pct].forEach(
-        (v) => {
-          confMinWp = Math.min(confMinWp, v);
-          confMaxWp = Math.max(confMaxWp, v);
-        }
-      );
+      const teamCount = conf.teams?.length || 1;
+      const powerTwvAvg = conf.power_twv / teamCount;
+      const nonpowerTwvAvg = conf.nonpower_twv / teamCount;
+      const totalTwvAvg = conf.total_twv / teamCount;
+
+      powerConfMinTwv = Math.min(powerConfMinTwv, powerTwvAvg);
+      powerConfMaxTwv = Math.max(powerConfMaxTwv, powerTwvAvg);
+      nonpowerConfMinTwv = Math.min(nonpowerConfMinTwv, nonpowerTwvAvg);
+      nonpowerConfMaxTwv = Math.max(nonpowerConfMaxTwv, nonpowerTwvAvg);
+      totalConfMinTwv = Math.min(totalConfMinTwv, totalTwvAvg);
+      totalConfMaxTwv = Math.max(totalConfMaxTwv, totalTwvAvg);
+
+      powerConfMinWp = Math.min(powerConfMinWp, conf.power_win_pct);
+      powerConfMaxWp = Math.max(powerConfMaxWp, conf.power_win_pct);
+      nonpowerConfMinWp = Math.min(nonpowerConfMinWp, conf.nonpower_win_pct);
+      nonpowerConfMaxWp = Math.max(nonpowerConfMaxWp, conf.nonpower_win_pct);
+      totalConfMinWp = Math.min(totalConfMinWp, conf.total_win_pct);
+      totalConfMaxWp = Math.max(totalConfMaxWp, conf.total_win_pct);
 
       // Team-level values
       if (conf.teams) {
         conf.teams.forEach((team: Team) => {
-          [team.power_twv, team.nonpower_twv, team.total_twv].forEach((v) => {
-            teamMinTwv = Math.min(teamMinTwv, v);
-            teamMaxTwv = Math.max(teamMaxTwv, v);
-          });
-          [
-            team.power_win_pct,
-            team.nonpower_win_pct,
-            team.total_win_pct,
-          ].forEach((v) => {
-            teamMinWp = Math.min(teamMinWp, v);
-            teamMaxWp = Math.max(teamMaxWp, v);
-          });
+          powerTeamMinTwv = Math.min(powerTeamMinTwv, team.power_twv);
+          powerTeamMaxTwv = Math.max(powerTeamMaxTwv, team.power_twv);
+          nonpowerTeamMinTwv = Math.min(nonpowerTeamMinTwv, team.nonpower_twv);
+          nonpowerTeamMaxTwv = Math.max(nonpowerTeamMaxTwv, team.nonpower_twv);
+          totalTeamMinTwv = Math.min(totalTeamMinTwv, team.total_twv);
+          totalTeamMaxTwv = Math.max(totalTeamMaxTwv, team.total_twv);
+
+          powerTeamMinWp = Math.min(powerTeamMinWp, team.power_win_pct);
+          powerTeamMaxWp = Math.max(powerTeamMaxWp, team.power_win_pct);
+          nonpowerTeamMinWp = Math.min(
+            nonpowerTeamMinWp,
+            team.nonpower_win_pct
+          );
+          nonpowerTeamMaxWp = Math.max(
+            nonpowerTeamMaxWp,
+            team.nonpower_win_pct
+          );
+          totalTeamMinWp = Math.min(totalTeamMinWp, team.total_win_pct);
+          totalTeamMaxWp = Math.max(totalTeamMaxWp, team.total_win_pct);
         });
       }
     });
 
     return {
-      confMinTWV: Math.min(confMinTwv, -1),
-      confMaxTWV: Math.max(confMaxTwv, 1),
-      teamMinTWV: Math.min(teamMinTwv, -1),
-      teamMaxTWV: Math.max(teamMaxTwv, 1),
-      confMinWinPct: Math.min(confMinWp, 0),
-      confMaxWinPct: Math.max(confMaxWp, 100),
-      teamMinWinPct: Math.min(teamMinWp, 0),
-      teamMaxWinPct: Math.max(teamMaxWp, 100),
+      powerConfMinTWV: powerConfMinTwv === Infinity ? -1 : powerConfMinTwv,
+      powerConfMaxTWV: powerConfMaxTwv === -Infinity ? 1 : powerConfMaxTwv,
+      nonpowerConfMinTWV:
+        nonpowerConfMinTwv === Infinity ? -1 : nonpowerConfMinTwv,
+      nonpowerConfMaxTWV:
+        nonpowerConfMaxTwv === -Infinity ? 1 : nonpowerConfMaxTwv,
+      totalConfMinTWV: totalConfMinTwv === Infinity ? -1 : totalConfMinTwv,
+      totalConfMaxTWV: totalConfMaxTwv === -Infinity ? 1 : totalConfMaxTwv,
+      powerTeamMinTWV: powerTeamMinTwv === Infinity ? -1 : powerTeamMinTwv,
+      powerTeamMaxTWV: powerTeamMaxTwv === -Infinity ? 1 : powerTeamMaxTwv,
+      nonpowerTeamMinTWV:
+        nonpowerTeamMinTwv === Infinity ? -1 : nonpowerTeamMinTwv,
+      nonpowerTeamMaxTWV:
+        nonpowerTeamMaxTwv === -Infinity ? 1 : nonpowerTeamMaxTwv,
+      totalTeamMinTWV: totalTeamMinTwv === Infinity ? -1 : totalTeamMinTwv,
+      totalTeamMaxTWV: totalTeamMaxTwv === -Infinity ? 1 : totalTeamMaxTwv,
+      powerConfMinWinPct: powerConfMinWp === Infinity ? 0 : powerConfMinWp,
+      powerConfMaxWinPct: powerConfMaxWp === -Infinity ? 100 : powerConfMaxWp,
+      nonpowerConfMinWinPct:
+        nonpowerConfMinWp === Infinity ? 0 : nonpowerConfMinWp,
+      nonpowerConfMaxWinPct:
+        nonpowerConfMaxWp === -Infinity ? 100 : nonpowerConfMaxWp,
+      totalConfMinWinPct: totalConfMinWp === Infinity ? 0 : totalConfMinWp,
+      totalConfMaxWinPct: totalConfMaxWp === -Infinity ? 100 : totalConfMaxWp,
+      powerTeamMinWinPct: powerTeamMinWp === Infinity ? 0 : powerTeamMinWp,
+      powerTeamMaxWinPct: powerTeamMaxWp === -Infinity ? 100 : powerTeamMaxWp,
+      nonpowerTeamMinWinPct:
+        nonpowerTeamMinWp === Infinity ? 0 : nonpowerTeamMinWp,
+      nonpowerTeamMaxWinPct:
+        nonpowerTeamMaxWp === -Infinity ? 100 : nonpowerTeamMaxWp,
+      totalTeamMinWinPct: totalTeamMinWp === Infinity ? 0 : totalTeamMinWp,
+      totalTeamMaxWinPct: totalTeamMaxWp === -Infinity ? 100 : totalTeamMaxWp,
     };
   }, [tableData]);
 
   const getTWVColor = useCallback(
-    (value: number, isTeamRow: boolean = false) => {
+    (
+      value: number,
+      isTeamRow: boolean = false,
+      column: ColumnType = "power"
+    ) => {
       const blue = [24, 98, 123];
       const white = [255, 255, 255];
       const yellow = [255, 230, 113];
 
-      const minTWV = isTeamRow
-        ? minMaxValues.teamMinTWV
-        : minMaxValues.confMinTWV;
-      const maxTWV = isTeamRow
-        ? minMaxValues.teamMaxTWV
-        : minMaxValues.confMaxTWV;
+      let minTWV: number;
+      let maxTWV: number;
+
+      if (isTeamRow) {
+        if (column === "power") {
+          minTWV = minMaxValues.powerTeamMinTWV;
+          maxTWV = minMaxValues.powerTeamMaxTWV;
+        } else if (column === "nonpower") {
+          minTWV = minMaxValues.nonpowerTeamMinTWV;
+          maxTWV = minMaxValues.nonpowerTeamMaxTWV;
+        } else {
+          minTWV = minMaxValues.totalTeamMinTWV;
+          maxTWV = minMaxValues.totalTeamMaxTWV;
+        }
+      } else {
+        if (column === "power") {
+          minTWV = minMaxValues.powerConfMinTWV;
+          maxTWV = minMaxValues.powerConfMaxTWV;
+        } else if (column === "nonpower") {
+          minTWV = minMaxValues.nonpowerConfMinTWV;
+          maxTWV = minMaxValues.nonpowerConfMaxTWV;
+        } else {
+          minTWV = minMaxValues.totalConfMinTWV;
+          maxTWV = minMaxValues.totalConfMaxTWV;
+        }
+      }
 
       let r: number, g: number, b: number;
 
@@ -187,26 +289,45 @@ function BballNonConfAnalysisTable({
         color: textColor,
       };
     },
-    [
-      minMaxValues.confMinTWV,
-      minMaxValues.confMaxTWV,
-      minMaxValues.teamMinTWV,
-      minMaxValues.teamMaxTWV,
-    ]
+    [minMaxValues]
   );
 
   const getWinPctColor = useCallback(
-    (value: number, isTeamRow: boolean = false) => {
+    (
+      value: number,
+      isTeamRow: boolean = false,
+      column: ColumnType = "power"
+    ) => {
       const blue = [24, 98, 123];
       const white = [255, 255, 255];
       const yellow = [255, 230, 113];
 
-      const minWp = isTeamRow
-        ? minMaxValues.teamMinWinPct
-        : minMaxValues.confMinWinPct;
-      const maxWp = isTeamRow
-        ? minMaxValues.teamMaxWinPct
-        : minMaxValues.confMaxWinPct;
+      let minWp: number;
+      let maxWp: number;
+
+      if (isTeamRow) {
+        if (column === "power") {
+          minWp = minMaxValues.powerTeamMinWinPct;
+          maxWp = minMaxValues.powerTeamMaxWinPct;
+        } else if (column === "nonpower") {
+          minWp = minMaxValues.nonpowerTeamMinWinPct;
+          maxWp = minMaxValues.nonpowerTeamMaxWinPct;
+        } else {
+          minWp = minMaxValues.totalTeamMinWinPct;
+          maxWp = minMaxValues.totalTeamMaxWinPct;
+        }
+      } else {
+        if (column === "power") {
+          minWp = minMaxValues.powerConfMinWinPct;
+          maxWp = minMaxValues.powerConfMaxWinPct;
+        } else if (column === "nonpower") {
+          minWp = minMaxValues.nonpowerConfMinWinPct;
+          maxWp = minMaxValues.nonpowerConfMaxWinPct;
+        } else {
+          minWp = minMaxValues.totalConfMinWinPct;
+          maxWp = minMaxValues.totalConfMaxWinPct;
+        }
+      }
 
       const normalized = (value - minWp) / (maxWp - minWp);
 
@@ -232,12 +353,7 @@ function BballNonConfAnalysisTable({
         color: textColor,
       };
     },
-    [
-      minMaxValues.confMinWinPct,
-      minMaxValues.confMaxWinPct,
-      minMaxValues.teamMinWinPct,
-      minMaxValues.teamMaxWinPct,
-    ]
+    [minMaxValues]
   );
 
   const calculateExpectedWinPct = (
@@ -317,7 +433,7 @@ function BballNonConfAnalysisTable({
       case "power_exp_win_pct":
         return calculateExpectedWinPct(conf.power_record, conf.power_twv);
       case "power_twv":
-        return conf.power_twv;
+        return conf.power_twv / (conf.teams?.length || 1);
       case "nonpower_record":
         return parseRecord(conf.nonpower_record);
       case "nonpower_win_pct":
@@ -325,7 +441,7 @@ function BballNonConfAnalysisTable({
       case "nonpower_exp_win_pct":
         return calculateExpectedWinPct(conf.nonpower_record, conf.nonpower_twv);
       case "nonpower_twv":
-        return conf.nonpower_twv;
+        return conf.nonpower_twv / (conf.teams?.length || 1);
       case "total_record":
         return parseRecord(conf.total_record);
       case "total_win_pct":
@@ -333,7 +449,7 @@ function BballNonConfAnalysisTable({
       case "total_exp_win_pct":
         return calculateExpectedWinPct(conf.total_record, conf.total_twv);
       case "total_twv":
-        return conf.total_twv;
+        return conf.total_twv / (conf.teams?.length || 1);
       default:
         return 0;
     }
@@ -939,7 +1055,6 @@ function BballNonConfAnalysisTable({
                       <ChevronRight size={14} />
                     )}
                   </td>
-
                   {/* Conference Logo with Name */}
                   <td
                     style={{
@@ -1026,7 +1141,7 @@ function BballNonConfAnalysisTable({
                       textAlign: "center",
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
-                      ...getWinPctColor(row.power_win_pct, false),
+                      ...getWinPctColor(row.power_win_pct, false, "power"),
                     }}
                   >
                     {Math.round(row.power_win_pct)}%
@@ -1062,11 +1177,27 @@ function BballNonConfAnalysisTable({
                       textAlign: "center",
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
-                      ...getTWVColor(row.power_twv, false),
+                      ...getTWVColor(
+                        row.power_twv / (row.teams?.length || 1),
+                        false,
+                        "power"
+                      ),
                     }}
                   >
-                    {row.power_twv > 0 ? "+" : ""}
-                    {row.power_twv.toFixed(2)}
+                    {(() => {
+                      const value = row.power_twv / (row.teams?.length || 1);
+                      console.log("Power Conf TWV Debug:", {
+                        conference: row.team_conf,
+                        rawValue: row.power_twv,
+                        teamCount: row.teams?.length || 1,
+                        averagedValue: value,
+                        minTWV: minMaxValues.powerConfMinTWV,
+                        maxTWV: minMaxValues.powerConfMaxTWV,
+                      });
+                      return null;
+                    })()}
+                    {row.power_twv / (row.teams?.length || 1) > 0 ? "+" : ""}
+                    {(row.power_twv / (row.teams?.length || 1)).toFixed(2)}
                   </td>
                   {/* NONPOWER SECTION */}
                   <td
@@ -1096,7 +1227,11 @@ function BballNonConfAnalysisTable({
                       textAlign: "center",
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
-                      ...getWinPctColor(row.nonpower_win_pct, false),
+                      ...getWinPctColor(
+                        row.nonpower_win_pct,
+                        false,
+                        "nonpower"
+                      ),
                     }}
                   >
                     {Math.round(row.nonpower_win_pct)}%
@@ -1135,11 +1270,15 @@ function BballNonConfAnalysisTable({
                       textAlign: "center",
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
-                      ...getTWVColor(row.nonpower_twv, false),
+                      ...getTWVColor(
+                        row.nonpower_twv / (row.teams?.length || 1),
+                        false,
+                        "nonpower"
+                      ),
                     }}
                   >
-                    {row.nonpower_twv > 0 ? "+" : ""}
-                    {row.nonpower_twv.toFixed(2)}
+                    {row.nonpower_twv / (row.teams?.length || 1) > 0 ? "+" : ""}
+                    {(row.nonpower_twv / (row.teams?.length || 1)).toFixed(2)}
                   </td>
 
                   {/* TOTAL SECTION */}
@@ -1170,7 +1309,7 @@ function BballNonConfAnalysisTable({
                       textAlign: "center",
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
-                      ...getWinPctColor(row.total_win_pct, false),
+                      ...getWinPctColor(row.total_win_pct, false, "total"),
                     }}
                   >
                     {Math.round(row.total_win_pct)}%
@@ -1206,11 +1345,15 @@ function BballNonConfAnalysisTable({
                       textAlign: "center",
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
-                      ...getTWVColor(row.total_twv, false),
+                      ...getTWVColor(
+                        row.total_twv / (row.teams?.length || 1),
+                        false,
+                        "total"
+                      ),
                     }}
                   >
-                    {row.total_twv > 0 ? "+" : ""}
-                    {row.total_twv.toFixed(2)}
+                    {row.total_twv / (row.teams?.length || 1) > 0 ? "+" : ""}
+                    {(row.total_twv / (row.teams?.length || 1)).toFixed(2)}
                   </td>
                 </tr>,
 
@@ -1312,7 +1455,11 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getWinPctColor(team.power_win_pct, true),
+                            ...getWinPctColor(
+                              team.power_win_pct,
+                              true,
+                              "power"
+                            ),
                           }}
                         >
                           {Math.round(team.power_win_pct)}%
@@ -1351,7 +1498,7 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getTWVColor(team.power_twv, true),
+                            ...getTWVColor(team.power_twv, true, "power"),
                           }}
                         >
                           {team.power_twv > 0 ? "+" : ""}
@@ -1386,7 +1533,11 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getWinPctColor(team.nonpower_win_pct, true),
+                            ...getWinPctColor(
+                              team.nonpower_win_pct,
+                              true,
+                              "nonpower"
+                            ),
                           }}
                         >
                           {Math.round(team.nonpower_win_pct)}%
@@ -1425,7 +1576,7 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getTWVColor(team.nonpower_twv, true),
+                            ...getTWVColor(team.nonpower_twv, true, "nonpower"),
                           }}
                         >
                           {team.nonpower_twv > 0 ? "+" : ""}
@@ -1461,7 +1612,11 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getWinPctColor(team.total_win_pct, true),
+                            ...getWinPctColor(
+                              team.total_win_pct,
+                              true,
+                              "total"
+                            ),
                           }}
                         >
                           {Math.round(team.total_win_pct)}%
@@ -1500,7 +1655,7 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getTWVColor(team.total_twv, true),
+                            ...getTWVColor(team.total_twv, true, "total"),
                           }}
                         >
                           {team.total_twv > 0 ? "+" : ""}

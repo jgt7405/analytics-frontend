@@ -406,7 +406,9 @@ export default function BasketballConfDataPage() {
                         </div>
                         <div style={{ marginTop: "6px" }}>
                           TWV reflects # of wins above or below the projected
-                          wins for the #30 rated team vs that schedule.
+                          wins for the #30 rated team vs that schedule. For
+                          conferences, this is the average for the conference's
+                          teams.
                         </div>
                       </div>
                     </div>
