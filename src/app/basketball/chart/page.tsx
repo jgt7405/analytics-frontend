@@ -20,6 +20,7 @@ export default function BasketballChartPage() {
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [html2canvasLoaded, setHtml2canvasLoaded] = useState(false);
+  const [chartTitle, setChartTitle] = useState("Custom Scatterplot");
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Load html2canvas
@@ -131,7 +132,7 @@ export default function BasketballChartPage() {
         left: -9999px;
         top: 0;
         background-color: white;
-        padding: 32px 50px;
+        padding: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
         width: 1200px;
         box-sizing: border-box;
@@ -145,13 +146,13 @@ export default function BasketballChartPage() {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
-        padding-bottom: 16px;
+        padding: 32px 50px;
         border-bottom: 2px solid #e5e7eb;
         width: 100%;
+        box-sizing: border-box;
       `;
 
-      // Logo and title section
+      // Logo and title section (left side)
       const logoSection = document.createElement("div");
       logoSection.style.cssText = `
         display: flex;
@@ -177,9 +178,9 @@ export default function BasketballChartPage() {
         console.error("Failed to load logo:", e);
       }
 
-      // Add title
+      // Add centered title
       const titleElement = document.createElement("h1");
-      titleElement.textContent = "Custom Scatterplot";
+      titleElement.textContent = chartTitle;
       titleElement.style.cssText = `
         font-family: "Roboto Condensed", system-ui, sans-serif;
         font-size: 1.5rem;
@@ -187,30 +188,21 @@ export default function BasketballChartPage() {
         color: #374151;
         margin: 0;
         flex: 1;
-        margin-left: 12px;
+        text-align: center;
       `;
       logoSection.appendChild(titleElement);
 
-      // Add info section (right side of header)
-      const infoSection = document.createElement("div");
-      infoSection.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 4px;
-        flex-shrink: 0;
-      `;
-
+      // Add date (right side of header)
       const dateElement = document.createElement("div");
       dateElement.textContent = new Date().toLocaleDateString();
       dateElement.style.cssText = `
         font-size: 12px;
         color: #6b7280;
+        flex-shrink: 0;
       `;
-      infoSection.appendChild(dateElement);
 
       header.appendChild(logoSection);
-      header.appendChild(infoSection);
+      header.appendChild(dateElement);
       wrapper.appendChild(header);
 
       // Add chart container
@@ -219,6 +211,8 @@ export default function BasketballChartPage() {
         width: 100%;
         overflow: visible;
         display: block;
+        padding: 32px 50px;
+        box-sizing: border-box;
       `;
 
       clone.style.cssText = `
@@ -226,6 +220,7 @@ export default function BasketballChartPage() {
         overflow: visible !important;
         display: block !important;
         background: white !important;
+        padding: 0 !important;
       `;
       chartContainer.appendChild(clone);
       wrapper.appendChild(chartContainer);
@@ -265,7 +260,7 @@ export default function BasketballChartPage() {
 
       // Download file
       const timestamp = new Date().toISOString().split("T")[0];
-      const filename = `scatterplot_${timestamp}.png`;
+      const filename = `${chartTitle.replace(/\s+/g, "_")}_${timestamp}.png`;
       const link = document.createElement("a");
       link.download = filename;
       link.href = canvas.toDataURL("image/png");
@@ -289,7 +284,7 @@ export default function BasketballChartPage() {
     const url = new URL("https://twitter.com/intent/tweet");
     url.searchParams.append(
       "text",
-      "Check out my custom scatterplot chart! 📊 Built with JThom Analytics"
+      `Check out my ${chartTitle} scatterplot chart! 📊 Built with JThom Analytics`
     );
     url.searchParams.append("via", "JThom_Analytics");
     window.open(url.toString(), "_blank");
@@ -299,13 +294,14 @@ export default function BasketballChartPage() {
     <PageLayoutWrapper title="Custom Scatterplot" isLoading={isLoading}>
       <div className="w-full">
         <ErrorBoundary>
-          {/* Chart Container - Only this gets captured */}
+          {/* Chart Container - Only header and chart get captured in screenshot */}
           <div
             ref={chartRef}
-            className="bg-white p-6 rounded-lg"
+            className="bg-white rounded-lg"
             data-component="scatterplot"
+            style={{ padding: 0 }}
           >
-            <BballScatterplotChart />
+            <BballScatterplotChart onTitleChange={setChartTitle} />
           </div>
 
           {/* Action Buttons - NOT captured in screenshot */}
@@ -375,7 +371,7 @@ export default function BasketballChartPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-gray-400 mt-0.5">•</span>
-                      <span>Chart title</span>
+                      <span>Chart title: {chartTitle}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-gray-400 mt-0.5">•</span>
