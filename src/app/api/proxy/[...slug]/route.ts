@@ -438,84 +438,140 @@ export async function POST(
 ) {
   try {
     const { slug } = await params;
-    const body = await request.json();
+
+    console.log("🔵 POST PROXY CALLED");
+    console.log("🔵 Slug:", slug);
+    console.log(
+      "🔵 Request content-type:",
+      request.headers.get("content-type")
+    );
 
     const BACKEND_BASE_URL =
       "https://jthomprodbackend-production.up.railway.app/api";
 
     let backendPath = "";
+    let isFormData = false;
 
-    console.log("Proxy POST slug:", slug);
-
-    // ===== HANDLE WHAT-IF ROUTES =====
-
-    // Handle football what-if route (calculation)
-    if (slug.length === 2 && slug[0] === "football" && slug[1] === "whatif") {
-      backendPath = `/football/whatif`;
-      console.log("📤 PROXY POST: What-If calculation request");
+    // ===== HANDLE BASKETBALL CHART UPLOAD =====
+    if (
+      slug.length === 3 &&
+      slug[0] === "basketball" &&
+      slug[1] === "chart" &&
+      slug[2] === "upload"
+    ) {
+      backendPath = `/basketball/chart/upload`;
+      isFormData = true;
+      console.log("🎨 BASKETBALL CHART UPLOAD detected");
     }
-    // Handle football what-if export route (CSV export) ← NEW!
+    // ===== HANDLE WHAT-IF ROUTES =====
     else if (
+      slug.length === 2 &&
+      slug[0] === "football" &&
+      slug[1] === "whatif"
+    ) {
+      backendPath = `/football/whatif`;
+      console.log("🤔 FOOTBALL WHAT-IF detected");
+    } else if (
       slug.length === 3 &&
       slug[0] === "football" &&
       slug[1] === "whatif" &&
       slug[2] === "export"
     ) {
       backendPath = `/football/whatif/export`;
-      console.log("📥 PROXY POST: What-If CSV export request");
+      console.log("📥 FOOTBALL WHAT-IF EXPORT detected");
     }
     // ===== UNKNOWN ROUTE =====
     else {
-      console.error("Unknown POST endpoint:", slug);
+      console.error("❌ UNKNOWN POST ENDPOINT:", slug);
       return NextResponse.json(
-        { error: "Unknown POST endpoint" },
+        { error: "Unknown POST endpoint", slug: slug },
         { status: 404 }
       );
     }
 
     const backendUrl = `${BACKEND_BASE_URL}${backendPath}`;
-    console.log("Backend POST URL:", backendUrl);
+    console.log("🌐 Backend URL:", backendUrl);
+
+    let fetchOptions: RequestInit;
+
+    if (isFormData) {
+      console.log("📦 Processing as FormData");
+      const formData = await request.formData();
+      console.log(
+        "📦 FormData entries:",
+        Array.from(formData.entries()).map(([k]) => k)
+      );
+      console.log("📦 FormData file:", formData.get("file"));
+
+      fetchOptions = {
+        method: "POST",
+        body: formData,
+        signal: AbortSignal.timeout(30000),
+      };
+
+      console.log("📦 FormData fetch options prepared");
+    } else {
+      console.log("📋 Processing as JSON");
+      const body = await request.json();
+      console.log("📋 JSON body keys:", Object.keys(body));
+
+      fetchOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(
+          backendPath.includes("export") ? 300000 : 60000
+        ),
+      };
+    }
+
+    console.log("🚀 Making backend request...");
 
     // Make request to backend
-    const response = await fetch(backendUrl, {
-      method: "POST",
+    const response = await fetch(backendUrl, fetchOptions);
+
+    console.log("📡 Backend response received:", {
+      status: response.status,
+      statusText: response.statusText,
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        contentType: response.headers.get("content-type"),
       },
-      body: JSON.stringify(body),
-      // Longer timeout for CSV export (calculations can take 20-30s)
-      signal: AbortSignal.timeout(
-        backendPath.includes("export") ? 300000 : 60000
-      ),
     });
 
+    const responseText = await response.text();
+    console.log("📄 Backend raw response:", responseText.substring(0, 500));
+
     if (!response.ok) {
-      console.error(
-        `Backend POST request failed: ${response.status} ${response.statusText}`
-      );
+      console.error("❌ Backend returned error:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: responseText.substring(0, 500),
+      });
+
       return NextResponse.json(
         {
           error: `Backend request failed: ${response.status}`,
-          details: response.statusText,
+          details: responseText.substring(0, 200),
           url: backendPath,
         },
         { status: response.status }
       );
     }
 
-    const responseText = await response.text();
-    console.log("🔗 PROXY POST: Response size:", responseText.length, "bytes");
-
     let data;
     try {
       data = JSON.parse(responseText);
+      console.log("✅ Successfully parsed JSON response:", {
+        success: data.success,
+        dataLength: data.data?.length,
+      });
     } catch (parseError) {
-      console.error("🔗 PROXY POST: JSON parse error:", parseError);
-      console.error(
-        "🔗 PROXY POST: Raw response preview:",
-        responseText.substring(0, 500)
-      );
+      console.error("❌ JSON parse error:", parseError);
+      console.error("❌ Raw response:", responseText.substring(0, 500));
+
       return NextResponse.json(
         { error: "Failed to parse backend response" },
         { status: 500 }
@@ -523,18 +579,25 @@ export async function POST(
     }
 
     // Log response based on endpoint type
-    if (backendPath.includes("export")) {
-      console.log("🔗 PROXY POST: CSV export completed:", {
+    if (backendPath.includes("chart")) {
+      console.log("🎨 PROXY POST: Chart upload completed:", {
+        success: data.success,
+        dataCount: data.data?.length || 0,
+      });
+    } else if (backendPath.includes("export")) {
+      console.log("🔍 PROXY POST: CSV export completed:", {
         success: data.success,
         csv_size: data.csv_data?.length || 0,
         filename: data.filename,
       });
     } else {
-      console.log("🔗 PROXY POST: What-If calculation completed:", {
+      console.log("🔍 PROXY POST: What-If calculation completed:", {
         teams: data.data?.length || 0,
         calculation_time: data.metadata?.calculation_time || 0,
       });
     }
+
+    console.log("✅ Returning successful response to client");
 
     return NextResponse.json(data, {
       headers: {
@@ -544,7 +607,12 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error("POST proxy error:", error);
+    console.error("❌ POST PROXY ERROR:", error);
+    console.error("❌ Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : "No stack",
+    });
+
     return NextResponse.json(
       {
         error: "Failed to process POST request",
