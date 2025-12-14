@@ -3,13 +3,14 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useQuery } from "@tanstack/react-query";
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 
 interface BowlGame {
   "#": string;
   "Bowl Name": string;
   "Team 1": string;
   "Team 2": string;
+  Winner: string;
   Date: string;
   Time: string;
   "TV Station": string;
@@ -17,8 +18,6 @@ interface BowlGame {
 }
 
 function BowlPicksTable() {
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-
   const {
     data: bowlData,
     isLoading,
@@ -66,22 +65,11 @@ function BowlPicksTable() {
 
   const sortedGames = useMemo(() => {
     if (!bowlData?.games || !Array.isArray(bowlData.games)) return [];
-    const games = [...bowlData.games];
-
-    if (sortColumn === "date") {
-      return games.sort(
-        (a, b) => new Date(a.Date).getTime() - new Date(b.Date).getTime()
-      );
-    } else if (sortColumn === "completed") {
-      return games.sort(
-        (a, b) => (b.is_completed ? 1 : 0) - (a.is_completed ? 1 : 0)
-      );
-    }
-    return games;
-  }, [bowlData, sortColumn]);
+    return bowlData.games;
+  }, [bowlData]);
 
   // Calculate min/max points for coloring - cap max at 40
-  const pointsRange = useMemo(() => {
+  const pointsRange = useMemo((): { min: number; max: number } => {
     if (!sortedGames || sortedGames.length === 0) {
       return { min: 0, max: 40 };
     }
@@ -89,7 +77,7 @@ function BowlPicksTable() {
     let minPoints = Infinity;
     let maxPoints = 0;
 
-    sortedGames.forEach((game) => {
+    sortedGames.forEach((game: BowlGame) => {
       people.forEach((person) => {
         const points = parseInt(game[`${person} Points`] || "0", 10);
         minPoints = Math.min(minPoints, points);
@@ -150,13 +138,50 @@ function BowlPicksTable() {
   const getLogoUrl = (team: string) => {
     if (!logoData?.data || !Array.isArray(logoData.data))
       return "/images/team_logos/default.png";
-    const teamData = logoData.data.find((t: any) => t.team_name === team);
+    const teamData = logoData.data.find(
+      (t: { team_name: string; logo_url: string }) => t.team_name === team
+    );
     return teamData?.logo_url || "/images/team_logos/default.png";
   };
 
   const formatDate = (dateStr: string) => {
     // Remove day of week (e.g., "Saturday Dec 13" -> "Dec 13")
     return dateStr.replace(/^[A-Za-z]+\s+/, "");
+  };
+
+  // Check if a prediction is correct
+  const isPredictionCorrect = (
+    gameWinner: string,
+    predictedWinner: string
+  ): boolean | null => {
+    // If no actual winner yet, return null (game not complete)
+    if (!gameWinner || gameWinner.trim() === "") {
+      return null;
+    }
+    // Compare winners (case-insensitive)
+    return (
+      gameWinner.toLowerCase().trim() === predictedWinner.toLowerCase().trim()
+    );
+  };
+
+  // Get color for prediction result
+  const getPredictionColor = (isCorrect: boolean | null) => {
+    if (isCorrect === null) {
+      // Game not complete - use points coloring
+      return null;
+    }
+    if (isCorrect) {
+      // Correct - green
+      return {
+        backgroundColor: "#dcfce7",
+        color: "#166534",
+      };
+    }
+    // Incorrect - red
+    return {
+      backgroundColor: "#fee2e2",
+      color: "#991b1b",
+    };
   };
 
   if (isLoading)
@@ -171,41 +196,22 @@ function BowlPicksTable() {
     );
 
   return (
-    <div style={{ padding: "16px" }}>
-      {/* Controls */}
-      <div style={{ marginBottom: "16px", display: "flex", gap: "12px" }}>
-        <button
-          onClick={() => setSortColumn(sortColumn === "date" ? null : "date")}
-          style={{
-            padding: "8px 16px",
-            border: "1px solid #d1d5db",
-            borderRadius: "6px",
-            backgroundColor: sortColumn === "date" ? "#3b82f6" : "#f3f4f6",
-            color: sortColumn === "date" ? "white" : "black",
-            cursor: "pointer",
-          }}
-        >
-          Sort by Date
-        </button>
-        <button
-          onClick={() =>
-            setSortColumn(sortColumn === "completed" ? null : "completed")
-          }
-          style={{
-            padding: "8px 16px",
-            border: "1px solid #d1d5db",
-            borderRadius: "6px",
-            backgroundColor: sortColumn === "completed" ? "#3b82f6" : "#f3f4f6",
-            color: sortColumn === "completed" ? "white" : "black",
-            cursor: "pointer",
-          }}
-        >
-          Sort by Status
-        </button>
-      </div>
-
+    <div
+      style={{
+        padding: "16px 0 16px 0",
+        marginLeft: "-16px",
+        width: "calc(100% + 16px)",
+      }}
+    >
       {/* Table Container with scroll */}
-      <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "80vh" }}>
+      <div
+        style={{
+          overflowX: "auto",
+          overflowY: "auto",
+          maxHeight: "80vh",
+          paddingLeft: "16px",
+        }}
+      >
         <table
           style={{
             width: "max-content",
@@ -222,50 +228,42 @@ function BowlPicksTable() {
                 zIndex: 40,
               }}
             >
-              {/* # - Frozen */}
+              {/* # - Not frozen */}
               <th
                 style={{
                   border: "1px solid #e5e7eb",
-                  padding: "8px 12px",
+                  padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
-                  fontSize: "14px",
-                  position: "sticky",
-                  left: 0,
-                  backgroundColor: "#f3f4f6",
-                  zIndex: 41,
+                  fontSize: "12px",
                 }}
               >
                 #
               </th>
 
-              {/* Bowl Name - Frozen */}
+              {/* Bowl Name - Not frozen */}
               <th
                 style={{
                   border: "1px solid #e5e7eb",
-                  padding: "8px 12px",
+                  padding: "4px 6px",
                   textAlign: "left",
                   fontWeight: "600",
-                  fontSize: "14px",
-                  position: "sticky",
-                  left: "50px",
-                  backgroundColor: "#f3f4f6",
-                  zIndex: 41,
+                  fontSize: "12px",
                 }}
               >
                 Bowl Name
               </th>
 
-              {/* Teams - Frozen */}
+              {/* Teams - Frozen on left */}
               <th
                 style={{
                   border: "1px solid #e5e7eb",
-                  padding: "8px 12px",
+                  padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
-                  fontSize: "14px",
+                  fontSize: "12px",
                   position: "sticky",
-                  left: "170px",
+                  left: 0,
                   backgroundColor: "#f3f4f6",
                   zIndex: 41,
                 }}
@@ -277,10 +275,21 @@ function BowlPicksTable() {
               <th
                 style={{
                   border: "1px solid #e5e7eb",
-                  padding: "8px 12px",
+                  padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
-                  fontSize: "14px",
+                  fontSize: "12px",
+                }}
+              >
+                Winner
+              </th>
+              <th
+                style={{
+                  border: "1px solid #e5e7eb",
+                  padding: "4px 6px",
+                  textAlign: "center",
+                  fontWeight: "600",
+                  fontSize: "12px",
                 }}
               >
                 Date
@@ -288,10 +297,10 @@ function BowlPicksTable() {
               <th
                 style={{
                   border: "1px solid #e5e7eb",
-                  padding: "8px 12px",
+                  padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
-                  fontSize: "14px",
+                  fontSize: "12px",
                 }}
               >
                 Time
@@ -299,10 +308,10 @@ function BowlPicksTable() {
               <th
                 style={{
                   border: "1px solid #e5e7eb",
-                  padding: "8px 12px",
+                  padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
-                  fontSize: "14px",
+                  fontSize: "12px",
                 }}
               >
                 TV
@@ -314,10 +323,10 @@ function BowlPicksTable() {
                   key={`${person}-winner`}
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "8px 12px",
+                    padding: "4px 6px",
                     textAlign: "center",
                     fontWeight: "600",
-                    fontSize: "14px",
+                    fontSize: "12px",
                   }}
                 >
                   {person}
@@ -330,13 +339,13 @@ function BowlPicksTable() {
                   key={`${person}-points`}
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "8px 6px",
+                    padding: "4px 3px",
                     textAlign: "center",
                     fontWeight: "600",
-                    fontSize: "12px",
+                    fontSize: "11px",
                     whiteSpace: "normal",
-                    lineHeight: "1.3",
-                    width: "50px",
+                    lineHeight: "1.2",
+                    width: "38px",
                   }}
                 >
                   <div>{person}</div>
@@ -347,49 +356,41 @@ function BowlPicksTable() {
           </thead>
           <tbody>
             {sortedGames.map((game: BowlGame) => (
-              <tr key={game["#"]} style={{ height: "32px" }}>
-                {/* # - Frozen */}
+              <tr key={game["#"]} style={{ height: "20px" }}>
+                {/* # - Not frozen */}
                 <td
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "8px 12px",
+                    padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "13px",
-                    position: "sticky",
-                    left: 0,
-                    backgroundColor: "white",
-                    zIndex: 20,
                   }}
                 >
                   {game["#"]}
                 </td>
 
-                {/* Bowl Name - Frozen */}
+                {/* Bowl Name - Not frozen */}
                 <td
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "8px 12px",
+                    padding: "4px 6px",
                     textAlign: "left",
                     fontSize: "13px",
-                    maxWidth: "120px",
+                    maxWidth: "90px",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
-                    position: "sticky",
-                    left: "50px",
-                    backgroundColor: "white",
-                    zIndex: 20,
                   }}
                   title={game["Bowl Name"]}
                 >
                   {game["Bowl Name"]}
                 </td>
 
-                {/* Teams - Frozen */}
+                {/* Teams - Frozen on left */}
                 <td
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "8px 12px",
+                    padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "13px",
                     display: "flex",
@@ -397,7 +398,7 @@ function BowlPicksTable() {
                     justifyContent: "center",
                     gap: "4px",
                     position: "sticky",
-                    left: "170px",
+                    left: 0,
                     backgroundColor: "white",
                     zIndex: 20,
                   }}
@@ -420,11 +421,36 @@ function BowlPicksTable() {
                   </div>
                 </td>
 
+                {/* Winner */}
+                <td
+                  style={{
+                    border: "1px solid #e5e7eb",
+                    padding: "4px 6px",
+                    textAlign: "center",
+                    fontSize: "13px",
+                  }}
+                >
+                  {game["Winner"] && game["Winner"].trim() ? (
+                    <div style={{ background: "transparent" }}>
+                      <TeamLogo
+                        logoUrl={getLogoUrl(game["Winner"])}
+                        teamName={game["Winner"]}
+                        size={24}
+                        showTooltip={true}
+                      />
+                    </div>
+                  ) : (
+                    <span style={{ color: "#9ca3af", fontSize: "12px" }}>
+                      —
+                    </span>
+                  )}
+                </td>
+
                 {/* Scrollable columns */}
                 <td
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "8px 12px",
+                    padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "13px",
                   }}
@@ -434,7 +460,7 @@ function BowlPicksTable() {
                 <td
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "8px 12px",
+                    padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "13px",
                   }}
@@ -444,7 +470,7 @@ function BowlPicksTable() {
                 <td
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "8px 12px",
+                    padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "13px",
                   }}
@@ -458,7 +484,7 @@ function BowlPicksTable() {
                     key={`${game["#"]}-${person}-winner`}
                     style={{
                       border: "1px solid #e5e7eb",
-                      padding: "8px 12px",
+                      padding: "4px 6px",
                       textAlign: "center",
                       fontSize: "13px",
                     }}
@@ -477,17 +503,35 @@ function BowlPicksTable() {
                 {/* Points with coloring */}
                 {people.map((person) => {
                   const points = parseInt(game[`${person} Points`] || "0", 10);
-                  const colorStyle = getPointsColor(points);
+                  const predictedWinner = game[`${person} Winner`];
+                  const actualWinner = game["Winner"];
+
+                  // Check if game is complete and if prediction is correct
+                  const isCorrect = isPredictionCorrect(
+                    actualWinner,
+                    predictedWinner
+                  );
+                  const predictionColorStyle = getPredictionColor(isCorrect);
+
+                  // If game is complete, use prediction coloring, otherwise use points coloring
+                  let cellStyle: React.CSSProperties;
+                  if (predictionColorStyle) {
+                    cellStyle = predictionColorStyle;
+                  } else {
+                    const colorStyle = getPointsColor(points);
+                    cellStyle = colorStyle;
+                  }
+
                   return (
                     <td
                       key={`${game["#"]}-${person}-points`}
                       style={{
                         border: "1px solid #e5e7eb",
-                        padding: "8px 12px",
+                        padding: "4px 6px",
                         textAlign: "center",
                         fontSize: "13px",
                         fontWeight: "500",
-                        ...colorStyle,
+                        ...cellStyle,
                       }}
                     >
                       {game[`${person} Points`]}
