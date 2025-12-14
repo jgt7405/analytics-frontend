@@ -215,8 +215,9 @@ function BowlPicksTable() {
         <table
           style={{
             width: "max-content",
-            borderCollapse: "collapse",
+            borderCollapse: "separate",
             border: "1px solid #e5e7eb",
+            borderSpacing: 0,
           }}
         >
           <thead>
@@ -400,7 +401,7 @@ function BowlPicksTable() {
                     position: "sticky",
                     left: 0,
                     backgroundColor: "white",
-                    zIndex: 20,
+                    zIndex: 30,
                   }}
                 >
                   <div style={{ background: "transparent" }}>
