@@ -40,13 +40,22 @@ interface ChartSettings {
   yMax: number;
   xFormat: "decimal" | "percentage";
   yFormat: "decimal" | "percentage";
+  collisionDetection: "none" | "minor" | "major";
 }
 
 interface BballScatterplotChartProps {
   onTitleChange?: (title: string) => void;
 }
 
-const MARGIN = { top: 60, right: 60, bottom: 60, left: 60 };
+interface PositionedLogo extends ChartData {
+  adjustedX: number;
+  adjustedY: number;
+  hasCollision?: boolean;
+  offsetX?: number;
+  offsetY?: number;
+}
+
+const MARGIN = { top: 40, right: 60, bottom: 100, left: 80 };
 const CHART_WIDTH = 1000;
 const CHART_HEIGHT = 700;
 const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
@@ -81,6 +90,7 @@ export default function BballScatterplotChart({
     yMax: 1,
     xFormat: "decimal",
     yFormat: "decimal",
+    collisionDetection: "none",
   });
 
   const [hoveredTeam, setHoveredTeam] = useState<string | null>(null);
@@ -115,13 +125,11 @@ export default function BballScatterplotChart({
     const yDataMin = Math.min(...yValues);
     const yDataMax = Math.max(...yValues);
 
-    // Use settings min/max if they're set, otherwise use data min/max with padding
     let xMin = settings.xMin !== 0 ? settings.xMin : xDataMin;
     let xMax = settings.xMax !== 1 ? settings.xMax : xDataMax;
     let yMin = settings.yMin !== 0 ? settings.yMin : yDataMin;
     let yMax = settings.yMax !== 1 ? settings.yMax : yDataMax;
 
-    // Add padding if using auto-calculated min/max
     if (settings.xMin === 0 && settings.xMax === 1) {
       const xPadding = (xDataMax - xDataMin) * 0.1 || 1;
       xMin = xDataMin - xPadding;
@@ -151,16 +159,207 @@ export default function BballScatterplotChart({
     };
   }, [state.data, settings.xMin, settings.xMax, settings.yMin, settings.yMax]);
 
-  // Position logos at data points
+  // Check if two logos collide
+  const checkCollision = (
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    size: number
+  ): { collides: boolean; overlapArea: number } => {
+    const r = size / 2;
+    const dx = Math.abs(x1 - x2);
+    const dy = Math.abs(y1 - y2);
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance >= size) {
+      return { collides: false, overlapArea: 0 };
+    }
+
+    // Calculate overlap area (approximate)
+    const overlapRadius = Math.max(0, r - distance / 2);
+    const overlapArea = Math.PI * overlapRadius * overlapRadius;
+
+    return { collides: true, overlapArea };
+  };
+
+  // Position logos with collision detection and avoidance
   const positionedLogos = useMemo(() => {
     if (state.data.length === 0) return [];
 
-    return state.data.map((team) => ({
+    const logos: PositionedLogo[] = state.data.map((team) => ({
       ...team,
       adjustedX: scales.xScale(team.x_value),
       adjustedY: scales.yScale(team.y_value),
+      hasCollision: false,
+      offsetX: 0,
+      offsetY: 0,
     }));
-  }, [state.data, scales]);
+
+    if (settings.collisionDetection === "none") {
+      return logos;
+    }
+
+    // Detect collisions
+    const collisions: { [key: string]: boolean } = {};
+
+    for (let i = 0; i < logos.length; i++) {
+      for (let j = i + 1; j < logos.length; j++) {
+        const { collides, overlapArea } = checkCollision(
+          logos[i].adjustedX,
+          logos[i].adjustedY,
+          logos[j].adjustedX,
+          logos[j].adjustedY,
+          settings.logoSize
+        );
+
+        if (!collides) continue;
+
+        // For "major" collision detection, only flag high overlap
+        if (settings.collisionDetection === "major") {
+          const maxArea = Math.PI * (settings.logoSize / 2) ** 2;
+          if (overlapArea < maxArea * 0.5) continue; // Less than 50% overlap
+        }
+
+        collisions[logos[i].team_name] = true;
+        collisions[logos[j].team_name] = true;
+      }
+    }
+
+    // Helper function to check if a position collides with any logo
+    const hasCollisionAtPosition = (
+      x: number,
+      y: number,
+      logoIndex: number,
+      processedLogos: PositionedLogo[]
+    ): boolean => {
+      for (let i = 0; i < processedLogos.length; i++) {
+        if (i === logoIndex) continue;
+
+        const otherX =
+          processedLogos[i].adjustedX + (processedLogos[i].offsetX || 0);
+        const otherY =
+          processedLogos[i].adjustedY + (processedLogos[i].offsetY || 0);
+
+        const { collides } = checkCollision(
+          x,
+          y,
+          otherX,
+          otherY,
+          settings.logoSize
+        );
+
+        if (collides) return true;
+      }
+      return false;
+    };
+
+    // Offset colliding logos - process one at a time and check against already-processed logos
+    const processedLogos: PositionedLogo[] = [];
+    const offsetDistance = settings.logoSize * 0.6; // Minimum distance to avoid collision
+
+    const directions = [
+      { x: offsetDistance, y: 0 }, // Right
+      { x: -offsetDistance, y: 0 }, // Left
+      { x: 0, y: -offsetDistance }, // Up
+      { x: 0, y: offsetDistance }, // Down
+      { x: offsetDistance, y: -offsetDistance }, // Up-Right
+      { x: offsetDistance, y: offsetDistance }, // Down-Right
+      { x: -offsetDistance, y: -offsetDistance }, // Up-Left
+      { x: -offsetDistance, y: offsetDistance }, // Down-Left
+      { x: offsetDistance * 2, y: 0 }, // Far Right
+      { x: -offsetDistance * 2, y: 0 }, // Far Left
+      { x: 0, y: -offsetDistance * 2 }, // Far Up
+      { x: 0, y: offsetDistance * 2 }, // Far Down
+      { x: offsetDistance * 1.5, y: -offsetDistance * 1.5 }, // Far Up-Right
+      { x: offsetDistance * 1.5, y: offsetDistance * 1.5 }, // Far Down-Right
+      { x: -offsetDistance * 1.5, y: -offsetDistance * 1.5 }, // Far Up-Left
+      { x: -offsetDistance * 1.5, y: offsetDistance * 1.5 }, // Far Down-Left
+    ];
+
+    for (let i = 0; i < logos.length; i++) {
+      const logo = logos[i];
+
+      if (!collisions[logo.team_name]) {
+        // No collision for this logo
+        processedLogos.push(logo);
+        continue;
+      }
+
+      // Find the best offset position
+      let bestOffset = { x: 0, y: 0 };
+      let foundGoodPosition = false;
+
+      for (const direction of directions) {
+        const testX = logo.adjustedX + direction.x;
+        const testY = logo.adjustedY + direction.y;
+
+        // Check if this position is within bounds and doesn't collide
+        const isInBounds =
+          testX >= MARGIN.left &&
+          testX <= MARGIN.left + PLOT_WIDTH &&
+          testY >= MARGIN.top &&
+          testY <= MARGIN.top + PLOT_HEIGHT;
+
+        if (!isInBounds) continue;
+
+        const hasCollision = hasCollisionAtPosition(
+          testX,
+          testY,
+          i,
+          processedLogos
+        );
+
+        if (!hasCollision) {
+          bestOffset = direction;
+          foundGoodPosition = true;
+          break;
+        }
+      }
+
+      // If no good position found in bounds, use the direction with least overlap
+      if (!foundGoodPosition) {
+        let minOverlap = Infinity;
+
+        for (const direction of directions) {
+          const testX = logo.adjustedX + direction.x;
+          const testY = logo.adjustedY + direction.y;
+          let totalOverlap = 0;
+
+          for (const processedLogo of processedLogos) {
+            const otherX =
+              processedLogo.adjustedX + (processedLogo.offsetX || 0);
+            const otherY =
+              processedLogo.adjustedY + (processedLogo.offsetY || 0);
+
+            const { collides, overlapArea } = checkCollision(
+              testX,
+              testY,
+              otherX,
+              otherY,
+              settings.logoSize
+            );
+
+            if (collides) totalOverlap += overlapArea;
+          }
+
+          if (totalOverlap < minOverlap) {
+            minOverlap = totalOverlap;
+            bestOffset = direction;
+          }
+        }
+      }
+
+      processedLogos.push({
+        ...logo,
+        hasCollision: true,
+        offsetX: bestOffset.x,
+        offsetY: bestOffset.y,
+      });
+    }
+
+    return processedLogos;
+  }, [state.data, scales, settings.collisionDetection, settings.logoSize]);
 
   // Generate ticks based on custom interval
   const generateTicksFromInterval = (
@@ -193,7 +392,6 @@ export default function BballScatterplotChart({
     [scales.yMin, scales.yMax, settings.yInterval]
   );
 
-  // Determine decimal places for labels
   const getDecimalPlaces = (interval: number) => {
     if (interval >= 1) return 0;
     if (interval >= 0.1) return 1;
@@ -204,7 +402,6 @@ export default function BballScatterplotChart({
   const xDecimalPlaces = getDecimalPlaces(settings.xInterval);
   const yDecimalPlaces = getDecimalPlaces(settings.yInterval);
 
-  // Format value as decimal or percentage
   const formatValue = (
     value: number,
     format: "decimal" | "percentage",
@@ -212,7 +409,6 @@ export default function BballScatterplotChart({
   ): string => {
     if (format === "percentage") {
       const percentValue = value * 100;
-      // For percentages, don't show decimals
       return `${Math.round(percentValue)}%`;
     }
     return value.toFixed(decimals);
@@ -225,7 +421,7 @@ export default function BballScatterplotChart({
       return;
     }
 
-    console.log("📁 File selected:", {
+    console.log("📄 File selected:", {
       name: file.name,
       size: file.size,
       type: file.type,
@@ -276,7 +472,6 @@ export default function BballScatterplotChart({
         isLoading: false,
       }));
 
-      // Update settings with the loaded data
       setSettings((prev) => ({
         ...prev,
         chartTitle: result.chart_title || "Scatterplot",
@@ -297,12 +492,10 @@ export default function BballScatterplotChart({
 
   return (
     <div className={cn(layout.card, "p-6")} style={{ padding: 0 }}>
-      {/* Only show these sections when NOT in screenshot mode */}
       {state.data.length === 0 && !state.isLoading && !state.error && (
         <>
           <h2 className="text-xl font-semibold mb-4 p-6">Scatterplot Chart</h2>
 
-          {/* File Upload Section */}
           <div className="mb-6 p-6 pt-0">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Upload CSV File
@@ -350,10 +543,12 @@ export default function BballScatterplotChart({
         </div>
       )}
 
-      {/* Settings Panel - Only show when data is loaded */}
       {state.data.length > 0 && (
         <div className="mb-6 p-6 pt-0">
-          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div
+            className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+            data-exclude-screenshot="true"
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-gray-700">
                 Chart Settings
@@ -368,7 +563,6 @@ export default function BballScatterplotChart({
 
             {showSettings && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Chart Title */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Chart Title
@@ -386,7 +580,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* X-Axis Label */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     X-Axis Label
@@ -404,7 +597,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* Y-Axis Label */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Y-Axis Label
@@ -422,7 +614,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* X-Axis Interval */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     X-Axis Interval
@@ -442,7 +633,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* Y-Axis Interval */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Y-Axis Interval
@@ -462,7 +652,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* Logo Size */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Logo Size (pixels)
@@ -483,7 +672,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* Show Grid Lines */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Show Grid Lines
@@ -503,7 +691,6 @@ export default function BballScatterplotChart({
                   </select>
                 </div>
 
-                {/* Show X-Axis */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Show X-Axis Labels
@@ -523,7 +710,6 @@ export default function BballScatterplotChart({
                   </select>
                 </div>
 
-                {/* Show Y-Axis */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Show Y-Axis Labels
@@ -543,7 +729,29 @@ export default function BballScatterplotChart({
                   </select>
                 </div>
 
-                {/* X-Axis Min */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Collision Detection
+                  </label>
+                  <select
+                    value={settings.collisionDetection}
+                    onChange={(e) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        collisionDetection: e.target.value as
+                          | "none"
+                          | "minor"
+                          | "major",
+                      }))
+                    }
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  >
+                    <option value="none">None</option>
+                    <option value="minor">Minor (Any Overlap)</option>
+                    <option value="major">Major (High Overlap)</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     X-Axis Min
@@ -562,7 +770,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* X-Axis Max */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     X-Axis Max
@@ -581,7 +788,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* Y-Axis Min */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Y-Axis Min
@@ -600,7 +806,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* Y-Axis Max */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Y-Axis Max
@@ -619,7 +824,6 @@ export default function BballScatterplotChart({
                   />
                 </div>
 
-                {/* X-Axis Format */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     X-Axis Format
@@ -639,7 +843,6 @@ export default function BballScatterplotChart({
                   </select>
                 </div>
 
-                {/* Y-Axis Format */}
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Y-Axis Format
@@ -664,166 +867,199 @@ export default function BballScatterplotChart({
         </div>
       )}
 
-      {/* Chart Section - This is what gets captured in screenshot */}
       {state.data.length > 0 && (
-        <div style={{ padding: 0 }}>
-          {/* Chart Title */}
-          <h3 className="text-lg font-semibold mb-4 text-gray-800 p-6 pb-0">
-            {settings.chartTitle}
-          </h3>
-
-          <div
-            className="overflow-x-auto relative p-6 pt-4"
-            style={{ position: "relative" }}
+        <div style={{ padding: 0, position: "relative" }}>
+          <svg
+            width={chartWidth}
+            height={CHART_HEIGHT}
+            className="border border-gray-200 rounded"
+            onMouseLeave={() => setHoveredTeam(null)}
+            style={{ display: "block", position: "relative", flexShrink: 0 }}
           >
-            <svg
-              width={chartWidth}
-              height={CHART_HEIGHT}
-              className="border border-gray-200 rounded"
-              onMouseLeave={() => setHoveredTeam(null)}
-              style={{ display: "block" }}
+            <rect width={chartWidth} height={CHART_HEIGHT} fill="white" />
+            {/* Y-axis grid lines */}
+            {settings.showGridLines &&
+              yTicks.map((yValue) => {
+                const y = scales.yScale(yValue);
+                const isZeroLine = Math.abs(yValue) < 0.0001;
+                return (
+                  <g key={`y-tick-${yValue}`}>
+                    <line
+                      x1={MARGIN.left}
+                      x2={MARGIN.left + PLOT_WIDTH}
+                      y1={y}
+                      y2={y}
+                      stroke={isZeroLine ? "#000" : "#e5e7eb"}
+                      strokeWidth={isZeroLine ? 2 : 1}
+                    />
+                  </g>
+                );
+              })}
+
+            {/* X-axis grid lines */}
+            {settings.showGridLines &&
+              xTicks.map((xValue) => {
+                const x = scales.xScale(xValue);
+                const isZeroLine = Math.abs(xValue) < 0.0001;
+
+                return (
+                  <g key={`x-tick-${xValue}`}>
+                    <line
+                      x1={x}
+                      x2={x}
+                      y1={MARGIN.top}
+                      y2={MARGIN.top + PLOT_HEIGHT}
+                      stroke={isZeroLine ? "#000" : "#e5e7eb"}
+                      strokeWidth={isZeroLine ? 2 : 1}
+                    />
+                  </g>
+                );
+              })}
+
+            {/* Y-axis labels */}
+            {settings.showYAxis &&
+              yTicks.map((yValue) => {
+                const y = scales.yScale(yValue);
+                const isZeroLine = Math.abs(yValue) < 0.0001;
+
+                return (
+                  <text
+                    key={`y-label-${yValue}`}
+                    x={MARGIN.left - 10}
+                    y={y + 4}
+                    textAnchor="end"
+                    fontSize="18"
+                    fill="#666"
+                    fontWeight={isZeroLine ? "bold" : "normal"}
+                  >
+                    {formatValue(yValue, settings.yFormat, yDecimalPlaces)}
+                  </text>
+                );
+              })}
+
+            {/* X-axis labels */}
+            {settings.showXAxis &&
+              xTicks.map((xValue) => {
+                const x = scales.xScale(xValue);
+                const isZeroLine = Math.abs(xValue) < 0.0001;
+
+                return (
+                  <text
+                    key={`x-label-${xValue}`}
+                    x={x}
+                    y={MARGIN.top + PLOT_HEIGHT + 20}
+                    textAnchor="middle"
+                    fontSize="18"
+                    fill="#666"
+                    fontWeight={isZeroLine ? "bold" : "normal"}
+                  >
+                    {formatValue(xValue, settings.xFormat, xDecimalPlaces)}
+                  </text>
+                );
+              })}
+
+            {/* Data points for collisions */}
+            {positionedLogos.map((team) => {
+              if (!team.hasCollision) return null;
+
+              return (
+                <g key={`point-${team.team_name}`}>
+                  {/* Dotted line from point to offset logo */}
+                  <line
+                    x1={team.adjustedX}
+                    y1={team.adjustedY}
+                    x2={team.adjustedX + team.offsetX!}
+                    y2={team.adjustedY + team.offsetY!}
+                    stroke="#999"
+                    strokeWidth="1"
+                    strokeDasharray="5,5"
+                    opacity="0.6"
+                  />
+                  {/* Point at data location */}
+                  <circle
+                    cx={team.adjustedX}
+                    cy={team.adjustedY}
+                    r="3"
+                    fill={team.primary_color}
+                    stroke="#fff"
+                    strokeWidth="1"
+                  />
+                </g>
+              );
+            })}
+
+            {/* Axes */}
+            <line
+              x1={MARGIN.left}
+              y1={MARGIN.top}
+              x2={MARGIN.left}
+              y2={MARGIN.top + PLOT_HEIGHT}
+              stroke="#000"
+              strokeWidth={2}
+            />
+            <line
+              x1={MARGIN.left}
+              y1={MARGIN.top + PLOT_HEIGHT}
+              x2={MARGIN.left + PLOT_WIDTH}
+              y2={MARGIN.top + PLOT_HEIGHT}
+              stroke="#000"
+              strokeWidth={2}
+            />
+
+            {/* Y-Axis Label */}
+            <text
+              x={MARGIN.left - 30}
+              y={MARGIN.top + PLOT_HEIGHT / 2}
+              textAnchor="middle"
+              transform={`rotate(-90, ${MARGIN.left - 60}, ${
+                MARGIN.top + PLOT_HEIGHT / 2
+              })`}
+              fontSize="20"
+              fontWeight="500"
+              fill="#374151"
+              style={{ fontFamily: "system-ui, sans-serif" }}
             >
-              <rect width={chartWidth} height={CHART_HEIGHT} fill="white" />
+              {settings.yLabel}
+            </text>
 
-              {/* Y-axis grid lines and labels */}
-              {settings.showGridLines &&
-                yTicks.map((yValue) => {
-                  const y = scales.yScale(yValue);
-                  const isZeroLine = Math.abs(yValue) < 0.0001;
+            {/* X-Axis Label */}
+            <text
+              x={MARGIN.left + PLOT_WIDTH / 2}
+              y={CHART_HEIGHT - 50}
+              textAnchor="middle"
+              fontSize="20"
+              fontWeight="500"
+              fill="#374151"
+              style={{ fontFamily: "system-ui, sans-serif" }}
+            >
+              {settings.xLabel}
+            </text>
+          </svg>
 
-                  return (
-                    <g key={`y-tick-${yValue}`}>
-                      {/* Grid line */}
-                      <line
-                        x1={MARGIN.left}
-                        x2={MARGIN.left + PLOT_WIDTH}
-                        y1={y}
-                        y2={y}
-                        stroke={isZeroLine ? "#000" : "#e5e7eb"}
-                        strokeWidth={isZeroLine ? 2 : 1}
-                      />
-                    </g>
-                  );
-                })}
-
-              {/* X-axis grid lines and labels */}
-              {settings.showGridLines &&
-                xTicks.map((xValue) => {
-                  const x = scales.xScale(xValue);
-                  const isZeroLine = Math.abs(xValue) < 0.0001;
-
-                  return (
-                    <g key={`x-tick-${xValue}`}>
-                      {/* Grid line */}
-                      <line
-                        x1={x}
-                        x2={x}
-                        y1={MARGIN.top}
-                        y2={MARGIN.top + PLOT_HEIGHT}
-                        stroke={isZeroLine ? "#000" : "#e5e7eb"}
-                        strokeWidth={isZeroLine ? 2 : 1}
-                      />
-                    </g>
-                  );
-                })}
-
-              {/* Y-axis labels (always show if showYAxis is true) */}
-              {settings.showYAxis &&
-                yTicks.map((yValue) => {
-                  const y = scales.yScale(yValue);
-                  const isZeroLine = Math.abs(yValue) < 0.0001;
-
-                  return (
-                    <text
-                      key={`y-label-${yValue}`}
-                      x={MARGIN.left - 10}
-                      y={y + 4}
-                      textAnchor="end"
-                      fontSize="12"
-                      fill="#666"
-                      fontWeight={isZeroLine ? "bold" : "normal"}
-                    >
-                      {formatValue(yValue, settings.yFormat, yDecimalPlaces)}
-                    </text>
-                  );
-                })}
-
-              {/* X-axis labels (always show if showXAxis is true) */}
-              {settings.showXAxis &&
-                xTicks.map((xValue) => {
-                  const x = scales.xScale(xValue);
-                  const isZeroLine = Math.abs(xValue) < 0.0001;
-
-                  return (
-                    <text
-                      key={`x-label-${xValue}`}
-                      x={x}
-                      y={MARGIN.top + PLOT_HEIGHT + 20}
-                      textAnchor="middle"
-                      fontSize="12"
-                      fill="#666"
-                      fontWeight={isZeroLine ? "bold" : "normal"}
-                    >
-                      {formatValue(xValue, settings.xFormat, xDecimalPlaces)}
-                    </text>
-                  );
-                })}
-
-              {/* Axes */}
-              <line
-                x1={MARGIN.left}
-                y1={MARGIN.top}
-                x2={MARGIN.left}
-                y2={MARGIN.top + PLOT_HEIGHT}
-                stroke="#000"
-                strokeWidth={2}
-              />
-              <line
-                x1={MARGIN.left}
-                y1={MARGIN.top + PLOT_HEIGHT}
-                x2={MARGIN.left + PLOT_WIDTH}
-                y2={MARGIN.top + PLOT_HEIGHT}
-                stroke="#000"
-                strokeWidth={2}
-              />
-
-              {/* Y-Axis Label */}
-              <text
-                x={MARGIN.left - 40}
-                y={MARGIN.top + PLOT_HEIGHT / 2}
-                textAnchor="middle"
-                transform={`rotate(-90, ${MARGIN.left - 40}, ${
-                  MARGIN.top + PLOT_HEIGHT / 2
-                })`}
-                className="text-sm font-medium fill-gray-700"
-              >
-                {settings.yLabel}
-              </text>
-
-              {/* X-Axis Label */}
-              <text
-                x={MARGIN.left + PLOT_WIDTH / 2}
-                y={CHART_HEIGHT - 5}
-                textAnchor="middle"
-                className="text-sm font-medium fill-gray-700"
-              >
-                {settings.xLabel}
-              </text>
-            </svg>
-
-            {/* Logos rendered as DOM elements using Next.js Image component */}
+          {/* Logos */}
+          <div
+            style={{
+              position: "absolute",
+              top: "0px",
+              left: "0px",
+              width: `${chartWidth}px`,
+              height: `${CHART_HEIGHT}px`,
+              pointerEvents: "none",
+            }}
+          >
             {positionedLogos.map((team) => (
               <div
                 key={team.team_name}
                 style={{
                   position: "absolute",
-                  left: `${team.adjustedX - settings.logoSize / 2}px`,
-                  top: `${team.adjustedY - settings.logoSize / 2}px`,
+                  left: `${team.adjustedX - settings.logoSize / 2 + (team.offsetX || 0)}px`,
+                  top: `${team.adjustedY - settings.logoSize / 2 + (team.offsetY || 0)}px`,
                   cursor: "pointer",
                   zIndex: hoveredTeam === team.team_name ? 20 : 10,
                   width: `${settings.logoSize}px`,
                   height: `${settings.logoSize}px`,
                   overflow: "hidden",
+                  pointerEvents: "auto",
                 }}
                 onMouseEnter={() => setHoveredTeam(team.team_name)}
                 onMouseLeave={() => setHoveredTeam(null)}
@@ -850,14 +1086,6 @@ export default function BballScatterplotChart({
                 )}
               </div>
             ))}
-
-            {/* Legend - NOT captured in screenshot */}
-            <div className="mt-4 text-sm text-gray-600">
-              <p>Showing {state.data.length} teams</p>
-              <p className="text-xs text-gray-500 mt-1">
-                Hover over logos to highlight
-              </p>
-            </div>
           </div>
         </div>
       )}

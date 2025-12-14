@@ -255,6 +255,12 @@ export async function GET(
           case "future_games":
             backendPath = `/football/future_games`;
             break;
+          case "bowl-picks":
+            backendPath = `/football/bowl-picks`;
+            break;
+          case "bowl-scoreboard":
+            backendPath = `/football/bowl-scoreboard`;
+            break;
           default:
             return NextResponse.json(
               { error: "Unknown football endpoint" },
@@ -431,6 +437,12 @@ export async function GET(
  *
  * - POST /api/proxy/football/whatif/export
  *   Exports what-if scenarios as CSV
+ *
+ * - POST /api/proxy/football/bowl-game-winner
+ *   Marks a bowl game with a winner
+ *
+ * - POST /api/proxy/basketball/chart/upload
+ *   Uploads CSV for scatterplot chart
  */
 export async function POST(
   request: NextRequest,
@@ -462,6 +474,15 @@ export async function POST(
       backendPath = `/basketball/chart/upload`;
       isFormData = true;
       console.log("🎨 BASKETBALL CHART UPLOAD detected");
+    }
+    // ===== HANDLE BOWL PICKS ROUTES =====
+    else if (
+      slug.length === 2 &&
+      slug[0] === "football" &&
+      slug[1] === "bowl-game-winner"
+    ) {
+      backendPath = `/football/bowl-game-winner`;
+      console.log("🏈 FOOTBALL BOWL GAME WINNER detected");
     }
     // ===== HANDLE WHAT-IF ROUTES =====
     else if (
@@ -589,6 +610,11 @@ export async function POST(
         success: data.success,
         csv_size: data.csv_data?.length || 0,
         filename: data.filename,
+      });
+    } else if (backendPath.includes("bowl")) {
+      console.log("🏈 PROXY POST: Bowl game marked:", {
+        success: data.success,
+        message: data.message,
       });
     } else {
       console.log("🔍 PROXY POST: What-If calculation completed:", {

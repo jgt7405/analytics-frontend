@@ -83,17 +83,34 @@ export default function BasketballChartPage() {
       // Clone the element
       const clone = targetElement.cloneNode(true) as HTMLElement;
 
+      // Remove the Chart Settings section from the clone
+      const settingsPanel = clone.querySelector(
+        '[data-exclude-screenshot="true"]'
+      );
+      if (settingsPanel) {
+        settingsPanel.remove();
+      }
+
+      // Also remove the entire parent div containing settings if needed
+      const settingsContainer = clone.querySelector(".mb-6.p-6.pt-0");
+      if (
+        settingsContainer &&
+        settingsContainer.querySelector('[data-exclude-screenshot="true"]')
+      ) {
+        settingsContainer.remove();
+      }
+
       // Fix SVG visibility and styling
       const svgs = clone.querySelectorAll("svg");
       svgs.forEach((svg) => {
         svg.style.cssText = `
-          display: block !important;
-          overflow: visible !important;
-          width: 100% !important;
-          height: auto !important;
-          background: white !important;
-          border: none !important;
-        `;
+        display: block !important;
+        overflow: visible !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        border: none !important;
+      `;
       });
 
       // Fix and convert images to base64
@@ -128,38 +145,39 @@ export default function BasketballChartPage() {
       // Create wrapper with fixed width
       const wrapper = document.createElement("div");
       wrapper.style.cssText = `
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        background-color: white;
-        padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-        width: 1200px;
-        box-sizing: border-box;
-        z-index: -1;
-        overflow: visible;
-      `;
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  background-color: white;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  width: 1000px;
+  box-sizing: border-box;
+  z-index: -1;
+  overflow: visible;
+`;
 
       // Create header section
       const header = document.createElement("div");
       header.style.cssText = `
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 32px 50px;
-        border-bottom: 2px solid #e5e7eb;
-        width: 100%;
-        box-sizing: border-box;
-      `;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 2px solid #e5e7eb;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+`;
 
       // Logo and title section (left side)
       const logoSection = document.createElement("div");
       logoSection.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-shrink: 0;
-      `;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+`;
 
       // Add JThom logo
       const logo = document.createElement("img");
@@ -169,10 +187,10 @@ export default function BasketballChartPage() {
         );
         logo.src = logoBase64;
         logo.style.cssText = `
-          height: 50px;
-          width: auto;
-          flex-shrink: 0;
-        `;
+    height: 50px;
+    width: auto;
+    flex-shrink: 0;
+  `;
         logoSection.appendChild(logo);
       } catch (e) {
         console.error("Failed to load logo:", e);
@@ -182,46 +200,56 @@ export default function BasketballChartPage() {
       const titleElement = document.createElement("h1");
       titleElement.textContent = chartTitle;
       titleElement.style.cssText = `
-        font-family: "Roboto Condensed", system-ui, sans-serif;
-        font-size: 1.5rem;
-        font-weight: 500;
-        color: #374151;
-        margin: 0;
-        flex: 1;
-        text-align: center;
-      `;
-      logoSection.appendChild(titleElement);
+  font-family: "Roboto Condensed", system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #374151;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+`;
 
-      // Add date (right side of header)
+      // Add date (moved further right)
       const dateElement = document.createElement("div");
       dateElement.textContent = new Date().toLocaleDateString();
       dateElement.style.cssText = `
-        font-size: 12px;
-        color: #6b7280;
-        flex-shrink: 0;
-      `;
+  font-size: 12px;
+  color: #6b7280;
+  flex-shrink: 0;
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+`;
 
       header.appendChild(logoSection);
+      header.appendChild(titleElement);
       header.appendChild(dateElement);
       wrapper.appendChild(header);
 
-      // Add chart container
+      // Add chart container with reduced height to show bottom labels
       const chartContainer = document.createElement("div");
       chartContainer.style.cssText = `
-        width: 100%;
-        overflow: visible;
-        display: block;
-        padding: 32px 50px;
-        box-sizing: border-box;
-      `;
+  width: 100%;
+  overflow: visible;
+  display: block;
+  padding: 2px 16px 0 24px;
+  box-sizing: border-box;
+  height: 680px;
+  overflow: hidden;
+`;
 
       clone.style.cssText = `
-        width: 100% !important;
-        overflow: visible !important;
-        display: block !important;
-        background: white !important;
-        padding: 0 !important;
-      `;
+  width: 100% !important;
+  overflow: visible !important;
+  display: block !important;
+  background: white !important;
+  padding: 0 !important;
+  margin-top: -60px !important;
+`;
       chartContainer.appendChild(clone);
       wrapper.appendChild(chartContainer);
 
@@ -241,8 +269,8 @@ export default function BasketballChartPage() {
           logging: false,
           useCORS: true,
           allowTaint: true,
-          width: 1200,
-          windowWidth: 1200,
+          width: 1000,
+          windowWidth: 1000,
           letterRendering: true,
         }),
         new Promise((_, reject) =>
@@ -393,7 +421,7 @@ export default function BasketballChartPage() {
                   >
                     {isCapturing ? (
                       <>
-                        <span className="animate-spin inline-block">⏳</span>
+                        <span className="animate-spin inline-block">↻</span>
                         <span>Capturing...</span>
                       </>
                     ) : (
