@@ -1,6 +1,7 @@
 // src/app/football/bowlpicks/page.tsx
 "use client";
 
+import BowlPicksProjectionChart from "@/components/features/football/BowlPicksProjectionChart";
 import BowlPicksTable from "@/components/features/football/BowlPicksTable";
 import BowlScoreboard from "@/components/features/football/BowlScoreboard";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
@@ -26,6 +27,11 @@ export default function BowlPicksPage() {
         {/* Bowl Scoreboard */}
         <div className="animate-fadeIn mb-8">
           <BowlScoreboard />
+        </div>
+
+        {/* Bowl Picks Projection Chart */}
+        <div className="animate-fadeIn mb-8">
+          <BowlPicksProjectionChart />
         </div>
 
         {/* Bowl Picks Table */}

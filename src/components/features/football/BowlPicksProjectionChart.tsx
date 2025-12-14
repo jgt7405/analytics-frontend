@@ -1,0 +1,442 @@
+// src/components/features/football/BowlPicksProjectionChart.tsx
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { memo, useMemo } from "react";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+interface ChartDataPoint {
+  gameNumber: number;
+  [key: string]: number;
+}
+
+interface BowlGameData {
+  "#": string;
+  "Bowl Name": string;
+  "Team 1": string;
+  "Team 2": string;
+  Winner: string;
+  Date: string;
+  Time: string;
+  "TV Station": string;
+  [key: string]: string;
+}
+
+function BowlPicksProjectionChart() {
+  const {
+    data: bowlData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["bowl-picks"],
+    queryFn: async () => {
+      const res = await fetch("/api/proxy/football/bowl-picks");
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+  });
+
+  // Custom tooltip component
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      name: string;
+      value: number;
+      color: string;
+      payload: { gameNumber: number };
+    }>;
+  }) => {
+    if (active && payload && payload.length) {
+      // Sort by value descending
+      const sorted = [...payload].sort((a, b) => b.value - a.value);
+
+      return (
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "4px",
+            padding: "8px",
+          }}
+        >
+          <p style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>
+            Game {payload[0].payload.gameNumber}
+          </p>
+          {sorted.map((entry, index: number) => (
+            <p
+              key={index}
+              style={{
+                margin: "2px 0",
+                fontSize: "12px",
+                color: entry.color,
+              }}
+            >
+              {entry.name}: {entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Custom tooltip component for above/below average
+  const CustomTooltipAboveAverage = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      name: string;
+      value: number;
+      color: string;
+      payload: { gameNumber: number };
+    }>;
+  }) => {
+    if (active && payload && payload.length) {
+      // Sort by value descending
+      const sorted = [...payload].sort((a, b) => b.value - a.value);
+
+      return (
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "4px",
+            padding: "8px",
+          }}
+        >
+          <p style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>
+            Game {payload[0].payload.gameNumber}
+          </p>
+          {sorted.map((entry, index: number) => (
+            <p
+              key={index}
+              style={{
+                margin: "2px 0",
+                fontSize: "12px",
+                color: entry.color,
+              }}
+            >
+              {entry.name}: {entry.value > 0 ? "+" : ""}
+              {entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Color palette for different people
+  const colors = [
+    "#1f2937", // Dark gray
+    "#dc2626", // Red
+    "#ea580c", // Orange
+    "#d97706", // Amber
+    "#16a34a", // Green
+    "#0284c7", // Sky Blue
+    "#6366f1", // Indigo
+    "#9333ea", // Purple
+    "#db2777", // Pink
+  ];
+
+  // Calculate projection data
+  const chartData = useMemo(() => {
+    if (!bowlData?.games || !Array.isArray(bowlData.games)) return [];
+
+    const firstGame = bowlData.games[0];
+    if (!firstGame) return [];
+
+    // Extract person names
+    const people: string[] = [];
+    Object.keys(firstGame).forEach((key) => {
+      if (key.endsWith(" Winner")) {
+        const personName = key.replace(" Winner", "");
+        people.push(personName);
+      }
+    });
+
+    // Helper function to calculate projected points for remaining games
+    const calculateProjectionForGames = (
+      startIndex: number,
+      endIndex: number
+    ) => {
+      const projections: { [key: string]: number } = {};
+      people.forEach((person) => {
+        projections[person] = 0;
+      });
+
+      for (let i = startIndex; i <= endIndex; i++) {
+        const game = bowlData.games[i];
+        const gamePoints: { [key: string]: number } = {};
+
+        people.forEach((person) => {
+          gamePoints[person] = parseInt(game[`${person} Points`] || "0", 10);
+        });
+
+        // Game is incomplete - use consensus allocation
+        const teamCounts: { [team: string]: number } = {};
+        const teamChoosers: { [team: string]: string[] } = {};
+
+        people.forEach((person) => {
+          const predictedWinner = game[`${person} Winner`];
+          if (predictedWinner && predictedWinner.trim()) {
+            teamCounts[predictedWinner] =
+              (teamCounts[predictedWinner] || 0) + 1;
+            if (!teamChoosers[predictedWinner]) {
+              teamChoosers[predictedWinner] = [];
+            }
+            teamChoosers[predictedWinner].push(person);
+          }
+        });
+
+        // Allocate points based on consensus
+        Object.keys(teamCounts).forEach((team) => {
+          const consensusPercentage = teamCounts[team] / people.length;
+          teamChoosers[team].forEach((person) => {
+            const pointsAllocated = gamePoints[person] * consensusPercentage;
+            projections[person] += pointsAllocated;
+          });
+        });
+      }
+
+      return projections;
+    };
+
+    // Build chart data
+    const data: ChartDataPoint[] = [];
+
+    // Point 0: Projection for all 46 games
+    const dataPoint0: ChartDataPoint = { gameNumber: 0 };
+    const allProjections = calculateProjectionForGames(0, 45);
+    people.forEach((person) => {
+      dataPoint0[person] = Math.round(allProjections[person] * 10) / 10;
+    });
+    data.push(dataPoint0);
+
+    // Points 1 through last completed: Actuals + projections
+    const actualCumulative: { [key: string]: number } = {};
+    people.forEach((person) => {
+      actualCumulative[person] = 0;
+    });
+
+    bowlData.games.forEach((game: BowlGameData, index: number) => {
+      const gameNumber = index + 1;
+      const actualWinner = game["Winner"];
+      const gamePoints: { [key: string]: number } = {};
+
+      people.forEach((person) => {
+        gamePoints[person] = parseInt(game[`${person} Points`] || "0", 10);
+      });
+
+      // Add actual results for this completed game
+      if (actualWinner && actualWinner.trim()) {
+        people.forEach((person) => {
+          const predictedWinner = game[`${person} Winner`];
+          if (
+            actualWinner.toLowerCase().trim() ===
+            predictedWinner.toLowerCase().trim()
+          ) {
+            actualCumulative[person] += gamePoints[person];
+          }
+        });
+
+        // Calculate projections for remaining games
+        const remainingProjections: { [key: string]: number } = {};
+        people.forEach((person) => {
+          remainingProjections[person] = 0;
+        });
+
+        if (index < bowlData.games.length - 1) {
+          const futureProjections = calculateProjectionForGames(
+            index + 1,
+            bowlData.games.length - 1
+          );
+          people.forEach((person) => {
+            remainingProjections[person] = futureProjections[person];
+          });
+        }
+
+        // Create data point with actuals + projections
+        const dataPoint: ChartDataPoint = { gameNumber };
+        people.forEach((person) => {
+          dataPoint[person] =
+            Math.round(
+              (actualCumulative[person] + remainingProjections[person]) * 10
+            ) / 10;
+        });
+
+        data.push(dataPoint);
+      }
+    });
+
+    return data;
+  }, [bowlData]);
+
+  // Extract people names - memoized to avoid dependency issues
+  const people = useMemo(() => {
+    if (
+      !bowlData?.games ||
+      !Array.isArray(bowlData.games) ||
+      bowlData.games.length === 0
+    ) {
+      return [];
+    }
+    const firstGame = bowlData.games[0];
+    const peopleList: string[] = [];
+    Object.keys(firstGame).forEach((key) => {
+      if (key.endsWith(" Winner")) {
+        const personName = key.replace(" Winner", "");
+        peopleList.push(personName);
+      }
+    });
+    return peopleList;
+  }, [bowlData]);
+
+  // Calculate above/below average data
+  const chartDataAboveAverage = useMemo(() => {
+    return chartData.map((dataPoint) => {
+      const gameNumber = dataPoint.gameNumber;
+      const values = people.map((person) => dataPoint[person]);
+      const average = values.reduce((a, b) => a + b, 0) / values.length;
+
+      const aboveAveragePoint: ChartDataPoint = { gameNumber };
+      people.forEach((person) => {
+        const value = dataPoint[person];
+        aboveAveragePoint[person] = Math.round((value - average) * 10) / 10;
+      });
+
+      return aboveAveragePoint;
+    });
+  }, [chartData, people]);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>Loading...</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center", color: "red" }}>
+        Error loading chart data
+      </div>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return <div style={{ padding: "20px", textAlign: "center" }}>No data</div>;
+  }
+
+  return (
+    <div
+      style={{
+        padding: "16px",
+        backgroundColor: "#ffffff",
+        borderRadius: "8px",
+        border: "1px solid #e5e7eb",
+        marginBottom: "24px",
+      }}
+    >
+      {/* Header */}
+      <div style={{ marginBottom: "16px" }}>
+        <h2
+          style={{ fontSize: "18px", fontWeight: "bold", margin: "0 0 4px 0" }}
+        >
+          Points Projection
+        </h2>
+        <p style={{ fontSize: "12px", color: "#6b7280", margin: 0 }}>
+          Cumulative points with consensus allocation for incomplete games
+        </p>
+      </div>
+
+      {/* Chart */}
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="gameNumber"
+            label={{
+              value: "Game #",
+              position: "insideBottomRight",
+              offset: -5,
+            }}
+          />
+          <YAxis
+            label={{ value: "Points", angle: -90, position: "insideLeft" }}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+          {people.map((person, index) => (
+            <Line
+              key={person}
+              type="monotone"
+              dataKey={person}
+              stroke={colors[index % colors.length]}
+              dot={false}
+              strokeWidth={2}
+              isAnimationActive={false}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+
+      {/* Above/Below Average Chart */}
+      <div style={{ marginTop: "32px" }}>
+        <h3
+          style={{ fontSize: "16px", fontWeight: "bold", margin: "0 0 12px 0" }}
+        >
+          Above/Below Average
+        </h3>
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart data={chartDataAboveAverage}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="gameNumber"
+              label={{
+                value: "Game #",
+                position: "insideBottomRight",
+                offset: -5,
+              }}
+            />
+            <YAxis
+              label={{
+                value: "Difference from Average",
+                angle: -90,
+                position: "insideLeft",
+              }}
+            />
+            <Tooltip content={<CustomTooltipAboveAverage />} />
+            <Legend />
+            {people.map((person, index) => (
+              <Line
+                key={person}
+                type="monotone"
+                dataKey={person}
+                stroke={colors[index % colors.length]}
+                dot={false}
+                strokeWidth={2}
+                isAnimationActive={false}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+export default memo(BowlPicksProjectionChart);

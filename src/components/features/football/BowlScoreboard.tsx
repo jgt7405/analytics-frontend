@@ -19,6 +19,18 @@ interface ColumnRange {
   max: number;
 }
 
+interface BowlGameData {
+  "#": string;
+  "Bowl Name": string;
+  "Team 1": string;
+  "Team 2": string;
+  Winner: string;
+  Date: string;
+  Time: string;
+  "TV Station": string;
+  [key: string]: string;
+}
+
 function BowlScoreboard() {
   const {
     data: bowlData,
@@ -57,7 +69,7 @@ function BowlScoreboard() {
       let completedPoints = 0;
       let remainingPoints = 0;
 
-      bowlData.games.forEach((game: any) => {
+      bowlData.games.forEach((game: BowlGameData) => {
         const actualWinner = game["Winner"];
         const predictedWinner = game[`${person} Winner`];
         const gamePoints = parseInt(game[`${person} Points`] || "0", 10);
@@ -66,14 +78,14 @@ function BowlScoreboard() {
           // Game is completed
           completedGames++;
           completedPoints += gamePoints;
-          actualPoints += gamePoints;
 
-          // Check if prediction is correct
+          // Check if prediction is correct - only add points if right
           if (
             actualWinner.toLowerCase().trim() ===
             predictedWinner.toLowerCase().trim()
           ) {
             correctPicks++;
+            actualPoints += gamePoints;
           }
         } else {
           // Game is not completed
@@ -88,7 +100,7 @@ function BowlScoreboard() {
         actualPoints,
         completedPoints,
         remainingPoints,
-        totalPossiblePoints: completedPoints + remainingPoints,
+        totalPossiblePoints: actualPoints + remainingPoints,
       };
     });
 
