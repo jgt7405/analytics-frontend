@@ -57,9 +57,19 @@ export default function TeamSchedule({
     Object.keys(groups).forEach((location) => {
       const loc = location as LocationType;
       groups[loc].sort((a, b) => {
-        if (a.kenpom_rank && b.kenpom_rank) {
-          return a.kenpom_rank - b.kenpom_rank;
+        const aIsNonD1 = !a.kenpom_rank || a.kenpom_rank === 999;
+        const bIsNonD1 = !b.kenpom_rank || b.kenpom_rank === 999;
+
+        // If one is Non D1 and the other isn't, Non D1 goes to bottom
+        if (aIsNonD1 && !bIsNonD1) return 1;
+        if (!aIsNonD1 && bIsNonD1) return -1;
+
+        // If both are D1 teams, sort by rank
+        if (!aIsNonD1 && !bIsNonD1) {
+          return (a.kenpom_rank || 999) - (b.kenpom_rank || 999);
         }
+
+        // If both are Non D1, sort alphabetically
         return a.opponent.localeCompare(b.opponent);
       });
     });
