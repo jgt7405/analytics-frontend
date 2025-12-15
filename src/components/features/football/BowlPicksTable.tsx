@@ -196,24 +196,9 @@ function BowlPicksTable() {
     );
 
   return (
-    <div
-      style={{
-        padding: "0 0 16px 0",
-        marginLeft: "-16px",
-        width: "calc(100% + 16px)",
-        marginBottom: "24px",
-      }}
-    >
-      {/* Table Container with scroll - white border on left acts as barrier */}
-      <div
-        style={{
-          overflowX: "auto",
-          overflowY: "auto",
-          maxHeight: "80vh",
-          paddingLeft: "16px",
-          borderLeft: "16px solid white",
-        }}
-      >
+    <div style={{ padding: "0 0 16px 0", marginBottom: "24px" }}>
+      {/* Table Container with scroll */}
+      <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "80vh" }}>
         <table
           style={{
             width: "max-content",
@@ -230,6 +215,25 @@ function BowlPicksTable() {
                 zIndex: 40,
               }}
             >
+              {/* Teams - First column */}
+              <th
+                style={{
+                  border: "1px solid #e5e7eb",
+                  padding: "4px 6px",
+                  textAlign: "center",
+                  fontWeight: "600",
+                  fontSize: "12px",
+                  position: "sticky",
+                  left: 0,
+                  backgroundColor: "#f3f4f6",
+                  zIndex: 41,
+                  minWidth: "90px",
+                  boxShadow: "8px 0 8px -4px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                Teams
+              </th>
+
               {/* # - Not frozen */}
               <th
                 style={{
@@ -254,24 +258,6 @@ function BowlPicksTable() {
                 }}
               >
                 Bowl Name
-              </th>
-
-              {/* Teams */}
-              <th
-                style={{
-                  border: "1px solid #e5e7eb",
-                  padding: "4px 6px",
-                  textAlign: "center",
-                  fontWeight: "600",
-                  fontSize: "12px",
-                  position: "sticky",
-                  left: "-16px",
-                  backgroundColor: "#f3f4f6",
-                  zIndex: 41,
-                  minWidth: "90px",
-                }}
-              >
-                Teams
               </th>
 
               {/* Winner */}
@@ -360,6 +346,43 @@ function BowlPicksTable() {
           <tbody>
             {sortedGames.map((game: BowlGame) => (
               <tr key={game["#"]} style={{ height: "20px" }}>
+                {/* Teams - First column */}
+                <td
+                  style={{
+                    border: "1px solid #e5e7eb",
+                    padding: "4px 6px",
+                    textAlign: "center",
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "4px",
+                    position: "sticky",
+                    left: 0,
+                    backgroundColor: "white",
+                    zIndex: 30,
+                    minWidth: "90px",
+                    boxShadow: "8px 0 8px -4px rgba(0, 0, 0, 0.1)",
+                  }}
+                >
+                  <div style={{ background: "transparent" }}>
+                    <TeamLogo
+                      logoUrl={getLogoUrl(game["Team 1"])}
+                      teamName={game["Team 1"]}
+                      size={24}
+                      showTooltip={true}
+                    />
+                  </div>
+                  <div style={{ background: "transparent" }}>
+                    <TeamLogo
+                      logoUrl={getLogoUrl(game["Team 2"])}
+                      teamName={game["Team 2"]}
+                      size={24}
+                      showTooltip={true}
+                    />
+                  </div>
+                </td>
+
                 {/* # - Not frozen */}
                 <td
                   style={{
@@ -387,42 +410,6 @@ function BowlPicksTable() {
                   title={game["Bowl Name"]}
                 >
                   {game["Bowl Name"]}
-                </td>
-
-                {/* Teams */}
-                <td
-                  style={{
-                    border: "1px solid #e5e7eb",
-                    padding: "4px 6px",
-                    textAlign: "center",
-                    fontSize: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "4px",
-                    position: "sticky",
-                    left: "-16px",
-                    backgroundColor: "white",
-                    zIndex: 30,
-                    minWidth: "90px",
-                  }}
-                >
-                  <div style={{ background: "transparent" }}>
-                    <TeamLogo
-                      logoUrl={getLogoUrl(game["Team 1"])}
-                      teamName={game["Team 1"]}
-                      size={24}
-                      showTooltip={true}
-                    />
-                  </div>
-                  <div style={{ background: "transparent" }}>
-                    <TeamLogo
-                      logoUrl={getLogoUrl(game["Team 2"])}
-                      teamName={game["Team 2"]}
-                      size={24}
-                      showTooltip={true}
-                    />
-                  </div>
                 </td>
 
                 {/* Winner */}
