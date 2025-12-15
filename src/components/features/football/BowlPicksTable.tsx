@@ -198,26 +198,27 @@ function BowlPicksTable() {
   return (
     <div
       style={{
-        padding: "16px 0 16px 0",
+        padding: "0 0 16px 0",
         marginLeft: "-16px",
         width: "calc(100% + 16px)",
+        marginBottom: "24px",
       }}
     >
-      {/* Table Container with scroll */}
+      {/* Table Container with scroll - white border on left acts as barrier */}
       <div
         style={{
           overflowX: "auto",
           overflowY: "auto",
           maxHeight: "80vh",
           paddingLeft: "16px",
+          borderLeft: "16px solid white",
         }}
       >
         <table
           style={{
             width: "max-content",
-            borderCollapse: "separate",
+            borderCollapse: "collapse",
             border: "1px solid #e5e7eb",
-            borderSpacing: 0,
           }}
         >
           <thead>
@@ -255,7 +256,7 @@ function BowlPicksTable() {
                 Bowl Name
               </th>
 
-              {/* Teams - Frozen on left */}
+              {/* Teams */}
               <th
                 style={{
                   border: "1px solid #e5e7eb",
@@ -264,15 +265,16 @@ function BowlPicksTable() {
                   fontWeight: "600",
                   fontSize: "12px",
                   position: "sticky",
-                  left: 0,
+                  left: "-16px",
                   backgroundColor: "#f3f4f6",
                   zIndex: 41,
+                  minWidth: "90px",
                 }}
               >
                 Teams
               </th>
 
-              {/* Scrollable columns */}
+              {/* Winner */}
               <th
                 style={{
                   border: "1px solid #e5e7eb",
@@ -324,7 +326,7 @@ function BowlPicksTable() {
                   key={`${person}-winner`}
                   style={{
                     border: "1px solid #e5e7eb",
-                    padding: "4px 6px",
+                    padding: "4px 4px",
                     textAlign: "center",
                     fontWeight: "600",
                     fontSize: "12px",
@@ -364,7 +366,7 @@ function BowlPicksTable() {
                     border: "1px solid #e5e7eb",
                     padding: "4px 6px",
                     textAlign: "center",
-                    fontSize: "13px",
+                    fontSize: "12px",
                   }}
                 >
                   {game["#"]}
@@ -376,7 +378,7 @@ function BowlPicksTable() {
                     border: "1px solid #e5e7eb",
                     padding: "4px 6px",
                     textAlign: "left",
-                    fontSize: "13px",
+                    fontSize: "12px",
                     maxWidth: "90px",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -387,21 +389,22 @@ function BowlPicksTable() {
                   {game["Bowl Name"]}
                 </td>
 
-                {/* Teams - Frozen on left */}
+                {/* Teams */}
                 <td
                   style={{
                     border: "1px solid #e5e7eb",
                     padding: "4px 6px",
                     textAlign: "center",
-                    fontSize: "13px",
+                    fontSize: "12px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "4px",
                     position: "sticky",
-                    left: 0,
+                    left: "-16px",
                     backgroundColor: "white",
                     zIndex: 30,
+                    minWidth: "90px",
                   }}
                 >
                   <div style={{ background: "transparent" }}>
@@ -428,7 +431,7 @@ function BowlPicksTable() {
                     border: "1px solid #e5e7eb",
                     padding: "4px 6px",
                     textAlign: "center",
-                    fontSize: "13px",
+                    fontSize: "12px",
                   }}
                 >
                   {game["Winner"] && game["Winner"].trim() ? (
@@ -447,13 +450,13 @@ function BowlPicksTable() {
                   )}
                 </td>
 
-                {/* Scrollable columns */}
+                {/* Date */}
                 <td
                   style={{
                     border: "1px solid #e5e7eb",
                     padding: "4px 6px",
                     textAlign: "center",
-                    fontSize: "13px",
+                    fontSize: "12px",
                   }}
                 >
                   {formatDate(game.Date)}
@@ -463,7 +466,7 @@ function BowlPicksTable() {
                     border: "1px solid #e5e7eb",
                     padding: "4px 6px",
                     textAlign: "center",
-                    fontSize: "13px",
+                    fontSize: "12px",
                   }}
                 >
                   {game.Time}
@@ -473,7 +476,7 @@ function BowlPicksTable() {
                     border: "1px solid #e5e7eb",
                     padding: "4px 6px",
                     textAlign: "center",
-                    fontSize: "13px",
+                    fontSize: "12px",
                   }}
                 >
                   {game["TV Station"]}
@@ -487,7 +490,7 @@ function BowlPicksTable() {
                       border: "1px solid #e5e7eb",
                       padding: "4px 6px",
                       textAlign: "center",
-                      fontSize: "13px",
+                      fontSize: "12px",
                     }}
                   >
                     <div style={{ background: "transparent" }}>
@@ -530,7 +533,7 @@ function BowlPicksTable() {
                         border: "1px solid #e5e7eb",
                         padding: "4px 6px",
                         textAlign: "center",
-                        fontSize: "13px",
+                        fontSize: "12px",
                         fontWeight: "500",
                         ...cellStyle,
                       }}

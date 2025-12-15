@@ -323,6 +323,29 @@ function BowlPicksProjectionChart() {
     });
   }, [chartData, people]);
 
+  // Calculate Y-axis domain based on data
+  const yAxisDomain = useMemo(() => {
+    if (chartData.length === 0) return [0, 100];
+
+    let minValue = Infinity;
+    let maxValue = -Infinity;
+
+    chartData.forEach((dataPoint) => {
+      people.forEach((person) => {
+        const value = dataPoint[person];
+        minValue = Math.min(minValue, value);
+        maxValue = Math.max(maxValue, value);
+      });
+    });
+
+    // Add 10% padding on both sides
+    const padding = (maxValue - minValue) * 0.1;
+    const bottom = Math.max(0, minValue - padding);
+    const top = maxValue + padding;
+
+    return [Math.floor(bottom), Math.ceil(top)];
+  }, [chartData, people]);
+
   if (isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>Loading...</div>
@@ -376,6 +399,7 @@ function BowlPicksProjectionChart() {
             }}
           />
           <YAxis
+            domain={yAxisDomain}
             label={{ value: "Points", angle: -90, position: "insideLeft" }}
           />
           <Tooltip content={<CustomTooltip />} />

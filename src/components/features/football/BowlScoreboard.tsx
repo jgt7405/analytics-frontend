@@ -265,6 +265,7 @@ function BowlScoreboard() {
           overflowX: "auto",
           overflowY: "auto",
           paddingLeft: "16px",
+          borderLeft: "16px solid white",
         }}
       >
         <table
@@ -280,7 +281,7 @@ function BowlScoreboard() {
                 backgroundColor: "#f3f4f6",
                 position: "sticky",
                 top: 0,
-                zIndex: 40,
+                zIndex: 41,
               }}
             >
               <th
@@ -291,6 +292,10 @@ function BowlScoreboard() {
                   fontWeight: "600",
                   fontSize: "12px",
                   minWidth: "100px",
+                  position: "sticky",
+                  left: "-16px",
+                  backgroundColor: "#f3f4f6",
+                  zIndex: 42,
                 }}
               >
                 Name
@@ -394,6 +399,10 @@ function BowlScoreboard() {
                       fontSize: "12px",
                       fontWeight: "500",
                       color: "#1f2937",
+                      position: "sticky",
+                      left: "-16px",
+                      backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9fafb",
+                      zIndex: 40,
                     }}
                   >
                     {user.name}
