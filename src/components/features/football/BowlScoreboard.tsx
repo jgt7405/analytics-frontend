@@ -2,7 +2,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 
 interface ScoreboardUser {
   name: string;
@@ -31,7 +31,19 @@ interface BowlGameData {
   [key: string]: string;
 }
 
+type SortKey =
+  | "name"
+  | "totalPoints"
+  | "percentPoints"
+  | "totalPossible"
+  | "percentPossible"
+  | "percentRight"
+  | "pointsLeft";
+
 function BowlScoreboard() {
+  const [sortKey, setSortKey] = useState<SortKey>("percentPoints");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
   const {
     data: bowlData,
     isLoading,
@@ -104,9 +116,75 @@ function BowlScoreboard() {
       };
     });
 
-    // Sort by actualPoints descending
-    return scores.sort((a, b) => b.actualPoints - a.actualPoints);
-  }, [bowlData]);
+    // Apply sorting
+    const sorted = [...scores].sort((a, b) => {
+      let aValue: number | string;
+      let bValue: number | string;
+
+      switch (sortKey) {
+        case "name":
+          aValue = a.name;
+          bValue = b.name;
+          break;
+        case "totalPoints":
+          aValue = a.actualPoints;
+          bValue = b.actualPoints;
+          break;
+        case "percentPoints":
+          aValue =
+            a.completedPoints > 0
+              ? (a.actualPoints / a.completedPoints) * 100
+              : 0;
+          bValue =
+            b.completedPoints > 0
+              ? (b.actualPoints / b.completedPoints) * 100
+              : 0;
+          break;
+        case "totalPossible":
+          aValue = a.totalPossiblePoints;
+          bValue = b.totalPossiblePoints;
+          break;
+        case "percentPossible":
+          aValue =
+            a.totalPossiblePoints > 0
+              ? (a.actualPoints / a.totalPossiblePoints) * 100
+              : 0;
+          bValue =
+            b.totalPossiblePoints > 0
+              ? (b.actualPoints / b.totalPossiblePoints) * 100
+              : 0;
+          break;
+        case "percentRight":
+          aValue =
+            a.completedGames > 0
+              ? (a.correctPicks / a.completedGames) * 100
+              : 0;
+          bValue =
+            b.completedGames > 0
+              ? (b.correctPicks / b.completedGames) * 100
+              : 0;
+          break;
+        case "pointsLeft":
+          aValue = a.remainingPoints;
+          bValue = b.remainingPoints;
+          break;
+        default:
+          return 0;
+      }
+
+      // Compare values
+      let comparison = 0;
+      if (aValue < bValue) {
+        comparison = -1;
+      } else if (aValue > bValue) {
+        comparison = 1;
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return sorted;
+  }, [bowlData, sortKey, sortDirection]);
 
   // Calculate ranges for coloring
   const columnRanges = useMemo((): {
@@ -223,6 +301,24 @@ function BowlScoreboard() {
     };
   };
 
+  // Handle header click to toggle sort
+  const handleHeaderClick = (key: SortKey) => {
+    if (sortKey === key) {
+      // Toggle direction if clicking the same column
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // New column, default to descending
+      setSortKey(key);
+      setSortDirection("desc");
+    }
+  };
+
+  // Helper to render sort indicator
+  const getSortIndicator = (key: SortKey) => {
+    if (sortKey !== key) return "";
+    return sortDirection === "asc" ? " ↑" : " ↓";
+  };
+
   if (isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>Loading...</div>
@@ -285,6 +381,7 @@ function BowlScoreboard() {
               }}
             >
               <th
+                onClick={() => handleHeaderClick("name")}
                 style={{
                   border: "1px solid #e5e7eb",
                   padding: "4px 8px",
@@ -296,75 +393,95 @@ function BowlScoreboard() {
                   left: "-16px",
                   backgroundColor: "#f3f4f6",
                   zIndex: 42,
+                  cursor: "pointer",
+                  userSelect: "none",
                 }}
               >
-                Name
+                Name{getSortIndicator("name")}
               </th>
               <th
+                onClick={() => handleHeaderClick("totalPoints")}
                 style={{
                   border: "1px solid #e5e7eb",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
                   fontSize: "11px",
+                  cursor: "pointer",
+                  userSelect: "none",
                 }}
               >
-                Total Points
+                Total Points{getSortIndicator("totalPoints")}
               </th>
               <th
+                onClick={() => handleHeaderClick("percentPoints")}
                 style={{
                   border: "1px solid #e5e7eb",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
                   fontSize: "11px",
+                  cursor: "pointer",
+                  userSelect: "none",
                 }}
               >
-                % of Points
+                % of Points{getSortIndicator("percentPoints")}
               </th>
               <th
+                onClick={() => handleHeaderClick("totalPossible")}
                 style={{
                   border: "1px solid #e5e7eb",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
                   fontSize: "11px",
+                  cursor: "pointer",
+                  userSelect: "none",
                 }}
               >
-                Total Possible
+                Total Possible{getSortIndicator("totalPossible")}
               </th>
               <th
+                onClick={() => handleHeaderClick("percentPossible")}
                 style={{
                   border: "1px solid #e5e7eb",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
                   fontSize: "11px",
+                  cursor: "pointer",
+                  userSelect: "none",
                 }}
               >
-                % of Possible
+                % of Possible{getSortIndicator("percentPossible")}
               </th>
               <th
+                onClick={() => handleHeaderClick("percentRight")}
                 style={{
                   border: "1px solid #e5e7eb",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
                   fontSize: "11px",
+                  cursor: "pointer",
+                  userSelect: "none",
                 }}
               >
-                % Right
+                % Right{getSortIndicator("percentRight")}
               </th>
               <th
+                onClick={() => handleHeaderClick("pointsLeft")}
                 style={{
                   border: "1px solid #e5e7eb",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
                   fontSize: "11px",
+                  cursor: "pointer",
+                  userSelect: "none",
                 }}
               >
-                Points Left
+                Points Left{getSortIndicator("pointsLeft")}
               </th>
             </tr>
           </thead>
