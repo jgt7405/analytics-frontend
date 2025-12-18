@@ -1,8 +1,9 @@
-// src/app/basketball/seed/page.tsx
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
+import BballCeiling from "@/components/features/basketball/BballCeiling";
+import BballSeedCeilingFloor from "@/components/features/basketball/BballSeedCeilingFloor";
 import SeedTable from "@/components/features/basketball/SeedTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -138,8 +139,18 @@ export default function SeedPage() {
           ) : (
             <ErrorBoundary level="component" onRetry={() => refetch()}>
               <div className="mb-8">
+                {/* Seed Table - FIRST */}
                 <div className="seed-table">
-                  <Suspense fallback={<BasketballTableSkeleton />}>
+                  <Suspense
+                    fallback={
+                      <BasketballTableSkeleton
+                        tableType="standings"
+                        rows={selectedConference === "All Teams" ? 25 : 15}
+                        teamCols={18}
+                        showSummaryRows={false}
+                      />
+                    }
+                  >
                     {seedResponse?.data && (
                       <SeedTable
                         seedData={seedResponse.data}
@@ -165,7 +176,9 @@ export default function SeedPage() {
                       </div>
                     </div>
                     <div
-                      className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                      className={`flex-shrink-0 ${
+                        isMobile ? "w-1/3" : "w-auto mr-2"
+                      }`}
                     >
                       <TableActionButtons
                         selectedConference={selectedConference}
@@ -177,6 +190,99 @@ export default function SeedPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Tournament Ceiling Chart - SECOND */}
+                {seedResponse?.data && seedResponse.data.length > 0 && (
+                  <div className="mb-8 mt-12">
+                    <h1 className="text-xl font-normal text-gray-500 mb-4">
+                      Tournament Seeding Ceiling
+                    </h1>
+                    <div className="bball-ceiling-chart">
+                      <Suspense
+                        fallback={
+                          <div className="h-96 bg-gray-100 animate-pulse rounded-lg" />
+                        }
+                      >
+                        <BballCeiling
+                          seedData={seedResponse.data}
+                          _maxHeight={600}
+                        />
+                      </Suspense>
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="flex flex-row items-start gap-4">
+                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div style={{ lineHeight: "1.3" }}></div>
+                        </div>
+                        <div
+                          className={`flex-shrink-0 ${
+                            isMobile ? "w-1/3" : "w-auto mr-2"
+                          }`}
+                        >
+                          <TableActionButtons
+                            selectedConference={selectedConference}
+                            contentSelector=".bball-ceiling-chart"
+                            pageName="bball-ceiling"
+                            pageTitle="Tournament Seeding Ceiling"
+                            shareTitle="Tournament Seeding Ceiling Projections"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Box Whisker Chart - THIRD */}
+                {seedResponse?.data && seedResponse.data.length > 0 && (
+                  <div className="mb-8 mt-12">
+                    <h1 className="text-xl font-normal text-gray-500 mb-2">
+                      Seed Ceiling & Floor
+                    </h1>
+                    <div className="seed-ceiling-floor-chart">
+                      <Suspense
+                        fallback={
+                          <div className="h-96 bg-gray-100 animate-pulse rounded-lg" />
+                        }
+                      >
+                        <BballSeedCeilingFloor
+                          seedData={seedResponse.data}
+                          maxHeight={700}
+                        />
+                      </Suspense>
+                    </div>
+
+                    <div className="mt-10">
+                      <div className="flex flex-row items-start gap-4">
+                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div style={{ lineHeight: "1.3" }}>
+                            <div>
+                              Seed ceiling and floor based on 1,000 simulations
+                              using composite ratings.
+                            </div>
+                            <div style={{ marginTop: "6px" }}>
+                              Box shows 25th-75th percentile range, whiskers
+                              show 5th-95th percentile.
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className={`flex-shrink-0 ${
+                            isMobile ? "w-1/3" : "w-auto mr-2"
+                          }`}
+                        >
+                          <TableActionButtons
+                            selectedConference={selectedConference}
+                            contentSelector=".seed-ceiling-floor-chart"
+                            pageName="seed-ceiling-floor"
+                            pageTitle="NCAA Seed Ceiling & Floor"
+                            shareTitle="Seed Ceiling & Floor Projections"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </ErrorBoundary>
           )}

@@ -287,11 +287,25 @@ export interface SeedTeam {
   team_name: string;
   team_id: string;
   logo_url: string;
-  average_seed?: number;
+  primary_color?: string;
+  secondary_color?: string;
+  tournament_bid_pct: number;
+  average_seed: number | null;
   seed_distribution: Record<string, number>;
-  tournament_bid_pct?: number;
   first_four_out: number;
   next_four_out: number;
+  seed_min?: number | string;
+  seed_q25?: number | string;
+  seed_median?: number | string;
+  seed_q75?: number | string;
+  seed_max?: number | string;
+  auto_bid_overall_pct: number;
+  at_large_overall_pct: number;
+}
+
+export interface SeedPageData {
+  data: SeedTeam[];
+  conferences: string[];
 }
 
 // TWV (Total Win Value) Types
