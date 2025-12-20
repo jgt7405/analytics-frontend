@@ -236,6 +236,9 @@ export async function GET(
           case "conf-data":
             backendPath = `/unified_conference_data`;
             break;
+          case "ncaa-projections":
+            backendPath = `/basketball/ncaa-projections`;
+            break;
           default:
             return NextResponse.json(
               { error: "Unknown basketball endpoint" },
