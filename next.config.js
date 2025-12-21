@@ -183,17 +183,6 @@ const nextConfig = {
       },
     ];
   },
-
-  // Redirects
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/football/wins",
-        permanent: false,
-      },
-    ];
-  },
 };
 
 module.exports = withPWA(withBundleAnalyzer(nextConfig));
