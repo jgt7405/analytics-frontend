@@ -7,6 +7,7 @@ interface PageLayoutWrapperProps {
   title: string;
   subtitle?: string;
   conferenceSelector?: ReactNode;
+  rightElement?: ReactNode;
   isLoading: boolean;
   children: ReactNode;
 }
@@ -15,6 +16,7 @@ export default function PageLayoutWrapper({
   title,
   subtitle,
   conferenceSelector,
+  rightElement,
   isLoading,
   children,
 }: PageLayoutWrapperProps) {
@@ -30,12 +32,19 @@ export default function PageLayoutWrapper({
           </>
         ) : (
           <>
-            <h1 className="text-xl font-normal text-gray-500 mb-4">
-              {title}
-              {subtitle && (
-                <span className="text-base ml-2 text-gray-500">{subtitle}</span>
+            <div className="flex justify-between items-baseline mb-4">
+              <h1 className="text-xl font-normal text-gray-500">
+                {title}
+                {subtitle && (
+                  <span className="text-base ml-2 text-gray-500">
+                    {subtitle}
+                  </span>
+                )}
+              </h1>
+              {rightElement && (
+                <div className="text-sm text-gray-600">{rightElement}</div>
               )}
-            </h1>
+            </div>
             {conferenceSelector && (
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
                 {conferenceSelector}

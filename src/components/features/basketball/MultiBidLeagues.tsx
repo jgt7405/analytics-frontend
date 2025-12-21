@@ -63,7 +63,8 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
   if (error) {
     return (
       <div className="p-4 text-center text-red-600">
-        Error loading data: {error}
+        Error loading data:{" "}
+        {error instanceof Error ? error.message : "Unknown error"}
       </div>
     );
   }

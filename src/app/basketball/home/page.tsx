@@ -5,19 +5,44 @@ import MultiBidLeagues from "@/components/features/basketball/MultiBidLeagues";
 import NCAABracketTable from "@/components/features/basketball/NCAABracketTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { useNCAAProjections } from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
-import { Suspense, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 
 export default function BasketballHome() {
   const { isMobile } = useResponsive();
   const ncaaTableRef = useRef<HTMLDivElement>(null);
   const multiBidRef = useRef<HTMLDivElement>(null);
+  const { data } = useNCAAProjections();
+
+  // Format the last updated timestamp
+  const lastUpdated = useMemo(() => {
+    if (data?.last_updated) {
+      try {
+        const date = new Date(data.last_updated);
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${month}/${day}/${year}`;
+      } catch (error) {
+        console.error("Error formatting date:", error);
+      }
+    }
+
+    // Fallback to current date
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const year = now.getFullYear();
+    return `${month}/${day}/${year}`;
+  }, [data?.last_updated]);
 
   return (
     <ErrorBoundary level="page">
       <PageLayoutWrapper
-        title="NCAA Tournament Seed Projections"
+        title="Basketball Tournament Projections"
         isLoading={false}
+        rightElement={`Updated: ${lastUpdated}`}
       >
         <div className="-mt-2 md:-mt-6">
           {/* NCAA Bracket Table Section */}
@@ -56,8 +81,6 @@ export default function BasketballHome() {
                     <TableActionButtons
                       contentSelector=".ncaa-bracket-table"
                       pageName="ncaa-tournament"
-                      pageTitle="NCAA Tournament Projections"
-                      shareTitle="Tournament Bracket Projections"
                     />
                   </div>
                 </div>
@@ -68,9 +91,10 @@ export default function BasketballHome() {
           {/* Multi-Bid Conferences Section */}
           <ErrorBoundary level="component">
             <div className="mb-8">
-              <h1 className="text-xl font-normal text-gray-500 mb-4">
+              <h2 className="text-xl font-normal text-gray-500">
                 Multi-Bid Conferences
-              </h1>
+              </h2>
+
               <div className="multibid-leagues-table" ref={multiBidRef}>
                 <Suspense
                   fallback={
@@ -102,9 +126,7 @@ export default function BasketballHome() {
                   >
                     <TableActionButtons
                       contentSelector=".multibid-leagues-table"
-                      pageName="multibid-conferences"
-                      pageTitle="Multi-Bid Conferences"
-                      shareTitle="Multi-Bid Conferences"
+                      pageName="multi-bid-conferences"
                     />
                   </div>
                 </div>

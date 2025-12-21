@@ -12,13 +12,16 @@ function Header() {
     ? "/images/JThom_Logo_Football.png"
     : "/images/JThom_Logo.png";
 
+  // Logo links to home based on current sport
+  const logoLink = isFootball ? "/football/wins" : "/basketball/home";
+
   return (
     <header
       className="main-header w-full"
       style={{ borderBottom: "1px solid #d1d5db" }}
     >
       <div className="header-content flex items-center justify-between w-full px-4 py-0 md:justify-start md:gap-8">
-        <Link href="/football/wins" className="logo-link flex-shrink-0">
+        <Link href={logoLink} className="logo-link flex-shrink-0">
           <Image
             src={logoSrc}
             alt="JThom Analytics Logo"

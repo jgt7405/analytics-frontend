@@ -25,7 +25,7 @@ function NavigationContent() {
       // Rule 4: If on team page, use team's conference
       const teamConf = searchParams.get("teamConf");
       if (teamConf && isTeamPage) {
-        // ✅ FIXED: Don't encode - searchParams.get() returns decoded value
+        // âœ… FIXED: Don't encode - searchParams.get() returns decoded value
         // Link href will handle encoding automatically
         return `${basePath}?conf=${teamConf}`;
       }
@@ -34,13 +34,18 @@ function NavigationContent() {
       const currentConf = searchParams.get("conf");
       const confToUse =
         currentConf && currentConf !== "All Teams" ? currentConf : "Big 12";
-      // ✅ FIXED: Don't encode - Link href will handle encoding automatically
+      // âœ… FIXED: Don't encode - Link href will handle encoding automatically
       return `${basePath}?conf=${confToUse}`;
     },
     [searchParams, isTeamPage]
   );
 
   const basketballNavItems = [
+    {
+      name: "Home",
+      path: "/basketball/home",
+      description: "Basketball home",
+    },
     {
       name: "Wins",
       path: addConferenceToUrl("/basketball/wins"),
