@@ -159,22 +159,12 @@ export default function BballCeiling({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const logoSize = isMobile ? 20 : 32;
+  const logoSize = isMobile ? 28 : 32;
   const gapBetweenLogos = 4;
-  const seedLabelWidth = 45;
-  const paddingHorizontal = 12;
-  const minLogosPerRow = isMobile ? 5 : 4;
+  const seedLabelWidth = isMobile ? 40 : 45;
+  const paddingHorizontal = isMobile ? 10 : 12;
+  const minLogosPerRow = isMobile ? 4 : 4;
   const baseRowHeight = logoSize + 6;
-
-  const calculateRowsNeeded = (teamCount: number) => {
-    if (teamCount === 0) return 1;
-    return Math.ceil(teamCount / minLogosPerRow);
-  };
-
-  const getRowHeight = (teamCount: number) => {
-    const rowsNeeded = calculateRowsNeeded(teamCount);
-    return baseRowHeight + (rowsNeeded - 1) * (logoSize + gapBetweenLogos);
-  };
 
   // Create grouped data for ceiling (using seed_min)
   const teamsBySeedCeiling = useMemo(() => {
@@ -276,6 +266,16 @@ export default function BballCeiling({
 
   // Calculate row heights per seed - using the maximum from both ceiling and floor
   const rowHeightsBySeed = useMemo(() => {
+    const calculateRowsNeeded = (teamCount: number) => {
+      if (teamCount === 0) return 1;
+      return Math.ceil(teamCount / minLogosPerRow);
+    };
+
+    const getRowHeight = (teamCount: number) => {
+      const rowsNeeded = calculateRowsNeeded(teamCount);
+      return baseRowHeight + (rowsNeeded - 1) * (logoSize + gapBetweenLogos);
+    };
+
     const heights: Record<string | number, number> = {};
 
     seedLabels.forEach((label) => {
@@ -290,7 +290,14 @@ export default function BballCeiling({
     });
 
     return heights;
-  }, [teamsBySeedCeiling, teamsBySeedFloor]);
+  }, [
+    teamsBySeedCeiling,
+    teamsBySeedFloor,
+    logoSize,
+    gapBetweenLogos,
+    baseRowHeight,
+    minLogosPerRow,
+  ]);
 
   const renderTeamRow = (
     label: string | number,

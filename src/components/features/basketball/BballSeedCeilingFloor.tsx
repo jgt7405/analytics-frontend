@@ -205,185 +205,284 @@ export default function BballSeedCeilingFloor({
         position: "relative",
       }}
     >
-      {/* Main chart container with scrollable content */}
+      {/* Main chart container */}
       <div
         style={{
+          display: isMobile ? "flex" : "block",
           overflowY:
             sortedTeams.length > (isMobile ? 12 : 20) ? "auto" : "visible",
-          overflowX: "auto",
+          overflowX: isMobile ? "hidden" : "auto",
           maxHeight: maxHeight,
           width: "100%",
           backgroundColor: "white",
           scrollbarGutter: "stable",
         }}
       >
-        <svg
-          width={width}
-          height={contentHeight}
+        {/* Fixed left side on mobile - logos and pie charts only */}
+        {isMobile && (
+          <svg
+            width={chartPaddingLeft}
+            height={contentHeight}
+            style={{
+              display: "block",
+              backgroundColor: "white",
+              flexShrink: 0,
+              position: "sticky",
+              left: 0,
+              zIndex: 5,
+              borderRight: "1px solid #dee2e6",
+            }}
+          >
+            {/* Y-axis: team logos and pie charts */}
+            {sortedTeams.map((team, index) => {
+              const yPos = getYPosition(index);
+
+              return (
+                <g key={`team-label-${team.team_id}`}>
+                  {/* Team logo */}
+                  {team.logo_url && (
+                    <image
+                      href={team.logo_url}
+                      x={logoX}
+                      y={yPos - logoSize / 2}
+                      width={logoSize}
+                      height={logoSize}
+                    />
+                  )}
+
+                  {/* Tournament bid pie chart */}
+                  {team.tournament_bid_pct !== undefined && (
+                    <PieChart
+                      cx={pieCenterX}
+                      cy={yPos}
+                      radius={pieChartRadius}
+                      percentage={
+                        team.tournament_bid_pct && team.tournament_bid_pct <= 1
+                          ? team.tournament_bid_pct * 100
+                          : team.tournament_bid_pct || 0
+                      }
+                    />
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+        )}
+
+        {/* Scrollable chart area */}
+        <div
           style={{
-            display: "block",
-            backgroundColor: "white",
-            minWidth: "100%",
+            overflowX: "auto",
+            overflowY: "hidden",
+            flex: isMobile ? 1 : "none",
+            scrollbarGutter: "stable",
           }}
         >
-          {/* X-axis */}
-          <line
-            x1={chartPadding.left}
-            y1={chartPadding.top + totalTeamHeight}
-            x2={chartPadding.left + chartWidth}
-            y2={chartPadding.top + totalTeamHeight}
-            stroke="#333"
-            strokeWidth={2}
-          />
+          <svg
+            width={isMobile ? chartWidth + chartPadding.right : width}
+            height={contentHeight}
+            style={{
+              display: "block",
+              backgroundColor: "white",
+              minWidth: isMobile ? "auto" : "100%",
+            }}
+          >
+            {/* X-axis */}
+            <line
+              x1={isMobile ? 0 : chartPadding.left}
+              y1={chartPadding.top + totalTeamHeight}
+              x2={
+                isMobile
+                  ? chartWidth + chartPadding.right
+                  : chartPadding.left + chartWidth
+              }
+              y2={chartPadding.top + totalTeamHeight}
+              stroke="#333"
+              strokeWidth={2}
+            />
 
-          {/* Y-axis */}
-          <line
-            x1={chartPadding.left}
-            y1={chartPadding.top}
-            x2={chartPadding.left}
-            y2={chartPadding.top + totalTeamHeight}
-            stroke="#333"
-            strokeWidth={2}
-          />
+            {/* Y-axis - only on desktop */}
+            {!isMobile && (
+              <line
+                x1={chartPadding.left}
+                y1={chartPadding.top}
+                x2={chartPadding.left}
+                y2={chartPadding.top + totalTeamHeight}
+                stroke="#333"
+                strokeWidth={2}
+              />
+            )}
 
-          {/* Y-axis: team logos and pie charts */}
-          {sortedTeams.map((team, index) => {
-            const yPos = getYPosition(index);
+            {/* Y-axis: team logos and pie charts - only on desktop */}
+            {!isMobile &&
+              sortedTeams.map((team, index) => {
+                const yPos = getYPosition(index);
 
-            return (
-              <g key={`team-label-${team.team_id}`}>
-                {/* Team logo */}
-                {team.logo_url && (
-                  <image
-                    href={team.logo_url}
-                    x={logoX}
-                    y={yPos - logoSize / 2}
-                    width={logoSize}
-                    height={logoSize}
+                return (
+                  <g key={`team-label-${team.team_id}`}>
+                    {/* Team logo */}
+                    {team.logo_url && (
+                      <image
+                        href={team.logo_url}
+                        x={logoX}
+                        y={yPos - logoSize / 2}
+                        width={logoSize}
+                        height={logoSize}
+                      />
+                    )}
+
+                    {/* Tournament bid pie chart */}
+                    {team.tournament_bid_pct !== undefined && (
+                      <PieChart
+                        cx={pieCenterX}
+                        cy={yPos}
+                        radius={pieChartRadius}
+                        percentage={
+                          team.tournament_bid_pct &&
+                          team.tournament_bid_pct <= 1
+                            ? team.tournament_bid_pct * 100
+                            : team.tournament_bid_pct || 0
+                        }
+                      />
+                    )}
+                  </g>
+                );
+              })}
+
+            {/* Box whisker plots */}
+            {sortedTeams.map((team, teamIndex) => {
+              const yPos = getYPosition(teamIndex);
+              const primaryColor = team.primary_color || "#1a1a1a";
+              const boxFillColor = primaryColor;
+              let whiskerStrokeColor = team.secondary_color || primaryColor;
+              if (
+                whiskerStrokeColor.toLowerCase() === "#ffffff" ||
+                whiskerStrokeColor.toLowerCase() === "white"
+              ) {
+                whiskerStrokeColor = "#000000";
+              }
+
+              const boxHeight = isMobile ? 10 : 14;
+
+              const minX = seedToXPosition(team.seed_min);
+              const q25X = seedToXPosition(team.seed_q25);
+              const medianX = seedToXPosition(team.seed_median);
+              const q75X = seedToXPosition(team.seed_q75);
+              const maxX = seedToXPosition(team.seed_max);
+
+              if (minX === null || maxX === null) return null;
+
+              const q25Pos = q25X ?? minX;
+              const medianPos = medianX ?? minX;
+              const q75Pos = q75X ?? maxX;
+
+              // Adjust X positions for mobile (remove left padding since it's in fixed column)
+              const adjustedMinX = isMobile ? minX - chartPadding.left : minX;
+              const adjustedQ25Pos = isMobile
+                ? q25Pos - chartPadding.left
+                : q25Pos;
+              const adjustedMedianPos = isMobile
+                ? medianPos - chartPadding.left
+                : medianPos;
+              const adjustedQ75Pos = isMobile
+                ? q75Pos - chartPadding.left
+                : q75Pos;
+              const adjustedMaxX = isMobile ? maxX - chartPadding.left : maxX;
+
+              return (
+                <g key={`box-whisker-${team.team_id}`} opacity={0.85}>
+                  {/* Whisker line (min to max) */}
+                  <line
+                    x1={adjustedMinX}
+                    y1={yPos}
+                    x2={adjustedMaxX}
+                    y2={yPos}
+                    stroke={whiskerStrokeColor}
+                    strokeWidth={isMobile ? 1.5 : 2}
                   />
-                )}
 
-                {/* Tournament bid pie chart */}
-                {team.tournament_bid_pct !== undefined && (
-                  <PieChart
-                    cx={pieCenterX}
-                    cy={yPos}
-                    radius={pieChartRadius}
-                    percentage={
-                      team.tournament_bid_pct && team.tournament_bid_pct <= 1
-                        ? team.tournament_bid_pct * 100
-                        : team.tournament_bid_pct || 0
-                    }
+                  {/* Left whisker cap */}
+                  <line
+                    x1={adjustedMinX}
+                    y1={yPos - boxHeight / 3}
+                    x2={adjustedMinX}
+                    y2={yPos + boxHeight / 3}
+                    stroke={whiskerStrokeColor}
+                    strokeWidth={isMobile ? 1.5 : 2}
                   />
-                )}
-              </g>
-            );
-          })}
 
-          {/* Box whisker plots */}
-          {sortedTeams.map((team, teamIndex) => {
-            const yPos = getYPosition(teamIndex);
-            const primaryColor = team.primary_color || "#1a1a1a";
-            // Flip colors: use primary for fill, secondary for stroke
-            // If secondary is white (#ffffff), use black instead
-            const boxFillColor = primaryColor;
-            let whiskerStrokeColor = team.secondary_color || primaryColor;
-            if (
-              whiskerStrokeColor.toLowerCase() === "#ffffff" ||
-              whiskerStrokeColor.toLowerCase() === "white"
-            ) {
-              whiskerStrokeColor = "#000000";
-            }
+                  {/* Right whisker cap */}
+                  <line
+                    x1={adjustedMaxX}
+                    y1={yPos - boxHeight / 3}
+                    x2={adjustedMaxX}
+                    y2={yPos + boxHeight / 3}
+                    stroke={whiskerStrokeColor}
+                    strokeWidth={isMobile ? 1.5 : 2}
+                  />
 
-            const boxHeight = isMobile ? 10 : 14;
+                  {/* Box (Q1 to Q3) */}
+                  <rect
+                    x={Math.min(adjustedQ25Pos, adjustedQ75Pos)}
+                    y={yPos - boxHeight / 2}
+                    width={Math.max(
+                      Math.abs(adjustedQ75Pos - adjustedQ25Pos),
+                      2
+                    )}
+                    height={boxHeight}
+                    fill={boxFillColor}
+                    stroke={whiskerStrokeColor}
+                    strokeWidth={isMobile ? 1 : 1.5}
+                  />
 
-            const minX = seedToXPosition(team.seed_min);
-            const q25X = seedToXPosition(team.seed_q25);
-            const medianX = seedToXPosition(team.seed_median);
-            const q75X = seedToXPosition(team.seed_q75);
-            const maxX = seedToXPosition(team.seed_max);
+                  {/* Median line */}
+                  <line
+                    x1={adjustedMedianPos}
+                    y1={yPos - boxHeight / 2}
+                    x2={adjustedMedianPos}
+                    y2={yPos + boxHeight / 2}
+                    stroke={whiskerStrokeColor}
+                    strokeWidth={isMobile ? 2 : 2.5}
+                  />
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
 
-            if (minX === null || maxX === null) return null;
+      {/* Sticky bottom axis - inside scrollable container */}
+      <div
+        style={{
+          display: "flex",
+          overflowX: isMobile ? "hidden" : "auto",
+          backgroundColor: "white",
+          borderTop: "1px solid #dee2e6",
+          scrollbarGutter: "stable",
+        }}
+      >
+        {/* Fixed left placeholder on mobile */}
+        {isMobile && <div style={{ width: chartPaddingLeft, flexShrink: 0 }} />}
 
-            const q25Pos = q25X ?? minX;
-            const medianPos = medianX ?? minX;
-            const q75Pos = q75X ?? maxX;
-
-            return (
-              <g key={`box-whisker-${team.team_id}`} opacity={0.85}>
-                {/* Whisker line (min to max) */}
-                <line
-                  x1={minX}
-                  y1={yPos}
-                  x2={maxX}
-                  y2={yPos}
-                  stroke={whiskerStrokeColor}
-                  strokeWidth={isMobile ? 1.5 : 2}
-                />
-
-                {/* Left whisker cap */}
-                <line
-                  x1={minX}
-                  y1={yPos - boxHeight / 3}
-                  x2={minX}
-                  y2={yPos + boxHeight / 3}
-                  stroke={whiskerStrokeColor}
-                  strokeWidth={isMobile ? 1.5 : 2}
-                />
-
-                {/* Right whisker cap */}
-                <line
-                  x1={maxX}
-                  y1={yPos - boxHeight / 3}
-                  x2={maxX}
-                  y2={yPos + boxHeight / 3}
-                  stroke={whiskerStrokeColor}
-                  strokeWidth={isMobile ? 1.5 : 2}
-                />
-
-                {/* Box (Q1 to Q3) */}
-                <rect
-                  x={Math.min(q25Pos, q75Pos)}
-                  y={yPos - boxHeight / 2}
-                  width={Math.max(Math.abs(q75Pos - q25Pos), 2)}
-                  height={boxHeight}
-                  fill={boxFillColor}
-                  stroke={whiskerStrokeColor}
-                  strokeWidth={isMobile ? 1 : 1.5}
-                />
-
-                {/* Median line */}
-                <line
-                  x1={medianPos}
-                  y1={yPos - boxHeight / 2}
-                  x2={medianPos}
-                  y2={yPos + boxHeight / 2}
-                  stroke={whiskerStrokeColor}
-                  strokeWidth={isMobile ? 2 : 2.5}
-                />
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Sticky bottom axis - inside scrollable container */}
+        {/* Scrollable axis area */}
         <svg
-          width={width}
+          width={isMobile ? chartWidth + chartPadding.right : width}
           height={isMobile ? 80 : 100}
           style={{
             display: "block",
             backgroundColor: "white",
-            borderTop: "1px solid #dee2e6",
-            position: "sticky",
-            bottom: 0,
-            zIndex: 10,
+            flex: isMobile ? 1 : "none",
           }}
         >
           {/* X-axis line */}
           <line
-            x1={chartPadding.left}
+            x1={isMobile ? 0 : chartPadding.left}
             y1={10}
-            x2={chartPadding.left + chartWidth}
+            x2={
+              isMobile
+                ? chartWidth + chartPadding.right
+                : chartPadding.left + chartWidth
+            }
             y2={10}
             stroke="#333"
             strokeWidth={2}
@@ -391,7 +490,8 @@ export default function BballSeedCeilingFloor({
 
           {/* X-axis labels and ticks */}
           {xAxisLabels.map((label: string, index: number) => {
-            const xPos = chartPadding.left + (index + 0.5) * xScale;
+            const xPos =
+              (isMobile ? 0 : chartPadding.left) + (index + 0.5) * xScale;
             const isSpecialLabel = ["F4O", "N4O", "Out"].includes(label);
 
             return (
@@ -420,7 +520,7 @@ export default function BballSeedCeilingFloor({
 
           {/* Label: "Projected Seed/Tournament Status" */}
           <text
-            x={chartPadding.left + chartWidth / 2}
+            x={(isMobile ? chartWidth : chartWidth + chartPadding.left) / 2}
             y={isMobile ? 70 : 95}
             textAnchor="middle"
             fontSize={isMobile ? 11 : 12}
