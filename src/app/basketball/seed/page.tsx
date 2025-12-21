@@ -195,7 +195,7 @@ export default function SeedPage() {
                 {seedResponse?.data && seedResponse.data.length > 0 && (
                   <div className="mb-8 mt-12">
                     <h1 className="text-xl font-normal text-gray-500 mb-4">
-                      Tournament Seeding Ceiling
+                      Tournament Seeding Ceiling/Floor
                     </h1>
                     <div className="bball-ceiling-chart">
                       <Suspense
@@ -224,8 +224,8 @@ export default function SeedPage() {
                             selectedConference={selectedConference}
                             contentSelector=".bball-ceiling-chart"
                             pageName="bball-ceiling"
-                            pageTitle="Tournament Seeding Ceiling"
-                            shareTitle="Tournament Seeding Ceiling Projections"
+                            pageTitle="Tournament Seeding Ceiling/Floor"
+                            shareTitle="Tournament Seeding Ceiling/Floor Projections"
                           />
                         </div>
                       </div>
@@ -257,8 +257,9 @@ export default function SeedPage() {
                         <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                           <div style={{ lineHeight: "1.3" }}>
                             <div>
-                              Seed ceiling and floor based on 1,000 simulations
-                              using composite ratings.
+                              Seed ceiling and floor based on 1,000 season
+                              simulations using composite ratings from kenpom,
+                              barttorvik and evanmiya.
                             </div>
                             <div style={{ marginTop: "6px" }}>
                               Box shows 25th-75th percentile range, whiskers

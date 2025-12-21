@@ -1,7 +1,7 @@
 "use client";
 
 import type { SeedTeam } from "@/types/basketball";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface BballSeedCeilingFloorProps {
   seedData: SeedTeam[];
@@ -104,6 +104,15 @@ export default function BballSeedCeilingFloor({
   seedData,
   maxHeight = 700,
 }: BballSeedCeilingFloorProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const xAxisLabels: string[] = [
     "1",
     "2",
@@ -132,31 +141,32 @@ export default function BballSeedCeilingFloor({
     );
   }, [seedData]);
 
-  // Increased heights for better visibility
-  const teamRowHeight = 32;
+  // Mobile: smaller sizing, desktop: original sizing
+  const teamRowHeight = isMobile ? 24 : 32;
+  const logoSize = isMobile ? 20 : 28;
+  const pieChartRadius = isMobile ? 7 : 10;
+  const logoPieGap = 6;
+
   const totalTeamHeight = sortedTeams.length * teamRowHeight;
-  // Calculate dynamic height: content only (sticky axis is positioned separately)
   const contentHeight = totalTeamHeight + 20;
 
-  // Adjusted padding - left increased to accommodate larger logo and pie chart
-  const chartPaddingLeft = 80;
+  // Reduce left padding on mobile
+  const chartPaddingLeft = isMobile ? 60 : 80;
   const chartPadding = {
     top: 10,
-    right: 100,
-    bottom: 80,
+    right: isMobile ? 40 : 100,
+    bottom: 100,
     left: chartPaddingLeft,
   };
-  const chartWidth = 1200;
+
+  // Mobile: narrower chart, desktop: wider chart
+  const chartWidth = isMobile ? 700 : 1200;
   const width = chartWidth + chartPadding.left + chartPadding.right;
 
   const xScale = chartWidth / xAxisLabels.length;
 
-  // Logo and pie chart sizing
-  const logoSize = 28;
-  const logoPieGap = 8;
-  const pieChartRadius = 10;
-  // Position logo and pie chart on the left side, aligned with title
-  const logoX = 10;
+  // Position logo and pie chart on the left side
+  const logoX = isMobile ? 5 : 10;
   const pieCenterX = logoX + logoSize + logoPieGap + pieChartRadius;
 
   const seedToXPosition = (
@@ -198,11 +208,13 @@ export default function BballSeedCeilingFloor({
       {/* Main chart container with scrollable content */}
       <div
         style={{
-          overflowY: sortedTeams.length > 20 ? "auto" : "visible",
-          overflowX: "visible",
+          overflowY:
+            sortedTeams.length > (isMobile ? 12 : 20) ? "auto" : "visible",
+          overflowX: "auto",
           maxHeight: maxHeight,
           width: "100%",
           backgroundColor: "white",
+          scrollbarGutter: "stable",
         }}
       >
         <svg
@@ -211,6 +223,7 @@ export default function BballSeedCeilingFloor({
           style={{
             display: "block",
             backgroundColor: "white",
+            minWidth: "100%",
           }}
         >
           {/* X-axis */}
@@ -233,15 +246,13 @@ export default function BballSeedCeilingFloor({
             strokeWidth={2}
           />
 
-          {/* X-axis labels and ticks - REMOVED, now in sticky axis below */}
-
           {/* Y-axis: team logos and pie charts */}
           {sortedTeams.map((team, index) => {
             const yPos = getYPosition(index);
 
             return (
               <g key={`team-label-${team.team_id}`}>
-                {/* Team logo - larger size, aligned left */}
+                {/* Team logo */}
                 {team.logo_url && (
                   <image
                     href={team.logo_url}
@@ -252,7 +263,7 @@ export default function BballSeedCeilingFloor({
                   />
                 )}
 
-                {/* Tournament bid pie chart - next to logo */}
+                {/* Tournament bid pie chart */}
                 {team.tournament_bid_pct !== undefined && (
                   <PieChart
                     cx={pieCenterX}
@@ -284,7 +295,7 @@ export default function BballSeedCeilingFloor({
               whiskerStrokeColor = "#000000";
             }
 
-            const boxHeight = 14;
+            const boxHeight = isMobile ? 10 : 14;
 
             const minX = seedToXPosition(team.seed_min);
             const q25X = seedToXPosition(team.seed_q25);
@@ -307,7 +318,7 @@ export default function BballSeedCeilingFloor({
                   x2={maxX}
                   y2={yPos}
                   stroke={whiskerStrokeColor}
-                  strokeWidth={2}
+                  strokeWidth={isMobile ? 1.5 : 2}
                 />
 
                 {/* Left whisker cap */}
@@ -317,7 +328,7 @@ export default function BballSeedCeilingFloor({
                   x2={minX}
                   y2={yPos + boxHeight / 3}
                   stroke={whiskerStrokeColor}
-                  strokeWidth={2}
+                  strokeWidth={isMobile ? 1.5 : 2}
                 />
 
                 {/* Right whisker cap */}
@@ -327,10 +338,10 @@ export default function BballSeedCeilingFloor({
                   x2={maxX}
                   y2={yPos + boxHeight / 3}
                   stroke={whiskerStrokeColor}
-                  strokeWidth={2}
+                  strokeWidth={isMobile ? 1.5 : 2}
                 />
 
-                {/* Box (Q1 to Q3) - flipped: fill with primary, stroke with secondary */}
+                {/* Box (Q1 to Q3) */}
                 <rect
                   x={Math.min(q25Pos, q75Pos)}
                   y={yPos - boxHeight / 2}
@@ -338,7 +349,7 @@ export default function BballSeedCeilingFloor({
                   height={boxHeight}
                   fill={boxFillColor}
                   stroke={whiskerStrokeColor}
-                  strokeWidth={1.5}
+                  strokeWidth={isMobile ? 1 : 1.5}
                 />
 
                 {/* Median line */}
@@ -348,17 +359,17 @@ export default function BballSeedCeilingFloor({
                   x2={medianPos}
                   y2={yPos + boxHeight / 2}
                   stroke={whiskerStrokeColor}
-                  strokeWidth={2.5}
+                  strokeWidth={isMobile ? 2 : 2.5}
                 />
               </g>
             );
           })}
         </svg>
 
-        {/* Single sticky bottom axis - inside scrollable container */}
+        {/* Sticky bottom axis - inside scrollable container */}
         <svg
           width={width}
-          height={100}
+          height={isMobile ? 80 : 100}
           style={{
             display: "block",
             backgroundColor: "white",
@@ -395,9 +406,9 @@ export default function BballSeedCeilingFloor({
                 />
                 <text
                   x={xPos}
-                  y={50}
+                  y={isMobile ? 40 : 50}
                   textAnchor="middle"
-                  fontSize={11}
+                  fontSize={isMobile ? 9 : 11}
                   fill="#333"
                   fontWeight={isSpecialLabel ? "600" : "normal"}
                 >
@@ -410,9 +421,9 @@ export default function BballSeedCeilingFloor({
           {/* Label: "Projected Seed/Tournament Status" */}
           <text
             x={chartPadding.left + chartWidth / 2}
-            y={95}
+            y={isMobile ? 70 : 95}
             textAnchor="middle"
-            fontSize={12}
+            fontSize={isMobile ? 11 : 12}
             fill="#6b7280"
             fontWeight="500"
           >
@@ -420,26 +431,30 @@ export default function BballSeedCeilingFloor({
           </text>
 
           {/* Label: "In Tourney Probability" - positioned above pie chart area */}
-          <text
-            x={pieCenterX}
-            y={70}
-            textAnchor="middle"
-            fontSize={12}
-            fill="#6b7280"
-            fontWeight="500"
-          >
-            In Tourney
-          </text>
-          <text
-            x={pieCenterX}
-            y={85}
-            textAnchor="middle"
-            fontSize={12}
-            fill="#6b7280"
-            fontWeight="500"
-          >
-            Probability
-          </text>
+          {!isMobile && (
+            <>
+              <text
+                x={pieCenterX}
+                y={70}
+                textAnchor="middle"
+                fontSize={12}
+                fill="#6b7280"
+                fontWeight="500"
+              >
+                In Tourney
+              </text>
+              <text
+                x={pieCenterX}
+                y={85}
+                textAnchor="middle"
+                fontSize={12}
+                fill="#6b7280"
+                fontWeight="500"
+              >
+                Probability
+              </text>
+            </>
+          )}
         </svg>
       </div>
     </div>
