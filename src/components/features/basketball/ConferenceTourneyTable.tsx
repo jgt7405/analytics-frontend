@@ -38,16 +38,19 @@ function ConferenceTourneyTable({
     router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
   };
 
-  const roundOrder = [
-    "First_Round",
-    "Second_Round",
-    "Third_Round",
-    "Fourth_Round",
-    "Quarterfinals",
-    "Semifinals",
-    "Finals",
-    "Champion",
-  ];
+  const roundOrder = useMemo(
+    () => [
+      "First_Round",
+      "Second_Round",
+      "Third_Round",
+      "Fourth_Round",
+      "Quarterfinals",
+      "Semifinals",
+      "Finals",
+      "Champion",
+    ],
+    []
+  );
 
   const fieldToLabel: Record<string, string> = {
     First_Round: "First\nRound",
@@ -63,24 +66,28 @@ function ConferenceTourneyTable({
   const activeRounds = useMemo(() => {
     return roundOrder.filter((round) =>
       tourneyData.some(
-        (team) => (team as any)[round] && (team as any)[round] > 0
+        (team) =>
+          (team[round as keyof TourneyTeam] as number | undefined) &&
+          (team[round as keyof TourneyTeam] as number | undefined)! > 0
       )
     );
-  }, [tourneyData]);
+  }, [tourneyData, roundOrder]);
 
   const sortedTeams = useMemo(() => {
     return [...tourneyData].sort((a, b) => {
       const reverseRounds = [...roundOrder].reverse();
       for (const round of reverseRounds) {
         if (activeRounds.includes(round)) {
-          const aVal = (a as any)[round] || 0;
-          const bVal = (b as any)[round] || 0;
+          const aVal =
+            (a[round as keyof TourneyTeam] as number | undefined) || 0;
+          const bVal =
+            (b[round as keyof TourneyTeam] as number | undefined) || 0;
           if (aVal !== bVal) return bVal - aVal;
         }
       }
       return 0;
     });
-  }, [tourneyData, activeRounds]);
+  }, [tourneyData, activeRounds, roundOrder]);
 
   const firstColWidth = isMobile ? 120 : 180;
   const roundColWidth = isMobile ? 55 : 70; // Increased width for wrapped labels
@@ -179,7 +186,8 @@ function ConferenceTourneyTable({
                 </div>
               </td>
               {activeRounds.map((round) => {
-                const value = (team as any)[round] || 0;
+                const value =
+                  (team[round as keyof TourneyTeam] as number | undefined) || 0;
                 const colorStyle = getCellColor(value);
 
                 return (

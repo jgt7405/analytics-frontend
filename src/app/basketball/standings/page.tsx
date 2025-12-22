@@ -4,6 +4,7 @@ import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
 import BballFirstPlaceHistoryChart from "@/components/features/basketball/BballFirstPlaceHistoryChart";
 import BballStandingsHistoryChart from "@/components/features/basketball/BballStandingsHistoryChart";
+import BballStandingsProgressionTable from "@/components/features/basketball/BballStandingsProgressionTable";
 import StandingsTable from "@/components/features/basketball/StandingsTable";
 import StandingsTableNoTies from "@/components/features/basketball/StandingsTableNoTies";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
@@ -438,6 +439,40 @@ export default function StandingsPage() {
                               pageName="first-place-history"
                               pageTitle="First Place Probability History Over Time"
                               shareTitle="First Place Probability History"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ErrorBoundary>
+
+                  {/* Standings Progression Table */}
+                  <ErrorBoundary level="component">
+                    <div className="mb-8">
+                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                        Projected Conference Standings Progression{" "}
+                      </h1>
+                      <div className="standings-progression-table">
+                        <BballStandingsProgressionTable
+                          timelineData={historyData.timeline_data}
+                          conferenceSize={standingsResponse?.data?.length || 12}
+                        />
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex flex-row items-start gap-4">
+                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                            <div style={{ lineHeight: "1.3" }}></div>
+                          </div>
+                          <div
+                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
+                          >
+                            <TableActionButtons
+                              selectedConference={selectedConference}
+                              contentSelector=".standings-progression-table"
+                              pageName="standings-progression"
+                              pageTitle="Standings Progression Timeline View"
+                              shareTitle="Standings Progression"
                             />
                           </div>
                         </div>
