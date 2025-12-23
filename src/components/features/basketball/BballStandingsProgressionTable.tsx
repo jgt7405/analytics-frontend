@@ -50,13 +50,6 @@ export default function BballStandingsProgressionTable({
     const dates: string[] = [];
     const dateSet = new Set<string>();
 
-    // Always start with 11/1/2025
-    const nov1 = "2025-11-01";
-    if (allDates.includes(nov1)) {
-      dates.push(nov1);
-      dateSet.add(nov1);
-    }
-
     // Add 1st and 15th of each month
     const monthMap = new Map<string, { first?: string; fifteenth?: string }>();
     for (const dateStr of allDates) {
