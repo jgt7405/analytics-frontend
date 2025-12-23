@@ -409,13 +409,17 @@ export default function TeamSeedProjections({
       }
     );
 
-    Object.entries(totalRow.rawCounts.bidCategoryDistribution).forEach(
-      ([category, count]) => {
-        totalRow.bidCategoryDistribution[
-          category as keyof BidCategoryDistribution
-        ] = grandTotal > 0 ? (count / grandTotal) * 100 : 0;
-      }
-    );
+    // Calculate bid category percentages based only on tournament appearances
+    const totalAutoBidCount =
+      totalRow.rawCounts.bidCategoryDistribution["Auto Bid"];
+    const totalAtLargeCount =
+      totalRow.rawCounts.bidCategoryDistribution["At Large"];
+    const totalBidCount = totalAutoBidCount + totalAtLargeCount;
+
+    totalRow.bidCategoryDistribution["Auto Bid"] =
+      totalBidCount > 0 ? (totalAutoBidCount / totalBidCount) * 100 : 0;
+    totalRow.bidCategoryDistribution["At Large"] =
+      totalBidCount > 0 ? (totalAtLargeCount / totalBidCount) * 100 : 0;
 
     return { winData, winTotals, seeds, totalRow, hasNumericSeeds, grandTotal };
   };
