@@ -432,7 +432,7 @@ function SeedTable({
               >
                 Wgtd Avg{"\n"}Seed
                 {sortColumn === "average_seed" && (
-                  <div className="text-blue-600 text-xs mt-1">â–²</div>
+                  <div className="text-blue-600 text-xs mt-1">▲</div>
                 )}
               </th>
 
@@ -459,7 +459,7 @@ function SeedTable({
                 >
                   {seed}
                   {sortColumn === seed.toString() && (
-                    <div className="text-blue-600 text-xs mt-1">â–¼</div>
+                    <div className="text-blue-600 text-xs mt-1">▼</div>
                   )}
                 </th>
               ))}
@@ -488,7 +488,7 @@ function SeedTable({
               >
                 {getCompactHeader("In Tourney")}
                 {sortColumn === "tournament_bid_pct" && (
-                  <div className="text-blue-600 text-xs mt-1">â–¼</div>
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
               </th>
 
@@ -516,7 +516,7 @@ function SeedTable({
               >
                 {getCompactHeader("First Four Out")}
                 {sortColumn === "first_four_out" && (
-                  <div className="text-blue-600 text-xs mt-1">â–¼</div>
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
               </th>
 
@@ -544,7 +544,7 @@ function SeedTable({
               >
                 {getCompactHeader("Next Four Out")}
                 {sortColumn === "next_four_out" && (
-                  <div className="text-blue-600 text-xs mt-1">â–¼</div>
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
               </th>
 
@@ -572,7 +572,7 @@ function SeedTable({
               >
                 {getCompactHeader("Out of Tourney")}
                 {sortColumn === "out_of_tourney" && (
-                  <div className="text-blue-600 text-xs mt-1">â–¼</div>
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
               </th>
 
@@ -600,7 +600,7 @@ function SeedTable({
               >
                 {getCompactHeader("Auto Bid")}
                 {sortColumn === "auto_bid_overall_pct" && (
-                  <div className="text-blue-600 text-xs mt-1">â–¼</div>
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
               </th>
 
@@ -628,7 +628,7 @@ function SeedTable({
               >
                 {getCompactHeader("At Large")}
                 {sortColumn === "at_large_overall_pct" && (
-                  <div className="text-blue-600 text-xs mt-1">â–¼</div>
+                  <div className="text-blue-600 text-xs mt-1">▼</div>
                 )}
               </th>
             </tr>
