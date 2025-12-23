@@ -85,13 +85,13 @@ export default function BballStandingsProgressionTable({
     // Sort the collected dates
     dates.sort();
 
-    // Always add last date if not already included
+    // Always add last date from data if not already included
     const lastDate = allDates[allDates.length - 1];
-    if (!dateSet.has(lastDate)) {
+    if (lastDate && !dateSet.has(lastDate)) {
       dates.push(lastDate);
     }
 
-    return dates.map((dateStr) => new Date(dateStr));
+    return dates;
   }, [timelineData]);
 
   // Build data lookup: date -> sorted teams by standing
@@ -168,15 +168,15 @@ export default function BballStandingsProgressionTable({
   }, [timelineData]);
 
   // Format date for display
-  const formatDateDisplay = (date: Date) => {
-    const m = date.getMonth() + 1;
-    const d = date.getDate();
+  const formatDateDisplay = (dateStr: string) => {
+    const [year, month, day] = dateStr.split("-");
+    const m = parseInt(month, 10);
+    const d = parseInt(day, 10);
     return `${m}/${d}`;
   };
 
   // Get teams for a specific date
-  const getTeamsForDate = (targetDate: Date): TeamDateData[] => {
-    const dateStr = targetDate.toISOString().split("T")[0];
+  const getTeamsForDate = (dateStr: string): TeamDateData[] => {
     return dateTeamsLookup.get(dateStr) || [];
   };
 
@@ -259,12 +259,12 @@ export default function BballStandingsProgressionTable({
 
           {/* Data columns */}
           <div className="flex gap-0">
-            {selectedDates.map((date) => {
-              const teams = getTeamsForDate(date);
+            {selectedDates.map((dateStr) => {
+              const teams = getTeamsForDate(dateStr);
 
               return (
                 <div
-                  key={`column-${date.toISOString()}`}
+                  key={`column-${dateStr}`}
                   className="flex flex-col flex-shrink-0"
                 >
                   {/* Column header with date */}
@@ -278,7 +278,7 @@ export default function BballStandingsProgressionTable({
                       borderTop: `1px solid ${borderColor}`,
                     }}
                   >
-                    {formatDateDisplay(date)}
+                    {formatDateDisplay(dateStr)}
                   </div>
 
                   {/* Position cells with team logos only */}
@@ -288,7 +288,7 @@ export default function BballStandingsProgressionTable({
 
                     return (
                       <div
-                        key={`${date.toISOString()}-pos-${position}`}
+                        key={`${dateStr}-pos-${position}`}
                         className="flex items-center justify-center bg-white hover:bg-gray-50 transition-colors"
                         style={{
                           width: `${cellWidth}px`,
@@ -344,8 +344,9 @@ export default function BballStandingsProgressionTable({
       {/* Info text */}
       <div className="p-4 text-xs text-gray-600 border-t border-gray-200">
         <p>
-          Team logos show projected conference standings for that date, ordered
-          from best (1) to worst ({conferenceSize}).
+          Team logos show projected standing for that date, ordered from best
+          (1) to worst ({conferenceSize}). Dates shown: 11/1, first of each
+          month with data, and current date.
         </p>
       </div>
 
