@@ -150,6 +150,11 @@ export default function BballCeiling({
 }: BballCeilingProps) {
   void _maxHeight;
 
+  // Debug logging
+  useEffect(() => {
+    console.log("📊 BballCeiling rendered - displaying component");
+  }, []);
+
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -159,12 +164,21 @@ export default function BballCeiling({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const logoSize = isMobile ? 28 : 32;
-  const gapBetweenLogos = 4;
-  const seedLabelWidth = isMobile ? 40 : 45;
-  const paddingHorizontal = isMobile ? 10 : 12;
-  const minLogosPerRow = isMobile ? 4 : 4;
+  // Logo and layout sizing - reduced overall width
+  const logoSize = isMobile ? 24 : 28;
+  const gapBetweenLogos = 2;
+  const seedLabelWidth = isMobile ? 35 : 40;
+  const paddingHorizontal = isMobile ? 4 : 6;
+  const maxLogosPerRow = 6;
   const baseRowHeight = logoSize + 6;
+
+  // Calculate width based on 6 logos per row - compact sizing
+  const seedColumnWidth =
+    seedLabelWidth +
+    paddingHorizontal * 2 +
+    6 * logoSize +
+    5 * gapBetweenLogos +
+    5;
 
   // Create grouped data for ceiling (using seed_min)
   const teamsBySeedCeiling = useMemo(() => {
@@ -173,6 +187,10 @@ export default function BballCeiling({
     seedLabels.forEach((label) => {
       grouped[label] = [];
     });
+
+    if (!seedData || seedData.length === 0) {
+      return grouped;
+    }
 
     seedData.forEach((team) => {
       const seedMin = team.seed_min;
@@ -223,6 +241,10 @@ export default function BballCeiling({
       grouped[label] = [];
     });
 
+    if (!seedData || seedData.length === 0) {
+      return grouped;
+    }
+
     seedData.forEach((team) => {
       const seedMax = team.seed_max;
       const seedNum = seedToNumeric(seedMax);
@@ -268,7 +290,7 @@ export default function BballCeiling({
   const rowHeightsBySeed = useMemo(() => {
     const calculateRowsNeeded = (teamCount: number) => {
       if (teamCount === 0) return 1;
-      return Math.ceil(teamCount / minLogosPerRow);
+      return Math.ceil(teamCount / maxLogosPerRow);
     };
 
     const getRowHeight = (teamCount: number) => {
@@ -296,7 +318,7 @@ export default function BballCeiling({
     logoSize,
     gapBetweenLogos,
     baseRowHeight,
-    minLogosPerRow,
+    maxLogosPerRow,
   ]);
 
   const renderTeamRow = (
@@ -326,7 +348,7 @@ export default function BballCeiling({
           style={{
             display: "flex",
             flexDirection: "row",
-            alignItems: "flex-start",
+            alignItems: "center",
             gap: gapBetweenLogos,
             paddingLeft: paddingHorizontal,
             paddingRight: paddingHorizontal,
@@ -342,11 +364,15 @@ export default function BballCeiling({
               width: seedLabelWidth,
               flexShrink: 0,
               fontSize: isMobile ? "12px" : "13px",
-              fontWeight: "600",
+              fontWeight: "400",
               color: "#374151",
-              textAlign: "left",
+              textAlign: "center",
               paddingTop: 2,
               boxSizing: "border-box",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
             }}
           >
             {seedLabelDisplay}
@@ -356,33 +382,18 @@ export default function BballCeiling({
             style={{
               display: "flex",
               flexDirection: "row",
-              alignItems: "flex-start",
+              alignItems: "center",
               gap: gapBetweenLogos,
               flexWrap: "wrap",
               boxSizing: "border-box",
               flex: 1,
               minWidth: 0,
+              maxWidth: 6 * logoSize + 5 * gapBetweenLogos,
+              alignContent: "center",
             }}
           >
             {ceilingTeams.map((team) => (
-              <div
-                key={`team-${team.team_id}`}
-                style={{
-                  position: "relative",
-                  width: logoSize,
-                  height: logoSize,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "4px",
-                  overflow: "hidden",
-                  backgroundColor: "#f3f4f6",
-                  border: "1px solid #e5e7eb",
-                  flexShrink: 0,
-                  boxSizing: "border-box",
-                }}
-                title={`${team.team_name} - ${(team.tournament_bid_pct || 0).toFixed(1)}% tournament bid`}
-              >
+              <div key={`team-${team.team_id}`}>
                 {team.logo_url && (
                   <Image
                     src={team.logo_url}
@@ -390,11 +401,11 @@ export default function BballCeiling({
                     width={logoSize}
                     height={logoSize}
                     style={{
-                      width: "100%",
-                      height: "100%",
+                      width: logoSize,
+                      height: logoSize,
                       objectFit: "contain",
-                      padding: "2px",
                     }}
+                    title={`${team.team_name} - ${(team.tournament_bid_pct || 0).toFixed(1)}% tournament bid`}
                   />
                 )}
               </div>
@@ -418,7 +429,7 @@ export default function BballCeiling({
           style={{
             display: "flex",
             flexDirection: "row",
-            alignItems: "flex-start",
+            alignItems: "center",
             gap: gapBetweenLogos,
             paddingLeft: paddingHorizontal,
             paddingRight: paddingHorizontal,
@@ -434,11 +445,15 @@ export default function BballCeiling({
               width: seedLabelWidth,
               flexShrink: 0,
               fontSize: isMobile ? "12px" : "13px",
-              fontWeight: "600",
+              fontWeight: "400",
               color: "#374151",
-              textAlign: "left",
+              textAlign: "center",
               paddingTop: 2,
               boxSizing: "border-box",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
             }}
           >
             {seedLabelDisplay}
@@ -448,33 +463,18 @@ export default function BballCeiling({
             style={{
               display: "flex",
               flexDirection: "row",
-              alignItems: "flex-start",
+              alignItems: "center",
               gap: gapBetweenLogos,
               flexWrap: "wrap",
               boxSizing: "border-box",
               flex: 1,
               minWidth: 0,
+              maxWidth: 6 * logoSize + 5 * gapBetweenLogos,
+              alignContent: "center",
             }}
           >
             {floorTeams.map((team) => (
-              <div
-                key={`team-${team.team_id}`}
-                style={{
-                  position: "relative",
-                  width: logoSize,
-                  height: logoSize,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "4px",
-                  overflow: "hidden",
-                  backgroundColor: "#f3f4f6",
-                  border: "1px solid #e5e7eb",
-                  flexShrink: 0,
-                  boxSizing: "border-box",
-                }}
-                title={`${team.team_name} - ${(team.tournament_bid_pct || 0).toFixed(1)}% tournament bid`}
-              >
+              <div key={`team-${team.team_id}`}>
                 {team.logo_url && (
                   <Image
                     src={team.logo_url}
@@ -482,11 +482,11 @@ export default function BballCeiling({
                     width={logoSize}
                     height={logoSize}
                     style={{
-                      width: "100%",
-                      height: "100%",
+                      width: logoSize,
+                      height: logoSize,
                       objectFit: "contain",
-                      padding: "2px",
                     }}
+                    title={`${team.team_name} - ${(team.tournament_bid_pct || 0).toFixed(1)}% tournament bid`}
                   />
                 )}
               </div>
@@ -503,7 +503,7 @@ export default function BballCeiling({
       style={{
         display: "flex",
         flexDirection: "column",
-        width: "100%",
+        width: "fit-content",
         height: "100%",
         boxSizing: "border-box",
       }}
@@ -512,8 +512,8 @@ export default function BballCeiling({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1px 1fr",
-          width: "100%",
+          gridTemplateColumns: `${seedColumnWidth}px 1px ${seedColumnWidth}px`,
+          width: "fit-content",
           paddingLeft: paddingHorizontal,
           paddingRight: paddingHorizontal,
           paddingTop: 12,
@@ -528,6 +528,10 @@ export default function BballCeiling({
             fontSize: isMobile ? "12px" : "14px",
             fontWeight: "400",
             color: "#374151",
+            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           Ceiling
@@ -538,6 +542,10 @@ export default function BballCeiling({
             fontSize: isMobile ? "12px" : "14px",
             fontWeight: "400",
             color: "#374151",
+            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           Floor
@@ -548,8 +556,8 @@ export default function BballCeiling({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1px 1fr",
-          width: "100%",
+          gridTemplateColumns: `${seedColumnWidth}px 1px ${seedColumnWidth}px`,
+          width: "fit-content",
           flex: 1,
           boxSizing: "border-box",
           overflow: "auto",
@@ -586,11 +594,7 @@ export default function BballCeiling({
           Floor: Teams with that seed or better in at least 95% of 1,000 full
           season simulations.
         </div>
-        <div>
-          Simulations use actual results to date + probabilities for future
-          games based on composite ratings from kenpom, barttorvik and evanmiya.
-          F4O = First Four Out; N4O = Next 4 Out.
-        </div>
+        <div>F4O = First Four Out; N4O = Next 4 Out.</div>
       </div>
     </div>
   );

@@ -107,28 +107,10 @@ export default function TableActionButtons({
       // Check chart type and calculate width
       const isLineChart = targetElement.querySelector("canvas") !== null;
       const table = targetElement.querySelector("table");
-      const isProgressionTable =
-        contentSelector.includes("standings-progression") ||
-        contentSelector.includes("progression-table");
       let actualWidth;
 
       if (table) {
         actualWidth = (table as HTMLElement).offsetWidth + 200;
-      } else if (isProgressionTable) {
-        // For standings progression tables, count date columns not team logos
-        // Count actual date header text matching M/D or MM/DD format
-        const dateHeaders = targetElement.querySelectorAll(
-          '[class*="text-center"][class*="text-sm"]'
-        );
-        let dateCount = 0;
-        dateHeaders.forEach((header) => {
-          const text = header.textContent?.trim();
-          if (text && /^\d{1,2}\/\d{1,2}$/.test(text)) {
-            dateCount++;
-          }
-        });
-        if (dateCount === 0) dateCount = 8;
-        actualWidth = 250 + dateCount * 90;
       } else if (isLineChart) {
         // Distinguish line charts from box plots
         const isLineChartSpecific =
@@ -137,6 +119,9 @@ export default function TableActionButtons({
           pageTitle?.includes("History") ||
           pageTitle?.includes("Over Time");
         actualWidth = isLineChartSpecific ? 1475 : 800;
+      } else if (contentSelector.includes("ceiling")) {
+        // For ceiling/floor chart, use actual component width with minimal buffer
+        actualWidth = (targetElement as HTMLElement).offsetWidth + 20;
       } else {
         const teamLogos1 = targetElement.querySelectorAll(
           'img[src*="team_logos"]'
@@ -220,7 +205,7 @@ export default function TableActionButtons({
         left: -9999px;
         top: 0;
         background-color: white;
-        padding: 24px 50px;
+        padding: 12px 20px;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
         width: ${actualWidth}px;
         z-index: -1;
@@ -228,7 +213,8 @@ export default function TableActionButtons({
       `;
 
       // Header with proper width alignment
-      const contentWidth = actualWidth - 100;
+      // contentWidth = actualWidth minus left padding minus right padding
+      const contentWidth = actualWidth - 40;
       const header = document.createElement("div");
       header.style.cssText = `
         display: flex;
@@ -320,12 +306,18 @@ export default function TableActionButtons({
           line-height: 1.3;
           width: ${contentWidth}px;
           margin-left: 0;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+          white-space: normal !important;
+          overflow: visible !important;
         `;
         wrapper.appendChild(explainerClone);
       }
 
       document.body.appendChild(wrapper);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("⏳ Taking screenshot of component as displayed...");
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log("✅ Screenshot captured");
 
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
