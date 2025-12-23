@@ -169,7 +169,7 @@ export default function BballStandingsProgressionTable({
 
   // Format date for display
   const formatDateDisplay = (dateStr: string) => {
-    const [year, month, day] = dateStr.split("-");
+    const [, month, day] = dateStr.split("-");
     const m = parseInt(month, 10);
     const d = parseInt(day, 10);
     return `${m}/${d}`;
