@@ -53,20 +53,19 @@ export default function BballStandingsProgressionTable({
     // Add 1st and 15th of each month
     const monthMap = new Map<string, { first?: string; fifteenth?: string }>();
     for (const dateStr of allDates) {
-      const date = new Date(dateStr);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const key = `${year}-${month}`;
+      // Parse YYYY-MM-DD string directly without Date object to avoid timezone issues
+      const parts = dateStr.split("-");
+      const day = parseInt(parts[2], 10);
+      const monthKey = `${parts[0]}-${parts[1]}`;
 
-      if (!monthMap.has(key)) {
-        monthMap.set(key, {});
+      if (!monthMap.has(monthKey)) {
+        monthMap.set(monthKey, {});
       }
 
-      const day = date.getDate();
-      if (day === 1 && !monthMap.get(key)!.first) {
-        monthMap.get(key)!.first = dateStr;
-      } else if (day === 15 && !monthMap.get(key)!.fifteenth) {
-        monthMap.get(key)!.fifteenth = dateStr;
+      if (day === 1 && !monthMap.get(monthKey)!.first) {
+        monthMap.get(monthKey)!.first = dateStr;
+      } else if (day === 15 && !monthMap.get(monthKey)!.fifteenth) {
+        monthMap.get(monthKey)!.fifteenth = dateStr;
       }
     }
 
@@ -169,6 +168,7 @@ export default function BballStandingsProgressionTable({
 
   // Format date for display
   const formatDateDisplay = (dateStr: string) => {
+    // dateStr is already YYYY-MM-DD from the data
     const [, month, day] = dateStr.split("-");
     const m = parseInt(month, 10);
     const d = parseInt(day, 10);
@@ -177,6 +177,7 @@ export default function BballStandingsProgressionTable({
 
   // Get teams for a specific date
   const getTeamsForDate = (dateStr: string): TeamDateData[] => {
+    // dateStr is the exact YYYY-MM-DD string from the data
     return dateTeamsLookup.get(dateStr) || [];
   };
 
@@ -229,8 +230,11 @@ export default function BballStandingsProgressionTable({
   return (
     <div className="bg-white rounded-lg border border-gray-200">
       {/* Chart */}
-      <div className="overflow-x-auto p-4">
-        <div className="flex" style={{ minWidth: "max-content" }}>
+      <div className="overflow-x-auto p-4 w-full">
+        <div
+          className="flex"
+          style={{ minWidth: "max-content", maxWidth: "100vw" }}
+        >
           {/* Left axis (position numbers) */}
           <div className="flex flex-col flex-shrink-0">
             {/* Top spacer for header */}
@@ -345,8 +349,7 @@ export default function BballStandingsProgressionTable({
       <div className="p-4 text-xs text-gray-600 border-t border-gray-200">
         <p>
           Team logos show projected standing for that date, ordered from best
-          (1) to worst ({conferenceSize}). Dates shown: 11/1, first of each
-          month with data, and current date.
+          (1) to worst ({conferenceSize}).
         </p>
       </div>
 

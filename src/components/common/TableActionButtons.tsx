@@ -107,10 +107,28 @@ export default function TableActionButtons({
       // Check chart type and calculate width
       const isLineChart = targetElement.querySelector("canvas") !== null;
       const table = targetElement.querySelector("table");
+      const isProgressionTable =
+        contentSelector.includes("standings-progression") ||
+        contentSelector.includes("progression-table");
       let actualWidth;
 
       if (table) {
         actualWidth = (table as HTMLElement).offsetWidth + 200;
+      } else if (isProgressionTable) {
+        // For standings progression tables, count date columns not team logos
+        // Count actual date header text matching M/D or MM/DD format
+        const dateHeaders = targetElement.querySelectorAll(
+          '[class*="text-center"][class*="text-sm"]'
+        );
+        let dateCount = 0;
+        dateHeaders.forEach((header) => {
+          const text = header.textContent?.trim();
+          if (text && /^\d{1,2}\/\d{1,2}$/.test(text)) {
+            dateCount++;
+          }
+        });
+        if (dateCount === 0) dateCount = 8;
+        actualWidth = 250 + dateCount * 90;
       } else if (isLineChart) {
         // Distinguish line charts from box plots
         const isLineChartSpecific =

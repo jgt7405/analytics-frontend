@@ -471,7 +471,7 @@ export default function StandingsPage() {
                               selectedConference={selectedConference}
                               contentSelector=".standings-progression-table"
                               pageName="standings-progression"
-                              pageTitle="Standings Progression Timeline View"
+                              pageTitle="Projected Conference Standings Progression"
                               shareTitle="Standings Progression"
                             />
                           </div>
