@@ -344,9 +344,8 @@ export default function BballStandingsProgressionTable({
       {/* Info text */}
       <div className="p-4 text-xs text-gray-600 border-t border-gray-200">
         <p>
-          Team logos show projected standing for that date, ordered from best
-          (1) to worst ({conferenceSize}). Dates shown: 11/1, first of each
-          month with data, and current date.
+          Team logos show projected conference standings for that date, ordered
+          from best (1) to worst ({conferenceSize}).
         </p>
       </div>
 
