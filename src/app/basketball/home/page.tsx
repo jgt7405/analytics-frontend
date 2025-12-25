@@ -92,7 +92,7 @@ export default function BasketballHome() {
           <ErrorBoundary level="component">
             <div className="mb-8">
               <h2 className="text-xl font-normal text-gray-500">
-                Multi-Bid Conferences
+                Potential Multi-Bid Conferences
               </h2>
 
               <div className="multibid-leagues-table" ref={multiBidRef}>
@@ -112,12 +112,8 @@ export default function BasketballHome() {
                   <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        Conferences with multiple teams selected to the NCAA
-                        tournament.
-                      </div>
-                      <div style={{ marginTop: "6px" }}>
-                        Displays each conference and the projected seeds of its
-                        tournament teams, sorted by number of tournament bids.
+                        Conferences with multiple teams projected to be in the NCAA Tournament
+                        or with bubble teams in first four out/next four out.
                       </div>
                     </div>
                   </div>

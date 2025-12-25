@@ -25,6 +25,7 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
   const { isMobile } = useResponsive();
   const { data, loading, error } = useNCAAProjections();
 
+  // All hooks must be called before any early returns
   const multiBidConferences = useMemo(() => {
     if (!data || !data.tournament_teams) {
       return [];
@@ -52,6 +53,118 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
       .sort((a, b) => b.teams.length - a.teams.length);
   }, [data]);
 
+  const outTeams = useMemo(() => {
+    if (!data) return [];
+
+    const f4o = ((data.first_four_out as NCAATeamWithConfLogo[]) || []).map(
+      (team) => ({ team, category: "F4O" as const })
+    );
+    const n4o = ((data.next_four_out as NCAATeamWithConfLogo[]) || []).map(
+      (team) => ({ team, category: "N4O" as const })
+    );
+
+    // Sort each by TWV descending
+    const sortedF4o = f4o.sort(
+      (a, b) => b.team.post_conf_tourney_twv - a.team.post_conf_tourney_twv
+    );
+    const sortedN4o = n4o.sort(
+      (a, b) => b.team.post_conf_tourney_twv - a.team.post_conf_tourney_twv
+    );
+
+    return [...sortedF4o, ...sortedN4o];
+  }, [data]);
+
+  // Build out-of-tournament teams by conference and get conference logos
+  const outTeamsByConference = useMemo(() => {
+    const confMap = new Map<
+      string,
+      { teams: NCAATeamWithConfLogo[]; logoUrl?: string }
+    >();
+
+    outTeams.forEach((outTeamInfo) => {
+      const conf = outTeamInfo.team.full_conference_name;
+      if (!confMap.has(conf)) {
+        confMap.set(conf, {
+          teams: [],
+          logoUrl: outTeamInfo.team.conf_logo_url,
+        });
+      }
+      confMap.get(conf)!.teams.push(outTeamInfo.team);
+    });
+
+    return confMap;
+  }, [outTeams]);
+
+  // Combine all conferences that have tournament teams or out teams, sorted by tournament team count
+  const allConferencesWithOutTeams = useMemo(() => {
+    const confMap = new Map<
+      string,
+      {
+        tournamentTeams: NCAATeamWithConfLogo[];
+        confLogoUrl?: string;
+        outTeamsCount: number;
+      }
+    >();
+
+    // Add multi-bid conferences
+    multiBidConferences.forEach((conf) => {
+      confMap.set(conf.conference, {
+        tournamentTeams: conf.teams,
+        confLogoUrl: conf.confLogoUrl,
+        outTeamsCount:
+          outTeamsByConference.get(conf.conference)?.teams.length || 0,
+      });
+    });
+
+    // Add conferences with only out teams, but look for tournament teams from that conference
+    outTeamsByConference.forEach((outTeamData, confName) => {
+      if (!confMap.has(confName)) {
+        // Find if any tournament teams belong to this conference
+        const tournamentTeamsInConf =
+          (data?.tournament_teams as NCAATeamWithConfLogo[])?.filter(
+            (t) => t.full_conference_name === confName
+          ) || [];
+
+        confMap.set(confName, {
+          tournamentTeams: tournamentTeamsInConf,
+          confLogoUrl: outTeamData.logoUrl,
+          outTeamsCount: outTeamData.teams.length,
+        });
+      }
+    });
+
+    // Sort by tournament team count descending, then by conference name
+    return Array.from(confMap.entries())
+      .sort((a, b) => {
+        const countDiff =
+          b[1].tournamentTeams.length - a[1].tournamentTeams.length;
+        return countDiff !== 0 ? countDiff : a[0].localeCompare(b[0]);
+      })
+      .map(([name, data]) => ({ name, ...data }));
+  }, [multiBidConferences, outTeamsByConference, data]);
+
+  // Find max number of rows needed (tournament teams + out teams per conference)
+  const maxRowsPerSection = useMemo(() => {
+    let maxTournamentRows = 0;
+    let maxOutRows = 0;
+
+    allConferencesWithOutTeams.forEach((confData) => {
+      maxTournamentRows = Math.max(
+        maxTournamentRows,
+        confData.tournamentTeams.length
+      );
+      const outTeamsForConf =
+        outTeamsByConference.get(confData.name)?.teams.length || 0;
+      maxOutRows = Math.max(maxOutRows, outTeamsForConf);
+    });
+
+    return { maxTournamentRows, maxOutRows };
+  }, [allConferencesWithOutTeams, outTeamsByConference]);
+
+  // Get the number of columns needed
+  const numColumns = allConferencesWithOutTeams.length;
+
+  // Early returns after all hooks
   if (loading) {
     return (
       <div className="p-4 text-center text-gray-500">
@@ -94,142 +207,253 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
   const teamRowHeight = isMobile ? 36 : 44;
   const confLogoSize = isMobile ? 28 : 36;
   const teamLogoSize = isMobile ? 24 : 28;
-  const columnWidth = isMobile ? 85 : 110;
+  const columnWidth = isMobile ? 70 : 90;
   const borderColor = "#e5e7eb";
-
-  // Find max number of teams in any conference (for grid height)
-  const maxTeams = Math.max(...multiBidConferences.map((c) => c.teams.length));
 
   return (
     <div className={tableClassName}>
-      {/* Grid Container */}
+      {/* Single Scrolling Container for both sections */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${multiBidConferences.length}, ${columnWidth}px)`,
-          gap: "0",
           overflowX: "auto",
-          border: `1px solid ${borderColor}`,
-          backgroundColor: "#ffffff",
+          overflowY: "hidden",
         }}
       >
-        {/* Conference Headers and Teams */}
-        {multiBidConferences.map((confInfo) => {
-          // Sort teams by seed then TWV
-          const sortedTeams = [...confInfo.teams].sort((a, b) => {
-            const seedA = a.seed ? parseInt(a.seed, 10) : 999;
-            const seedB = b.seed ? parseInt(b.seed, 10) : 999;
-            if (seedA !== seedB) {
-              return seedA - seedB;
-            }
-            return b.post_conf_tourney_twv - a.post_conf_tourney_twv;
-          });
+        {/* Tournament Section */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
+            gap: "0",
+            border: `1px solid ${borderColor}`,
+            backgroundColor: "#ffffff",
+          }}
+        >
+          {/* Conference Headers and Tournament Teams */}
+          {allConferencesWithOutTeams.map((confData) => {
+            const confName = confData.name;
+            const tournamentTeams = confData.tournamentTeams;
+            const confLogoUrl = confData.confLogoUrl;
 
-          return (
-            <div
-              key={confInfo.conference}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                borderRight: `1px solid ${borderColor}`,
-              }}
-            >
-              {/* Conference Header */}
+            // Sort tournament teams by seed then TWV
+            const sortedTeams = [...tournamentTeams].sort((a, b) => {
+              const seedA = a.seed ? parseInt(a.seed, 10) : 999;
+              const seedB = b.seed ? parseInt(b.seed, 10) : 999;
+              if (seedA !== seedB) {
+                return seedA - seedB;
+              }
+              return b.post_conf_tourney_twv - a.post_conf_tourney_twv;
+            });
+
+            return (
               <div
+                key={confName}
                 style={{
-                  height: confHeaderHeight,
-                  borderBottom: `1px solid ${borderColor}`,
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  padding: "8px",
-                  backgroundColor: "#f9fafb",
+                  borderRight: `1px solid ${borderColor}`,
                 }}
               >
-                {/* Conference Logo */}
-                {confInfo.confLogoUrl ? (
-                  <TeamLogo
-                    logoUrl={confInfo.confLogoUrl}
-                    teamName={confInfo.conference}
-                    size={confLogoSize}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: confLogoSize,
-                      height: confLogoSize,
-                      backgroundColor: "#e5e7eb",
-                      borderRadius: "4px",
-                    }}
-                  />
-                )}
-                {/* Team Count */}
+                {/* Conference Header */}
                 <div
                   style={{
-                    fontSize: isMobile ? "12px" : "14px",
-                    fontWeight: "400",
-                    color: "#374151",
-                  }}
-                >
-                  {confInfo.teams.length} teams
-                </div>
-              </div>
-
-              {/* Teams in Conference */}
-              {sortedTeams.map((team, idx) => (
-                <div
-                  key={`${team.teamid}-${idx}`}
-                  style={{
-                    height: teamRowHeight,
+                    height: confHeaderHeight,
                     borderBottom: `1px solid ${borderColor}`,
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "8px",
-                    padding: "4px 8px",
-                    backgroundColor: "#ffffff",
+                    padding: "8px",
+                    backgroundColor: "#f9fafb",
                   }}
                 >
-                  {/* Team Logo */}
-                  <TeamLogo
-                    logoUrl={team.logo_url}
-                    teamName={team.team_name}
-                    size={teamLogoSize}
-                  />
-                  {/* Seed */}
+                  {/* Conference Logo */}
+                  {confLogoUrl ? (
+                    <TeamLogo
+                      logoUrl={confLogoUrl}
+                      teamName={confName}
+                      size={confLogoSize}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: confLogoSize,
+                        height: confLogoSize,
+                        backgroundColor: "#e5e7eb",
+                        borderRadius: "4px",
+                      }}
+                    />
+                  )}
+                  {/* Team Count - only count tournament teams */}
                   <div
                     style={{
                       fontSize: isMobile ? "12px" : "14px",
                       fontWeight: "400",
                       color: "#374151",
-                      minWidth: "20px",
-                      textAlign: "center",
                     }}
                   >
-                    {team.seed || "-"}
+                    {sortedTeams.length} team
+                    {sortedTeams.length !== 1 ? "s" : ""}
                   </div>
                 </div>
-              ))}
 
-              {/* Empty cells to fill grid if this conference has fewer teams than max */}
-              {sortedTeams.length < maxTeams &&
-                Array.from({ length: maxTeams - sortedTeams.length }).map(
-                  (_, idx) => (
+                {/* Tournament Teams in Conference */}
+                {sortedTeams.map((team, idx) => (
+                  <div
+                    key={`${team.teamid}-${idx}`}
+                    style={{
+                      height: teamRowHeight,
+                      borderBottom: `1px solid ${borderColor}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-start",
+                      gap: "4px",
+                      padding: "4px 4px 4px 12px",
+                      backgroundColor: "#ffffff",
+                    }}
+                  >
+                    {/* Team Logo */}
+                    <TeamLogo
+                      logoUrl={team.logo_url}
+                      teamName={team.team_name}
+                      size={teamLogoSize}
+                    />
+                    {/* Seed */}
                     <div
-                      key={`empty-${idx}`}
+                      style={{
+                        fontSize: isMobile ? "12px" : "14px",
+                        fontWeight: "400",
+                        color: "#374151",
+                        minWidth: "20px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {team.seed || "-"}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Empty cells for alignment */}
+                {sortedTeams.length < maxRowsPerSection.maxTournamentRows &&
+                  Array.from({
+                    length:
+                      maxRowsPerSection.maxTournamentRows - sortedTeams.length,
+                  }).map((_, idx) => (
+                    <div
+                      key={`empty-tournament-${idx}`}
                       style={{
                         height: teamRowHeight,
                         borderBottom: `1px solid ${borderColor}`,
-                        backgroundColor: "#ffffff",
+                        backgroundColor: "#f3f4f6",
                       }}
                     />
-                  )
+                  ))}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Global Black Separator Line */}
+        <div
+          style={{
+            height: "3px",
+            backgroundColor: "#000000",
+            width: `${numColumns * columnWidth}px`,
+          }}
+        />
+
+        {/* Out-of-Tournament Section */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
+            gap: "0",
+            border: `1px solid ${borderColor}`,
+            borderTop: "none",
+            backgroundColor: "#ffffff",
+          }}
+        >
+          {/* F4O and N4O Teams */}
+          {allConferencesWithOutTeams.map((confData) => {
+            const confName = confData.name;
+            const outTeamsForConf =
+              outTeamsByConference.get(confName)?.teams || [];
+
+            return (
+              <div
+                key={`out-${confName}`}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  borderRight: `1px solid ${borderColor}`,
+                }}
+              >
+                {/* F4O and N4O Teams for this Conference */}
+                {outTeamsForConf.map(
+                  (team: NCAATeamWithConfLogo, idx: number) => {
+                    // Determine if this is F4O or N4O
+                    const isF4O = (
+                      data.first_four_out as NCAATeamWithConfLogo[]
+                    )?.some((t) => t.teamid === team.teamid);
+                    const category = isF4O ? "F4O" : "N4O";
+
+                    return (
+                      <div
+                        key={`out-${team.teamid}-${idx}`}
+                        style={{
+                          height: teamRowHeight,
+                          borderBottom: `1px solid ${borderColor}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "flex-start",
+                          gap: "4px",
+                          padding: "4px 4px 4px 12px",
+                          backgroundColor: "#ffffff",
+                        }}
+                      >
+                        {/* Team Logo */}
+                        <TeamLogo
+                          logoUrl={team.logo_url}
+                          teamName={team.team_name}
+                          size={teamLogoSize}
+                        />
+                        {/* Category Badge */}
+                        <div
+                          style={{
+                            fontSize: isMobile ? "12px" : "14px",
+                            fontWeight: "400",
+                            color: "#374151",
+                            minWidth: "20px",
+                            textAlign: "center",
+                          }}
+                        >
+                          {category}
+                        </div>
+                      </div>
+                    );
+                  }
                 )}
-            </div>
-          );
-        })}
+
+                {/* Empty cells for alignment */}
+                {outTeamsForConf.length < maxRowsPerSection.maxOutRows &&
+                  Array.from({
+                    length:
+                      maxRowsPerSection.maxOutRows - outTeamsForConf.length,
+                  }).map((_, idx) => (
+                    <div
+                      key={`empty-out-${idx}`}
+                      style={{
+                        height: teamRowHeight,
+                        borderBottom: `1px solid ${borderColor}`,
+                        backgroundColor: "#f3f4f6",
+                      }}
+                    />
+                  ))}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
