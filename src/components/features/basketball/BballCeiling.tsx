@@ -150,7 +150,6 @@ export default function BballCeiling({
 }: BballCeilingProps) {
   void _maxHeight;
 
-  // Debug logging
   useEffect(() => {
     console.log("📊 BballCeiling rendered - displaying component");
   }, []);
@@ -164,7 +163,6 @@ export default function BballCeiling({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Logo and layout sizing - reduced overall width
   const logoSize = isMobile ? 24 : 28;
   const gapBetweenLogos = 2;
   const seedLabelWidth = isMobile ? 35 : 40;
@@ -172,7 +170,6 @@ export default function BballCeiling({
   const maxLogosPerRow = 6;
   const baseRowHeight = logoSize + 6;
 
-  // Calculate width based on 6 logos per row - compact sizing
   const seedColumnWidth =
     seedLabelWidth +
     paddingHorizontal * 2 +
@@ -180,7 +177,6 @@ export default function BballCeiling({
     5 * gapBetweenLogos +
     5;
 
-  // Create grouped data for ceiling (using seed_min)
   const teamsBySeedCeiling = useMemo(() => {
     const grouped: Record<string | number, typeof seedData> = {};
 
@@ -233,7 +229,6 @@ export default function BballCeiling({
     return grouped;
   }, [seedData]);
 
-  // Create grouped data for floor (using seed_max)
   const teamsBySeedFloor = useMemo(() => {
     const grouped: Record<string | number, typeof seedData> = {};
 
@@ -286,7 +281,6 @@ export default function BballCeiling({
     return grouped;
   }, [seedData]);
 
-  // Calculate row heights per seed - using the maximum from both ceiling and floor
   const rowHeightsBySeed = useMemo(() => {
     const calculateRowsNeeded = (teamCount: number) => {
       if (teamCount === 0) return 1;
@@ -307,7 +301,6 @@ export default function BballCeiling({
       const ceilingHeight = getRowHeight(ceilingTeams.length);
       const floorHeight = getRowHeight(floorTeams.length);
 
-      // Use the maximum height so both sides align
       heights[label] = Math.max(ceilingHeight, floorHeight);
     });
 
@@ -352,7 +345,7 @@ export default function BballCeiling({
             gap: gapBetweenLogos,
             paddingLeft: paddingHorizontal,
             paddingRight: paddingHorizontal,
-            paddingTop: 2,
+            paddingTop: 4,
             paddingBottom: 2,
             minHeight: fixedHeight,
             borderBottom: "1px solid #f0f0f0",
@@ -367,7 +360,6 @@ export default function BballCeiling({
               fontWeight: "400",
               color: "#374151",
               textAlign: "center",
-              paddingTop: 2,
               boxSizing: "border-box",
               display: "flex",
               alignItems: "center",
@@ -383,13 +375,14 @@ export default function BballCeiling({
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              justifyContent: "flex-start",
               gap: gapBetweenLogos,
               flexWrap: "wrap",
               boxSizing: "border-box",
               flex: 1,
               minWidth: 0,
               maxWidth: 6 * logoSize + 5 * gapBetweenLogos,
-              alignContent: "center",
+              marginTop: 2,
             }}
           >
             {ceilingTeams.map((team) => (
@@ -433,7 +426,7 @@ export default function BballCeiling({
             gap: gapBetweenLogos,
             paddingLeft: paddingHorizontal,
             paddingRight: paddingHorizontal,
-            paddingTop: 2,
+            paddingTop: 4,
             paddingBottom: 2,
             minHeight: fixedHeight,
             borderBottom: "1px solid #f0f0f0",
@@ -448,7 +441,6 @@ export default function BballCeiling({
               fontWeight: "400",
               color: "#374151",
               textAlign: "center",
-              paddingTop: 2,
               boxSizing: "border-box",
               display: "flex",
               alignItems: "center",
@@ -464,13 +456,14 @@ export default function BballCeiling({
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              justifyContent: "flex-start",
               gap: gapBetweenLogos,
               flexWrap: "wrap",
               boxSizing: "border-box",
               flex: 1,
               minWidth: 0,
               maxWidth: 6 * logoSize + 5 * gapBetweenLogos,
-              alignContent: "center",
+              marginTop: 2,
             }}
           >
             {floorTeams.map((team) => (
