@@ -504,6 +504,15 @@ export async function POST(
       backendPath = `/football/whatif/export`;
       console.log("📥 FOOTBALL WHAT-IF EXPORT detected");
     }
+    // ===== HANDLE BASKETBALL WHAT-IF ROUTES =====
+    else if (
+      slug.length === 2 &&
+      slug[0] === "basketball" &&
+      slug[1] === "whatif"
+    ) {
+      backendPath = `/basketball/whatif`;
+      console.log("🏀 BASKETBALL WHAT-IF detected");
+    }
     // ===== UNKNOWN ROUTE =====
     else {
       console.error("❌ UNKNOWN POST ENDPOINT:", slug);

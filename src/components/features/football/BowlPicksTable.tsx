@@ -17,6 +17,250 @@ interface BowlGame {
   [key: string]: string;
 }
 
+// Map of game numbers to their prerequisite game numbers
+// E.g., Game 44 (Fiesta) depends on winners of Games 37 & 38
+const GAME_DEPENDENCIES: { [key: number]: number[] } = {
+  44: [37, 38], // CFP Semifinal - Fiesta Bowl
+  45: [32, 39], // CFP Semifinal - Peach Bowl
+  46: [44, 45], // CFP National Championship
+};
+
+/**
+ * Resolve a team reference - could be a team name or "Game X Winner"
+ */
+const resolveTeamReference = (
+  reference: string,
+  allGames: BowlGame[]
+): string | null => {
+  // Check if it's a game reference like "Game 32 Winner"
+  const match = reference.match(/Game (\d+) Winner/i);
+  if (match) {
+    const gameNum = parseInt(match[1], 10);
+    const referencedGame = allGames[gameNum - 1];
+
+    if (
+      !referencedGame ||
+      !referencedGame.Winner ||
+      !referencedGame.Winner.trim()
+    ) {
+      return null; // Game not completed yet
+    }
+
+    return referencedGame.Winner;
+  }
+
+  // It's a direct team name
+  return reference;
+};
+
+/**
+ * Check if a predicted team advanced through all dependency games (recursive)
+ */
+const isTeamAdvanced = (
+  predictedTeam: string,
+  gameNumber: number,
+  allGames: BowlGame[],
+  depth: number = 0
+): boolean | null => {
+  const indent = "  ".repeat(depth);
+
+  if (!GAME_DEPENDENCIES[gameNumber]) {
+    console.log(
+      `${indent}[ADVANCE Game ${gameNumber}] No dependencies, returning TRUE`
+    );
+    return true; // No dependencies, team is "advanced" for direct games
+  }
+
+  const dependencies = GAME_DEPENDENCIES[gameNumber];
+  const normalizedPredicted = predictedTeam.toLowerCase().trim();
+
+  console.log(
+    `${indent}[ADVANCE Game ${gameNumber}] Checking "${predictedTeam}" through deps: [${dependencies.join(", ")}]`
+  );
+
+  // Check each dependency game
+  for (const depGameNum of dependencies) {
+    const depGame = allGames[depGameNum - 1];
+    if (!depGame) {
+      console.log(`${indent}  [DEP ${depGameNum}] Not found, skip`);
+      continue;
+    }
+
+    const team1 = resolveTeamReference(depGame["Team 1"], allGames);
+    const team2 = resolveTeamReference(depGame["Team 2"], allGames);
+    const winner = depGame.Winner;
+
+    console.log(
+      `${indent}  [DEP ${depGameNum}] ${team1} vs ${team2}, Winner: "${winner}"`
+    );
+
+    // If dependency game not completed
+    if (!winner || !winner.trim()) {
+      if (team1 && team2) {
+        const normalizedTeam1 = team1.toLowerCase().trim();
+        const normalizedTeam2 = team2.toLowerCase().trim();
+
+        if (
+          normalizedPredicted === normalizedTeam1 ||
+          normalizedPredicted === normalizedTeam2
+        ) {
+          console.log(
+            `${indent}    "${predictedTeam}" is in this incomplete game`
+          );
+          continue;
+        } else {
+          console.log(
+            `${indent}    "${predictedTeam}" not in game, checking recursively...`
+          );
+          const couldAdvanceThroughDep = isTeamAdvanced(
+            predictedTeam,
+            depGameNum,
+            allGames,
+            depth + 2
+          );
+          if (couldAdvanceThroughDep === false) {
+            console.log(`${indent}    Recursive returned FALSE`);
+            return false;
+          }
+          continue;
+        }
+      } else {
+        // team1 or team2 are null (couldn't resolve game references)
+        // This means the dependency game references other games that aren't complete
+        // But we still need to check if our team could be eliminated via that chain
+        console.log(
+          `${indent}    Teams unresolved (game refs), checking if team could be eliminated...`
+        );
+        const couldAdvanceThroughDep = isTeamAdvanced(
+          predictedTeam,
+          depGameNum,
+          allGames,
+          depth + 2
+        );
+        if (couldAdvanceThroughDep === false) {
+          console.log(`${indent}    Team eliminated in dependency chain`);
+          return false;
+        }
+        // If null or true, continue checking other dependencies
+        continue;
+      }
+    }
+
+    // Dependency game IS complete
+    if (team1 && team2) {
+      const normalizedTeam1 = team1.toLowerCase().trim();
+      const normalizedTeam2 = team2.toLowerCase().trim();
+      const normalizedWinner = winner.toLowerCase().trim();
+
+      if (
+        normalizedPredicted === normalizedTeam1 ||
+        normalizedPredicted === normalizedTeam2
+      ) {
+        console.log(`${indent}    "${predictedTeam}" was in this game`);
+        if (normalizedWinner !== normalizedPredicted) {
+          console.log(`${indent}    LOST to ${winner}, ELIMINATING`);
+          return false;
+        }
+        console.log(`${indent}    WON this game`);
+      } else {
+        console.log(
+          `${indent}    "${predictedTeam}" not in game, checking recursively...`
+        );
+        const couldAdvanceThroughDep = isTeamAdvanced(
+          predictedTeam,
+          depGameNum,
+          allGames,
+          depth + 2
+        );
+        if (couldAdvanceThroughDep === false) {
+          console.log(`${indent}    Recursive returned FALSE`);
+          return false;
+        }
+      }
+    }
+  }
+
+  console.log(
+    `${indent}[ADVANCE Game ${gameNumber}] All checks OK, returning TRUE`
+  );
+  return true;
+};
+
+/**
+ * Checks if a predicted winner is valid with full cascade logic
+ * Returns:
+ *   true = team won
+ *   false = team lost OR eliminated by dependency
+ *   null = game not completed yet, but team is not eliminated
+ */
+const isPredictionCorrectWithCascade = (
+  gameNumber: number,
+  predictedWinner: string,
+  actualWinner: string,
+  allGames: BowlGame[]
+): boolean | null => {
+  const game = allGames[gameNumber - 1];
+  if (!game) return null;
+
+  console.log(
+    `[CASCADE CHECK] Game ${gameNumber}: Team1="${game["Team 1"]}", Team2="${game["Team 2"]}", Predicted="${predictedWinner}", Winner="${actualWinner}"`
+  );
+
+  const normalizedPredicted = predictedWinner.toLowerCase().trim();
+
+  // First, check if team is eliminated by a dependency REGARDLESS of whether this game is completed
+  const isAdvanced = isTeamAdvanced(predictedWinner, gameNumber, allGames);
+  console.log(`[CASCADE] isTeamAdvanced result: ${isAdvanced}`);
+
+  if (isAdvanced === false) {
+    // Team is definitely eliminated - they lost in a dependency game
+    console.log(`[CASCADE] Team ELIMINATED in dependency, returning FALSE`);
+    return false;
+  }
+
+  // Game not completed yet
+  if (!actualWinner || actualWinner.trim() === "") {
+    console.log(`[CASCADE] Game not completed yet, returning NULL`);
+    return null;
+  }
+
+  // Game IS completed - check the actual result
+  // Resolve team references in Team 1 and Team 2
+  const team1 = resolveTeamReference(game["Team 1"], allGames);
+  const team2 = resolveTeamReference(game["Team 2"], allGames);
+
+  console.log(`[CASCADE] After resolve: team1="${team1}", team2="${team2}"`);
+
+  // Check if predicted team is actually in this game
+  if (!team1 || !team2) {
+    console.log(`[CASCADE] Could not resolve teams`);
+    return null;
+  }
+
+  const normalizedTeam1 = team1.toLowerCase().trim();
+  const normalizedTeam2 = team2.toLowerCase().trim();
+
+  console.log(
+    `[CASCADE] Checking if "${normalizedPredicted}" matches "${normalizedTeam1}" or "${normalizedTeam2}"`
+  );
+
+  // Check if predicted team is one of the competing teams
+  if (
+    normalizedPredicted !== normalizedTeam1 &&
+    normalizedPredicted !== normalizedTeam2
+  ) {
+    // Predicted team is NOT in this game - wrong pick
+    console.log(`[CASCADE] Team not in this game, returning FALSE`);
+    return false;
+  }
+
+  // Predicted team IS in the game - check if they won
+  const normalizedActual = actualWinner.toLowerCase().trim();
+  const result = normalizedActual === normalizedPredicted;
+  console.log(`[CASCADE] Team IN game. Did they win? ${result}`);
+  return result;
+};
+
 function BowlPicksTable() {
   const {
     data: bowlData,
@@ -147,21 +391,6 @@ function BowlPicksTable() {
   const formatDate = (dateStr: string) => {
     // Remove day of week (e.g., "Saturday Dec 13" -> "Dec 13")
     return dateStr.replace(/^[A-Za-z]+\s+/, "");
-  };
-
-  // Check if a prediction is correct
-  const isPredictionCorrect = (
-    gameWinner: string,
-    predictedWinner: string
-  ): boolean | null => {
-    // If no actual winner yet, return null (game not complete)
-    if (!gameWinner || gameWinner.trim() === "") {
-      return null;
-    }
-    // Compare winners (case-insensitive)
-    return (
-      gameWinner.toLowerCase().trim() === predictedWinner.toLowerCase().trim()
-    );
   };
 
   // Get color for prediction result
@@ -432,7 +661,7 @@ function BowlPicksTable() {
                     </div>
                   ) : (
                     <span style={{ color: "#9ca3af", fontSize: "12px" }}>
-                      —
+                      â€”
                     </span>
                   )}
                 </td>
@@ -496,11 +725,14 @@ function BowlPicksTable() {
                   const points = parseInt(game[`${person} Points`] || "0", 10);
                   const predictedWinner = game[`${person} Winner`];
                   const actualWinner = game["Winner"];
+                  const gameNumber = parseInt(game["#"], 10);
 
-                  // Check if game is complete and if prediction is correct
-                  const isCorrect = isPredictionCorrect(
+                  // Check if game is complete and if prediction is correct (with cascade validation)
+                  const isCorrect = isPredictionCorrectWithCascade(
+                    gameNumber,
+                    predictedWinner,
                     actualWinner,
-                    predictedWinner
+                    sortedGames
                   );
                   const predictionColorStyle = getPredictionColor(isCorrect);
 
