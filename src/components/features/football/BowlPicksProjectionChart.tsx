@@ -38,9 +38,6 @@ const GAME_DEPENDENCIES: { [key: number]: number[] } = {
   46: [44, 45],
 };
 
-// Total points available at start of season
-const TOTAL_POINTS_AT_START = 1140;
-
 /**
  * Resolve a team reference - could be a team name or "Game X Winner"
  */
