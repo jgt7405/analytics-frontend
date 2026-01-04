@@ -5,7 +5,8 @@ import { NCAATeam, useNCAAProjections } from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo } from "react";
 
 interface NCAATeamWithConfLogo extends NCAATeam {
   conf_logo_url?: string;
@@ -24,6 +25,15 @@ interface MultiBidLeaguesProps {
 function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
   const { isMobile } = useResponsive();
   const { data, loading, error } = useNCAAProjections();
+  const router = useRouter();
+
+  // Navigation handler for team clicks
+  const navigateToTeam = useCallback(
+    (teamName: string) => {
+      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    },
+    [router]
+  );
 
   // All hooks must be called before any early returns
   const multiBidConferences = useMemo(() => {
@@ -268,23 +278,39 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
                     backgroundColor: "#f9fafb",
                   }}
                 >
-                  {/* Conference Logo */}
-                  {confLogoUrl ? (
-                    <TeamLogo
-                      logoUrl={confLogoUrl}
-                      teamName={confName}
-                      size={confLogoSize}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: confLogoSize,
-                        height: confLogoSize,
-                        backgroundColor: "#e5e7eb",
-                        borderRadius: "4px",
-                      }}
-                    />
-                  )}
+                  {/* Conference Logo - Clickable */}
+                  <div
+                    onClick={() => {
+                      if (sortedTeams.length > 0) {
+                        navigateToTeam(sortedTeams[0].team_name);
+                      }
+                    }}
+                    style={{
+                      cursor: sortedTeams.length > 0 ? "pointer" : "default",
+                    }}
+                    title={
+                      sortedTeams.length > 0
+                        ? `View ${sortedTeams[0].team_name}`
+                        : undefined
+                    }
+                  >
+                    {confLogoUrl ? (
+                      <TeamLogo
+                        logoUrl={confLogoUrl}
+                        teamName={confName}
+                        size={confLogoSize}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: confLogoSize,
+                          height: confLogoSize,
+                          backgroundColor: "#e5e7eb",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    )}
+                  </div>
                   {/* Team Count - only count tournament teams */}
                   <div
                     style={{
@@ -302,6 +328,7 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
                 {sortedTeams.map((team, idx) => (
                   <div
                     key={`${team.teamid}-${idx}`}
+                    onClick={() => navigateToTeam(team.team_name)}
                     style={{
                       height: teamRowHeight,
                       borderBottom: `1px solid ${borderColor}`,
@@ -311,7 +338,9 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
                       gap: "4px",
                       padding: "4px 4px 4px 12px",
                       backgroundColor: "#ffffff",
+                      cursor: "pointer",
                     }}
+                    title={`View ${team.team_name}`}
                   >
                     {/* Team Logo */}
                     <TeamLogo
@@ -401,6 +430,7 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
                     return (
                       <div
                         key={`out-${team.teamid}-${idx}`}
+                        onClick={() => navigateToTeam(team.team_name)}
                         style={{
                           height: teamRowHeight,
                           borderBottom: `1px solid ${borderColor}`,
@@ -410,7 +440,9 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
                           gap: "4px",
                           padding: "4px 4px 4px 12px",
                           backgroundColor: "#ffffff",
+                          cursor: "pointer",
                         }}
+                        title={`View ${team.team_name}`}
                       >
                         {/* Team Logo */}
                         <TeamLogo
