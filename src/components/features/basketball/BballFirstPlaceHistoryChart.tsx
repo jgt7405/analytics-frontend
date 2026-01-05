@@ -2,6 +2,7 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
+import type { Chart } from "chart.js";
 import {
   CategoryScale,
   ChartArea,
@@ -89,8 +90,8 @@ export default function BballFirstPlaceHistoryChart({
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day, 12, 0, 0);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    // Return full date with year for internal tracking
+    return `${month}/${day}/${year}`;
   };
 
   // Filter data starting from 8/22
@@ -123,8 +124,9 @@ export default function BballFirstPlaceHistoryChart({
         team_info: item.team_info,
       };
     }
+    const formatted = formatDate(item.date);
     teamData[item.team_name].data.push({
-      x: formatDate(item.date),
+      x: formatted,
       y: item.first_place_pct,
     });
   });
@@ -134,12 +136,49 @@ export default function BballFirstPlaceHistoryChart({
       Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
     ),
   ].sort((a, b) => {
-    const dateA = new Date(a + "/2025");
-    const dateB = new Date(b + "/2025");
+    // Sort using the full date (with year)
+    const [aMonth, aDay, aYear] = a.split("/").map(Number);
+    const [bMonth, bDay, bYear] = b.split("/").map(Number);
+    const dateA = new Date(aYear, aMonth - 1, aDay, 12, 0, 0);
+    const dateB = new Date(bYear, bMonth - 1, bDay, 12, 0, 0);
     return dateA.getTime() - dateB.getTime();
   });
 
-  const teamsForLogos = Object.entries(teamData)
+  // Create display labels that show the year transition points
+  const displayLabels = dates.map((dateStr, index) => {
+    const [month, day, year] = dateStr.split("/").map(Number);
+    const displayDate = `${month}/${day}`;
+
+    // Show year only if year changed from previous date (not on first date)
+    if (index > 0) {
+      const prevYear = parseInt(dates[index - 1].split("/")[2], 10);
+      if (year !== prevYear) {
+        return `${displayDate} ${year}`;
+      }
+    }
+
+    return displayDate;
+  });
+
+  // Create a mapping from full dates to array indices for chart x-axis
+  const dateIndexMap = new Map<string, number>();
+  dates.forEach((date, index) => {
+    dateIndexMap.set(date, index);
+  });
+
+  // Re-map team data to use display labels instead of date strings
+  const mappedTeamData: Record<string, TeamInfo> = {};
+  Object.entries(teamData).forEach(([teamName, teamInfo]) => {
+    mappedTeamData[teamName] = {
+      data: teamInfo.data.map((point) => ({
+        x: displayLabels[dateIndexMap.get(point.x as string) || 0],
+        y: point.y,
+      })),
+      team_info: teamInfo.team_info,
+    };
+  });
+
+  const teamsForLogos = Object.entries(mappedTeamData)
     .map(([teamName, team]) => {
       const finalPct = team.data[team.data.length - 1]?.y || 0;
       return {
@@ -153,7 +192,7 @@ export default function BballFirstPlaceHistoryChart({
     .sort((a, b) => b.final_pct - a.final_pct);
 
   // All teams sorted by final percentage for bottom logos
-  const allTeamsSorted = Object.entries(teamData)
+  const allTeamsSorted = Object.entries(mappedTeamData)
     .map(([teamName, team]) => {
       const finalPct = team.data[team.data.length - 1]?.y || 0;
       return {
@@ -188,7 +227,7 @@ export default function BballFirstPlaceHistoryChart({
     });
   };
 
-  const datasets = Object.entries(teamData).map(([teamName, team]) => {
+  const datasets = Object.entries(mappedTeamData).map(([teamName, team]) => {
     // Show team if no teams are selected OR this team is in the selected set
     const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
     const color = isSelected
@@ -209,7 +248,7 @@ export default function BballFirstPlaceHistoryChart({
   });
 
   const chartData = {
-    labels: dates,
+    labels: displayLabels,
     datasets,
   };
 
@@ -225,7 +264,7 @@ export default function BballFirstPlaceHistoryChart({
       legend: { display: false },
       tooltip: {
         enabled: false,
-        external: (args: { chart: ChartJS; tooltip: TooltipModel<"line"> }) => {
+        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
           let tooltipEl = document.getElementById("chartjs-tooltip-firstplace");
@@ -279,120 +318,45 @@ export default function BballFirstPlaceHistoryChart({
           }
 
           if (tooltipModel.body) {
-            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = dates[dataIndex];
+            const bodyLines = tooltipModel.body.map((b) => b.lines);
 
-            const teamsAtDate = Object.entries(teamData)
-              .map(([teamName, team]) => {
-                const dataPoint = team.data.find(
-                  (d: TeamDataPoint) => d.x === currentDate
-                );
-                return {
-                  name: teamName,
-                  pct: dataPoint?.y || 0,
-                  color: team.team_info.primary_color || "#000000",
-                };
+            const innerHtml = bodyLines
+              .map((lines, index) => {
+                const datasetIndex =
+                  tooltipModel.dataPoints[index].datasetIndex;
+                const dataset = chart.data.datasets[datasetIndex];
+                return `
+              <div style="color: ${dataset.borderColor}; font-weight: 500; margin-bottom: 8px;">
+                ${lines[0]}
+              </div>
+              <div style="font-size: 11px; color: #6b7280;">
+                ${chart.data.labels ? chart.data.labels[tooltipModel.dataPoints[index].dataIndex] : ""}
+              </div>
+            `;
               })
-              .filter((team) => team.pct > 0)
-              .sort((a, b) => b.pct - a.pct);
-
-            let innerHtml = `
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-               <button id="tooltip-close" style="
-                 background: none; 
-                 border: none; 
-                 font-size: 16px; 
-                 cursor: pointer; 
-                 color: #6b7280;
-                 padding: 0;
-                 margin: 0;
-                 line-height: 1;
-                 width: 20px;
-                 height: 20px;
-                 display: flex;
-                 align-items: center;
-                 justify-content: center;
-               ">&times;</button>
-             </div>
-           `;
-
-            teamsAtDate.forEach((team) => {
-              innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${Math.round(team.pct)}%</div>`;
-            });
+              .join("");
 
             tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
-            }
           }
 
-          // Smart positioning logic
           const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
+          const chartWidth = chart.width || 600;
           const tooltipWidth = tooltipEl.offsetWidth || 200;
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
+          // Determine position based on whether caret is on left or right side
           const isLeftSide = caretX < chartWidth / 2;
           let leftPosition: number;
-          let arrowPosition: string;
 
           if (isLeftSide) {
             leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
           } else {
             leftPosition =
               position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
           }
 
-          // Add/update arrow
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          } else {
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
-          }
-
+          // Ensure tooltip stays within viewport
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
@@ -403,8 +367,7 @@ export default function BballFirstPlaceHistoryChart({
             position.top +
             window.pageYOffset +
             caretY -
-            tooltipEl.offsetHeight / 2 -
-            120 +
+            tooltipEl.offsetHeight / 2 +
             "px";
         },
       },
@@ -419,7 +382,7 @@ export default function BballFirstPlaceHistoryChart({
         title: { display: true, text: "First Place Probability (%)" },
         min: 0,
         max: (() => {
-          const allValues = Object.values(teamData).flatMap((team) =>
+          const allValues = Object.values(mappedTeamData).flatMap((team) =>
             team.data.map((d: TeamDataPoint) => d.y)
           );
           const maxValue = Math.max(...allValues);
@@ -451,7 +414,7 @@ export default function BballFirstPlaceHistoryChart({
     if (!chartDimensions?.chartArea) return null;
     const { top, bottom } = chartDimensions.chartArea;
     const maxY = (() => {
-      const allValues = Object.values(teamData).flatMap((team) =>
+      const allValues = Object.values(mappedTeamData).flatMap((team) =>
         team.data.map((d: TeamDataPoint) => d.y)
       );
       const maxValue = Math.max(...allValues);
@@ -549,6 +512,7 @@ export default function BballFirstPlaceHistoryChart({
                 const teamColor = isSelected
                   ? team.team_info.primary_color || "#94a3b8"
                   : "#d1d5db";
+
                 return (
                   <div key={`end-${team.team_name}`}>
                     <svg
@@ -579,37 +543,47 @@ export default function BballFirstPlaceHistoryChart({
               {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
                 const isSelected =
                   selectedTeams.size === 0 || selectedTeams.has(team.team_name);
+                const teamDataPoint = mappedTeamData[team.team_name];
+                const lastPoint =
+                  teamDataPoint?.data[teamDataPoint.data.length - 1];
+
                 return (
                   <div
                     key={`logo-${team.team_name}`}
                     className="absolute flex items-center"
                     style={{
-                      right: "0px",
-                      top: `${adjustedY - 12}px`,
+                      right: "10px",
+                      top: `${adjustedY - 10}px`,
                       zIndex: 10,
                       opacity: isSelected ? 1 : 0.3,
                     }}
                   >
-                    <TeamLogo
-                      logoUrl={
-                        team.team_info.logo_url ||
-                        "/images/team_logos/default.png"
-                      }
-                      teamName={team.team_name}
-                      size={24}
-                    />
                     <span
-                      className="text-xs font-medium ml-2"
+                      className="text-xs font-medium mr-2"
                       style={{
                         color: isSelected
                           ? team.team_info.primary_color || "#000000"
                           : "#d1d5db",
                         minWidth: "35px",
-                        textAlign: "left",
+                        textAlign: "right",
                       }}
                     >
-                      {Math.round(team.final_pct)}%
+                      {lastPoint?.y.toFixed(1) || team.final_pct.toFixed(1)}%
                     </span>
+                    <div
+                      style={{
+                        filter: isSelected ? "none" : "grayscale(100%)",
+                      }}
+                    >
+                      <TeamLogo
+                        logoUrl={
+                          team.team_info.logo_url ||
+                          "/images/team_logos/default.png"
+                        }
+                        teamName={team.team_name}
+                        size={20}
+                      />
+                    </div>
                   </div>
                 );
               })}
@@ -618,7 +592,7 @@ export default function BballFirstPlaceHistoryChart({
         )}
       </div>
 
-      {/* Bottom logo selector - smaller size */}
+      {/* Bottom logo selector */}
       <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
         {allTeamsSorted.map((team) => {
           const isSelected =
@@ -648,7 +622,7 @@ export default function BballFirstPlaceHistoryChart({
                     : "#9ca3af",
                 }}
               >
-                {Math.round(team.final_pct)}%
+                {team.final_pct.toFixed(1)}%
               </span>
             </button>
           );

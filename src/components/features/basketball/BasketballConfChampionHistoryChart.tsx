@@ -90,8 +90,8 @@ export default function BasketballConfChampionHistoryChart({
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day, 12, 0, 0);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    // Return full date with year for internal tracking
+    return `${month}/${day}/${year}`;
   };
 
   const filteredChampionData = championData.filter((item) => {
@@ -121,8 +121,9 @@ export default function BasketballConfChampionHistoryChart({
         team_info: item.team_info,
       };
     }
+    const formatted = formatDate(item.date);
     teamData[item.team_name].data.push({
-      x: formatDate(item.date),
+      x: formatted,
       y: item.champion_pct,
     });
   });
@@ -132,12 +133,49 @@ export default function BasketballConfChampionHistoryChart({
       Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
     ),
   ].sort((a, b) => {
-    const dateA = new Date(a + "/2025");
-    const dateB = new Date(b + "/2025");
+    // Sort using the full date (with year)
+    const [aMonth, aDay, aYear] = a.split("/").map(Number);
+    const [bMonth, bDay, bYear] = b.split("/").map(Number);
+    const dateA = new Date(aYear, aMonth - 1, aDay, 12, 0, 0);
+    const dateB = new Date(bYear, bMonth - 1, bDay, 12, 0, 0);
     return dateA.getTime() - dateB.getTime();
   });
 
-  const teamsForLogos = Object.entries(teamData)
+  // Create display labels that show the year transition points
+  const displayLabels = dates.map((dateStr, index) => {
+    const [month, day, year] = dateStr.split("/").map(Number);
+    const displayDate = `${month}/${day}`;
+
+    // Show year only if year changed from previous date (not on first date)
+    if (index > 0) {
+      const prevYear = parseInt(dates[index - 1].split("/")[2], 10);
+      if (year !== prevYear) {
+        return `${displayDate} ${year}`;
+      }
+    }
+
+    return displayDate;
+  });
+
+  // Create a mapping from full dates to array indices for chart x-axis
+  const dateIndexMap = new Map<string, number>();
+  dates.forEach((date, index) => {
+    dateIndexMap.set(date, index);
+  });
+
+  // Re-map team data to use display labels instead of date strings
+  const mappedTeamData: Record<string, TeamInfo> = {};
+  Object.entries(teamData).forEach(([teamName, teamInfo]) => {
+    mappedTeamData[teamName] = {
+      data: teamInfo.data.map((point) => ({
+        x: displayLabels[dateIndexMap.get(point.x as string) || 0],
+        y: point.y,
+      })),
+      team_info: teamInfo.team_info,
+    };
+  });
+
+  const teamsForLogos = Object.entries(mappedTeamData)
     .map(([teamName, team]) => {
       const finalPct = team.data[team.data.length - 1]?.y || 0;
       return {
@@ -151,7 +189,7 @@ export default function BasketballConfChampionHistoryChart({
     .sort((a, b) => b.final_pct - a.final_pct);
 
   // All teams sorted by final percentage for bottom logos
-  const allTeamsSorted = Object.entries(teamData)
+  const allTeamsSorted = Object.entries(mappedTeamData)
     .map(([teamName, team]) => {
       const finalPct = team.data[team.data.length - 1]?.y || 0;
       return {
@@ -186,7 +224,7 @@ export default function BasketballConfChampionHistoryChart({
     });
   };
 
-  const datasets = Object.entries(teamData).map(([teamName, team]) => {
+  const datasets = Object.entries(mappedTeamData).map(([teamName, team]) => {
     // Show team if no teams are selected OR this team is in the selected set
     const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
     const color = isSelected
@@ -207,7 +245,7 @@ export default function BasketballConfChampionHistoryChart({
   });
 
   const chartData = {
-    labels: dates,
+    labels: displayLabels,
     datasets,
   };
 
@@ -226,12 +264,10 @@ export default function BasketballConfChampionHistoryChart({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById(
-            "chartjs-tooltip-bball-champion"
-          );
+          let tooltipEl = document.getElementById("chartjs-tooltip-conf-champ");
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-bball-champion";
+            tooltipEl.id = "chartjs-tooltip-conf-champ";
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
@@ -279,118 +315,45 @@ export default function BasketballConfChampionHistoryChart({
           }
 
           if (tooltipModel.body) {
-            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = dates[dataIndex];
+            const bodyLines = tooltipModel.body.map((b) => b.lines);
 
-            const teamsAtDate = Object.entries(teamData)
-              .map(([teamName, team]) => {
-                const dataPoint = team.data.find(
-                  (d: TeamDataPoint) => d.x === currentDate
-                );
-                return {
-                  name: teamName,
-                  pct: dataPoint?.y || 0,
-                  color: team.team_info.primary_color || "#000000",
-                };
-              })
-              .filter((team) => team.pct > 0)
-              .sort((a, b) => b.pct - a.pct);
-
-            let innerHtml = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-                <button id="tooltip-close" style="
-                  background: none; 
-                  border: none; 
-                  font-size: 16px; 
-                  cursor: pointer; 
-                  color: #6b7280;
-                  padding: 0;
-                  margin: 0;
-                  line-height: 1;
-                  width: 20px;
-                  height: 20px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">&times;</button>
+            const innerHtml = bodyLines
+              .map((lines, index) => {
+                const datasetIndex =
+                  tooltipModel.dataPoints[index].datasetIndex;
+                const dataset = chart.data.datasets[datasetIndex];
+                return `
+              <div style="color: ${dataset.borderColor}; font-weight: 500; margin-bottom: 8px;">
+                ${lines[0]}
+              </div>
+              <div style="font-size: 11px; color: #6b7280;">
+                ${chart.data.labels ? chart.data.labels[tooltipModel.dataPoints[index].dataIndex] : ""}
               </div>
             `;
-
-            teamsAtDate.forEach((team) => {
-              innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${Math.round(team.pct)}%</div>`;
-            });
+              })
+              .join("");
 
             tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
-            }
           }
 
           const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
+          const chartWidth = chart.width || 600;
           const tooltipWidth = tooltipEl.offsetWidth || 200;
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
+          // Determine position based on whether caret is on left or right side
           const isLeftSide = caretX < chartWidth / 2;
           let leftPosition: number;
-          let arrowPosition: string;
 
           if (isLeftSide) {
             leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
           } else {
             leftPosition =
               position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
           }
 
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          } else {
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
-          }
-
+          // Ensure tooltip stays within viewport
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
@@ -401,8 +364,7 @@ export default function BasketballConfChampionHistoryChart({
             position.top +
             window.pageYOffset +
             caretY -
-            tooltipEl.offsetHeight / 2 -
-            120 +
+            tooltipEl.offsetHeight / 2 +
             "px";
         },
       },
@@ -410,22 +372,14 @@ export default function BasketballConfChampionHistoryChart({
     scales: {
       x: {
         title: { display: false },
-        ticks: {
-          maxTicksLimit: isMobile ? 5 : 10,
-          font: {
-            size: 11,
-          },
-        },
-        grid: {
-          display: false,
-          drawBorder: true,
-        },
+        ticks: { maxTicksLimit: isMobile ? 5 : 10 },
+        grid: { display: false },
       },
       y: {
         title: { display: true, text: "Conference Champion Probability (%)" },
         min: 0,
         max: (() => {
-          const allValues = Object.values(teamData).flatMap((team) =>
+          const allValues = Object.values(mappedTeamData).flatMap((team) =>
             team.data.map((d: TeamDataPoint) => d.y)
           );
           const maxValue = Math.max(...allValues);
@@ -457,7 +411,7 @@ export default function BasketballConfChampionHistoryChart({
     if (!chartDimensions?.chartArea) return null;
     const { top, bottom } = chartDimensions.chartArea;
     const maxY = (() => {
-      const allValues = Object.values(teamData).flatMap((team) =>
+      const allValues = Object.values(mappedTeamData).flatMap((team) =>
         team.data.map((d: TeamDataPoint) => d.y)
       );
       const maxValue = Math.max(...allValues);
@@ -492,31 +446,35 @@ export default function BasketballConfChampionHistoryChart({
       endX: getChartEndXPosition() || 0,
     }));
 
-    positions.sort((a, b) => b.team.final_pct - a.team.final_pct);
-
-    for (let i = positions.length - 1; i >= 0; i--) {
-      if (i === positions.length - 1) {
-        positions[i].adjustedY = Math.min(positions[i].idealY, chartBottom);
-      } else {
-        const lowerLogo = positions[i + 1];
-        const maxAllowedY = lowerLogo.adjustedY - minSpacing;
-        positions[i].adjustedY = Math.min(positions[i].idealY, maxAllowedY);
-        if (positions[i].adjustedY < chartTop) {
-          positions[i].adjustedY = chartTop;
-        }
-      }
+    // If only one team visible, don't adjust - use ideal position
+    if (positions.length === 1) {
+      return positions;
     }
 
-    const topBunchedLogos = positions.filter(
-      (pos) => pos.adjustedY <= chartTop + minSpacing
-    );
-    if (topBunchedLogos.length > 1) {
-      const availableSpace = chartBottom - chartTop;
-      const evenSpacing = availableSpace / (positions.length - 1);
-      for (let i = 0; i < positions.length; i++) {
-        if (positions[i].adjustedY <= chartTop + minSpacing) {
-          positions[i].adjustedY =
-            chartTop + i * Math.max(evenSpacing, minSpacing);
+    // Sort by final_pct descending (highest to lowest) to stack from top
+    positions.sort((a, b) => b.team.final_pct - a.team.final_pct);
+
+    // First pass: try to place all logos at their ideal positions
+    for (let i = 0; i < positions.length; i++) {
+      positions[i].adjustedY = positions[i].idealY;
+    }
+
+    // Second pass: adjust for collisions, working from top to bottom
+    for (let i = positions.length - 1; i >= 0; i--) {
+      // Ensure within chart bounds
+      if (positions[i].adjustedY > chartBottom) {
+        positions[i].adjustedY = chartBottom;
+      }
+      if (positions[i].adjustedY < chartTop) {
+        positions[i].adjustedY = chartTop;
+      }
+
+      // Check for collision with logo below (higher index, lower on chart)
+      if (i < positions.length - 1) {
+        const lowerLogo = positions[i + 1];
+        const minY = lowerLogo.adjustedY - minSpacing;
+        if (positions[i].adjustedY > minY) {
+          positions[i].adjustedY = minY;
         }
       }
     }
@@ -528,7 +486,7 @@ export default function BasketballConfChampionHistoryChart({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">
-          No conference champion probability data available
+          No conference champion data available
         </div>
       </div>
     );
@@ -551,6 +509,7 @@ export default function BasketballConfChampionHistoryChart({
                 const teamColor = isSelected
                   ? team.team_info.primary_color || "#94a3b8"
                   : "#d1d5db";
+
                 return (
                   <div key={`end-${team.team_name}`}>
                     <svg
@@ -581,37 +540,47 @@ export default function BasketballConfChampionHistoryChart({
               {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
                 const isSelected =
                   selectedTeams.size === 0 || selectedTeams.has(team.team_name);
+                const teamDataPoint = mappedTeamData[team.team_name];
+                const lastPoint =
+                  teamDataPoint?.data[teamDataPoint.data.length - 1];
+
                 return (
                   <div
                     key={`logo-${team.team_name}`}
                     className="absolute flex items-center"
                     style={{
-                      right: "0px",
-                      top: `${adjustedY - 12}px`,
+                      right: "10px",
+                      top: `${adjustedY - 10}px`,
                       zIndex: 10,
                       opacity: isSelected ? 1 : 0.3,
                     }}
                   >
-                    <TeamLogo
-                      logoUrl={
-                        team.team_info.logo_url ||
-                        "/images/team_logos/default.png"
-                      }
-                      teamName={team.team_name}
-                      size={24}
-                    />
                     <span
-                      className="text-xs font-medium ml-2"
+                      className="text-xs font-medium mr-2"
                       style={{
                         color: isSelected
                           ? team.team_info.primary_color || "#000000"
                           : "#d1d5db",
                         minWidth: "35px",
-                        textAlign: "left",
+                        textAlign: "right",
                       }}
                     >
-                      {Math.round(team.final_pct)}%
+                      {lastPoint?.y.toFixed(1) || team.final_pct.toFixed(1)}%
                     </span>
+                    <div
+                      style={{
+                        filter: isSelected ? "none" : "grayscale(100%)",
+                      }}
+                    >
+                      <TeamLogo
+                        logoUrl={
+                          team.team_info.logo_url ||
+                          "/images/team_logos/default.png"
+                        }
+                        teamName={team.team_name}
+                        size={20}
+                      />
+                    </div>
                   </div>
                 );
               })}
@@ -620,7 +589,7 @@ export default function BasketballConfChampionHistoryChart({
         )}
       </div>
 
-      {/* Bottom logo selector - smaller size */}
+      {/* Bottom logo selector */}
       <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
         {allTeamsSorted.map((team) => {
           const isSelected =
@@ -650,7 +619,7 @@ export default function BasketballConfChampionHistoryChart({
                     : "#9ca3af",
                 }}
               >
-                {Math.round(team.final_pct)}%
+                {team.final_pct.toFixed(1)}%
               </span>
             </button>
           );

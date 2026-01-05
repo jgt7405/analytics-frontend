@@ -35,13 +35,16 @@ export default function BballStandingsProgressionTable({
   const { isMobile } = useResponsive();
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
 
-  // Generate dates: 11/1, 1st and 15th of each month, last date
+  // Generate dates: 1st and 15th of each month, last date - IN PROPER CHRONOLOGICAL ORDER
   const selectedDates = useMemo(() => {
     if (!timelineData || timelineData.length === 0) {
       return [];
     }
 
-    const allDates = [...new Set(timelineData.map((d) => d.date))].sort();
+    // Step 1: Get all unique dates and sort them chronologically (accounting for year)
+    const allDates = [...new Set(timelineData.map((d) => d.date))].sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    );
 
     if (allDates.length === 0) {
       return [];
@@ -50,13 +53,12 @@ export default function BballStandingsProgressionTable({
     const dates: string[] = [];
     const dateSet = new Set<string>();
 
-    // Add 1st and 15th of each month
+    // Step 2: Build monthMap from chronologically sorted allDates
     const monthMap = new Map<string, { first?: string; fifteenth?: string }>();
     for (const dateStr of allDates) {
-      // Parse YYYY-MM-DD string directly without Date object to avoid timezone issues
       const parts = dateStr.split("-");
       const day = parseInt(parts[2], 10);
-      const monthKey = `${parts[0]}-${parts[1]}`;
+      const monthKey = `${parts[0]}-${parts[1]}`; // YYYY-MM
 
       if (!monthMap.has(monthKey)) {
         monthMap.set(monthKey, {});
@@ -69,22 +71,25 @@ export default function BballStandingsProgressionTable({
       }
     }
 
-    // Add 1st and 15th dates in order
-    for (const [, dates_] of monthMap.entries()) {
-      if (dates_.first && !dateSet.has(dates_.first)) {
-        dates.push(dates_.first);
-        dateSet.add(dates_.first);
+    // Step 3: Extract month keys and sort them chronologically
+    const sortedMonthKeys = Array.from(monthMap.keys()).sort(
+      (a, b) => new Date(a + "-01").getTime() - new Date(b + "-01").getTime()
+    );
+
+    // Step 4: Add 1st and 15th dates in chronological order
+    for (const monthKey of sortedMonthKeys) {
+      const datesByMonth = monthMap.get(monthKey)!;
+      if (datesByMonth.first && !dateSet.has(datesByMonth.first)) {
+        dates.push(datesByMonth.first);
+        dateSet.add(datesByMonth.first);
       }
-      if (dates_.fifteenth && !dateSet.has(dates_.fifteenth)) {
-        dates.push(dates_.fifteenth);
-        dateSet.add(dates_.fifteenth);
+      if (datesByMonth.fifteenth && !dateSet.has(datesByMonth.fifteenth)) {
+        dates.push(datesByMonth.fifteenth);
+        dateSet.add(datesByMonth.fifteenth);
       }
     }
 
-    // Sort the collected dates
-    dates.sort();
-
-    // Always add last date from data if not already included
+    // Step 5: Always add last date from data if not already included
     const lastDate = allDates[allDates.length - 1];
     if (lastDate && !dateSet.has(lastDate)) {
       dates.push(lastDate);

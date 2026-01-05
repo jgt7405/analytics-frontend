@@ -99,8 +99,8 @@ export default function BballStandingsHistoryChart({
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day, 12, 0, 0);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    // Return full date with year for internal tracking
+    return `${month}/${day}/${year}`;
   };
 
   // Deduplicate by team and date, keeping earliest version_id
@@ -126,8 +126,9 @@ export default function BballStandingsHistoryChart({
         team_info: item.team_info,
       };
     }
+    const formatted = formatDate(item.date);
     teamData[item.team_name].data.push({
-      x: formatDate(item.date),
+      x: formatted, // Keep internal format for now, will map later
       y: item.avg_standing,
     });
   });
@@ -137,12 +138,52 @@ export default function BballStandingsHistoryChart({
       Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
     ),
   ].sort((a, b) => {
-    const dateA = new Date(a + "/2025");
-    const dateB = new Date(b + "/2025");
+    // Sort using the full date (with year)
+    const [aMonth, aDay, aYear] = a.split("/").map(Number);
+    const [bMonth, bDay, bYear] = b.split("/").map(Number);
+    const dateA = new Date(aYear, aMonth - 1, aDay, 12, 0, 0);
+    const dateB = new Date(bYear, bMonth - 1, bDay, 12, 0, 0);
     return dateA.getTime() - dateB.getTime();
   });
 
-  const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort();
+  // Create display labels that show the year transition points
+  const displayLabels = dates.map((dateStr, index) => {
+    const [month, day, year] = dateStr.split("/").map(Number);
+    const displayDate = `${month}/${day}`;
+
+    // Show year only if year changed from previous date (not on first date)
+    if (index > 0) {
+      const prevYear = parseInt(dates[index - 1].split("/")[2], 10);
+      if (year !== prevYear) {
+        return `${displayDate} ${year}`;
+      }
+    }
+
+    return displayDate;
+  });
+
+  // Create a mapping from full dates to array indices for chart x-axis
+  const dateIndexMap = new Map<string, number>();
+  dates.forEach((date, index) => {
+    dateIndexMap.set(date, index);
+  });
+
+  // Re-map team data to use indices instead of date strings
+  const mappedTeamData: Record<string, TeamInfo> = {};
+  Object.entries(teamData).forEach(([teamName, teamInfo]) => {
+    mappedTeamData[teamName] = {
+      data: teamInfo.data.map((point) => ({
+        x: displayLabels[dateIndexMap.get(point.x as string) || 0],
+        y: point.y,
+      })),
+      team_info: teamInfo.team_info,
+    };
+  });
+
+  // FIX: Sort allDates chronologically (accounting for year) instead of alphabetically
+  const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort(
+    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+  );
   const lastDate = allDates[allDates.length - 1];
   const finalStandings = filteredTimelineData
     .filter((item) => item.date === lastDate)
@@ -179,7 +220,7 @@ export default function BballStandingsHistoryChart({
     });
   };
 
-  const datasets = Object.entries(teamData).map(([teamName, team]) => {
+  const datasets = Object.entries(mappedTeamData).map(([teamName, team]) => {
     // Show team if no teams are selected OR this team is in the selected set
     const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
     const color = isSelected
@@ -199,7 +240,7 @@ export default function BballStandingsHistoryChart({
   });
 
   const chartData = {
-    labels: dates,
+    labels: displayLabels,
     datasets,
   };
 
@@ -271,115 +312,45 @@ export default function BballStandingsHistoryChart({
           }
 
           if (tooltipModel.body) {
-            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = allDates[dataIndex];
+            const bodyLines = tooltipModel.body.map((b) => b.lines);
 
-            const teamsAtDate = filteredTimelineData
-              .filter((item) => item.date === currentDate)
-              .map((item) => ({
-                name: item.team_name,
-                standing: item.avg_standing,
-                color: item.team_info.primary_color || "#000000",
-              }))
-              .sort((a, b) => a.standing - b.standing);
-
-            let innerHtml = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div style="font-weight: 600; color: #1f2937;">${formatDate(currentDate)}</div>
-              <button id="tooltip-close" style="
-                background: none; 
-                border: none; 
-                font-size: 16px; 
-                cursor: pointer; 
-                color: #6b7280;
-                padding: 0;
-                margin: 0;
-                line-height: 1;
-                width: 20px;
-                height: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              ">&times;</button>
-            </div>
-          `;
-
-            teamsAtDate.forEach((team) => {
-              innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${team.standing.toFixed(1)}</div>`;
-            });
+            const innerHtml = bodyLines
+              .map((lines, index) => {
+                const datasetIndex =
+                  tooltipModel.dataPoints[index].datasetIndex;
+                const dataset = chart.data.datasets[datasetIndex];
+                return `
+              <div style="color: ${dataset.borderColor}; font-weight: 500; margin-bottom: 8px;">
+                ${lines[0]}
+              </div>
+              <div style="font-size: 11px; color: #6b7280;">
+                ${chart.data.labels ? chart.data.labels[tooltipModel.dataPoints[index].dataIndex] : ""}
+              </div>
+            `;
+              })
+              .join("");
 
             tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
-            }
           }
 
-          // Smart positioning logic
           const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
+          const chartWidth = chart.width || 600;
           const tooltipWidth = tooltipEl.offsetWidth || 200;
           const caretX = tooltipModel.caretX;
           const caretY = tooltipModel.caretY;
 
+          // Determine position based on whether caret is on left or right side
           const isLeftSide = caretX < chartWidth / 2;
           let leftPosition: number;
-          let arrowPosition: string;
 
           if (isLeftSide) {
             leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
           } else {
             leftPosition =
               position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
           }
 
-          // Add/update arrow
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          } else {
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
-          }
-
+          // Ensure tooltip stays within viewport
           const maxLeft = window.innerWidth - tooltipWidth - 10;
           const minLeft = 10;
           leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
@@ -391,7 +362,6 @@ export default function BballStandingsHistoryChart({
             window.pageYOffset +
             caretY -
             tooltipEl.offsetHeight / 2 +
-            40 +
             "px";
         },
       },
@@ -452,7 +422,7 @@ export default function BballStandingsHistoryChart({
         : finalStandings.filter((team) => selectedTeams.has(team.team_name));
 
     const positions = visibleTeams.map((team) => {
-      const teamDataPoint = teamData[team.team_name];
+      const teamDataPoint = mappedTeamData[team.team_name];
       const lastPoint = teamDataPoint?.data[teamDataPoint.data.length - 1];
       const idealY =
         getChartJsYPosition(lastPoint?.y || team.avg_standing) || 0;
@@ -542,7 +512,7 @@ export default function BballStandingsHistoryChart({
               {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
                 const isSelected =
                   selectedTeams.size === 0 || selectedTeams.has(team.team_name);
-                const teamDataPoint = teamData[team.team_name];
+                const teamDataPoint = mappedTeamData[team.team_name];
                 const lastPoint =
                   teamDataPoint?.data[teamDataPoint.data.length - 1];
 
