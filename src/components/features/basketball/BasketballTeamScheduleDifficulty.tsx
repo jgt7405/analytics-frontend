@@ -3,11 +3,13 @@
 
 import { useMemo, useState } from "react";
 
-// Constants - Adjusted height
-const CHART_HEIGHT = 450;
+// Constants
+const TOP_SECTION_HEIGHT = 480;
+const BOTTOM_SECTION_HEIGHT = 35;
+const TOTAL_CHART_HEIGHT = TOP_SECTION_HEIGHT + BOTTOM_SECTION_HEIGHT;
 const CHART_WIDTH_DESKTOP = 380;
 const CHART_WIDTH_MOBILE = 320;
-const MARGIN = { top: 20, right: 60, bottom: 40, left: 60 };
+const THRESHOLD = 0.95; // 95% probability threshold
 
 interface BasketballTeamGame {
   date: string;
@@ -31,12 +33,13 @@ interface AllScheduleGame {
 interface GameWithPosition extends BasketballTeamGame {
   percentilePosition: number;
   gameIndex: number;
+  isHighProb: boolean;
 }
 
 interface PositionedGame extends GameWithPosition {
   isRightSide: boolean;
   adjustedY: number;
-  columnIndex: number; // 0=far left, 1=near left, 2=near right, 3=far right
+  columnIndex: number;
 }
 
 interface BasketballTeamScheduleDifficultyProps {
@@ -79,9 +82,15 @@ export default function BasketballTeamScheduleDifficulty({
   // Detect mobile
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
   const CHART_WIDTH = isMobile ? CHART_WIDTH_MOBILE : CHART_WIDTH_DESKTOP;
-  const PLOT_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
-  const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 
+  const TOP_MARGIN = { top: 20, right: 60, bottom: 30, left: 60 };
+  const BOTTOM_MARGIN = { top: 2, right: 60, bottom: 5, left: 60 };
+
+  const TOP_PLOT_HEIGHT =
+    TOP_SECTION_HEIGHT - TOP_MARGIN.top - TOP_MARGIN.bottom;
+  const TOP_PLOT_WIDTH = CHART_WIDTH - TOP_MARGIN.left - TOP_MARGIN.right;
+
+  // Filter team games based on gameFilter
   const teamGames = useMemo(() => {
     if (!allScheduleData) return [];
 
@@ -103,7 +112,59 @@ export default function BasketballTeamScheduleDifficulty({
     });
   }, [schedule, gameFilter, allScheduleData]);
 
+  // Split team games into two groups
+  const { lowProbGames, highProbGames } = useMemo(() => {
+    const low = teamGames.filter((g) => (g.kenpom_win_prob || 0) <= THRESHOLD);
+    const high = teamGames.filter((g) => (g.kenpom_win_prob || 0) > THRESHOLD);
+    return { lowProbGames: low, highProbGames: high };
+  }, [teamGames]);
+
+  // Get comparison dataset for low probability games only
   const comparisonDataset = useMemo(() => {
+    if (!allScheduleData) return [];
+
+    const filtered = allScheduleData.filter((game: AllScheduleGame) => {
+      // Only include games <= 95%
+      if ((game.kenpom_win_prob || 0) > THRESHOLD) return false;
+
+      switch (gameFilter) {
+        case "completed":
+          if (!["W", "L"].includes(game.status)) return false;
+          break;
+        case "wins":
+          if (game.status !== "W") return false;
+          break;
+        case "losses":
+          if (game.status !== "L") return false;
+          break;
+        case "remaining":
+          if (["W", "L"].includes(game.status)) return false;
+          break;
+      }
+
+      switch (comparisonFilter) {
+        case "conference":
+          return game.team_conf === teamConference;
+        case "all_d1":
+          return true;
+        case "power_6":
+          return ["Big 12", "SEC", "Big Ten", "ACC", "Big East"].includes(
+            game.team_conf
+          );
+        case "non_power_6":
+          return !["Big 12", "SEC", "Big Ten", "ACC", "Big East"].includes(
+            game.team_conf
+          );
+        default:
+          return true;
+      }
+    });
+
+    return filtered;
+  }, [allScheduleData, comparisonFilter, teamConference, gameFilter]);
+
+  // Get all games (both <95% and >95%) for comparison dataset
+  const allComparisonGames = useMemo(() => {
     if (!allScheduleData) return [];
 
     const filtered = allScheduleData.filter((game: AllScheduleGame) => {
@@ -143,6 +204,7 @@ export default function BasketballTeamScheduleDifficulty({
     return filtered;
   }, [allScheduleData, comparisonFilter, teamConference, gameFilter]);
 
+  // Calculate percentiles for low probability games only
   const percentiles = useMemo(() => {
     const kenpomProbs = comparisonDataset
       .map((game: AllScheduleGame) => game.kenpom_win_prob)
@@ -161,14 +223,15 @@ export default function BasketballTeamScheduleDifficulty({
 
     percentileValues.push({
       percentile: 100,
-      value: kenpomProbs[kenpomProbs.length - 1],
+      value: Math.min(kenpomProbs[kenpomProbs.length - 1], THRESHOLD),
     });
 
     return percentileValues;
   }, [comparisonDataset]);
 
+  // Position games in top section (low probability)
   const teamGamePositions = useMemo((): GameWithPosition[] => {
-    return teamGames.map((game, index) => {
+    return lowProbGames.map((game, index) => {
       const kenpomProb = game.kenpom_win_prob!;
       let percentilePosition = 100;
 
@@ -195,52 +258,50 @@ export default function BasketballTeamScheduleDifficulty({
         percentilePosition = 0;
       }
 
-      return { ...game, percentilePosition, gameIndex: index };
+      return {
+        ...game,
+        percentilePosition,
+        gameIndex: index,
+        isHighProb: false,
+      };
     });
-  }, [teamGames, percentiles]);
+  }, [lowProbGames, percentiles]);
 
+  // Layout games in top section
   const positionedGames = useMemo((): PositionedGame[] => {
-    // Sort by difficulty (hardest first)
     const sortedByDifficulty = [...teamGamePositions].sort(
       (a, b) => a.percentilePosition - b.percentilePosition
     );
 
     const positioned: PositionedGame[] = [];
-    const minSpacing = 32; // Increased minimum vertical spacing between logos
-
-    // Column assignment pattern: #1->column 0, #2->column 3, #3->column 1, #4->column 2
+    const minSpacing = 32;
     const columnPattern = [0, 3, 1, 2];
 
-    // Process games in difficulty order (hardest to easiest)
     sortedByDifficulty.forEach((game, index) => {
-      // Assign to columns based on pattern
       const columnIndex = columnPattern[index % 4];
       const isRightSide = columnIndex >= 2;
 
-      // Calculate the ideal Y position based on difficulty percentile
-      const gameY = MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
-      let logoY = gameY; // Start at ideal position
+      const gameY =
+        TOP_MARGIN.top + (game.percentilePosition / 100) * TOP_PLOT_HEIGHT;
+      let logoY = gameY;
 
-      // Get all previously placed logos in this column, sorted by Y position
       const sameColumnLogos = positioned
         .filter((p) => p.columnIndex === columnIndex)
         .sort((a, b) => a.adjustedY - b.adjustedY);
 
       if (sameColumnLogos.length > 0) {
-        // Find the best position that minimizes total displacement
         let bestY = logoY;
         let minTotalDisplacement = Infinity;
 
-        // Try different positions around the ideal position
-        const searchRange = 120; // Increased search range
-        const step = 2; // Check every 2 pixels
+        const searchRange = 120;
+        const step = 2;
 
         for (
-          let testY = Math.max(MARGIN.top + 15, logoY - searchRange);
-          testY <= Math.min(MARGIN.top + PLOT_HEIGHT - 15, logoY + searchRange);
+          let testY = Math.max(TOP_MARGIN.top + 15, logoY - searchRange);
+          testY <=
+          Math.min(TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15, logoY + searchRange);
           testY += step
         ) {
-          // Check if this position has minimum spacing from ALL existing logos in this column
           let hasCollision = false;
           for (const existing of sameColumnLogos) {
             if (Math.abs(testY - existing.adjustedY) < minSpacing) {
@@ -250,10 +311,7 @@ export default function BasketballTeamScheduleDifficulty({
           }
 
           if (!hasCollision) {
-            // Calculate total displacement if we use this position
             const displacement = Math.abs(testY - gameY);
-
-            // Calculate what the total displacement would be for all games so far
             const totalDisplacement =
               displacement +
               positioned.reduce(
@@ -261,7 +319,8 @@ export default function BasketballTeamScheduleDifficulty({
                   sum +
                   Math.abs(
                     p.adjustedY -
-                      (MARGIN.top + (p.percentilePosition / 100) * PLOT_HEIGHT)
+                      (TOP_MARGIN.top +
+                        (p.percentilePosition / 100) * TOP_PLOT_HEIGHT)
                   ),
                 0
               );
@@ -276,10 +335,9 @@ export default function BasketballTeamScheduleDifficulty({
         logoY = bestY;
       }
 
-      // Ensure logo stays within chart bounds
       logoY = Math.max(
-        MARGIN.top + 15,
-        Math.min(MARGIN.top + PLOT_HEIGHT - 15, logoY)
+        TOP_MARGIN.top + 15,
+        Math.min(TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15, logoY)
       );
 
       positioned.push({
@@ -291,7 +349,40 @@ export default function BasketballTeamScheduleDifficulty({
     });
 
     return positioned;
-  }, [teamGamePositions, PLOT_HEIGHT]);
+  }, [teamGamePositions, TOP_PLOT_HEIGHT, TOP_MARGIN.top]);
+
+  // Format record text based on gameFilter
+  const getRecordText = () => {
+    const { wins, losses, remaining } = highProbRecord;
+
+    if (gameFilter === "all") {
+      return `${wins}-${losses}, ${remaining} remaining`;
+    } else if (gameFilter === "wins") {
+      return `${wins} ${wins === 1 ? "win" : "wins"}`;
+    } else if (gameFilter === "losses") {
+      return `${losses} ${losses === 1 ? "loss" : "losses"}`;
+    } else if (gameFilter === "remaining") {
+      return `${remaining} ${remaining === 1 ? "remaining" : "remaining"}`;
+    } else if (gameFilter === "completed") {
+      return `${wins}-${losses}`;
+    }
+    return "";
+  };
+
+  // Calculate high prob games record
+  const highProbRecord = useMemo(() => {
+    let wins = 0,
+      losses = 0,
+      remaining = 0;
+
+    highProbGames.forEach((game) => {
+      if (game.status === "W") wins++;
+      else if (game.status === "L") losses++;
+      else remaining++;
+    });
+
+    return { wins, losses, remaining };
+  }, [highProbGames]);
 
   const getGameRank = (game: PositionedGame) => {
     const allGamesInFilter = comparisonDataset
@@ -387,7 +478,7 @@ export default function BasketballTeamScheduleDifficulty({
           <div>Location: {game.location}</div>
           <div>{winProb}% Win Probability for 30th Rated Team</div>
           <div>
-            #{rank} Most Difficult Game Out of{" "}
+            #{rank.toLocaleString()} Most Difficult Game Out of{" "}
             {comparisonDataset.length.toLocaleString()} Games in{" "}
             {getFilterDescription()} ({percentile} Percentile)
           </div>
@@ -471,25 +562,29 @@ export default function BasketballTeamScheduleDifficulty({
       >
         <svg
           width={CHART_WIDTH}
-          height={CHART_HEIGHT}
+          height={TOTAL_CHART_HEIGHT}
           className="border border-gray-200 rounded"
         >
-          <rect width={CHART_WIDTH} height={CHART_HEIGHT} fill="white" />
+          <rect width={CHART_WIDTH} height={TOTAL_CHART_HEIGHT} fill="white" />
 
+          {/* ========== TOP SECTION (≤95% games) ========== */}
+
+          {/* Percentile gridlines */}
           {percentiles.map((percentile) => {
-            const y = MARGIN.top + (percentile.percentile / 100) * PLOT_HEIGHT;
+            const y =
+              TOP_MARGIN.top + (percentile.percentile / 100) * TOP_PLOT_HEIGHT;
             return (
-              <g key={percentile.percentile}>
+              <g key={`top-percentile-${percentile.percentile}`}>
                 <line
-                  x1={MARGIN.left}
-                  x2={MARGIN.left + PLOT_WIDTH}
+                  x1={TOP_MARGIN.left}
+                  x2={TOP_MARGIN.left + TOP_PLOT_WIDTH}
                   y1={y}
                   y2={y}
                   stroke="#e5e7eb"
                   strokeWidth={1}
                 />
                 <text
-                  x={MARGIN.left - 10}
+                  x={TOP_MARGIN.left - 10}
                   y={y + 4}
                   textAnchor="end"
                   className="text-xs fill-gray-600"
@@ -497,7 +592,7 @@ export default function BasketballTeamScheduleDifficulty({
                   {percentile.percentile}%
                 </text>
                 <text
-                  x={MARGIN.left + PLOT_WIDTH + 10}
+                  x={TOP_MARGIN.left + TOP_PLOT_WIDTH + 10}
                   y={y + 4}
                   textAnchor="start"
                   className="text-xs fill-gray-600"
@@ -508,21 +603,23 @@ export default function BasketballTeamScheduleDifficulty({
             );
           })}
 
+          {/* Center vertical line */}
           <line
-            x1={MARGIN.left + PLOT_WIDTH / 2}
-            x2={MARGIN.left + PLOT_WIDTH / 2}
-            y1={MARGIN.top}
-            y2={MARGIN.top + PLOT_HEIGHT}
+            x1={TOP_MARGIN.left + TOP_PLOT_WIDTH / 2}
+            x2={TOP_MARGIN.left + TOP_PLOT_WIDTH / 2}
+            y1={TOP_MARGIN.top}
+            y2={TOP_MARGIN.top + TOP_PLOT_HEIGHT}
             stroke="#374151"
             strokeWidth={2}
           />
 
+          {/* Top section games */}
           {positionedGames.map((game, index) => {
             const gameY =
-              MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
-            const circleX = MARGIN.left + PLOT_WIDTH / 2;
+              TOP_MARGIN.top +
+              (game.percentilePosition / 100) * TOP_PLOT_HEIGHT;
+            const circleX = TOP_MARGIN.left + TOP_PLOT_WIDTH / 2;
 
-            // Calculate logoX based on columnIndex
             const columnOffsets = [-85, -45, 45, 85];
             const logoX = circleX + columnOffsets[game.columnIndex];
 
@@ -531,7 +628,6 @@ export default function BasketballTeamScheduleDifficulty({
 
             return (
               <g key={uniqueKey}>
-                {/* Connection line with opponent's primary color */}
                 <line
                   x1={circleX + (game.isRightSide ? 4 : -4)}
                   x2={logoX + (game.isRightSide ? -12 : 12)}
@@ -649,29 +745,30 @@ export default function BasketballTeamScheduleDifficulty({
             );
           })}
 
+          {/* Top section axis labels */}
           <text
-            x={MARGIN.left - 45}
-            y={MARGIN.top + PLOT_HEIGHT / 2}
+            x={TOP_MARGIN.left - 45}
+            y={TOP_MARGIN.top + TOP_PLOT_HEIGHT / 2}
             textAnchor="middle"
-            transform={`rotate(-90, ${MARGIN.left - 45}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
+            transform={`rotate(-90, ${TOP_MARGIN.left - 45}, ${TOP_MARGIN.top + TOP_PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
             Difficulty Percentile Rating All Games in Dataset
           </text>
 
           <text
-            x={MARGIN.left + PLOT_WIDTH + 45}
-            y={MARGIN.top + PLOT_HEIGHT / 2}
+            x={TOP_MARGIN.left + TOP_PLOT_WIDTH + 45}
+            y={TOP_MARGIN.top + TOP_PLOT_HEIGHT / 2}
             textAnchor="middle"
-            transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 45}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
+            transform={`rotate(90, ${TOP_MARGIN.left + TOP_PLOT_WIDTH + 45}, ${TOP_MARGIN.top + TOP_PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
             Win Probability of 30th Rated Team
           </text>
 
           <text
-            x={MARGIN.left + PLOT_WIDTH - 150}
-            y={MARGIN.top - 8}
+            x={TOP_MARGIN.left + TOP_PLOT_WIDTH - 150}
+            y={TOP_MARGIN.top - 8}
             textAnchor="start"
             className="text-xs fill-gray-500"
           >
@@ -679,13 +776,48 @@ export default function BasketballTeamScheduleDifficulty({
           </text>
 
           <text
-            x={MARGIN.left + PLOT_WIDTH - 150}
-            y={MARGIN.top + PLOT_HEIGHT + 18}
+            x={TOP_MARGIN.left + TOP_PLOT_WIDTH - 150}
+            y={TOP_MARGIN.top + TOP_PLOT_HEIGHT + 12}
             textAnchor="start"
             className="text-xs fill-gray-500"
           >
-            Easiest
+            Easiest (95% threshold)
           </text>
+
+          {/* ========== DIVIDING LINE ========== */}
+          <line
+            x1={BOTTOM_MARGIN.left}
+            x2={CHART_WIDTH - BOTTOM_MARGIN.right}
+            y1={TOP_SECTION_HEIGHT}
+            y2={TOP_SECTION_HEIGHT}
+            stroke="#9ca3af"
+            strokeWidth={1.5}
+            strokeDasharray="5,3"
+          />
+
+          {/* ========== BOTTOM SECTION (>95% games) ========== */}
+
+          {/* Bottom section label and record */}
+          {highProbGames.length > 0 && (
+            <g>
+              <text
+                x={CHART_WIDTH / 2}
+                y={TOP_SECTION_HEIGHT + BOTTOM_MARGIN.top + 12}
+                textAnchor="middle"
+                className="text-xs fill-gray-600"
+              >
+                Games with {">"} 95% Win Probability
+              </text>
+              <text
+                x={CHART_WIDTH / 2}
+                y={TOP_SECTION_HEIGHT + BOTTOM_MARGIN.top + 28}
+                textAnchor="middle"
+                className="text-sm fill-gray-800"
+              >
+                {getRecordText()}
+              </text>
+            </g>
+          )}
         </svg>
 
         {hoveredGame && (
@@ -697,6 +829,7 @@ export default function BasketballTeamScheduleDifficulty({
         )}
       </div>
 
+      {/* Legend and stats */}
       <div className="mt-4 text-xs text-gray-600">
         <div className="flex flex-wrap gap-4 justify-center">
           <div className="flex items-center gap-1">
@@ -712,9 +845,10 @@ export default function BasketballTeamScheduleDifficulty({
             <span>Future Game</span>
           </div>
         </div>
+
         <div className="text-center mt-2">
-          Comparing {teamGames.length.toLocaleString()} games against{" "}
-          {comparisonDataset.length.toLocaleString()} total games
+          Comparing {teamGames.length.toLocaleString()} games vs{" "}
+          {allComparisonGames.length.toLocaleString()} total games
           <br />
         </div>
       </div>
