@@ -148,14 +148,27 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
         textColor = "black";
         content = "L";
       } else if (game.date) {
-        const currentDate = new Date();
+        // Get today's date at midnight for proper comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        // Find the next game for this specific team
+        // Find the next game for this specific team (today or later, without W or L)
         const teamGames = Object.values(gamesByRankAndTeam)
           .map((rankGames) => rankGames[teamName])
-          .filter((g) => g && g.date && new Date(g.date) > currentDate)
+          .filter((g) => {
+            if (!g || !g.date) return false;
+            // Parse date string YYYY-MM-DD
+            const gameDate = new Date(g.date + "T00:00:00");
+            // Include games that are today or later, and don't have a W or L status
+            return (
+              gameDate >= today &&
+              (!g.status || (g.status !== "W" && g.status !== "L"))
+            );
+          })
           .sort(
-            (a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime()
+            (a, b) =>
+              new Date(a.date! + "T00:00:00").getTime() -
+              new Date(b.date! + "T00:00:00").getTime()
           );
 
         const isNextGame =

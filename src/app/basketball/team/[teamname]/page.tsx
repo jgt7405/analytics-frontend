@@ -1,4 +1,3 @@
-// src/app/basketball/team/[teamname]/page.tsx
 "use client";
 
 import ScreenshotModal from "@/components/common/ScreenshotModal";
@@ -10,6 +9,7 @@ import BasketballTeamStandingsHistory from "@/components/features/basketball/Bas
 import BasketballTeamTournamentBidHistory from "@/components/features/basketball/BasketballTeamTournamentBidHistory";
 import BasketballTeamTournamentProgressionHistory from "@/components/features/basketball/BasketballTeamTournamentProgressionHistory";
 import BasketballTeamWinHistory from "@/components/features/basketball/BasketballTeamWinHistory";
+import BasketballTeamWinsBreakdown from "@/components/features/basketball/BasketballTeamWinsBreakdown";
 import TeamSchedule from "@/components/features/basketball/TeamSchedule";
 import TeamSeedProjections from "@/components/features/basketball/TeamSeedProjections";
 import TeamWinValues from "@/components/features/basketball/TeamWinValues";
@@ -171,6 +171,11 @@ export default function BasketballTeamPage({
       selector: ".basketball-schedule-difficulty",
     },
     {
+      id: "wins-breakdown",
+      label: "Wins Breakdown",
+      selector: ".basketball-wins-breakdown",
+    },
+    {
       id: "win-values",
       label: "Win Values Over Time",
       selector: ".basketball-win-values",
@@ -245,7 +250,7 @@ export default function BasketballTeamPage({
       <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
         <div className="space-y-3">
           {isMobile ? (
-            // ... REST OF COMPONENT STAYS THE SAME (mobile JSX)
+            // MOBILE LAYOUT
             <div className="space-y-2">
               {/* Mobile Header */}
               <div className="bg-white rounded-lg px-2 py-4">
@@ -450,6 +455,21 @@ export default function BasketballTeamPage({
                 </div>
               )}
 
+              {/* Mobile Wins Breakdown - WITH SECONDARY COLOR */}
+              <div
+                className="bg-white rounded-lg p-3 basketball-wins-breakdown"
+                style={{ border: "1px solid #d1d5db" }}
+              >
+                <h2 className="text-base font-semibold mb-1 -mt-2">
+                  Wins Breakdown
+                </h2>
+                <BasketballTeamWinsBreakdown
+                  schedule={schedule}
+                  primaryColor={team_info.primary_color}
+                  secondaryColor={team_info.secondary_color}
+                />
+              </div>
+
               {/* Screenshot Button - Mobile */}
               <div className="flex justify-end px-2 mt-2">
                 <button
@@ -568,8 +588,7 @@ export default function BasketballTeamPage({
               </div>
             </div>
           ) : (
-            // ... REST OF COMPONENT STAYS THE SAME (desktop JSX from original)
-            // Copy the entire desktop section from your original file
+            // DESKTOP LAYOUT
             <div className="w-full">
               {/* Desktop Header */}
               <div className="bg-white rounded-lg p-4 mb-3">
@@ -757,6 +776,21 @@ export default function BasketballTeamPage({
                       />
                     </div>
                   )}
+
+                  {/* Wins Breakdown - WITH SECONDARY COLOR */}
+                  <div
+                    className="bg-white rounded-lg p-3 basketball-wins-breakdown"
+                    style={{ border: "1px solid #d1d5db" }}
+                  >
+                    <h2 className="text-lg font-semibold mb-1 -mt-2">
+                      Wins Breakdown
+                    </h2>
+                    <BasketballTeamWinsBreakdown
+                      schedule={schedule}
+                      primaryColor={team_info.primary_color}
+                      secondaryColor={team_info.secondary_color}
+                    />
+                  </div>
 
                   {/* Screenshot Button - Desktop */}
                   <div className="flex justify-end">
