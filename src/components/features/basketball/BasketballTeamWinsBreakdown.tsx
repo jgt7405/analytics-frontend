@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface BasketballTeamGame {
   date: string;
@@ -14,28 +14,98 @@ interface BasketballTeamGame {
   team_conf?: string;
 }
 
+interface ConfChampData {
+  team_name: string;
+  pct_prob_win_conf_tourney_game_1: number;
+  pct_prob_win_conf_tourney_game_2: number;
+  pct_prob_win_conf_tourney_game_3: number;
+  pct_prob_win_conf_tourney_game_4: number;
+  pct_prob_win_conf_tourney_game_5: number;
+  pct_prob_win_conf_tourney_game_6: number;
+  wins_for_bubble: number;
+  wins_for_1_seed: number;
+  wins_for_2_seed: number;
+  wins_for_3_seed: number;
+  wins_for_4_seed: number;
+  wins_for_5_seed: number;
+  wins_for_6_seed: number;
+  wins_for_7_seed: number;
+  wins_for_8_seed: number;
+  wins_for_9_seed: number;
+  wins_for_10_seed: number;
+}
+
 interface BasketballTeamWinsBreakdownProps {
   schedule: BasketballTeamGame[];
+  teamName: string;
+  conference: string;
   primaryColor: string;
   secondaryColor?: string;
   logoUrl?: string;
 }
 
-const LOGO_SIZE = 20; // Size of opponent logos in pixels
-const PADDING = 12; // Increased to prevent label clipping
-const LEFT_AXIS_PADDING = -20; // Shifted 90 pixels left from previous position (70 - 90 = -20)
-const LOGO_SPACING = 8; // Spacing between bar and logos
-const MIN_WIDTH = 350; // Much smaller width to fit in box
-const CHART_HEIGHT = 540; // Increased to accommodate larger padding and bottom label
-const BAR_WIDTH = 40; // Wider bar for better visibility
+const LOGO_SIZE = 20;
+const PADDING = 12;
+const LEFT_AXIS_PADDING = -20;
+const LOGO_SPACING = 8;
+const MIN_WIDTH = 350;
+const CHART_HEIGHT = 540;
+const BAR_WIDTH = 40;
 
 export default function BasketballTeamWinsBreakdown({
   schedule,
+  teamName,
+  conference,
   primaryColor,
   secondaryColor,
   logoUrl: _logoUrl,
 }: BasketballTeamWinsBreakdownProps) {
-  // Use the secondary color that's passed from the page
+  const [confChampData, setConfChampData] = useState<ConfChampData | null>(
+    null
+  );
+  const [loading, setLoading] = useState(false);
+
+  // Generate conference logo URL
+  const confLogoUrl = useMemo(() => {
+    const formattedConfName = conference.replace(/\s+/g, "_");
+    return `/images/conf_logos/${formattedConfName}.png`;
+  }, [conference]);
+
+  // Fetch conference championship data
+  useEffect(() => {
+    const fetchConfChampData = async () => {
+      setLoading(true);
+      try {
+        const confFormatted = conference.replace(/\s+/g, "_");
+        const url = `/api/proxy/basketball/conf_champ_analysis/${confFormatted}`;
+
+        const response = await fetch(url);
+
+        if (response.ok) {
+          const result = await response.json();
+
+          if (result.data && Array.isArray(result.data)) {
+            const teamData = result.data.find(
+              (t: ConfChampData) => t.team_name === teamName
+            );
+
+            if (teamData) {
+              setConfChampData(teamData);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("[CONF_CHAMP] Fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (teamName && conference) {
+      fetchConfChampData();
+    }
+  }, [teamName, conference]);
+
   const finalSecondaryColor = secondaryColor
     ? secondaryColor
     : primaryColor === "#3b82f6"
@@ -44,15 +114,36 @@ export default function BasketballTeamWinsBreakdown({
         ? "#3b82f6"
         : "#ef4444";
 
-  // DEBUG: Log colors with detailed info
-  useEffect(() => {
-    console.log("🎨 WinsBreakdown Component Rendered");
-    console.log("  primaryColor:", primaryColor);
-    console.log("  secondaryColor (received):", secondaryColor);
-    console.log("  finalSecondaryColor (using):", finalSecondaryColor);
-    console.log("  Is secondaryColor defined?:", secondaryColor !== undefined);
-    console.log("  Type of secondaryColor:", typeof secondaryColor);
-  }, [primaryColor, secondaryColor, finalSecondaryColor]);
+  // Create conference championship games with probabilities
+  const confChampGames = useMemo(() => {
+    if (!confChampData) {
+      return [];
+    }
+
+    const games: (BasketballTeamGame & { winProb: number })[] = [];
+
+    for (let gameNum = 1; gameNum <= 6; gameNum++) {
+      const probKey =
+        `pct_prob_win_conf_tourney_game_${gameNum}` as keyof ConfChampData;
+      const prob = (confChampData[probKey] as number) || 0;
+
+      if (prob > 0) {
+        games.push({
+          date: "",
+          opponent: `Conf Champ Game ${gameNum}`,
+          opponent_logo: confLogoUrl,
+          opponent_primary_color: "#8B7355",
+          location: "Neutral",
+          status: "Projected",
+          team_win_prob: prob / 100,
+          winProb: prob / 100,
+        });
+      }
+    }
+
+    return games;
+  }, [confChampData, confLogoUrl]);
+
   // Separate wins and remaining games with probabilities
   const { completedWins, remainingGames, totalWins } = useMemo(() => {
     const wins = schedule
@@ -61,7 +152,7 @@ export default function BasketballTeamWinsBreakdown({
         ...g,
         winProb: g.team_win_prob || 0,
       }))
-      .sort((a, b) => b.winProb - a.winProb); // Highest prob first (most difficult at top)
+      .sort((a, b) => b.winProb - a.winProb);
 
     const remaining = schedule
       .filter(
@@ -71,55 +162,51 @@ export default function BasketballTeamWinsBreakdown({
         ...g,
         winProb: g.team_win_prob || 0,
       }))
-      .sort((a, b) => b.winProb - a.winProb); // Highest prob first (most difficult at top)
+      .concat(confChampGames)
+      .sort((a, b) => b.winProb - a.winProb);
 
     return {
       completedWins: wins,
       remainingGames: remaining,
       totalWins: wins.length,
     };
-  }, [schedule]);
+  }, [schedule, confChampGames]);
 
-  const chartWidth = Math.max(MIN_WIDTH, 320); // Much smaller width
+  const chartWidth = Math.max(MIN_WIDTH, 320);
   const chartHeight = CHART_HEIGHT;
 
-  // Y-axis scale: only account for wins and remaining games (no losses)
   const maxGames = completedWins.length + remainingGames.length;
 
-  // Usable chart area
-  const chartAreaTop = PADDING; // No extra space needed for legend
-  const chartAreaBottom = chartHeight - PADDING - 20; // Space for x-axis label and bottom text
+  const chartAreaTop = PADDING;
+  const chartAreaBottom = chartHeight - PADDING - 20;
   const chartAreaHeight = chartAreaBottom - chartAreaTop;
 
-  // Center the bar with logo spaces on left and right
-  const centerX = chartWidth / 2 - 50; // Shifted 50 pixels left
+  const centerX = chartWidth / 2 - 50;
   const barX = centerX - BAR_WIDTH / 2;
   const barWidth = BAR_WIDTH;
 
-  // Position for the base of the colored bar (representing current wins)
   const barBottomY = chartAreaBottom;
   const barTopY = barBottomY - (totalWins / maxGames) * chartAreaHeight;
 
-  // Position for remaining games outline (extends above the bar)
-  // Note: This space is used for rendering remaining games sections
-
-  // Calculate positions for logos on left and right sides
-  // Position them at the CENTER of each game grouping (between game numbers)
   const allGames = [...completedWins, ...remainingGames];
   const logoPositions = allGames.map((game, index) => {
-    // Center position between game index and index+1
-    const gameCenterNumber = index + 0.5; // 0.5, 1.5, 2.5, etc.
+    const gameCenterNumber = index + 0.5;
     const yPosition =
       barBottomY - (gameCenterNumber / maxGames) * chartAreaHeight;
-    const _isLeft = index % 2 === 0; // Even indices on left, odd on right
+    const _isLeft = index % 2 === 0;
 
-    // Position logos close to the bar, on left and right sides
     const logoX = _isLeft
-      ? barX - LOGO_SPACING - LOGO_SIZE // Left side logos - close to bar
-      : barX + barWidth + LOGO_SPACING; // Right side logos - close to bar
+      ? barX - LOGO_SPACING - LOGO_SIZE
+      : barX + barWidth + LOGO_SPACING;
 
     return { game, yPosition, gameNumber: index + 1, logoX };
   });
+
+  // Helper function to convert wins to Y position
+  const getYFromWins = (wins: number) => {
+    if (maxGames === 0) return chartAreaBottom;
+    return chartAreaBottom - (wins / maxGames) * chartAreaHeight;
+  };
 
   return (
     <div className="flex flex-col items-center w-full">
@@ -136,6 +223,478 @@ export default function BasketballTeamWinsBreakdown({
           height={chartHeight}
           fill="white"
         />
+
+        {/* Seed projection background regions - LABELS ARE ABOVE THEIR LINES */}
+        {confChampData &&
+          (() => {
+            const bubbleWins = confChampData.wins_for_bubble || 0;
+            const seed10Wins = confChampData.wins_for_10_seed || 0;
+            const seed9Wins = confChampData.wins_for_9_seed || 0;
+            const seed8Wins = confChampData.wins_for_8_seed || 0;
+            const seed7Wins = confChampData.wins_for_7_seed || 0;
+            const seed6Wins = confChampData.wins_for_6_seed || 0;
+            const seed5Wins = confChampData.wins_for_5_seed || 0;
+            const seed4Wins = confChampData.wins_for_4_seed || 0;
+            const seed3Wins = confChampData.wins_for_3_seed || 0;
+            const seed2Wins = confChampData.wins_for_2_seed || 0;
+            const seed1Wins = confChampData.wins_for_1_seed || 0;
+
+            const bubbleY = getYFromWins(bubbleWins);
+            const seed10Y = getYFromWins(seed10Wins);
+            const seed9Y = getYFromWins(seed9Wins);
+            const seed8Y = getYFromWins(seed8Wins);
+            const seed7Y = getYFromWins(seed7Wins);
+            const seed6Y = getYFromWins(seed6Wins);
+            const seed5Y = getYFromWins(seed5Wins);
+            const seed4Y = getYFromWins(seed4Wins);
+            const seed3Y = getYFromWins(seed3Wins);
+            const seed2Y = getYFromWins(seed2Wins);
+            const seed1Y = getYFromWins(seed1Wins);
+
+            const regionLeft = LEFT_AXIS_PADDING;
+            const regionRight = chartWidth - PADDING;
+
+            return (
+              <>
+                {/* 1 Seed region - GREEN - from seed1Y to top of bar */}
+                {seed1Wins > 0 && seed1Y > chartAreaTop && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={chartAreaTop}
+                      width={regionRight - regionLeft}
+                      height={seed1Y - chartAreaTop}
+                      fill="#dcfce7"
+                      opacity={0.6}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed1Y}
+                      x2={regionRight}
+                      y2={seed1Y}
+                      stroke="#22c55e"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.5}
+                    />
+                    {/* #1 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed1Y - 5}
+                      fontSize="11"
+                      fill="#166534"
+                      opacity={0.7}
+                      fontWeight="600"
+                    >
+                      #1 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 2 region */}
+                {seed2Wins > 0 && seed2Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed2Y}
+                      width={regionRight - regionLeft}
+                      height={seed1Y > 0 ? seed1Y - seed2Y : chartAreaTop}
+                      fill="#60a5fa"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed2Y}
+                      x2={regionRight}
+                      y2={seed2Y}
+                      stroke="#3b82f6"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #2 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed2Y - 5}
+                      fontSize="11"
+                      fill="#1e40af"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #2 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 3 region */}
+                {seed3Wins > 0 && seed3Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed3Y}
+                      width={regionRight - regionLeft}
+                      height={seed2Y > 0 ? seed2Y - seed3Y : seed1Y - seed3Y}
+                      fill="#4ade80"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed3Y}
+                      x2={regionRight}
+                      y2={seed3Y}
+                      stroke="#22c55e"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #3 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed3Y - 5}
+                      fontSize="11"
+                      fill="#166534"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #3 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 4 region */}
+                {seed4Wins > 0 && seed4Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed4Y}
+                      width={regionRight - regionLeft}
+                      height={
+                        seed3Y > 0
+                          ? seed3Y - seed4Y
+                          : seed2Y > 0
+                            ? seed2Y - seed4Y
+                            : seed1Y - seed4Y
+                      }
+                      fill="#a3e635"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed4Y}
+                      x2={regionRight}
+                      y2={seed4Y}
+                      stroke="#84cc16"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #4 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed4Y - 5}
+                      fontSize="11"
+                      fill="#4d7c0f"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #4 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 5 region */}
+                {seed5Wins > 0 && seed5Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed5Y}
+                      width={regionRight - regionLeft}
+                      height={
+                        seed4Y > 0
+                          ? seed4Y - seed5Y
+                          : seed3Y > 0
+                            ? seed3Y - seed5Y
+                            : seed2Y - seed5Y
+                      }
+                      fill="#fcd34d"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed5Y}
+                      x2={regionRight}
+                      y2={seed5Y}
+                      stroke="#fbbf24"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #5 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed5Y - 5}
+                      fontSize="11"
+                      fill="#854d0e"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #5 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 6 region */}
+                {seed6Wins > 0 && seed6Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed6Y}
+                      width={regionRight - regionLeft}
+                      height={
+                        seed5Y > 0
+                          ? seed5Y - seed6Y
+                          : seed4Y > 0
+                            ? seed4Y - seed6Y
+                            : seed3Y - seed6Y
+                      }
+                      fill="#fbbf24"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed6Y}
+                      x2={regionRight}
+                      y2={seed6Y}
+                      stroke="#f59e0b"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #6 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed6Y - 5}
+                      fontSize="11"
+                      fill="#92400e"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #6 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 7 region */}
+                {seed7Wins > 0 && seed7Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed7Y}
+                      width={regionRight - regionLeft}
+                      height={
+                        seed6Y > 0
+                          ? seed6Y - seed7Y
+                          : seed5Y > 0
+                            ? seed5Y - seed7Y
+                            : seed4Y - seed7Y
+                      }
+                      fill="#fb923c"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed7Y}
+                      x2={regionRight}
+                      y2={seed7Y}
+                      stroke="#f97316"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #7 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed7Y - 5}
+                      fontSize="11"
+                      fill="#b45309"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #7 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 8 region */}
+                {seed8Wins > 0 && seed8Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed8Y}
+                      width={regionRight - regionLeft}
+                      height={
+                        seed7Y > 0
+                          ? seed7Y - seed8Y
+                          : seed6Y > 0
+                            ? seed6Y - seed8Y
+                            : seed5Y - seed8Y
+                      }
+                      fill="#f97316"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed8Y}
+                      x2={regionRight}
+                      y2={seed8Y}
+                      stroke="#ea580c"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #8 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed8Y - 5}
+                      fontSize="11"
+                      fill="#9a3412"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #8 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 9 region */}
+                {seed9Wins > 0 && seed9Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed9Y}
+                      width={regionRight - regionLeft}
+                      height={
+                        seed8Y > 0
+                          ? seed8Y - seed9Y
+                          : seed7Y > 0
+                            ? seed7Y - seed9Y
+                            : seed6Y - seed9Y
+                      }
+                      fill="#fb7185"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed9Y}
+                      x2={regionRight}
+                      y2={seed9Y}
+                      stroke="#f43f5e"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #9 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed9Y - 5}
+                      fontSize="11"
+                      fill="#be123c"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #9 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Seed 10 region */}
+                {seed10Wins > 0 && seed10Y < chartAreaBottom && (
+                  <>
+                    <rect
+                      x={regionLeft}
+                      y={seed10Y}
+                      width={regionRight - regionLeft}
+                      height={
+                        seed9Y > 0
+                          ? seed9Y - seed10Y
+                          : seed8Y > 0
+                            ? seed8Y - seed10Y
+                            : seed7Y - seed10Y
+                      }
+                      fill="#fca5a5"
+                      opacity={0.15}
+                    />
+                    <line
+                      x1={regionLeft}
+                      y1={seed10Y}
+                      x2={regionRight}
+                      y2={seed10Y}
+                      stroke="#f87171"
+                      strokeWidth={1}
+                      strokeDasharray="2,2"
+                      opacity={0.4}
+                    />
+                    {/* #10 Seed label - ABOVE the line */}
+                    <text
+                      x={regionLeft + 8}
+                      y={seed10Y - 5}
+                      fontSize="11"
+                      fill="#991b1b"
+                      opacity={0.6}
+                      fontWeight="600"
+                    >
+                      #10 Seed
+                    </text>
+                  </>
+                )}
+
+                {/* Bubble region - light red below bubble line */}
+                <rect
+                  x={regionLeft}
+                  y={bubbleY}
+                  width={regionRight - regionLeft}
+                  height={chartAreaBottom - bubbleY}
+                  fill="#fee2e2"
+                  opacity={0.6}
+                />
+                <line
+                  x1={regionLeft}
+                  y1={bubbleY}
+                  x2={regionRight}
+                  y2={bubbleY}
+                  stroke="#dc2626"
+                  strokeWidth={1}
+                  strokeDasharray="2,2"
+                  opacity={0.5}
+                />
+                {/* Bubble label - ABOVE the line */}
+                <text
+                  x={regionLeft + 8}
+                  y={bubbleY - 5}
+                  fontSize="11"
+                  fill="#7f1d1d"
+                  opacity={0.7}
+                  fontWeight="600"
+                >
+                  Bubble
+                </text>
+
+                {/* Not At Large Candidate - RED - below bubble line */}
+                {bubbleY < chartAreaBottom && (
+                  <text
+                    x={regionLeft + 8}
+                    y={chartAreaBottom - 8}
+                    fontSize="11"
+                    fill="#991b1b"
+                    opacity={0.6}
+                    fontWeight="600"
+                  >
+                    Not At Large Candidate
+                  </text>
+                )}
+              </>
+            );
+          })()}
 
         {/* Y-axis */}
         <line
@@ -177,7 +736,7 @@ export default function BasketballTeamWinsBreakdown({
           );
         })}
 
-        {/* Dotted lines for each completed win only - NO lines for remaining games */}
+        {/* Dotted lines for each completed win only */}
         {completedWins.map((_game, index) => {
           const gameNumber = index + 1;
           const yPosition =
@@ -185,7 +744,6 @@ export default function BasketballTeamWinsBreakdown({
 
           return (
             <g key={`game-marker-${index}`}>
-              {/* Dotted horizontal line in bar area only - secondary color for wins */}
               <line
                 x1={barX}
                 y1={yPosition}
@@ -239,7 +797,7 @@ export default function BasketballTeamWinsBreakdown({
                     fill={primaryColor}
                   />
 
-                  {/* Separator line (secondary color, dotted) - after each win INCLUDING the last one */}
+                  {/* Separator line */}
                   <line
                     x1={barX}
                     y1={yEnd}
@@ -318,7 +876,6 @@ export default function BasketballTeamWinsBreakdown({
 
             {/* Dotted separator lines between remaining games */}
             {remainingGames.map((_game, index) => {
-              // Skip the last game - no separator below it
               if (index === remainingGames.length - 1) return null;
 
               const gameIndex = totalWins + index + 1;
@@ -359,9 +916,11 @@ export default function BasketballTeamWinsBreakdown({
           const probability = (game.winProb * 100).toFixed(0);
           const isLeftSide = logoX < barX;
 
+          const confGameNumber = game.opponent.match(/\d+/)?.[0];
+
           return (
             <g key={`logo-${gameNumber}`}>
-              {/* Connecting dotted line from logo to edge of bar (not into bar) */}
+              {/* Connecting dotted line from logo to edge of bar */}
               <line
                 x1={isLeftSide ? logoX + LOGO_SIZE - 2 : logoX + 2}
                 y1={yPosition}
@@ -373,7 +932,7 @@ export default function BasketballTeamWinsBreakdown({
                 opacity={0.7}
               />
 
-              {/* Logo - with SVG-based fallback */}
+              {/* Logo */}
               {game.opponent_logo ? (
                 <image
                   x={logoX}
@@ -387,21 +946,45 @@ export default function BasketballTeamWinsBreakdown({
                   }}
                 />
               ) : (
-                // Fallback: gray circle with border
                 <circle
                   cx={logoX + LOGO_SIZE / 2}
                   cy={yPosition}
                   r={LOGO_SIZE / 2}
-                  fill="#d1d5db"
+                  fill={lineColor}
                   stroke={lineColor}
-                  strokeWidth="2"
+                  strokeWidth="1"
+                  opacity={0.6}
                 />
               )}
+
+              {/* Game number badge - only for tournament games */}
+              {confGameNumber && (
+                <>
+                  <circle
+                    cx={logoX + LOGO_SIZE - 3}
+                    cy={yPosition - LOGO_SIZE / 2 + 3}
+                    r={7}
+                    fill="#FFFFFF"
+                    stroke={lineColor}
+                    strokeWidth="1.5"
+                  />
+                  <text
+                    x={logoX + LOGO_SIZE - 3}
+                    y={yPosition - LOGO_SIZE / 2 + 6}
+                    textAnchor="middle"
+                    fontSize="9"
+                    fontWeight="bold"
+                    fill={lineColor}
+                  >
+                    #{confGameNumber}
+                  </text>
+                </>
+              )}
+
               <title>{`${game.opponent} - Game ${gameNumber} (${probability}%)`}</title>
 
-              {/* Game number and probability label - HORIZONTAL */}
+              {/* Game number and probability label */}
               {isLeftSide ? (
-                // Left side: % then number then logo (closer to logo)
                 <>
                   <text
                     x={logoX - LOGO_SIZE - 12}
@@ -423,7 +1006,6 @@ export default function BasketballTeamWinsBreakdown({
                   </text>
                 </>
               ) : (
-                // Right side: logo then number then %
                 <>
                   <text
                     x={logoX + LOGO_SIZE + 8}
@@ -475,6 +1057,12 @@ export default function BasketballTeamWinsBreakdown({
           Wins
         </text>
       </svg>
+
+      {loading && (
+        <div className="text-xs text-gray-500 mt-2">
+          Loading tournament data...
+        </div>
+      )}
     </div>
   );
 }

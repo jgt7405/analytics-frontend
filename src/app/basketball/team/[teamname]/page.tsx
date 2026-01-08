@@ -455,7 +455,7 @@ export default function BasketballTeamPage({
                 </div>
               )}
 
-              {/* Mobile Wins Breakdown - WITH SECONDARY COLOR */}
+              {/* Mobile Wins Breakdown - WITH SECONDARY COLOR AND NEW PROPS */}
               <div
                 className="bg-white rounded-lg p-3 basketball-wins-breakdown"
                 style={{ border: "1px solid #d1d5db" }}
@@ -465,6 +465,8 @@ export default function BasketballTeamPage({
                 </h2>
                 <BasketballTeamWinsBreakdown
                   schedule={schedule}
+                  teamName={team_info.team_name}
+                  conference={team_info.conference}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                 />
@@ -777,7 +779,7 @@ export default function BasketballTeamPage({
                     </div>
                   )}
 
-                  {/* Wins Breakdown - WITH SECONDARY COLOR */}
+                  {/* Wins Breakdown - WITH SECONDARY COLOR AND NEW PROPS */}
                   <div
                     className="bg-white rounded-lg p-3 basketball-wins-breakdown"
                     style={{ border: "1px solid #d1d5db" }}
@@ -787,6 +789,8 @@ export default function BasketballTeamPage({
                     </h2>
                     <BasketballTeamWinsBreakdown
                       schedule={schedule}
+                      teamName={team_info.team_name}
+                      conference={team_info.conference}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                     />
