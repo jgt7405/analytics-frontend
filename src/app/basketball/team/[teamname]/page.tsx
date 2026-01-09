@@ -171,11 +171,6 @@ export default function BasketballTeamPage({
       selector: ".basketball-schedule-difficulty",
     },
     {
-      id: "wins-breakdown",
-      label: "Wins Breakdown",
-      selector: ".basketball-wins-breakdown",
-    },
-    {
       id: "win-values",
       label: "Win Values Over Time",
       selector: ".basketball-win-values",
@@ -455,7 +450,7 @@ export default function BasketballTeamPage({
                 </div>
               )}
 
-              {/* Mobile Wins Breakdown - WITH SECONDARY COLOR AND NEW PROPS */}
+              {/* Mobile Wins Breakdown - NEW COMPONENT */}
               <div
                 className="bg-white rounded-lg p-3 basketball-wins-breakdown"
                 style={{ border: "1px solid #d1d5db" }}
@@ -779,7 +774,7 @@ export default function BasketballTeamPage({
                     </div>
                   )}
 
-                  {/* Wins Breakdown - WITH SECONDARY COLOR AND NEW PROPS */}
+                  {/* Wins Breakdown - NEW COMPONENT */}
                   <div
                     className="bg-white rounded-lg p-3 basketball-wins-breakdown"
                     style={{ border: "1px solid #d1d5db" }}

@@ -918,6 +918,15 @@ export default function BasketballTeamWinsBreakdown({
 
           const confGameNumber = game.opponent.match(/\d+/)?.[0];
 
+          // NEW: Calculate location display for tooltip
+          const locationDisplay =
+            game.location === "Home"
+              ? "Home"
+              : game.location === "Away"
+                ? "Away"
+                : "Neutral";
+          const dateDisplay = game.date || "No date";
+
           return (
             <g key={`logo-${gameNumber}`}>
               {/* Connecting dotted line from logo to edge of bar */}
@@ -981,7 +990,8 @@ export default function BasketballTeamWinsBreakdown({
                 </>
               )}
 
-              <title>{`${game.opponent} - Game ${gameNumber} (${probability}%)`}</title>
+              {/* UPDATED: New multiline tooltip format with whole number percentages */}
+              <title>{`${game.opponent}\nLocation: ${locationDisplay}\n${dateDisplay}\nWin Probability: ${probability}%`}</title>
 
               {/* Game number and probability label */}
               {isLeftSide ? (
