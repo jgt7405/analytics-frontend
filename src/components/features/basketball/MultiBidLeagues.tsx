@@ -35,6 +35,19 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
     [router]
   );
 
+  // Calculate average seed for a set of teams
+  const calculateAverageSeed = useCallback(
+    (teams: NCAATeamWithConfLogo[]): number => {
+      if (teams.length === 0) return 999;
+      const seeds = teams
+        .map((t) => (t.seed ? parseInt(t.seed, 10) : 999))
+        .filter((s) => s !== 999);
+      if (seeds.length === 0) return 999;
+      return seeds.reduce((a, b) => a + b, 0) / seeds.length;
+    },
+    []
+  );
+
   // All hooks must be called before any early returns
   const multiBidConferences = useMemo(() => {
     if (!data || !data.tournament_teams) {
@@ -143,15 +156,27 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
       }
     });
 
-    // Sort by tournament team count descending, then by conference name
+    // Sort by: tournament team count desc, then out teams count desc, then average seed asc
     return Array.from(confMap.entries())
       .sort((a, b) => {
-        const countDiff =
+        const tournamentCountDiff =
           b[1].tournamentTeams.length - a[1].tournamentTeams.length;
-        return countDiff !== 0 ? countDiff : a[0].localeCompare(b[0]);
+        if (tournamentCountDiff !== 0) {
+          return tournamentCountDiff;
+        }
+
+        const outTeamsCountDiff = b[1].outTeamsCount - a[1].outTeamsCount;
+        if (outTeamsCountDiff !== 0) {
+          return outTeamsCountDiff;
+        }
+
+        // If equal in both, sort by average seed (lowest first)
+        const avgSeedA = calculateAverageSeed(a[1].tournamentTeams);
+        const avgSeedB = calculateAverageSeed(b[1].tournamentTeams);
+        return avgSeedA - avgSeedB;
       })
       .map(([name, data]) => ({ name, ...data }));
-  }, [multiBidConferences, outTeamsByConference, data]);
+  }, [multiBidConferences, outTeamsByConference, data, calculateAverageSeed]);
 
   // Find max number of rows needed (tournament teams + out teams per conference)
   const maxRowsPerSection = useMemo(() => {
@@ -272,9 +297,9 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    padding: "8px",
+                    justifyContent: "flex-start",
+                    gap: "4px",
+                    padding: "12px 8px 8px 8px",
                     backgroundColor: "#f9fafb",
                   }}
                 >
@@ -287,6 +312,7 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
                     }}
                     style={{
                       cursor: sortedTeams.length > 0 ? "pointer" : "default",
+                      marginTop: "-5px",
                     }}
                     title={
                       sortedTeams.length > 0
@@ -317,6 +343,7 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
                       fontSize: isMobile ? "12px" : "14px",
                       fontWeight: "400",
                       color: "#374151",
+                      marginTop: "-10px",
                     }}
                   >
                     {sortedTeams.length} team
