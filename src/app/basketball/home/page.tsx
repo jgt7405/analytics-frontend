@@ -69,9 +69,31 @@ export default function BasketballHome() {
                         simulations using composite ratings.
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        Shows tournament seeds (1-16), team records, and
-                        projected tournament status (Auto Bid, At Large, Last 4
-                        In, First 4 Out, Next 4 Out).
+                        Featured in{" "}
+                        <a
+                          href="https://bracketproject.blogspot.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "#3b82f6",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          Bracket Matrix Blog
+                        </a>
+                        . Bracket Matrix site{" "}
+                        <a
+                          href="http://bracketmatrix.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "#3b82f6",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          here
+                        </a>
+                        .
                       </div>
                     </div>
                   </div>
@@ -112,8 +134,9 @@ export default function BasketballHome() {
                   <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        Conferences with multiple teams projected to be in the NCAA Tournament
-                        or with bubble teams in first four out/next four out.
+                        Conferences with multiple teams projected to be in the
+                        NCAA Tournament or with bubble teams in first four
+                        out/next four out.
                       </div>
                     </div>
                   </div>
