@@ -312,23 +312,43 @@ export default function BballStandingsHistoryChart({
           }
 
           if (tooltipModel.body) {
-            const bodyLines = tooltipModel.body.map((b) => b.lines);
+            const date = chart.data.labels
+              ? chart.data.labels[tooltipModel.dataPoints[0].dataIndex]
+              : "";
+            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
 
-            const innerHtml = bodyLines
-              .map((lines, index) => {
-                const datasetIndex =
-                  tooltipModel.dataPoints[index].datasetIndex;
+            // Create array of teams with their values at this date
+            const teamsAtDate = tooltipModel.dataPoints
+              .map((point) => {
+                const datasetIndex = point.datasetIndex;
                 const dataset = chart.data.datasets[datasetIndex];
+                const dataPoint = dataset.data[
+                  dataIndex
+                ] as unknown as TeamDataPoint;
+                return {
+                  label: dataset.label,
+                  value: dataPoint.y || 0,
+                  borderColor: dataset.borderColor,
+                };
+              })
+              .sort((a, b) => a.value - b.value); // Sort low to high (1st place at top)
+
+            const teamsHtml = teamsAtDate
+              .map((team) => {
                 return `
-              <div style="color: ${dataset.borderColor}; font-weight: 500; margin-bottom: 8px;">
-                ${lines[0]}
-              </div>
-              <div style="font-size: 11px; color: #6b7280;">
-                ${chart.data.labels ? chart.data.labels[tooltipModel.dataPoints[index].dataIndex] : ""}
+              <div style="color: ${team.borderColor}; font-weight: 500; margin-bottom: 4px;">
+                ${team.label}: ${team.value.toFixed(1)}
               </div>
             `;
               })
               .join("");
+
+            const innerHtml = `
+              <div style="font-size: 11px; color: #6b7280; margin-bottom: 8px; font-weight: 500;">
+                ${date}
+              </div>
+              ${teamsHtml}
+            `;
 
             tooltipEl.innerHTML = innerHtml;
           }
