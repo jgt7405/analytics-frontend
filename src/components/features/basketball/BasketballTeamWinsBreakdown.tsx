@@ -75,15 +75,7 @@ export default function BasketballTeamWinsBreakdown({
 
   // DEBUG: Log all games and their logos
   useEffect(() => {
-    console.log("[BBALL_WINS] Full schedule with logos:");
-    schedule.forEach((game, idx) => {
-      console.log(`Game ${idx}: ${game.opponent}`, {
-        status: game.status,
-        opponent_logo: game.opponent_logo,
-        team_win_prob: game.team_win_prob,
-        opponent: game.opponent,
-      });
-    });
+    // Removed debug logging
   }, [schedule]);
 
   // Generate conference logo URL
@@ -94,12 +86,7 @@ export default function BasketballTeamWinsBreakdown({
 
   // DEBUG: Log when schedule changes
   useEffect(() => {
-    console.log("[BBALL_WINS] Schedule updated, total games:", schedule.length);
-    const logosPresent = schedule.filter((g) => g.opponent_logo).length;
-    const logosMissing = schedule.filter((g) => !g.opponent_logo).length;
-    console.log(
-      `[BBALL_WINS] Logos present: ${logosPresent}, Missing: ${logosMissing}`
-    );
+    // Removed debug logging
   }, [schedule]);
 
   // Fetch conference championship data
@@ -121,7 +108,6 @@ export default function BasketballTeamWinsBreakdown({
             );
 
             if (teamData) {
-              console.log(`[BBALL_WINS] Loaded confChamp data for ${teamName}`);
               setConfChampData(teamData);
             }
           }
@@ -879,7 +865,7 @@ export default function BasketballTeamWinsBreakdown({
             strokeWidth={2}
           />
 
-          {/* PROJECTED WIN TOTAL INDICATOR - X marker with arrow */}
+          {/* PROJECTED WIN TOTAL INDICATOR - Favicon at projected wins level */}
           {projectedWinsY !== null && confChampData && (
             <>
               {/* Arrow pointing from right to left at projected wins level */}
@@ -888,14 +874,14 @@ export default function BasketballTeamWinsBreakdown({
                 y1={projectedWinsY}
                 x2={barX + barWidth - 15}
                 y2={projectedWinsY}
-                stroke="#4f46e5"
+                stroke="rgb(0, 151, 178)"
                 strokeWidth={2}
                 opacity={0.8}
               />
               {/* Arrow head (triangle pointing left) */}
               <polygon
                 points={`${barX + barWidth - 15},${projectedWinsY} ${barX + barWidth - 8},${projectedWinsY - 4} ${barX + barWidth - 8},${projectedWinsY + 4}`}
-                fill="#4f46e5"
+                fill="rgb(0, 151, 178)"
                 opacity={0.8}
               />
 
@@ -905,7 +891,7 @@ export default function BasketballTeamWinsBreakdown({
                 y={projectedWinsY - 5}
                 textAnchor="middle"
                 fontSize="10"
-                fill="#4f46e5"
+                fill="rgb(0, 151, 178)"
                 fontWeight="600"
                 opacity={0.9}
               >
@@ -918,31 +904,21 @@ export default function BasketballTeamWinsBreakdown({
                 y={projectedWinsY + 13}
                 textAnchor="middle"
                 fontSize="10"
-                fill="#4f46e5"
+                fill="rgb(0, 151, 178)"
                 fontWeight="600"
                 opacity={0.9}
               >
                 Wins
               </text>
 
-              {/* X marker at projected wins level - thicker and smaller */}
-              <line
-                x1={barX + barWidth / 2 - 4}
-                y1={projectedWinsY - 4}
-                x2={barX + barWidth / 2 + 4}
-                y2={projectedWinsY + 4}
-                stroke="#4f46e5"
-                strokeWidth={3}
-                opacity={0.8}
-              />
-              <line
-                x1={barX + barWidth / 2 + 4}
-                y1={projectedWinsY - 4}
-                x2={barX + barWidth / 2 - 4}
-                y2={projectedWinsY + 4}
-                stroke="#4f46e5"
-                strokeWidth={3}
-                opacity={0.8}
+              {/* Favicon at projected wins level */}
+              <image
+                x={barX + barWidth / 2 - 8}
+                y={projectedWinsY - 8}
+                width={16}
+                height={16}
+                href="/images/favicon-16x16.png"
+                opacity={0.9}
               />
             </>
           )}
@@ -960,14 +936,6 @@ export default function BasketballTeamWinsBreakdown({
             const probability = (game.winProb * 100).toFixed(0);
 
             const confGameNumber = game.opponent.match(/\d+/)?.[0];
-
-            // DEBUG: Log each logo being rendered
-            console.log(`[BBALL_WINS] Rendering logo for game ${gameNumber}:`, {
-              opponent: game.opponent,
-              opponent_logo: game.opponent_logo,
-              hasLogo: !!game.opponent_logo,
-              willShowRect: !game.opponent_logo,
-            });
 
             // Calculate location display for tooltip
             const locationDisplay =
@@ -1174,17 +1142,6 @@ export default function BasketballTeamWinsBreakdown({
             const lineColor = game.opponent_primary_color || primaryColor;
             const probability = (game.winProb * 100).toFixed(0);
             const confGameNumber = game.opponent.match(/\d+/)?.[0];
-
-            // DEBUG: Log each completed win logo
-            console.log(
-              `[BBALL_WINS] Rendering COMPLETED WIN logo for game ${gameNumber}:`,
-              {
-                opponent: game.opponent,
-                opponent_logo: game.opponent_logo,
-                hasLogo: !!game.opponent_logo,
-                willShowRect: !game.opponent_logo,
-              }
-            );
 
             return (
               <g key={`logo-win-${gameNumber}`}>
@@ -1538,7 +1495,7 @@ export default function BasketballTeamWinsBreakdown({
               strokeWidth={1}
             />
             <text
-              x={-62}
+              x={-65}
               y={chartHeight + 24}
               fontSize="11"
               fill="#374151"
@@ -1549,7 +1506,7 @@ export default function BasketballTeamWinsBreakdown({
 
             {/* Future games - dotted box */}
             <rect
-              x={70}
+              x={10}
               y={chartHeight + 15}
               width={12}
               height={12}
@@ -1559,13 +1516,32 @@ export default function BasketballTeamWinsBreakdown({
               strokeDasharray="2,2"
             />
             <text
-              x={88}
+              x={26}
               y={chartHeight + 24}
               fontSize="11"
               fill="#374151"
               fontWeight="500"
             >
-              - future scheduled games
+              - future games
+            </text>
+
+            {/* JThom projected wins - favicon */}
+            <image
+              x={110}
+              y={chartHeight + 13}
+              width={16}
+              height={16}
+              href="/images/favicon-16x16.png"
+              opacity={0.9}
+            />
+            <text
+              x={128}
+              y={chartHeight + 24}
+              fontSize="11"
+              fill="#374151"
+              fontWeight="500"
+            >
+              - JThom proj wins
             </text>
           </g>
 

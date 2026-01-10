@@ -131,6 +131,46 @@ export default function ScreenshotModal({
         }
       }
 
+      // Extract SVG image elements and convert to base64
+      const svgImages = targetElement.querySelectorAll("svg image");
+      const svgImageMap = new Map<SVGImageElement, string>();
+
+      console.log("Converting SVG images to base64...");
+      for (const svgImg of Array.from(svgImages)) {
+        const svgImgEl = svgImg as SVGImageElement;
+        let originalUrl =
+          svgImgEl.getAttribute("href") ||
+          svgImgEl.getAttribute("xlink:href") ||
+          "";
+
+        if (originalUrl && !originalUrl.includes("data:")) {
+          if (originalUrl.includes("/_next/image")) {
+            try {
+              const url = new URL(originalUrl);
+              const path = url.searchParams.get("url");
+              if (path) {
+                originalUrl = path.startsWith("http")
+                  ? path
+                  : `${window.location.origin}${path}`;
+              }
+            } catch (e) {
+              console.error("URL parse error:", e);
+            }
+          }
+
+          try {
+            const base64 = await imageToBase64(originalUrl);
+            svgImageMap.set(svgImgEl, base64);
+          } catch (e) {
+            console.error(
+              "Base64 conversion failed for SVG image:",
+              originalUrl,
+              e
+            );
+          }
+        }
+      }
+
       console.log("Images converted, creating clone...");
 
       // Calculate width based on actual content
@@ -177,6 +217,17 @@ export default function ScreenshotModal({
         const base64 = imageMap.get(originalImg);
         if (base64) {
           (clonedImg as HTMLImageElement).src = base64;
+        }
+      });
+
+      // Replace cloned SVG images with base64
+      const clonedSvgImages = clone.querySelectorAll("svg image");
+      const originalSvgImagesArray = Array.from(svgImages);
+      clonedSvgImages.forEach((clonedSvgImg, index) => {
+        const originalSvgImg = originalSvgImagesArray[index] as SVGImageElement;
+        const base64 = svgImageMap.get(originalSvgImg);
+        if (base64) {
+          clonedSvgImg.setAttribute("href", base64);
         }
       });
 

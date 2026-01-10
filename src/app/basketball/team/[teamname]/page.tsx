@@ -171,6 +171,11 @@ export default function BasketballTeamPage({
       selector: ".basketball-schedule-difficulty",
     },
     {
+      id: "wins-to-seed-map",
+      label: "Wins to Seed Map",
+      selector: ".basketball-wins-breakdown",
+    },
+    {
       id: "win-values",
       label: "Win Values Over Time",
       selector: ".basketball-win-values",
@@ -457,7 +462,7 @@ export default function BasketballTeamPage({
               >
                 <div className="relative">
                   <h2 className="text-base font-semibold mb-1 -mt-2">
-                    Wins Breakdown
+                    Wins to Seed Map
                   </h2>
                   {team_info.logo_url && (
                     <div
@@ -803,7 +808,7 @@ export default function BasketballTeamPage({
                   >
                     <div className="relative">
                       <h2 className="text-lg font-semibold mb-1 -mt-2">
-                        Wins Breakdown
+                        Wins to Seed Map
                       </h2>
                       {team_info.logo_url && (
                         <div
