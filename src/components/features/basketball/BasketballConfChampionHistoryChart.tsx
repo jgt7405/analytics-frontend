@@ -315,23 +315,43 @@ export default function BasketballConfChampionHistoryChart({
           }
 
           if (tooltipModel.body) {
-            const bodyLines = tooltipModel.body.map((b) => b.lines);
+            const date = chart.data.labels
+              ? chart.data.labels[tooltipModel.dataPoints[0].dataIndex]
+              : "";
+            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
 
-            const innerHtml = bodyLines
-              .map((lines, index) => {
-                const datasetIndex =
-                  tooltipModel.dataPoints[index].datasetIndex;
+            // Create array of teams with their values at this date
+            const teamsAtDate = tooltipModel.dataPoints
+              .map((point) => {
+                const datasetIndex = point.datasetIndex;
                 const dataset = chart.data.datasets[datasetIndex];
+                const dataPoint = dataset.data[
+                  dataIndex
+                ] as unknown as TeamDataPoint;
+                return {
+                  label: dataset.label,
+                  value: dataPoint.y || 0,
+                  borderColor: dataset.borderColor,
+                };
+              })
+              .sort((a, b) => b.value - a.value); // Sort high to low for champion prob
+
+            const teamsHtml = teamsAtDate
+              .map((team) => {
                 return `
-              <div style="color: ${dataset.borderColor}; font-weight: 500; margin-bottom: 8px;">
-                ${lines[0]}
-              </div>
-              <div style="font-size: 11px; color: #6b7280;">
-                ${chart.data.labels ? chart.data.labels[tooltipModel.dataPoints[index].dataIndex] : ""}
+              <div style="color: ${team.borderColor}; font-weight: 500; margin-bottom: 4px;">
+                ${team.label}: ${team.value.toFixed(1)}%
               </div>
             `;
               })
               .join("");
+
+            const innerHtml = `
+              <div style="font-size: 11px; color: #6b7280; margin-bottom: 8px; font-weight: 500;">
+                ${date}
+              </div>
+              ${teamsHtml}
+            `;
 
             tooltipEl.innerHTML = innerHtml;
           }
@@ -364,7 +384,8 @@ export default function BasketballConfChampionHistoryChart({
             position.top +
             window.pageYOffset +
             caretY -
-            tooltipEl.offsetHeight / 2 +
+            tooltipEl.offsetHeight -
+            19 +
             "px";
         },
       },
@@ -391,7 +412,7 @@ export default function BasketballConfChampionHistoryChart({
       },
     },
     layout: {
-      padding: { left: 10, right: 70 },
+      padding: { left: 10, right: 100 },
     },
     animation: {
       onComplete: () => {
@@ -427,7 +448,7 @@ export default function BasketballConfChampionHistoryChart({
 
   const getAdjustedLogoPositions = () => {
     if (!chartDimensions) return [];
-    const minSpacing = 20;
+    const minSpacing = 25;
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom - 15;
 
@@ -493,8 +514,14 @@ export default function BasketballConfChampionHistoryChart({
   }
 
   return (
-    <div>
-      <div className="relative" style={{ height: chartHeight }}>
+    <div
+      className="bg-white rounded-lg p-4 border relative"
+      style={{ zIndex: 10, isolation: "isolate" }}
+    >
+      <div
+        className="relative"
+        style={{ height: `${chartHeight}px`, overflow: "visible" }}
+      >
         <Line ref={chartRef} data={chartData} options={options} />
 
         {chartDimensions && (
@@ -549,24 +576,12 @@ export default function BasketballConfChampionHistoryChart({
                     key={`logo-${team.team_name}`}
                     className="absolute flex items-center"
                     style={{
-                      right: "10px",
+                      right: "25px",
                       top: `${adjustedY - 10}px`,
                       zIndex: 10,
                       opacity: isSelected ? 1 : 0.3,
                     }}
                   >
-                    <span
-                      className="text-xs font-medium mr-2"
-                      style={{
-                        color: isSelected
-                          ? team.team_info.primary_color || "#000000"
-                          : "#d1d5db",
-                        minWidth: "35px",
-                        textAlign: "right",
-                      }}
-                    >
-                      {lastPoint?.y.toFixed(1) || team.final_pct.toFixed(1)}%
-                    </span>
                     <div
                       style={{
                         filter: isSelected ? "none" : "grayscale(100%)",
@@ -581,6 +596,18 @@ export default function BasketballConfChampionHistoryChart({
                         size={20}
                       />
                     </div>
+                    <span
+                      className="text-xs font-medium ml-2"
+                      style={{
+                        color: isSelected
+                          ? team.team_info.primary_color || "#000000"
+                          : "#d1d5db",
+                        minWidth: "35px",
+                        textAlign: "left",
+                      }}
+                    >
+                      {lastPoint?.y.toFixed(1) || team.final_pct.toFixed(1)}%
+                    </span>
                   </div>
                 );
               })}

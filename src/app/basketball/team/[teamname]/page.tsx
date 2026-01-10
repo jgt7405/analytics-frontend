@@ -452,18 +452,40 @@ export default function BasketballTeamPage({
 
               {/* Mobile Wins Breakdown - NEW COMPONENT */}
               <div
-                className="bg-white rounded-lg p-3 basketball-wins-breakdown"
+                className="bg-white rounded-lg p-3 basketball-wins-breakdown relative"
                 style={{ border: "1px solid #d1d5db" }}
               >
-                <h2 className="text-base font-semibold mb-1 -mt-2">
-                  Wins Breakdown
-                </h2>
+                <div className="relative">
+                  <h2 className="text-base font-semibold mb-1 -mt-2">
+                    Wins Breakdown
+                  </h2>
+                  {team_info.logo_url && (
+                    <div
+                      className="absolute"
+                      style={{
+                        top: "0px",
+                        right: "-5px",
+                        width: "24px",
+                        height: "24px",
+                      }}
+                    >
+                      <Image
+                        src={team_info.logo_url}
+                        alt={`${team_info.team_name} logo`}
+                        width={24}
+                        height={24}
+                        className="object-contain opacity-80"
+                      />
+                    </div>
+                  )}
+                </div>
                 <BasketballTeamWinsBreakdown
                   schedule={schedule}
                   teamName={team_info.team_name}
                   conference={team_info.conference}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  logoUrl={team_info.logo_url}
                 />
               </div>
 
@@ -776,18 +798,40 @@ export default function BasketballTeamPage({
 
                   {/* Wins Breakdown - NEW COMPONENT */}
                   <div
-                    className="bg-white rounded-lg p-3 basketball-wins-breakdown"
+                    className="bg-white rounded-lg p-3 basketball-wins-breakdown relative"
                     style={{ border: "1px solid #d1d5db" }}
                   >
-                    <h2 className="text-lg font-semibold mb-1 -mt-2">
-                      Wins Breakdown
-                    </h2>
+                    <div className="relative">
+                      <h2 className="text-lg font-semibold mb-1 -mt-2">
+                        Wins Breakdown
+                      </h2>
+                      {team_info.logo_url && (
+                        <div
+                          className="absolute"
+                          style={{
+                            top: "0px",
+                            right: "-5px",
+                            width: "32px",
+                            height: "32px",
+                          }}
+                        >
+                          <Image
+                            src={team_info.logo_url}
+                            alt={`${team_info.team_name} logo`}
+                            width={32}
+                            height={32}
+                            className="object-contain opacity-80"
+                          />
+                        </div>
+                      )}
+                    </div>
                     <BasketballTeamWinsBreakdown
                       schedule={schedule}
                       teamName={team_info.team_name}
                       conference={team_info.conference}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      logoUrl={team_info.logo_url}
                     />
                   </div>
 

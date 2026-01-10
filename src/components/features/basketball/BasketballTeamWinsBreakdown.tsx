@@ -33,6 +33,7 @@ interface ConfChampData {
   wins_for_8_seed: number;
   wins_for_9_seed: number;
   wins_for_10_seed: number;
+  season_total_proj_wins_avg: number;
 }
 
 interface BasketballTeamWinsBreakdownProps {
@@ -44,13 +45,15 @@ interface BasketballTeamWinsBreakdownProps {
   logoUrl?: string;
 }
 
-const LOGO_SIZE = 20;
+const LOGO_SIZE = 14;
 const PADDING = 12;
-const LEFT_AXIS_PADDING = -20;
+const LEFT_AXIS_PADDING = -60;
 const LOGO_SPACING = 8;
 const MIN_WIDTH = 350;
 const CHART_HEIGHT = 540;
 const BAR_WIDTH = 40;
+const CHART_SHIFT = -50; // Shift chart 50 pixels left
+const AXIS_LABEL_SHIFT = 0; // No additional shift for y-axis labels
 
 export default function BasketballTeamWinsBreakdown({
   schedule,
@@ -64,12 +67,40 @@ export default function BasketballTeamWinsBreakdown({
     null
   );
   const [loading, setLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // DEBUG: Log all games and their logos
+  useEffect(() => {
+    console.log("[BBALL_WINS] Full schedule with logos:");
+    schedule.forEach((game, idx) => {
+      console.log(`Game ${idx}: ${game.opponent}`, {
+        status: game.status,
+        opponent_logo: game.opponent_logo,
+        team_win_prob: game.team_win_prob,
+        opponent: game.opponent,
+      });
+    });
+  }, [schedule]);
 
   // Generate conference logo URL
   const confLogoUrl = useMemo(() => {
     const formattedConfName = conference.replace(/\s+/g, "_");
     return `/images/conf_logos/${formattedConfName}.png`;
   }, [conference]);
+
+  // DEBUG: Log when schedule changes
+  useEffect(() => {
+    console.log("[BBALL_WINS] Schedule updated, total games:", schedule.length);
+    const logosPresent = schedule.filter((g) => g.opponent_logo).length;
+    const logosMissing = schedule.filter((g) => !g.opponent_logo).length;
+    console.log(
+      `[BBALL_WINS] Logos present: ${logosPresent}, Missing: ${logosMissing}`
+    );
+  }, [schedule]);
 
   // Fetch conference championship data
   useEffect(() => {
@@ -90,6 +121,7 @@ export default function BasketballTeamWinsBreakdown({
             );
 
             if (teamData) {
+              console.log(`[BBALL_WINS] Loaded confChamp data for ${teamName}`);
               setConfChampData(teamData);
             }
           }
@@ -172,7 +204,11 @@ export default function BasketballTeamWinsBreakdown({
     };
   }, [schedule, confChampGames]);
 
-  const chartWidth = Math.max(MIN_WIDTH, 320);
+  const isMobile =
+    isClient && typeof window !== "undefined" && window.innerWidth < 768;
+  const chartWidth = isMobile
+    ? Math.max(MIN_WIDTH, 300)
+    : Math.max(MIN_WIDTH, 320);
   const chartHeight = CHART_HEIGHT;
 
   const maxGames = completedWins.length + remainingGames.length;
@@ -181,7 +217,7 @@ export default function BasketballTeamWinsBreakdown({
   const chartAreaBottom = chartHeight - PADDING - 20;
   const chartAreaHeight = chartAreaBottom - chartAreaTop;
 
-  const centerX = chartWidth / 2 - 50;
+  const centerX = chartWidth / 2 - 50 + CHART_SHIFT;
   const barX = centerX - BAR_WIDTH / 2;
   const barWidth = BAR_WIDTH;
 
@@ -193,11 +229,8 @@ export default function BasketballTeamWinsBreakdown({
     const gameCenterNumber = index + 0.5;
     const yPosition =
       barBottomY - (gameCenterNumber / maxGames) * chartAreaHeight;
-    const _isLeft = index % 2 === 0;
 
-    const logoX = _isLeft
-      ? barX - LOGO_SPACING - LOGO_SIZE
-      : barX + barWidth + LOGO_SPACING;
+    const logoX = barX - LOGO_SPACING - LOGO_SIZE;
 
     return { game, yPosition, gameNumber: index + 1, logoX };
   });
@@ -208,865 +241,1387 @@ export default function BasketballTeamWinsBreakdown({
     return chartAreaBottom - (wins / maxGames) * chartAreaHeight;
   };
 
+  // Calculate Y position for season total projected wins
+  const projectedWinsY = confChampData
+    ? getYFromWins(confChampData.season_total_proj_wins_avg)
+    : null;
+
   return (
     <div className="flex flex-col items-center w-full">
-      <svg
-        width={chartWidth}
-        height={chartHeight}
-        className="border border-gray-200 rounded bg-white"
-        viewBox={`-20 0 ${chartWidth} ${chartHeight}`}
-      >
-        {/* Background */}
-        <rect
-          x="-20"
-          width={chartWidth + 20}
-          height={chartHeight}
-          fill="white"
-        />
-
-        {/* Seed projection background regions - LABELS ARE ABOVE THEIR LINES */}
-        {confChampData &&
-          (() => {
-            const bubbleWins = confChampData.wins_for_bubble || 0;
-            const seed10Wins = confChampData.wins_for_10_seed || 0;
-            const seed9Wins = confChampData.wins_for_9_seed || 0;
-            const seed8Wins = confChampData.wins_for_8_seed || 0;
-            const seed7Wins = confChampData.wins_for_7_seed || 0;
-            const seed6Wins = confChampData.wins_for_6_seed || 0;
-            const seed5Wins = confChampData.wins_for_5_seed || 0;
-            const seed4Wins = confChampData.wins_for_4_seed || 0;
-            const seed3Wins = confChampData.wins_for_3_seed || 0;
-            const seed2Wins = confChampData.wins_for_2_seed || 0;
-            const seed1Wins = confChampData.wins_for_1_seed || 0;
-
-            const bubbleY = getYFromWins(bubbleWins);
-            const seed10Y = getYFromWins(seed10Wins);
-            const seed9Y = getYFromWins(seed9Wins);
-            const seed8Y = getYFromWins(seed8Wins);
-            const seed7Y = getYFromWins(seed7Wins);
-            const seed6Y = getYFromWins(seed6Wins);
-            const seed5Y = getYFromWins(seed5Wins);
-            const seed4Y = getYFromWins(seed4Wins);
-            const seed3Y = getYFromWins(seed3Wins);
-            const seed2Y = getYFromWins(seed2Wins);
-            const seed1Y = getYFromWins(seed1Wins);
-
-            const regionLeft = LEFT_AXIS_PADDING;
-            const regionRight = chartWidth - PADDING;
-
-            return (
-              <>
-                {/* 1 Seed region - GREEN - from seed1Y to top of bar */}
-                {seed1Wins > 0 && seed1Y > chartAreaTop && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={chartAreaTop}
-                      width={regionRight - regionLeft}
-                      height={seed1Y - chartAreaTop}
-                      fill="#dcfce7"
-                      opacity={0.6}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed1Y}
-                      x2={regionRight}
-                      y2={seed1Y}
-                      stroke="#22c55e"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.5}
-                    />
-                    {/* #1 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed1Y - 5}
-                      fontSize="11"
-                      fill="#166534"
-                      opacity={0.7}
-                      fontWeight="600"
-                    >
-                      #1 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 2 region */}
-                {seed2Wins > 0 && seed2Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed2Y}
-                      width={regionRight - regionLeft}
-                      height={seed1Y > 0 ? seed1Y - seed2Y : chartAreaTop}
-                      fill="#60a5fa"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed2Y}
-                      x2={regionRight}
-                      y2={seed2Y}
-                      stroke="#3b82f6"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #2 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed2Y - 5}
-                      fontSize="11"
-                      fill="#1e40af"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #2 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 3 region */}
-                {seed3Wins > 0 && seed3Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed3Y}
-                      width={regionRight - regionLeft}
-                      height={seed2Y > 0 ? seed2Y - seed3Y : seed1Y - seed3Y}
-                      fill="#4ade80"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed3Y}
-                      x2={regionRight}
-                      y2={seed3Y}
-                      stroke="#22c55e"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #3 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed3Y - 5}
-                      fontSize="11"
-                      fill="#166534"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #3 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 4 region */}
-                {seed4Wins > 0 && seed4Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed4Y}
-                      width={regionRight - regionLeft}
-                      height={
-                        seed3Y > 0
-                          ? seed3Y - seed4Y
-                          : seed2Y > 0
-                            ? seed2Y - seed4Y
-                            : seed1Y - seed4Y
-                      }
-                      fill="#a3e635"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed4Y}
-                      x2={regionRight}
-                      y2={seed4Y}
-                      stroke="#84cc16"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #4 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed4Y - 5}
-                      fontSize="11"
-                      fill="#4d7c0f"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #4 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 5 region */}
-                {seed5Wins > 0 && seed5Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed5Y}
-                      width={regionRight - regionLeft}
-                      height={
-                        seed4Y > 0
-                          ? seed4Y - seed5Y
-                          : seed3Y > 0
-                            ? seed3Y - seed5Y
-                            : seed2Y - seed5Y
-                      }
-                      fill="#fcd34d"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed5Y}
-                      x2={regionRight}
-                      y2={seed5Y}
-                      stroke="#fbbf24"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #5 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed5Y - 5}
-                      fontSize="11"
-                      fill="#854d0e"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #5 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 6 region */}
-                {seed6Wins > 0 && seed6Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed6Y}
-                      width={regionRight - regionLeft}
-                      height={
-                        seed5Y > 0
-                          ? seed5Y - seed6Y
-                          : seed4Y > 0
-                            ? seed4Y - seed6Y
-                            : seed3Y - seed6Y
-                      }
-                      fill="#fbbf24"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed6Y}
-                      x2={regionRight}
-                      y2={seed6Y}
-                      stroke="#f59e0b"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #6 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed6Y - 5}
-                      fontSize="11"
-                      fill="#92400e"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #6 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 7 region */}
-                {seed7Wins > 0 && seed7Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed7Y}
-                      width={regionRight - regionLeft}
-                      height={
-                        seed6Y > 0
-                          ? seed6Y - seed7Y
-                          : seed5Y > 0
-                            ? seed5Y - seed7Y
-                            : seed4Y - seed7Y
-                      }
-                      fill="#fb923c"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed7Y}
-                      x2={regionRight}
-                      y2={seed7Y}
-                      stroke="#f97316"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #7 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed7Y - 5}
-                      fontSize="11"
-                      fill="#b45309"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #7 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 8 region */}
-                {seed8Wins > 0 && seed8Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed8Y}
-                      width={regionRight - regionLeft}
-                      height={
-                        seed7Y > 0
-                          ? seed7Y - seed8Y
-                          : seed6Y > 0
-                            ? seed6Y - seed8Y
-                            : seed5Y - seed8Y
-                      }
-                      fill="#f97316"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed8Y}
-                      x2={regionRight}
-                      y2={seed8Y}
-                      stroke="#ea580c"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #8 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed8Y - 5}
-                      fontSize="11"
-                      fill="#9a3412"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #8 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 9 region */}
-                {seed9Wins > 0 && seed9Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed9Y}
-                      width={regionRight - regionLeft}
-                      height={
-                        seed8Y > 0
-                          ? seed8Y - seed9Y
-                          : seed7Y > 0
-                            ? seed7Y - seed9Y
-                            : seed6Y - seed9Y
-                      }
-                      fill="#fb7185"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed9Y}
-                      x2={regionRight}
-                      y2={seed9Y}
-                      stroke="#f43f5e"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #9 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed9Y - 5}
-                      fontSize="11"
-                      fill="#be123c"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #9 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Seed 10 region */}
-                {seed10Wins > 0 && seed10Y < chartAreaBottom && (
-                  <>
-                    <rect
-                      x={regionLeft}
-                      y={seed10Y}
-                      width={regionRight - regionLeft}
-                      height={
-                        seed9Y > 0
-                          ? seed9Y - seed10Y
-                          : seed8Y > 0
-                            ? seed8Y - seed10Y
-                            : seed7Y - seed10Y
-                      }
-                      fill="#fca5a5"
-                      opacity={0.15}
-                    />
-                    <line
-                      x1={regionLeft}
-                      y1={seed10Y}
-                      x2={regionRight}
-                      y2={seed10Y}
-                      stroke="#f87171"
-                      strokeWidth={1}
-                      strokeDasharray="2,2"
-                      opacity={0.4}
-                    />
-                    {/* #10 Seed label - ABOVE the line */}
-                    <text
-                      x={regionLeft + 8}
-                      y={seed10Y - 5}
-                      fontSize="11"
-                      fill="#991b1b"
-                      opacity={0.6}
-                      fontWeight="600"
-                    >
-                      #10 Seed
-                    </text>
-                  </>
-                )}
-
-                {/* Bubble region - light red below bubble line */}
-                <rect
-                  x={regionLeft}
-                  y={bubbleY}
-                  width={regionRight - regionLeft}
-                  height={chartAreaBottom - bubbleY}
-                  fill="#fee2e2"
-                  opacity={0.6}
-                />
-                <line
-                  x1={regionLeft}
-                  y1={bubbleY}
-                  x2={regionRight}
-                  y2={bubbleY}
-                  stroke="#dc2626"
-                  strokeWidth={1}
-                  strokeDasharray="2,2"
-                  opacity={0.5}
-                />
-                {/* Bubble label - ABOVE the line */}
-                <text
-                  x={regionLeft + 8}
-                  y={bubbleY - 5}
-                  fontSize="11"
-                  fill="#7f1d1d"
-                  opacity={0.7}
-                  fontWeight="600"
-                >
-                  Bubble
-                </text>
-
-                {/* Not At Large Candidate - RED - below bubble line */}
-                {bubbleY < chartAreaBottom && (
-                  <text
-                    x={regionLeft + 8}
-                    y={chartAreaBottom - 8}
-                    fontSize="11"
-                    fill="#991b1b"
-                    opacity={0.6}
-                    fontWeight="600"
-                  >
-                    Not At Large Candidate
-                  </text>
-                )}
-              </>
-            );
-          })()}
-
-        {/* Y-axis */}
-        <line
-          x1={LEFT_AXIS_PADDING}
-          y1={chartAreaTop}
-          x2={LEFT_AXIS_PADDING}
-          y2={chartAreaBottom}
-          stroke="#d1d5db"
-          strokeWidth={2}
-        />
-
-        {/* Y-axis labels and gridlines - Every 5 games */}
-        {Array.from(
-          { length: Math.floor(maxGames / 5) + 1 },
-          (_, i) => i * 5
-        ).map((value) => {
-          if (value > maxGames) return null;
-          const y = barBottomY - (value / maxGames) * chartAreaHeight;
-          return (
-            <g key={`gridline-${value}`}>
-              <line
-                x1={LEFT_AXIS_PADDING - 5}
-                y1={y}
-                x2={LEFT_AXIS_PADDING}
-                y2={y}
-                stroke="#d1d5db"
-                strokeWidth={1}
+      <div className="w-full overflow-x-auto md:overflow-x-visible">
+        <svg
+          width={chartWidth - 15}
+          height={chartHeight + 135}
+          className="border border-gray-200 rounded bg-white"
+          viewBox={`-90 0 ${chartWidth - 25} ${chartHeight + 135}`}
+        >
+          {/* Clipping path to constrain right-side seed regions to bar height */}
+          <defs>
+            <clipPath id="seedRegionClip">
+              <rect
+                x={barX + barWidth}
+                y={chartAreaTop}
+                width={chartWidth}
+                height={barBottomY - chartAreaTop}
               />
-              <text
-                x={LEFT_AXIS_PADDING - 8}
-                y={y + 4}
-                textAnchor="end"
-                className="text-xs fill-gray-600"
-                fontSize="11"
-              >
-                {value}
-              </text>
-            </g>
-          );
-        })}
+            </clipPath>
+          </defs>
 
-        {/* Dotted lines for each completed win only */}
-        {completedWins.map((_game, index) => {
-          const gameNumber = index + 1;
-          const yPosition =
-            barBottomY - (gameNumber / maxGames) * chartAreaHeight;
+          {/* Background */}
+          <rect
+            x="-20"
+            width={chartWidth + 20}
+            height={chartHeight}
+            fill="white"
+          />
 
-          return (
-            <g key={`game-marker-${index}`}>
-              <line
-                x1={barX}
-                y1={yPosition}
-                x2={barX + barWidth}
-                y2={yPosition}
-                stroke={secondaryColor}
-                strokeWidth={1}
-                strokeDasharray="4,4"
-                opacity={0.5}
-              />
-            </g>
-          );
-        })}
+          {/* Background shading regions on right side - corresponding to seed categories */}
+          <g clipPath="url(#seedRegionClip)">
+            {confChampData &&
+              (() => {
+                const bubbleWins = confChampData.wins_for_bubble || 0;
+                const seed10Wins = confChampData.wins_for_10_seed || 0;
+                const seed7Wins = confChampData.wins_for_7_seed || 0;
+                const seed4Wins = confChampData.wins_for_4_seed || 0;
+                const seed1Wins = confChampData.wins_for_1_seed || 0;
 
-        {/* Colored bar representing wins - with separators */}
-        {totalWins > 0 && (
-          <>
-            {/* Solid left and right borders */}
-            <line
-              x1={barX}
-              y1={barTopY}
-              x2={barX}
-              y2={barBottomY}
-              stroke="#000"
-              strokeWidth={2}
-            />
-            <line
-              x1={barX + barWidth}
-              y1={barTopY}
-              x2={barX + barWidth}
-              y2={barBottomY}
-              stroke="#000"
-              strokeWidth={2}
-            />
+                const bubbleY = getYFromWins(bubbleWins);
+                const seed10Y = getYFromWins(seed10Wins);
+                const seed7Y = getYFromWins(seed7Wins);
+                const seed4Y = getYFromWins(seed4Wins);
+                const seed1Y = getYFromWins(seed1Wins);
 
-            {/* Filled sections for each completed win */}
-            {completedWins.map((_win, index) => {
-              const yStart =
-                barBottomY - ((index + 1) / maxGames) * chartAreaHeight;
-              const yEnd = barBottomY - (index / maxGames) * chartAreaHeight;
-              const sectionHeight = yEnd - yStart;
+                const regionLeft = barX + barWidth;
+                const regionRight = isMobile
+                  ? chartWidth - PADDING - 110
+                  : chartWidth - PADDING - 65;
+
+                return (
+                  <>
+                    {/* 1 Seed region - light green from top to seed1 line */}
+                    {seed1Wins > 0 && (
+                      <>
+                        <rect
+                          x={regionLeft}
+                          y={chartAreaTop}
+                          width={regionRight - regionLeft}
+                          height={seed1Y - chartAreaTop}
+                          fill="#dcfce7"
+                          opacity={0.6}
+                        />
+                        <line
+                          x1={regionLeft}
+                          y1={seed1Y}
+                          x2={regionRight}
+                          y2={seed1Y}
+                          stroke="#22c55e"
+                          strokeWidth={1}
+                          strokeDasharray="2,2"
+                          opacity={0.5}
+                        />
+                      </>
+                    )}
+
+                    {/* 2-4 Seed region - light blue from seed1 to seed4 */}
+                    {seed4Wins > 0 && seed4Y > seed1Y && (
+                      <>
+                        <rect
+                          x={regionLeft}
+                          y={seed1Y}
+                          width={regionRight - regionLeft}
+                          height={seed4Y - seed1Y}
+                          fill="#93c5fd"
+                          opacity={0.2}
+                        />
+                        <line
+                          x1={regionLeft}
+                          y1={seed4Y}
+                          x2={regionRight}
+                          y2={seed4Y}
+                          stroke="#3b82f6"
+                          strokeWidth={1}
+                          strokeDasharray="2,2"
+                          opacity={0.4}
+                        />
+                      </>
+                    )}
+
+                    {/* 5-7 Seed region - purple from seed7 to seed4 */}
+                    {seed7Wins > 0 && seed7Y > seed4Y && (
+                      <>
+                        <rect
+                          x={regionLeft}
+                          y={seed4Y}
+                          width={regionRight - regionLeft}
+                          height={seed7Y - seed4Y}
+                          fill="#d8b4fe"
+                          opacity={0.2}
+                        />
+                        <line
+                          x1={regionLeft}
+                          y1={seed7Y}
+                          x2={regionRight}
+                          y2={seed7Y}
+                          stroke="#a855f7"
+                          strokeWidth={1}
+                          strokeDasharray="2,2"
+                          opacity={0.4}
+                        />
+                      </>
+                    )}
+
+                    {/* 8-10 Seed region - cyan from seed10 to seed7 */}
+                    {seed10Wins > 0 && seed10Y > seed7Y && (
+                      <>
+                        <rect
+                          x={regionLeft}
+                          y={seed7Y}
+                          width={regionRight - regionLeft}
+                          height={seed10Y - seed7Y}
+                          fill="#a5f3fc"
+                          opacity={0.2}
+                        />
+                        <line
+                          x1={regionLeft}
+                          y1={seed10Y}
+                          x2={regionRight}
+                          y2={seed10Y}
+                          stroke="#06b6d4"
+                          strokeWidth={1}
+                          strokeDasharray="2,2"
+                          opacity={0.4}
+                        />
+                      </>
+                    )}
+
+                    {/* Bubble region - orange from bubble to seed10 */}
+                    {bubbleWins > 0 && bubbleY > seed10Y && (
+                      <>
+                        <rect
+                          x={regionLeft}
+                          y={seed10Y}
+                          width={regionRight - regionLeft}
+                          height={bubbleY - seed10Y}
+                          fill="#fed7aa"
+                          opacity={0.3}
+                        />
+                        <line
+                          x1={regionLeft}
+                          y1={bubbleY}
+                          x2={regionRight}
+                          y2={bubbleY}
+                          stroke="#f97316"
+                          strokeWidth={1}
+                          strokeDasharray="2,2"
+                          opacity={0.5}
+                        />
+                      </>
+                    )}
+
+                    {/* Not At Large region - red from bubble to bottom */}
+                    {bubbleY < chartAreaBottom && (
+                      <rect
+                        x={regionLeft}
+                        y={bubbleY}
+                        width={regionRight - regionLeft}
+                        height={chartAreaBottom - bubbleY}
+                        fill="#fecaca"
+                        opacity={0.3}
+                      />
+                    )}
+                  </>
+                );
+              })()}
+          </g>
+
+          {/* Labels rendered OUTSIDE the clipped group so they're always visible */}
+          {confChampData &&
+            (() => {
+              const bubbleWins = confChampData.wins_for_bubble || 0;
+              const seed10Wins = confChampData.wins_for_10_seed || 0;
+              const seed7Wins = confChampData.wins_for_7_seed || 0;
+              const seed4Wins = confChampData.wins_for_4_seed || 0;
+              const seed1Wins = confChampData.wins_for_1_seed || 0;
+
+              const bubbleY = getYFromWins(bubbleWins);
+              const seed10Y = getYFromWins(seed10Wins);
+              const seed7Y = getYFromWins(seed7Wins);
+              const seed4Y = getYFromWins(seed4Wins);
+              const seed1Y = getYFromWins(seed1Wins);
+
+              const regionLeft = barX + barWidth;
+              const regionRight = isMobile
+                ? chartWidth - PADDING - 110
+                : chartWidth - PADDING - 65;
+              const labelX =
+                regionLeft +
+                (regionRight - regionLeft) * 0.425 -
+                (isMobile ? 5 : 0);
+              const numberX = isMobile ? regionRight - 15 : regionRight - 40;
+
+              const roundToHalf = (num: number) => {
+                return Math.round(num * 2) / 2;
+              };
 
               return (
-                <g key={`win-section-${index}`}>
-                  {/* Filled primary color section */}
-                  <rect
-                    x={barX}
-                    y={yStart}
-                    width={barWidth}
-                    height={sectionHeight}
-                    fill={primaryColor}
-                  />
+                <>
+                  {/* 1 Seed label - show if region is within bar area */}
+                  {seed1Wins > 0 && seed1Y <= barBottomY && (
+                    <>
+                      <text
+                        x={labelX}
+                        y={chartAreaTop + (seed1Y - chartAreaTop) / 2}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="#166534"
+                        opacity={0.7}
+                        fontWeight="600"
+                        dominantBaseline="middle"
+                      >
+                        1 Seed
+                      </text>
+                      <text
+                        x={numberX}
+                        y={seed1Y + 3}
+                        textAnchor="end"
+                        fontSize="11"
+                        fill="#166534"
+                        opacity={0.8}
+                        fontWeight="600"
+                      >
+                        ~{roundToHalf(seed1Wins).toFixed(1)}
+                      </text>
+                    </>
+                  )}
 
-                  {/* Separator line */}
+                  {/* 2-4 Seed label and number - show if region is within bar area */}
+                  {seed4Wins > 0 && seed4Y > seed1Y && seed4Y <= barBottomY && (
+                    <>
+                      <text
+                        x={labelX}
+                        y={
+                          Math.max(chartAreaTop, seed1Y) +
+                          (Math.min(chartAreaBottom, seed4Y) -
+                            Math.max(chartAreaTop, seed1Y)) /
+                            2
+                        }
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="#1e40af"
+                        opacity={0.6}
+                        fontWeight="600"
+                        dominantBaseline="middle"
+                      >
+                        2-4 Seed
+                      </text>
+                      <text
+                        x={numberX}
+                        y={seed4Y + 3}
+                        textAnchor="end"
+                        fontSize="11"
+                        fill="#1e40af"
+                        opacity={0.8}
+                        fontWeight="600"
+                      >
+                        ~{roundToHalf(seed4Wins).toFixed(1)}
+                      </text>
+                    </>
+                  )}
+
+                  {/* 5-7 Seed label and number - show if region is within bar area */}
+                  {seed7Wins > 0 && seed7Y > seed4Y && seed7Y <= barBottomY && (
+                    <>
+                      <text
+                        x={labelX}
+                        y={
+                          Math.max(chartAreaTop, seed4Y) +
+                          (Math.min(chartAreaBottom, seed7Y) -
+                            Math.max(chartAreaTop, seed4Y)) /
+                            2
+                        }
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="#6b21a8"
+                        opacity={0.6}
+                        fontWeight="600"
+                        dominantBaseline="middle"
+                      >
+                        5-7 Seed
+                      </text>
+                      <text
+                        x={numberX}
+                        y={seed7Y + 3}
+                        textAnchor="end"
+                        fontSize="11"
+                        fill="#6b21a8"
+                        opacity={0.8}
+                        fontWeight="600"
+                      >
+                        ~{roundToHalf(seed7Wins).toFixed(1)}
+                      </text>
+                    </>
+                  )}
+
+                  {/* 8-10 Seed label and number - show if region is within bar area */}
+                  {seed10Wins > 0 &&
+                    seed10Y > seed7Y &&
+                    seed10Y <= barBottomY && (
+                      <>
+                        <text
+                          x={labelX}
+                          y={
+                            Math.max(chartAreaTop, seed7Y) +
+                            (Math.min(chartAreaBottom, seed10Y) -
+                              Math.max(chartAreaTop, seed7Y)) /
+                              2
+                          }
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#0e7490"
+                          opacity={0.6}
+                          fontWeight="600"
+                          dominantBaseline="middle"
+                        >
+                          8-10 Seed
+                        </text>
+                        <text
+                          x={numberX}
+                          y={seed10Y + 3}
+                          textAnchor="end"
+                          fontSize="11"
+                          fill="#0e7490"
+                          opacity={0.8}
+                          fontWeight="600"
+                        >
+                          ~{roundToHalf(seed10Wins).toFixed(1)}
+                        </text>
+                      </>
+                    )}
+
+                  {/* Bubble label and number - show if region is within bar area */}
+                  {bubbleWins > 0 &&
+                    bubbleY > seed10Y &&
+                    bubbleY <= barBottomY && (
+                      <>
+                        <text
+                          x={labelX}
+                          y={
+                            Math.max(chartAreaTop, seed10Y) +
+                            (Math.min(chartAreaBottom, bubbleY) -
+                              Math.max(chartAreaTop, seed10Y)) /
+                              2
+                          }
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#92400e"
+                          opacity={0.7}
+                          fontWeight="600"
+                          dominantBaseline="middle"
+                        >
+                          Bubble
+                        </text>
+                        <text
+                          x={numberX}
+                          y={bubbleY + 3}
+                          textAnchor="end"
+                          fontSize="11"
+                          fill="#92400e"
+                          opacity={0.8}
+                          fontWeight="600"
+                        >
+                          ~{roundToHalf(bubbleWins).toFixed(1)}
+                        </text>
+                      </>
+                    )}
+
+                  {/* Not At Large label */}
+                  {bubbleY < chartAreaBottom && (
+                    <>
+                      <text
+                        x={labelX}
+                        y={bubbleY + (chartAreaBottom - bubbleY) / 2 - 6}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="#991b1b"
+                        opacity={0.8}
+                        fontWeight="600"
+                        dominantBaseline="middle"
+                      >
+                        Not At Large
+                      </text>
+                      <text
+                        x={labelX}
+                        y={bubbleY + (chartAreaBottom - bubbleY) / 2 + 6}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="#991b1b"
+                        opacity={0.8}
+                        fontWeight="600"
+                        dominantBaseline="middle"
+                      >
+                        Candidate
+                      </text>
+                    </>
+                  )}
+                </>
+              );
+            })()}
+
+          {/* Y-axis */}
+          <line
+            x1={LEFT_AXIS_PADDING}
+            y1={chartAreaTop}
+            x2={LEFT_AXIS_PADDING}
+            y2={chartAreaBottom}
+            stroke="#9ca3af"
+            strokeWidth={2}
+          />
+
+          {/* Y-axis labels and gridlines - Every 5 games */}
+          {Array.from(
+            { length: Math.floor(maxGames / 5) + 1 },
+            (_, i) => i * 5
+          ).map((value) => {
+            if (value > maxGames) return null;
+            const y = barBottomY - (value / maxGames) * chartAreaHeight;
+            return (
+              <g key={`gridline-${value}`}>
+                <line
+                  x1={LEFT_AXIS_PADDING - 5}
+                  y1={y}
+                  x2={LEFT_AXIS_PADDING}
+                  y2={y}
+                  stroke="#d1d5db"
+                  strokeWidth={1}
+                />
+                <text
+                  x={LEFT_AXIS_PADDING - 15 + AXIS_LABEL_SHIFT}
+                  y={y + 4}
+                  textAnchor="end"
+                  fill="#4b5563"
+                  fontSize="12"
+                >
+                  {value}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Dotted lines for each completed win only */}
+          {completedWins.map((_game, index) => {
+            const gameNumber = index + 1;
+            const yPosition =
+              barBottomY - (gameNumber / maxGames) * chartAreaHeight;
+
+            return (
+              <g key={`game-marker-${index}`}>
+                <line
+                  x1={barX}
+                  y1={yPosition}
+                  x2={barX + barWidth}
+                  y2={yPosition}
+                  stroke={secondaryColor}
+                  strokeWidth={1}
+                  strokeDasharray="4,4"
+                  opacity={0.5}
+                />
+              </g>
+            );
+          })}
+
+          {/* Colored bar representing wins - with separators */}
+          {totalWins > 0 && (
+            <>
+              {/* Solid left and right borders */}
+              <line
+                x1={barX}
+                y1={barTopY}
+                x2={barX}
+                y2={barBottomY}
+                stroke="#000"
+                strokeWidth={2}
+              />
+              <line
+                x1={barX + barWidth}
+                y1={barTopY}
+                x2={barX + barWidth}
+                y2={barBottomY}
+                stroke="#000"
+                strokeWidth={2}
+              />
+
+              {/* Filled sections for each completed win */}
+              {completedWins.map((_win, index) => {
+                const yStart =
+                  barBottomY - ((index + 1) / maxGames) * chartAreaHeight;
+                const yEnd = barBottomY - (index / maxGames) * chartAreaHeight;
+                const sectionHeight = yEnd - yStart;
+
+                return (
+                  <g key={`win-section-${index}`}>
+                    {/* Filled primary color section */}
+                    <rect
+                      x={barX}
+                      y={yStart}
+                      width={barWidth}
+                      height={sectionHeight}
+                      fill={primaryColor}
+                    />
+
+                    {/* Separator line */}
+                    <line
+                      x1={barX}
+                      y1={yEnd}
+                      x2={barX + barWidth}
+                      y2={yEnd}
+                      stroke={finalSecondaryColor}
+                      strokeWidth={1}
+                      strokeDasharray="3,3"
+                    />
+                  </g>
+                );
+              })}
+            </>
+          )}
+
+          {/* Remaining games as outlined sections */}
+          {remainingGames.length > 0 && (
+            <>
+              {/* Dotted left and right borders for all remaining games */}
+              <line
+                x1={barX}
+                y1={barBottomY - (totalWins / maxGames) * chartAreaHeight}
+                x2={barX}
+                y2={
+                  barBottomY -
+                  ((totalWins + remainingGames.length) / maxGames) *
+                    chartAreaHeight
+                }
+                stroke="#000"
+                strokeWidth={1}
+                strokeDasharray="3,3"
+              />
+              <line
+                x1={barX + barWidth}
+                y1={barBottomY - (totalWins / maxGames) * chartAreaHeight}
+                x2={barX + barWidth}
+                y2={
+                  barBottomY -
+                  ((totalWins + remainingGames.length) / maxGames) *
+                    chartAreaHeight
+                }
+                stroke="#000"
+                strokeWidth={1}
+                strokeDasharray="3,3"
+              />
+
+              {/* Top border line for remaining games section */}
+              <line
+                x1={barX}
+                y1={barBottomY - (totalWins / maxGames) * chartAreaHeight}
+                x2={barX + barWidth}
+                y2={barBottomY - (totalWins / maxGames) * chartAreaHeight}
+                stroke="#000"
+                strokeWidth={1}
+                strokeDasharray="3,3"
+              />
+
+              {/* Bottom border line for remaining games section */}
+              <line
+                x1={barX}
+                y1={
+                  barBottomY -
+                  ((totalWins + remainingGames.length) / maxGames) *
+                    chartAreaHeight
+                }
+                x2={barX + barWidth}
+                y2={
+                  barBottomY -
+                  ((totalWins + remainingGames.length) / maxGames) *
+                    chartAreaHeight
+                }
+                stroke="#000"
+                strokeWidth={1}
+                strokeDasharray="3,3"
+              />
+
+              {/* Dotted separator lines between remaining games */}
+              {remainingGames.map((_game, index) => {
+                if (index === remainingGames.length - 1) return null;
+
+                const gameIndex = totalWins + index + 1;
+                const yEnd =
+                  barBottomY - (gameIndex / maxGames) * chartAreaHeight;
+
+                return (
                   <line
+                    key={`remaining-separator-${index}`}
                     x1={barX}
                     y1={yEnd}
                     x2={barX + barWidth}
                     y2={yEnd}
-                    stroke={finalSecondaryColor}
+                    stroke="#000"
                     strokeWidth={1}
                     strokeDasharray="3,3"
                   />
-                </g>
-              );
-            })}
-          </>
-        )}
+                );
+              })}
+            </>
+          )}
 
-        {/* Remaining games as outlined sections */}
-        {remainingGames.length > 0 && (
-          <>
-            {/* Dotted left and right borders for all remaining games */}
-            <line
-              x1={barX}
-              y1={barBottomY - (totalWins / maxGames) * chartAreaHeight}
-              x2={barX}
-              y2={
-                barBottomY -
-                ((totalWins + remainingGames.length) / maxGames) *
-                  chartAreaHeight
-              }
-              stroke="#000"
-              strokeWidth={1}
-              strokeDasharray="3,3"
-            />
-            <line
-              x1={barX + barWidth}
-              y1={barBottomY - (totalWins / maxGames) * chartAreaHeight}
-              x2={barX + barWidth}
-              y2={
-                barBottomY -
-                ((totalWins + remainingGames.length) / maxGames) *
-                  chartAreaHeight
-              }
-              stroke="#000"
-              strokeWidth={1}
-              strokeDasharray="3,3"
-            />
+          {/* X-axis */}
+          <line
+            x1={LEFT_AXIS_PADDING}
+            y1={barBottomY}
+            x2={isMobile ? chartWidth - PADDING - 110 : chartWidth - PADDING}
+            y2={barBottomY}
+            stroke="#9ca3af"
+            strokeWidth={2}
+          />
 
-            {/* Top border line for remaining games section */}
+          {/* PROJECTED WIN TOTAL INDICATOR - X marker with arrow */}
+          {projectedWinsY !== null && confChampData && (
+            <>
+              {/* Arrow pointing from right to left at projected wins level */}
+              <line
+                x1={barX + barWidth + 30}
+                y1={projectedWinsY}
+                x2={barX + barWidth - 15}
+                y2={projectedWinsY}
+                stroke="#4f46e5"
+                strokeWidth={2}
+                opacity={0.8}
+              />
+              {/* Arrow head (triangle pointing left) */}
+              <polygon
+                points={`${barX + barWidth - 15},${projectedWinsY} ${barX + barWidth - 8},${projectedWinsY - 4} ${barX + barWidth - 8},${projectedWinsY + 4}`}
+                fill="#4f46e5"
+                opacity={0.8}
+              />
+
+              {/* "Proj" label above the arrow */}
+              <text
+                x={barX + barWidth + 18}
+                y={projectedWinsY - 5}
+                textAnchor="middle"
+                fontSize="10"
+                fill="#4f46e5"
+                fontWeight="600"
+                opacity={0.9}
+              >
+                Proj
+              </text>
+
+              {/* "Wins" label below the arrow */}
+              <text
+                x={barX + barWidth + 18}
+                y={projectedWinsY + 13}
+                textAnchor="middle"
+                fontSize="10"
+                fill="#4f46e5"
+                fontWeight="600"
+                opacity={0.9}
+              >
+                Wins
+              </text>
+
+              {/* X marker at projected wins level - thicker and smaller */}
+              <line
+                x1={barX + barWidth / 2 - 4}
+                y1={projectedWinsY - 4}
+                x2={barX + barWidth / 2 + 4}
+                y2={projectedWinsY + 4}
+                stroke="#4f46e5"
+                strokeWidth={3}
+                opacity={0.8}
+              />
+              <line
+                x1={barX + barWidth / 2 + 4}
+                y1={projectedWinsY - 4}
+                x2={barX + barWidth / 2 - 4}
+                y2={projectedWinsY + 4}
+                stroke="#4f46e5"
+                strokeWidth={3}
+                opacity={0.8}
+              />
+            </>
+          )}
+
+          {/* Logos on left side for non-completed games */}
+          {logoPositions.map(({ game, yPosition, gameNumber, logoX }) => {
+            const isWin = gameNumber <= totalWins;
+
+            // Only render logos for non-completed games
+            if (isWin) {
+              return null;
+            }
+
+            const lineColor = game.opponent_primary_color || "#d1d5db";
+            const probability = (game.winProb * 100).toFixed(0);
+
+            const confGameNumber = game.opponent.match(/\d+/)?.[0];
+
+            // DEBUG: Log each logo being rendered
+            console.log(`[BBALL_WINS] Rendering logo for game ${gameNumber}:`, {
+              opponent: game.opponent,
+              opponent_logo: game.opponent_logo,
+              hasLogo: !!game.opponent_logo,
+              willShowRect: !game.opponent_logo,
+            });
+
+            // Calculate location display for tooltip
+            const locationDisplay =
+              game.location === "Home"
+                ? "Home"
+                : game.location === "Away"
+                  ? "Away"
+                  : "Neutral";
+            const dateDisplay = game.date || "No date";
+
+            return (
+              <g key={`logo-${gameNumber}`}>
+                {/* Connecting dotted line from logo to left edge of bar */}
+                <line
+                  x1={logoX + LOGO_SIZE - 2}
+                  y1={yPosition}
+                  x2={barX}
+                  y2={yPosition}
+                  stroke={lineColor}
+                  strokeWidth={1.5}
+                  strokeDasharray="3,3"
+                  opacity={0.7}
+                />
+
+                {/* Logo */}
+                {game.opponent_logo ? (
+                  <image
+                    x={logoX}
+                    y={yPosition - LOGO_SIZE / 2}
+                    width={LOGO_SIZE}
+                    height={LOGO_SIZE}
+                    href={game.opponent_logo}
+                    style={{
+                      border: `2px solid ${lineColor}`,
+                      borderRadius: "4px",
+                    }}
+                  />
+                ) : (
+                  <image
+                    x={logoX}
+                    y={yPosition - LOGO_SIZE / 2}
+                    width={LOGO_SIZE}
+                    height={LOGO_SIZE}
+                    href="/images/team_logos/default.png"
+                    style={{
+                      border: `2px solid ${lineColor}`,
+                      borderRadius: "4px",
+                    }}
+                  />
+                )}
+
+                {/* Game number badge - only for tournament games */}
+                {confGameNumber && (
+                  <>
+                    <circle
+                      cx={logoX + LOGO_SIZE - 3}
+                      cy={yPosition - LOGO_SIZE / 2 + 3}
+                      r={4}
+                      fill="#FFFFFF"
+                      stroke={lineColor}
+                      strokeWidth="0.75"
+                    />
+                    <text
+                      x={logoX + LOGO_SIZE - 3}
+                      y={yPosition - LOGO_SIZE / 2 + 5}
+                      textAnchor="middle"
+                      fontSize="6"
+                      fontWeight="bold"
+                      fill={lineColor}
+                    >
+                      #{confGameNumber}
+                    </text>
+                  </>
+                )}
+
+                {/* Multiline tooltip format with whole number percentages */}
+                <title>{`${game.opponent}\nLocation: ${locationDisplay}\n${dateDisplay}\nWin Probability: ${probability}%`}</title>
+
+                {/* Helper function to get color based on win probability - using TWV colors */}
+                {(() => {
+                  const getPercentageColor = (prob: number) => {
+                    // TWV color scheme for win probability 0-100%
+                    // Maps 100% = dark blue, 50% = white, 0% = yellow
+                    const blue = [24, 98, 123]; // Dark blue for 100%
+                    const white = [255, 255, 255]; // White for 50%
+                    const yellow = [255, 230, 113]; // Yellow for 0%
+
+                    let r: number, g: number, b: number;
+
+                    if (prob >= 50) {
+                      // 50-100%: interpolate from white to dark blue
+                      const ratio = Math.min((prob - 50) / 50, 1);
+                      r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
+                      g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
+                      b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
+                    } else {
+                      // 0-50%: interpolate from yellow to white
+                      const ratio = Math.min(prob / 50, 1);
+                      r = Math.round(
+                        yellow[0] + (white[0] - yellow[0]) * ratio
+                      );
+                      g = Math.round(
+                        yellow[1] + (white[1] - yellow[1]) * ratio
+                      );
+                      b = Math.round(
+                        yellow[2] + (white[2] - yellow[2]) * ratio
+                      );
+                    }
+
+                    // Calculate brightness for text color contrast
+                    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                    const textColor = brightness > 140 ? "#000000" : "#ffffff";
+
+                    return {
+                      backgroundColor: `rgb(${r}, ${g}, ${b})`,
+                      textColor: textColor,
+                    };
+                  };
+
+                  const cellStyle = getPercentageColor(parseInt(probability));
+
+                  return (
+                    <>
+                      {/* Column 1: Percentage cell with full background */}
+                      <rect
+                        x={logoX - LOGO_SIZE - 65}
+                        y={yPosition - 6}
+                        width={20}
+                        height={12}
+                        fill={cellStyle.backgroundColor}
+                        rx="2"
+                      />
+                      <text
+                        x={logoX - LOGO_SIZE - 55}
+                        y={yPosition + 3}
+                        textAnchor="middle"
+                        fill={cellStyle.textColor}
+                        fontSize="9"
+                      >
+                        {probability}%
+                      </text>
+                      {/* Column 2: Location cell with background */}
+                      <rect
+                        x={logoX - LOGO_SIZE - 33}
+                        y={yPosition - 6}
+                        width={12}
+                        height={12}
+                        fill={
+                          game.location === "Home"
+                            ? "#dcfce7"
+                            : game.location === "Away"
+                              ? "#fee2e2"
+                              : "#fef3c7"
+                        }
+                        rx="2"
+                      />
+                      <text
+                        x={logoX - LOGO_SIZE - 27}
+                        y={yPosition + 3}
+                        textAnchor="middle"
+                        fill={
+                          game.location === "Home"
+                            ? "#15803d"
+                            : game.location === "Away"
+                              ? "#991b1b"
+                              : "#d97706"
+                        }
+                        fontSize="10"
+                        fontWeight="600"
+                      >
+                        {game.location === "Home"
+                          ? "H"
+                          : game.location === "Away"
+                            ? "A"
+                            : "N"}
+                      </text>
+                      {/* Column 3: Game Number */}
+                      <text
+                        x={logoX - LOGO_SIZE - 9}
+                        y={yPosition + 3}
+                        textAnchor="start"
+                        fill="#9ca3af"
+                        fontSize="10"
+                      >
+                        {gameNumber}
+                      </text>
+                      {/* Column 4: Logo (positioned at logoX) */}
+                    </>
+                  );
+                })()}
+              </g>
+            );
+          })}
+
+          {/* Logos on left side for completed wins */}
+          {logoPositions.map(({ game, yPosition, gameNumber, logoX }) => {
+            const isWin = gameNumber <= totalWins;
+
+            // Only render for completed wins
+            if (!isWin) {
+              return null;
+            }
+
+            const lineColor = game.opponent_primary_color || primaryColor;
+            const probability = (game.winProb * 100).toFixed(0);
+            const confGameNumber = game.opponent.match(/\d+/)?.[0];
+
+            // DEBUG: Log each completed win logo
+            console.log(
+              `[BBALL_WINS] Rendering COMPLETED WIN logo for game ${gameNumber}:`,
+              {
+                opponent: game.opponent,
+                opponent_logo: game.opponent_logo,
+                hasLogo: !!game.opponent_logo,
+                willShowRect: !game.opponent_logo,
+              }
+            );
+
+            return (
+              <g key={`logo-win-${gameNumber}`}>
+                {/* Connecting dotted line from logo to left edge of bar */}
+                <line
+                  x1={logoX + LOGO_SIZE - 2}
+                  y1={yPosition}
+                  x2={barX}
+                  y2={yPosition}
+                  stroke={lineColor}
+                  strokeWidth={1.5}
+                  strokeDasharray="3,3"
+                  opacity={0.7}
+                />
+
+                {/* Logo */}
+                {game.opponent_logo ? (
+                  <image
+                    x={logoX}
+                    y={yPosition - LOGO_SIZE / 2}
+                    width={LOGO_SIZE}
+                    height={LOGO_SIZE}
+                    href={game.opponent_logo}
+                    style={{
+                      border: `2px solid ${lineColor}`,
+                      borderRadius: "4px",
+                    }}
+                  />
+                ) : (
+                  <image
+                    x={logoX}
+                    y={yPosition - LOGO_SIZE / 2}
+                    width={LOGO_SIZE}
+                    height={LOGO_SIZE}
+                    href="/images/team_logos/default.png"
+                    style={{
+                      border: `2px solid ${lineColor}`,
+                      borderRadius: "4px",
+                    }}
+                  />
+                )}
+
+                {/* Game number badge - only for tournament games */}
+                {confGameNumber && (
+                  <>
+                    <circle
+                      cx={logoX + LOGO_SIZE - 3}
+                      cy={yPosition - LOGO_SIZE / 2 + 3}
+                      r={4}
+                      fill="#FFFFFF"
+                      stroke={lineColor}
+                      strokeWidth="0.75"
+                    />
+                    <text
+                      x={logoX + LOGO_SIZE - 3}
+                      y={yPosition - LOGO_SIZE / 2 + 5}
+                      textAnchor="middle"
+                      fontSize="6"
+                      fontWeight="bold"
+                      fill={lineColor}
+                    >
+                      #{confGameNumber}
+                    </text>
+                  </>
+                )}
+
+                {/* Four column layout: Percentage | Location | Game # | Logo */}
+                {(() => {
+                  const getPercentageColor = (prob: number) => {
+                    // TWV color scheme for win probability 0-100%
+                    // Maps 100% = dark blue, 50% = white, 0% = yellow
+                    const blue = [24, 98, 123]; // Dark blue for 100%
+                    const white = [255, 255, 255]; // White for 50%
+                    const yellow = [255, 230, 113]; // Yellow for 0%
+
+                    let r: number, g: number, b: number;
+
+                    if (prob >= 50) {
+                      // 50-100%: interpolate from white to dark blue
+                      const ratio = Math.min((prob - 50) / 50, 1);
+                      r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
+                      g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
+                      b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
+                    } else {
+                      // 0-50%: interpolate from yellow to white
+                      const ratio = Math.min(prob / 50, 1);
+                      r = Math.round(
+                        yellow[0] + (white[0] - yellow[0]) * ratio
+                      );
+                      g = Math.round(
+                        yellow[1] + (white[1] - yellow[1]) * ratio
+                      );
+                      b = Math.round(
+                        yellow[2] + (white[2] - yellow[2]) * ratio
+                      );
+                    }
+
+                    // Calculate brightness for text color contrast
+                    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                    const textColor = brightness > 140 ? "#000000" : "#ffffff";
+
+                    return {
+                      backgroundColor: `rgb(${r}, ${g}, ${b})`,
+                      textColor: textColor,
+                    };
+                  };
+
+                  const cellStyle = getPercentageColor(parseInt(probability));
+
+                  return (
+                    <>
+                      {/* Column 1: Percentage cell with full background */}
+                      <rect
+                        x={logoX - LOGO_SIZE - 65}
+                        y={yPosition - 6}
+                        width={20}
+                        height={12}
+                        fill={cellStyle.backgroundColor}
+                        rx="2"
+                      />
+                      <text
+                        x={logoX - LOGO_SIZE - 55}
+                        y={yPosition + 3}
+                        textAnchor="middle"
+                        fill={cellStyle.textColor}
+                        fontSize="9"
+                      >
+                        {probability}%
+                      </text>
+                      {/* Column 2: Location cell with background */}
+                      <rect
+                        x={logoX - LOGO_SIZE - 33}
+                        y={yPosition - 6}
+                        width={12}
+                        height={12}
+                        fill={
+                          game.location === "Home"
+                            ? "#dcfce7"
+                            : game.location === "Away"
+                              ? "#fee2e2"
+                              : "#fef3c7"
+                        }
+                        rx="2"
+                      />
+                      <text
+                        x={logoX - LOGO_SIZE - 27}
+                        y={yPosition + 3}
+                        textAnchor="middle"
+                        fill={
+                          game.location === "Home"
+                            ? "#15803d"
+                            : game.location === "Away"
+                              ? "#991b1b"
+                              : "#d97706"
+                        }
+                        fontSize="10"
+                        fontWeight="600"
+                      >
+                        {game.location === "Home"
+                          ? "H"
+                          : game.location === "Away"
+                            ? "A"
+                            : "N"}
+                      </text>
+                      {/* Column 3: Game Number */}
+                      <text
+                        x={logoX - LOGO_SIZE - 9}
+                        y={yPosition + 3}
+                        textAnchor="start"
+                        fill="#9ca3af"
+                        fontSize="10"
+                      >
+                        {gameNumber}
+                      </text>
+                      {/* Column 4: Logo (positioned at logoX) */}
+                    </>
+                  );
+                })()}
+              </g>
+            );
+          })}
+
+          {/* Separator line between completed and uncompleted games */}
+          {totalWins > 0 && (
             <line
-              x1={barX}
+              x1={LEFT_AXIS_PADDING}
               y1={barBottomY - (totalWins / maxGames) * chartAreaHeight}
               x2={barX + barWidth}
               y2={barBottomY - (totalWins / maxGames) * chartAreaHeight}
+              stroke={primaryColor}
+              strokeWidth={1.5}
+              strokeDasharray="4,4"
+              opacity={0.6}
+            />
+          )}
+
+          {/* Current wins label at top of bar */}
+          {totalWins > 0 && (
+            <text
+              x={barX + barWidth / 2}
+              y={barTopY + 12}
+              textAnchor="middle"
+              fill={finalSecondaryColor}
+              fontSize="14"
+              fontWeight="bold"
+            >
+              {totalWins}
+            </text>
+          )}
+
+          {/* Column headers at bottom */}
+          {(() => {
+            // Calculate header positions based on actual data column positions
+            // Using the same logoX calculation as in logoPositions
+            const headerLogoX = barX - LOGO_SPACING - LOGO_SIZE;
+
+            // Win Prob: center of percentage cell, moved left by 13px
+            const winProbX = headerLogoX - LOGO_SIZE - 45 - 13;
+
+            // Loc: center of location cell (12px wide, centered at logoX - LOGO_SIZE - 30)
+            const locX = headerLogoX - LOGO_SIZE - 30;
+
+            // Game: position of game number, moved right by 6px
+            const gameX = headerLogoX - LOGO_SIZE - 9 + 6;
+
+            // Opp: center of logo position, moved right by 12px
+            const oppX = headerLogoX + 12;
+
+            // Wins: center of wins bar
+            const winsX = barX + barWidth / 2;
+
+            // NCAA Seed: positioned at 42.5% from left of colored region
+            const regionLeft = barX + barWidth;
+            const regionRight = isMobile
+              ? chartWidth - PADDING - 110
+              : chartWidth - PADDING - 65;
+            const ncaaSeedX =
+              regionLeft +
+              (regionRight - regionLeft) * 0.425 -
+              (isMobile ? 5 : 0);
+
+            return (
+              <>
+                {/* Win Prob column - wrapped text */}
+                <text
+                  x={winProbX}
+                  y={chartHeight - 16}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  Win
+                </text>
+                <text
+                  x={winProbX}
+                  y={chartHeight - 4}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  Prob
+                </text>
+
+                {/* Loc column */}
+                <text
+                  x={locX}
+                  y={chartHeight - 4}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  Loc
+                </text>
+
+                {/* Game column */}
+                <text
+                  x={gameX}
+                  y={chartHeight - 4}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  Game
+                </text>
+
+                {/* Opp column */}
+                <text
+                  x={oppX}
+                  y={chartHeight - 4}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  Opp
+                </text>
+
+                {/* Wins column */}
+                <text
+                  x={winsX}
+                  y={chartHeight - 4}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  Wins
+                </text>
+
+                {/* NCAA Seed column - wrapped text */}
+                <text
+                  x={ncaaSeedX}
+                  y={chartHeight - 16}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  NCAA
+                </text>
+                <text
+                  x={ncaaSeedX}
+                  y={chartHeight - 4}
+                  textAnchor="middle"
+                  className="text-xs fill-gray-600"
+                  fontSize="8"
+                  fontWeight="500"
+                >
+                  Seed
+                </text>
+              </>
+            );
+          })()}
+
+          {/* LEGEND AND DESCRIPTION SECTION */}
+
+          {/* Legend Row 1: Wins to date and future games */}
+          <g>
+            {/* Wins to date - filled box */}
+            <rect
+              x={-80}
+              y={chartHeight + 15}
+              width={12}
+              height={12}
+              fill={primaryColor}
               stroke="#000"
               strokeWidth={1}
-              strokeDasharray="3,3"
             />
+            <text
+              x={-62}
+              y={chartHeight + 24}
+              fontSize="11"
+              fill="#374151"
+              fontWeight="500"
+            >
+              - wins to date
+            </text>
 
-            {/* Bottom border line for remaining games section */}
-            <line
-              x1={barX}
-              y1={
-                barBottomY -
-                ((totalWins + remainingGames.length) / maxGames) *
-                  chartAreaHeight
-              }
-              x2={barX + barWidth}
-              y2={
-                barBottomY -
-                ((totalWins + remainingGames.length) / maxGames) *
-                  chartAreaHeight
-              }
+            {/* Future games - dotted box */}
+            <rect
+              x={70}
+              y={chartHeight + 15}
+              width={12}
+              height={12}
+              fill="none"
               stroke="#000"
               strokeWidth={1}
-              strokeDasharray="3,3"
+              strokeDasharray="2,2"
             />
+            <text
+              x={88}
+              y={chartHeight + 24}
+              fontSize="11"
+              fill="#374151"
+              fontWeight="500"
+            >
+              - future scheduled games
+            </text>
+          </g>
 
-            {/* Dotted separator lines between remaining games */}
-            {remainingGames.map((_game, index) => {
-              if (index === remainingGames.length - 1) return null;
-
-              const gameIndex = totalWins + index + 1;
-              const yEnd =
-                barBottomY - (gameIndex / maxGames) * chartAreaHeight;
-
-              return (
-                <line
-                  key={`remaining-separator-${index}`}
-                  x1={barX}
-                  y1={yEnd}
-                  x2={barX + barWidth}
-                  y2={yEnd}
-                  stroke="#000"
-                  strokeWidth={1}
-                  strokeDasharray="3,3"
-                />
-              );
-            })}
-          </>
-        )}
-
-        {/* X-axis */}
-        <line
-          x1={LEFT_AXIS_PADDING}
-          y1={barBottomY}
-          x2={chartWidth - PADDING}
-          y2={barBottomY}
-          stroke="#374151"
-          strokeWidth={2}
-        />
-
-        {/* Logos on left and right sides with connecting dotted lines */}
-        {logoPositions.map(({ game, yPosition, gameNumber, logoX }) => {
-          const isWin = gameNumber <= totalWins;
-          const lineColor =
-            game.opponent_primary_color || (isWin ? primaryColor : "#d1d5db");
-          const probability = (game.winProb * 100).toFixed(0);
-          const isLeftSide = logoX < barX;
-
-          const confGameNumber = game.opponent.match(/\d+/)?.[0];
-
-          // NEW: Calculate location display for tooltip
-          const locationDisplay =
-            game.location === "Home"
-              ? "Home"
-              : game.location === "Away"
-                ? "Away"
-                : "Neutral";
-          const dateDisplay = game.date || "No date";
-
-          return (
-            <g key={`logo-${gameNumber}`}>
-              {/* Connecting dotted line from logo to edge of bar */}
-              <line
-                x1={isLeftSide ? logoX + LOGO_SIZE - 2 : logoX + 2}
-                y1={yPosition}
-                x2={isLeftSide ? barX : barX + barWidth}
-                y2={yPosition}
-                stroke={lineColor}
-                strokeWidth={1.5}
-                strokeDasharray="3,3"
-                opacity={0.7}
-              />
-
-              {/* Logo */}
-              {game.opponent_logo ? (
-                <image
-                  x={logoX}
-                  y={yPosition - LOGO_SIZE / 2}
-                  width={LOGO_SIZE}
-                  height={LOGO_SIZE}
-                  href={game.opponent_logo}
-                  style={{
-                    border: `2px solid ${lineColor}`,
-                    borderRadius: "4px",
-                  }}
-                />
-              ) : (
-                <circle
-                  cx={logoX + LOGO_SIZE / 2}
-                  cy={yPosition}
-                  r={LOGO_SIZE / 2}
-                  fill={lineColor}
-                  stroke={lineColor}
-                  strokeWidth="1"
-                  opacity={0.6}
-                />
-              )}
-
-              {/* Game number badge - only for tournament games */}
-              {confGameNumber && (
-                <>
-                  <circle
-                    cx={logoX + LOGO_SIZE - 3}
-                    cy={yPosition - LOGO_SIZE / 2 + 3}
-                    r={7}
-                    fill="#FFFFFF"
-                    stroke={lineColor}
-                    strokeWidth="1.5"
-                  />
-                  <text
-                    x={logoX + LOGO_SIZE - 3}
-                    y={yPosition - LOGO_SIZE / 2 + 6}
-                    textAnchor="middle"
-                    fontSize="9"
-                    fontWeight="bold"
-                    fill={lineColor}
-                  >
-                    #{confGameNumber}
-                  </text>
-                </>
-              )}
-
-              {/* UPDATED: New multiline tooltip format with whole number percentages */}
-              <title>{`${game.opponent}\nLocation: ${locationDisplay}\n${dateDisplay}\nWin Probability: ${probability}%`}</title>
-
-              {/* Game number and probability label */}
-              {isLeftSide ? (
-                <>
-                  <text
-                    x={logoX - LOGO_SIZE - 12}
-                    y={yPosition + 4}
-                    textAnchor="end"
-                    className="text-xs fill-gray-500"
-                    fontSize="10"
-                  >
-                    {probability}%
-                  </text>
-                  <text
-                    x={logoX - LOGO_SIZE + 8}
-                    y={yPosition + 4}
-                    textAnchor="end"
-                    className="text-xs font-semibold fill-gray-500"
-                    fontSize="10"
-                  >
-                    {gameNumber}
-                  </text>
-                </>
-              ) : (
-                <>
-                  <text
-                    x={logoX + LOGO_SIZE + 8}
-                    y={yPosition + 4}
-                    textAnchor="start"
-                    className="text-xs font-semibold fill-gray-500"
-                    fontSize="10"
-                  >
-                    {gameNumber}
-                  </text>
-                  <text
-                    x={logoX + LOGO_SIZE + 28}
-                    y={yPosition + 4}
-                    textAnchor="start"
-                    className="text-xs fill-gray-500"
-                    fontSize="10"
-                  >
-                    {probability}%
-                  </text>
-                </>
-              )}
-            </g>
-          );
-        })}
-
-        {/* Current wins label at top of bar */}
-        {totalWins > 0 && (
-          <text
-            x={barX + barWidth / 2}
-            y={barTopY + 12}
-            textAnchor="middle"
-            fill={finalSecondaryColor}
-            fontSize="14"
-            fontWeight="bold"
-          >
-            {totalWins}
+          {/* Win Prob and Loc definitions - better wrapped */}
+          <text x={-80} y={chartHeight + 50} fontSize="9" fill="#374151">
+            <tspan fontWeight="500">Win Prob</tspan>
+            <tspan> = probability team would win vs opponent;</tspan>
           </text>
-        )}
+          <text x={-80} y={chartHeight + 60} fontSize="9" fill="#374151">
+            <tspan fontWeight="500">Loc</tspan>
+            <tspan> = location of the game (H=Home, A=Away, N=Neutral)</tspan>
+          </text>
 
-        {/* Wins label at bottom */}
-        <text
-          x={barX + barWidth / 2}
-          y={chartHeight - 4}
-          textAnchor="middle"
-          className="text-xs fill-gray-600"
-          fontSize="12"
-          fontWeight="500"
-        >
-          Wins
-        </text>
-      </svg>
+          {/* Game, Opp, NCAA Seed definitions */}
+          <text x={-80} y={chartHeight + 70} fontSize="9" fill="#374151">
+            <tspan fontWeight="500">Game</tspan>
+            <tspan>
+              {" "}
+              = current wins and count of potential remaining games;{" "}
+            </tspan>
+            <tspan fontWeight="500">Opp</tspan>
+            <tspan> = Opponent;</tspan>
+          </text>
+          <text x={-80} y={chartHeight + 80} fontSize="9" fill="#374151">
+            <tspan fontWeight="500">NCAA Seed</tspan>
+            <tspan> = expected seed by wins</tspan>
+          </text>
+
+          {/* Explainer text - properly wrapped within box */}
+          <text
+            x={-80}
+            y={chartHeight + 92}
+            fontSize="8"
+            fill="#4b5563"
+            fontWeight="400"
+            fontStyle="italic"
+          >
+            <tspan>
+              Projected seed range for team based on number of victories.
+            </tspan>
+            <tspan x={-80} dy="10">
+              Schedule strength factors into range that is identified.
+            </tspan>
+            <tspan x={-80} dy="10">
+              Proj Wins is average total wins in regular season and conference
+            </tspan>
+            <tspan x={-80} dy="10">
+              tournament by team based on 1,000 season simulations using
+              composite
+            </tspan>
+            <tspan x={-80} dy="10">
+              ratings based on kenpom, barttorvik and evanmiya.
+            </tspan>
+          </text>
+        </svg>
+      </div>
 
       {loading && (
         <div className="text-xs text-gray-500 mt-2">
