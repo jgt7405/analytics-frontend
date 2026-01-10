@@ -1208,6 +1208,21 @@ export default function BasketballTeamWinsBreakdown({
                   </>
                 )}
 
+                {/* Tooltip - NOW ADDED FOR COMPLETED GAMES */}
+                {(() => {
+                  const locationDisplay =
+                    game.location === "Home"
+                      ? "Home"
+                      : game.location === "Away"
+                        ? "Away"
+                        : "Neutral";
+                  const dateDisplay = game.date || "No date";
+
+                  return (
+                    <title>{`${game.opponent}\nLocation: ${locationDisplay}\n${dateDisplay}\nWin Probability: ${probability}%`}</title>
+                  );
+                })()}
+
                 {/* Four column layout: Percentage | Location | Game # | Logo */}
                 {(() => {
                   const getPercentageColor = (prob: number) => {
