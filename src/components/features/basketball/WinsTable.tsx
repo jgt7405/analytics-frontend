@@ -259,24 +259,28 @@ function WinsTable({ standings, className }: WinsTableProps) {
             >
               Curr Conf Record
             </td>
-            {sortedTeams.map((team) => (
-              <td
-                key={`${team.team_name}-record`}
-                className="bg-gray-50 text-center"
-                style={{
-                  height: summaryRowHeight,
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  fontSize: isMobile ? "12px" : "14px",
-                }}
-              >
-                {team.record || "0-0"}
-              </td>
-            ))}
+            {sortedTeams.map((team) => {
+              const confWins = team.conference_wins || 0;
+              const confLosses = team.conference_losses || 0;
+              return (
+                <td
+                  key={`${team.team_name}-record`}
+                  className="bg-gray-50 text-center"
+                  style={{
+                    height: summaryRowHeight,
+                    width: teamColWidth,
+                    minWidth: teamColWidth,
+                    maxWidth: teamColWidth,
+                    border: "1px solid #e5e7eb",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    fontSize: isMobile ? "12px" : "14px",
+                  }}
+                >
+                  {`${confWins}-${confLosses}`}
+                </td>
+              );
+            })}
           </tr>
         </tbody>
       </table>
