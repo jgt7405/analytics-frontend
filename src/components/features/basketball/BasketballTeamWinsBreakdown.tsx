@@ -16,6 +16,9 @@ interface BasketballTeamGame {
 
 interface ConfChampData {
   team_name: string;
+  actual_total_wins?: number;
+  actual_total_losses?: number;
+  proj_losses?: number;
   pct_prob_win_conf_tourney_game_1: number;
   pct_prob_win_conf_tourney_game_2: number;
   pct_prob_win_conf_tourney_game_3: number;
@@ -237,9 +240,9 @@ export default function BasketballTeamWinsBreakdown({
       <div className="w-full overflow-x-auto md:overflow-x-visible">
         <svg
           width={chartWidth - 15}
-          height={chartHeight + 135}
+          height={chartHeight + 155}
           className="border border-gray-200 rounded bg-white"
-          viewBox={`-90 0 ${chartWidth - 25} ${chartHeight + 135}`}
+          viewBox={`-90 0 ${chartWidth - 25} ${chartHeight + 155}`}
         >
           {/* Clipping path to constrain right-side seed regions to bar height */}
           <defs>
@@ -1495,14 +1498,58 @@ export default function BasketballTeamWinsBreakdown({
             );
           })()}
 
-          {/* LEGEND AND DESCRIPTION SECTION */}
+          {/* RECORD INFORMATION - BELOW LABELS, ABOVE LEGEND */}
+          {confChampData && (
+            <g>
+              {/* Current Record and Proj Final Record on same line */}
+              <text
+                x={-60}
+                y={chartHeight + 17}
+                fontSize="13"
+                fill="#6b7280"
+                fontWeight="500"
+              >
+                Current Record:
+              </text>
+              <text
+                x={20}
+                y={chartHeight + 17}
+                fontSize="13"
+                fill={primaryColor}
+                fontWeight="bold"
+              >
+                {confChampData.actual_total_wins || 0}-
+                {confChampData.actual_total_losses || 0}
+              </text>
+
+              <text
+                x={65}
+                y={chartHeight + 17}
+                fontSize="13"
+                fill="#6b7280"
+                fontWeight="500"
+              >
+                Proj Final Record:
+              </text>
+              <text
+                x={158}
+                y={chartHeight + 17}
+                fontSize="13"
+                fill={primaryColor}
+                fontWeight="bold"
+              >
+                {(confChampData.season_total_proj_wins_avg || 0).toFixed(1)}-
+                {(confChampData.proj_losses || 0).toFixed(1)}
+              </text>
+            </g>
+          )}
 
           {/* Legend Row 1: Wins to date and future games */}
           <g>
             {/* Wins to date - filled box */}
             <rect
               x={-80}
-              y={chartHeight + 15}
+              y={chartHeight + 35}
               width={12}
               height={12}
               fill={primaryColor}
@@ -1511,7 +1558,7 @@ export default function BasketballTeamWinsBreakdown({
             />
             <text
               x={-65}
-              y={chartHeight + 24}
+              y={chartHeight + 44}
               fontSize="11"
               fill="#374151"
               fontWeight="500"
@@ -1522,7 +1569,7 @@ export default function BasketballTeamWinsBreakdown({
             {/* Future games - dotted box */}
             <rect
               x={10}
-              y={chartHeight + 15}
+              y={chartHeight + 35}
               width={12}
               height={12}
               fill="none"
@@ -1532,7 +1579,7 @@ export default function BasketballTeamWinsBreakdown({
             />
             <text
               x={26}
-              y={chartHeight + 24}
+              y={chartHeight + 44}
               fontSize="11"
               fill="#374151"
               fontWeight="500"
@@ -1543,7 +1590,7 @@ export default function BasketballTeamWinsBreakdown({
             {/* JThom projected wins - favicon */}
             <image
               x={110}
-              y={chartHeight + 13}
+              y={chartHeight + 33}
               width={16}
               height={16}
               href="/images/favicon-16x16.png"
@@ -1551,7 +1598,7 @@ export default function BasketballTeamWinsBreakdown({
             />
             <text
               x={128}
-              y={chartHeight + 24}
+              y={chartHeight + 44}
               fontSize="11"
               fill="#374151"
               fontWeight="500"
@@ -1561,17 +1608,17 @@ export default function BasketballTeamWinsBreakdown({
           </g>
 
           {/* Win Prob and Loc definitions - better wrapped */}
-          <text x={-80} y={chartHeight + 50} fontSize="9" fill="#374151">
+          <text x={-80} y={chartHeight + 70} fontSize="9" fill="#374151">
             <tspan fontWeight="500">Win Prob</tspan>
             <tspan> = probability team would win vs opponent;</tspan>
           </text>
-          <text x={-80} y={chartHeight + 60} fontSize="9" fill="#374151">
+          <text x={-80} y={chartHeight + 80} fontSize="9" fill="#374151">
             <tspan fontWeight="500">Loc</tspan>
             <tspan> = location of the game (H=Home, A=Away, N=Neutral)</tspan>
           </text>
 
           {/* Game, Opp, NCAA Seed definitions */}
-          <text x={-80} y={chartHeight + 70} fontSize="9" fill="#374151">
+          <text x={-80} y={chartHeight + 90} fontSize="9" fill="#374151">
             <tspan fontWeight="500">Game</tspan>
             <tspan>
               {" "}
@@ -1580,7 +1627,7 @@ export default function BasketballTeamWinsBreakdown({
             <tspan fontWeight="500">Opp</tspan>
             <tspan> = Opponent;</tspan>
           </text>
-          <text x={-80} y={chartHeight + 80} fontSize="9" fill="#374151">
+          <text x={-80} y={chartHeight + 100} fontSize="9" fill="#374151">
             <tspan fontWeight="500">NCAA Seed</tspan>
             <tspan> = expected seed by wins</tspan>
           </text>
@@ -1588,7 +1635,7 @@ export default function BasketballTeamWinsBreakdown({
           {/* Explainer text - properly wrapped within box */}
           <text
             x={-80}
-            y={chartHeight + 92}
+            y={chartHeight + 112}
             fontSize="8"
             fill="#4b5563"
             fontWeight="400"
