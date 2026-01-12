@@ -1548,7 +1548,7 @@ export default function BasketballTeamWinsBreakdown({
               Conference logo (with #) designates conference tournament games. % = probability of winning that
             </tspan>
             <tspan x={-80} dy="10">
-              conference tournament game #; could be low due to tournament byes and probability of even playing game.
+              conference tournament game #; tournament byes and probability of even playing game impacts %.
             </tspan>
           </text>
         </svg>
