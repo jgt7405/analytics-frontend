@@ -55,8 +55,8 @@ const LOGO_SPACING = 8;
 const MIN_WIDTH = 350;
 const CHART_HEIGHT = 540;
 const BAR_WIDTH = 40;
-const CHART_SHIFT = -50; // Shift chart 50 pixels left
-const AXIS_LABEL_SHIFT = 0; // No additional shift for y-axis labels
+const CHART_SHIFT = -50;
+const AXIS_LABEL_SHIFT = 0;
 
 export default function BasketballTeamWinsBreakdown({
   schedule,
@@ -76,23 +76,22 @@ export default function BasketballTeamWinsBreakdown({
     setIsClient(true);
   }, []);
 
-  // DEBUG: Log all games and their logos
   useEffect(() => {
     // Removed debug logging
   }, [schedule]);
 
-  // Generate conference logo URL
+  // Generate conference logo URL - replace both spaces AND hyphens with underscores
   const confLogoUrl = useMemo(() => {
-    const formattedConfName = conference.replace(/\s+/g, "_");
+    const formattedConfName = conference
+      .replace(/\s+/g, "_")
+      .replace(/-/g, "_");
     return `/images/conf_logos/${formattedConfName}.png`;
   }, [conference]);
 
-  // DEBUG: Log when schedule changes
   useEffect(() => {
     // Removed debug logging
   }, [schedule]);
 
-  // Fetch conference championship data
   useEffect(() => {
     const fetchConfChampData = async () => {
       setLoading(true);
@@ -135,7 +134,6 @@ export default function BasketballTeamWinsBreakdown({
         ? "#3b82f6"
         : "#ef4444";
 
-  // Create conference championship games with probabilities
   const confChampGames = useMemo(() => {
     if (!confChampData) {
       return [];
@@ -165,7 +163,6 @@ export default function BasketballTeamWinsBreakdown({
     return games;
   }, [confChampData, confLogoUrl]);
 
-  // Separate wins and remaining games with probabilities
   const { completedWins, remainingGames, totalWins } = useMemo(() => {
     const wins = schedule
       .filter((g) => g.status === "W" && g.team_win_prob !== undefined)
@@ -224,13 +221,11 @@ export default function BasketballTeamWinsBreakdown({
     return { game, yPosition, gameNumber: index + 1, logoX };
   });
 
-  // Helper function to convert wins to Y position
   const getYFromWins = (wins: number) => {
     if (maxGames === 0) return chartAreaBottom;
     return chartAreaBottom - (wins / maxGames) * chartAreaHeight;
   };
 
-  // Calculate Y position for season total projected wins
   const projectedWinsY = confChampData
     ? getYFromWins(confChampData.season_total_proj_wins_avg)
     : null;
@@ -244,7 +239,6 @@ export default function BasketballTeamWinsBreakdown({
           className="border border-gray-200 rounded bg-white"
           viewBox={`-90 0 ${chartWidth - 25} ${chartHeight + 155}`}
         >
-          {/* Clipping path to constrain right-side seed regions to bar height */}
           <defs>
             <clipPath id="seedRegionClip">
               <rect
@@ -256,7 +250,6 @@ export default function BasketballTeamWinsBreakdown({
             </clipPath>
           </defs>
 
-          {/* Background */}
           <rect
             x="-20"
             width={chartWidth + 20}
@@ -264,7 +257,6 @@ export default function BasketballTeamWinsBreakdown({
             fill="white"
           />
 
-          {/* Background shading regions on right side - corresponding to seed categories */}
           <g clipPath="url(#seedRegionClip)">
             {confChampData &&
               (() => {
@@ -287,7 +279,6 @@ export default function BasketballTeamWinsBreakdown({
 
                 return (
                   <>
-                    {/* 1 Seed region - light green from top to seed1 line */}
                     {seed1Wins > 0 && (
                       <>
                         <rect
@@ -311,7 +302,6 @@ export default function BasketballTeamWinsBreakdown({
                       </>
                     )}
 
-                    {/* 2-4 Seed region - light blue from seed1 to seed4 */}
                     {seed4Wins > 0 && seed4Y > seed1Y && (
                       <>
                         <rect
@@ -335,7 +325,6 @@ export default function BasketballTeamWinsBreakdown({
                       </>
                     )}
 
-                    {/* 5-7 Seed region - purple from seed7 to seed4 */}
                     {seed7Wins > 0 && seed7Y > seed4Y && (
                       <>
                         <rect
@@ -359,7 +348,6 @@ export default function BasketballTeamWinsBreakdown({
                       </>
                     )}
 
-                    {/* 8-10 Seed region - cyan from seed10 to seed7 */}
                     {seed10Wins > 0 && seed10Y > seed7Y && (
                       <>
                         <rect
@@ -383,7 +371,6 @@ export default function BasketballTeamWinsBreakdown({
                       </>
                     )}
 
-                    {/* Bubble region - orange from bubble to seed10 */}
                     {bubbleWins > 0 && bubbleY > seed10Y && (
                       <>
                         <rect
@@ -407,7 +394,6 @@ export default function BasketballTeamWinsBreakdown({
                       </>
                     )}
 
-                    {/* Not At Large region - red from bubble to bottom */}
                     {bubbleY < chartAreaBottom && (
                       <rect
                         x={regionLeft}
@@ -423,7 +409,6 @@ export default function BasketballTeamWinsBreakdown({
               })()}
           </g>
 
-          {/* Labels rendered OUTSIDE the clipped group so they're always visible */}
           {confChampData &&
             (() => {
               const bubbleWins = confChampData.wins_for_bubble || 0;
@@ -454,7 +439,6 @@ export default function BasketballTeamWinsBreakdown({
 
               return (
                 <>
-                  {/* 1 Seed label - show if region is within bar area */}
                   {seed1Wins > 0 && seed1Y <= barBottomY && (
                     <>
                       <text
@@ -483,7 +467,6 @@ export default function BasketballTeamWinsBreakdown({
                     </>
                   )}
 
-                  {/* 2-4 Seed label and number - show if region is within bar area */}
                   {seed4Wins > 0 && seed4Y > seed1Y && seed4Y <= barBottomY && (
                     <>
                       <text
@@ -517,7 +500,6 @@ export default function BasketballTeamWinsBreakdown({
                     </>
                   )}
 
-                  {/* 5-7 Seed label and number - show if region is within bar area */}
                   {seed7Wins > 0 && seed7Y > seed4Y && seed7Y <= barBottomY && (
                     <>
                       <text
@@ -551,7 +533,6 @@ export default function BasketballTeamWinsBreakdown({
                     </>
                   )}
 
-                  {/* 8-10 Seed label and number - show if region is within bar area */}
                   {seed10Wins > 0 &&
                     seed10Y > seed7Y &&
                     seed10Y <= barBottomY && (
@@ -587,7 +568,6 @@ export default function BasketballTeamWinsBreakdown({
                       </>
                     )}
 
-                  {/* Bubble label and number - show if region is within bar area */}
                   {bubbleWins > 0 &&
                     bubbleY > seed10Y &&
                     bubbleY <= barBottomY && (
@@ -623,7 +603,6 @@ export default function BasketballTeamWinsBreakdown({
                       </>
                     )}
 
-                  {/* Not At Large label */}
                   {bubbleY < chartAreaBottom && (
                     <>
                       <text
@@ -656,7 +635,6 @@ export default function BasketballTeamWinsBreakdown({
               );
             })()}
 
-          {/* Y-axis */}
           <line
             x1={LEFT_AXIS_PADDING}
             y1={chartAreaTop}
@@ -666,7 +644,6 @@ export default function BasketballTeamWinsBreakdown({
             strokeWidth={2}
           />
 
-          {/* Y-axis labels and gridlines - Every 5 games */}
           {Array.from(
             { length: Math.floor(maxGames / 5) + 1 },
             (_, i) => i * 5
@@ -696,7 +673,6 @@ export default function BasketballTeamWinsBreakdown({
             );
           })}
 
-          {/* Dotted lines for each completed win only */}
           {completedWins.map((_game, index) => {
             const gameNumber = index + 1;
             const yPosition =
@@ -718,10 +694,8 @@ export default function BasketballTeamWinsBreakdown({
             );
           })}
 
-          {/* Colored bar representing wins - with separators */}
           {totalWins > 0 && (
             <>
-              {/* Solid left and right borders */}
               <line
                 x1={barX}
                 y1={barTopY}
@@ -739,7 +713,6 @@ export default function BasketballTeamWinsBreakdown({
                 strokeWidth={2}
               />
 
-              {/* Filled sections for each completed win */}
               {completedWins.map((_win, index) => {
                 const yStart =
                   barBottomY - ((index + 1) / maxGames) * chartAreaHeight;
@@ -748,7 +721,6 @@ export default function BasketballTeamWinsBreakdown({
 
                 return (
                   <g key={`win-section-${index}`}>
-                    {/* Filled primary color section */}
                     <rect
                       x={barX}
                       y={yStart}
@@ -757,7 +729,6 @@ export default function BasketballTeamWinsBreakdown({
                       fill={primaryColor}
                     />
 
-                    {/* Separator line */}
                     <line
                       x1={barX}
                       y1={yEnd}
@@ -773,10 +744,8 @@ export default function BasketballTeamWinsBreakdown({
             </>
           )}
 
-          {/* Remaining games as outlined sections */}
           {remainingGames.length > 0 && (
             <>
-              {/* Dotted left and right borders for all remaining games */}
               <line
                 x1={barX}
                 y1={barBottomY - (totalWins / maxGames) * chartAreaHeight}
@@ -804,7 +773,6 @@ export default function BasketballTeamWinsBreakdown({
                 strokeDasharray="3,3"
               />
 
-              {/* Top border line for remaining games section */}
               <line
                 x1={barX}
                 y1={barBottomY - (totalWins / maxGames) * chartAreaHeight}
@@ -815,7 +783,6 @@ export default function BasketballTeamWinsBreakdown({
                 strokeDasharray="3,3"
               />
 
-              {/* Bottom border line for remaining games section */}
               <line
                 x1={barX}
                 y1={
@@ -834,7 +801,6 @@ export default function BasketballTeamWinsBreakdown({
                 strokeDasharray="3,3"
               />
 
-              {/* Dotted separator lines between remaining games */}
               {remainingGames.map((_game, index) => {
                 if (index === remainingGames.length - 1) return null;
 
@@ -858,7 +824,6 @@ export default function BasketballTeamWinsBreakdown({
             </>
           )}
 
-          {/* X-axis */}
           <line
             x1={LEFT_AXIS_PADDING}
             y1={barBottomY}
@@ -868,10 +833,8 @@ export default function BasketballTeamWinsBreakdown({
             strokeWidth={2}
           />
 
-          {/* PROJECTED WIN TOTAL INDICATOR - Favicon at projected wins level */}
           {projectedWinsY !== null && confChampData && (
             <>
-              {/* Arrow pointing from right to left at projected wins level */}
               <line
                 x1={barX + barWidth + 30}
                 y1={projectedWinsY}
@@ -881,14 +844,12 @@ export default function BasketballTeamWinsBreakdown({
                 strokeWidth={2}
                 opacity={0.8}
               />
-              {/* Arrow head (triangle pointing left) */}
               <polygon
                 points={`${barX + barWidth - 15},${projectedWinsY} ${barX + barWidth - 8},${projectedWinsY - 4} ${barX + barWidth - 8},${projectedWinsY + 4}`}
                 fill="rgb(0, 151, 178)"
                 opacity={0.8}
               />
 
-              {/* "Proj" label above the arrow */}
               <text
                 x={barX + barWidth + 18}
                 y={projectedWinsY - 5}
@@ -901,7 +862,6 @@ export default function BasketballTeamWinsBreakdown({
                 Proj
               </text>
 
-              {/* "Wins" label below the arrow */}
               <text
                 x={barX + barWidth + 18}
                 y={projectedWinsY + 13}
@@ -914,7 +874,6 @@ export default function BasketballTeamWinsBreakdown({
                 Wins
               </text>
 
-              {/* Favicon at projected wins level */}
               <image
                 x={barX + barWidth / 2 - 8}
                 y={projectedWinsY - 8}
@@ -926,11 +885,9 @@ export default function BasketballTeamWinsBreakdown({
             </>
           )}
 
-          {/* Logos on left side for non-completed games */}
           {logoPositions.map(({ game, yPosition, gameNumber, logoX }) => {
             const isWin = gameNumber <= totalWins;
 
-            // Only render logos for non-completed games
             if (isWin) {
               return null;
             }
@@ -940,7 +897,6 @@ export default function BasketballTeamWinsBreakdown({
 
             const confGameNumber = game.opponent.match(/\d+/)?.[0];
 
-            // Calculate location display for tooltip
             const locationDisplay =
               game.location === "Home"
                 ? "Home"
@@ -951,7 +907,6 @@ export default function BasketballTeamWinsBreakdown({
 
             return (
               <g key={`logo-${gameNumber}`}>
-                {/* Connecting dotted line from logo to left edge of bar */}
                 <line
                   x1={logoX + LOGO_SIZE - 2}
                   y1={yPosition}
@@ -963,7 +918,6 @@ export default function BasketballTeamWinsBreakdown({
                   opacity={0.7}
                 />
 
-                {/* Logo */}
                 {game.opponent_logo ? (
                   <image
                     x={logoX}
@@ -990,7 +944,6 @@ export default function BasketballTeamWinsBreakdown({
                   />
                 )}
 
-                {/* Game number badge - only for tournament games */}
                 {confGameNumber && (
                   <>
                     <circle
@@ -1014,28 +967,22 @@ export default function BasketballTeamWinsBreakdown({
                   </>
                 )}
 
-                {/* Multiline tooltip format with whole number percentages */}
                 <title>{`${game.opponent}\nLocation: ${locationDisplay}\n${dateDisplay}\nWin Probability: ${probability}%`}</title>
 
-                {/* Helper function to get color based on win probability - using TWV colors */}
                 {(() => {
                   const getPercentageColor = (prob: number) => {
-                    // TWV color scheme for win probability 0-100%
-                    // Maps 100% = dark blue, 50% = white, 0% = yellow
-                    const blue = [24, 98, 123]; // Dark blue for 100%
-                    const white = [255, 255, 255]; // White for 50%
-                    const yellow = [255, 230, 113]; // Yellow for 0%
+                    const blue = [24, 98, 123];
+                    const white = [255, 255, 255];
+                    const yellow = [255, 230, 113];
 
                     let r: number, g: number, b: number;
 
                     if (prob >= 50) {
-                      // 50-100%: interpolate from white to dark blue
                       const ratio = Math.min((prob - 50) / 50, 1);
                       r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
                       g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
                       b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
                     } else {
-                      // 0-50%: interpolate from yellow to white
                       const ratio = Math.min(prob / 50, 1);
                       r = Math.round(
                         yellow[0] + (white[0] - yellow[0]) * ratio
@@ -1048,7 +995,6 @@ export default function BasketballTeamWinsBreakdown({
                       );
                     }
 
-                    // Calculate brightness for text color contrast
                     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
                     const textColor = brightness > 140 ? "#000000" : "#ffffff";
 
@@ -1062,7 +1008,6 @@ export default function BasketballTeamWinsBreakdown({
 
                   return (
                     <>
-                      {/* Column 1: Percentage cell with full background */}
                       <rect
                         x={logoX - LOGO_SIZE - 65}
                         y={yPosition - 6}
@@ -1080,7 +1025,6 @@ export default function BasketballTeamWinsBreakdown({
                       >
                         {probability}%
                       </text>
-                      {/* Column 2: Location cell with background */}
                       <rect
                         x={logoX - LOGO_SIZE - 33}
                         y={yPosition - 6}
@@ -1115,7 +1059,6 @@ export default function BasketballTeamWinsBreakdown({
                             ? "A"
                             : "N"}
                       </text>
-                      {/* Column 3: Game Number */}
                       <text
                         x={logoX - LOGO_SIZE - 9}
                         y={yPosition + 3}
@@ -1125,7 +1068,6 @@ export default function BasketballTeamWinsBreakdown({
                       >
                         {gameNumber}
                       </text>
-                      {/* Column 4: Logo (positioned at logoX) */}
                     </>
                   );
                 })()}
@@ -1133,11 +1075,9 @@ export default function BasketballTeamWinsBreakdown({
             );
           })}
 
-          {/* Logos on left side for completed wins */}
           {logoPositions.map(({ game, yPosition, gameNumber, logoX }) => {
             const isWin = gameNumber <= totalWins;
 
-            // Only render for completed wins
             if (!isWin) {
               return null;
             }
@@ -1148,7 +1088,6 @@ export default function BasketballTeamWinsBreakdown({
 
             return (
               <g key={`logo-win-${gameNumber}`}>
-                {/* Connecting dotted line from logo to left edge of bar */}
                 <line
                   x1={logoX + LOGO_SIZE - 2}
                   y1={yPosition}
@@ -1160,7 +1099,6 @@ export default function BasketballTeamWinsBreakdown({
                   opacity={0.7}
                 />
 
-                {/* Logo */}
                 {game.opponent_logo ? (
                   <image
                     x={logoX}
@@ -1187,7 +1125,6 @@ export default function BasketballTeamWinsBreakdown({
                   />
                 )}
 
-                {/* Game number badge - only for tournament games */}
                 {confGameNumber && (
                   <>
                     <circle
@@ -1211,7 +1148,6 @@ export default function BasketballTeamWinsBreakdown({
                   </>
                 )}
 
-                {/* Tooltip - NOW ADDED FOR COMPLETED GAMES */}
                 {(() => {
                   const locationDisplay =
                     game.location === "Home"
@@ -1226,25 +1162,20 @@ export default function BasketballTeamWinsBreakdown({
                   );
                 })()}
 
-                {/* Four column layout: Percentage | Location | Game # | Logo */}
                 {(() => {
                   const getPercentageColor = (prob: number) => {
-                    // TWV color scheme for win probability 0-100%
-                    // Maps 100% = dark blue, 50% = white, 0% = yellow
-                    const blue = [24, 98, 123]; // Dark blue for 100%
-                    const white = [255, 255, 255]; // White for 50%
-                    const yellow = [255, 230, 113]; // Yellow for 0%
+                    const blue = [24, 98, 123];
+                    const white = [255, 255, 255];
+                    const yellow = [255, 230, 113];
 
                     let r: number, g: number, b: number;
 
                     if (prob >= 50) {
-                      // 50-100%: interpolate from white to dark blue
                       const ratio = Math.min((prob - 50) / 50, 1);
                       r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
                       g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
                       b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
                     } else {
-                      // 0-50%: interpolate from yellow to white
                       const ratio = Math.min(prob / 50, 1);
                       r = Math.round(
                         yellow[0] + (white[0] - yellow[0]) * ratio
@@ -1257,7 +1188,6 @@ export default function BasketballTeamWinsBreakdown({
                       );
                     }
 
-                    // Calculate brightness for text color contrast
                     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
                     const textColor = brightness > 140 ? "#000000" : "#ffffff";
 
@@ -1271,7 +1201,6 @@ export default function BasketballTeamWinsBreakdown({
 
                   return (
                     <>
-                      {/* Column 1: Percentage cell with full background */}
                       <rect
                         x={logoX - LOGO_SIZE - 65}
                         y={yPosition - 6}
@@ -1289,7 +1218,6 @@ export default function BasketballTeamWinsBreakdown({
                       >
                         {probability}%
                       </text>
-                      {/* Column 2: Location cell with background */}
                       <rect
                         x={logoX - LOGO_SIZE - 33}
                         y={yPosition - 6}
@@ -1324,7 +1252,6 @@ export default function BasketballTeamWinsBreakdown({
                             ? "A"
                             : "N"}
                       </text>
-                      {/* Column 3: Game Number */}
                       <text
                         x={logoX - LOGO_SIZE - 9}
                         y={yPosition + 3}
@@ -1334,7 +1261,6 @@ export default function BasketballTeamWinsBreakdown({
                       >
                         {gameNumber}
                       </text>
-                      {/* Column 4: Logo (positioned at logoX) */}
                     </>
                   );
                 })()}
@@ -1342,7 +1268,6 @@ export default function BasketballTeamWinsBreakdown({
             );
           })}
 
-          {/* Separator line between completed and uncompleted games */}
           {totalWins > 0 && (
             <line
               x1={LEFT_AXIS_PADDING}
@@ -1356,7 +1281,6 @@ export default function BasketballTeamWinsBreakdown({
             />
           )}
 
-          {/* Current wins label at top of bar */}
           {totalWins > 0 && (
             <text
               x={barX + barWidth / 2}
@@ -1370,28 +1294,13 @@ export default function BasketballTeamWinsBreakdown({
             </text>
           )}
 
-          {/* Column headers at bottom */}
           {(() => {
-            // Calculate header positions based on actual data column positions
-            // Using the same logoX calculation as in logoPositions
             const headerLogoX = barX - LOGO_SPACING - LOGO_SIZE;
-
-            // Win Prob: center of percentage cell, moved left by 13px
             const winProbX = headerLogoX - LOGO_SIZE - 45 - 13;
-
-            // Loc: center of location cell (12px wide, centered at logoX - LOGO_SIZE - 30)
             const locX = headerLogoX - LOGO_SIZE - 30;
-
-            // Game: position of game number, moved right by 6px
             const gameX = headerLogoX - LOGO_SIZE - 9 + 6;
-
-            // Opp: center of logo position, moved right by 12px
             const oppX = headerLogoX + 12;
-
-            // Wins: center of wins bar
             const winsX = barX + barWidth / 2;
-
-            // NCAA Seed: positioned at 42.5% from left of colored region
             const regionLeft = barX + barWidth;
             const regionRight = isMobile
               ? chartWidth - PADDING - 110
@@ -1403,7 +1312,6 @@ export default function BasketballTeamWinsBreakdown({
 
             return (
               <>
-                {/* Win Prob column - wrapped text */}
                 <text
                   x={winProbX}
                   y={chartHeight - 16}
@@ -1425,7 +1333,6 @@ export default function BasketballTeamWinsBreakdown({
                   Prob
                 </text>
 
-                {/* Loc column */}
                 <text
                   x={locX}
                   y={chartHeight - 4}
@@ -1437,7 +1344,6 @@ export default function BasketballTeamWinsBreakdown({
                   Loc
                 </text>
 
-                {/* Game column */}
                 <text
                   x={gameX}
                   y={chartHeight - 4}
@@ -1449,7 +1355,6 @@ export default function BasketballTeamWinsBreakdown({
                   Game
                 </text>
 
-                {/* Opp column */}
                 <text
                   x={oppX}
                   y={chartHeight - 4}
@@ -1461,7 +1366,6 @@ export default function BasketballTeamWinsBreakdown({
                   Opp
                 </text>
 
-                {/* Wins column */}
                 <text
                   x={winsX}
                   y={chartHeight - 4}
@@ -1473,7 +1377,6 @@ export default function BasketballTeamWinsBreakdown({
                   Wins
                 </text>
 
-                {/* NCAA Seed column - wrapped text */}
                 <text
                   x={ncaaSeedX}
                   y={chartHeight - 16}
@@ -1498,10 +1401,8 @@ export default function BasketballTeamWinsBreakdown({
             );
           })()}
 
-          {/* RECORD INFORMATION - BELOW LABELS, ABOVE LEGEND */}
           {confChampData && (
             <g>
-              {/* Current Record and Proj Final Record on same line */}
               <text
                 x={-60}
                 y={chartHeight + 17}
@@ -1544,9 +1445,7 @@ export default function BasketballTeamWinsBreakdown({
             </g>
           )}
 
-          {/* Legend Row 1: Wins to date and future games */}
           <g>
-            {/* Wins to date - filled box */}
             <rect
               x={-80}
               y={chartHeight + 35}
@@ -1566,7 +1465,6 @@ export default function BasketballTeamWinsBreakdown({
               - wins to date
             </text>
 
-            {/* Future games - dotted box */}
             <rect
               x={10}
               y={chartHeight + 35}
@@ -1587,7 +1485,6 @@ export default function BasketballTeamWinsBreakdown({
               - future games
             </text>
 
-            {/* JThom projected wins - favicon */}
             <image
               x={110}
               y={chartHeight + 33}
@@ -1607,7 +1504,6 @@ export default function BasketballTeamWinsBreakdown({
             </text>
           </g>
 
-          {/* Win Prob and Loc definitions - better wrapped */}
           <text x={-80} y={chartHeight + 70} fontSize="9" fill="#374151">
             <tspan fontWeight="500">Win Prob</tspan>
             <tspan> = probability team would win vs opponent;</tspan>
@@ -1617,7 +1513,6 @@ export default function BasketballTeamWinsBreakdown({
             <tspan> = location of the game (H=Home, A=Away, N=Neutral)</tspan>
           </text>
 
-          {/* Game, Opp, NCAA Seed definitions */}
           <text x={-80} y={chartHeight + 90} fontSize="9" fill="#374151">
             <tspan fontWeight="500">Game</tspan>
             <tspan>
@@ -1632,7 +1527,6 @@ export default function BasketballTeamWinsBreakdown({
             <tspan> = expected seed by wins</tspan>
           </text>
 
-          {/* Explainer text - properly wrapped within box */}
           <text
             x={-80}
             y={chartHeight + 112}

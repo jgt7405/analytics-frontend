@@ -36,6 +36,7 @@ interface TeamInfo {
   team_id: string;
   conference: string;
   logo_url: string;
+  conf_logo_url?: string;
   primary_color: string;
   secondary_color: string;
   overall_record: string;
@@ -242,8 +243,17 @@ export default function BasketballTeamPage({
   }
 
   const { team_info, schedule } = teamData;
-  const formattedConfName = team_info.conference.replace(/ /g, "_");
-  const conferenceLogoUrl = `/images/conf_logos/${formattedConfName}.png`;
+
+  // ✅ FIXED: Replace both spaces AND hyphens with underscores
+  // Big 12 → Big_12
+  // Mid-American → Mid_American
+  const formattedConfName = team_info.conference
+    .replace(/ /g, "_")
+    .replace(/-/g, "_");
+
+  // Use API-provided conf_logo_url if available, otherwise construct it
+  const conferenceLogoUrl =
+    team_info.conf_logo_url || `/images/conf_logos/${formattedConfName}.png`;
 
   return (
     <ErrorBoundary level="page">
