@@ -1536,20 +1536,19 @@ export default function BasketballTeamWinsBreakdown({
             fontStyle="italic"
           >
             <tspan>
-              Projected seed range for team based on number of victories.
+              Projected seed range for team based on number of victories. Schedule strength factors into identified range.
             </tspan>
             <tspan x={-80} dy="10">
-              Schedule strength factors into range that is identified.
+              Proj Wins is average total wins in regular season and conference tournament based on 1,000 season
             </tspan>
             <tspan x={-80} dy="10">
-              Proj Wins is average total wins in regular season and conference
+              simulations using composite ratings based on kenpom, barttorvik and evanmiya.
             </tspan>
             <tspan x={-80} dy="10">
-              tournament by team based on 1,000 season simulations using
-              composite
+              Conference tournament games represented by conference logo - % represents probability of winning that game
             </tspan>
             <tspan x={-80} dy="10">
-              ratings based on kenpom, barttorvik and evanmiya.
+              # in conference tournament - may be very low due to tournament byes and probability of even playing game.
             </tspan>
           </text>
         </svg>
