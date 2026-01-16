@@ -189,6 +189,24 @@ export default function TableActionButtons({
       // Clone element first
       const clone = targetElement.cloneNode(true) as HTMLElement;
 
+      // IMPORTANT: Preserve the select element's current value in the clone
+      const originalSelect = targetElement.querySelector(
+        "select"
+      ) as HTMLSelectElement;
+      if (originalSelect) {
+        const clonedSelect = clone.querySelector("select") as HTMLSelectElement;
+        if (clonedSelect) {
+          // Set the cloned select to match the original's current value
+          clonedSelect.value = originalSelect.value;
+          // Also update the displayed text for the option
+          const selectedOption =
+            originalSelect.options[originalSelect.selectedIndex];
+          if (selectedOption) {
+            clonedSelect.selectedIndex = originalSelect.selectedIndex;
+          }
+        }
+      }
+
       // Handle canvas replacement
       const originalCanvas = targetElement.querySelector(
         "canvas"
@@ -363,7 +381,22 @@ export default function TableActionButtons({
       document.body.removeChild(wrapper);
 
       const timestamp = new Date().toISOString().split("T")[0];
-      const filename = `${selectedConference}_${pageName}_${timestamp}.png`;
+
+      // Extract selectedSeed from the select dropdown in the component if available
+      const selectElement = targetElement.querySelector(
+        "select"
+      ) as HTMLSelectElement;
+      let seedSuffix = "";
+
+      if (selectElement && selectElement.value) {
+        const selectedValue = selectElement.value;
+        // Map the value to a display label (1 -> 1seed, 11 -> 11seed, bubble -> bubble, etc)
+        const seedLabel =
+          selectedValue === "bubble" ? "bubble" : `${selectedValue}seed`;
+        seedSuffix = `_${seedLabel}`;
+      }
+
+      const filename = `${selectedConference}_${pageName}${seedSuffix}_${timestamp}.png`;
 
       if (isMobile) {
         canvas.toBlob(async (blob: Blob | null) => {

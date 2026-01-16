@@ -519,6 +519,7 @@ export default function BballSeedWinsAndProbability({
   return (
     <div
       data-component-type="bball-seed-wins-and-probability"
+      data-selected-seed={selectedSeed}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -580,7 +581,7 @@ export default function BballSeedWinsAndProbability({
         style={{
           display: "flex",
           flexDirection: "row",
-          gap: chartGap,
+          gap: 4,
           flex: 1,
           boxSizing: "border-box",
           overflow: "auto",
@@ -596,7 +597,7 @@ export default function BballSeedWinsAndProbability({
             flexDirection: "column",
             minWidth: 0,
             boxSizing: "border-box",
-            borderRight: `1px solid #e5e7eb`,
+            borderRight: `2px solid #d1d5db`,
             paddingRight: chartGap / 2,
             maxWidth: "320px",
           }}
@@ -610,7 +611,7 @@ export default function BballSeedWinsAndProbability({
               paddingRight: paddingHorizontal,
               paddingTop: 12,
               paddingBottom: 8,
-              borderBottom: "2px solid #e5e7eb",
+              borderBottom: "2px solid #d1d5db",
               boxSizing: "border-box",
               flexShrink: 0,
               alignItems: "flex-end",
@@ -657,7 +658,7 @@ export default function BballSeedWinsAndProbability({
                     paddingRight: paddingHorizontal,
                     paddingTop: 2,
                     paddingBottom: 2,
-                    borderBottom: "1px solid #f0f0f0",
+                    borderBottom: "1px solid #f3f4f6",
                     boxSizing: "border-box",
                   }}
                 >
@@ -688,7 +689,7 @@ export default function BballSeedWinsAndProbability({
                 paddingRight: paddingHorizontal,
                 paddingTop: 2,
                 paddingBottom: 2,
-                borderBottom: "1px solid #f0f0f0",
+                borderBottom: "1px solid #f3f4f6",
                 backgroundColor: "#fef2f2",
                 boxSizing: "border-box",
               }}
@@ -722,7 +723,7 @@ export default function BballSeedWinsAndProbability({
             flexDirection: "column",
             minWidth: 0,
             boxSizing: "border-box",
-            paddingLeft: chartGap / 2,
+            paddingLeft: 0,
             maxWidth: "320px",
             marginTop: 18,
           }}
@@ -732,11 +733,11 @@ export default function BballSeedWinsAndProbability({
               display: "flex",
               flexDirection: "row",
               gap: 12,
-              paddingLeft: paddingHorizontal,
+              paddingLeft: 0,
               paddingRight: paddingHorizontal,
               paddingTop: 12,
               paddingBottom: 8,
-              borderBottom: "2px solid #e5e7eb",
+              borderBottom: "2px solid #d1d5db",
               boxSizing: "border-box",
               flexShrink: 0,
               alignItems: "flex-end",
@@ -771,7 +772,6 @@ export default function BballSeedWinsAndProbability({
           <div style={{ flex: 1, overflow: "auto" }}>
             {probabilityCategories.map((probCategory) => {
               const probTeams = processedData.probGrouped[probCategory] || [];
-              const categoryColor = getTWVColorForCategory(probCategory);
 
               return (
                 <div
@@ -779,13 +779,13 @@ export default function BballSeedWinsAndProbability({
                   style={{
                     display: "flex",
                     flexDirection: "row",
-                    alignItems: "center",
+                    alignItems: "stretch",
                     gap: 12,
-                    paddingLeft: paddingHorizontal,
+                    paddingLeft: 0,
                     paddingRight: paddingHorizontal,
-                    paddingTop: 2,
-                    paddingBottom: 2,
-                    borderBottom: "1px solid #f0f0f0",
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    borderBottom: "1px solid #f3f4f6",
                     boxSizing: "border-box",
                   }}
                 >
@@ -802,7 +802,10 @@ export default function BballSeedWinsAndProbability({
                       textAlign: "left",
                       boxSizing: "border-box",
                       borderRadius: 2,
-                      ...categoryColor,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      ...getTWVColorForCategory(probCategory),
                     }}
                   >
                     {probCategory}
