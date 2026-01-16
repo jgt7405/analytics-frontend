@@ -4,6 +4,7 @@ import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
 import BballCeiling from "@/components/features/basketball/BballCeiling";
 import BballSeedCeilingFloor from "@/components/features/basketball/BballSeedCeilingFloor";
+import BballSeedWinsAndProbability from "@/components/features/basketball/BballSeedWinsAndProbability";
 import SeedTable from "@/components/features/basketball/SeedTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -233,7 +234,49 @@ export default function SeedPage() {
                   </div>
                 )}
 
-                {/* Box Whisker Chart - THIRD */}
+                {/* Wins Required and Probability Chart - UNIFIED */}
+                {seedResponse?.data && seedResponse.data.length > 0 && (
+                  <div className="mb-8 mt-12">
+                    <h1 className="text-xl font-normal text-gray-500 mb-4">
+                      Wins to Seed Ladder
+                    </h1>
+                    <div className="bball-seed-wins-and-probability-chart">
+                      <Suspense
+                        fallback={
+                          <div className="h-96 bg-gray-100 animate-pulse rounded-lg" />
+                        }
+                      >
+                        <BballSeedWinsAndProbability
+                          conference={selectedConference}
+                          _maxHeight={600}
+                        />
+                      </Suspense>
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="flex flex-row items-start gap-4">
+                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div style={{ lineHeight: "1.3" }}></div>
+                        </div>
+                        <div
+                          className={`flex-shrink-0 ${
+                            isMobile ? "w-1/3" : "w-auto mr-2"
+                          }`}
+                        >
+                          <TableActionButtons
+                            selectedConference={selectedConference}
+                            contentSelector=".bball-seed-wins-and-probability-chart"
+                            pageName="seed-wins-probability"
+                            pageTitle="Wins to Seed Ladder"
+                            shareTitle="Wins to Seed Ladder"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Box Whisker Chart - FOURTH */}
                 {seedResponse?.data && seedResponse.data.length > 0 && (
                   <div className="mb-8 mt-12">
                     <h1 className="text-xl font-normal text-gray-500 mb-2">

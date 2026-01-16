@@ -107,9 +107,11 @@ export default function TableActionButtons({
       // Check chart type and calculate width
       const isLineChart = targetElement.querySelector("canvas") !== null;
       const table = targetElement.querySelector("table");
+      const componentType = targetElement.getAttribute("data-component-type");
       let actualWidth;
 
       if (table) {
+        // Table: use table width + buffer
         actualWidth = (table as HTMLElement).offsetWidth + 200;
       } else if (isLineChart) {
         // Distinguish line charts from box plots
@@ -119,10 +121,33 @@ export default function TableActionButtons({
           pageTitle?.includes("History") ||
           pageTitle?.includes("Over Time");
         actualWidth = isLineChartSpecific ? 1475 : 800;
-      } else if (contentSelector.includes("ceiling")) {
+      } else if (
+        contentSelector.includes("ceiling") ||
+        componentType?.includes("ceiling")
+      ) {
         // For ceiling/floor chart, use actual component width with minimal buffer
         actualWidth = (targetElement as HTMLElement).offsetWidth + 20;
+      } else if (
+        contentSelector.includes("seed-wins") ||
+        componentType?.includes("seed-wins")
+      ) {
+        // For seed wins and probability components, use fixed tight width
+        // Left column: 320px, Gap: 24px, Right column: 320px = 664px + padding
+        actualWidth = 700;
+      } else if (
+        contentSelector.includes("seed-wins-required") ||
+        componentType?.includes("seed-wins-required")
+      ) {
+        // For seed wins required components, use fixed tight width
+        actualWidth = 700;
+      } else if (
+        contentSelector.includes("seed-probability") ||
+        componentType?.includes("seed-probability")
+      ) {
+        // For seed probability components, use fixed tight width
+        actualWidth = 700;
       } else {
+        // Fallback: team-based width calculation
         const teamLogos1 = targetElement.querySelectorAll(
           'img[src*="team_logos"]'
         );
@@ -249,29 +274,37 @@ export default function TableActionButtons({
       const infoSection = document.createElement("div");
       infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-end; gap: 4px;`;
 
-      const confName = selectedConference || "All";
-      if (confName && confName !== "All") {
-        const formattedConfName = confName.replace(/ /g, "_");
-        const conferenceLogoUrl = `/images/conf_logos/${formattedConfName}.png`;
-
+      const confName = selectedConference || conference || "";
+      if (confName) {
         const confLogo = document.createElement("img");
-        confLogo.src = conferenceLogoUrl;
-        confLogo.style.cssText = `height: 30px; width: auto; max-width: 80px;`;
+        const conferenceLogoMap: { [key: string]: string } = {
+          "Big 12": "big_12.png",
+          SEC: "sec.png",
+          "Big Ten": "big_ten.png",
+          ACC: "acc.png",
+          "Pac-12": "pac_12.png",
+        };
 
-        confLogo.onerror = () => {
-          confLogo.style.display = "none";
+        const logoFileName = conferenceLogoMap[confName];
+        if (logoFileName) {
+          confLogo.src = `/images/conf_logos/${logoFileName}`;
+          confLogo.style.cssText = `height: 30px; width: auto; max-width: 80px;`;
+
+          confLogo.onerror = () => {
+            confLogo.style.display = "none";
+            const conference = document.createElement("div");
+            conference.textContent = confName;
+            conference.style.cssText = `font-size: 14px; font-weight: 600; color: #1f2937;`;
+            infoSection.insertBefore(conference, infoSection.firstChild);
+          };
+
+          infoSection.appendChild(confLogo);
+        } else {
           const conference = document.createElement("div");
           conference.textContent = confName;
           conference.style.cssText = `font-size: 14px; font-weight: 600; color: #1f2937;`;
-          infoSection.insertBefore(conference, infoSection.firstChild);
-        };
-
-        infoSection.appendChild(confLogo);
-      } else {
-        const conference = document.createElement("div");
-        conference.textContent = confName;
-        conference.style.cssText = `font-size: 14px; font-weight: 600; color: #1f2937;`;
-        infoSection.appendChild(conference);
+          infoSection.appendChild(conference);
+        }
       }
 
       const date = document.createElement("div");
