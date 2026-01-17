@@ -67,7 +67,7 @@ export default function BasketballTeamWinsBreakdown({
   logoUrl: _logoUrl,
 }: BasketballTeamWinsBreakdownProps) {
   const [confChampData, setConfChampData] = useState<ConfChampData | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -106,7 +106,7 @@ export default function BasketballTeamWinsBreakdown({
 
           if (result.data && Array.isArray(result.data)) {
             const teamData = result.data.find(
-              (t: ConfChampData) => t.team_name === teamName
+              (t: ConfChampData) => t.team_name === teamName,
             );
 
             if (teamData) {
@@ -174,7 +174,7 @@ export default function BasketballTeamWinsBreakdown({
 
     const remaining = schedule
       .filter(
-        (g) => !["W", "L"].includes(g.status) && g.team_win_prob !== undefined
+        (g) => !["W", "L"].includes(g.status) && g.team_win_prob !== undefined,
       )
       .map((g) => ({
         ...g,
@@ -646,7 +646,7 @@ export default function BasketballTeamWinsBreakdown({
 
           {Array.from(
             { length: Math.floor(maxGames / 5) + 1 },
-            (_, i) => i * 5
+            (_, i) => i * 5,
           ).map((value) => {
             if (value > maxGames) return null;
             const y = barBottomY - (value / maxGames) * chartAreaHeight;
@@ -985,13 +985,13 @@ export default function BasketballTeamWinsBreakdown({
                     } else {
                       const ratio = Math.min(prob / 50, 1);
                       r = Math.round(
-                        yellow[0] + (white[0] - yellow[0]) * ratio
+                        yellow[0] + (white[0] - yellow[0]) * ratio,
                       );
                       g = Math.round(
-                        yellow[1] + (white[1] - yellow[1]) * ratio
+                        yellow[1] + (white[1] - yellow[1]) * ratio,
                       );
                       b = Math.round(
-                        yellow[2] + (white[2] - yellow[2]) * ratio
+                        yellow[2] + (white[2] - yellow[2]) * ratio,
                       );
                     }
 
@@ -1178,13 +1178,13 @@ export default function BasketballTeamWinsBreakdown({
                     } else {
                       const ratio = Math.min(prob / 50, 1);
                       r = Math.round(
-                        yellow[0] + (white[0] - yellow[0]) * ratio
+                        yellow[0] + (white[0] - yellow[0]) * ratio,
                       );
                       g = Math.round(
-                        yellow[1] + (white[1] - yellow[1]) * ratio
+                        yellow[1] + (white[1] - yellow[1]) * ratio,
                       );
                       b = Math.round(
-                        yellow[2] + (white[2] - yellow[2]) * ratio
+                        yellow[2] + (white[2] - yellow[2]) * ratio,
                       );
                     }
 
@@ -1404,8 +1404,8 @@ export default function BasketballTeamWinsBreakdown({
           {confChampData && (
             <g>
               <text
-                x={-60}
-                y={chartHeight + 17}
+                x={-53}
+                y={chartHeight + 15}
                 fontSize="13"
                 fill="#6b7280"
                 fontWeight="500"
@@ -1413,8 +1413,8 @@ export default function BasketballTeamWinsBreakdown({
                 Current Record:
               </text>
               <text
-                x={20}
-                y={chartHeight + 17}
+                x={-53}
+                y={chartHeight + 28}
                 fontSize="13"
                 fill={primaryColor}
                 fontWeight="bold"
@@ -1425,7 +1425,7 @@ export default function BasketballTeamWinsBreakdown({
 
               <text
                 x={65}
-                y={chartHeight + 17}
+                y={chartHeight + 15}
                 fontSize="13"
                 fill="#6b7280"
                 fontWeight="500"
@@ -1433,8 +1433,8 @@ export default function BasketballTeamWinsBreakdown({
                 Proj Final Record:
               </text>
               <text
-                x={158}
-                y={chartHeight + 17}
+                x={65}
+                y={chartHeight + 28}
                 fontSize="13"
                 fill={primaryColor}
                 fontWeight="bold"
@@ -1536,19 +1536,20 @@ export default function BasketballTeamWinsBreakdown({
             fontStyle="italic"
           >
             <tspan>
-              Projected seed range for team based on # of victories. Schedule strength determines range.
+              Projected seed range for team based on number of victories.
             </tspan>
             <tspan x={-80} dy="10">
-              Proj Wins is average total wins in regular season and conference tournament based on 1,000 season
+              Schedule strength factors into range that is identified.
             </tspan>
             <tspan x={-80} dy="10">
-              simulations using composite ratings based on kenpom, barttorvik and evanmiya.
+              Proj Wins is average total wins in regular season and conference
             </tspan>
             <tspan x={-80} dy="10">
-              Conference logo (with #) designates conference tournament games. % = probability of winning that
+              tournament by team based on 1,000 season simulations using
+              composite
             </tspan>
             <tspan x={-80} dy="10">
-              conference tournament game #; tournament byes and probability of even playing game impacts %.
+              ratings based on kenpom, barttorvik and evanmiya.
             </tspan>
           </text>
         </svg>

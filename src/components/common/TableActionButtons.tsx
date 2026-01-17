@@ -10,7 +10,7 @@ declare global {
   interface Window {
     html2canvas?: (
       element: HTMLElement,
-      options?: object
+      options?: object,
     ) => Promise<HTMLCanvasElement>;
   }
 }
@@ -92,7 +92,7 @@ export default function TableActionButtons({
       // Temporarily force element to show full width for measurement
       const originalStyles = new Map();
       const containers = targetElement.querySelectorAll(
-        '[style*="overflow"], .overflow-x-auto'
+        '[style*="overflow"], .overflow-x-auto',
       );
       containers.forEach((container) => {
         const el = container as HTMLElement;
@@ -107,11 +107,9 @@ export default function TableActionButtons({
       // Check chart type and calculate width
       const isLineChart = targetElement.querySelector("canvas") !== null;
       const table = targetElement.querySelector("table");
-      const componentType = targetElement.getAttribute("data-component-type");
       let actualWidth;
 
       if (table) {
-        // Table: use table width + buffer
         actualWidth = (table as HTMLElement).offsetWidth + 200;
       } else if (isLineChart) {
         // Distinguish line charts from box plots
@@ -121,35 +119,18 @@ export default function TableActionButtons({
           pageTitle?.includes("History") ||
           pageTitle?.includes("Over Time");
         actualWidth = isLineChartSpecific ? 1475 : 800;
-      } else if (
-        contentSelector.includes("ceiling") ||
-        componentType?.includes("ceiling")
-      ) {
+      } else if (contentSelector.includes("ceiling")) {
         // For ceiling/floor chart, use actual component width with minimal buffer
         actualWidth = (targetElement as HTMLElement).offsetWidth + 20;
       } else if (
-        contentSelector.includes("seed-wins") ||
-        componentType?.includes("seed-wins")
+        contentSelector.includes("wins-breakdown") ||
+        targetElement.classList.contains("basketball-wins-breakdown")
       ) {
-        // For seed wins and probability components, use fixed tight width
-        // Left column: 320px, Gap: 24px, Right column: 320px = 664px + padding
-        actualWidth = 700;
-      } else if (
-        contentSelector.includes("seed-wins-required") ||
-        componentType?.includes("seed-wins-required")
-      ) {
-        // For seed wins required components, use fixed tight width
-        actualWidth = 700;
-      } else if (
-        contentSelector.includes("seed-probability") ||
-        componentType?.includes("seed-probability")
-      ) {
-        // For seed probability components, use fixed tight width
+        // For wins breakdown chart, use fixed width to match design
         actualWidth = 700;
       } else {
-        // Fallback: team-based width calculation
         const teamLogos1 = targetElement.querySelectorAll(
-          'img[src*="team_logos"]'
+          'img[src*="team_logos"]',
         );
         const teamLogos2 = targetElement.querySelectorAll('img[alt*="logo"]');
         const teamLogos3 = targetElement.querySelectorAll('img[src*="logos"]');
@@ -157,12 +138,12 @@ export default function TableActionButtons({
         let teamCount = Math.max(
           teamLogos1.length,
           teamLogos2.length,
-          teamLogos3.length
+          teamLogos3.length,
         );
 
         if (teamCount === 0) {
           const teamElements = targetElement.querySelectorAll(
-            '[data-team], .team-logo, [class*="team"]'
+            '[data-team], .team-logo, [class*="team"]',
           );
           teamCount = teamElements.length;
         }
@@ -189,27 +170,9 @@ export default function TableActionButtons({
       // Clone element first
       const clone = targetElement.cloneNode(true) as HTMLElement;
 
-      // IMPORTANT: Preserve the select element's current value in the clone
-      const originalSelect = targetElement.querySelector(
-        "select"
-      ) as HTMLSelectElement;
-      if (originalSelect) {
-        const clonedSelect = clone.querySelector("select") as HTMLSelectElement;
-        if (clonedSelect) {
-          // Set the cloned select to match the original's current value
-          clonedSelect.value = originalSelect.value;
-          // Also update the displayed text for the option
-          const selectedOption =
-            originalSelect.options[originalSelect.selectedIndex];
-          if (selectedOption) {
-            clonedSelect.selectedIndex = originalSelect.selectedIndex;
-          }
-        }
-      }
-
       // Handle canvas replacement
       const originalCanvas = targetElement.querySelector(
-        "canvas"
+        "canvas",
       ) as HTMLCanvasElement;
       if (originalCanvas) {
         const tempCanvas = document.createElement("canvas");
@@ -252,7 +215,7 @@ export default function TableActionButtons({
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
         width: ${actualWidth}px;
         z-index: -1;
-        overflow: visible;
+        overflow: ${contentSelector.includes("wins-breakdown") ? "hidden" : "visible"};
       `;
 
       // Header with proper width alignment
@@ -292,37 +255,29 @@ export default function TableActionButtons({
       const infoSection = document.createElement("div");
       infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-end; gap: 4px;`;
 
-      const confName = selectedConference || conference || "";
-      if (confName) {
+      const confName = selectedConference || "All";
+      if (confName && confName !== "All") {
+        const formattedConfName = confName.replace(/ /g, "_");
+        const conferenceLogoUrl = `/images/conf_logos/${formattedConfName}.png`;
+
         const confLogo = document.createElement("img");
-        const conferenceLogoMap: { [key: string]: string } = {
-          "Big 12": "big_12.png",
-          SEC: "sec.png",
-          "Big Ten": "big_ten.png",
-          ACC: "acc.png",
-          "Pac-12": "pac_12.png",
-        };
+        confLogo.src = conferenceLogoUrl;
+        confLogo.style.cssText = `height: 30px; width: auto; max-width: 80px;`;
 
-        const logoFileName = conferenceLogoMap[confName];
-        if (logoFileName) {
-          confLogo.src = `/images/conf_logos/${logoFileName}`;
-          confLogo.style.cssText = `height: 30px; width: auto; max-width: 80px;`;
-
-          confLogo.onerror = () => {
-            confLogo.style.display = "none";
-            const conference = document.createElement("div");
-            conference.textContent = confName;
-            conference.style.cssText = `font-size: 14px; font-weight: 600; color: #1f2937;`;
-            infoSection.insertBefore(conference, infoSection.firstChild);
-          };
-
-          infoSection.appendChild(confLogo);
-        } else {
+        confLogo.onerror = () => {
+          confLogo.style.display = "none";
           const conference = document.createElement("div");
           conference.textContent = confName;
           conference.style.cssText = `font-size: 14px; font-weight: 600; color: #1f2937;`;
-          infoSection.appendChild(conference);
-        }
+          infoSection.insertBefore(conference, infoSection.firstChild);
+        };
+
+        infoSection.appendChild(confLogo);
+      } else {
+        const conference = document.createElement("div");
+        conference.textContent = confName;
+        conference.style.cssText = `font-size: 14px; font-weight: 600; color: #1f2937;`;
+        infoSection.appendChild(conference);
       }
 
       const date = document.createElement("div");
@@ -344,6 +299,20 @@ export default function TableActionButtons({
         margin-left: 0 !important;
         padding-left: 0 !important;
       `;
+
+      // Constrain SVG width for wins breakdown chart in screenshot
+      const winsBreakdownSvg = clone.querySelector(
+        ".basketball-wins-breakdown svg",
+      ) as HTMLElement | null;
+      if (winsBreakdownSvg) {
+        (winsBreakdownSvg as unknown as SVGSVGElement).setAttribute(
+          "width",
+          "650",
+        );
+        winsBreakdownSvg.style.maxWidth = "650px";
+        (clone as HTMLElement).style.marginLeft = "-130px !important";
+      }
+
       wrapper.appendChild(clone);
 
       // Add explainer with left alignment
@@ -366,9 +335,9 @@ export default function TableActionButtons({
       }
 
       document.body.appendChild(wrapper);
-      console.log("⏳ Taking screenshot of component as displayed...");
+      console.log("â³ Taking screenshot of component as displayed...");
       await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log("✅ Screenshot captured");
+      console.log("âœ… Screenshot captured");
 
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
@@ -381,22 +350,7 @@ export default function TableActionButtons({
       document.body.removeChild(wrapper);
 
       const timestamp = new Date().toISOString().split("T")[0];
-
-      // Extract selectedSeed from the select dropdown in the component if available
-      const selectElement = targetElement.querySelector(
-        "select"
-      ) as HTMLSelectElement;
-      let seedSuffix = "";
-
-      if (selectElement && selectElement.value) {
-        const selectedValue = selectElement.value;
-        // Map the value to a display label (1 -> 1seed, 11 -> 11seed, bubble -> bubble, etc)
-        const seedLabel =
-          selectedValue === "bubble" ? "bubble" : `${selectedValue}seed`;
-        seedSuffix = `_${seedLabel}`;
-      }
-
-      const filename = `${selectedConference}_${pageName}${seedSuffix}_${timestamp}.png`;
+      const filename = `${selectedConference}_${pageName}_${timestamp}.png`;
 
       if (isMobile) {
         canvas.toBlob(async (blob: Blob | null) => {
@@ -439,7 +393,7 @@ export default function TableActionButtons({
     } catch (error) {
       console.error("Download failed:", error);
       toast.error(
-        `Screenshot failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Screenshot failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setDownloading(false);

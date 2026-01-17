@@ -21,7 +21,7 @@ declare global {
   interface Window {
     html2canvas?: (
       element: HTMLElement,
-      options?: object
+      options?: object,
     ) => Promise<HTMLCanvasElement>;
   }
 }
@@ -165,7 +165,7 @@ export default function ScreenshotModal({
             console.error(
               "Base64 conversion failed for SVG image:",
               originalUrl,
-              e
+              e,
             );
           }
         }
@@ -173,27 +173,12 @@ export default function ScreenshotModal({
 
       console.log("Images converted, creating clone...");
 
-      // Calculate width based on actual content
-      const table = targetElement.querySelector("table");
-      const isChart = targetElement.querySelector("canvas") !== null;
-
-      let actualWidth: number;
-      if (table) {
-        // Get the full scrollWidth of the table to include all columns
-        const tableScrollWidth = (table as HTMLElement).scrollWidth;
-        actualWidth = tableScrollWidth + 100; // Add padding
-      } else if (isChart) {
-        actualWidth = targetElement.scrollWidth + 100;
-      } else {
-        actualWidth = Math.max(targetElement.scrollWidth, 600) + 100;
-      }
-
       // Clone and replace images with base64
       const clone = targetElement.cloneNode(true) as HTMLElement;
 
       // Handle canvas
       const originalCanvas = targetElement.querySelector(
-        "canvas"
+        "canvas",
       ) as HTMLCanvasElement;
       if (originalCanvas) {
         console.log("Cloning canvas...");
@@ -261,7 +246,7 @@ export default function ScreenshotModal({
       if (clonedTable) {
         // Remove sticky from all th and td elements
         const stickyCells = clonedTable.querySelectorAll(
-          'th[style*="sticky"], td[style*="sticky"]'
+          'th[style*="sticky"], td[style*="sticky"]',
         );
         stickyCells.forEach((cell) => {
           (cell as HTMLElement).style.position = "relative";
@@ -279,11 +264,11 @@ export default function ScreenshotModal({
       console.log("Creating wrapper...");
       // Create wrapper
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = `position: fixed; left: -9999px; top: 0; background-color: white; padding: 24px 50px; width: ${actualWidth}px; z-index: -1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;`;
+      wrapper.style.cssText = `position: fixed; left: -9999px; top: 0; background-color: white; padding: 12px 0 12px 12px; width: 400px; height: auto; overflow: hidden; z-index: -1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;`;
 
-      const contentWidth = actualWidth - 100;
+      const contentWidth = 650;
       const header = document.createElement("div");
-      header.style.cssText = `display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; width: ${contentWidth}px;`;
+      header.style.cssText = `display: flex; justify-content: flex-start; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; width: ${contentWidth}px; gap: 0;`;
 
       // JThom logo as base64
       const logo = document.createElement("img");
@@ -291,22 +276,22 @@ export default function ScreenshotModal({
         ? "/images/JThom_Logo_Football.png"
         : "/images/JThom_Logo.png";
       const logoBase64 = await imageToBase64(
-        `${window.location.origin}${logoPath}`
+        `${window.location.origin}${logoPath}`,
       );
       logo.src = logoBase64;
       logo.style.cssText = `height: 50px; width: auto;`;
 
       const titleElement = document.createElement("h1");
       titleElement.textContent = label;
-      titleElement.style.cssText = `font-family: "Roboto Condensed", system-ui, sans-serif; font-size: 1.25rem; font-weight: 500; color: #6b7280; margin: 0; text-align: center; flex: 1;`;
+      titleElement.style.cssText = `font-family: "Roboto Condensed", system-ui, sans-serif; font-size: 1.25rem; font-weight: 500; color: #6b7280; margin: 0; text-align: left; flex-shrink: 0; margin-left: 12px;`;
 
       const infoSection = document.createElement("div");
-      infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-end; gap: 4px;`;
+      infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-left: 12px;`;
 
       if (teamLogoUrl) {
         const teamLogo = document.createElement("img");
         const teamLogoBase64 = await imageToBase64(
-          `${window.location.origin}${teamLogoUrl}`
+          `${window.location.origin}${teamLogoUrl}`,
         );
         teamLogo.src = teamLogoBase64;
         teamLogo.style.cssText = `height: 40px; width: auto; max-width: 80px;`;
@@ -323,7 +308,20 @@ export default function ScreenshotModal({
       header.appendChild(infoSection);
       wrapper.appendChild(header);
 
-      clone.style.cssText = `width: ${contentWidth}px !important; overflow: visible !important; display: block !important;`;
+      clone.style.cssText = `width: 650px !important; overflow: hidden !important; display: block !important; margin-left: -170px !important;`;
+
+      // Constrain SVG width for wins breakdown chart in screenshot
+      const winsBreakdownSvg = clone.querySelector(
+        ".basketball-wins-breakdown svg",
+      ) as HTMLElement | null;
+      if (winsBreakdownSvg) {
+        (winsBreakdownSvg as unknown as SVGSVGElement).setAttribute(
+          "width",
+          "650",
+        );
+        winsBreakdownSvg.style.maxWidth = "650px";
+      }
+
       wrapper.appendChild(clone);
 
       document.body.appendChild(wrapper);
@@ -343,8 +341,8 @@ export default function ScreenshotModal({
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(
           () => reject(new Error("Screenshot timed out after 30 seconds")),
-          30000
-        )
+          30000,
+        ),
       );
 
       const canvas = (await Promise.race([

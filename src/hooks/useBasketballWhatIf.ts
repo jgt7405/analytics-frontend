@@ -19,6 +19,8 @@ export interface WhatIfGame {
   away_team: string;
   home_team_id: number;
   away_team_id: number;
+  home_team_logo: string;
+  away_team_logo: string;
   home_probability: number;
   away_probability: number;
   conf_game: boolean;
@@ -105,9 +107,9 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => {
 };
 
 const calculateBasketballWhatIf = async (
-  request: WhatIfRequest
+  request: WhatIfRequest,
 ): Promise<WhatIfResponse> => {
-  console.log("ðŸ€ Sending basketball what-if request:", request);
+  console.log("Ã°Å¸Ââ‚¬ Sending basketball what-if request:", request);
 
   const response = await fetch("/api/proxy/basketball/whatif", {
     method: "POST",
@@ -122,14 +124,14 @@ const calculateBasketballWhatIf = async (
       error: string;
     }
     const errorData = (await response.json()) as ErrorResponse;
-    console.error("âŒ Basketball what-if API error:", errorData);
+    console.error("Ã¢ÂÅ’ Basketball what-if API error:", errorData);
     throw new Error(
-      errorData.error || "Failed to calculate basketball what-if scenarios"
+      errorData.error || "Failed to calculate basketball what-if scenarios",
     );
   }
 
   const data = (await response.json()) as BackendWhatIfResponse;
-  console.log("ðŸ“¥ Received basketball what-if response:", {
+  console.log("Ã°Å¸â€œÂ¥ Received basketball what-if response:", {
     success: data.success,
     teams: data.data?.length || 0,
     games: data.games?.length || 0,
@@ -153,7 +155,7 @@ const calculateBasketballWhatIf = async (
     },
   };
 
-  console.log("âœ… Mapped basketball what-if data:", {
+  console.log("Ã¢Å“â€¦ Mapped basketball what-if data:", {
     teams: mappedData.data.length,
     games: mappedData.games.length,
     current_projections: mappedData.current_projections.length,

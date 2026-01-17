@@ -14,10 +14,10 @@ import { useCallback, useMemo, useState } from "react";
 
 export default function BasketballWhatIfScenarios() {
   const [selectedConference, setSelectedConference] = useState<string | null>(
-    null
+    null,
   );
   const [gameSelections, setGameSelections] = useState<Map<number, number>>(
-    new Map()
+    new Map(),
   );
   const [whatIfData, setWhatIfData] = useState<WhatIfResponse | null>(null);
 
@@ -46,16 +46,16 @@ export default function BasketballWhatIfScenarios() {
   const handleFetchWhatIf = useCallback(
     (
       conference: string,
-      selections: Array<{ game_id: number; winner_team_id: number }>
+      selections: Array<{ game_id: number; winner_team_id: number }>,
     ) => {
       fetchWhatIf(
         { conference, selections },
         {
           onSuccess: (data: WhatIfResponse) => setWhatIfData(data),
-        }
+        },
       );
     },
-    [fetchWhatIf]
+    [fetchWhatIf],
   );
 
   const handleGameSelection = (gameId: number, winnerId: number) => {
@@ -68,7 +68,7 @@ export default function BasketballWhatIfScenarios() {
         ([gId, wId]) => ({
           game_id: gId,
           winner_team_id: wId,
-        })
+        }),
       );
       handleFetchWhatIf(selectedConference, selectionsArray);
     }
@@ -84,7 +84,7 @@ export default function BasketballWhatIfScenarios() {
         ([gId, wId]) => ({
           game_id: gId,
           winner_team_id: wId,
-        })
+        }),
       );
       handleFetchWhatIf(selectedConference, selectionsArray);
     }
@@ -210,29 +210,8 @@ export default function BasketballWhatIfScenarios() {
                         <p className="text-xs text-gray-500 mb-2">
                           {game.date}
                         </p>
-                        <p className="text-sm font-semibold mb-3">
-                          {game.home_team} @ {game.away_team}
-                        </p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              if (selectedWinner === game.home_team_id) {
-                                handleGameDeselection(game.game_id);
-                              } else {
-                                handleGameSelection(
-                                  game.game_id,
-                                  game.home_team_id
-                                );
-                              }
-                            }}
-                            className={`flex-1 px-2 py-2 text-xs font-semibold rounded transition ${
-                              selectedWinner === game.home_team_id
-                                ? "bg-teal-600 text-white"
-                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                            }`}
-                          >
-                            {game.home_team}
-                          </button>
+                        <div className="flex gap-2 items-center justify-center">
+                          {/* Away Team */}
                           <button
                             onClick={() => {
                               if (selectedWinner === game.away_team_id) {
@@ -240,17 +219,69 @@ export default function BasketballWhatIfScenarios() {
                               } else {
                                 handleGameSelection(
                                   game.game_id,
-                                  game.away_team_id
+                                  game.away_team_id,
                                 );
                               }
                             }}
-                            className={`flex-1 px-2 py-2 text-xs font-semibold rounded transition ${
+                            className={`flex flex-col items-center gap-1 px-2 py-2 rounded transition border-2 ${
                               selectedWinner === game.away_team_id
-                                ? "bg-teal-600 text-white"
-                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                ? "border-teal-600 bg-teal-50"
+                                : "border-gray-200 bg-white hover:bg-gray-50"
                             }`}
                           >
-                            {game.away_team}
+                            {game.away_team_logo ? (
+                              <img
+                                src={game.away_team_logo}
+                                alt={game.away_team}
+                                className="w-8 h-8 object-contain"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">
+                                {game.away_team.substring(0, 1)}
+                              </div>
+                            )}
+                            <span className="text-xs font-semibold">
+                              {game.away_team.substring(0, 3)}
+                            </span>
+                          </button>
+
+                          {/* Separator */}
+                          <span className="text-xs text-gray-400 font-bold">
+                            @
+                          </span>
+
+                          {/* Home Team */}
+                          <button
+                            onClick={() => {
+                              if (selectedWinner === game.home_team_id) {
+                                handleGameDeselection(game.game_id);
+                              } else {
+                                handleGameSelection(
+                                  game.game_id,
+                                  game.home_team_id,
+                                );
+                              }
+                            }}
+                            className={`flex flex-col items-center gap-1 px-2 py-2 rounded transition border-2 ${
+                              selectedWinner === game.home_team_id
+                                ? "border-teal-600 bg-teal-50"
+                                : "border-gray-200 bg-white hover:bg-gray-50"
+                            }`}
+                          >
+                            {game.home_team_logo ? (
+                              <img
+                                src={game.home_team_logo}
+                                alt={game.home_team}
+                                className="w-8 h-8 object-contain"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">
+                                {game.home_team.substring(0, 1)}
+                              </div>
+                            )}
+                            <span className="text-xs font-semibold">
+                              {game.home_team.substring(0, 3)}
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -338,7 +369,7 @@ export default function BasketballWhatIfScenarios() {
                                 {(team.avg_conference_standing ?? 0).toFixed(1)}
                               </td>
                             </tr>
-                          )
+                          ),
                         )
                       ) : (
                         <tr>
@@ -385,7 +416,7 @@ export default function BasketballWhatIfScenarios() {
                                 const currentIndex =
                                   whatIfData.current_projections.findIndex(
                                     (t: WhatIfTeamResult) =>
-                                      t.team_id === team.team_id
+                                      t.team_id === team.team_id,
                                   );
                                 const change = currentIndex - index;
 
@@ -416,11 +447,11 @@ export default function BasketballWhatIfScenarios() {
                                         ? `+${change}`
                                         : change < 0
                                           ? `${change}`
-                                          : "–"}
+                                          : "â€“"}
                                     </td>
                                   </tr>
                                 );
-                              }
+                              },
                             )}
                           </tbody>
                         </table>
