@@ -27,6 +27,7 @@ interface AllScheduleGame {
   opponent: string;
   kenpom_win_prob: number;
   team_conf: string;
+  team_conf_catg?: string;
   status: string;
 }
 
@@ -47,10 +48,13 @@ interface BasketballTeamScheduleDifficultyProps {
   allScheduleData: AllScheduleGame[];
   teamConference?: string;
   logoUrl?: string;
+  teamColor?: string;
+  teamName?: string;
 }
 
 type ComparisonFilter = "all_d1" | "power_6" | "non_power_6" | "conference";
 type GameFilter = "all" | "completed" | "wins" | "losses" | "remaining";
+type LocationFilter = "all" | "home" | "away" | "neutral";
 
 const COMPARISON_OPTIONS = [
   { value: "all_d1" as ComparisonFilter, label: "All D1" },
@@ -67,15 +71,25 @@ const GAME_OPTIONS = [
   { value: "remaining" as GameFilter, label: "Remaining" },
 ];
 
+const LOCATION_OPTIONS = [
+  { value: "all" as LocationFilter, label: "All" },
+  { value: "home" as LocationFilter, label: "Home" },
+  { value: "away" as LocationFilter, label: "Away" },
+  { value: "neutral" as LocationFilter, label: "Neutral" },
+];
+
 export default function BasketballTeamScheduleDifficulty({
   schedule,
   allScheduleData,
   teamConference,
   logoUrl: _logoUrl,
+  teamColor = "#0097b2",
+  teamName,
 }: BasketballTeamScheduleDifficultyProps) {
   const [comparisonFilter, setComparisonFilter] =
-    useState<ComparisonFilter>("all_d1");
+    useState<ComparisonFilter>("power_6");
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
+  const [locationFilter, setLocationFilter] = useState<LocationFilter>("all");
   const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -90,12 +104,21 @@ export default function BasketballTeamScheduleDifficulty({
     TOP_SECTION_HEIGHT - TOP_MARGIN.top - TOP_MARGIN.bottom;
   const TOP_PLOT_WIDTH = CHART_WIDTH - TOP_MARGIN.left - TOP_MARGIN.right;
 
-  // Filter team games based on gameFilter
+  // Filter team games based on gameFilter and locationFilter
   const teamGames = useMemo(() => {
     if (!allScheduleData) return [];
 
     return schedule.filter((game) => {
       if (!game.kenpom_win_prob) return false;
+
+      // Filter by location
+      if (locationFilter !== "all") {
+        const gameLocation = game.location || "";
+        if (locationFilter === "home" && gameLocation !== "Home") return false;
+        if (locationFilter === "away" && gameLocation !== "Away") return false;
+        if (locationFilter === "neutral" && gameLocation !== "Neutral")
+          return false;
+      }
 
       switch (gameFilter) {
         case "completed":
@@ -110,7 +133,7 @@ export default function BasketballTeamScheduleDifficulty({
           return true;
       }
     });
-  }, [schedule, gameFilter, allScheduleData]);
+  }, [schedule, gameFilter, locationFilter, allScheduleData]);
 
   // Split team games into two groups
   const { lowProbGames, highProbGames } = useMemo(() => {
@@ -123,7 +146,15 @@ export default function BasketballTeamScheduleDifficulty({
   const comparisonDataset = useMemo(() => {
     if (!allScheduleData) return [];
 
-    const filtered = allScheduleData.filter((game: AllScheduleGame) => {
+    // Filter to only THIS team's games if teamName is provided
+    let teamScheduleData = allScheduleData;
+    if (teamName) {
+      teamScheduleData = allScheduleData.filter(
+        (game: AllScheduleGame) => game.team === teamName,
+      );
+    }
+
+    const filtered = teamScheduleData.filter((game: AllScheduleGame) => {
       // Only include games <= 95%
       if ((game.kenpom_win_prob || 0) > THRESHOLD) return false;
 
@@ -148,61 +179,38 @@ export default function BasketballTeamScheduleDifficulty({
         case "all_d1":
           return true;
         case "power_6":
-          return ["Big 12", "SEC", "Big Ten", "ACC", "Big East"].includes(
-            game.team_conf
-          );
+          // Use team_conf_catg if available, otherwise fall back to conference names
+          if (game.team_conf_catg) {
+            return game.team_conf_catg === "Power";
+          }
+          return [
+            "Southeastern",
+            "Big Ten",
+            "Atlantic Coast",
+            "Big 12",
+            "Big East",
+          ].includes(game.team_conf);
         case "non_power_6":
-          return !["Big 12", "SEC", "Big Ten", "ACC", "Big East"].includes(
-            game.team_conf
-          );
+          // Use team_conf_catg if available, otherwise fall back to conference names
+          if (game.team_conf_catg) {
+            return game.team_conf_catg !== "Power";
+          }
+          return ![
+            "Southeastern",
+            "Big Ten",
+            "Atlantic Coast",
+            "Big 12",
+            "Big East",
+          ].includes(game.team_conf);
         default:
           return true;
       }
     });
 
     return filtered;
-  }, [allScheduleData, comparisonFilter, teamConference, gameFilter]);
+  }, [allScheduleData, comparisonFilter, teamConference, gameFilter, teamName]);
 
   // Get all games (both <95% and >95%) for comparison dataset
-  const allComparisonGames = useMemo(() => {
-    if (!allScheduleData) return [];
-
-    const filtered = allScheduleData.filter((game: AllScheduleGame) => {
-      switch (gameFilter) {
-        case "completed":
-          if (!["W", "L"].includes(game.status)) return false;
-          break;
-        case "wins":
-          if (game.status !== "W") return false;
-          break;
-        case "losses":
-          if (game.status !== "L") return false;
-          break;
-        case "remaining":
-          if (["W", "L"].includes(game.status)) return false;
-          break;
-      }
-
-      switch (comparisonFilter) {
-        case "conference":
-          return game.team_conf === teamConference;
-        case "all_d1":
-          return true;
-        case "power_6":
-          return ["Big 12", "SEC", "Big Ten", "ACC", "Big East"].includes(
-            game.team_conf
-          );
-        case "non_power_6":
-          return !["Big 12", "SEC", "Big Ten", "ACC", "Big East"].includes(
-            game.team_conf
-          );
-        default:
-          return true;
-      }
-    });
-
-    return filtered;
-  }, [allScheduleData, comparisonFilter, teamConference, gameFilter]);
 
   // Calculate percentiles for low probability games only
   const percentiles = useMemo(() => {
@@ -270,7 +278,7 @@ export default function BasketballTeamScheduleDifficulty({
   // Layout games in top section
   const positionedGames = useMemo((): PositionedGame[] => {
     const sortedByDifficulty = [...teamGamePositions].sort(
-      (a, b) => a.percentilePosition - b.percentilePosition
+      (a, b) => a.percentilePosition - b.percentilePosition,
     );
 
     const positioned: PositionedGame[] = [];
@@ -320,9 +328,9 @@ export default function BasketballTeamScheduleDifficulty({
                   Math.abs(
                     p.adjustedY -
                       (TOP_MARGIN.top +
-                        (p.percentilePosition / 100) * TOP_PLOT_HEIGHT)
+                        (p.percentilePosition / 100) * TOP_PLOT_HEIGHT),
                   ),
-                0
+                0,
               );
 
             if (totalDisplacement < minTotalDisplacement) {
@@ -337,7 +345,7 @@ export default function BasketballTeamScheduleDifficulty({
 
       logoY = Math.max(
         TOP_MARGIN.top + 15,
-        Math.min(TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15, logoY)
+        Math.min(TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15, logoY),
       );
 
       positioned.push({
@@ -350,24 +358,6 @@ export default function BasketballTeamScheduleDifficulty({
 
     return positioned;
   }, [teamGamePositions, TOP_PLOT_HEIGHT, TOP_MARGIN.top]);
-
-  // Format record text based on gameFilter
-  const getRecordText = () => {
-    const { wins, losses, remaining } = highProbRecord;
-
-    if (gameFilter === "all") {
-      return `${wins}-${losses}, ${remaining} remaining`;
-    } else if (gameFilter === "wins") {
-      return `${wins} ${wins === 1 ? "win" : "wins"}`;
-    } else if (gameFilter === "losses") {
-      return `${losses} ${losses === 1 ? "loss" : "losses"}`;
-    } else if (gameFilter === "remaining") {
-      return `${remaining} ${remaining === 1 ? "remaining" : "remaining"}`;
-    } else if (gameFilter === "completed") {
-      return `${wins}-${losses}`;
-    }
-    return "";
-  };
 
   // Calculate high prob games record
   const highProbRecord = useMemo(() => {
@@ -384,6 +374,50 @@ export default function BasketballTeamScheduleDifficulty({
     return { wins, losses, remaining };
   }, [highProbGames]);
 
+  // Calculate team statistics including all games (both <95% and >95%)
+  const teamStats = useMemo(() => {
+    const allTeamGames = [...lowProbGames, ...highProbGames];
+    const completedGames = allTeamGames.filter(
+      (g) => g.status === "W" || g.status === "L",
+    );
+
+    const wins = completedGames.filter((g) => g.status === "W").length;
+    const losses = completedGames.filter((g) => g.status === "L").length;
+
+    // Expected wins: sum of all win probabilities
+    const expectedWins = completedGames.reduce(
+      (sum, g) => sum + (g.kenpom_win_prob || 0),
+      0,
+    );
+    const expectedLosses = completedGames.length - expectedWins;
+
+    // Forecast win %
+    const forecastWinPct =
+      completedGames.length > 0
+        ? (expectedWins / completedGames.length) * 100
+        : 0;
+
+    // True Win Value
+    const twv = wins - expectedWins;
+
+    // Actual win %
+    const actualWinPct =
+      completedGames.length > 0 ? (wins / completedGames.length) * 100 : 0;
+
+    return {
+      wins,
+      losses,
+      expectedWins,
+      expectedLosses,
+      forecastWinPct,
+      twv,
+      actualWinPct,
+      highProbWins: highProbRecord.wins,
+      highProbLosses: highProbRecord.losses,
+      highProbGames: highProbGames.length,
+    };
+  }, [lowProbGames, highProbGames, highProbRecord]);
+
   const getGameRank = (game: PositionedGame) => {
     const allGamesInFilter = comparisonDataset
       .map((g) => g.kenpom_win_prob)
@@ -395,21 +429,6 @@ export default function BasketballTeamScheduleDifficulty({
     return position === -1 ? allGamesInFilter.length : position + 1;
   };
 
-  const getFilterDescription = () => {
-    switch (comparisonFilter) {
-      case "conference":
-        return `${teamConference} conference`;
-      case "all_d1":
-        return "all D1";
-      case "power_6":
-        return "Power 5 conferences";
-      case "non_power_6":
-        return "Non Power 5 conferences";
-      default:
-        return "all D1";
-    }
-  };
-
   const handleGameClick = (game: PositionedGame) => {
     if (
       hoveredGame?.opponent === game.opponent &&
@@ -419,7 +438,7 @@ export default function BasketballTeamScheduleDifficulty({
     } else {
       const tooltipWidth = 180;
       const x = (CHART_WIDTH - tooltipWidth) / 2 - 30;
-      const y = game.adjustedY + 20;
+      const y = game.adjustedY + 40;
       setTooltipPosition({ x, y });
       setHoveredGame(game);
     }
@@ -428,11 +447,9 @@ export default function BasketballTeamScheduleDifficulty({
   const Tooltip = ({
     game,
     position,
-    onClose,
   }: {
     game: PositionedGame;
     position: { x: number; y: number };
-    onClose: () => void;
   }) => {
     const rank = getGameRank(game);
     const winProb = Math.round((game.kenpom_win_prob || 0) * 100);
@@ -450,37 +467,21 @@ export default function BasketballTeamScheduleDifficulty({
         onClick={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onClose();
-          }}
-          onTouchStart={(e) => {
-            e.stopPropagation();
-          }}
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-            handleGameClick(game);
-          }}
-          className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center text-lg font-bold border-none bg-transparent cursor-pointer"
-          style={{
-            lineHeight: "1",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            touchAction: "manipulation",
-          }}
-        >
-          ×
-        </button>
         <div className="text-sm font-semibold mb-1">{game.opponent}</div>
         <div className="text-xs space-y-1">
           <div>Location: {game.location}</div>
           <div>{winProb}% Win Probability for 30th Rated Team</div>
           <div>
-            #{rank.toLocaleString()} Most Difficult Game Out of{" "}
-            {comparisonDataset.length.toLocaleString()} Games in{" "}
-            {getFilterDescription()} ({percentile} Percentile)
+            #{rank.toLocaleString()} Most Difficult Game ({percentile}{" "}
+            Percentile)
+          </div>
+          <div style={{ marginTop: "6px", fontWeight: "500" }}>
+            Result:{" "}
+            {game.status === "W"
+              ? "Win"
+              : game.status === "L"
+                ? "Loss"
+                : "Scheduled"}
           </div>
         </div>
       </div>
@@ -488,70 +489,96 @@ export default function BasketballTeamScheduleDifficulty({
   };
 
   return (
-    <div className="w-full relative" onClick={() => setHoveredGame(null)}>
-      {_logoUrl && (
-        <div
-          className="absolute z-10"
-          style={{
-            top: "-30px",
-            right: "0px",
-            width: isMobile ? "24px" : "32px",
-            height: isMobile ? "24px" : "32px",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={_logoUrl}
-            alt="Team logo"
+    <div
+      className="basketball-schedule-difficulty w-full"
+      style={{ overflow: "visible" }}
+    >
+      <div className="w-full relative" onClick={() => setHoveredGame(null)}>
+        {_logoUrl && (
+          <div
+            className="absolute z-10"
             style={{
+              top: "-30px",
+              right: "0px",
               width: isMobile ? "24px" : "32px",
               height: isMobile ? "24px" : "32px",
-              objectFit: "contain",
-              opacity: 0.8,
             }}
-          />
-        </div>
-      )}
-      <div className="mb-4 space-y-3" onClick={(e) => e.stopPropagation()}>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Compare against:
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {COMPARISON_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setComparisonFilter(option.value)}
-                className={`px-3 py-1 ${isMobile ? "text-xs" : "text-sm"} rounded-md border transition-colors ${
-                  comparisonFilter === option.value
-                    ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={_logoUrl}
+              alt="Team logo"
+              style={{
+                width: isMobile ? "24px" : "32px",
+                height: isMobile ? "24px" : "32px",
+                objectFit: "contain",
+                opacity: 0.8,
+              }}
+            />
           </div>
-        </div>
+        )}
+        <div className="mb-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Compare against:
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {COMPARISON_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setComparisonFilter(option.value)}
+                  className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
+                    comparisonFilter === option.value
+                      ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Show games:
-          </label>
-          <div className="flex gap-2">
-            {GAME_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setGameFilter(option.value)}
-                className={`px-3 py-1 ${isMobile ? "text-xs" : "text-sm"} rounded-md border transition-colors ${
-                  gameFilter === option.value
-                    ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Show games:
+            </label>
+            <div className="flex gap-2">
+              {GAME_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setGameFilter(option.value)}
+                  className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
+                    gameFilter === option.value
+                      ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Location:
+            </label>
+            <div className="flex gap-2">
+              {LOCATION_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setLocationFilter(option.value)}
+                  className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
+                    locationFilter === option.value
+                      ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -567,7 +594,7 @@ export default function BasketballTeamScheduleDifficulty({
         >
           <rect width={CHART_WIDTH} height={TOTAL_CHART_HEIGHT} fill="white" />
 
-          {/* ========== TOP SECTION (≤95% games) ========== */}
+          {/* ========== TOP SECTION (â‰¤95% games) ========== */}
 
           {/* Percentile gridlines */}
           {percentiles.map((percentile) => {
@@ -753,7 +780,7 @@ export default function BasketballTeamScheduleDifficulty({
             transform={`rotate(-90, ${TOP_MARGIN.left - 45}, ${TOP_MARGIN.top + TOP_PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Difficulty Percentile Rating All Games in Dataset
+            Difficulty Percentile: Games &lt;95% Probability for 30th Rated Team
           </text>
 
           <text
@@ -806,32 +833,79 @@ export default function BasketballTeamScheduleDifficulty({
                 textAnchor="middle"
                 className="text-xs fill-gray-600"
               >
-                Games with {">"} 95% Win Probability
+                {">"} 95% Probability Games
               </text>
               <text
                 x={CHART_WIDTH / 2}
                 y={TOP_SECTION_HEIGHT + BOTTOM_MARGIN.top + 28}
                 textAnchor="middle"
-                className="text-sm fill-gray-800"
+                className="text-sm"
               >
-                {getRecordText()}
+                <tspan style={{ fill: teamColor }}>
+                  {highProbRecord.wins}-{highProbRecord.losses}
+                </tspan>
+                <tspan className="fill-gray-600">
+                  , {highProbRecord.remaining} left
+                </tspan>
               </text>
             </g>
           )}
         </svg>
 
-        {hoveredGame && (
-          <Tooltip
-            game={hoveredGame}
-            position={tooltipPosition}
-            onClose={() => setHoveredGame(null)}
-          />
-        )}
+        {hoveredGame ? (
+          <Tooltip game={hoveredGame} position={tooltipPosition} />
+        ) : null}
       </div>
 
       {/* Legend and stats */}
-      <div className="mt-4 text-xs text-gray-600">
-        <div className="flex flex-wrap gap-4 justify-center">
+      <div className="mt-2 text-xs text-gray-600">
+        {/* Team Stats Summary - MOVED TO TOP */}
+        <div className="text-center mt-0 -pt-1 border-b border-gray-300 text-xs">
+          <div className="grid grid-cols-5 gap-4 justify-center px-2">
+            <div>
+              <div className="font-medium text-gray-700">Record:</div>
+              <div style={{ color: teamColor }}>
+                {teamStats.wins}-{teamStats.losses}
+              </div>
+            </div>
+            <div>
+              <div className="font-medium text-gray-700">#30 Fcst:</div>
+              <div>
+                {teamStats.expectedWins.toFixed(1)}-
+                {teamStats.expectedLosses.toFixed(1)}
+              </div>
+            </div>
+            <div>
+              <div className="font-medium text-gray-700">Act Win %:</div>
+              <div style={{ color: teamColor }}>
+                {teamStats.actualWinPct.toFixed(0)}%
+              </div>
+            </div>
+            <div>
+              <div className="font-medium text-gray-700">#30 Fcst %:</div>
+              <div>{teamStats.forecastWinPct.toFixed(0)}%</div>
+            </div>
+            <div>
+              <div className="font-medium text-gray-700">TWV:</div>
+              <div
+                style={{
+                  color:
+                    teamStats.twv > 0
+                      ? "#10b981"
+                      : teamStats.twv < 0
+                        ? "#ef4444"
+                        : "#6b7280",
+                }}
+              >
+                {teamStats.twv > 0 ? "+" : ""}
+                {teamStats.twv.toFixed(1)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Legend - MOVED ABOVE COMPARISON */}
+        <div className="flex flex-wrap gap-4 justify-center mt-2 pb-2 border-b border-gray-300">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
             <span>Win</span>
@@ -846,9 +920,11 @@ export default function BasketballTeamScheduleDifficulty({
           </div>
         </div>
 
-        <div className="text-center mt-2">
-          Comparing {teamGames.length.toLocaleString()} games vs{" "}
-          {allComparisonGames.length.toLocaleString()} total games
+        {/* Comparison text - AT BOTTOM */}
+        <div className="text-center -mt-1">
+          Comparing {lowProbGames.length.toLocaleString()} games vs{" "}
+          {comparisonDataset.length.toLocaleString()} total &lt;95% games in
+          dataset
           <br />
         </div>
       </div>

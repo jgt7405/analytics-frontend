@@ -173,6 +173,31 @@ export default function ScreenshotModal({
 
       console.log("Images converted, creating clone...");
 
+      // Calculate width based on actual content
+      const table = targetElement.querySelector("table");
+      const isChart = targetElement.querySelector("canvas") !== null;
+      const isSvgChart = targetElement.querySelector("svg") !== null;
+
+      let actualWidth: number;
+      if (table) {
+        // Get the full scrollWidth of the table to include all columns
+        const tableScrollWidth = (table as HTMLElement).scrollWidth;
+        actualWidth = tableScrollWidth + 100; // Add padding
+      } else if (isChart) {
+        actualWidth = targetElement.scrollWidth + 100;
+      } else if (isSvgChart) {
+        // For SVG charts, get the SVG width and add padding for controls
+        const svg = targetElement.querySelector("svg") as SVGElement;
+        const svgWidth = svg?.getAttribute("width");
+        if (svgWidth) {
+          actualWidth = parseInt(svgWidth) + 200; // Add extra padding for controls
+        } else {
+          actualWidth = targetElement.scrollWidth + 200;
+        }
+      } else {
+        actualWidth = Math.max(targetElement.scrollWidth, 600) + 100;
+      }
+
       // Clone and replace images with base64
       const clone = targetElement.cloneNode(true) as HTMLElement;
 
@@ -264,11 +289,11 @@ export default function ScreenshotModal({
       console.log("Creating wrapper...");
       // Create wrapper
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = `position: fixed; left: -9999px; top: 0; background-color: white; padding: 12px 0 12px 12px; width: 400px; height: auto; overflow: hidden; z-index: -1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;`;
+      wrapper.style.cssText = `position: fixed; left: -9999px; top: 0; background-color: white; padding: 24px 50px; width: ${actualWidth}px; z-index: -1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;`;
 
-      const contentWidth = 650;
+      const contentWidth = actualWidth - 100;
       const header = document.createElement("div");
-      header.style.cssText = `display: flex; justify-content: flex-start; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; width: ${contentWidth}px; gap: 0;`;
+      header.style.cssText = `display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; width: ${contentWidth}px;`;
 
       // JThom logo as base64
       const logo = document.createElement("img");
@@ -283,10 +308,10 @@ export default function ScreenshotModal({
 
       const titleElement = document.createElement("h1");
       titleElement.textContent = label;
-      titleElement.style.cssText = `font-family: "Roboto Condensed", system-ui, sans-serif; font-size: 1.25rem; font-weight: 500; color: #6b7280; margin: 0; text-align: left; flex-shrink: 0; margin-left: 12px;`;
+      titleElement.style.cssText = `font-family: "Roboto Condensed", system-ui, sans-serif; font-size: 1.25rem; font-weight: 500; color: #6b7280; margin: 0; text-align: center; flex: 1;`;
 
       const infoSection = document.createElement("div");
-      infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-left: 12px;`;
+      infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-end; gap: 4px;`;
 
       if (teamLogoUrl) {
         const teamLogo = document.createElement("img");
@@ -308,20 +333,7 @@ export default function ScreenshotModal({
       header.appendChild(infoSection);
       wrapper.appendChild(header);
 
-      clone.style.cssText = `width: 650px !important; overflow: hidden !important; display: block !important; margin-left: -170px !important;`;
-
-      // Constrain SVG width for wins breakdown chart in screenshot
-      const winsBreakdownSvg = clone.querySelector(
-        ".basketball-wins-breakdown svg",
-      ) as HTMLElement | null;
-      if (winsBreakdownSvg) {
-        (winsBreakdownSvg as unknown as SVGSVGElement).setAttribute(
-          "width",
-          "650",
-        );
-        winsBreakdownSvg.style.maxWidth = "650px";
-      }
-
+      clone.style.cssText = `width: ${contentWidth}px !important; overflow: visible !important; display: block !important;`;
       wrapper.appendChild(clone);
 
       document.body.appendChild(wrapper);

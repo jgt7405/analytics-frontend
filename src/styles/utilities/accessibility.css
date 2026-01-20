@@ -274,7 +274,7 @@
 }
 
 .accessible-table th[aria-sort="ascending"]::after {
-  content: " ↑";
+  content: " (asc)";
   position: absolute;
   right: 4px;
   top: 50%;
@@ -282,7 +282,7 @@
 }
 
 .accessible-table th[aria-sort="descending"]::after {
-  content: " ↓";
+  content: " (desc)";
   position: absolute;
   right: 4px;
   top: 50%;

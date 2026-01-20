@@ -114,7 +114,7 @@ export default function BasketballTeamPage({
         setError(null);
 
         const response = await fetch(
-          `/api/proxy/team/${encodeURIComponent(teamname)}`
+          `/api/proxy/team/${encodeURIComponent(teamname)}`,
         );
 
         if (!response.ok) throw new Error("Failed to load team data");
@@ -123,7 +123,7 @@ export default function BasketballTeamPage({
         setTeamData(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load team data"
+          err instanceof Error ? err.message : "Failed to load team data",
         );
       } finally {
         setLoading(false);
@@ -461,6 +461,7 @@ export default function BasketballTeamPage({
                     allScheduleData={teamData.all_schedule_data}
                     teamConference={team_info.conference}
                     logoUrl={team_info.logo_url}
+                    teamColor={team_info.primary_color}
                   />
                 </div>
               )}
@@ -807,6 +808,7 @@ export default function BasketballTeamPage({
                         allScheduleData={teamData.all_schedule_data}
                         teamConference={team_info.conference}
                         logoUrl={team_info.logo_url}
+                        teamColor={team_info.primary_color}
                       />
                     </div>
                   )}
