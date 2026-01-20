@@ -689,9 +689,10 @@ export default function BasketballCompareSchedulesChart({
                 </g>
               ) : null}
 
-              {/* Opponent Logo - reduced size to 18px */}
+              {/* Opponent Logo - using native SVG image for mobile compatibility */}
               {game.opponentLogo && (
-                <foreignObject
+                <image
+                  href={game.opponentLogo}
                   x={logoX - 9}
                   y={game.adjustedY - 9}
                   width="18"
@@ -699,20 +700,10 @@ export default function BasketballCompareSchedulesChart({
                   style={{
                     cursor: "pointer",
                     opacity: isHovered ? 1 : 0.7,
-                    overflow: "visible",
+                    transition: "opacity 0.2s",
                   }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={game.opponentLogo}
-                    alt={game.opponent}
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                      objectFit: "contain",
-                    }}
-                  />
-                </foreignObject>
+                  preserveAspectRatio="xMidYMid meet"
+                />
               )}
 
               {/* Game Dot on the Line */}
