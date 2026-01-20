@@ -932,7 +932,11 @@ export default function BasketballCompareSchedulesChart({
 
       {/* Chart */}
       <div className="overflow-x-auto overflow-y-visible relative">
-        <svg width={CHART_WIDTH} height={CHART_HEIGHT} className="mx-auto">
+        <svg
+          width={CHART_WIDTH}
+          height={CHART_HEIGHT}
+          className="mx-auto sticky top-0 z-10"
+        >
           {/* Percentile grid lines and labels */}
           {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((percentile) => {
             // INVERTED: 0% at top, 100% at bottom
