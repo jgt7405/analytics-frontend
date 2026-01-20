@@ -689,21 +689,31 @@ export default function BasketballCompareSchedulesChart({
                 </g>
               ) : null}
 
-              {/* Opponent Logo - using native SVG image for mobile compatibility */}
+              {/* Opponent Logo - using foreignObject for screenshot compatibility */}
               {game.opponentLogo && (
-                <image
-                  href={game.opponentLogo}
+                <foreignObject
                   x={logoX - 9}
                   y={game.adjustedY - 9}
                   width="18"
                   height="18"
                   style={{
                     cursor: "pointer",
-                    opacity: isHovered ? 1 : 0.7,
-                    transition: "opacity 0.2s",
+                    overflow: "hidden",
                   }}
-                  preserveAspectRatio="xMidYMid meet"
-                />
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={game.opponentLogo}
+                    alt={game.opponent}
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      objectFit: "contain",
+                      opacity: isHovered ? 1 : 0.7,
+                      transition: "opacity 0.2s",
+                    }}
+                  />
+                </foreignObject>
               )}
 
               {/* Game Dot on the Line */}
@@ -737,6 +747,12 @@ export default function BasketballCompareSchedulesChart({
               textAnchor="middle"
               className="text-sm font-medium"
               fill={teams[teamIndex].teamColor}
+              style={{
+                fontSize: "14px",
+                fontWeight: 500,
+                fontFamily:
+                  '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+              }}
             >
               {stats.highProbWins}-{stats.highProbLosses}
             </text>
@@ -745,6 +761,11 @@ export default function BasketballCompareSchedulesChart({
               y={TOP_SECTION_HEIGHT + 37}
               textAnchor="middle"
               className="text-xs fill-gray-600"
+              style={{
+                fontSize: "12px",
+                fontFamily:
+                  '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+              }}
             >
               ({stats.highProbGames - stats.highProbWins - stats.highProbLosses}{" "}
               left)
@@ -759,6 +780,11 @@ export default function BasketballCompareSchedulesChart({
           textAnchor="middle"
           className="text-xs"
           fill={teams[teamIndex].teamColor}
+          style={{
+            fontSize: "12px",
+            fontFamily:
+              '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+          }}
         >
           {stats.wins}-{stats.losses}
         </text>
@@ -767,6 +793,11 @@ export default function BasketballCompareSchedulesChart({
           y={TOP_SECTION_HEIGHT + 78}
           textAnchor="middle"
           className="text-xs fill-gray-600"
+          style={{
+            fontSize: "12px",
+            fontFamily:
+              '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+          }}
         >
           {stats.expectedWins.toFixed(1)}-{stats.expectedLosses.toFixed(1)}
         </text>
@@ -776,6 +807,11 @@ export default function BasketballCompareSchedulesChart({
           textAnchor="middle"
           className="text-xs"
           fill={teams[teamIndex].teamColor}
+          style={{
+            fontSize: "12px",
+            fontFamily:
+              '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+          }}
         >
           {stats.actualWinPct.toFixed(0)}%
         </text>
@@ -784,6 +820,11 @@ export default function BasketballCompareSchedulesChart({
           y={TOP_SECTION_HEIGHT + 108}
           textAnchor="middle"
           className="text-xs fill-gray-600"
+          style={{
+            fontSize: "12px",
+            fontFamily:
+              '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+          }}
         >
           {stats.forecastWinPct.toFixed(0)}%
         </text>
@@ -798,6 +839,12 @@ export default function BasketballCompareSchedulesChart({
                 ? "fill-red-600"
                 : "fill-gray-600"
           }`}
+          style={{
+            fontSize: "12px",
+            fontWeight: 500,
+            fontFamily:
+              '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+          }}
         >
           {stats.twv > 0 ? "+" : ""}
           {stats.twv.toFixed(1)}
@@ -811,6 +858,12 @@ export default function BasketballCompareSchedulesChart({
               y={TOP_SECTION_HEIGHT + 63}
               textAnchor="end"
               className="text-xs font-medium fill-gray-600"
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                fontFamily:
+                  '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+              }}
             >
               Record:
             </text>
@@ -819,6 +872,12 @@ export default function BasketballCompareSchedulesChart({
               y={TOP_SECTION_HEIGHT + 78}
               textAnchor="end"
               className="text-xs font-medium fill-gray-600"
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                fontFamily:
+                  '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+              }}
             >
               #30 Fcst:
             </text>
@@ -827,6 +886,12 @@ export default function BasketballCompareSchedulesChart({
               y={TOP_SECTION_HEIGHT + 93}
               textAnchor="end"
               className="text-xs font-medium fill-gray-600"
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                fontFamily:
+                  '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+              }}
             >
               Act Win %:
             </text>
@@ -835,6 +900,12 @@ export default function BasketballCompareSchedulesChart({
               y={TOP_SECTION_HEIGHT + 108}
               textAnchor="end"
               className="text-xs font-medium fill-gray-600"
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                fontFamily:
+                  '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+              }}
             >
               #30 Fcst %:
             </text>
@@ -843,6 +914,12 @@ export default function BasketballCompareSchedulesChart({
               y={TOP_SECTION_HEIGHT + 123}
               textAnchor="end"
               className="text-xs font-medium fill-gray-600"
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                fontFamily:
+                  '"Roboto Condensed", system-ui, -apple-system, sans-serif',
+              }}
             >
               TWV:
             </text>
@@ -875,7 +952,7 @@ export default function BasketballCompareSchedulesChart({
               <button
                 key={option.value}
                 onClick={() => setComparisonFilter(option.value)}
-                className={`px-1 md:px-3 py-0.5 md:py-1 text-xs md:text-sm rounded-md border transition-colors ${
+                className={`px-1 md:px-4 py-0.5 md:py-1 text-xs md:text-base rounded-md border transition-colors ${
                   comparisonFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -896,7 +973,7 @@ export default function BasketballCompareSchedulesChart({
               <button
                 key={option.value}
                 onClick={() => setGameFilter(option.value)}
-                className={`px-1 md:px-3 py-0.5 md:py-1 text-xs md:text-sm rounded-md border transition-colors ${
+                className={`px-1 md:px-4 py-0.5 md:py-1 text-xs md:text-base rounded-md border transition-colors ${
                   gameFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -917,7 +994,7 @@ export default function BasketballCompareSchedulesChart({
               <button
                 key={option.value}
                 onClick={() => setLocationFilter(option.value)}
-                className={`px-1 md:px-3 py-0.5 md:py-1 text-xs md:text-sm rounded-md border transition-colors ${
+                className={`px-1 md:px-4 py-0.5 md:py-1 text-xs md:text-base rounded-md border transition-colors ${
                   locationFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
