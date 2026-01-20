@@ -865,17 +865,17 @@ export default function BasketballCompareSchedulesChart({
       <h3 className="text-lg font-semibold mb-4">Compare Schedules</h3>
 
       {/* Filter Controls */}
-      <div className="mb-4 space-y-3">
+      <div className="mb-4 space-y-1">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
             Compare against:
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-0.5 md:gap-2">
             {COMPARISON_OPTIONS.map((option) => (
               <button
                 key={option.value}
                 onClick={() => setComparisonFilter(option.value)}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
+                className={`px-1 md:px-3 py-0.5 md:py-1 text-xs md:text-sm rounded-md border transition-colors ${
                   comparisonFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -888,15 +888,15 @@ export default function BasketballCompareSchedulesChart({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
             Show games:
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-0.5 md:gap-2">
             {GAME_OPTIONS.map((option) => (
               <button
                 key={option.value}
                 onClick={() => setGameFilter(option.value)}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
+                className={`px-1 md:px-3 py-0.5 md:py-1 text-xs md:text-sm rounded-md border transition-colors ${
                   gameFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -909,15 +909,15 @@ export default function BasketballCompareSchedulesChart({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
             Location:
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-0.5 md:gap-2">
             {LOCATION_OPTIONS.map((option) => (
               <button
                 key={option.value}
                 onClick={() => setLocationFilter(option.value)}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
+                className={`px-1 md:px-3 py-0.5 md:py-1 text-xs md:text-sm rounded-md border transition-colors ${
                   locationFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
