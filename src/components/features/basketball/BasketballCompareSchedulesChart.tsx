@@ -931,7 +931,7 @@ export default function BasketballCompareSchedulesChart({
       </div>
 
       {/* Chart */}
-      <div className="overflow-x-auto relative">
+      <div className="overflow-x-auto overflow-y-visible relative">
         <svg width={CHART_WIDTH} height={CHART_HEIGHT} className="mx-auto">
           {/* Percentile grid lines and labels */}
           {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((percentile) => {
@@ -1090,15 +1090,21 @@ export default function BasketballCompareSchedulesChart({
               hoveredGame.teamIndex * columnWidth +
               columnWidth / 2;
 
+            // If game is in top 20% (percentile 0-20), show tooltip below, otherwise above
+            const isTopRange = hoveredGame.percentilePosition < 20;
+            const tooltipTop = isTopRange
+              ? hoveredGame.adjustedY + 30 // Below the pointer
+              : hoveredGame.adjustedY - 150; // Above the pointer
+
             return (
               <div
                 onMouseEnter={() => setHoveredGame(hoveredGame)}
                 onMouseLeave={() => setHoveredGame(null)}
                 style={{
                   position: "absolute",
-                  left: `${columnX - 150}px`,
-                  top: `${hoveredGame.adjustedY - 95}px`,
-                  width: "300px",
+                  left: `${columnX - 120}px`,
+                  top: `${tooltipTop}px`,
+                  width: "240px",
                   backgroundColor: "#ffffff",
                   border: "1px solid #d1d5db",
                   borderRadius: "6px",
@@ -1109,6 +1115,8 @@ export default function BasketballCompareSchedulesChart({
                   fontFamily:
                     "var(--font-roboto-condensed), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                   zIndex: 50,
+                  pointerEvents: "none",
+                  whiteSpace: "nowrap",
                 }}
               >
                 <div
