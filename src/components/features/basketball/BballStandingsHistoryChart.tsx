@@ -25,7 +25,7 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 interface TimelineData {
@@ -70,7 +70,7 @@ export default function BballStandingsHistoryChart({
 }: BballStandingsHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", TeamDataPoint[], string> | null>(
-    null
+    null,
   );
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
@@ -135,7 +135,7 @@ export default function BballStandingsHistoryChart({
 
   const dates = [
     ...new Set(
-      Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
+      Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date)),
     ),
   ].sort((a, b) => {
     // Sort using the full date (with year)
@@ -182,7 +182,7 @@ export default function BballStandingsHistoryChart({
 
   // FIX: Sort allDates chronologically (accounting for year) instead of alphabetically
   const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    (a, b) => new Date(a).getTime() - new Date(b).getTime(),
   );
   const lastDate = allDates[allDates.length - 1];
   const finalStandings = filteredTimelineData
@@ -260,7 +260,7 @@ export default function BballStandingsHistoryChart({
           const { tooltip: tooltipModel, chart } = args;
 
           let tooltipEl = document.getElementById(
-            "chartjs-tooltip-bball-standings"
+            "chartjs-tooltip-bball-standings",
           );
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
@@ -293,7 +293,7 @@ export default function BballStandingsHistoryChart({
                     document.removeEventListener("click", handleClickOutside);
                     document.removeEventListener(
                       "touchstart",
-                      handleClickOutside
+                      handleClickOutside,
                     );
                     document.body.removeChild(tooltipEl);
                   }

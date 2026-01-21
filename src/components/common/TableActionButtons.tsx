@@ -108,26 +108,26 @@ export default function TableActionButtons({
       const isLineChart = targetElement.querySelector("canvas") !== null;
       const table = targetElement.querySelector("table");
       let actualWidth;
+      let isLineChartSpecific = false;
 
       if (table) {
         actualWidth = (table as HTMLElement).offsetWidth + 200;
       } else if (isLineChart) {
         // Distinguish line charts from box plots
-        const isLineChartSpecific =
+        isLineChartSpecific =
           targetElement.textContent?.includes("Over Time") ||
+          false ||
           targetElement.textContent?.includes("History") ||
+          false ||
           pageTitle?.includes("History") ||
-          pageTitle?.includes("Over Time");
-        actualWidth = isLineChartSpecific ? 1475 : 800;
+          false ||
+          pageTitle?.includes("Over Time") ||
+          false;
+        // Use fixed width for history charts, smaller to position logos closer
+        actualWidth = isLineChartSpecific ? 1410 : 800;
       } else if (contentSelector.includes("ceiling")) {
         // For ceiling/floor chart, use actual component width with minimal buffer
         actualWidth = (targetElement as HTMLElement).offsetWidth + 20;
-      } else if (
-        contentSelector.includes("wins-breakdown") ||
-        targetElement.classList.contains("basketball-wins-breakdown")
-      ) {
-        // For wins breakdown chart, use fixed width to match design
-        actualWidth = 700;
       } else {
         const teamLogos1 = targetElement.querySelectorAll(
           'img[src*="team_logos"]',
@@ -215,11 +215,11 @@ export default function TableActionButtons({
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
         width: ${actualWidth}px;
         z-index: -1;
-        overflow: ${contentSelector.includes("wins-breakdown") ? "hidden" : "visible"};
+        overflow: visible;
       `;
 
       // Header with proper width alignment
-      // contentWidth = actualWidth minus left padding minus right padding
+      // contentWidth = actualWidth minus left and right padding
       const contentWidth = actualWidth - 40;
       const header = document.createElement("div");
       header.style.cssText = `
@@ -299,20 +299,6 @@ export default function TableActionButtons({
         margin-left: 0 !important;
         padding-left: 0 !important;
       `;
-
-      // Constrain SVG width for wins breakdown chart in screenshot
-      const winsBreakdownSvg = clone.querySelector(
-        ".basketball-wins-breakdown svg",
-      ) as HTMLElement | null;
-      if (winsBreakdownSvg) {
-        (winsBreakdownSvg as unknown as SVGSVGElement).setAttribute(
-          "width",
-          "650",
-        );
-        winsBreakdownSvg.style.maxWidth = "650px";
-        (clone as HTMLElement).style.marginLeft = "-130px !important";
-      }
-
       wrapper.appendChild(clone);
 
       // Add explainer with left alignment

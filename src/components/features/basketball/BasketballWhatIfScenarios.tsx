@@ -3,6 +3,7 @@
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
   useBasketballWhatIf,
@@ -10,7 +11,74 @@ import {
   type WhatIfResponse,
   type WhatIfTeamResult,
 } from "@/hooks/useBasketballWhatIf";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+// ========================================
+// DEBUGGING UTILITIES
+// ========================================
+
+const DEBUG_ENABLED = true;
+
+const debugLog = (label: string, data: unknown) => {
+  if (DEBUG_ENABLED) {
+    console.log(`🏀 [BasketballWhatIf] ${label}`, data);
+  }
+};
+
+const debugWarn = (label: string, data: unknown) => {
+  if (DEBUG_ENABLED) {
+    console.warn(`⚠️ [BasketballWhatIf] ${label}`, data);
+  }
+};
+
+const debugError = (label: string, data: unknown) => {
+  if (DEBUG_ENABLED) {
+    console.error(`❌ [BasketballWhatIf] ${label}`, data);
+  }
+};
+
+// ========================================
+// LOGO DEBUGGING FUNCTION
+// ========================================
+
+const analyzeLogoLoading = (games: WhatIfGame[]) => {
+  if (!games || games.length === 0) {
+    debugWarn("analyzeLogoLoading", "No games provided");
+    return;
+  }
+
+  const logoAnalysis = games.map((game, idx) => ({
+    index: idx,
+    gameId: game.game_id,
+    date: game.date,
+    homeTeam: game.home_team,
+    awayTeam: game.away_team,
+    homeTeamId: game.home_team_id,
+    awayTeamId: game.away_team_id,
+    homeLogoUrl: game.home_logo_url,
+    awayLogoUrl: game.away_logo_url,
+    homeLogoExists: Boolean(game.home_logo_url),
+    awayLogoExists: Boolean(game.away_logo_url),
+    homeLogoValid: game.home_logo_url
+      ? game.home_logo_url.startsWith("http")
+      : false,
+    awayLogoValid: game.away_logo_url
+      ? game.away_logo_url.startsWith("http")
+      : false,
+  }));
+
+  debugLog("Logo Loading Analysis", {
+    totalGames: games.length,
+    gamesWithBothLogos: logoAnalysis.filter(
+      (g) => g.homeLogoExists && g.awayLogoExists,
+    ).length,
+    gamesWithoutHomeLogos: logoAnalysis.filter((g) => !g.homeLogoExists).length,
+    gamesWithoutAwayLogos: logoAnalysis.filter((g) => !g.awayLogoExists).length,
+    firstFiveGames: logoAnalysis.slice(0, 5),
+  });
+
+  return logoAnalysis;
+};
 
 export default function BasketballWhatIfScenarios() {
   const [selectedConference, setSelectedConference] = useState<string | null>(
@@ -20,6 +88,7 @@ export default function BasketballWhatIfScenarios() {
     new Map(),
   );
   const [whatIfData, setWhatIfData] = useState<WhatIfResponse | null>(null);
+  const [debugPanel, setDebugPanel] = useState(false);
 
   // Use existing hook - it already fetches all conference data
   const {
@@ -32,7 +101,7 @@ export default function BasketballWhatIfScenarios() {
   const conferences = useMemo(() => {
     if (!confData?.conferenceData?.data) return [];
     return confData.conferenceData.data
-      .map((conf: any) => conf.conference_name)
+      .map((conf: { conference_name: string }) => conf.conference_name)
       .sort();
   }, [confData]);
 
@@ -48,17 +117,48 @@ export default function BasketballWhatIfScenarios() {
       conference: string,
       selections: Array<{ game_id: number; winner_team_id: number }>,
     ) => {
+      debugLog("handleFetchWhatIf called", {
+        conference,
+        selectionsCount: selections.length,
+        selections,
+      });
+
       fetchWhatIf(
         { conference, selections },
         {
-          onSuccess: (data: WhatIfResponse) => setWhatIfData(data),
+          onSuccess: (data: WhatIfResponse) => {
+            debugLog("WhatIf fetch successful", {
+              teamsCount: data.data.length,
+              gamesCount: data.games.length,
+              currentProjectionsCount: data.current_projections.length,
+              metadata: data.metadata,
+            });
+            analyzeLogoLoading(data.games);
+            setWhatIfData(data);
+          },
+          onError: (err: Error) => {
+            debugError("WhatIf fetch failed", err.message);
+          },
         },
       );
     },
     [fetchWhatIf],
   );
 
+  // Debug effect to monitor whatIfData changes
+  useEffect(() => {
+    if (whatIfData) {
+      debugLog("whatIfData updated", {
+        teamsCount: whatIfData.data.length,
+        gamesCount: whatIfData.games.length,
+        metadata: whatIfData.metadata,
+      });
+    }
+  }, [whatIfData]);
+
   const handleGameSelection = (gameId: number, winnerId: number) => {
+    debugLog("handleGameSelection", { gameId, winnerId });
+
     const newSelections = new Map(gameSelections);
     newSelections.set(gameId, winnerId);
     setGameSelections(newSelections);
@@ -75,6 +175,8 @@ export default function BasketballWhatIfScenarios() {
   };
 
   const handleGameDeselection = (gameId: number) => {
+    debugLog("handleGameDeselection", { gameId });
+
     const newSelections = new Map(gameSelections);
     newSelections.delete(gameId);
     setGameSelections(newSelections);
@@ -91,12 +193,14 @@ export default function BasketballWhatIfScenarios() {
   };
 
   const handleConferenceChange = (newConference: string) => {
+    debugLog("handleConferenceChange", { newConference });
     setSelectedConference(newConference);
     setGameSelections(new Map());
     handleFetchWhatIf(newConference, []);
   };
 
   const handleReset = () => {
+    debugLog("handleReset called", { selectedConference });
     setGameSelections(new Map());
     if (selectedConference) {
       handleFetchWhatIf(selectedConference, []);
@@ -168,10 +272,60 @@ export default function BasketballWhatIfScenarios() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Basketball What If</h1>
-        <p className="text-gray-600">See how game outcomes impact standings.</p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Basketball What If</h1>
+          <p className="text-gray-600">
+            See how game outcomes impact standings.
+          </p>
+        </div>
+        <button
+          onClick={() => setDebugPanel(!debugPanel)}
+          className="px-3 py-2 text-xs bg-gray-200 rounded hover:bg-gray-300 transition"
+          title="Toggle debug panel"
+        >
+          🐛 Debug
+        </button>
       </div>
+
+      {/* DEBUG PANEL */}
+      {debugPanel && whatIfData && (
+        <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-lg text-xs">
+          <h3 className="font-bold text-red-900 mb-2">🔍 Debug Information</h3>
+          <div className="space-y-1 text-red-800 font-mono text-xs">
+            <div>
+              <strong>Games Count:</strong> {whatIfData.games.length}
+            </div>
+            <div>
+              <strong>Teams Count:</strong> {whatIfData.data.length}
+            </div>
+            <div>
+              <strong>Selected Conference:</strong> {selectedConference}
+            </div>
+            <div>
+              <strong>Game Selections:</strong> {gameSelections.size}
+            </div>
+            {whatIfData.games.length > 0 && (
+              <div className="mt-2 pt-2 border-t-2 border-red-300">
+                <div className="font-bold mb-1">First 3 Games Data:</div>
+                {whatIfData.games.slice(0, 3).map((game, idx) => (
+                  <div key={idx} className="bg-red-100 p-1 rounded mb-1">
+                    <div>
+                      Game {idx + 1}: {game.home_team} vs {game.away_team}
+                    </div>
+                    <div className="text-red-700">
+                      Home Logo: {game.home_logo_url ? "✓" : "✗"}
+                    </div>
+                    <div className="text-red-700">
+                      Away Logo: {game.away_logo_url ? "✓" : "✗"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* LEFT PANEL */}
@@ -210,47 +364,9 @@ export default function BasketballWhatIfScenarios() {
                         <p className="text-xs text-gray-500 mb-2">
                           {game.date}
                         </p>
-                        <div className="flex gap-2 items-center justify-center">
-                          {/* Away Team */}
-                          <button
-                            onClick={() => {
-                              if (selectedWinner === game.away_team_id) {
-                                handleGameDeselection(game.game_id);
-                              } else {
-                                handleGameSelection(
-                                  game.game_id,
-                                  game.away_team_id,
-                                );
-                              }
-                            }}
-                            className={`flex flex-col items-center gap-1 px-2 py-2 rounded transition border-2 ${
-                              selectedWinner === game.away_team_id
-                                ? "border-teal-600 bg-teal-50"
-                                : "border-gray-200 bg-white hover:bg-gray-50"
-                            }`}
-                          >
-                            {game.away_team_logo ? (
-                              <img
-                                src={game.away_team_logo}
-                                alt={game.away_team}
-                                className="w-8 h-8 object-contain"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">
-                                {game.away_team.substring(0, 1)}
-                              </div>
-                            )}
-                            <span className="text-xs font-semibold">
-                              {game.away_team.substring(0, 3)}
-                            </span>
-                          </button>
 
-                          {/* Separator */}
-                          <span className="text-xs text-gray-400 font-bold">
-                            @
-                          </span>
-
-                          {/* Home Team */}
+                        <div className="flex gap-2">
+                          {/* HOME TEAM */}
                           <button
                             onClick={() => {
                               if (selectedWinner === game.home_team_id) {
@@ -262,25 +378,77 @@ export default function BasketballWhatIfScenarios() {
                                 );
                               }
                             }}
-                            className={`flex flex-col items-center gap-1 px-2 py-2 rounded transition border-2 ${
+                            className={`flex-1 px-2 py-2 rounded transition flex items-center gap-1.5 justify-center border-2 ${
                               selectedWinner === game.home_team_id
                                 ? "border-teal-600 bg-teal-50"
-                                : "border-gray-200 bg-white hover:bg-gray-50"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
                             }`}
+                            title={game.home_team}
                           >
-                            {game.home_team_logo ? (
-                              <img
-                                src={game.home_team_logo}
-                                alt={game.home_team}
-                                className="w-8 h-8 object-contain"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">
-                                {game.home_team.substring(0, 1)}
-                              </div>
+                            {game.home_logo_url && (
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={game.home_logo_url}
+                                  alt={game.home_team}
+                                  width={20}
+                                  height={20}
+                                  className="flex-shrink-0 object-contain"
+                                  onError={(
+                                    e: React.SyntheticEvent<HTMLImageElement>,
+                                  ) => {
+                                    (
+                                      e.target as HTMLImageElement
+                                    ).style.display = "none";
+                                  }}
+                                />
+                              </>
                             )}
-                            <span className="text-xs font-semibold">
-                              {game.home_team.substring(0, 3)}
+                            <span className="text-xs font-semibold hidden sm:inline">
+                              {game.home_team}
+                            </span>
+                          </button>
+
+                          {/* AWAY TEAM */}
+                          <button
+                            onClick={() => {
+                              if (selectedWinner === game.away_team_id) {
+                                handleGameDeselection(game.game_id);
+                              } else {
+                                handleGameSelection(
+                                  game.game_id,
+                                  game.away_team_id,
+                                );
+                              }
+                            }}
+                            className={`flex-1 px-2 py-2 rounded transition flex items-center gap-1.5 justify-center border-2 ${
+                              selectedWinner === game.away_team_id
+                                ? "border-teal-600 bg-teal-50"
+                                : "border-gray-200 hover:border-gray-300 bg-white"
+                            }`}
+                            title={game.away_team}
+                          >
+                            {game.away_logo_url && (
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={game.away_logo_url}
+                                  alt={game.away_team}
+                                  width={20}
+                                  height={20}
+                                  className="flex-shrink-0 object-contain"
+                                  onError={(
+                                    e: React.SyntheticEvent<HTMLImageElement>,
+                                  ) => {
+                                    (
+                                      e.target as HTMLImageElement
+                                    ).style.display = "none";
+                                  }}
+                                />
+                              </>
+                            )}
+                            <span className="text-xs font-semibold hidden sm:inline">
+                              {game.away_team}
                             </span>
                           </button>
                         </div>
@@ -359,7 +527,26 @@ export default function BasketballWhatIfScenarios() {
                               <td className="py-3 px-4 text-gray-500 font-semibold">
                                 {idx + 1}
                               </td>
-                              <td className="py-3 px-4 font-semibold text-gray-900">
+                              <td className="py-3 px-4 font-semibold text-gray-900 flex items-center gap-2">
+                                {team.logo_url && (
+                                  <>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={team.logo_url}
+                                      alt={team.team_name}
+                                      width={24}
+                                      height={24}
+                                      className="object-contain"
+                                      onError={(
+                                        e: React.SyntheticEvent<HTMLImageElement>,
+                                      ) => {
+                                        (
+                                          e.target as HTMLImageElement
+                                        ).style.display = "none";
+                                      }}
+                                    />
+                                  </>
+                                )}
                                 {team.team_name}
                               </td>
                               <td className="py-3 px-4 text-center">
@@ -425,7 +612,26 @@ export default function BasketballWhatIfScenarios() {
                                     key={team.team_id}
                                     className="border-b hover:bg-gray-50"
                                   >
-                                    <td className="py-3 px-4 font-semibold">
+                                    <td className="py-3 px-4 font-semibold flex items-center gap-2">
+                                      {team.logo_url && (
+                                        <>
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img
+                                            src={team.logo_url}
+                                            alt={team.team_name}
+                                            width={24}
+                                            height={24}
+                                            className="object-contain"
+                                            onError={(
+                                              e: React.SyntheticEvent<HTMLImageElement>,
+                                            ) => {
+                                              (
+                                                e.target as HTMLImageElement
+                                              ).style.display = "none";
+                                            }}
+                                          />
+                                        </>
+                                      )}
                                       {team.team_name}
                                     </td>
                                     <td className="py-3 px-4 text-center">
@@ -447,7 +653,7 @@ export default function BasketballWhatIfScenarios() {
                                         ? `+${change}`
                                         : change < 0
                                           ? `${change}`
-                                          : "â€“"}
+                                          : "—"}
                                     </td>
                                   </tr>
                                 );

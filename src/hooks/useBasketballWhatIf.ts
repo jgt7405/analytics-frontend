@@ -19,11 +19,11 @@ export interface WhatIfGame {
   away_team: string;
   home_team_id: number;
   away_team_id: number;
-  home_team_logo: string;
-  away_team_logo: string;
   home_probability: number;
   away_probability: number;
   conf_game: boolean;
+  home_logo_url?: string;
+  away_logo_url?: string;
 }
 
 export interface WhatIfTeamResult {
@@ -78,11 +78,27 @@ interface BackendTeamResult {
   standing_8_prob?: number;
 }
 
+interface BackendGame {
+  game_id: number;
+  date: string;
+  home_team: string;
+  away_team: string;
+  home_team_id: number;
+  away_team_id: number;
+  home_probability: number;
+  away_probability: number;
+  conf_game: boolean;
+  home_team_logo?: string;
+  away_team_logo?: string;
+  home_logo_url?: string;
+  away_logo_url?: string;
+}
+
 interface BackendWhatIfResponse {
   success: boolean;
   data: BackendTeamResult[];
   current_projections: BackendTeamResult[];
-  games: WhatIfGame[];
+  games: BackendGame[];
   metadata: WhatIfMetadata;
 }
 
@@ -106,10 +122,35 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => {
   return result;
 };
 
+const mapGame = (game: BackendGame): WhatIfGame => {
+  // Convert filename to frontend logo path
+  const getLogoUrl = (filename: string | undefined): string | undefined => {
+    if (!filename) return undefined;
+    // If it's already a full URL, use as-is
+    if (filename.startsWith("http")) return filename;
+    // If it's a filename, construct the public path
+    return `/images/team_logos/${filename}`;
+  };
+
+  return {
+    game_id: game.game_id,
+    date: game.date,
+    home_team: game.home_team,
+    away_team: game.away_team,
+    home_team_id: game.home_team_id,
+    away_team_id: game.away_team_id,
+    home_probability: game.home_probability,
+    away_probability: game.away_probability,
+    conf_game: game.conf_game,
+    home_logo_url: getLogoUrl(game.home_team_logo),
+    away_logo_url: getLogoUrl(game.away_team_logo),
+  };
+};
+
 const calculateBasketballWhatIf = async (
   request: WhatIfRequest,
 ): Promise<WhatIfResponse> => {
-  console.log("Ã°Å¸Ââ‚¬ Sending basketball what-if request:", request);
+  console.log("🏀 Sending basketball what-if request:", request);
 
   const response = await fetch("/api/proxy/basketball/whatif", {
     method: "POST",
@@ -124,14 +165,14 @@ const calculateBasketballWhatIf = async (
       error: string;
     }
     const errorData = (await response.json()) as ErrorResponse;
-    console.error("Ã¢ÂÅ’ Basketball what-if API error:", errorData);
+    console.error("⚠️ Basketball what-if API error:", errorData);
     throw new Error(
       errorData.error || "Failed to calculate basketball what-if scenarios",
     );
   }
 
   const data = (await response.json()) as BackendWhatIfResponse;
-  console.log("Ã°Å¸â€œÂ¥ Received basketball what-if response:", {
+  console.log("📊 Received basketball what-if response:", {
     success: data.success,
     teams: data.data?.length || 0,
     games: data.games?.length || 0,
@@ -139,12 +180,89 @@ const calculateBasketballWhatIf = async (
     metadata: data.metadata,
   });
 
+  // Debug: Inspect actual game objects
+  if (data.games && data.games.length > 0) {
+    console.log("🔍 DEBUGGING: First 3 games from API:");
+    for (let i = 0; i < Math.min(3, data.games.length); i++) {
+      const game = data.games[i];
+      const gameRecord = game as unknown as Record<string, unknown>;
+      console.log(`  Game ${i}:`, {
+        game_id: game.game_id,
+        home_team: game.home_team,
+        away_team: game.away_team,
+        home_team_logo: gameRecord.home_team_logo,
+        away_team_logo: gameRecord.away_team_logo,
+        home_logo_url: gameRecord.home_logo_url,
+        away_logo_url: gameRecord.away_logo_url,
+        allKeys: Object.keys(game),
+      });
+    }
+  }
+
+  // Analyze game logo data
+  if (data.games && data.games.length > 0) {
+    console.log("🔍 DEBUGGING: Analyzing logo availability...");
+
+    const gamesWithBothLogos = data.games.filter((g) => {
+      const gRecord = g as unknown as Record<string, unknown>;
+      const hasHome = !!(g.home_logo_url || gRecord.home_team_logo);
+      const hasAway = !!(g.away_logo_url || gRecord.away_team_logo);
+      return hasHome && hasAway;
+    }).length;
+
+    const totalGames = data.games.length;
+    console.log(
+      `📸 Logo Analysis: ${gamesWithBothLogos}/${totalGames} games have both logos`,
+    );
+
+    // Show which field names have data
+    const firstGame = data.games[0];
+    const firstGameRecord = firstGame as unknown as Record<string, unknown>;
+    console.log("🔍 Field name check on first game:", {
+      has_home_logo_url: !!firstGame.home_logo_url,
+      has_away_logo_url: !!firstGame.away_logo_url,
+      has_home_team_logo: !!firstGameRecord.home_team_logo,
+      has_away_team_logo: !!firstGameRecord.away_team_logo,
+    });
+
+    if (gamesWithBothLogos < totalGames) {
+      const missingLogos = data.games
+        .filter((g) => {
+          const gRecord = g as unknown as Record<string, unknown>;
+          return (
+            !(g.home_logo_url || gRecord.home_team_logo) ||
+            !(g.away_logo_url || gRecord.away_team_logo)
+          );
+        })
+        .slice(0, 3)
+        .map((g) => {
+          const gRecord = g as unknown as Record<string, unknown>;
+          return {
+            game_id: g.game_id,
+            game: `${g.home_team} vs ${g.away_team}`,
+            homeLogoMissing: !(g.home_logo_url || gRecord.home_team_logo),
+            awayLogoMissing: !(g.away_logo_url || gRecord.away_team_logo),
+            homeLogoUrl: g.home_logo_url,
+            homeTeamLogo: gRecord.home_team_logo,
+            awayLogoUrl: g.away_logo_url,
+            awayTeamLogo: gRecord.away_team_logo,
+            home_team_id: g.home_team_id,
+            away_team_id: g.away_team_id,
+          };
+        });
+      console.warn("⚠️ Some games missing logos:", missingLogos);
+      console.log("🔍 Total games:", totalGames);
+      console.log("🔍 Games with logos:", gamesWithBothLogos);
+      console.log("🔍 Games without logos:", totalGames - gamesWithBothLogos);
+    }
+  }
+
   // Map the backend response to the frontend format
   const mappedData: WhatIfResponse = {
     success: data.success,
     data: (data.data || []).map(mapTeamResult),
     current_projections: (data.current_projections || []).map(mapTeamResult),
-    games: data.games || [],
+    games: (data.games || []).map(mapGame),
     metadata: data.metadata || {
       conference: request.conference,
       num_scenarios: 1000,
@@ -155,7 +273,24 @@ const calculateBasketballWhatIf = async (
     },
   };
 
-  console.log("Ã¢Å“â€¦ Mapped basketball what-if data:", {
+  // Debug: Show mapped games with logo URLs
+  if (mappedData.games && mappedData.games.length > 0) {
+    console.log("🔍 DEBUGGING: First 3 MAPPED games (after mapGame):");
+    for (let i = 0; i < Math.min(3, mappedData.games.length); i++) {
+      const game = mappedData.games[i];
+      console.log(`  Game ${i}:`, {
+        game_id: game.game_id,
+        home_team: game.home_team,
+        away_team: game.away_team,
+        home_logo_url: game.home_logo_url,
+        away_logo_url: game.away_logo_url,
+        home_logo_truthy: !!game.home_logo_url,
+        away_logo_truthy: !!game.away_logo_url,
+      });
+    }
+  }
+
+  console.log("✅ Mapped basketball what-if data:", {
     teams: mappedData.data.length,
     games: mappedData.games.length,
     current_projections: mappedData.current_projections.length,
