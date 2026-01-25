@@ -5,8 +5,9 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { CWVData } from "@/types/basketball";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 interface GameData {
   rank: number;
@@ -14,6 +15,16 @@ interface GameData {
   win_prob: number;
   date?: string;
   status?: string;
+  opponent?: string;
+  location?: string;
+  opponent_logo?: string;
+}
+
+interface HoverState {
+  rank: number;
+  teamName: string;
+  x: number;
+  y: number;
 }
 
 interface CWVTableProps {
@@ -24,12 +35,13 @@ interface CWVTableProps {
 function CWVTable({ cwvData, className }: CWVTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
+  const [hoveredGame, setHoveredGame] = useState<HoverState | null>(null);
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
       router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
     },
-    [router]
+    [router],
   );
 
   const sortedTeams = useMemo(() => {
@@ -77,7 +89,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
         color: textColor,
       };
     },
-    [maxCWV, minCWV]
+    [maxCWV, minCWV],
   );
 
   const { ranks, gamesByRankAndTeam, winProbsByRank } = useMemo(() => {
@@ -168,7 +180,7 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
           .sort(
             (a, b) =>
               new Date(a.date! + "T00:00:00").getTime() -
-              new Date(b.date! + "T00:00:00").getTime()
+              new Date(b.date! + "T00:00:00").getTime(),
           );
 
         const isNextGame =
@@ -179,18 +191,33 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
         textColor = "#4b5563";
       }
 
+      const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+        setHoveredGame({
+          rank,
+          teamName,
+          x: e.clientX,
+          y: e.clientY,
+        });
+      };
+
+      const handleMouseLeave = () => {
+        setHoveredGame(null);
+      };
+
       return (
         <div
           className={`absolute inset-0 flex items-center justify-center ${
             isMobile ? "text-xs" : "text-sm"
-          }`}
+          } cursor-default`}
           style={{ backgroundColor, color: textColor }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           {content}
         </div>
       );
     },
-    [gamesByRankAndTeam, formatDate, isMobile]
+    [gamesByRankAndTeam, formatDate, isMobile],
   );
 
   if (!cwvData || !cwvData.teams || !cwvData.games) {
@@ -460,6 +487,128 @@ function CWVTable({ cwvData, className }: CWVTableProps) {
           </tr>
         </tbody>
       </table>
+      {/* Tooltip */}
+      {hoveredGame &&
+        (() => {
+          const game =
+            gamesByRankAndTeam[hoveredGame.rank]?.[hoveredGame.teamName];
+          if (!game) return null;
+
+          let tooltipContent = null;
+
+          if (game.status === "W" || game.status === "L") {
+            tooltipContent = (
+              <div className="text-xs space-y-0.5">
+                <div className="flex items-center gap-2 pb-1 border-b border-gray-200">
+                  {game.opponent_logo && (
+                    <Image
+                      src={game.opponent_logo}
+                      alt={game.opponent || "opponent"}
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  )}
+                  <span className="font-medium">{game.opponent}</span>
+                </div>
+                {game.location && <div>{game.location}</div>}
+                {game.date && (
+                  <div className="text-gray-600">
+                    {new Date(game.date + "T00:00:00").toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      },
+                    )}
+                  </div>
+                )}
+                <div>{game.status === "W" ? "Win" : "Loss"}</div>
+              </div>
+            );
+          } else if (game.date) {
+            tooltipContent = (
+              <div className="text-xs space-y-0.5">
+                <div className="flex items-center gap-2 pb-1 border-b border-gray-200">
+                  {game.opponent_logo && (
+                    <Image
+                      src={game.opponent_logo}
+                      alt={game.opponent || "opponent"}
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  )}
+                  <span className="font-medium">{game.opponent}</span>
+                </div>
+                {game.location && <div>{game.location}</div>}
+                {game.date && (
+                  <div className="text-gray-600">
+                    {new Date(game.date + "T00:00:00").toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      },
+                    )}
+                  </div>
+                )}
+                <div>Upcoming</div>
+              </div>
+            );
+          }
+
+          if (!tooltipContent) return null;
+
+          // Position tooltip to the right, with fallback to left if needed
+          const tooltipWidth = 180;
+          const tooltipHeight = 120;
+          const gap = 12;
+          const verticalGapAbove = 5; // Closer when above
+          const verticalGapBelow = 8; // A bit below when below
+
+          let left = hoveredGame.x + gap;
+          let top;
+
+          // Check if this is one of the top 3 games (ranks 1-3)
+          const isTopGame = hoveredGame.rank <= 3;
+
+          // Position above or below cursor
+          if (isTopGame) {
+            // Below cursor: tooltip starts a bit below the cursor
+            top = hoveredGame.y + verticalGapBelow;
+          } else {
+            // Above cursor: tooltip ends closer above the cursor
+            top = hoveredGame.y - tooltipHeight - verticalGapAbove;
+          }
+
+          // If too close to right edge, position to left
+          if (left + tooltipWidth > window.innerWidth - 10) {
+            left = hoveredGame.x - tooltipWidth - gap;
+          }
+
+          // Keep within viewport vertically
+          if (top < 10) {
+            top = 10;
+          } else if (top + tooltipHeight > window.innerHeight - 10) {
+            top = window.innerHeight - tooltipHeight - 10;
+          }
+
+          return (
+            <div
+              className="fixed bg-white border border-gray-300 rounded shadow-lg p-2 pointer-events-none z-50"
+              style={{
+                left: `${left}px`,
+                top: `${top}px`,
+                maxWidth: `${tooltipWidth}px`,
+              }}
+            >
+              {tooltipContent}
+            </div>
+          );
+        })()}
     </div>
   );
 }
