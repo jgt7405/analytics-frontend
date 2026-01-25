@@ -107,11 +107,18 @@ export default function TableActionButtons({
       // Check chart type and calculate width
       const isLineChart = targetElement.querySelector("canvas") !== null;
       const table = targetElement.querySelector("table");
+      const isSeedWinsComponent =
+        targetElement.querySelector(
+          '[data-component-type="bball-seed-wins-and-probability"]',
+        ) !== null || contentSelector.includes("seed-wins");
       let actualWidth;
       let isLineChartSpecific = false;
 
       if (table) {
         actualWidth = (table as HTMLElement).offsetWidth + 200;
+      } else if (isSeedWinsComponent) {
+        // For seed-wins component, use a narrower width to fit content better
+        actualWidth = 700;
       } else if (isLineChart) {
         // Distinguish line charts from box plots
         isLineChartSpecific =
@@ -201,6 +208,11 @@ export default function TableActionButtons({
         th img { width: 24px !important; height: 24px !important; }
         canvas { display: block !important; }
         .chartjs-render-monitor { display: block !important; }
+        [data-component-type="bball-seed-wins-and-probability"] { height: auto !important; }
+        [data-component-type="bball-seed-wins-and-probability"] > div { height: auto !important; }
+        .seed-target-display { display: flex !important; }
+        select { display: none !important; }
+        label:has(+ select) { display: none !important; }
       `;
       clone.appendChild(style);
 
@@ -321,9 +333,9 @@ export default function TableActionButtons({
       }
 
       document.body.appendChild(wrapper);
-      console.log("â³ Taking screenshot of component as displayed...");
+      console.log("Ã¢ÂÂ³ Taking screenshot of component as displayed...");
       await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log("âœ… Screenshot captured");
+      console.log("Ã¢Å“â€¦ Screenshot captured");
 
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",

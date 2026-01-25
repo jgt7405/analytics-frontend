@@ -22,7 +22,7 @@ export default function ConferenceSelector({
 }: ConferenceSelectorProps) {
   // Filter out FCS and any specified conferences to exclude
   const filteredConferences = conferences.filter(
-    (conf) => conf !== "FCS" && !excludeConferences.includes(conf)
+    (conf) => conf !== "FCS" && !excludeConferences.includes(conf),
   );
 
   return (

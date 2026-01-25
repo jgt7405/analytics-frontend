@@ -89,7 +89,7 @@ const probabilityCategories: ProbabilityCategory[] = [
 const getTWVColorForCategory = (
   category: ProbabilityCategory,
   maxTWV: number = 1.0,
-  minTWV: number = -1.0
+  minTWV: number = -1.0,
 ): { backgroundColor: string; color: string } => {
   const categoryToValue: Record<ProbabilityCategory, number> = {
     "Already Met": 1.0,
@@ -186,7 +186,7 @@ export default function BballSeedWinsAndProbability({
 
   const confChampData = useMemo(
     () => (seedWinsResponse?.data as ConfChampData[]) || [],
-    [seedWinsResponse]
+    [seedWinsResponse],
   );
 
   const processedData = useMemo(() => {
@@ -211,7 +211,7 @@ export default function BballSeedWinsAndProbability({
     }
 
     console.log(
-      `DEBUG: Processing ${confChampData.length} teams, selectedSeed=${selectedSeed}`
+      `DEBUG: Processing ${confChampData.length} teams, selectedSeed=${selectedSeed}`,
     );
 
     confChampData.forEach((team: ConfChampData) => {
@@ -222,12 +222,16 @@ export default function BballSeedWinsAndProbability({
         (team.actual_total_wins + team.actual_total_losses);
       const winsRequired = winsTarget - team.actual_total_wins;
 
-      const isPossible = winsRequired <= gamesRemaining && winsRequired > 0;
+      // Check if team has already met the requirement
+      const alreadyMet = winsRequired <= 0;
+      // Only "Not Possible" if physically impossible AND not already met
+      const isPossible =
+        alreadyMet || (winsRequired <= gamesRemaining && winsRequired > 0);
 
       // DEBUG
       if (team.team_name === "Arizona" || team.team_name === "TCU") {
         console.log(
-          `DEBUG ${team.team_name}: winsField=${winsField}, winsTarget=${winsTarget}, actual_wins=${team.actual_total_wins}, winsRequired=${winsRequired}, isPossible=${isPossible}`
+          `DEBUG ${team.team_name}: winsField=${winsField}, winsTarget=${winsTarget}, actual_wins=${team.actual_total_wins}, winsRequired=${winsRequired}, alreadyMet=${alreadyMet}, isPossible=${isPossible}`,
         );
       }
 
@@ -275,14 +279,14 @@ export default function BballSeedWinsAndProbability({
       if (team.team_name === "Arizona" || team.team_name === "TCU") {
         const teamData = team as unknown as ConfChampData;
         console.log(
-          `DEBUG ${team.team_name}: selectedSeed=${selectedSeed}, probability=${probability}, probCategory=${probCategory}`
+          `DEBUG ${team.team_name}: selectedSeed=${selectedSeed}, probability=${probability}, probCategory=${probCategory}`,
         );
         console.log(
-          `DEBUG ${team.team_name}: winsRequired=${winsRequired}, gamesRemaining=${gamesRemaining}`
+          `DEBUG ${team.team_name}: winsRequired=${winsRequired}, gamesRemaining=${gamesRemaining}`,
         );
         console.log(
           `DEBUG ${team.team_name}: team.wins_probabilities=`,
-          teamData.wins_probabilities
+          teamData.wins_probabilities,
         );
       }
 
@@ -302,7 +306,7 @@ export default function BballSeedWinsAndProbability({
 
     Object.keys(probGrouped).forEach((category) => {
       probGrouped[category as ProbabilityCategory].sort(
-        (a, b) => b.probability - a.probability
+        (a, b) => b.probability - a.probability,
       );
     });
 
@@ -367,7 +371,7 @@ export default function BballSeedWinsAndProbability({
                 }}
                 onClick={() => {
                   router.push(
-                    `/basketball/team/${encodeURIComponent(team.team_name)}`
+                    `/basketball/team/${encodeURIComponent(team.team_name)}`,
                   );
                 }}
                 title={`${team.team_name}: ${team.winsRequired} more wins needed, up to ${team.totalWinsPossible} games remaining`}
@@ -384,7 +388,7 @@ export default function BballSeedWinsAndProbability({
               }}
               onClick={() => {
                 router.push(
-                  `/basketball/team/${encodeURIComponent(team.team_name)}`
+                  `/basketball/team/${encodeURIComponent(team.team_name)}`,
                 );
               }}
               title={`${team.team_name}: ${team.winsRequired} wins needed`}
@@ -442,7 +446,7 @@ export default function BballSeedWinsAndProbability({
                 }}
                 onClick={() => {
                   router.push(
-                    `/basketball/team/${encodeURIComponent(team.team_name)}`
+                    `/basketball/team/${encodeURIComponent(team.team_name)}`,
                   );
                 }}
                 title={`${team.team_name}: ${team.probability}% probability`}
@@ -459,7 +463,7 @@ export default function BballSeedWinsAndProbability({
               }}
               onClick={() => {
                 router.push(
-                  `/basketball/team/${encodeURIComponent(team.team_name)}`
+                  `/basketball/team/${encodeURIComponent(team.team_name)}`,
                 );
               }}
               title={`${team.team_name}: ${team.probability}%`}
@@ -532,8 +536,8 @@ export default function BballSeedWinsAndProbability({
         style={{
           paddingLeft: paddingHorizontal,
           paddingRight: paddingHorizontal,
-          paddingTop: 12,
-          paddingBottom: 12,
+          paddingTop: 4,
+          paddingBottom: 4,
           boxSizing: "border-box",
           flexShrink: 0,
           display: "flex",
@@ -577,6 +581,27 @@ export default function BballSeedWinsAndProbability({
         </select>
       </div>
 
+      {/* Target Seed display for screenshots - hidden from normal view */}
+      <div
+        style={{
+          paddingLeft: paddingHorizontal,
+          paddingRight: paddingHorizontal,
+          paddingTop: 6,
+          paddingBottom: 2,
+          boxSizing: "border-box",
+          flexShrink: 0,
+          display: "none",
+          fontSize: isMobile ? "13px" : "14px",
+          fontWeight: "400",
+          color: "#1f2937",
+        }}
+        className="seed-target-display"
+      >
+        Target Seed:{" "}
+        {seedLevels.find((s) => s.value === selectedSeed)?.label ||
+          selectedSeed}
+      </div>
+
       <div
         style={{
           display: "flex",
@@ -609,8 +634,8 @@ export default function BballSeedWinsAndProbability({
               gap: 12,
               paddingLeft: paddingHorizontal,
               paddingRight: paddingHorizontal,
-              paddingTop: 12,
-              paddingBottom: 8,
+              paddingTop: 6,
+              paddingBottom: 4,
               borderBottom: "2px solid #d1d5db",
               boxSizing: "border-box",
               flexShrink: 0,
@@ -622,7 +647,7 @@ export default function BballSeedWinsAndProbability({
                 width: labelWidth,
                 flexShrink: 0,
                 fontSize: isMobile ? "12px" : "13px",
-                fontWeight: "500",
+                fontWeight: "400",
                 color: "#374151",
                 textAlign: "left",
                 boxSizing: "border-box",
@@ -634,7 +659,7 @@ export default function BballSeedWinsAndProbability({
             <div
               style={{
                 fontSize: isMobile ? "12px" : "13px",
-                fontWeight: "500",
+                fontWeight: "400",
                 color: "#374151",
                 flex: 1,
               }}
@@ -646,6 +671,7 @@ export default function BballSeedWinsAndProbability({
           <div style={{ flex: 1, overflow: "auto" }}>
             {sortedWinsLevels.map((winsLevel) => {
               const winsTeams = processedData.winsGrouped[winsLevel] || [];
+              const isZeroWins = winsLevel === 0;
               return (
                 <div
                   key={`wins-${winsLevel}`}
@@ -659,6 +685,7 @@ export default function BballSeedWinsAndProbability({
                     paddingTop: 2,
                     paddingBottom: 2,
                     borderBottom: "1px solid #f3f4f6",
+                    backgroundColor: isZeroWins ? "#f0fdf4" : "transparent",
                     boxSizing: "border-box",
                   }}
                 >
@@ -668,7 +695,7 @@ export default function BballSeedWinsAndProbability({
                       flexShrink: 0,
                       fontSize: isMobile ? "11px" : "12px",
                       fontWeight: "400",
-                      color: "#1f2937",
+                      color: isZeroWins ? "#166534" : "#1f2937",
                       textAlign: "left",
                       boxSizing: "border-box",
                     }}
@@ -735,8 +762,8 @@ export default function BballSeedWinsAndProbability({
               gap: 12,
               paddingLeft: 0,
               paddingRight: paddingHorizontal,
-              paddingTop: 12,
-              paddingBottom: 8,
+              paddingTop: 6,
+              paddingBottom: 4,
               borderBottom: "2px solid #d1d5db",
               boxSizing: "border-box",
               flexShrink: 0,
@@ -748,7 +775,7 @@ export default function BballSeedWinsAndProbability({
                 width: labelWidth,
                 flexShrink: 0,
                 fontSize: isMobile ? "12px" : "13px",
-                fontWeight: "500",
+                fontWeight: "400",
                 color: "#374151",
                 textAlign: "left",
                 boxSizing: "border-box",
@@ -760,7 +787,7 @@ export default function BballSeedWinsAndProbability({
             <div
               style={{
                 fontSize: isMobile ? "12px" : "13px",
-                fontWeight: "500",
+                fontWeight: "400",
                 color: "#374151",
                 flex: 1,
               }}
@@ -804,7 +831,7 @@ export default function BballSeedWinsAndProbability({
                       borderRadius: 2,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      justifyContent: "flex-start",
                       ...getTWVColorForCategory(probCategory),
                     }}
                   >

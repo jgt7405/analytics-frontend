@@ -24,6 +24,8 @@ export interface WhatIfGame {
   conf_game: boolean;
   home_logo_url?: string;
   away_logo_url?: string;
+  home_team_logo?: string;
+  away_team_logo?: string;
 }
 
 export interface WhatIfTeamResult {
@@ -53,11 +55,16 @@ export interface WhatIfMetadata {
 }
 
 export interface WhatIfResponse {
-  success: boolean;
-  data: WhatIfTeamResult[];
-  current_projections: WhatIfTeamResult[];
+  data_with_ties: WhatIfTeamResult[];
+  data_no_ties: WhatIfTeamResult[];
+  current_projections_with_ties: WhatIfTeamResult[];
+  current_projections_no_ties: WhatIfTeamResult[];
   games: WhatIfGame[];
-  metadata: WhatIfMetadata;
+  conference: string;
+  num_scenarios: number;
+  num_conference_games: number;
+  num_current_projections: number;
+  calculation_time: number;
 }
 
 interface BackendTeamResult {
@@ -95,15 +102,20 @@ interface BackendGame {
 }
 
 interface BackendWhatIfResponse {
-  success: boolean;
-  data: BackendTeamResult[];
-  current_projections: BackendTeamResult[];
+  data_with_ties: BackendTeamResult[];
+  data_no_ties: BackendTeamResult[];
+  current_projections_with_ties: BackendTeamResult[];
+  current_projections_no_ties: BackendTeamResult[];
   games: BackendGame[];
-  metadata: WhatIfMetadata;
+  conference: string;
+  num_scenarios: number;
+  num_conference_games: number;
+  num_current_projections: number;
+  calculation_time: number;
 }
 
 const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => {
-  const result: WhatIfTeamResult = {
+  return {
     team_id: team.team_id || team.teamid || 0,
     team_name: team.team_name,
     conference: team.conference,
@@ -119,7 +131,6 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => {
     standing_7_prob: team.standing_7_prob,
     standing_8_prob: team.standing_8_prob,
   };
-  return result;
 };
 
 const mapGame = (game: BackendGame): WhatIfGame => {
@@ -142,8 +153,8 @@ const mapGame = (game: BackendGame): WhatIfGame => {
     home_probability: game.home_probability,
     away_probability: game.away_probability,
     conf_game: game.conf_game,
-    home_logo_url: getLogoUrl(game.home_team_logo),
-    away_logo_url: getLogoUrl(game.away_team_logo),
+    home_logo_url: getLogoUrl(game.home_team_logo || game.home_logo_url),
+    away_logo_url: getLogoUrl(game.away_team_logo || game.away_logo_url),
   };
 };
 
@@ -172,128 +183,77 @@ const calculateBasketballWhatIf = async (
   }
 
   const data = (await response.json()) as BackendWhatIfResponse;
-  console.log("📊 Received basketball what-if response:", {
-    success: data.success,
-    teams: data.data?.length || 0,
-    games: data.games?.length || 0,
-    current_projections: data.current_projections?.length || 0,
-    metadata: data.metadata,
-  });
 
-  // Debug: Inspect actual game objects
-  if (data.games && data.games.length > 0) {
-    console.log("🔍 DEBUGGING: First 3 games from API:");
-    for (let i = 0; i < Math.min(3, data.games.length); i++) {
-      const game = data.games[i];
-      const gameRecord = game as unknown as Record<string, unknown>;
-      console.log(`  Game ${i}:`, {
-        game_id: game.game_id,
-        home_team: game.home_team,
-        away_team: game.away_team,
-        home_team_logo: gameRecord.home_team_logo,
-        away_team_logo: gameRecord.away_team_logo,
-        home_logo_url: gameRecord.home_logo_url,
-        away_logo_url: gameRecord.away_logo_url,
-        allKeys: Object.keys(game),
-      });
-    }
-  }
+  console.log("========================================");
+  console.log("RAW API RESPONSE - DUAL SECTIONS");
+  console.log("========================================");
 
-  // Analyze game logo data
-  if (data.games && data.games.length > 0) {
-    console.log("🔍 DEBUGGING: Analyzing logo availability...");
+  // Log data availability
+  console.log("Response fields available:");
+  console.log(
+    "  ✅ data_with_ties:",
+    data.data_with_ties?.length || 0,
+    "teams",
+  );
+  console.log("  ✅ data_no_ties:", data.data_no_ties?.length || 0, "teams");
+  console.log(
+    "  ✅ current_projections_with_ties:",
+    data.current_projections_with_ties?.length || 0,
+    "teams",
+  );
+  console.log(
+    "  ✅ current_projections_no_ties:",
+    data.current_projections_no_ties?.length || 0,
+    "teams",
+  );
+  console.log("  ✅ games:", data.games?.length || 0, "games");
 
-    const gamesWithBothLogos = data.games.filter((g) => {
-      const gRecord = g as unknown as Record<string, unknown>;
-      const hasHome = !!(g.home_logo_url || gRecord.home_team_logo);
-      const hasAway = !!(g.away_logo_url || gRecord.away_team_logo);
-      return hasHome && hasAway;
-    }).length;
-
-    const totalGames = data.games.length;
-    console.log(
-      `📸 Logo Analysis: ${gamesWithBothLogos}/${totalGames} games have both logos`,
-    );
-
-    // Show which field names have data
-    const firstGame = data.games[0];
-    const firstGameRecord = firstGame as unknown as Record<string, unknown>;
-    console.log("🔍 Field name check on first game:", {
-      has_home_logo_url: !!firstGame.home_logo_url,
-      has_away_logo_url: !!firstGame.away_logo_url,
-      has_home_team_logo: !!firstGameRecord.home_team_logo,
-      has_away_team_logo: !!firstGameRecord.away_team_logo,
+  // Log sample data
+  if (data.data_with_ties && data.data_with_ties.length > 0) {
+    const first = data.data_with_ties[0];
+    console.log("\nFirst team (WITH TIES):", {
+      name: first.team_name,
+      standing_1_prob: first.standing_1_prob,
+      standing_2_prob: first.standing_2_prob,
     });
-
-    if (gamesWithBothLogos < totalGames) {
-      const missingLogos = data.games
-        .filter((g) => {
-          const gRecord = g as unknown as Record<string, unknown>;
-          return (
-            !(g.home_logo_url || gRecord.home_team_logo) ||
-            !(g.away_logo_url || gRecord.away_team_logo)
-          );
-        })
-        .slice(0, 3)
-        .map((g) => {
-          const gRecord = g as unknown as Record<string, unknown>;
-          return {
-            game_id: g.game_id,
-            game: `${g.home_team} vs ${g.away_team}`,
-            homeLogoMissing: !(g.home_logo_url || gRecord.home_team_logo),
-            awayLogoMissing: !(g.away_logo_url || gRecord.away_team_logo),
-            homeLogoUrl: g.home_logo_url,
-            homeTeamLogo: gRecord.home_team_logo,
-            awayLogoUrl: g.away_logo_url,
-            awayTeamLogo: gRecord.away_team_logo,
-            home_team_id: g.home_team_id,
-            away_team_id: g.away_team_id,
-          };
-        });
-      console.warn("⚠️ Some games missing logos:", missingLogos);
-      console.log("🔍 Total games:", totalGames);
-      console.log("🔍 Games with logos:", gamesWithBothLogos);
-      console.log("🔍 Games without logos:", totalGames - gamesWithBothLogos);
-    }
   }
+
+  if (data.games && data.games.length > 0) {
+    const first = data.games[0];
+    console.log("\nFirst game:", {
+      id: first.game_id,
+      matchup: `${first.away_team} @ ${first.home_team}`,
+      away_prob: first.away_probability,
+      home_prob: first.home_probability,
+      has_home_logo: !!(first.home_team_logo || first.home_logo_url),
+      has_away_logo: !!(first.away_team_logo || first.away_logo_url),
+    });
+  }
+
+  console.log("========================================");
 
   // Map the backend response to the frontend format
   const mappedData: WhatIfResponse = {
-    success: data.success,
-    data: (data.data || []).map(mapTeamResult),
-    current_projections: (data.current_projections || []).map(mapTeamResult),
+    data_with_ties: (data.data_with_ties || []).map(mapTeamResult),
+    data_no_ties: (data.data_no_ties || []).map(mapTeamResult),
+    current_projections_with_ties: (
+      data.current_projections_with_ties || []
+    ).map(mapTeamResult),
+    current_projections_no_ties: (data.current_projections_no_ties || []).map(
+      mapTeamResult,
+    ),
     games: (data.games || []).map(mapGame),
-    metadata: data.metadata || {
-      conference: request.conference,
-      num_scenarios: 1000,
-      calculation_time: 0,
-      num_selections: request.selections.length,
-      num_conference_games: 0,
-      num_current_projections: 0,
-    },
+    conference: data.conference,
+    num_scenarios: data.num_scenarios,
+    num_conference_games: data.num_conference_games,
+    num_current_projections: data.num_current_projections,
+    calculation_time: data.calculation_time,
   };
 
-  // Debug: Show mapped games with logo URLs
-  if (mappedData.games && mappedData.games.length > 0) {
-    console.log("🔍 DEBUGGING: First 3 MAPPED games (after mapGame):");
-    for (let i = 0; i < Math.min(3, mappedData.games.length); i++) {
-      const game = mappedData.games[i];
-      console.log(`  Game ${i}:`, {
-        game_id: game.game_id,
-        home_team: game.home_team,
-        away_team: game.away_team,
-        home_logo_url: game.home_logo_url,
-        away_logo_url: game.away_logo_url,
-        home_logo_truthy: !!game.home_logo_url,
-        away_logo_truthy: !!game.away_logo_url,
-      });
-    }
-  }
-
-  console.log("✅ Mapped basketball what-if data:", {
-    teams: mappedData.data.length,
+  console.log("✅ Mapped data ready:", {
+    with_ties_teams: mappedData.data_with_ties.length,
+    no_ties_teams: mappedData.data_no_ties.length,
     games: mappedData.games.length,
-    current_projections: mappedData.current_projections.length,
   });
 
   return mappedData;
