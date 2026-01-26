@@ -91,7 +91,6 @@ export default function BasketballTeamScheduleDifficulty({
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("all");
   const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   // Detect mobile
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
@@ -418,82 +417,12 @@ export default function BasketballTeamScheduleDifficulty({
     };
   }, [lowProbGames, highProbGames, highProbRecord]);
 
-  const getGameRank = (game: PositionedGame) => {
-    const allGamesInFilter = comparisonDataset
-      .map((g) => g.kenpom_win_prob)
-      .sort((a, b) => a - b);
-
-    const gameProb = game.kenpom_win_prob || 0;
-    const position = allGamesInFilter.findIndex((prob) => prob >= gameProb);
-
-    return position === -1 ? allGamesInFilter.length : position + 1;
-  };
-
-  const handleGameClick = (game: PositionedGame) => {
-    if (
-      hoveredGame?.opponent === game.opponent &&
-      hoveredGame?.date === game.date
-    ) {
-      setHoveredGame(null);
-    } else {
-      const tooltipWidth = 180;
-      const x = (CHART_WIDTH - tooltipWidth) / 2 - 30;
-      const y = game.adjustedY + 40;
-      setTooltipPosition({ x, y });
-      setHoveredGame(game);
-    }
-  };
-
-  const Tooltip = ({
-    game,
-    position,
-  }: {
-    game: PositionedGame;
-    position: { x: number; y: number };
-  }) => {
-    const rank = getGameRank(game);
-    const winProb = Math.round((game.kenpom_win_prob || 0) * 100);
-    const percentile = Math.round(game.percentilePosition);
-
-    return (
-      <div
-        className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50 min-w-[180px]"
-        style={{
-          left: position.x,
-          top: position.y,
-          color: game.opponent_primary_color || "#1f2937",
-          touchAction: "none",
-        }}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-      >
-        <div className="text-sm font-semibold mb-1">{game.opponent}</div>
-        <div className="text-xs space-y-1">
-          <div>Location: {game.location}</div>
-          <div>{winProb}% Win Probability for 30th Rated Team</div>
-          <div>
-            #{rank.toLocaleString()} Most Difficult Game ({percentile}{" "}
-            Percentile)
-          </div>
-          <div style={{ marginTop: "6px", fontWeight: "500" }}>
-            Result:{" "}
-            {game.status === "W"
-              ? "Win"
-              : game.status === "L"
-                ? "Loss"
-                : "Scheduled"}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div
       className="basketball-schedule-difficulty w-full"
       style={{ overflow: "visible" }}
     >
-      <div className="w-full relative" onClick={() => setHoveredGame(null)}>
+      <div className="w-full relative">
         {_logoUrl && (
           <div
             className="absolute z-10"
@@ -583,10 +512,7 @@ export default function BasketballTeamScheduleDifficulty({
         </div>
       </div>
 
-      <div
-        className="flex justify-center"
-        onMouseLeave={() => setHoveredGame(null)}
-      >
+      <div className="flex justify-center" style={{ position: "relative" }}>
         <svg
           width={CHART_WIDTH}
           height={TOTAL_CHART_HEIGHT}
@@ -594,7 +520,7 @@ export default function BasketballTeamScheduleDifficulty({
         >
           <rect width={CHART_WIDTH} height={TOTAL_CHART_HEIGHT} fill="white" />
 
-          {/* ========== TOP SECTION (â‰¤95% games) ========== */}
+          {/* ========== TOP SECTION (Ã¢â€°Â¤95% games) ========== */}
 
           {/* Percentile gridlines */}
           {percentiles.map((percentile) => {
@@ -681,31 +607,17 @@ export default function BasketballTeamScheduleDifficulty({
                 />
 
                 {(game.opponent_logo || "/images/team_logos/default.png") && (
-                  <g>
+                  <g
+                    onMouseEnter={() => setHoveredGame(game)}
+                    onMouseLeave={() => setHoveredGame(null)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <foreignObject
                       x={logoX - 12}
                       y={game.adjustedY - 12}
                       width={24}
                       height={24}
                       style={{ cursor: "pointer" }}
-                      onMouseEnter={(_e) => {
-                        const tooltipWidth = 180;
-                        const x = (CHART_WIDTH - tooltipWidth) / 2 - 30;
-                        const y = game.adjustedY + 20;
-                        setTooltipPosition({ x, y });
-                        setHoveredGame(game);
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleGameClick(game);
-                      }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation();
-                      }}
-                      onTouchEnd={(e) => {
-                        e.stopPropagation();
-                        handleGameClick(game);
-                      }}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -852,9 +764,81 @@ export default function BasketballTeamScheduleDifficulty({
           )}
         </svg>
 
-        {hoveredGame ? (
-          <Tooltip game={hoveredGame} position={tooltipPosition} />
-        ) : null}
+        {/* Tooltip - rendered above SVG */}
+        {hoveredGame &&
+          (() => {
+            const allGamesInFilter = comparisonDataset
+              .map((g) => g.kenpom_win_prob)
+              .sort((a, b) => a - b);
+            const gameProb = hoveredGame.kenpom_win_prob || 0;
+            const position = allGamesInFilter.findIndex(
+              (prob) => prob >= gameProb,
+            );
+            const gameRank =
+              position === -1 ? allGamesInFilter.length : position + 1;
+
+            // If game is in top 20% (percentile 0-20), show tooltip below, otherwise above
+            const isTopRange = hoveredGame.percentilePosition < 20;
+            const tooltipTop = isTopRange
+              ? hoveredGame.adjustedY + 30 // Below the pointer
+              : hoveredGame.adjustedY - 150; // Above the pointer
+
+            // Center the tooltip
+            const tooltipLeft = CHART_WIDTH / 2 - 120;
+
+            return (
+              <div
+                onMouseEnter={() => setHoveredGame(hoveredGame)}
+                onMouseLeave={() => setHoveredGame(null)}
+                style={{
+                  position: "absolute",
+                  left: `${tooltipLeft}px`,
+                  top: `${tooltipTop}px`,
+                  width: "240px",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  padding: "12px",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  color: hoveredGame.opponent_primary_color || "#1f2937",
+                  fontSize: "12px",
+                  fontFamily:
+                    "var(--font-roboto-condensed), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                  zIndex: 50,
+                  pointerEvents: "none",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: "8px",
+                    fontSize: "13px",
+                  }}
+                >
+                  {hoveredGame.opponent}
+                </div>
+                <div style={{ lineHeight: "1.6", textAlign: "left" }}>
+                  <div>Location: {hoveredGame.location}</div>
+                  <div>
+                    {((hoveredGame.kenpom_win_prob || 0) * 100).toFixed(0)}% Win
+                    Probability for 30th Rated Team
+                  </div>
+                  <div>
+                    #{gameRank.toLocaleString()} Most Difficult Game (
+                    {Math.round(hoveredGame.percentilePosition)} Percentile)
+                  </div>
+                  <div style={{ marginTop: "6px", fontWeight: "500" }}>
+                    Result:{" "}
+                    {hoveredGame.status === "W"
+                      ? "Win"
+                      : hoveredGame.status === "L"
+                        ? "Loss"
+                        : "Scheduled"}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
       </div>
 
       {/* Legend and stats */}
