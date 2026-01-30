@@ -149,7 +149,7 @@ export default function BasketballTeamWinsBreakdown({
       if (prob > 0) {
         games.push({
           date: "",
-          opponent: `Conf Champ Game ${gameNum}`,
+          opponent: `Conf Tourney Game ${gameNum}`,
           opponent_logo: confLogoUrl,
           opponent_primary_color: "#8B7355",
           location: "Neutral",
