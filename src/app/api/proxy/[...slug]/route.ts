@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ slug: string[] }> }
+  { params }: { params: Promise<{ slug: string[] }> },
 ) {
   try {
     const { slug } = await params;
@@ -39,7 +39,7 @@ export async function GET(
         default:
           return NextResponse.json(
             { error: "Unknown single endpoint" },
-            { status: 404 }
+            { status: 404 },
           );
       }
     }
@@ -62,7 +62,7 @@ export async function GET(
         default:
           return NextResponse.json(
             { error: "Unknown football team history endpoint" },
-            { status: 404 }
+            { status: 404 },
           );
       }
     }
@@ -82,7 +82,7 @@ export async function GET(
         default:
           return NextResponse.json(
             { error: "Unknown basketball team history endpoint" },
-            { status: 404 }
+            { status: 404 },
           );
       }
     }
@@ -122,7 +122,7 @@ export async function GET(
         default:
           return NextResponse.json(
             { error: "Unknown football history endpoint" },
-            { status: 404 }
+            { status: 404 },
           );
       }
     }
@@ -148,6 +148,16 @@ export async function GET(
       const [, conference] = slug;
       const formattedConference = conference.replace(/\s+/g, "_");
       backendPath = `/conf_tourney/${formattedConference}/history`;
+    }
+    // Handle 3-part JSON standings routes: standings/json/Big_Ten
+    else if (
+      slug.length === 3 &&
+      slug[0] === "standings" &&
+      slug[1] === "json"
+    ) {
+      const [, , conference] = slug;
+      const formattedConference = conference.replace(/\s+/g, "_");
+      backendPath = `/standings/json/${formattedConference}`;
     }
     // Handle 3-part basketball nonconf analysis routes: basketball/nonconf_analysis/All_Teams
     else if (
@@ -207,14 +217,14 @@ export async function GET(
           } else {
             return NextResponse.json(
               { error: "Invalid debug endpoint" },
-              { status: 404 }
+              { status: 404 },
             );
           }
           break;
         default:
           return NextResponse.json(
             { error: "Unknown football endpoint" },
-            { status: 404 }
+            { status: 404 },
           );
       }
     }
@@ -251,7 +261,7 @@ export async function GET(
           default:
             return NextResponse.json(
               { error: "Unknown basketball endpoint" },
-              { status: 404 }
+              { status: 404 },
             );
         }
       }
@@ -276,7 +286,7 @@ export async function GET(
           default:
             return NextResponse.json(
               { error: "Unknown football endpoint" },
-              { status: 404 }
+              { status: 404 },
             );
         }
       }
@@ -321,14 +331,14 @@ export async function GET(
           default:
             return NextResponse.json(
               { error: "Unknown endpoint" },
-              { status: 404 }
+              { status: 404 },
             );
         }
       }
     } else {
       return NextResponse.json(
         { error: "Invalid URL structure" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -351,7 +361,7 @@ export async function GET(
 
     if (!response.ok) {
       console.error(
-        `Backend request failed: ${response.status} ${response.statusText} for ${backendUrl}`
+        `Backend request failed: ${response.status} ${response.statusText} for ${backendUrl}`,
       );
       return NextResponse.json(
         {
@@ -359,7 +369,7 @@ export async function GET(
           details: response.statusText,
           url: backendPath,
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -374,11 +384,11 @@ export async function GET(
       console.error("🔗 PROXY: JSON parse error:", parseError);
       console.error(
         "🔗 PROXY: Raw response preview:",
-        responseText.substring(0, 500)
+        responseText.substring(0, 500),
       );
       return NextResponse.json(
         { error: "Failed to parse backend response" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -414,7 +424,7 @@ export async function GET(
         // Count total fields
         console.log(
           "🔗 PROXY: Total fields in first item:",
-          Object.keys(firstItem).length
+          Object.keys(firstItem).length,
         );
         console.log("🔗 PROXY: All fields:", Object.keys(firstItem));
       }
@@ -435,7 +445,7 @@ export async function GET(
         error: "Internal proxy error",
         details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -458,7 +468,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string[] }> }
+  { params }: { params: Promise<{ slug: string[] }> },
 ) {
   try {
     const { slug } = await params;
@@ -467,7 +477,7 @@ export async function POST(
     console.log("🔵 Slug:", slug);
     console.log(
       "🔵 Request content-type:",
-      request.headers.get("content-type")
+      request.headers.get("content-type"),
     );
 
     const BACKEND_BASE_URL =
@@ -527,7 +537,7 @@ export async function POST(
       console.error("❌ UNKNOWN POST ENDPOINT:", slug);
       return NextResponse.json(
         { error: "Unknown POST endpoint", slug: slug },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -541,7 +551,7 @@ export async function POST(
       const formData = await request.formData();
       console.log(
         "📦 FormData entries:",
-        Array.from(formData.entries()).map(([k]) => k)
+        Array.from(formData.entries()).map(([k]) => k),
       );
       console.log("📦 FormData file:", formData.get("file"));
 
@@ -565,7 +575,7 @@ export async function POST(
         },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(
-          backendPath.includes("export") ? 300000 : 60000
+          backendPath.includes("export") ? 300000 : 60000,
         ),
       };
     }
@@ -599,7 +609,7 @@ export async function POST(
           details: responseText.substring(0, 200),
           url: backendPath,
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -616,7 +626,7 @@ export async function POST(
 
       return NextResponse.json(
         { error: "Failed to parse backend response" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -665,7 +675,7 @@ export async function POST(
         error: "Failed to process POST request",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
