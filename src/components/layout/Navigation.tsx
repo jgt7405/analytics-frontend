@@ -6,15 +6,17 @@ import navStyles from "@/styles/components/navigation.module.css";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import ContactModal from "./ContactModal";
 
 function NavigationContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const firstItemRef = useRef<HTMLAnchorElement>(null);
-  const lastItemRef = useRef<HTMLAnchorElement>(null);
+  const lastItemRef = useRef<HTMLButtonElement>(null);
 
   const isFootball = pathname.startsWith("/football");
   const isTeamPage = pathname.includes("/team/");
@@ -25,7 +27,7 @@ function NavigationContent() {
       // Rule 4: If on team page, use team's conference
       const teamConf = searchParams.get("teamConf");
       if (teamConf && isTeamPage) {
-        // âœ… FIXED: Don't encode - searchParams.get() returns decoded value
+        // Ã¢Å“â€¦ FIXED: Don't encode - searchParams.get() returns decoded value
         // Link href will handle encoding automatically
         return `${basePath}?conf=${teamConf}`;
       }
@@ -34,10 +36,10 @@ function NavigationContent() {
       const currentConf = searchParams.get("conf");
       const confToUse =
         currentConf && currentConf !== "All Teams" ? currentConf : "Big 12";
-      // âœ… FIXED: Don't encode - Link href will handle encoding automatically
+      // Ã¢Å“â€¦ FIXED: Don't encode - Link href will handle encoding automatically
       return `${basePath}?conf=${confToUse}`;
     },
-    [searchParams, isTeamPage]
+    [searchParams, isTeamPage],
   );
 
   const basketballNavItems = [
@@ -198,7 +200,7 @@ function NavigationContent() {
         }
       }
     },
-    [mobileMenuOpen]
+    [mobileMenuOpen],
   );
 
   useEffect(() => {
@@ -254,7 +256,7 @@ function NavigationContent() {
               href={item.path}
               className={cn(
                 navStyles.tabButton,
-                isActive && navStyles.tabButtonActive
+                isActive && navStyles.tabButtonActive,
               )}
               aria-current={isActive ? "page" : undefined}
               aria-label={`${item.name} - ${item.description}`}
@@ -269,7 +271,7 @@ function NavigationContent() {
           href={getSportSwitchUrl()}
           className={cn(
             navStyles.tabButton,
-            "text-xs flex flex-col items-center justify-center leading-none py-1"
+            "text-xs flex flex-col items-center justify-center leading-none py-1",
           )}
         >
           <span>Switch to </span>
@@ -289,7 +291,7 @@ function NavigationContent() {
           }}
           className={cn(
             navStyles.hamburgerButton,
-            mobileMenuOpen && navStyles.hamburgerButtonActive
+            mobileMenuOpen && navStyles.hamburgerButtonActive,
           )}
           aria-expanded={mobileMenuOpen}
           aria-controls="mobile-menu"
@@ -305,7 +307,7 @@ function NavigationContent() {
           id="mobile-menu"
           className={cn(
             navStyles.mobileNav,
-            mobileMenuOpen && navStyles.mobileNavActive
+            mobileMenuOpen && navStyles.mobileNavActive,
           )}
           role="menu"
           aria-hidden={!mobileMenuOpen}
@@ -314,18 +316,15 @@ function NavigationContent() {
             {navItems.map((item, index) => {
               const isActive = pathname === item.path.split("?")[0];
               const isFirst = index === 0;
-              const isLast = index === navItems.length - 1;
 
               return (
                 <Link
                   key={item.path}
                   href={item.path}
-                  ref={
-                    isFirst ? firstItemRef : isLast ? lastItemRef : undefined
-                  }
+                  ref={isFirst ? firstItemRef : undefined}
                   className={cn(
                     navStyles.tabButton,
-                    isActive && navStyles.tabButtonActive
+                    isActive && navStyles.tabButtonActive,
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                   role="menuitem"
@@ -337,11 +336,38 @@ function NavigationContent() {
               );
             })}
 
+            <button
+              onClick={() => {
+                setIsContactModalOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              ref={lastItemRef}
+              className={navStyles.tabButton}
+              style={{
+                all: "unset",
+                display: "block",
+                width: "calc(100% - 16px)",
+                textAlign: "left",
+                padding: "8px 20px",
+                margin: "0 8px",
+                borderBottom: "1px solid var(--border-color)",
+                position: "relative",
+                color: "var(--text-secondary)",
+                fontWeight: "400",
+                cursor: "pointer",
+                fontSize: "14px",
+              }}
+              role="menuitem"
+              tabIndex={mobileMenuOpen ? 0 : -1}
+            >
+              Contact
+            </button>
+
             <Link
               href={getSportSwitchUrl()}
               className={cn(
                 navStyles.tabButton,
-                "text-xs flex flex-col items-center justify-center leading-none py-1 gap-0"
+                "text-xs flex flex-col items-center justify-center leading-none py-1 gap-0",
               )}
               onClick={() => setMobileMenuOpen(false)}
               role="menuitem"
@@ -353,6 +379,10 @@ function NavigationContent() {
           </nav>
         </div>
       </div>
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
     </div>
   );
 }

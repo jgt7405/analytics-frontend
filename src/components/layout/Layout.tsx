@@ -2,6 +2,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import Footer from "./Footer";
 import Header from "./Header";
 
 interface LayoutProps {
@@ -18,11 +19,11 @@ export default function Layout({
   controls,
 }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
       <main
         id="main-content"
-        className="container mx-auto px-4 pt-0 pb-6"
+        className="container mx-auto px-4 pt-0 pb-6 flex-grow"
         role="main"
         aria-label="Main content"
       >
@@ -45,6 +46,7 @@ export default function Layout({
         )}
         {children}
       </main>
+      <Footer />
     </div>
   );
 }
