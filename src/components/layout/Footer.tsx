@@ -16,20 +16,68 @@ function MethodologyModal({ isOpen, onClose }: MethodologyModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Methodology</h2>
+        <div
+          className="flex items-center justify-between border-b border-gray-200"
+          style={{ padding: "6px 12px" }}
+        >
+          <h2
+            className="text-xl font-bold text-gray-500"
+            style={{
+              fontFamily: "Roboto Condensed, system-ui, sans-serif",
+              margin: 0,
+            }}
+          >
+            Methodology
+          </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors bg-transparent border-none"
+            style={{ padding: 0, cursor: "pointer" }}
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
-        <div className="p-6">
-          <p className="text-gray-700 text-center">
-            Simulate entire basketball season using composite ratings from
-            KenPom, Bart Torvik and Evan Miya.
-          </p>
+        <div style={{ padding: "8px 12px" }}>
+          <ul
+            style={{
+              fontFamily: "Roboto Condensed, system-ui, sans-serif",
+              fontSize: "12px",
+              fontWeight: "400",
+              lineHeight: "1.3",
+              color: "#666",
+              margin: 0,
+              paddingLeft: "16px",
+            }}
+          >
+            <li style={{ marginBottom: "6px" }}>
+              Create composite team ratings using KenPom, Evan Miya, and Bart
+              Torvik
+            </li>
+            <li style={{ marginBottom: "6px" }}>
+              Calculate win probabilities for future games based on composite
+              ratings
+            </li>
+            <li style={{ marginBottom: "6px" }}>
+              Simulate regular season 1,000 times to project standings and seeds
+            </li>
+            <li style={{ marginBottom: "6px" }}>
+              Simulate conference championship tournament 1,000 times based on
+              seeded matchups
+            </li>
+            <li style={{ marginBottom: "6px" }}>
+              Seed teams in NCAA tournament using TWV from simulated seasons
+            </li>
+            <li style={{ marginBottom: "6px" }}>
+              Simulate NCAA tournament 1,000 times
+            </li>
+            <li style={{ marginBottom: "6px" }}>
+              Display aggregated results and trends from all simulations
+            </li>
+            <li>
+              Update daily by 5:00 AM ET with current ratings (no preseason
+              bias)
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -47,16 +95,28 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Social Media</h2>
+        <div
+          className="flex items-center justify-between border-b border-gray-200"
+          style={{ padding: "6px 12px" }}
+        >
+          <h2
+            className="text-xl font-bold text-gray-500"
+            style={{
+              fontFamily: "Roboto Condensed, system-ui, sans-serif",
+              margin: 0,
+            }}
+          >
+            Social Media
+          </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors bg-transparent border-none"
+            style={{ padding: 0, cursor: "pointer" }}
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
-        <div className="p-6">
+        <div style={{ padding: "8px 12px" }}>
           <div className="flex flex-col gap-3">
             <a
               href="https://x.com/JThomAnalytics"
@@ -71,11 +131,24 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
               >
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.6l-5.17-6.763-5.91 6.763h-3.308l7.73-8.835L2.56 2.25h6.598l4.702 6.218L18.244 2.25zM17.09 19.765h1.828L5.782 4.137H3.826L17.09 19.765z" />
               </svg>
-              <span className="font-medium text-gray-800">@JThomAnalytics</span>
+              <span
+                className="font-medium text-gray-800"
+                style={{
+                  fontFamily: "Roboto Condensed, system-ui, sans-serif",
+                }}
+              >
+                @JThomAnalytics
+              </span>
             </a>
           </div>
-          <p className="text-sm text-gray-600 mt-4 text-center">
-            Follow us on X for the latest basketball analytics and insights.
+          <p
+            className="text-sm text-gray-600"
+            style={{
+              fontFamily: "Roboto Condensed, system-ui, sans-serif",
+              margin: "8px 0 0 0",
+            }}
+          >
+            Follow on X for latest analytics insights.
           </p>
         </div>
       </div>
@@ -96,27 +169,42 @@ export default function Footer() {
           style={{
             borderTop: "none",
             backgroundColor: "white",
-            padding: "4px 0",
+            padding: "2px 0 0 0",
           }}
         >
           <div className="flex justify-center gap-6">
             <button
               onClick={() => setIsMethodologyOpen(true)}
-              style={{ fontFamily: "Roboto Condensed, system-ui, sans-serif" }}
+              style={{
+                fontFamily: "Roboto Condensed, system-ui, sans-serif",
+                fontSize: "12px",
+                fontWeight: "400",
+                lineHeight: "1.3",
+              }}
               className="text-gray-600 hover:text-gray-900 bg-transparent border-none p-0 cursor-pointer"
             >
               Methodology
             </button>
             <button
               onClick={() => setIsContactOpen(true)}
-              style={{ fontFamily: "Roboto Condensed, system-ui, sans-serif" }}
+              style={{
+                fontFamily: "Roboto Condensed, system-ui, sans-serif",
+                fontSize: "12px",
+                fontWeight: "400",
+                lineHeight: "1.3",
+              }}
               className="text-gray-600 hover:text-gray-900 bg-transparent border-none p-0 cursor-pointer"
             >
               Contact
             </button>
             <button
               onClick={() => setIsSocialOpen(true)}
-              style={{ fontFamily: "Roboto Condensed, system-ui, sans-serif" }}
+              style={{
+                fontFamily: "Roboto Condensed, system-ui, sans-serif",
+                fontSize: "12px",
+                fontWeight: "400",
+                lineHeight: "1.3",
+              }}
               className="text-gray-600 hover:text-gray-900 bg-transparent border-none p-0 cursor-pointer"
             >
               Social Media
