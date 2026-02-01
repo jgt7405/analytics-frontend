@@ -54,12 +54,41 @@ export interface WhatIfMetadata {
   num_current_projections: number;
 }
 
+export interface ScenarioGameResult {
+  game_id: number;
+  date: string;
+  away_team: string;
+  home_team: string;
+  away_team_id: number;
+  home_team_id: number;
+  winner: string;
+  winner_id: number;
+  loser: string;
+  loser_id: number;
+}
+
+export interface ScenarioTeamStanding {
+  team_id: number;
+  team_name: string;
+  conf_wins: number;
+  conf_losses: number;
+  seed: number;
+}
+
+export interface ScenarioResult {
+  scenario_num: number;
+  games: ScenarioGameResult[];
+  game_outcomes: Record<number, [string, string]>;
+  standings: ScenarioTeamStanding[];
+}
+
 export interface WhatIfResponse {
   data_with_ties: WhatIfTeamResult[];
   data_no_ties: WhatIfTeamResult[];
   current_projections_with_ties: WhatIfTeamResult[];
   current_projections_no_ties: WhatIfTeamResult[];
   games: WhatIfGame[];
+  scenario_results: ScenarioResult[];
   conference: string;
   num_scenarios: number;
   num_conference_games: number;
@@ -107,6 +136,7 @@ interface BackendWhatIfResponse {
   current_projections_with_ties: BackendTeamResult[];
   current_projections_no_ties: BackendTeamResult[];
   games: BackendGame[];
+  scenario_results: ScenarioResult[];
   conference: string;
   num_scenarios: number;
   num_conference_games: number;
@@ -161,7 +191,7 @@ const mapGame = (game: BackendGame): WhatIfGame => {
 const calculateBasketballWhatIf = async (
   request: WhatIfRequest,
 ): Promise<WhatIfResponse> => {
-  console.log("🏀 Sending basketball what-if request:", request);
+  console.log("ðŸ€ Sending basketball what-if request:", request);
 
   const response = await fetch("/api/proxy/basketball/whatif", {
     method: "POST",
@@ -176,7 +206,7 @@ const calculateBasketballWhatIf = async (
       error: string;
     }
     const errorData = (await response.json()) as ErrorResponse;
-    console.error("⚠️ Basketball what-if API error:", errorData);
+    console.error("âš ï¸ Basketball what-if API error:", errorData);
     throw new Error(
       errorData.error || "Failed to calculate basketball what-if scenarios",
     );
@@ -191,22 +221,27 @@ const calculateBasketballWhatIf = async (
   // Log data availability
   console.log("Response fields available:");
   console.log(
-    "  ✅ data_with_ties:",
+    "  âœ… data_with_ties:",
     data.data_with_ties?.length || 0,
     "teams",
   );
-  console.log("  ✅ data_no_ties:", data.data_no_ties?.length || 0, "teams");
+  console.log("  âœ… data_no_ties:", data.data_no_ties?.length || 0, "teams");
   console.log(
-    "  ✅ current_projections_with_ties:",
+    "  âœ… current_projections_with_ties:",
     data.current_projections_with_ties?.length || 0,
     "teams",
   );
   console.log(
-    "  ✅ current_projections_no_ties:",
+    "  âœ… current_projections_no_ties:",
     data.current_projections_no_ties?.length || 0,
     "teams",
   );
-  console.log("  ✅ games:", data.games?.length || 0, "games");
+  console.log("  âœ… games:", data.games?.length || 0, "games");
+  console.log(
+    "  âœ… scenario_results:",
+    data.scenario_results?.length || 0,
+    "scenarios",
+  );
 
   // Log sample data
   if (data.data_with_ties && data.data_with_ties.length > 0) {
@@ -243,6 +278,7 @@ const calculateBasketballWhatIf = async (
       mapTeamResult,
     ),
     games: (data.games || []).map(mapGame),
+    scenario_results: data.scenario_results || [],
     conference: data.conference,
     num_scenarios: data.num_scenarios,
     num_conference_games: data.num_conference_games,
@@ -250,7 +286,7 @@ const calculateBasketballWhatIf = async (
     calculation_time: data.calculation_time,
   };
 
-  console.log("✅ Mapped data ready:", {
+  console.log("âœ… Mapped data ready:", {
     with_ties_teams: mappedData.data_with_ties.length,
     no_ties_teams: mappedData.data_no_ties.length,
     games: mappedData.games.length,
