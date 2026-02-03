@@ -80,7 +80,16 @@ export default function TableActionButtons({
     try {
       setDownloading(true);
 
+      console.log(`🔍 SCREENSHOT DEBUG: contentSelector="${contentSelector}"`);
       const targetElement = document.querySelector(contentSelector);
+      console.log(`🔍 SCREENSHOT DEBUG: targetElement found=`, !!targetElement);
+      if (targetElement) {
+        console.log(
+          `🔍 SCREENSHOT DEBUG: targetElement HTML=`,
+          targetElement.innerHTML.substring(0, 200),
+        );
+      }
+
       if (!targetElement) {
         throw new Error("Target element not found");
       }
@@ -92,16 +101,21 @@ export default function TableActionButtons({
       // Temporarily force element to show full width for measurement
       const originalStyles = new Map();
       const containers = targetElement.querySelectorAll(
-        '[style*="overflow"], .overflow-x-auto',
+        '[style*="overflow"], .overflow-x-auto, [style*="max-width"]',
       );
       containers.forEach((container) => {
         const el = container as HTMLElement;
         originalStyles.set(el, {
           overflow: el.style.overflow,
+          overflowX: el.style.overflowX,
           width: el.style.width,
+          maxWidth: el.style.maxWidth,
         });
         el.style.overflow = "visible";
+        el.style.overflowX = "visible";
         el.style.width = "max-content";
+        el.style.maxWidth = "none";
+        console.log(`🔍 SCREENSHOT DEBUG: Removed constraints from container`);
       });
 
       // Check chart type and calculate width
@@ -114,8 +128,49 @@ export default function TableActionButtons({
       let actualWidth;
       let isLineChartSpecific = false;
 
+      console.log(
+        `🔍 SCREENSHOT DEBUG: Found table=`,
+        !!table,
+        `, isLineChart=`,
+        isLineChart,
+      );
+
       if (table) {
-        actualWidth = (table as HTMLElement).offsetWidth + 200;
+        // Measure the actual table width including all cells
+        let tableWidth = (table as HTMLElement).offsetWidth;
+        console.log(`🔍 SCREENSHOT DEBUG: table.offsetWidth=${tableWidth}`);
+
+        // Check the rightmost cell position to ensure we capture full table width
+        const cells = table.querySelectorAll("th, td");
+        if (cells.length > 0) {
+          const lastCell = cells[cells.length - 1] as HTMLElement;
+          const lastCellRight = lastCell.offsetLeft + lastCell.offsetWidth;
+          tableWidth = Math.max(tableWidth, lastCellRight);
+          console.log(
+            `🔍 SCREENSHOT DEBUG: lastCellRight=${lastCellRight}, final tableWidth=${tableWidth}`,
+          );
+        }
+
+        actualWidth = tableWidth + 40; // Minimal padding (20px on each side)
+        console.log(`📊 TABLE SCREENSHOT: actualWidth set to ${actualWidth}`);
+      } else if (contentSelector.includes("standings-progression")) {
+        // For standings progression table (flex-based layout)
+        // Measure the flex container width after removing constraints
+        const flexContainer = targetElement.querySelector(
+          '[style*="min-width"]',
+        );
+        if (flexContainer) {
+          const containerWidth = (flexContainer as HTMLElement).offsetWidth;
+          console.log(
+            `🔍 SCREENSHOT DEBUG: Standings progression flex container width=${containerWidth}`,
+          );
+          actualWidth = containerWidth + 40;
+        } else {
+          actualWidth = (targetElement as HTMLElement).offsetWidth + 40;
+        }
+        console.log(
+          `📊 STANDINGS PROGRESSION SCREENSHOT: actualWidth set to ${actualWidth}`,
+        );
       } else if (isSeedWinsComponent) {
         // For seed-wins component, use a narrower width to fit content better
         actualWidth = 700;
@@ -333,9 +388,9 @@ export default function TableActionButtons({
       }
 
       document.body.appendChild(wrapper);
-      console.log("Ã¢ÂÂ³ Taking screenshot of component as displayed...");
+      console.log("ÃƒÂ¢Ã‚ÂÃ‚Â³ Taking screenshot of component as displayed...");
       await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log("Ã¢Å“â€¦ Screenshot captured");
+      console.log("ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Screenshot captured");
 
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",

@@ -6,7 +6,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 interface TWVTeam {
   rank: number;
@@ -31,11 +31,17 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
   const [inputValue, setInputValue] = useState<string>(
     twvData.length.toString(),
   );
+  const [isHydrated, setIsHydrated] = useState(false);
   const [showTWVTooltip, setShowTWVTooltip] = useState<boolean>(false);
   const [showActualRecordTooltip, setShowActualRecordTooltip] =
     useState<boolean>(false);
   const [showExpectedRecordTooltip, setShowExpectedRecordTooltip] =
     useState<boolean>(false);
+
+  // Hydration fix: Only show tooltips after hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
@@ -234,7 +240,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
               >
                 TWV
                 {/* Tooltip */}
-                {showTWVTooltip && (
+                {isHydrated && showTWVTooltip && (
                   <div
                     className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
@@ -249,7 +255,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                       </div>
                       <div className="text-gray-700">
                         # of wins above (or below) what would be expected by the
-                        30th rated team with the same schedule
+                        30th rated team with the same schedule.
                       </div>
                     </div>
                   </div>
@@ -284,7 +290,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                 )}
 
                 {/* Tooltip */}
-                {showActualRecordTooltip && (
+                {isHydrated && showActualRecordTooltip && (
                   <div
                     className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
@@ -296,7 +302,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                     <div className="text-gray-900 text-sm">
                       <div className="font-semibold mb-2">Actual Record</div>
                       <div className="text-gray-700">
-                        Current actual win/loss record
+                        Current actual win/loss record.
                       </div>
                     </div>
                   </div>
@@ -331,7 +337,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                 )}
 
                 {/* Tooltip */}
-                {showExpectedRecordTooltip && (
+                {isHydrated && showExpectedRecordTooltip && (
                   <div
                     className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
@@ -344,7 +350,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                       <div className="font-semibold mb-2">Expected Record</div>
                       <div className="text-gray-700">
                         Win/loss record that would be expected by the 30th rated
-                        team with the same schedule
+                        team with the same schedule.
                       </div>
                     </div>
                   </div>

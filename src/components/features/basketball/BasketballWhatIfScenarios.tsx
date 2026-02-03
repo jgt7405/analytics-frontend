@@ -7,13 +7,13 @@ import {
   type WhatIfResponse,
 } from "@/hooks/useBasketballWhatIf";
 import { useEffect, useMemo, useState } from "react";
+import RawProbabilityScheduleViewer from "./RawProbabilityScheduleViewer";
 
 export default function BasketballWhatIfScenarios() {
   const [selectedConference, setSelectedConference] = useState<string | null>(
     null,
   );
-  const { data: confData, isLoading: conferencesLoading } =
-    useBasketballConfData();
+  const { data: confData } = useBasketballConfData();
 
   const conferences = useMemo(() => {
     if (!confData?.conferenceData?.data) return [];
@@ -80,6 +80,16 @@ export default function BasketballWhatIfScenarios() {
     return games;
   }, [whatIfData]);
 
+  // Type for game outcomes
+  interface GameOutcomes {
+    [gameId: number]: Array<{
+      scenario: number;
+      winner: string;
+      away: string;
+      home: string;
+    }>;
+  }
+
   // Get sorted game IDs
   const sortedGameIds = useMemo(() => {
     return Object.keys(gamesByOutcome)
@@ -93,15 +103,20 @@ export default function BasketballWhatIfScenarios() {
       isLoading={false}
     >
       <div style={{ padding: "20px" }}>
+        {/* Raw Probability Schedule Viewer */}
+        <RawProbabilityScheduleViewer />
+
+        {/* Existing What-If Content */}
         <h1
           style={{
             fontSize: "24px",
             fontWeight: "bold",
             marginBottom: "20px",
-            color: "#ff0000",
+            color: "#333",
+            marginTop: "30px",
           }}
         >
-          🔴 DEBUG MODE - Game Outcomes By Scenario
+          🏀 What If Scenario Calculator
         </h1>
 
         {isCalculating && (
