@@ -214,6 +214,25 @@ export default function BballSeedWinsAndProbability({
       `DEBUG: Processing ${confChampData.length} teams, selectedSeed=${selectedSeed}`,
     );
 
+    // Debug: Log South Carolina's raw data if it exists
+    const southCarolina = confChampData.find(
+      (team: ConfChampData) => team.team_name === "South Carolina",
+    );
+    if (southCarolina) {
+      console.log(
+        "DEBUG: South Carolina raw data from backend:",
+        southCarolina,
+      );
+      console.log(
+        "DEBUG: South Carolina wins_probabilities:",
+        southCarolina.wins_probabilities,
+      );
+      console.log(
+        "DEBUG: South Carolina wins_for_11_seed:",
+        southCarolina.wins_for_11_seed,
+      );
+    }
+
     confChampData.forEach((team: ConfChampData) => {
       const winsField = getWinsField(selectedSeed);
       const winsTarget = Math.ceil((team[winsField] as number) || 0);
@@ -271,12 +290,28 @@ export default function BballSeedWinsAndProbability({
         // Get probability directly from backend calculation
         const teamData = team as unknown as ConfChampData;
         const backendProbs = teamData.wins_probabilities || {};
-        probability = backendProbs[selectedSeed] || 0;
+        const probValue = backendProbs[selectedSeed];
+
+        // If the value is an object or array, something is wrong with the data structure
+        if (typeof probValue === "object") {
+          console.warn(
+            `WARNING: ${team.team_name} has object value for seed ${selectedSeed}:`,
+            probValue,
+          );
+          probability = 0;
+        } else {
+          probability = Number(probValue) || 0;
+        }
+
         probCategory = getProbabilityCategory(probability);
       }
 
-      // DEBUG
-      if (team.team_name === "Arizona" || team.team_name === "TCU") {
+      // DEBUG - Enhanced logging for debugging
+      if (
+        team.team_name === "Arizona" ||
+        team.team_name === "TCU" ||
+        team.team_name === "South Carolina"
+      ) {
         const teamData = team as unknown as ConfChampData;
         console.log(
           `DEBUG ${team.team_name}: selectedSeed=${selectedSeed}, probability=${probability}, probCategory=${probCategory}`,
@@ -285,9 +320,29 @@ export default function BballSeedWinsAndProbability({
           `DEBUG ${team.team_name}: winsRequired=${winsRequired}, gamesRemaining=${gamesRemaining}`,
         );
         console.log(
-          `DEBUG ${team.team_name}: team.wins_probabilities=`,
+          `DEBUG ${team.team_name}: winsField=${getWinsField(selectedSeed)}, winsTarget=${Math.ceil((team[getWinsField(selectedSeed)] as number) || 0)}`,
+        );
+        console.log(
+          `DEBUG ${team.team_name}: actual_wins=${team.actual_total_wins}, actual_losses=${team.actual_total_losses}`,
+        );
+        const backendProbs = teamData.wins_probabilities || {};
+        console.log(
+          `DEBUG ${team.team_name}: backendProbs object keys:`,
+          Object.keys(backendProbs),
+        );
+        console.log(
+          `DEBUG ${team.team_name}: backendProbs[${selectedSeed}] =`,
+          backendProbs[selectedSeed],
+        );
+        console.log(
+          `DEBUG ${team.team_name}: typeof backendProbs[${selectedSeed}] =`,
+          typeof backendProbs[selectedSeed],
+        );
+        console.log(
+          `DEBUG ${team.team_name}: Full wins_probabilities object:`,
           teamData.wins_probabilities,
         );
+        console.log(`DEBUG ${team.team_name}: Full team object=`, teamData);
       }
 
       const probData: SeedProbabilityTeam = {
@@ -305,9 +360,22 @@ export default function BballSeedWinsAndProbability({
     });
 
     Object.keys(probGrouped).forEach((category) => {
-      probGrouped[category as ProbabilityCategory].sort(
-        (a, b) => b.probability - a.probability,
-      );
+      probGrouped[category as ProbabilityCategory].sort((a, b) => {
+        // First sort by games remaining (ascending - fewest games first)
+        if (a.gamesRemaining !== b.gamesRemaining) {
+          return a.gamesRemaining - b.gamesRemaining;
+        }
+        // Then by probability (descending - highest probability first)
+        if (a.probability !== b.probability) {
+          return b.probability - a.probability;
+        }
+        // Then by current wins (descending - most wins first)
+        if (a.actual_total_wins !== b.actual_total_wins) {
+          return b.actual_total_wins - a.actual_total_wins;
+        }
+        // Finally alphabetically by team name
+        return a.team_name.localeCompare(b.team_name);
+      });
     });
 
     // Sort wins groups by wins required (ascending: fewer wins needed first) within each group

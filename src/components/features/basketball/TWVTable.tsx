@@ -29,14 +29,19 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
   const router = useRouter();
   const [rowsToShow, setRowsToShow] = useState<number>(twvData.length);
   const [inputValue, setInputValue] = useState<string>(
-    twvData.length.toString()
+    twvData.length.toString(),
   );
+  const [showTWVTooltip, setShowTWVTooltip] = useState<boolean>(false);
+  const [showActualRecordTooltip, setShowActualRecordTooltip] =
+    useState<boolean>(false);
+  const [showExpectedRecordTooltip, setShowExpectedRecordTooltip] =
+    useState<boolean>(false);
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
       router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
     },
-    [router]
+    [router],
   );
 
   // Use ranks from backend - no recalculation
@@ -109,7 +114,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
         color: textColor,
       };
     },
-    [maxTWV, minTWV]
+    [maxTWV, minTWV],
   );
 
   if (!rankedTwvData || rankedTwvData.length === 0) {
@@ -212,7 +217,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
 
               {/* TWV Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
                 style={{
                   width: twvColWidth,
                   minWidth: twvColWidth,
@@ -222,14 +227,38 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                   top: 0,
                   border: "1px solid #e5e7eb",
                   borderLeft: "none",
+                  cursor: "help",
                 }}
+                onMouseEnter={() => setShowTWVTooltip(true)}
+                onMouseLeave={() => setShowTWVTooltip(false)}
               >
                 TWV
+                {/* Tooltip */}
+                {showTWVTooltip && (
+                  <div
+                    className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    style={{
+                      width: "300px",
+                      minWidth: "300px",
+                      left: "0",
+                    }}
+                  >
+                    <div className="text-gray-900 text-sm">
+                      <div className="font-semibold mb-2">
+                        TWV = True Win Value
+                      </div>
+                      <div className="text-gray-700">
+                        # of wins above (or below) what would be expected by the
+                        30th rated team with the same schedule
+                      </div>
+                    </div>
+                  </div>
+                )}
               </th>
 
               {/* Actual Record Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
                 style={{
                   width: recordColWidth,
                   minWidth: recordColWidth,
@@ -239,7 +268,10 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                   top: 0,
                   border: "1px solid #e5e7eb",
                   borderLeft: "none",
+                  cursor: "help",
                 }}
+                onMouseEnter={() => setShowActualRecordTooltip(true)}
+                onMouseLeave={() => setShowActualRecordTooltip(false)}
               >
                 {isMobile ? (
                   <>
@@ -250,11 +282,30 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                 ) : (
                   "Actual Record"
                 )}
+
+                {/* Tooltip */}
+                {showActualRecordTooltip && (
+                  <div
+                    className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    style={{
+                      width: "300px",
+                      minWidth: "300px",
+                      left: "0",
+                    }}
+                  >
+                    <div className="text-gray-900 text-sm">
+                      <div className="font-semibold mb-2">Actual Record</div>
+                      <div className="text-gray-700">
+                        Current actual win/loss record
+                      </div>
+                    </div>
+                  </div>
+                )}
               </th>
 
               {/* Expected Record Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
                 style={{
                   width: recordColWidth,
                   minWidth: recordColWidth,
@@ -264,7 +315,10 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                   top: 0,
                   border: "1px solid #e5e7eb",
                   borderLeft: "none",
+                  cursor: "help",
                 }}
+                onMouseEnter={() => setShowExpectedRecordTooltip(true)}
+                onMouseLeave={() => setShowExpectedRecordTooltip(false)}
               >
                 {isMobile ? (
                   <>
@@ -274,6 +328,26 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                   </>
                 ) : (
                   "Expected Record"
+                )}
+
+                {/* Tooltip */}
+                {showExpectedRecordTooltip && (
+                  <div
+                    className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    style={{
+                      width: "320px",
+                      minWidth: "320px",
+                      left: "0",
+                    }}
+                  >
+                    <div className="text-gray-900 text-sm">
+                      <div className="font-semibold mb-2">Expected Record</div>
+                      <div className="text-gray-700">
+                        Win/loss record that would be expected by the 30th rated
+                        team with the same schedule
+                      </div>
+                    </div>
+                  </div>
                 )}
               </th>
             </tr>

@@ -63,7 +63,7 @@ const nextConfig = {
         config.resolve.symlinks = false;
         config.cache = {
           type: "filesystem",
-          cacheDirectory: ".next/cache/webpack",
+          cacheDirectory: require("path").resolve(".next/cache/webpack"),
         };
       }
       return config;
@@ -108,19 +108,23 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
+  // Experimental features
   experimental: {
     optimizePackageImports: ["lucide-react"],
     optimizeCss: process.env.NODE_ENV === "production",
     webpackBuildWorker: true,
     missingSuspenseWithCSRBailout: false,
-    skipMiddlewareUrlNormalize: true,
-    skipTrailingSlashRedirect: true,
   },
+
+  // Middleware options (moved out of experimental in Next.js 14.2)
+  skipMiddlewareUrlNormalize: true,
+  skipTrailingSlashRedirect: true,
 
   images: {
     formats: ["image/webp", "image/avif"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    unoptimized: true,
   },
 
   compiler: {
@@ -179,9 +183,6 @@ const nextConfig = {
   },
 
   trailingSlash: true,
-  images: {
-    unoptimized: true,
-  },
 };
 
 module.exports = withPWA(withBundleAnalyzer(nextConfig));

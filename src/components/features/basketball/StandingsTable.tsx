@@ -22,7 +22,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
     (teamName: string) => {
       router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
     },
-    [router]
+    [router],
   );
 
   const sortedTeams = useMemo(() => {
@@ -37,7 +37,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
       const duration = performance.now() - startTime;
       if (duration > 10) {
         console.log(
-          `StandingsTable sort took ${duration.toFixed(2)}ms for ${standings.length} teams`
+          `StandingsTable sort took ${duration.toFixed(2)}ms for ${standings.length} teams`,
         );
       }
     }
@@ -51,7 +51,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
     for (const team of standings) {
       if (team.standings_distribution) {
         const teamMax = Math.max(
-          ...Object.keys(team.standings_distribution).map(Number)
+          ...Object.keys(team.standings_distribution).map(Number),
         );
         if (teamMax > maxPosition) maxPosition = teamMax;
       }
@@ -61,7 +61,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
       const duration = performance.now() - startTime;
       if (duration > 5) {
         console.log(
-          `StandingsTable positions calculation took ${duration.toFixed(2)}ms`
+          `StandingsTable positions calculation took ${duration.toFixed(2)}ms`,
         );
       }
     }
@@ -86,7 +86,7 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
   const tableClassName = cn(
     tableStyles.tableContainer,
     "standings-table",
-    className
+    className,
   );
 
   return (
@@ -232,6 +232,44 @@ function StandingsTable({ standings, className }: StandingsTableProps) {
                 }}
               >
                 {team.avg_standing?.toFixed(1) || "-"}
+              </td>
+            ))}
+          </tr>
+
+          {/* Curr Conf Record row */}
+          <tr className="bg-gray-50">
+            <td
+              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: firstColWidth,
+                minWidth: firstColWidth,
+                maxWidth: firstColWidth,
+                height: summaryRowHeight,
+                position: "sticky",
+                left: 0,
+                border: "1px solid #e5e7eb",
+                borderTop: "none",
+                borderRight: "1px solid #e5e7eb",
+              }}
+            >
+              Curr Conf Record
+            </td>
+            {sortedTeams.map((team) => (
+              <td
+                key={`${team.team_name}-conf-record`}
+                className="bg-gray-50 text-center"
+                style={{
+                  height: summaryRowHeight,
+                  width: teamColWidth,
+                  minWidth: teamColWidth,
+                  maxWidth: teamColWidth,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  fontSize: isMobile ? "12px" : "14px",
+                }}
+              >
+                {team.conference_record || "-"}
               </td>
             ))}
           </tr>

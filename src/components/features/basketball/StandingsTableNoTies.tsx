@@ -25,7 +25,7 @@ function StandingsTableNoTies({
     (teamName: string) => {
       router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
     },
-    [router]
+    [router],
   );
 
   const sortedTeams = useMemo(() => {
@@ -40,7 +40,7 @@ function StandingsTableNoTies({
       const duration = performance.now() - startTime;
       if (duration > 10) {
         console.log(
-          `StandingsTableNoTies sort took ${duration.toFixed(2)}ms for ${standings.length} teams`
+          `StandingsTableNoTies sort took ${duration.toFixed(2)}ms for ${standings.length} teams`,
         );
       }
     }
@@ -55,7 +55,7 @@ function StandingsTableNoTies({
       const duration = performance.now() - startTime;
       if (duration > 1) {
         console.log(
-          `StandingsTableNoTies positions calculation took ${duration.toFixed(2)}ms`
+          `StandingsTableNoTies positions calculation took ${duration.toFixed(2)}ms`,
         );
       }
     }
@@ -80,7 +80,7 @@ function StandingsTableNoTies({
   const tableClassName = cn(
     tableStyles.tableContainer,
     "standings-no-ties-table",
-    className
+    className,
   );
 
   return (
@@ -227,8 +227,46 @@ function StandingsTableNoTies({
                 }}
               >
                 {(team.Conf_Standing_No_Ties_Avg ?? team.avg_standing)?.toFixed(
-                  1
+                  1,
                 ) || "-"}
+              </td>
+            ))}
+          </tr>
+
+          {/* Curr Conf Record row */}
+          <tr className="bg-gray-50">
+            <td
+              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              style={{
+                width: firstColWidth,
+                minWidth: firstColWidth,
+                maxWidth: firstColWidth,
+                height: summaryRowHeight,
+                position: "sticky",
+                left: 0,
+                border: "1px solid #e5e7eb",
+                borderTop: "none",
+                borderRight: "1px solid #e5e7eb",
+              }}
+            >
+              Curr Conf Record
+            </td>
+            {sortedTeams.map((team) => (
+              <td
+                key={`${team.team_name}-conf-record`}
+                className="bg-gray-50 text-center"
+                style={{
+                  height: summaryRowHeight,
+                  width: teamColWidth,
+                  minWidth: teamColWidth,
+                  maxWidth: teamColWidth,
+                  border: "1px solid #e5e7eb",
+                  borderTop: "none",
+                  borderLeft: "none",
+                  fontSize: isMobile ? "12px" : "14px",
+                }}
+              >
+                {team.conference_record || "-"}
               </td>
             ))}
           </tr>
