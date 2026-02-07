@@ -21,7 +21,7 @@ export default function SeedPage() {
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
   const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
+    preferences.defaultConference,
   );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     "All Teams",
@@ -173,6 +173,27 @@ export default function SeedPage() {
                         <div style={{ marginTop: "6px" }}>
                           Projections consider current resume, remaining
                           schedule, and conference tournament outcomes.
+                        </div>
+                        <div style={{ marginTop: "6px" }}>
+                          Featured in{" "}
+                          <a
+                            href="https://www.espn.com/mens-college-basketball/story/_/id/47809690/bubble-watch-mens-ncaa-tournament-march-madness-bracket-predictions-2026"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            ESPN Bubble Watch
+                          </a>{" "}
+                          and{" "}
+                          <a
+                            href="https://neilpaine.substack.com/p/2026-ncaa-tournament-forecast?open=false#%C2%A72025-26-ncaa-tournament-model-consensus"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            NCAA Tournament Model Consensus
+                          </a>
+                          .
                         </div>
                       </div>
                     </div>
