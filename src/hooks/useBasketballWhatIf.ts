@@ -43,6 +43,8 @@ export interface WhatIfTeamResult {
   standing_6_prob?: number;
   standing_7_prob?: number;
   standing_8_prob?: number;
+  // Allow dynamic standing_N_prob keys for conferences with >8 teams
+  [key: `standing_${number}_prob`]: number | undefined;
 }
 
 export interface WhatIfMetadata {
@@ -82,6 +84,39 @@ export interface ScenarioResult {
   standings: ScenarioTeamStanding[];
 }
 
+export interface DebugGameWinner {
+  game_id: number;
+  date: string;
+  matchup: string;
+  conf_game: boolean;
+  original_winner: string;
+  whatif_winner: string;
+  changed: boolean;
+}
+
+export interface DebugStandingEntry {
+  team_name: string;
+  standing: number;
+  conf_wins: number;
+}
+
+export interface DebugScenario {
+  scenario_num: number;
+  game_winners: DebugGameWinner[];
+  team_records_original: Record<
+    string,
+    { conf_wins: number; conf_losses: number }
+  >;
+  team_records_whatif: Record<
+    string,
+    { conf_wins: number; conf_losses: number }
+  >;
+  standings_with_ties_original: DebugStandingEntry[];
+  standings_with_ties_whatif: DebugStandingEntry[];
+  standings_no_ties_original: DebugStandingEntry[];
+  standings_no_ties_whatif: DebugStandingEntry[];
+}
+
 export interface WhatIfResponse {
   data_with_ties: WhatIfTeamResult[];
   data_no_ties: WhatIfTeamResult[];
@@ -89,6 +124,7 @@ export interface WhatIfResponse {
   current_projections_no_ties: WhatIfTeamResult[];
   games: WhatIfGame[];
   scenario_results: ScenarioResult[];
+  debug_scenarios: DebugScenario[];
   conference: string;
   num_scenarios: number;
   num_conference_games: number;
@@ -112,6 +148,7 @@ interface BackendTeamResult {
   standing_6_prob?: number;
   standing_7_prob?: number;
   standing_8_prob?: number;
+  [key: string]: unknown;
 }
 
 interface BackendGame {
@@ -137,6 +174,7 @@ interface BackendWhatIfResponse {
   current_projections_no_ties: BackendTeamResult[];
   games: BackendGame[];
   scenario_results: ScenarioResult[];
+  debug_scenarios: DebugScenario[];
   conference: string;
   num_scenarios: number;
   num_conference_games: number;
@@ -145,22 +183,25 @@ interface BackendWhatIfResponse {
 }
 
 const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => {
-  return {
-    team_id: team.team_id || team.teamid || 0,
+  const result: WhatIfTeamResult = {
+    team_id: team.team_id || (team.teamid as number) || 0,
     team_name: team.team_name,
     conference: team.conference,
-    logo_url: team.logo_url || "",
-    avg_projected_conf_wins: team.avg_projected_conf_wins || 0,
-    avg_conference_standing: team.avg_conference_standing || 0,
-    standing_1_prob: team.standing_1_prob,
-    standing_2_prob: team.standing_2_prob,
-    standing_3_prob: team.standing_3_prob,
-    standing_4_prob: team.standing_4_prob,
-    standing_5_prob: team.standing_5_prob,
-    standing_6_prob: team.standing_6_prob,
-    standing_7_prob: team.standing_7_prob,
-    standing_8_prob: team.standing_8_prob,
+    logo_url: (team.logo_url as string) || "",
+    avg_projected_conf_wins: (team.avg_projected_conf_wins as number) || 0,
+    avg_conference_standing: (team.avg_conference_standing as number) || 0,
   };
+
+  // Copy all standing_N_prob keys (supports conferences with >8 teams)
+  for (const key of Object.keys(team)) {
+    const match = key.match(/^standing_(\d+)_prob$/);
+    if (match) {
+      const typedKey = key as `standing_${number}_prob`;
+      result[typedKey] = team[key] as number;
+    }
+  }
+
+  return result;
 };
 
 const mapGame = (game: BackendGame): WhatIfGame => {
@@ -191,7 +232,7 @@ const mapGame = (game: BackendGame): WhatIfGame => {
 const calculateBasketballWhatIf = async (
   request: WhatIfRequest,
 ): Promise<WhatIfResponse> => {
-  console.log("ðŸ€ Sending basketball what-if request:", request);
+  console.log("Ã°Å¸Ââ‚¬ Sending basketball what-if request:", request);
 
   const response = await fetch("/api/proxy/basketball/whatif", {
     method: "POST",
@@ -206,7 +247,7 @@ const calculateBasketballWhatIf = async (
       error: string;
     }
     const errorData = (await response.json()) as ErrorResponse;
-    console.error("âš ï¸ Basketball what-if API error:", errorData);
+    console.error("Ã¢Å¡Â Ã¯Â¸Â Basketball what-if API error:", errorData);
     throw new Error(
       errorData.error || "Failed to calculate basketball what-if scenarios",
     );
@@ -221,24 +262,28 @@ const calculateBasketballWhatIf = async (
   // Log data availability
   console.log("Response fields available:");
   console.log(
-    "  âœ… data_with_ties:",
+    "  Ã¢Å“â€¦ data_with_ties:",
     data.data_with_ties?.length || 0,
     "teams",
   );
-  console.log("  âœ… data_no_ties:", data.data_no_ties?.length || 0, "teams");
   console.log(
-    "  âœ… current_projections_with_ties:",
+    "  Ã¢Å“â€¦ data_no_ties:",
+    data.data_no_ties?.length || 0,
+    "teams",
+  );
+  console.log(
+    "  Ã¢Å“â€¦ current_projections_with_ties:",
     data.current_projections_with_ties?.length || 0,
     "teams",
   );
   console.log(
-    "  âœ… current_projections_no_ties:",
+    "  Ã¢Å“â€¦ current_projections_no_ties:",
     data.current_projections_no_ties?.length || 0,
     "teams",
   );
-  console.log("  âœ… games:", data.games?.length || 0, "games");
+  console.log("  Ã¢Å“â€¦ games:", data.games?.length || 0, "games");
   console.log(
-    "  âœ… scenario_results:",
+    "  Ã¢Å“â€¦ scenario_results:",
     data.scenario_results?.length || 0,
     "scenarios",
   );
@@ -279,6 +324,7 @@ const calculateBasketballWhatIf = async (
     ),
     games: (data.games || []).map(mapGame),
     scenario_results: data.scenario_results || [],
+    debug_scenarios: data.debug_scenarios || [],
     conference: data.conference,
     num_scenarios: data.num_scenarios,
     num_conference_games: data.num_conference_games,
@@ -286,7 +332,7 @@ const calculateBasketballWhatIf = async (
     calculation_time: data.calculation_time,
   };
 
-  console.log("âœ… Mapped data ready:", {
+  console.log("Ã¢Å“â€¦ Mapped data ready:", {
     with_ties_teams: mappedData.data_with_ties.length,
     no_ties_teams: mappedData.data_no_ties.length,
     games: mappedData.games.length,
