@@ -380,42 +380,46 @@ function SelectionLegend({
         Selections: {selections.size} game
         {selections.size !== 1 ? "s" : ""}
       </p>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1">
         {items.map(({ game, wid }) => {
           const awayWins = wid === game.away_team_id;
           return (
             <div
               key={game.game_id}
-              className="flex items-center gap-1 px-1.5 py-0.5 bg-white rounded"
-              style={{ border: "1px solid #d1d5db" }}
+              className="flex items-center gap-0.5 px-1 bg-white rounded"
+              style={{ border: "1px solid #d1d5db", padding: "1px 4px" }}
             >
               <span
-                className="rounded p-px"
+                className="rounded"
                 style={{
                   border: awayWins
                     ? `2px solid ${TEAL_COLOR}`
                     : "2px solid transparent",
+                  padding: "1px",
+                  lineHeight: 0,
                 }}
               >
                 <TeamLogo
                   src={game.away_logo_url}
                   alt={game.away_team}
-                  size={14}
+                  size={12}
                 />
               </span>
-              <span className="text-[9px] text-gray-300">@</span>
+              <span className="text-[8px] text-gray-300">@</span>
               <span
-                className="rounded p-px"
+                className="rounded"
                 style={{
                   border: !awayWins
                     ? `2px solid ${TEAL_COLOR}`
                     : "2px solid transparent",
+                  padding: "1px",
+                  lineHeight: 0,
                 }}
               >
                 <TeamLogo
                   src={game.home_logo_url}
                   alt={game.home_team}
-                  size={14}
+                  size={12}
                 />
               </span>
             </div>
@@ -788,29 +792,20 @@ function FullStandingsTable({
   );
 }
 
-// ── Next Game Implications (Change 7: auto-populates on load) ──
+// ── Next Game Implications (uses direct API calls, independent of main mutation) ──
 function NextGameImplications({
   games,
   baseline,
   conference,
-  fetchWhatIf,
 }: {
   games: WhatIfGame[];
   baseline: WhatIfTeamResult[];
   conference: string;
-  fetchWhatIf: (
-    req: {
-      conference: string;
-      selections: Array<{ game_id: number; winner_team_id: number }>;
-    },
-    opts: { onSuccess: (d: WhatIfResponse) => void },
-  ) => void;
 }) {
   const [implicationData, setImplicationData] = useState<
     Map<number, { win1st: number; lose1st: number }>
   >(new Map());
   const [loading, setLoading] = useState(false);
-  const [computed, setComputed] = useState(false);
   const computedForRef = useRef<string>("");
   const ref = useRef<HTMLDivElement>(null);
 
@@ -832,11 +827,30 @@ function NextGameImplications({
     );
   }, [baseline]);
 
+  // Direct API call — does NOT use the shared useMutation
+  const callWhatIfApi = useCallback(
+    async (
+      selections: Array<{ game_id: number; winner_team_id: number }>,
+    ): Promise<WhatIfResponse | null> => {
+      try {
+        const res = await fetch("/api/proxy/basketball/whatif", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conference, selections }),
+        });
+        if (!res.ok) return null;
+        return (await res.json()) as WhatIfResponse;
+      } catch {
+        return null;
+      }
+    },
+    [conference],
+  );
+
   // Auto-compute on mount / conference change
   useEffect(() => {
     const key = `${conference}-${teams.length}`;
-    if (computedForRef.current === key || loading || teams.length === 0)
-      return;
+    if (computedForRef.current === key || teams.length === 0) return;
     computedForRef.current = key;
 
     const uniqueGames = new Map<number, WhatIfGame>();
@@ -848,68 +862,57 @@ function NextGameImplications({
     if (uniqueGames.size === 0) return;
 
     setLoading(true);
-    const results = new Map<number, { win1st: number; lose1st: number }>();
-    let completed = 0;
-    const total = uniqueGames.size;
 
-    for (const [gameId, game] of uniqueGames) {
-      // Home wins scenario
-      fetchWhatIf(
-        {
-          conference,
-          selections: [
+    const computeAll = async () => {
+      const results = new Map<
+        number,
+        { win1st: number; lose1st: number }
+      >();
+
+      for (const [gameId, game] of uniqueGames) {
+        const [homeResult, awayResult] = await Promise.all([
+          callWhatIfApi([
             { game_id: gameId, winner_team_id: game.home_team_id },
-          ],
-        },
-        {
-          onSuccess: (homeResult) => {
-            // Away wins scenario
-            fetchWhatIf(
-              {
-                conference,
-                selections: [
-                  { game_id: gameId, winner_team_id: game.away_team_id },
-                ],
-              },
-              {
-                onSuccess: (awayResult) => {
-                  const homeWinData = new Map(
-                    (homeResult.data_with_ties || []).map((t) => [
-                      t.team_id,
-                      t.standing_1_prob ?? 0,
-                    ]),
-                  );
-                  const awayWinData = new Map(
-                    (awayResult.data_with_ties || []).map((t) => [
-                      t.team_id,
-                      t.standing_1_prob ?? 0,
-                    ]),
-                  );
+          ]),
+          callWhatIfApi([
+            { game_id: gameId, winner_team_id: game.away_team_id },
+          ]),
+        ]);
 
-                  results.set(game.home_team_id, {
-                    win1st: homeWinData.get(game.home_team_id) ?? 0,
-                    lose1st: awayWinData.get(game.home_team_id) ?? 0,
-                  });
-                  results.set(game.away_team_id, {
-                    win1st: awayWinData.get(game.away_team_id) ?? 0,
-                    lose1st: homeWinData.get(game.away_team_id) ?? 0,
-                  });
+        if (homeResult && awayResult) {
+          const homeWinData = new Map(
+            (homeResult.data_with_ties || []).map((t) => [
+              t.team_id,
+              t.standing_1_prob ?? 0,
+            ]),
+          );
+          const awayWinData = new Map(
+            (awayResult.data_with_ties || []).map((t) => [
+              t.team_id,
+              t.standing_1_prob ?? 0,
+            ]),
+          );
 
-                  completed++;
-                  if (completed >= total) {
-                    setImplicationData(new Map(results));
-                    setComputed(true);
-                    setLoading(false);
-                  }
-                },
-              },
-            );
-          },
-        },
-      );
-    }
+          // Home team: win=homeWin, lose=awayWin
+          results.set(game.home_team_id, {
+            win1st: homeWinData.get(game.home_team_id) ?? 0,
+            lose1st: awayWinData.get(game.home_team_id) ?? 0,
+          });
+          // Away team: win=awayWin, lose=homeWin
+          results.set(game.away_team_id, {
+            win1st: awayWinData.get(game.away_team_id) ?? 0,
+            lose1st: homeWinData.get(game.away_team_id) ?? 0,
+          });
+        }
+      }
+
+      setImplicationData(results);
+      setLoading(false);
+    };
+
+    computeAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conference, teams.length, teamNextGame]);
+  }, [conference, teams.length, teamNextGame, callWhatIfApi]);
 
   if (!teams.length) return null;
 
@@ -919,7 +922,7 @@ function NextGameImplications({
         <h3 className="text-sm font-semibold">
           Next Game Implications — 1st Place %
         </h3>
-        {computed && (
+        {implicationData.size > 0 && (
           <ScreenshotBtn
             targetRef={ref}
             filename="next_game_implications.png"
@@ -1323,7 +1326,6 @@ export default function BasketballWhatIfScenarios() {
                 games={whatIfData.games}
                 baseline={displayBaselineWT}
                 conference={selectedConference}
-                fetchWhatIf={fetchWhatIf}
               />
             )}
         </div>
