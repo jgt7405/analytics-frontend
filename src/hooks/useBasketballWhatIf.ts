@@ -84,37 +84,23 @@ export interface ScenarioResult {
   standings: ScenarioTeamStanding[];
 }
 
-export interface DebugGameWinner {
+export interface ValidationGameInfo {
   game_id: number;
-  date: string;
-  matchup: string;
-  conf_game: boolean;
-  original_winner: string;
-  whatif_winner: string;
-  changed: boolean;
+  home_team: string;
+  away_team: string;
+  home_probability: number | null;
+  away_probability: number | null;
 }
 
-export interface DebugStandingEntry {
-  team_name: string;
-  standing: number;
-  conf_wins: number;
-}
-
-export interface DebugScenario {
-  scenario_num: number;
-  game_winners: DebugGameWinner[];
-  team_records_original: Record<
-    string,
-    { conf_wins: number; conf_losses: number }
-  >;
-  team_records_whatif: Record<
-    string,
-    { conf_wins: number; conf_losses: number }
-  >;
-  standings_with_ties_original: DebugStandingEntry[];
-  standings_with_ties_whatif: DebugStandingEntry[];
-  standings_no_ties_original: DebugStandingEntry[];
-  standings_no_ties_whatif: DebugStandingEntry[];
+export interface ValidationData {
+  game_info: ValidationGameInfo[];
+  team_names: string[];
+  original_winners: Record<number, string[]>;
+  whatif_winners: Record<number, string[]>;
+  original_conf_wins: Record<number, Record<string, number>>;
+  whatif_conf_wins: Record<number, Record<string, number>>;
+  original_standings: Record<number, Record<string, number>>;
+  whatif_standings: Record<number, Record<string, number>>;
 }
 
 export interface WhatIfResponse {
@@ -124,7 +110,7 @@ export interface WhatIfResponse {
   current_projections_no_ties: WhatIfTeamResult[];
   games: WhatIfGame[];
   scenario_results: ScenarioResult[];
-  debug_scenarios: DebugScenario[];
+  validation_data: ValidationData | null;
   conference: string;
   num_scenarios: number;
   num_conference_games: number;
@@ -174,7 +160,7 @@ interface BackendWhatIfResponse {
   current_projections_no_ties: BackendTeamResult[];
   games: BackendGame[];
   scenario_results: ScenarioResult[];
-  debug_scenarios: DebugScenario[];
+  validation_data: ValidationData | null;
   conference: string;
   num_scenarios: number;
   num_conference_games: number;
@@ -266,11 +252,7 @@ const calculateBasketballWhatIf = async (
     data.data_with_ties?.length || 0,
     "teams",
   );
-  console.log(
-    "  Ã¢Å“â€¦ data_no_ties:",
-    data.data_no_ties?.length || 0,
-    "teams",
-  );
+  console.log("  Ã¢Å“â€¦ data_no_ties:", data.data_no_ties?.length || 0, "teams");
   console.log(
     "  Ã¢Å“â€¦ current_projections_with_ties:",
     data.current_projections_with_ties?.length || 0,
@@ -324,7 +306,7 @@ const calculateBasketballWhatIf = async (
     ),
     games: (data.games || []).map(mapGame),
     scenario_results: data.scenario_results || [],
-    debug_scenarios: data.debug_scenarios || [],
+    validation_data: data.validation_data || null,
     conference: data.conference,
     num_scenarios: data.num_scenarios,
     num_conference_games: data.num_conference_games,
