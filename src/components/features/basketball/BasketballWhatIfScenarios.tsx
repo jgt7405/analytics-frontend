@@ -8,7 +8,7 @@ import { Check, Download } from "lucide-react";
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
   useBasketballWhatIf,
-  type DebugScenario,
+  type ValidationData,
   type WhatIfGame,
   type WhatIfResponse,
   type WhatIfTeamResult,
@@ -16,6 +16,32 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const TEAL_COLOR = "rgb(0, 151, 178)";
+
+// TWV-style colors: blue for positive, yellow for negative
+const COLOR_BLUE = [24, 98, 123]; // Good / positive delta
+const COLOR_WHITE = [255, 255, 255];
+const COLOR_YELLOW = [255, 230, 113]; // Bad / negative delta
+
+function getDeltaColor(
+  delta: number,
+  maxAbs: number,
+): { backgroundColor: string; color: string } {
+  if (Math.abs(delta) < 0.05 || maxAbs === 0) {
+    return { backgroundColor: "transparent", color: "#000000" };
+  }
+
+  const ratio = Math.min(Math.abs(delta) / maxAbs, 1);
+  const target = delta > 0 ? COLOR_BLUE : COLOR_YELLOW;
+
+  const r = Math.round(COLOR_WHITE[0] + (target[0] - COLOR_WHITE[0]) * ratio);
+  const g = Math.round(COLOR_WHITE[1] + (target[1] - COLOR_WHITE[1]) * ratio);
+  const b = Math.round(COLOR_WHITE[2] + (target[2] - COLOR_WHITE[2]) * ratio);
+
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  const textColor = brightness > 140 ? "#000000" : "#ffffff";
+
+  return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
+}
 
 // ────────────────────────────────────────────────────
 // Helper: access dynamic standing_N_prob keys
@@ -26,199 +52,84 @@ function getStandingProb(team: WhatIfTeamResult, standing: number): number {
 }
 
 // ────────────────────────────────────────────────────
-// CSV Download Builder
+// CSV Download Builder — 6 sections, all 1000 scenarios
 // ────────────────────────────────────────────────────
-function buildValidationCSV(
-  debugScenarios: DebugScenario[],
-  games: WhatIfGame[],
-  conference: string,
-): string {
+function buildValidationCSV(vd: ValidationData, conference: string): string {
   const lines: string[] = [];
-  const esc = (v: string | number | boolean) =>
-    `"${String(v).replace(/"/g, '""')}"`;
+  const esc = (v: string | number | boolean | null | undefined) =>
+    `"${String(v ?? "").replace(/"/g, '""')}"`;
 
-  lines.push(esc(`What-If Validation Data - ${conference}`));
-  lines.push(esc(`Generated: ${new Date().toISOString()}`));
-  lines.push(esc(`Scenarios shown: ${debugScenarios.length} (of 1000)`));
-  lines.push("");
+  const games = vd.game_info;
+  const teams = vd.team_names;
 
-  // ── SECTION 1: All remaining conference games ──
-  lines.push(esc("=== SECTION 1: REMAINING CONFERENCE GAMES ==="));
-  lines.push(
-    [
-      "Game ID",
-      "Date",
-      "Away Team",
-      "Home Team",
-      "Conference Game",
-      "Away Prob",
-      "Home Prob",
-    ]
-      .map(esc)
-      .join(","),
+  // Header row for game columns
+  const gameHeaders = games.map(
+    (g) => `Game ${g.game_id}: ${g.away_team} @ ${g.home_team}`,
   );
-  for (const g of games) {
-    lines.push(
-      [
-        g.game_id,
-        g.date,
-        g.away_team,
-        g.home_team,
-        g.conf_game ? "Yes" : "No",
-        g.away_probability != null
-          ? (g.away_probability * 100).toFixed(1) + "%"
-          : "",
-        g.home_probability != null
-          ? (g.home_probability * 100).toFixed(1) + "%"
-          : "",
-      ]
-        .map(esc)
-        .join(","),
-    );
+  const gameProbRow = games.map((g) => {
+    const ap = g.away_probability != null ? (g.away_probability * 100).toFixed(0) + "%" : "";
+    const hp = g.home_probability != null ? (g.home_probability * 100).toFixed(0) + "%" : "";
+    return `${ap} / ${hp}`;
+  });
+
+  // --- SECTION 1: Current Winners ---
+  lines.push(esc(`=== SECTION 1: CURRENT WINNERS — ${conference} ===`));
+  lines.push(["Scenario", ...gameHeaders].map(esc).join(","));
+  lines.push(["Probabilities (Away/Home)", ...gameProbRow].map(esc).join(","));
+  for (let s = 1; s <= 1000; s++) {
+    const winners = vd.original_winners[s];
+    if (!winners) continue;
+    lines.push([s, ...winners].map(esc).join(","));
   }
   lines.push("");
 
-  // ── PER-SCENARIO SECTIONS ──
-  for (const scenario of debugScenarios) {
-    const sn = scenario.scenario_num;
-    lines.push(esc(`========================================`));
-    lines.push(esc(`SCENARIO ${sn}`));
-    lines.push(esc(`========================================`));
-    lines.push("");
+  // --- SECTION 2: Updated Winners ---
+  lines.push(esc(`=== SECTION 2: WHAT-IF WINNERS — ${conference} ===`));
+  lines.push(["Scenario", ...gameHeaders].map(esc).join(","));
+  for (let s = 1; s <= 1000; s++) {
+    const winners = vd.whatif_winners[s];
+    if (!winners) continue;
+    lines.push([s, ...winners].map(esc).join(","));
+  }
+  lines.push("");
 
-    // Section 2 & 3: Game winners (original vs what-if)
-    lines.push(esc(`--- Scenario ${sn}: Game Winners ---`));
-    lines.push(
-      [
-        "Game ID",
-        "Date",
-        "Matchup",
-        "Conf Game",
-        "Original Winner",
-        "What-If Winner",
-        "Changed",
-      ]
-        .map(esc)
-        .join(","),
-    );
-    for (const gw of scenario.game_winners) {
-      lines.push(
-        [
-          gw.game_id,
-          gw.date,
-          gw.matchup,
-          gw.conf_game ? "Yes" : "No",
-          gw.original_winner,
-          gw.whatif_winner,
-          gw.changed ? "YES" : "",
-        ]
-          .map(esc)
-          .join(","),
-      );
-    }
-    lines.push("");
+  // --- SECTION 3: Conference Wins Current ---
+  lines.push(esc(`=== SECTION 3: CONFERENCE WINS — CURRENT — ${conference} ===`));
+  lines.push(["Scenario", ...teams].map(esc).join(","));
+  for (let s = 1; s <= 1000; s++) {
+    const wins = vd.original_conf_wins[s];
+    if (!wins) continue;
+    lines.push([s, ...teams.map((t) => wins[t] ?? 0)].map(esc).join(","));
+  }
+  lines.push("");
 
-    // Section 4 & 5: Team records
-    lines.push(esc(`--- Scenario ${sn}: Team Conference Records ---`));
-    lines.push(
-      [
-        "Team",
-        "Original Wins",
-        "Original Losses",
-        "What-If Wins",
-        "What-If Losses",
-        "Wins Changed",
-      ]
-        .map(esc)
-        .join(","),
-    );
-    const allTeams = Object.keys(scenario.team_records_original).sort();
-    for (const team of allTeams) {
-      const orig = scenario.team_records_original[team];
-      const wi = scenario.team_records_whatif[team];
-      const winsChanged = orig.conf_wins !== wi.conf_wins;
-      lines.push(
-        [
-          team,
-          orig.conf_wins,
-          orig.conf_losses,
-          wi.conf_wins,
-          wi.conf_losses,
-          winsChanged ? "YES" : "",
-        ]
-          .map(esc)
-          .join(","),
-      );
-    }
-    lines.push("");
+  // --- SECTION 4: Conference Wins What-If ---
+  lines.push(esc(`=== SECTION 4: CONFERENCE WINS — WHAT-IF — ${conference} ===`));
+  lines.push(["Scenario", ...teams].map(esc).join(","));
+  for (let s = 1; s <= 1000; s++) {
+    const wins = vd.whatif_conf_wins[s];
+    if (!wins) continue;
+    lines.push([s, ...teams.map((t) => wins[t] ?? 0)].map(esc).join(","));
+  }
+  lines.push("");
 
-    // Section 6 & 7: Standings with ties
-    lines.push(esc(`--- Scenario ${sn}: Standings WITH TIES ---`));
-    lines.push(
-      [
-        "Standing",
-        "Original Team",
-        "Original Wins",
-        "What-If Team",
-        "What-If Wins",
-      ]
-        .map(esc)
-        .join(","),
-    );
-    const maxLen = Math.max(
-      scenario.standings_with_ties_original.length,
-      scenario.standings_with_ties_whatif.length,
-    );
-    for (let i = 0; i < maxLen; i++) {
-      const o = scenario.standings_with_ties_original[i];
-      const w = scenario.standings_with_ties_whatif[i];
-      lines.push(
-        [
-          o?.standing ?? w?.standing ?? i + 1,
-          o?.team_name ?? "",
-          o?.conf_wins ?? "",
-          w?.team_name ?? "",
-          w?.conf_wins ?? "",
-        ]
-          .map(esc)
-          .join(","),
-      );
-    }
-    lines.push("");
+  // --- SECTION 5: Standings Current (Ties Broken) ---
+  lines.push(esc(`=== SECTION 5: STANDINGS (TIES BROKEN) — CURRENT — ${conference} ===`));
+  lines.push(["Scenario", ...teams].map(esc).join(","));
+  for (let s = 1; s <= 1000; s++) {
+    const standings = vd.original_standings[s];
+    if (!standings) continue;
+    lines.push([s, ...teams.map((t) => standings[t] ?? "")].map(esc).join(","));
+  }
+  lines.push("");
 
-    // Section 8 & 9: Standings no ties
-    lines.push(esc(`--- Scenario ${sn}: Standings TIES BROKEN ---`));
-    lines.push(
-      [
-        "Standing",
-        "Original Team",
-        "Original Wins",
-        "What-If Team",
-        "What-If Wins",
-      ]
-        .map(esc)
-        .join(","),
-    );
-    const maxLen2 = Math.max(
-      scenario.standings_no_ties_original.length,
-      scenario.standings_no_ties_whatif.length,
-    );
-    for (let i = 0; i < maxLen2; i++) {
-      const o = scenario.standings_no_ties_original[i];
-      const w = scenario.standings_no_ties_whatif[i];
-      lines.push(
-        [
-          o?.standing ?? w?.standing ?? i + 1,
-          o?.team_name ?? "",
-          o?.conf_wins ?? "",
-          w?.team_name ?? "",
-          w?.conf_wins ?? "",
-        ]
-          .map(esc)
-          .join(","),
-      );
-    }
-    lines.push("");
+  // --- SECTION 6: Standings What-If (Ties Broken) ---
+  lines.push(esc(`=== SECTION 6: STANDINGS (TIES BROKEN) — WHAT-IF — ${conference} ===`));
+  lines.push(["Scenario", ...teams].map(esc).join(","));
+  for (let s = 1; s <= 1000; s++) {
+    const standings = vd.whatif_standings[s];
+    if (!standings) continue;
+    lines.push([s, ...teams.map((t) => standings[t] ?? "")].map(esc).join(","));
   }
 
   return lines.join("\n");
@@ -235,7 +146,7 @@ function downloadCSV(csv: string, filename: string) {
 }
 
 // ────────────────────────────────────────────────────
-// Team Logo (small, inline)
+// Team Logo
 // ────────────────────────────────────────────────────
 function TeamLogo({
   src,
@@ -286,7 +197,7 @@ function TeamTile({
       onClick={onClick}
       className="relative flex flex-col items-center justify-center w-10 h-12 rounded transition-all"
       style={{
-        border: isSelected ? `2px solid ${TEAL_COLOR}` : "1px solid #e5e7eb",
+        border: isSelected ? `2px solid ${TEAL_COLOR}` : "1px solid transparent",
         backgroundColor: isSelected ? "rgba(0, 151, 178, 0.08)" : "white",
       }}
       title={teamName}
@@ -324,7 +235,51 @@ function TeamTile({
 }
 
 // ────────────────────────────────────────────────────
-// Selections Summary (compact game chips with logos)
+// Game Card (pair of team tiles with border)
+// ────────────────────────────────────────────────────
+function GameCard({
+  game,
+  selectedWinner,
+  onSelect,
+}: {
+  game: WhatIfGame;
+  selectedWinner: number | undefined;
+  onSelect: (gameId: number, winnerId: number) => void;
+}) {
+  const hasSelection = selectedWinner !== undefined;
+  const awaySelected = selectedWinner === game.away_team_id;
+  const homeSelected = selectedWinner === game.home_team_id;
+
+  return (
+    <div
+      className="flex items-center gap-0.5 p-0.5 rounded"
+      style={{
+        border: hasSelection
+          ? `2px solid ${TEAL_COLOR}`
+          : "1px solid #d1d5db",
+      }}
+    >
+      <TeamTile
+        logoUrl={game.away_logo_url}
+        teamName={game.away_team}
+        probability={game.away_probability}
+        isSelected={awaySelected}
+        onClick={() => onSelect(game.game_id, game.away_team_id)}
+      />
+      <span className="text-[8px] text-gray-400">@</span>
+      <TeamTile
+        logoUrl={game.home_logo_url}
+        teamName={game.home_team}
+        probability={game.home_probability}
+        isSelected={homeSelected}
+        onClick={() => onSelect(game.game_id, game.home_team_id)}
+      />
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────
+// Selections Summary (compact game chips)
 // ────────────────────────────────────────────────────
 function SelectionsSummary({
   games,
@@ -354,7 +309,8 @@ function SelectionsSummary({
           return (
             <div
               key={game.game_id}
-              className="flex items-center gap-1 px-1.5 py-1 bg-white rounded border border-gray-200"
+              className="flex items-center gap-1 px-1.5 py-1 bg-white rounded"
+              style={{ border: "1px solid #d1d5db" }}
             >
               <span style={{ opacity: awayWins ? 1 : 0.35 }}>
                 <TeamLogo
@@ -380,7 +336,7 @@ function SelectionsSummary({
 }
 
 // ────────────────────────────────────────────────────
-// First Place Change Table
+// First Place Change Table (TWV coloring)
 // ────────────────────────────────────────────────────
 function FirstPlaceTable({
   baseline,
@@ -406,6 +362,8 @@ function FirstPlaceTable({
       return { team, before, after, change };
     });
 
+  const maxAbsChange = Math.max(...rows.map((r) => Math.abs(r.change)), 1);
+
   return (
     <table className="w-full text-sm">
       <thead>
@@ -417,41 +375,51 @@ function FirstPlaceTable({
         </tr>
       </thead>
       <tbody>
-        {rows.map(({ team, before, after, change }) => (
-          <tr
-            key={team.team_id}
-            className="border-b border-gray-100 hover:bg-gray-50"
-          >
-            <td className="py-1.5 px-2">
-              <div className="flex items-center gap-2">
-                <TeamLogo src={team.logo_url} alt={team.team_name} size={18} />
-                <span className="font-medium text-sm">{team.team_name}</span>
-              </div>
-            </td>
-            <td className="text-right py-1.5 px-2 tabular-nums text-gray-600">
-              {before.toFixed(1)}%
-            </td>
-            <td className="text-right py-1.5 px-2 tabular-nums font-semibold">
-              {after.toFixed(1)}%
-            </td>
-            <td className="text-right py-1.5 px-2 tabular-nums font-semibold">
-              {Math.abs(change) < 0.05 ? (
-                <span className="text-gray-400">&mdash;</span>
-              ) : change > 0 ? (
-                <span className="text-green-600">+{change.toFixed(1)}%</span>
-              ) : (
-                <span className="text-red-500">{change.toFixed(1)}%</span>
-              )}
-            </td>
-          </tr>
-        ))}
+        {rows.map(({ team, before, after, change }) => {
+          const cellStyle = getDeltaColor(change, maxAbsChange);
+          return (
+            <tr
+              key={team.team_id}
+              className="border-b border-gray-100"
+            >
+              <td className="py-1.5 px-2">
+                <div className="flex items-center gap-2">
+                  <TeamLogo
+                    src={team.logo_url}
+                    alt={team.team_name}
+                    size={18}
+                  />
+                  <span className="font-medium text-sm">{team.team_name}</span>
+                </div>
+              </td>
+              <td className="text-right py-1.5 px-2 tabular-nums text-gray-600">
+                {before.toFixed(1)}%
+              </td>
+              <td className="text-right py-1.5 px-2 tabular-nums font-semibold">
+                {after.toFixed(1)}%
+              </td>
+              <td
+                className="text-right py-1.5 px-2 tabular-nums font-semibold"
+                style={cellStyle}
+              >
+                {Math.abs(change) < 0.05 ? (
+                  <span style={{ color: "#9ca3af" }}>&mdash;</span>
+                ) : change > 0 ? (
+                  `+${change.toFixed(1)}%`
+                ) : (
+                  `${change.toFixed(1)}%`
+                )}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
 }
 
 // ────────────────────────────────────────────────────
-// Full Standings Comparison Table (all seed probs)
+// Full Standings Comparison Table
 // ────────────────────────────────────────────────────
 function FullStandingsTable({
   baseline,
@@ -473,6 +441,17 @@ function FullStandingsTable({
     (a, b) =>
       (a.avg_conference_standing ?? 99) - (b.avg_conference_standing ?? 99),
   );
+
+  // Find max absolute delta for color scaling
+  let maxAbsDelta = 1;
+  for (const team of sortedTeams) {
+    const bl = baselineMap.get(team.team_id);
+    if (!bl) continue;
+    for (let i = 1; i <= maxStandings; i++) {
+      const delta = getStandingProb(team, i) - getStandingProb(bl, i);
+      maxAbsDelta = Math.max(maxAbsDelta, Math.abs(delta));
+    }
+  }
 
   return (
     <div className="mb-6">
@@ -523,7 +502,13 @@ function FullStandingsTable({
                     {(team.avg_projected_conf_wins ?? 0).toFixed(1)}
                     {Math.abs(winsChange) > 0.01 && (
                       <span
-                        className={`block text-[9px] font-semibold ${winsChange > 0 ? "text-green-600" : "text-red-500"}`}
+                        className="block text-[9px] font-semibold"
+                        style={{
+                          color:
+                            winsChange > 0
+                              ? `rgb(${COLOR_BLUE.join(",")})`
+                              : `rgb(200, 160, 40)`,
+                        }}
                       >
                         {winsChange > 0 ? "+" : ""}
                         {winsChange.toFixed(2)}
@@ -539,24 +524,19 @@ function FullStandingsTable({
                     const blVal = bl ? getStandingProb(bl, standing) : val;
                     const delta = val - blVal;
                     const hasChange = Math.abs(delta) > 0.05;
+                    const cellStyle = hasChange
+                      ? getDeltaColor(delta, maxAbsDelta)
+                      : { backgroundColor: "transparent", color: "#000000" };
 
                     return (
                       <td
                         key={standing}
                         className="text-center py-1.5 px-1 tabular-nums"
-                        style={{
-                          backgroundColor: hasChange
-                            ? delta > 0
-                              ? "rgba(40, 167, 69, 0.08)"
-                              : "rgba(220, 53, 69, 0.06)"
-                            : "transparent",
-                        }}
+                        style={cellStyle}
                       >
                         {val > 0 ? `${val.toFixed(1)}` : ""}
                         {hasChange && (
-                          <span
-                            className={`block text-[8px] font-semibold ${delta > 0 ? "text-green-600" : "text-red-500"}`}
-                          >
+                          <span className="block text-[8px] font-semibold">
                             {delta > 0 ? "+" : ""}
                             {delta.toFixed(1)}
                           </span>
@@ -603,18 +583,13 @@ export default function BasketballWhatIfScenarios() {
   const { mutate: fetchWhatIf, isPending: isCalculating } =
     useBasketballWhatIf();
 
-  // Auto-load first conference
   useEffect(() => {
     if (conferences.length > 0 && !selectedConference) {
       const defaultConf = conferences[0];
       setSelectedConference(defaultConf);
       fetchWhatIf(
         { conference: defaultConf, selections: [] },
-        {
-          onSuccess: (data: WhatIfResponse) => {
-            setWhatIfData(data);
-          },
-        },
+        { onSuccess: (data: WhatIfResponse) => setWhatIfData(data) },
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -628,11 +603,7 @@ export default function BasketballWhatIfScenarios() {
       setHasCalculated(false);
       fetchWhatIf(
         { conference: newConference, selections: [] },
-        {
-          onSuccess: (data: WhatIfResponse) => {
-            setWhatIfData(data);
-          },
-        },
+        { onSuccess: (data: WhatIfResponse) => setWhatIfData(data) },
       );
     },
     [fetchWhatIf],
@@ -642,11 +613,8 @@ export default function BasketballWhatIfScenarios() {
     (gameId: number, winnerId: number) => {
       setGameSelections((prev) => {
         const next = new Map(prev);
-        if (next.get(gameId) === winnerId) {
-          next.delete(gameId);
-        } else {
-          next.set(gameId, winnerId);
-        }
+        if (next.get(gameId) === winnerId) next.delete(gameId);
+        else next.set(gameId, winnerId);
         return next;
       });
       setHasCalculated(false);
@@ -656,17 +624,19 @@ export default function BasketballWhatIfScenarios() {
 
   const handleCalculate = useCallback(() => {
     if (!selectedConference) return;
-    const selectionsArray = Array.from(gameSelections.entries()).map(
-      ([gId, wId]) => ({ game_id: gId, winner_team_id: wId }),
-    );
+    const arr = Array.from(gameSelections.entries()).map(([gId, wId]) => ({
+      game_id: gId,
+      winner_team_id: wId,
+    }));
     fetchWhatIf(
-      { conference: selectedConference, selections: selectionsArray },
+      { conference: selectedConference, selections: arr },
       {
         onSuccess: (data: WhatIfResponse) => {
           setWhatIfData(data);
           setHasCalculated(true);
         },
-        onError: (err: Error) => console.error("What-if failed:", err.message),
+        onError: (err: Error) =>
+          console.error("What-if failed:", err.message),
       },
     );
   }, [selectedConference, gameSelections, fetchWhatIf]);
@@ -677,29 +647,23 @@ export default function BasketballWhatIfScenarios() {
     if (selectedConference) {
       fetchWhatIf(
         { conference: selectedConference, selections: [] },
-        {
-          onSuccess: (data: WhatIfResponse) => {
-            setWhatIfData(data);
-          },
-        },
+        { onSuccess: (data: WhatIfResponse) => setWhatIfData(data) },
       );
     }
   }, [selectedConference, fetchWhatIf]);
 
   const handleDownloadValidation = useCallback(() => {
-    if (!whatIfData?.debug_scenarios || !whatIfData.games) return;
+    if (!whatIfData?.validation_data) return;
     const csv = buildValidationCSV(
-      whatIfData.debug_scenarios,
-      whatIfData.games,
+      whatIfData.validation_data,
       whatIfData.conference || selectedConference || "Unknown",
     );
-    const confSlug = (whatIfData.conference || "conf")
+    const slug = (whatIfData.conference || "conf")
       .replace(/\s+/g, "_")
       .toLowerCase();
-    downloadCSV(csv, `whatif_validation_${confSlug}.csv`);
+    downloadCSV(csv, `whatif_validation_${slug}.csv`);
   }, [whatIfData, selectedConference]);
 
-  // Group games by date
   const gamesByDate = useMemo(() => {
     if (!whatIfData?.games) return {};
     return whatIfData.games.reduce(
@@ -722,7 +686,6 @@ export default function BasketballWhatIfScenarios() {
   );
 
   const numTeams = whatIfData?.data_no_ties?.length ?? 16;
-
   const displayBaseline = whatIfData?.current_projections_no_ties ?? [];
   const displayWhatif = hasCalculated
     ? (whatIfData?.data_no_ties ?? [])
@@ -767,17 +730,19 @@ export default function BasketballWhatIfScenarios() {
             ═══════════════════════════════════ */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-4">
-            {/* Conference */}
+            {/* Conference selector — positioned left, above games */}
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Conference
               </label>
-              <ConferenceSelector
-                conferences={conferences}
-                selectedConference={selectedConference}
-                onChange={handleConferenceChange}
-                loading={conferencesLoading}
-              />
+              <div className="max-w-[220px]">
+                <ConferenceSelector
+                  conferences={conferences}
+                  selectedConference={selectedConference}
+                  onChange={handleConferenceChange}
+                  loading={conferencesLoading}
+                />
+              </div>
             </div>
 
             {/* Select Games header */}
@@ -802,44 +767,14 @@ export default function BasketballWhatIfScenarios() {
                       {date}
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {gamesByDate[date].map((game: WhatIfGame) => {
-                        const selected = gameSelections.get(game.game_id);
-                        const awaySelected = selected === game.away_team_id;
-                        const homeSelected = selected === game.home_team_id;
-
-                        return (
-                          <div
-                            key={game.game_id}
-                            className="flex items-center gap-0.5 p-0.5 rounded border border-gray-200 bg-gray-50"
-                          >
-                            <TeamTile
-                              logoUrl={game.away_logo_url}
-                              teamName={game.away_team}
-                              probability={game.away_probability}
-                              isSelected={awaySelected}
-                              onClick={() =>
-                                handleGameSelection(
-                                  game.game_id,
-                                  game.away_team_id,
-                                )
-                              }
-                            />
-                            <span className="text-[8px] text-gray-400">@</span>
-                            <TeamTile
-                              logoUrl={game.home_logo_url}
-                              teamName={game.home_team}
-                              probability={game.home_probability}
-                              isSelected={homeSelected}
-                              onClick={() =>
-                                handleGameSelection(
-                                  game.game_id,
-                                  game.home_team_id,
-                                )
-                              }
-                            />
-                          </div>
-                        );
-                      })}
+                      {gamesByDate[date].map((game: WhatIfGame) => (
+                        <GameCard
+                          key={game.game_id}
+                          game={game}
+                          selectedWinner={gameSelections.get(game.game_id)}
+                          onSelect={handleGameSelection}
+                        />
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -880,30 +815,27 @@ export default function BasketballWhatIfScenarios() {
             RIGHT PANEL — Results
             ═══════════════════════════════════ */}
         <div className="lg:col-span-2">
-          {/* First Place % or Current Standings card */}
           <div className="bg-white rounded-lg shadow p-4">
-            {/* Header with download button */}
+            {/* Header with download */}
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold">
                 {hasCalculated
                   ? "First Place % (Before \u2192 After)"
                   : "Current Standings"}
               </h2>
-              {hasCalculated &&
-                whatIfData?.debug_scenarios &&
-                whatIfData.debug_scenarios.length > 0 && (
-                  <button
-                    onClick={handleDownloadValidation}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition"
-                    title="Download validation data (first 10 scenarios)"
-                  >
-                    <Download size={13} />
-                    Validation CSV
-                  </button>
-                )}
+              {hasCalculated && whatIfData?.validation_data && (
+                <button
+                  onClick={handleDownloadValidation}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition"
+                  title="Download all 1000 scenarios as CSV"
+                >
+                  <Download size={13} />
+                  Validation CSV
+                </button>
+              )}
             </div>
 
-            {/* Selections summary chips */}
+            {/* Selections summary */}
             {whatIfData?.games && (
               <SelectionsSummary
                 games={whatIfData.games}
@@ -917,7 +849,7 @@ export default function BasketballWhatIfScenarios() {
               </div>
             )}
 
-            {/* After calculation: First Place % with Before/After/Change */}
+            {/* After calculation: First Place % */}
             {!isCalculating && hasCalculated && displayBaseline.length > 0 && (
               <FirstPlaceTable
                 baseline={displayBaseline}
@@ -925,7 +857,7 @@ export default function BasketballWhatIfScenarios() {
               />
             )}
 
-            {/* Before calculation: simple baseline table */}
+            {/* Before calculation: baseline table */}
             {!isCalculating && !hasCalculated && displayBaseline.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -991,9 +923,7 @@ export default function BasketballWhatIfScenarios() {
               )}
           </div>
 
-          {/* ═══════════════════════════════════
-              FULL STANDINGS TABLES (below)
-              ═══════════════════════════════════ */}
+          {/* Full standings tables */}
           {hasCalculated && displayBaseline.length > 0 && (
             <div className="bg-white rounded-lg shadow p-4 mt-6">
               <FullStandingsTable
@@ -1002,7 +932,6 @@ export default function BasketballWhatIfScenarios() {
                 numTeams={numTeams}
                 label="Projected Standings (Tiebreakers Applied)"
               />
-
               <FullStandingsTable
                 baseline={whatIfData?.current_projections_with_ties ?? []}
                 whatif={whatIfData?.data_with_ties ?? []}
