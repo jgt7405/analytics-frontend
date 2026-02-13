@@ -24,7 +24,7 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 interface TournamentProgressionDataPoint {
@@ -312,7 +312,7 @@ export default function BasketballTeamTournamentProgressionHistory({
           const { tooltip: tooltipModel, chart } = args;
 
           let tooltipEl = document.getElementById(
-            "ncaa-progression-tooltip-basketball"
+            "ncaa-progression-tooltip-basketball",
           );
           if (!tooltipEl) {
             tooltipEl = document.createElement("div");
@@ -345,7 +345,7 @@ export default function BasketballTeamTournamentProgressionHistory({
                     document.removeEventListener("click", handleClickOutside);
                     document.removeEventListener(
                       "touchstart",
-                      handleClickOutside
+                      handleClickOutside,
                     );
                     document.body.removeChild(tooltipEl);
                   }
@@ -389,11 +389,11 @@ export default function BasketballTeamTournamentProgressionHistory({
               </div>
             `;
 
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Champion: ${point.champion_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Championship: ${point.championship_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Final Four: ${point.final_four_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Elite Eight: ${point.elite_eight_pct.toFixed(1)}%</div>`;
             innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Sweet Sixteen: ${point.sweet_sixteen_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Elite Eight: ${point.elite_eight_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Final Four: ${point.final_four_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Championship: ${point.championship_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Champion: ${point.champion_pct.toFixed(1)}%</div>`;
 
             tooltipEl.innerHTML = innerHtml;
 
