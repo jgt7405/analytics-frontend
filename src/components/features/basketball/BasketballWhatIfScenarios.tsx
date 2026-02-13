@@ -48,6 +48,7 @@ async function captureScreenshot(
   element: HTMLElement,
   selectionLegendHtml: string | null,
   filename: string,
+  chartTitle?: string,
 ) {
   if (typeof window === "undefined") return;
   let html2canvas = window.html2canvas;
@@ -66,19 +67,32 @@ async function captureScreenshot(
   const clone = element.cloneNode(true) as HTMLElement;
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
 
+  // Measure actual content width for tighter screenshots
+  const contentWidth = Math.min(
+    element.scrollWidth + 48,
+    element.offsetWidth + 48,
+  );
+
   const wrapper = document.createElement("div");
-  wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${element.offsetWidth + 80}px;z-index:-1;overflow:visible;`;
+  wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
 
   const header = document.createElement("div");
   header.style.cssText =
-    "display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #e5e7eb;";
+    "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #e5e7eb;";
   const logo = document.createElement("img");
   logo.src = "/images/JThom_Logo.png";
   logo.style.cssText = "height:40px;width:auto;";
+
+  const titleSpan = document.createElement("div");
+  titleSpan.textContent = chartTitle || "";
+  titleSpan.style.cssText =
+    "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
+
   const date = document.createElement("div");
   date.textContent = new Date().toLocaleDateString();
   date.style.cssText = "font-size:12px;color:#6b7280;";
   header.appendChild(logo);
+  header.appendChild(titleSpan);
   header.appendChild(date);
   wrapper.appendChild(header);
 
@@ -93,11 +107,13 @@ async function captureScreenshot(
     wrapper.appendChild(legendDiv);
   }
 
-  const footer = document.createElement("div");
-  footer.style.cssText =
-    "margin-top:12px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;text-align:center;";
-  footer.textContent = "jthomanalytics.com";
-  wrapper.appendChild(footer);
+  // Explainer text at bottom of every screenshot
+  const explainer = document.createElement("div");
+  explainer.style.cssText =
+    "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
+  explainer.innerHTML =
+    "Current reflects current probabilities; what if reflects updated probabilities with game results selected.<br/>Change is the difference between current and what if.<br/>Ties broken based on Big 12 tiebreaker rules (future update to include individual conference tiebreakers).";
+  wrapper.appendChild(explainer);
 
   document.body.appendChild(wrapper);
   await new Promise((r) => setTimeout(r, 400));
@@ -165,11 +181,7 @@ function buildValidationCSV(vd: ValidationData, conference: string): string {
     const w = vd.original_winners[s];
     return w ? [s, ...w] : [];
   });
-  lines.splice(
-    2,
-    0,
-    ["Probabilities (Away/Home)", ...gp].map(esc).join(","),
-  );
+  lines.splice(2, 0, ["Probabilities (Away/Home)", ...gp].map(esc).join(","));
 
   section("SECTION 2: WHAT-IF WINNERS", ["Scenario", ...gh], (s) => {
     const w = vd.whatif_winners[s];
@@ -278,7 +290,7 @@ function TeamTile({
   return (
     <button
       onClick={onClick}
-      className="relative flex flex-col items-center justify-center w-10 h-12 rounded transition-all"
+      className="relative flex flex-col items-center justify-center w-10 h-10 rounded transition-all"
       style={{
         border: isSelected
           ? `2px solid ${TEAL_COLOR}`
@@ -386,8 +398,8 @@ function SelectionLegend({
           return (
             <div
               key={game.game_id}
-              className="flex items-center gap-0.5 px-1 bg-white rounded"
-              style={{ border: "1px solid #d1d5db", padding: "1px 4px" }}
+              className="flex items-center gap-0.5 bg-white rounded"
+              style={{ border: "1px solid #d1d5db", padding: "1px 2px" }}
             >
               <span
                 className="rounded"
@@ -435,10 +447,12 @@ function ScreenshotBtn({
   targetRef,
   filename,
   selectionHtml,
+  chartTitle,
 }: {
-  targetRef: React.RefObject<HTMLDivElement | null>;
+  targetRef: React.RefObject<HTMLDivElement>;
   filename: string;
   selectionHtml: string | null;
+  chartTitle?: string;
 }) {
   const [capturing, setCapturing] = useState(false);
   return (
@@ -448,7 +462,12 @@ function ScreenshotBtn({
         if (!targetRef.current || capturing) return;
         setCapturing(true);
         try {
-          await captureScreenshot(targetRef.current, selectionHtml, filename);
+          await captureScreenshot(
+            targetRef.current,
+            selectionHtml,
+            filename,
+            chartTitle,
+          );
         } catch (e) {
           console.error("Screenshot failed:", e);
         }
@@ -471,7 +490,7 @@ function ScreenshotBtn({
 // Change 5: sortable column headers
 // Change 6: "After" → "What If"
 // Change 9: no bold in data cells
-type SortCol = "before" | "whatif" | "change" | null;
+type SortCol = "before" | "after" | "change" | null;
 type SortDir = "asc" | "desc";
 
 function ProbabilityTable({
@@ -489,11 +508,11 @@ function ProbabilityTable({
   whatif: WhatIfTeamResult[];
   probFn: (t: WhatIfTeamResult) => number;
   hasCalculated: boolean;
-  screenshotRef: React.RefObject<HTMLDivElement | null>;
+  screenshotRef: React.RefObject<HTMLDivElement>;
   screenshotFilename: string;
   selectionHtml: string | null;
 }) {
-  const [sortCol, setSortCol] = useState<SortCol>(null);
+  const [sortCol, setSortCol] = useState<SortCol>("after");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const baselineMap = useMemo(
@@ -506,8 +525,7 @@ function ProbabilityTable({
     return [...src]
       .sort(
         (a, b) =>
-          (a.avg_conference_standing ?? 99) -
-          (b.avg_conference_standing ?? 99),
+          (a.avg_conference_standing ?? 99) - (b.avg_conference_standing ?? 99),
       )
       .map((team) => {
         const bl = baselineMap.get(team.team_id);
@@ -542,45 +560,63 @@ function ProbabilityTable({
 
   const sortIndicator = (col: SortCol) =>
     sortCol === col ? (
-      <span className="ml-0.5 text-[9px]">{sortDir === "desc" ? "▼" : "▲"}</span>
+      <span className="ml-0.5 text-[9px]">
+        {sortDir === "desc" ? "▼" : "▲"}
+      </span>
     ) : null;
 
   const thClass =
-    "text-right py-2 px-2 font-normal cursor-pointer hover:text-gray-800 select-none";
+    "text-center py-2 px-2 font-normal cursor-pointer hover:text-gray-800 select-none";
 
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-base font-semibold">{title}</h3>
+        <h3 className="text-base font-medium">{title}</h3>
         <div className="flex items-center gap-2" data-no-screenshot>
           <ScreenshotBtn
             targetRef={screenshotRef}
             filename={screenshotFilename}
             selectionHtml={selectionHtml}
+            chartTitle={title}
           />
         </div>
       </div>
       <div ref={screenshotRef}>
-        <table className="w-full text-sm">
+        <table className="text-sm" style={{ width: "auto", minWidth: "320px" }}>
           <thead>
             <tr className="border-b border-gray-200 text-gray-500">
-              <th className="text-left py-2 px-2 font-normal">Team</th>
+              <th
+                className="text-left py-2 px-2 font-normal"
+                style={{ minWidth: "140px" }}
+              >
+                Team
+              </th>
               {hasCalculated ? (
                 <>
-                  <th className={thClass} onClick={() => handleSort("before")}>
-                    Before{sortIndicator("before")}
+                  <th
+                    className={thClass}
+                    style={{ minWidth: "70px" }}
+                    onClick={() => handleSort("before")}
+                  >
+                    Current{sortIndicator("before")}
                   </th>
-                  <th className={thClass} onClick={() => handleSort("whatif")}>
-                    What If{sortIndicator("whatif")}
+                  <th
+                    className={thClass}
+                    style={{ minWidth: "70px" }}
+                    onClick={() => handleSort("after")}
+                  >
+                    What If{sortIndicator("after")}
                   </th>
-                  <th className={thClass} onClick={() => handleSort("change")}>
+                  <th
+                    className={thClass}
+                    style={{ minWidth: "70px" }}
+                    onClick={() => handleSort("change")}
+                  >
                     Change{sortIndicator("change")}
                   </th>
                 </>
               ) : (
-                <th className="text-right py-2 px-2 font-normal">
-                  Current %
-                </th>
+                <th className="text-center py-2 px-2 font-normal">Current %</th>
               )}
             </tr>
           </thead>
@@ -600,19 +636,19 @@ function ProbabilityTable({
                 {hasCalculated ? (
                   <>
                     <td
-                      className="text-right py-1.5 px-2 tabular-nums"
+                      className="text-center py-1.5 px-2 tabular-nums"
                       style={getCellColor(before, "blue")}
                     >
                       {before > 0 ? `${before.toFixed(1)}%` : ""}
                     </td>
                     <td
-                      className="text-right py-1.5 px-2 tabular-nums"
+                      className="text-center py-1.5 px-2 tabular-nums"
                       style={getCellColor(after, "blue")}
                     >
                       {after > 0 ? `${after.toFixed(1)}%` : ""}
                     </td>
                     <td
-                      className="text-right py-1.5 px-2 tabular-nums"
+                      className="text-center py-1.5 px-2 tabular-nums"
                       style={getDeltaColor(change, maxAbs)}
                     >
                       {Math.abs(change) < 0.05 ? (
@@ -626,7 +662,7 @@ function ProbabilityTable({
                   </>
                 ) : (
                   <td
-                    className="text-right py-1.5 px-2 tabular-nums"
+                    className="text-center py-1.5 px-2 tabular-nums"
                     style={getCellColor(before, "blue")}
                   >
                     {before > 0 ? `${before.toFixed(1)}%` : ""}
@@ -654,13 +690,13 @@ function FullStandingsTable({
   whatif: WhatIfTeamResult[];
   numTeams: number;
   label: string;
-  screenshotRef: React.RefObject<HTMLDivElement | null>;
+  screenshotRef: React.RefObject<HTMLDivElement>;
   selectionHtml: string | null;
 }) {
   if (!baseline.length || !whatif.length) return null;
 
   const baselineMap = new Map(baseline.map((t) => [t.team_id, t]));
-  const maxStandings = Math.min(numTeams, 16);
+  const maxStandings = numTeams;
 
   const sortedTeams = [...whatif].sort(
     (a, b) =>
@@ -669,24 +705,25 @@ function FullStandingsTable({
 
   const getProb = (team: WhatIfTeamResult, standing: number): number => {
     const key = `standing_${standing}_prob`;
-    return ((team as Record<string, unknown>)[key] as number) ?? 0;
+    return ((team as unknown as Record<string, unknown>)[key] as number) ?? 0;
   };
 
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-semibold">{label}</h3>
+        <h3 className="text-base font-medium">{label}</h3>
         <div data-no-screenshot>
           <ScreenshotBtn
             targetRef={screenshotRef}
             filename={`${label.replace(/\s+/g, "_").toLowerCase()}.png`}
             selectionHtml={selectionHtml}
+            chartTitle={label}
           />
         </div>
       </div>
       <div ref={screenshotRef}>
         <div className="overflow-x-auto border border-gray-200 rounded-lg">
-          <table className="w-full text-xs">
+          <table className="text-xs" style={{ width: "auto" }}>
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
                 <th className="text-left py-2 px-2 font-normal sticky left-0 bg-gray-50 z-10">
@@ -695,18 +732,9 @@ function FullStandingsTable({
                 <th className="text-center py-2 px-2 font-normal">Wins</th>
                 <th className="text-center py-2 px-2 font-normal">Avg</th>
                 {Array.from({ length: maxStandings }, (_, i) => (
-                  <th
-                    key={i}
-                    className="text-center py-2 px-1.5 font-normal"
-                  >
+                  <th key={i} className="text-center py-2 px-1.5 font-normal">
                     {i + 1}
-                    {i === 0
-                      ? "st"
-                      : i === 1
-                        ? "nd"
-                        : i === 2
-                          ? "rd"
-                          : "th"}
+                    {i === 0 ? "st" : i === 1 ? "nd" : i === 2 ? "rd" : "th"}
                   </th>
                 ))}
               </tr>
@@ -724,7 +752,7 @@ function FullStandingsTable({
                     key={team.team_id}
                     className={`border-b border-gray-100 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}
                   >
-                    <td className="py-1.5 px-2 sticky left-0 bg-white z-10">
+                    <td className="py-0.5 px-2 sticky left-0 bg-white z-10">
                       <div className="flex items-center gap-1.5">
                         <TeamLogo
                           src={team.logo_url}
@@ -736,7 +764,7 @@ function FullStandingsTable({
                         </span>
                       </div>
                     </td>
-                    <td className="text-center py-1.5 px-2 tabular-nums">
+                    <td className="text-center py-0.5 px-2 tabular-nums">
                       {(team.avg_projected_conf_wins ?? 0).toFixed(1)}
                       {Math.abs(winsChange) > 0.01 && (
                         <span
@@ -747,8 +775,22 @@ function FullStandingsTable({
                         </span>
                       )}
                     </td>
-                    <td className="text-center py-1.5 px-2 tabular-nums">
+                    <td className="text-center py-0.5 px-2 tabular-nums">
                       {(team.avg_conference_standing ?? 0).toFixed(1)}
+                      {bl &&
+                        (() => {
+                          const avgChange =
+                            (team.avg_conference_standing ?? 0) -
+                            (bl.avg_conference_standing ?? 0);
+                          return Math.abs(avgChange) > 0.01 ? (
+                            <span
+                              className={`block text-[9px] ${avgChange < 0 ? "text-green-600" : "text-red-500"}`}
+                            >
+                              {avgChange > 0 ? "+" : ""}
+                              {avgChange.toFixed(2)}
+                            </span>
+                          ) : null;
+                        })()}
                     </td>
                     {Array.from({ length: maxStandings }, (_, i) => {
                       const standing = i + 1;
@@ -760,7 +802,7 @@ function FullStandingsTable({
                       return (
                         <td
                           key={standing}
-                          className="text-center py-1.5 px-1 tabular-nums"
+                          className="text-center py-0.5 px-1 tabular-nums"
                           style={{
                             backgroundColor: hasChange
                               ? delta > 0
@@ -787,239 +829,6 @@ function FullStandingsTable({
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Next Game Implications (uses direct API calls, independent of main mutation) ──
-function NextGameImplications({
-  games,
-  baseline,
-  conference,
-}: {
-  games: WhatIfGame[];
-  baseline: WhatIfTeamResult[];
-  conference: string;
-}) {
-  const [implicationData, setImplicationData] = useState<
-    Map<number, { win1st: number; lose1st: number }>
-  >(new Map());
-  const [loading, setLoading] = useState(false);
-  const computedForRef = useRef<string>("");
-  const ref = useRef<HTMLDivElement>(null);
-
-  const teamNextGame = useMemo(() => {
-    const map = new Map<number, WhatIfGame>();
-    const sorted = [...games]
-      .filter((g) => g.conf_game)
-      .sort((a, b) => a.date.localeCompare(b.date));
-    for (const g of sorted) {
-      if (!map.has(g.home_team_id)) map.set(g.home_team_id, g);
-      if (!map.has(g.away_team_id)) map.set(g.away_team_id, g);
-    }
-    return map;
-  }, [games]);
-
-  const teams = useMemo(() => {
-    return [...baseline].sort(
-      (a, b) => (b.standing_1_prob ?? 0) - (a.standing_1_prob ?? 0),
-    );
-  }, [baseline]);
-
-  // Direct API call — does NOT use the shared useMutation
-  const callWhatIfApi = useCallback(
-    async (
-      selections: Array<{ game_id: number; winner_team_id: number }>,
-    ): Promise<WhatIfResponse | null> => {
-      try {
-        const res = await fetch("/api/proxy/basketball/whatif", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conference, selections }),
-        });
-        if (!res.ok) return null;
-        return (await res.json()) as WhatIfResponse;
-      } catch {
-        return null;
-      }
-    },
-    [conference],
-  );
-
-  // Auto-compute on mount / conference change
-  useEffect(() => {
-    const key = `${conference}-${teams.length}`;
-    if (computedForRef.current === key || teams.length === 0) return;
-    computedForRef.current = key;
-
-    const uniqueGames = new Map<number, WhatIfGame>();
-    for (const team of teams) {
-      const ng = teamNextGame.get(team.team_id);
-      if (ng && !uniqueGames.has(ng.game_id))
-        uniqueGames.set(ng.game_id, ng);
-    }
-    if (uniqueGames.size === 0) return;
-
-    setLoading(true);
-
-    const computeAll = async () => {
-      const results = new Map<
-        number,
-        { win1st: number; lose1st: number }
-      >();
-
-      for (const [gameId, game] of uniqueGames) {
-        const [homeResult, awayResult] = await Promise.all([
-          callWhatIfApi([
-            { game_id: gameId, winner_team_id: game.home_team_id },
-          ]),
-          callWhatIfApi([
-            { game_id: gameId, winner_team_id: game.away_team_id },
-          ]),
-        ]);
-
-        if (homeResult && awayResult) {
-          const homeWinData = new Map(
-            (homeResult.data_with_ties || []).map((t) => [
-              t.team_id,
-              t.standing_1_prob ?? 0,
-            ]),
-          );
-          const awayWinData = new Map(
-            (awayResult.data_with_ties || []).map((t) => [
-              t.team_id,
-              t.standing_1_prob ?? 0,
-            ]),
-          );
-
-          // Home team: win=homeWin, lose=awayWin
-          results.set(game.home_team_id, {
-            win1st: homeWinData.get(game.home_team_id) ?? 0,
-            lose1st: awayWinData.get(game.home_team_id) ?? 0,
-          });
-          // Away team: win=awayWin, lose=homeWin
-          results.set(game.away_team_id, {
-            win1st: awayWinData.get(game.away_team_id) ?? 0,
-            lose1st: homeWinData.get(game.away_team_id) ?? 0,
-          });
-        }
-      }
-
-      setImplicationData(results);
-      setLoading(false);
-    };
-
-    computeAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conference, teams.length, teamNextGame, callWhatIfApi]);
-
-  if (!teams.length) return null;
-
-  return (
-    <div className="bg-white rounded-lg shadow p-4 mt-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold">
-          Next Game Implications — 1st Place %
-        </h3>
-        {implicationData.size > 0 && (
-          <ScreenshotBtn
-            targetRef={ref}
-            filename="next_game_implications.png"
-            selectionHtml={null}
-          />
-        )}
-      </div>
-      {loading && (
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
-          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400" />
-          Computing implications...
-        </div>
-      )}
-      <div ref={ref}>
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-gray-200 text-gray-500">
-              <th className="text-left py-2 px-2 font-normal">Team</th>
-              <th className="text-left py-2 px-2 font-normal">Next Game</th>
-              <th className="text-center py-2 px-2 font-normal">Current</th>
-              <th className="text-center py-2 px-2 font-normal">Win</th>
-              <th className="text-center py-2 px-2 font-normal">Loss</th>
-            </tr>
-          </thead>
-          <tbody>
-            {teams.map((team) => {
-              const ng = teamNextGame.get(team.team_id);
-              if (!ng) return null;
-              const isHome = team.team_id === ng.home_team_id;
-              const oppName = isHome ? ng.away_team : ng.home_team;
-              const oppLogo = isHome
-                ? ng.away_logo_url
-                : ng.home_logo_url;
-              const current = team.standing_1_prob ?? 0;
-              const impl = implicationData.get(team.team_id);
-
-              return (
-                <tr
-                  key={team.team_id}
-                  className="border-b border-gray-100"
-                >
-                  <td className="py-1.5 px-2">
-                    <div className="flex items-center gap-1.5">
-                      <TeamLogo
-                        src={team.logo_url}
-                        alt={team.team_name}
-                        size={16}
-                      />
-                      <span>{team.team_name}</span>
-                    </div>
-                  </td>
-                  <td className="py-1.5 px-2">
-                    <div className="flex items-center gap-1">
-                      <span className="text-gray-400 text-[10px]">vs</span>
-                      <TeamLogo src={oppLogo} alt={oppName} size={14} />
-                      <span className="text-gray-600">{oppName}</span>
-                    </div>
-                  </td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={getCellColor(current, "blue")}
-                  >
-                    {current > 0 ? `${current.toFixed(1)}%` : ""}
-                  </td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={impl ? getCellColor(impl.win1st, "blue") : {}}
-                  >
-                    {impl ? (
-                      impl.win1st > 0 ? (
-                        `${impl.win1st.toFixed(1)}%`
-                      ) : (
-                        ""
-                      )
-                    ) : (
-                      <span className="text-gray-300">&mdash;</span>
-                    )}
-                  </td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={impl ? getCellColor(impl.lose1st, "blue") : {}}
-                  >
-                    {impl ? (
-                      impl.lose1st > 0 ? (
-                        `${impl.lose1st.toFixed(1)}%`
-                      ) : (
-                        ""
-                      )
-                    ) : (
-                      <span className="text-gray-300">&mdash;</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
       </div>
     </div>
   );
@@ -1086,18 +895,15 @@ export default function BasketballWhatIfScenarios() {
     [fetchWhatIf],
   );
 
-  const handleGameSelection = useCallback(
-    (gid: number, wid: number) => {
-      setGameSelections((prev) => {
-        const next = new Map(prev);
-        if (next.get(gid) === wid) next.delete(gid);
-        else next.set(gid, wid);
-        return next;
-      });
-      setHasCalculated(false);
-    },
-    [],
-  );
+  const handleGameSelection = useCallback((gid: number, wid: number) => {
+    setGameSelections((prev) => {
+      const next = new Map(prev);
+      if (next.get(gid) === wid) next.delete(gid);
+      else next.set(gid, wid);
+      return next;
+    });
+    setHasCalculated(false);
+  }, []);
 
   const handleCalculate = useCallback(() => {
     if (!selectedConference) return;
@@ -1147,7 +953,7 @@ export default function BasketballWhatIfScenarios() {
         const g = whatIfData.games.find((x) => x.game_id === gid);
         if (!g) return "";
         const awayWins = wid === g.away_team_id;
-        return `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border:1px solid #d1d5db;border-radius:4px;margin:2px;">
+        return `<span style="display:inline-flex;align-items:center;gap:2px;padding:1px 2px;border:1px solid #d1d5db;border-radius:4px;margin:2px;">
           <span style="border:${awayWins ? "2px solid rgb(0,151,178)" : "2px solid transparent"};border-radius:4px;padding:1px;">
             <img src="${g.away_logo_url}" width="14" height="14" style="display:block;" /></span>
           <span style="font-size:9px;color:#d1d5db;">@</span>
@@ -1186,11 +992,6 @@ export default function BasketballWhatIfScenarios() {
   const displayWhatif = hasCalculated
     ? (whatIfData?.data_no_ties ?? [])
     : displayBaseline;
-  const displayBaselineWT =
-    whatIfData?.current_projections_with_ties ?? [];
-  const displayWhatifWT = hasCalculated
-    ? (whatIfData?.data_with_ties ?? [])
-    : displayBaselineWT;
 
   // Prob functions
   const firstPlaceProb = useCallback(
@@ -1244,7 +1045,7 @@ export default function BasketballWhatIfScenarios() {
           <div className="bg-white rounded-lg shadow p-4">
             {/* Conference — inline */}
             <div className="mb-4 flex items-center gap-2">
-              <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                 Conference
               </label>
               <div className="[&_.conference-selector]:static [&_.conference-selector]:transform-none">
@@ -1258,21 +1059,19 @@ export default function BasketballWhatIfScenarios() {
             </div>
 
             <div className="mb-2 flex items-baseline justify-between">
-              <h3 className="text-sm font-semibold">Select Games</h3>
+              <h3 className="text-sm font-medium">
+                Select Game Winners and Calculate New What If Probabilities
+              </h3>
               <span className="text-[11px] text-gray-400">
                 {gameSelections.size} selected
               </span>
             </div>
-            <p className="text-[11px] text-gray-400 mb-3">
-              Percentage represents probability team will win based on
-              current season statistics.
-            </p>
 
             {whatIfData?.games && whatIfData.games.length > 0 ? (
               <div className="max-h-[50vh] overflow-y-auto pr-1 mb-4">
                 {sortedDates.map((date) => (
                   <div key={date} className="mb-3">
-                    <p className="text-[11px] font-medium text-gray-500 mb-1.5 sticky top-0 bg-white py-0.5 z-10">
+                    <p className="text-[11px] text-gray-500 mb-1.5 sticky top-0 bg-white py-0.5 z-10">
                       {date}
                     </p>
                     <div className="flex flex-wrap gap-1">
@@ -1317,17 +1116,6 @@ export default function BasketballWhatIfScenarios() {
               )}
             </div>
           </div>
-
-          {/* Next Game Implications — auto-populates */}
-          {displayBaselineWT.length > 0 &&
-            whatIfData?.games &&
-            selectedConference && (
-              <NextGameImplications
-                games={whatIfData.games}
-                baseline={displayBaselineWT}
-                conference={selectedConference}
-              />
-            )}
         </div>
 
         {/* ═══ RIGHT PANEL ═══ */}
@@ -1335,14 +1123,14 @@ export default function BasketballWhatIfScenarios() {
           <div className="bg-white rounded-lg shadow p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-lg font-medium">
                 {hasCalculated ? "What-If Results" : "Current Standings"}
               </h2>
               {hasCalculated && whatIfData?.validation_data && (
                 <button
                   onClick={handleDownloadCSV}
                   data-no-screenshot
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition"
+                  className="hidden items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition"
                 >
                   <Download size={13} /> Validation CSV
                 </button>
@@ -1366,7 +1154,7 @@ export default function BasketballWhatIfScenarios() {
             {!isCalculating && displayBaseline.length > 0 && (
               <>
                 <ProbabilityTable
-                  title="First Place % (Before → What If)"
+                  title="What If Probabilities - 1st Seed in Conference"
                   baseline={displayBaseline}
                   whatif={displayWhatif}
                   probFn={firstPlaceProb}
@@ -1376,7 +1164,7 @@ export default function BasketballWhatIfScenarios() {
                   selectionHtml={selectionLegendHtml}
                 />
                 <ProbabilityTable
-                  title="Top 4 % Probability"
+                  title="What If Probabilities - Top 4 Seed in Conference"
                   baseline={displayBaseline}
                   whatif={displayWhatif}
                   probFn={top4Prob}
@@ -1386,7 +1174,7 @@ export default function BasketballWhatIfScenarios() {
                   selectionHtml={selectionLegendHtml}
                 />
                 <ProbabilityTable
-                  title="Top 8 % Probability"
+                  title="What If Probabilities - Top 8 Seed in Conference"
                   baseline={displayBaseline}
                   whatif={displayWhatif}
                   probFn={top8Prob}
@@ -1412,21 +1200,32 @@ export default function BasketballWhatIfScenarios() {
                 baseline={whatIfData?.current_projections_no_ties ?? []}
                 whatif={whatIfData?.data_no_ties ?? []}
                 numTeams={numTeams}
-                label="Projected Standings (Tiebreakers Applied)"
+                label="What If Probabilities - Projected Seeding (Tiebreakers Applied)"
                 screenshotRef={standingsNoTiesRef}
                 selectionHtml={selectionLegendHtml}
               />
 
               <FullStandingsTable
-                baseline={
-                  whatIfData?.current_projections_with_ties ?? []
-                }
+                baseline={whatIfData?.current_projections_with_ties ?? []}
                 whatif={whatIfData?.data_with_ties ?? []}
                 numTeams={numTeams}
-                label="Projected Standings (With Ties)"
+                label="What If Probabilities - Projected Standings (No Tiebreakers)"
                 screenshotRef={standingsWithTiesRef}
                 selectionHtml={selectionLegendHtml}
               />
+            </div>
+          )}
+
+          {/* Explainer text */}
+          {!isCalculating && displayBaseline.length > 0 && (
+            <div className="mt-4 px-1">
+              <p className="text-[10px] text-gray-400 leading-relaxed">
+                Current reflects current probabilities; what if reflects updated
+                probabilities with game results selected. Change is the
+                difference between current and what if. Ties broken based on Big
+                12 tiebreaker rules (future update to include individual
+                conference tiebreakers).
+              </p>
             </div>
           )}
         </div>
