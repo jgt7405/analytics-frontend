@@ -859,6 +859,28 @@ export default function BasketballWhatIfScenarios() {
       });
       if (!res.ok) throw new Error(`Baseline fetch failed: ${res.status}`);
       const data = await res.json();
+      
+      // Map game logos (backend returns filenames, frontend needs /images/team_logos/ paths)
+      const getLogoUrl = (filename?: string): string | undefined => {
+        if (!filename) return undefined;
+        if (filename.startsWith("http") || filename.startsWith("/")) return filename;
+        return `/images/team_logos/${filename}`;
+      };
+      if (data.games) {
+        data.games = data.games.map((g: Record<string, unknown>) => ({
+          ...g,
+          home_logo_url: getLogoUrl((g.home_team_logo || g.home_logo_url) as string | undefined),
+          away_logo_url: getLogoUrl((g.away_team_logo || g.away_logo_url) as string | undefined),
+        }));
+      }
+      // Map team_id from teamid if needed
+      const mapTeams = (teams: Record<string, unknown>[]) =>
+        teams?.map((t) => ({ ...t, team_id: t.team_id || t.teamid || 0 })) ?? [];
+      data.data_with_ties = mapTeams(data.data_with_ties);
+      data.data_no_ties = mapTeams(data.data_no_ties);
+      data.current_projections_with_ties = mapTeams(data.current_projections_with_ties);
+      data.current_projections_no_ties = mapTeams(data.current_projections_no_ties);
+      
       setWhatIfData(data as WhatIfResponse);
     } catch (e) {
       console.error("Baseline fetch error:", e);
@@ -1121,7 +1143,7 @@ export default function BasketballWhatIfScenarios() {
               <h2 className="text-lg font-medium">
                 {hasCalculated ? "What-If Results" : "Current Standings"}
               </h2>
-              {hasCalculated && whatIfData?.validation_data && (
+              {hasCalculated && whatIfData?.validation_data && whatIfData.validation_data.game_info && (
                 <span />
               )}
             </div>
@@ -1219,7 +1241,7 @@ export default function BasketballWhatIfScenarios() {
           )}
 
           {/* Validation CSV download */}
-          {hasCalculated && whatIfData?.validation_data && (
+          {hasCalculated && whatIfData?.validation_data && whatIfData.validation_data.game_info && (
             <div className="mt-3 px-1" data-no-screenshot>
               <button
                 onClick={handleDownloadCSV}
