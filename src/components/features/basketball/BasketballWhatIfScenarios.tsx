@@ -68,10 +68,7 @@ async function captureScreenshot(
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
 
   // Measure actual content width for tighter screenshots
-  const contentWidth = Math.min(
-    element.scrollWidth + 48,
-    element.offsetWidth + 48,
-  );
+  const contentWidth = Math.min(element.scrollWidth + 48, element.offsetWidth + 48);
 
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
@@ -82,12 +79,11 @@ async function captureScreenshot(
   const logo = document.createElement("img");
   logo.src = "/images/JThom_Logo.png";
   logo.style.cssText = "height:40px;width:auto;";
-
+  
   const titleSpan = document.createElement("div");
   titleSpan.textContent = chartTitle || "";
-  titleSpan.style.cssText =
-    "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
-
+  titleSpan.style.cssText = "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
+  
   const date = document.createElement("div");
   date.textContent = new Date().toLocaleDateString();
   date.style.cssText = "font-size:12px;color:#6b7280;";
@@ -109,10 +105,8 @@ async function captureScreenshot(
 
   // Explainer text at bottom of every screenshot
   const explainer = document.createElement("div");
-  explainer.style.cssText =
-    "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
-  explainer.innerHTML =
-    "Current reflects current probabilities; what if reflects updated probabilities with game results selected.<br/>Change is the difference between current and what if.<br/>Ties broken based on Big 12 tiebreaker rules (future update to include individual conference tiebreakers).";
+  explainer.style.cssText = "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
+  explainer.innerHTML = "Current reflects current probabilities; what if reflects updated probabilities with game results selected.<br/>Change is the difference between current and what if.<br/>Ties broken based on Big 12 tiebreaker rules (future update to include individual conference tiebreakers).";
   wrapper.appendChild(explainer);
 
   document.body.appendChild(wrapper);
@@ -181,7 +175,11 @@ function buildValidationCSV(vd: ValidationData, conference: string): string {
     const w = vd.original_winners[s];
     return w ? [s, ...w] : [];
   });
-  lines.splice(2, 0, ["Probabilities (Away/Home)", ...gp].map(esc).join(","));
+  lines.splice(
+    2,
+    0,
+    ["Probabilities (Away/Home)", ...gp].map(esc).join(","),
+  );
 
   section("SECTION 2: WHAT-IF WINNERS", ["Scenario", ...gh], (s) => {
     const w = vd.whatif_winners[s];
@@ -462,12 +460,7 @@ function ScreenshotBtn({
         if (!targetRef.current || capturing) return;
         setCapturing(true);
         try {
-          await captureScreenshot(
-            targetRef.current,
-            selectionHtml,
-            filename,
-            chartTitle,
-          );
+          await captureScreenshot(targetRef.current, selectionHtml, filename, chartTitle);
         } catch (e) {
           console.error("Screenshot failed:", e);
         }
@@ -525,7 +518,8 @@ function ProbabilityTable({
     return [...src]
       .sort(
         (a, b) =>
-          (a.avg_conference_standing ?? 99) - (b.avg_conference_standing ?? 99),
+          (a.avg_conference_standing ?? 99) -
+          (b.avg_conference_standing ?? 99),
       )
       .map((team) => {
         const bl = baselineMap.get(team.team_id);
@@ -560,9 +554,7 @@ function ProbabilityTable({
 
   const sortIndicator = (col: SortCol) =>
     sortCol === col ? (
-      <span className="ml-0.5 text-[9px]">
-        {sortDir === "desc" ? "▼" : "▲"}
-      </span>
+      <span className="ml-0.5 text-[9px]">{sortDir === "desc" ? "▼" : "▲"}</span>
     ) : null;
 
   const thClass =
@@ -585,38 +577,23 @@ function ProbabilityTable({
         <table className="text-sm" style={{ width: "auto", minWidth: "320px" }}>
           <thead>
             <tr className="border-b border-gray-200 text-gray-500">
-              <th
-                className="text-left py-2 px-2 font-normal"
-                style={{ minWidth: "140px" }}
-              >
-                Team
-              </th>
+              <th className="text-left py-2 px-2 font-normal" style={{ minWidth: "140px" }}>Team</th>
               {hasCalculated ? (
                 <>
-                  <th
-                    className={thClass}
-                    style={{ minWidth: "70px" }}
-                    onClick={() => handleSort("before")}
-                  >
+                  <th className={thClass} style={{ minWidth: "70px" }} onClick={() => handleSort("before")}>
                     Current{sortIndicator("before")}
                   </th>
-                  <th
-                    className={thClass}
-                    style={{ minWidth: "70px" }}
-                    onClick={() => handleSort("after")}
-                  >
+                  <th className={thClass} style={{ minWidth: "70px" }} onClick={() => handleSort("after")}>
                     What If{sortIndicator("after")}
                   </th>
-                  <th
-                    className={thClass}
-                    style={{ minWidth: "70px" }}
-                    onClick={() => handleSort("change")}
-                  >
+                  <th className={thClass} style={{ minWidth: "70px" }} onClick={() => handleSort("change")}>
                     Change{sortIndicator("change")}
                   </th>
                 </>
               ) : (
-                <th className="text-center py-2 px-2 font-normal">Current %</th>
+                <th className="text-center py-2 px-2 font-normal">
+                  Current %
+                </th>
               )}
             </tr>
           </thead>
@@ -732,9 +709,18 @@ function FullStandingsTable({
                 <th className="text-center py-2 px-2 font-normal">Wins</th>
                 <th className="text-center py-2 px-2 font-normal">Avg</th>
                 {Array.from({ length: maxStandings }, (_, i) => (
-                  <th key={i} className="text-center py-2 px-1.5 font-normal">
+                  <th
+                    key={i}
+                    className="text-center py-2 px-1.5 font-normal"
+                  >
                     {i + 1}
-                    {i === 0 ? "st" : i === 1 ? "nd" : i === 2 ? "rd" : "th"}
+                    {i === 0
+                      ? "st"
+                      : i === 1
+                        ? "nd"
+                        : i === 2
+                          ? "rd"
+                          : "th"}
                   </th>
                 ))}
               </tr>
@@ -766,31 +752,25 @@ function FullStandingsTable({
                     </td>
                     <td className="text-center py-0.5 px-2 tabular-nums">
                       {(team.avg_projected_conf_wins ?? 0).toFixed(1)}
-                      {Math.abs(winsChange) > 0.01 && (
-                        <span
-                          className={`block text-[9px] ${winsChange > 0 ? "text-green-600" : "text-red-500"}`}
-                        >
-                          {winsChange > 0 ? "+" : ""}
-                          {winsChange.toFixed(2)}
-                        </span>
-                      )}
+                      <span
+                        className={`block text-[9px] ${Math.abs(winsChange) > 0.01 ? (winsChange > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
+                      >
+                        {Math.abs(winsChange) > 0.01 ? `${winsChange > 0 ? "+" : ""}${winsChange.toFixed(2)}` : "\u00A0"}
+                      </span>
                     </td>
                     <td className="text-center py-0.5 px-2 tabular-nums">
                       {(team.avg_conference_standing ?? 0).toFixed(1)}
-                      {bl &&
-                        (() => {
-                          const avgChange =
-                            (team.avg_conference_standing ?? 0) -
-                            (bl.avg_conference_standing ?? 0);
-                          return Math.abs(avgChange) > 0.01 ? (
-                            <span
-                              className={`block text-[9px] ${avgChange < 0 ? "text-green-600" : "text-red-500"}`}
-                            >
-                              {avgChange > 0 ? "+" : ""}
-                              {avgChange.toFixed(2)}
-                            </span>
-                          ) : null;
-                        })()}
+                      {(() => {
+                        const avgChange = bl ? (team.avg_conference_standing ?? 0) - (bl.avg_conference_standing ?? 0) : 0;
+                        const hasAvgChange = Math.abs(avgChange) > 0.01;
+                        return (
+                          <span
+                            className={`block text-[9px] ${hasAvgChange ? (avgChange < 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
+                          >
+                            {hasAvgChange ? `${avgChange > 0 ? "+" : ""}${avgChange.toFixed(2)}` : "\u00A0"}
+                          </span>
+                        );
+                      })()}
                     </td>
                     {Array.from({ length: maxStandings }, (_, i) => {
                       const standing = i + 1;
@@ -811,15 +791,12 @@ function FullStandingsTable({
                               : "transparent",
                           }}
                         >
-                          {val > 0 ? `${val.toFixed(1)}` : ""}
-                          {hasChange && (
-                            <span
-                              className={`block text-[8px] ${delta > 0 ? "text-green-600" : "text-red-500"}`}
-                            >
-                              {delta > 0 ? "+" : ""}
-                              {delta.toFixed(1)}
-                            </span>
-                          )}
+                          {val > 0 ? `${val.toFixed(1)}` : "\u00A0"}
+                          <span
+                            className={`block text-[8px] ${hasChange ? (delta > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
+                          >
+                            {hasChange ? `${delta > 0 ? "+" : ""}${delta.toFixed(1)}` : "\u00A0"}
+                          </span>
                         </td>
                       );
                     })}
@@ -869,14 +846,32 @@ export default function BasketballWhatIfScenarios() {
   const { mutate: fetchWhatIf, isPending: isCalculating } =
     useBasketballWhatIf();
 
+  // Lightweight baseline fetch — no simulations, just pre-computed data + games
+  const [isLoadingBaseline, setIsLoadingBaseline] = useState(false);
+
+  const fetchBaseline = useCallback(async (conf: string) => {
+    setIsLoadingBaseline(true);
+    try {
+      const res = await fetch("/api/proxy/basketball/whatif/baseline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conference: conf }),
+      });
+      if (!res.ok) throw new Error(`Baseline fetch failed: ${res.status}`);
+      const data = await res.json();
+      setWhatIfData(data as WhatIfResponse);
+    } catch (e) {
+      console.error("Baseline fetch error:", e);
+    } finally {
+      setIsLoadingBaseline(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (conferences.length > 0 && !selectedConference) {
       const def = conferences.includes("Big 12") ? "Big 12" : conferences[0];
       setSelectedConference(def);
-      fetchWhatIf(
-        { conference: def, selections: [] },
-        { onSuccess: (d: WhatIfResponse) => setWhatIfData(d) },
-      );
+      fetchBaseline(def);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conferences, selectedConference]);
@@ -887,23 +882,23 @@ export default function BasketballWhatIfScenarios() {
       setGameSelections(new Map());
       setWhatIfData(null);
       setHasCalculated(false);
-      fetchWhatIf(
-        { conference: c, selections: [] },
-        { onSuccess: (d: WhatIfResponse) => setWhatIfData(d) },
-      );
+      fetchBaseline(c);
     },
-    [fetchWhatIf],
+    [fetchBaseline],
   );
 
-  const handleGameSelection = useCallback((gid: number, wid: number) => {
-    setGameSelections((prev) => {
-      const next = new Map(prev);
-      if (next.get(gid) === wid) next.delete(gid);
-      else next.set(gid, wid);
-      return next;
-    });
-    setHasCalculated(false);
-  }, []);
+  const handleGameSelection = useCallback(
+    (gid: number, wid: number) => {
+      setGameSelections((prev) => {
+        const next = new Map(prev);
+        if (next.get(gid) === wid) next.delete(gid);
+        else next.set(gid, wid);
+        return next;
+      });
+      setHasCalculated(false);
+    },
+    [],
+  );
 
   const handleCalculate = useCallback(() => {
     if (!selectedConference) return;
@@ -1059,9 +1054,7 @@ export default function BasketballWhatIfScenarios() {
             </div>
 
             <div className="mb-2 flex items-baseline justify-between">
-              <h3 className="text-sm font-medium">
-                Select Game Winners and Calculate New What If Probabilities
-              </h3>
+              <h3 className="text-sm font-medium">Select Game Winners and Calculate New What If Probabilities</h3>
               <span className="text-[11px] text-gray-400">
                 {gameSelections.size} selected
               </span>
@@ -1089,7 +1082,7 @@ export default function BasketballWhatIfScenarios() {
               </div>
             ) : (
               <p className="text-sm text-gray-500 italic py-4">
-                {isCalculating
+                {isCalculating || isLoadingBaseline
                   ? "Loading games..."
                   : "No upcoming conference games found."}
               </p>
@@ -1116,6 +1109,8 @@ export default function BasketballWhatIfScenarios() {
               )}
             </div>
           </div>
+
+
         </div>
 
         {/* ═══ RIGHT PANEL ═══ */}
@@ -1127,13 +1122,7 @@ export default function BasketballWhatIfScenarios() {
                 {hasCalculated ? "What-If Results" : "Current Standings"}
               </h2>
               {hasCalculated && whatIfData?.validation_data && (
-                <button
-                  onClick={handleDownloadCSV}
-                  data-no-screenshot
-                  className="hidden items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition"
-                >
-                  <Download size={13} /> Validation CSV
-                </button>
+                <span />
               )}
             </div>
 
@@ -1145,13 +1134,13 @@ export default function BasketballWhatIfScenarios() {
               />
             )}
 
-            {isCalculating && (
+            {(isCalculating || isLoadingBaseline) && (
               <div className="flex justify-center py-12">
                 <LoadingSpinner />
               </div>
             )}
 
-            {!isCalculating && displayBaseline.length > 0 && (
+            {!isCalculating && !isLoadingBaseline && displayBaseline.length > 0 && (
               <>
                 <ProbabilityTable
                   title="What If Probabilities - 1st Seed in Conference"
@@ -1186,7 +1175,7 @@ export default function BasketballWhatIfScenarios() {
               </>
             )}
 
-            {!isCalculating && !displayBaseline.length && (
+            {!isCalculating && !isLoadingBaseline && !displayBaseline.length && (
               <p className="text-gray-500 text-center py-8">
                 No team data available
               </p>
@@ -1206,7 +1195,9 @@ export default function BasketballWhatIfScenarios() {
               />
 
               <FullStandingsTable
-                baseline={whatIfData?.current_projections_with_ties ?? []}
+                baseline={
+                  whatIfData?.current_projections_with_ties ?? []
+                }
                 whatif={whatIfData?.data_with_ties ?? []}
                 numTeams={numTeams}
                 label="What If Probabilities - Projected Standings (No Tiebreakers)"
@@ -1217,15 +1208,25 @@ export default function BasketballWhatIfScenarios() {
           )}
 
           {/* Explainer text */}
-          {!isCalculating && displayBaseline.length > 0 && (
+          {!isCalculating && !isLoadingBaseline && displayBaseline.length > 0 && (
             <div className="mt-4 px-1">
               <p className="text-[10px] text-gray-400 leading-relaxed">
-                Current reflects current probabilities; what if reflects updated
-                probabilities with game results selected. Change is the
-                difference between current and what if. Ties broken based on Big
-                12 tiebreaker rules (future update to include individual
-                conference tiebreakers).
+                Current reflects current probabilities; what if reflects updated probabilities with game results selected.
+                Change is the difference between current and what if.
+                Ties broken based on Big 12 tiebreaker rules (future update to include individual conference tiebreakers).
               </p>
+            </div>
+          )}
+
+          {/* Validation CSV download */}
+          {hasCalculated && whatIfData?.validation_data && (
+            <div className="mt-3 px-1" data-no-screenshot>
+              <button
+                onClick={handleDownloadCSV}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 transition"
+              >
+                <Download size={13} /> Download Validation CSV
+              </button>
             </div>
           )}
         </div>
