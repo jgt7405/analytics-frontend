@@ -523,6 +523,18 @@ export async function POST(
       backendPath = `/football/whatif/export`;
       console.log("📥 FOOTBALL WHAT-IF EXPORT detected");
     }
+
+    // ===== HANDLE BASKETBALL WHAT-IF BASELINE =====
+    else if (
+      slug.length === 3 &&
+      slug[0] === "basketball" &&
+      slug[1] === "whatif" &&
+      slug[2] === "baseline"
+    ) {
+      backendPath = `/basketball/whatif/baseline`;
+      console.log("🏀 BASKETBALL WHAT-IF BASELINE detected");
+    }
+        
     // ===== HANDLE BASKETBALL WHAT-IF ROUTES =====
     else if (
       slug.length === 2 &&
