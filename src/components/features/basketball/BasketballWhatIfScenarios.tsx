@@ -9,10 +9,10 @@ import { Camera, Download } from "lucide-react";
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
   useBasketballWhatIf,
+  type ValidationData,
   type WhatIfGame,
   type WhatIfResponse,
   type WhatIfTeamResult,
-  type ScenarioResult,
 } from "@/hooks/useBasketballWhatIf";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -68,7 +68,10 @@ async function captureScreenshot(
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
 
   // Measure actual content width for tighter screenshots
-  const contentWidth = Math.min(element.scrollWidth + 48, element.offsetWidth + 48);
+  const contentWidth = Math.min(
+    element.scrollWidth + 48,
+    element.offsetWidth + 48,
+  );
 
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
@@ -79,11 +82,12 @@ async function captureScreenshot(
   const logo = document.createElement("img");
   logo.src = "/images/JThom_Logo.png";
   logo.style.cssText = "height:40px;width:auto;";
-  
+
   const titleSpan = document.createElement("div");
   titleSpan.textContent = chartTitle || "";
-  titleSpan.style.cssText = "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
-  
+  titleSpan.style.cssText =
+    "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
+
   const date = document.createElement("div");
   date.textContent = new Date().toLocaleDateString();
   date.style.cssText = "font-size:12px;color:#6b7280;";
@@ -105,8 +109,10 @@ async function captureScreenshot(
 
   // Explainer text at bottom of every screenshot
   const explainer = document.createElement("div");
-  explainer.style.cssText = "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
-  explainer.innerHTML = "Current reflects current probabilities; what if reflects updated probabilities with game results selected.<br/>Change is the difference between current and what if.<br/>Ties broken based on Big 12 tiebreaker rules (future update to include individual conference tiebreakers).";
+  explainer.style.cssText =
+    "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
+  explainer.innerHTML =
+    "Current reflects current probabilities; what if reflects updated probabilities with game results selected.<br/>Change is the difference between current and what if.<br/>Ties broken based on Big 12 tiebreaker rules (future update to include individual conference tiebreakers).";
   wrapper.appendChild(explainer);
 
   document.body.appendChild(wrapper);
@@ -137,63 +143,90 @@ declare global {
 }
 
 // ── CSV ──
-function buildScenarioCSV(
-  scenarios: ScenarioResult[],
-  games: WhatIfGame[],
-  conference: string,
-): string {
+function buildValidationCSV(vd: ValidationData, conference: string): string {
   const lines: string[] = [];
   const esc = (v: string | number | boolean | null | undefined) =>
     `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const { game_info: games, team_names: teams } = vd;
 
-  // Header row with game matchups
-  const gameHeaders = games.map(
-    (g) => `Game ${g.game_id}: ${g.away_team} @ ${g.home_team}`,
+  // Game headers: "Game 4325: Away Team @ Home Team (45%/55%)"
+  const gh = games.map((g) => {
+    const ap =
+      g.away_probability != null
+        ? (g.away_probability * 100).toFixed(0) + "%"
+        : "";
+    const hp =
+      g.home_probability != null
+        ? (g.home_probability * 100).toFixed(0) + "%"
+        : "";
+    return `Game ${g.game_id}: ${g.away_team} @ ${g.home_team} (${ap}/${hp})`;
+  });
+
+  const section = (
+    title: string,
+    headers: string[],
+    rowFn: (s: number) => (string | number)[],
+  ) => {
+    lines.push(esc(`=== ${title} — ${conference} ===`));
+    lines.push(headers.map(esc).join(","));
+    for (let s = 1; s <= 1000; s++) {
+      const row = rowFn(s);
+      if (row.length) lines.push(row.map(esc).join(","));
+    }
+    lines.push("");
+  };
+
+  // Section 1: Current Winners
+  section("SECTION 1: CURRENT WINNERS", ["Scenario", ...gh], (s) => {
+    const w = vd.original_winners[s];
+    return w ? [s, ...w] : [];
+  });
+
+  // Section 2: What-If Winners (user selections forced across all scenarios)
+  section("SECTION 2: WHAT-IF WINNERS", ["Scenario", ...gh], (s) => {
+    const w = vd.whatif_winners[s];
+    return w ? [s, ...w] : [];
+  });
+
+  // Section 3: Conference Wins — Current
+  section(
+    "SECTION 3: CONFERENCE WINS — CURRENT",
+    ["Scenario", ...teams],
+    (s) => {
+      const w = vd.original_conf_wins[s];
+      return w ? [s, ...teams.map((t) => w[t] ?? 0)] : [];
+    },
   );
 
-  // Get sorted team names from first scenario's standings
-  const teamNames =
-    scenarios.length > 0 && scenarios[0].standings
-      ? scenarios[0].standings.map((s) => s.team_name)
-      : [];
+  // Section 4: Conference Wins — What-If
+  section(
+    "SECTION 4: CONFERENCE WINS — WHAT-IF",
+    ["Scenario", ...teams],
+    (s) => {
+      const w = vd.whatif_conf_wins[s];
+      return w ? [s, ...teams.map((t) => w[t] ?? 0)] : [];
+    },
+  );
 
-  // SECTION 1: Game winners per scenario
-  lines.push(esc(`=== GAME WINNERS — ${conference} ===`));
-  lines.push(["Scenario", ...gameHeaders].map(esc).join(","));
-  for (const sc of scenarios) {
-    const row: (string | number)[] = [sc.scenario_num];
-    for (const game of games) {
-      const outcome = sc.games?.find((g) => g.game_id === game.game_id);
-      row.push(outcome?.winner ?? "");
-    }
-    lines.push(row.map(esc).join(","));
-  }
-  lines.push("");
+  // Section 5: Standings (Ties Broken) — Current
+  section(
+    "SECTION 5: STANDINGS (TIES BROKEN) — CURRENT",
+    ["Scenario", ...teams],
+    (s) => {
+      const st = vd.original_standings[s];
+      return st ? [s, ...teams.map((t) => st[t] ?? "")] : [];
+    },
+  );
 
-  // SECTION 2: Conference wins per scenario
-  lines.push(esc(`=== CONFERENCE WINS — ${conference} ===`));
-  lines.push(["Scenario", ...teamNames].map(esc).join(","));
-  for (const sc of scenarios) {
-    const row: (string | number)[] = [sc.scenario_num];
-    for (const name of teamNames) {
-      const team = sc.standings?.find((s) => s.team_name === name);
-      row.push(team?.conf_wins ?? 0);
-    }
-    lines.push(row.map(esc).join(","));
-  }
-  lines.push("");
-
-  // SECTION 3: Standings (seed) per scenario
-  lines.push(esc(`=== STANDINGS (SEED) — ${conference} ===`));
-  lines.push(["Scenario", ...teamNames].map(esc).join(","));
-  for (const sc of scenarios) {
-    const row: (string | number)[] = [sc.scenario_num];
-    for (const name of teamNames) {
-      const team = sc.standings?.find((s) => s.team_name === name);
-      row.push(team?.seed ?? "");
-    }
-    lines.push(row.map(esc).join(","));
-  }
+  // Section 6: Standings (Ties Broken) — What-If
+  section(
+    "SECTION 6: STANDINGS (TIES BROKEN) — WHAT-IF",
+    ["Scenario", ...teams],
+    (s) => {
+      const st = vd.whatif_standings[s];
+      return st ? [s, ...teams.map((t) => st[t] ?? "")] : [];
+    },
+  );
 
   return lines.join("\n");
 }
@@ -438,7 +471,12 @@ function ScreenshotBtn({
         if (!targetRef.current || capturing) return;
         setCapturing(true);
         try {
-          await captureScreenshot(targetRef.current, selectionHtml, filename, chartTitle);
+          await captureScreenshot(
+            targetRef.current,
+            selectionHtml,
+            filename,
+            chartTitle,
+          );
         } catch (e) {
           console.error("Screenshot failed:", e);
         }
@@ -496,8 +534,7 @@ function ProbabilityTable({
     return [...src]
       .sort(
         (a, b) =>
-          (a.avg_conference_standing ?? 99) -
-          (b.avg_conference_standing ?? 99),
+          (a.avg_conference_standing ?? 99) - (b.avg_conference_standing ?? 99),
       )
       .map((team) => {
         const bl = baselineMap.get(team.team_id);
@@ -532,7 +569,9 @@ function ProbabilityTable({
 
   const sortIndicator = (col: SortCol) =>
     sortCol === col ? (
-      <span className="ml-0.5 text-[9px]">{sortDir === "desc" ? "▼" : "▲"}</span>
+      <span className="ml-0.5 text-[9px]">
+        {sortDir === "desc" ? "▼" : "▲"}
+      </span>
     ) : null;
 
   const thClass =
@@ -555,23 +594,38 @@ function ProbabilityTable({
         <table className="text-sm" style={{ width: "auto", minWidth: "320px" }}>
           <thead>
             <tr className="border-b border-gray-200 text-gray-500">
-              <th className="text-left py-2 px-2 font-normal" style={{ minWidth: "140px" }}>Team</th>
+              <th
+                className="text-left py-2 px-2 font-normal"
+                style={{ minWidth: "140px" }}
+              >
+                Team
+              </th>
               {hasCalculated ? (
                 <>
-                  <th className={thClass} style={{ minWidth: "70px" }} onClick={() => handleSort("before")}>
+                  <th
+                    className={thClass}
+                    style={{ minWidth: "70px" }}
+                    onClick={() => handleSort("before")}
+                  >
                     Current{sortIndicator("before")}
                   </th>
-                  <th className={thClass} style={{ minWidth: "70px" }} onClick={() => handleSort("after")}>
+                  <th
+                    className={thClass}
+                    style={{ minWidth: "70px" }}
+                    onClick={() => handleSort("after")}
+                  >
                     What If{sortIndicator("after")}
                   </th>
-                  <th className={thClass} style={{ minWidth: "70px" }} onClick={() => handleSort("change")}>
+                  <th
+                    className={thClass}
+                    style={{ minWidth: "70px" }}
+                    onClick={() => handleSort("change")}
+                  >
                     Change{sortIndicator("change")}
                   </th>
                 </>
               ) : (
-                <th className="text-center py-2 px-2 font-normal">
-                  Current %
-                </th>
+                <th className="text-center py-2 px-2 font-normal">Current %</th>
               )}
             </tr>
           </thead>
@@ -687,18 +741,9 @@ function FullStandingsTable({
                 <th className="text-center py-2 px-2 font-normal">Wins</th>
                 <th className="text-center py-2 px-2 font-normal">Avg</th>
                 {Array.from({ length: maxStandings }, (_, i) => (
-                  <th
-                    key={i}
-                    className="text-center py-2 px-1.5 font-normal"
-                  >
+                  <th key={i} className="text-center py-2 px-1.5 font-normal">
                     {i + 1}
-                    {i === 0
-                      ? "st"
-                      : i === 1
-                        ? "nd"
-                        : i === 2
-                          ? "rd"
-                          : "th"}
+                    {i === 0 ? "st" : i === 1 ? "nd" : i === 2 ? "rd" : "th"}
                   </th>
                 ))}
               </tr>
@@ -733,19 +778,26 @@ function FullStandingsTable({
                       <span
                         className={`block text-[9px] ${Math.abs(winsChange) > 0.01 ? (winsChange > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
                       >
-                        {Math.abs(winsChange) > 0.01 ? `${winsChange > 0 ? "+" : ""}${winsChange.toFixed(2)}` : "\u00A0"}
+                        {Math.abs(winsChange) > 0.01
+                          ? `${winsChange > 0 ? "+" : ""}${winsChange.toFixed(2)}`
+                          : "\u00A0"}
                       </span>
                     </td>
                     <td className="text-center py-0.5 px-2 tabular-nums">
                       {(team.avg_conference_standing ?? 0).toFixed(1)}
                       {(() => {
-                        const avgChange = bl ? (team.avg_conference_standing ?? 0) - (bl.avg_conference_standing ?? 0) : 0;
+                        const avgChange = bl
+                          ? (team.avg_conference_standing ?? 0) -
+                            (bl.avg_conference_standing ?? 0)
+                          : 0;
                         const hasAvgChange = Math.abs(avgChange) > 0.01;
                         return (
                           <span
                             className={`block text-[9px] ${hasAvgChange ? (avgChange < 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
                           >
-                            {hasAvgChange ? `${avgChange > 0 ? "+" : ""}${avgChange.toFixed(2)}` : "\u00A0"}
+                            {hasAvgChange
+                              ? `${avgChange > 0 ? "+" : ""}${avgChange.toFixed(2)}`
+                              : "\u00A0"}
                           </span>
                         );
                       })()}
@@ -773,7 +825,9 @@ function FullStandingsTable({
                           <span
                             className={`block text-[8px] ${hasChange ? (delta > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
                           >
-                            {hasChange ? `${delta > 0 ? "+" : ""}${delta.toFixed(1)}` : "\u00A0"}
+                            {hasChange
+                              ? `${delta > 0 ? "+" : ""}${delta.toFixed(1)}`
+                              : "\u00A0"}
                           </span>
                         </td>
                       );
@@ -837,28 +891,38 @@ export default function BasketballWhatIfScenarios() {
       });
       if (!res.ok) throw new Error(`Baseline fetch failed: ${res.status}`);
       const data = await res.json();
-      
+
       // Map game logos (backend returns filenames, frontend needs /images/team_logos/ paths)
       const getLogoUrl = (filename?: string): string | undefined => {
         if (!filename) return undefined;
-        if (filename.startsWith("http") || filename.startsWith("/")) return filename;
+        if (filename.startsWith("http") || filename.startsWith("/"))
+          return filename;
         return `/images/team_logos/${filename}`;
       };
       if (data.games) {
         data.games = data.games.map((g: Record<string, unknown>) => ({
           ...g,
-          home_logo_url: getLogoUrl((g.home_team_logo || g.home_logo_url) as string | undefined),
-          away_logo_url: getLogoUrl((g.away_team_logo || g.away_logo_url) as string | undefined),
+          home_logo_url: getLogoUrl(
+            (g.home_team_logo || g.home_logo_url) as string | undefined,
+          ),
+          away_logo_url: getLogoUrl(
+            (g.away_team_logo || g.away_logo_url) as string | undefined,
+          ),
         }));
       }
       // Map team_id from teamid if needed
       const mapTeams = (teams: Record<string, unknown>[]) =>
-        teams?.map((t) => ({ ...t, team_id: t.team_id || t.teamid || 0 })) ?? [];
+        teams?.map((t) => ({ ...t, team_id: t.team_id || t.teamid || 0 })) ??
+        [];
       data.data_with_ties = mapTeams(data.data_with_ties);
       data.data_no_ties = mapTeams(data.data_no_ties);
-      data.current_projections_with_ties = mapTeams(data.current_projections_with_ties);
-      data.current_projections_no_ties = mapTeams(data.current_projections_no_ties);
-      
+      data.current_projections_with_ties = mapTeams(
+        data.current_projections_with_ties,
+      );
+      data.current_projections_no_ties = mapTeams(
+        data.current_projections_no_ties,
+      );
+
       setWhatIfData(data as WhatIfResponse);
     } catch (e) {
       console.error("Baseline fetch error:", e);
@@ -887,18 +951,15 @@ export default function BasketballWhatIfScenarios() {
     [fetchBaseline],
   );
 
-  const handleGameSelection = useCallback(
-    (gid: number, wid: number) => {
-      setGameSelections((prev) => {
-        const next = new Map(prev);
-        if (next.get(gid) === wid) next.delete(gid);
-        else next.set(gid, wid);
-        return next;
-      });
-      setHasCalculated(false);
-    },
-    [],
-  );
+  const handleGameSelection = useCallback((gid: number, wid: number) => {
+    setGameSelections((prev) => {
+      const next = new Map(prev);
+      if (next.get(gid) === wid) next.delete(gid);
+      else next.set(gid, wid);
+      return next;
+    });
+    setHasCalculated(false);
+  }, []);
 
   const handleCalculate = useCallback(() => {
     if (!selectedConference) return;
@@ -921,23 +982,23 @@ export default function BasketballWhatIfScenarios() {
     setGameSelections(new Map());
     setHasCalculated(false);
     if (selectedConference) {
-      fetchWhatIf(
-        { conference: selectedConference, selections: [] },
-        { onSuccess: (d: WhatIfResponse) => setWhatIfData(d) },
-      );
+      fetchBaseline(selectedConference);
     }
-  }, [selectedConference, fetchWhatIf]);
+  }, [selectedConference, fetchBaseline]);
 
   const handleDownloadCSV = useCallback(() => {
-    if (!whatIfData?.scenario_results?.length || !whatIfData?.games?.length) return;
-    const csv = buildScenarioCSV(
-      whatIfData.scenario_results,
-      whatIfData.games,
+    console.log("CSV download clicked", {
+      hasValidation: !!whatIfData?.validation_data,
+      hasGameInfo: !!whatIfData?.validation_data?.game_info,
+    });
+    if (!whatIfData?.validation_data?.game_info) return;
+    const csv = buildValidationCSV(
+      whatIfData.validation_data,
       whatIfData.conference || "",
     );
     downloadCSV(
       csv,
-      `whatif_scenarios_${(whatIfData.conference || "").replace(/\s+/g, "_").toLowerCase()}.csv`,
+      `whatif_validation_${(whatIfData.conference || "").replace(/\s+/g, "_").toLowerCase()}.csv`,
     );
   }, [whatIfData]);
 
@@ -1055,7 +1116,9 @@ export default function BasketballWhatIfScenarios() {
             </div>
 
             <div className="mb-2 flex items-baseline justify-between">
-              <h3 className="text-sm font-medium">Select Game Winners and Calculate New What If Probabilities</h3>
+              <h3 className="text-sm font-medium">
+                Select Game Winners and Calculate New What If Probabilities
+              </h3>
               <span className="text-[11px] text-gray-400">
                 {gameSelections.size} selected
               </span>
@@ -1110,8 +1173,6 @@ export default function BasketballWhatIfScenarios() {
               )}
             </div>
           </div>
-
-
         </div>
 
         {/* ═══ RIGHT PANEL ═══ */}
@@ -1122,7 +1183,7 @@ export default function BasketballWhatIfScenarios() {
               <h2 className="text-lg font-medium">
                 {hasCalculated ? "What-If Results" : "Current Standings"}
               </h2>
-              {hasCalculated && whatIfData?.scenario_results && whatIfData.scenario_results.length > 0 && (
+              {hasCalculated && whatIfData?.validation_data?.game_info && (
                 <span />
               )}
             </div>
@@ -1141,46 +1202,50 @@ export default function BasketballWhatIfScenarios() {
               </div>
             )}
 
-            {!isCalculating && !isLoadingBaseline && displayBaseline.length > 0 && (
-              <>
-                <ProbabilityTable
-                  title="What If Probabilities - 1st Seed in Conference"
-                  baseline={displayBaseline}
-                  whatif={displayWhatif}
-                  probFn={firstPlaceProb}
-                  hasCalculated={hasCalculated}
-                  screenshotRef={firstPlaceRef}
-                  screenshotFilename="first_place_pct.png"
-                  selectionHtml={selectionLegendHtml}
-                />
-                <ProbabilityTable
-                  title="What If Probabilities - Top 4 Seed in Conference"
-                  baseline={displayBaseline}
-                  whatif={displayWhatif}
-                  probFn={top4Prob}
-                  hasCalculated={hasCalculated}
-                  screenshotRef={top4Ref}
-                  screenshotFilename="top_4_pct.png"
-                  selectionHtml={selectionLegendHtml}
-                />
-                <ProbabilityTable
-                  title="What If Probabilities - Top 8 Seed in Conference"
-                  baseline={displayBaseline}
-                  whatif={displayWhatif}
-                  probFn={top8Prob}
-                  hasCalculated={hasCalculated}
-                  screenshotRef={top8Ref}
-                  screenshotFilename="top_8_pct.png"
-                  selectionHtml={selectionLegendHtml}
-                />
-              </>
-            )}
+            {!isCalculating &&
+              !isLoadingBaseline &&
+              displayBaseline.length > 0 && (
+                <>
+                  <ProbabilityTable
+                    title="What If Probabilities - 1st Seed in Conference"
+                    baseline={displayBaseline}
+                    whatif={displayWhatif}
+                    probFn={firstPlaceProb}
+                    hasCalculated={hasCalculated}
+                    screenshotRef={firstPlaceRef}
+                    screenshotFilename="first_place_pct.png"
+                    selectionHtml={selectionLegendHtml}
+                  />
+                  <ProbabilityTable
+                    title="What If Probabilities - Top 4 Seed in Conference"
+                    baseline={displayBaseline}
+                    whatif={displayWhatif}
+                    probFn={top4Prob}
+                    hasCalculated={hasCalculated}
+                    screenshotRef={top4Ref}
+                    screenshotFilename="top_4_pct.png"
+                    selectionHtml={selectionLegendHtml}
+                  />
+                  <ProbabilityTable
+                    title="What If Probabilities - Top 8 Seed in Conference"
+                    baseline={displayBaseline}
+                    whatif={displayWhatif}
+                    probFn={top8Prob}
+                    hasCalculated={hasCalculated}
+                    screenshotRef={top8Ref}
+                    screenshotFilename="top_8_pct.png"
+                    selectionHtml={selectionLegendHtml}
+                  />
+                </>
+              )}
 
-            {!isCalculating && !isLoadingBaseline && !displayBaseline.length && (
-              <p className="text-gray-500 text-center py-8">
-                No team data available
-              </p>
-            )}
+            {!isCalculating &&
+              !isLoadingBaseline &&
+              !displayBaseline.length && (
+                <p className="text-gray-500 text-center py-8">
+                  No team data available
+                </p>
+              )}
           </div>
 
           {/* ═══ FULL STANDINGS TABLES (restored — Change 8) ═══ */}
@@ -1196,9 +1261,7 @@ export default function BasketballWhatIfScenarios() {
               />
 
               <FullStandingsTable
-                baseline={
-                  whatIfData?.current_projections_with_ties ?? []
-                }
+                baseline={whatIfData?.current_projections_with_ties ?? []}
                 whatif={whatIfData?.data_with_ties ?? []}
                 numTeams={numTeams}
                 label="What If Probabilities - Projected Standings (No Tiebreakers)"
@@ -1209,18 +1272,22 @@ export default function BasketballWhatIfScenarios() {
           )}
 
           {/* Explainer text */}
-          {!isCalculating && !isLoadingBaseline && displayBaseline.length > 0 && (
-            <div className="mt-4 px-1">
-              <p className="text-[10px] text-gray-400 leading-relaxed">
-                Current reflects current probabilities; what if reflects updated probabilities with game results selected.
-                Change is the difference between current and what if.
-                Ties broken based on Big 12 tiebreaker rules (future update to include individual conference tiebreakers).
-              </p>
-            </div>
-          )}
+          {!isCalculating &&
+            !isLoadingBaseline &&
+            displayBaseline.length > 0 && (
+              <div className="mt-4 px-1">
+                <p className="text-[10px] text-gray-400 leading-relaxed">
+                  Current reflects current probabilities; what if reflects
+                  updated probabilities with game results selected. Change is
+                  the difference between current and what if. Ties broken based
+                  on Big 12 tiebreaker rules (future update to include
+                  individual conference tiebreakers).
+                </p>
+              </div>
+            )}
 
           {/* Validation CSV download */}
-          {hasCalculated && whatIfData?.scenario_results && whatIfData.scenario_results.length > 0 && (
+          {hasCalculated && whatIfData?.validation_data?.game_info && (
             <div className="mt-3 px-1" data-no-screenshot>
               <button
                 onClick={handleDownloadCSV}
