@@ -640,7 +640,7 @@ function TeamFilter({
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded bg-white hover:border-gray-400 focus:ring-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors text-left"
+        className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded bg-white hover:border-gray-400 focus:ring-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors text-left text-gray-700"
       >
         <span className="flex items-center justify-between">
           <span>
