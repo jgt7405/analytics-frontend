@@ -9,10 +9,10 @@ import { Camera, Download } from "lucide-react";
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
   useBasketballWhatIf,
-  type ValidationData,
   type WhatIfGame,
   type WhatIfResponse,
   type WhatIfTeamResult,
+  type ScenarioResult,
 } from "@/hooks/useBasketballWhatIf";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -137,86 +137,64 @@ declare global {
 }
 
 // ── CSV ──
-function buildValidationCSV(vd: ValidationData, conference: string): string {
+function buildScenarioCSV(
+  scenarios: ScenarioResult[],
+  games: WhatIfGame[],
+  conference: string,
+): string {
   const lines: string[] = [];
   const esc = (v: string | number | boolean | null | undefined) =>
     `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const { game_info: games, team_names: teams } = vd;
-  const gh = games.map(
+
+  // Header row with game matchups
+  const gameHeaders = games.map(
     (g) => `Game ${g.game_id}: ${g.away_team} @ ${g.home_team}`,
   );
-  const gp = games.map((g) => {
-    const a =
-      g.away_probability != null
-        ? (g.away_probability * 100).toFixed(0) + "%"
-        : "";
-    const h =
-      g.home_probability != null
-        ? (g.home_probability * 100).toFixed(0) + "%"
-        : "";
-    return `${a} / ${h}`;
-  });
 
-  const section = (
-    title: string,
-    headers: string[],
-    rowFn: (s: number) => (string | number)[],
-  ) => {
-    lines.push(esc(`=== ${title} — ${conference} ===`));
-    lines.push(headers.map(esc).join(","));
-    for (let s = 1; s <= 1000; s++) {
-      const row = rowFn(s);
-      if (row.length) lines.push(row.map(esc).join(","));
+  // Get sorted team names from first scenario's standings
+  const teamNames =
+    scenarios.length > 0 && scenarios[0].standings
+      ? scenarios[0].standings.map((s) => s.team_name)
+      : [];
+
+  // SECTION 1: Game winners per scenario
+  lines.push(esc(`=== GAME WINNERS — ${conference} ===`));
+  lines.push(["Scenario", ...gameHeaders].map(esc).join(","));
+  for (const sc of scenarios) {
+    const row: (string | number)[] = [sc.scenario_num];
+    for (const game of games) {
+      const outcome = sc.games?.find((g) => g.game_id === game.game_id);
+      row.push(outcome?.winner ?? "");
     }
-    lines.push("");
-  };
+    lines.push(row.map(esc).join(","));
+  }
+  lines.push("");
 
-  section("SECTION 1: CURRENT WINNERS", ["Scenario", ...gh], (s) => {
-    const w = vd.original_winners[s];
-    return w ? [s, ...w] : [];
-  });
-  lines.splice(
-    2,
-    0,
-    ["Probabilities (Away/Home)", ...gp].map(esc).join(","),
-  );
+  // SECTION 2: Conference wins per scenario
+  lines.push(esc(`=== CONFERENCE WINS — ${conference} ===`));
+  lines.push(["Scenario", ...teamNames].map(esc).join(","));
+  for (const sc of scenarios) {
+    const row: (string | number)[] = [sc.scenario_num];
+    for (const name of teamNames) {
+      const team = sc.standings?.find((s) => s.team_name === name);
+      row.push(team?.conf_wins ?? 0);
+    }
+    lines.push(row.map(esc).join(","));
+  }
+  lines.push("");
 
-  section("SECTION 2: WHAT-IF WINNERS", ["Scenario", ...gh], (s) => {
-    const w = vd.whatif_winners[s];
-    return w ? [s, ...w] : [];
-  });
-  section(
-    "SECTION 3: CONFERENCE WINS — CURRENT",
-    ["Scenario", ...teams],
-    (s) => {
-      const w = vd.original_conf_wins[s];
-      return w ? [s, ...teams.map((t) => w[t] ?? 0)] : [];
-    },
-  );
-  section(
-    "SECTION 4: CONFERENCE WINS — WHAT-IF",
-    ["Scenario", ...teams],
-    (s) => {
-      const w = vd.whatif_conf_wins[s];
-      return w ? [s, ...teams.map((t) => w[t] ?? 0)] : [];
-    },
-  );
-  section(
-    "SECTION 5: STANDINGS (TIES BROKEN) — CURRENT",
-    ["Scenario", ...teams],
-    (s) => {
-      const st = vd.original_standings[s];
-      return st ? [s, ...teams.map((t) => st[t] ?? "")] : [];
-    },
-  );
-  section(
-    "SECTION 6: STANDINGS (TIES BROKEN) — WHAT-IF",
-    ["Scenario", ...teams],
-    (s) => {
-      const st = vd.whatif_standings[s];
-      return st ? [s, ...teams.map((t) => st[t] ?? "")] : [];
-    },
-  );
+  // SECTION 3: Standings (seed) per scenario
+  lines.push(esc(`=== STANDINGS (SEED) — ${conference} ===`));
+  lines.push(["Scenario", ...teamNames].map(esc).join(","));
+  for (const sc of scenarios) {
+    const row: (string | number)[] = [sc.scenario_num];
+    for (const name of teamNames) {
+      const team = sc.standings?.find((s) => s.team_name === name);
+      row.push(team?.seed ?? "");
+    }
+    lines.push(row.map(esc).join(","));
+  }
+
   return lines.join("\n");
 }
 
@@ -951,14 +929,15 @@ export default function BasketballWhatIfScenarios() {
   }, [selectedConference, fetchWhatIf]);
 
   const handleDownloadCSV = useCallback(() => {
-    if (!whatIfData?.validation_data) return;
-    const csv = buildValidationCSV(
-      whatIfData.validation_data,
+    if (!whatIfData?.scenario_results?.length || !whatIfData?.games?.length) return;
+    const csv = buildScenarioCSV(
+      whatIfData.scenario_results,
+      whatIfData.games,
       whatIfData.conference || "",
     );
     downloadCSV(
       csv,
-      `whatif_validation_${(whatIfData.conference || "").replace(/\s+/g, "_").toLowerCase()}.csv`,
+      `whatif_scenarios_${(whatIfData.conference || "").replace(/\s+/g, "_").toLowerCase()}.csv`,
     );
   }, [whatIfData]);
 
@@ -1143,7 +1122,7 @@ export default function BasketballWhatIfScenarios() {
               <h2 className="text-lg font-medium">
                 {hasCalculated ? "What-If Results" : "Current Standings"}
               </h2>
-              {hasCalculated && whatIfData?.validation_data && whatIfData.validation_data.game_info && (
+              {hasCalculated && whatIfData?.scenario_results && whatIfData.scenario_results.length > 0 && (
                 <span />
               )}
             </div>
@@ -1241,7 +1220,7 @@ export default function BasketballWhatIfScenarios() {
           )}
 
           {/* Validation CSV download */}
-          {hasCalculated && whatIfData?.validation_data && whatIfData.validation_data.game_info && (
+          {hasCalculated && whatIfData?.scenario_results && whatIfData.scenario_results.length > 0 && (
             <div className="mt-3 px-1" data-no-screenshot>
               <button
                 onClick={handleDownloadCSV}
