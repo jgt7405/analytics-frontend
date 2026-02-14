@@ -9,7 +9,6 @@ import { Camera, Download } from "lucide-react";
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
   useBasketballWhatIf,
-  type ValidationData,
   type WhatIfGame,
   type WhatIfResponse,
   type WhatIfTeamResult,
@@ -143,93 +142,7 @@ declare global {
 }
 
 // ── CSV ──
-function buildValidationCSV(vd: ValidationData, conference: string): string {
-  const lines: string[] = [];
-  const esc = (v: string | number | boolean | null | undefined) =>
-    `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const { game_info: games, team_names: teams } = vd;
-
-  // Game headers: "Game 4325: Away Team @ Home Team (45%/55%)"
-  const gh = games.map((g) => {
-    const ap =
-      g.away_probability != null
-        ? (g.away_probability * 100).toFixed(0) + "%"
-        : "";
-    const hp =
-      g.home_probability != null
-        ? (g.home_probability * 100).toFixed(0) + "%"
-        : "";
-    return `Game ${g.game_id}: ${g.away_team} @ ${g.home_team} (${ap}/${hp})`;
-  });
-
-  const section = (
-    title: string,
-    headers: string[],
-    rowFn: (s: number) => (string | number)[],
-  ) => {
-    lines.push(esc(`=== ${title} — ${conference} ===`));
-    lines.push(headers.map(esc).join(","));
-    for (let s = 1; s <= 1000; s++) {
-      const row = rowFn(s);
-      if (row.length) lines.push(row.map(esc).join(","));
-    }
-    lines.push("");
-  };
-
-  // Section 1: Current Winners
-  section("SECTION 1: CURRENT WINNERS", ["Scenario", ...gh], (s) => {
-    const w = vd.original_winners[s];
-    return w ? [s, ...w] : [];
-  });
-
-  // Section 2: What-If Winners (user selections forced across all scenarios)
-  section("SECTION 2: WHAT-IF WINNERS", ["Scenario", ...gh], (s) => {
-    const w = vd.whatif_winners[s];
-    return w ? [s, ...w] : [];
-  });
-
-  // Section 3: Conference Wins — Current
-  section(
-    "SECTION 3: CONFERENCE WINS — CURRENT",
-    ["Scenario", ...teams],
-    (s) => {
-      const w = vd.original_conf_wins[s];
-      return w ? [s, ...teams.map((t) => w[t] ?? 0)] : [];
-    },
-  );
-
-  // Section 4: Conference Wins — What-If
-  section(
-    "SECTION 4: CONFERENCE WINS — WHAT-IF",
-    ["Scenario", ...teams],
-    (s) => {
-      const w = vd.whatif_conf_wins[s];
-      return w ? [s, ...teams.map((t) => w[t] ?? 0)] : [];
-    },
-  );
-
-  // Section 5: Standings (Ties Broken) — Current
-  section(
-    "SECTION 5: STANDINGS (TIES BROKEN) — CURRENT",
-    ["Scenario", ...teams],
-    (s) => {
-      const st = vd.original_standings[s];
-      return st ? [s, ...teams.map((t) => st[t] ?? "")] : [];
-    },
-  );
-
-  // Section 6: Standings (Ties Broken) — What-If
-  section(
-    "SECTION 6: STANDINGS (TIES BROKEN) — WHAT-IF",
-    ["Scenario", ...teams],
-    (s) => {
-      const st = vd.whatif_standings[s];
-      return st ? [s, ...teams.map((t) => st[t] ?? "")] : [];
-    },
-  );
-
-  return lines.join("\n");
-}
+// CSV is generated server-side via /basketball/whatif/validation-csv endpoint
 
 function downloadCSV(csv: string, filename: string) {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -986,21 +899,35 @@ export default function BasketballWhatIfScenarios() {
     }
   }, [selectedConference, fetchBaseline]);
 
-  const handleDownloadCSV = useCallback(() => {
-    console.log("CSV download clicked", {
-      hasValidation: !!whatIfData?.validation_data,
-      hasGameInfo: !!whatIfData?.validation_data?.game_info,
-    });
-    if (!whatIfData?.validation_data?.game_info) return;
-    const csv = buildValidationCSV(
-      whatIfData.validation_data,
-      whatIfData.conference || "",
-    );
-    downloadCSV(
-      csv,
-      `whatif_validation_${(whatIfData.conference || "").replace(/\s+/g, "_").toLowerCase()}.csv`,
-    );
-  }, [whatIfData]);
+  const [isDownloadingCSV, setIsDownloadingCSV] = useState(false);
+
+  const handleDownloadCSV = useCallback(async () => {
+    if (!selectedConference) return;
+    setIsDownloadingCSV(true);
+    try {
+      const selectionsArray = Array.from(gameSelections.entries()).map(
+        ([game_id, winner_team_id]) => ({ game_id, winner_team_id }),
+      );
+      const res = await fetch("/api/proxy/basketball/whatif/validation-csv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conference: selectedConference,
+          selections: selectionsArray,
+        }),
+      });
+      if (!res.ok) throw new Error(`CSV download failed: ${res.status}`);
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `whatif_validation_${selectedConference.replace(/\s+/g, "_").toLowerCase()}.csv`;
+      a.click();
+    } catch (e) {
+      console.error("CSV download error:", e);
+    } finally {
+      setIsDownloadingCSV(false);
+    }
+  }, [selectedConference, gameSelections]);
 
   // Build selection legend HTML for screenshots
   const selectionLegendHtml = useMemo(() => {
@@ -1183,9 +1110,7 @@ export default function BasketballWhatIfScenarios() {
               <h2 className="text-lg font-medium">
                 {hasCalculated ? "What-If Results" : "Current Standings"}
               </h2>
-              {hasCalculated && whatIfData?.validation_data?.game_info && (
-                <span />
-              )}
+              {hasCalculated && <span />}
             </div>
 
             {/* Always-visible selection legend */}
@@ -1287,13 +1212,17 @@ export default function BasketballWhatIfScenarios() {
             )}
 
           {/* Validation CSV download */}
-          {hasCalculated && whatIfData?.validation_data?.game_info && (
+          {hasCalculated && (
             <div className="mt-3 px-1" data-no-screenshot>
               <button
                 onClick={handleDownloadCSV}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 transition"
+                disabled={isDownloadingCSV}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 transition disabled:opacity-50"
               >
-                <Download size={13} /> Download Validation CSV
+                <Download size={13} />
+                {isDownloadingCSV
+                  ? "Generating CSV..."
+                  : "Download Validation CSV"}
               </button>
             </div>
           )}

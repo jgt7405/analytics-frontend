@@ -465,6 +465,15 @@ export async function GET(
  *
  * - POST /api/proxy/basketball/chart/upload
  *   Uploads CSV for scatterplot chart
+ *
+ * - POST /api/proxy/basketball/whatif
+ *   Calculates basketball what-if scenarios
+ *
+ * - POST /api/proxy/basketball/whatif/baseline
+ *   Lightweight baseline load (no simulations)
+ *
+ * - POST /api/proxy/basketball/whatif/validation-csv
+ *   Downloads validation CSV for what-if scenarios
  */
 export async function POST(
   request: NextRequest,
@@ -506,7 +515,7 @@ export async function POST(
       backendPath = `/football/bowl-game-winner`;
       console.log("🏈 FOOTBALL BOWL GAME WINNER detected");
     }
-    // ===== HANDLE WHAT-IF ROUTES =====
+    // ===== HANDLE FOOTBALL WHAT-IF ROUTES =====
     else if (
       slug.length === 2 &&
       slug[0] === "football" &&
@@ -534,7 +543,18 @@ export async function POST(
       backendPath = `/basketball/whatif/baseline`;
       console.log("🏀 BASKETBALL WHAT-IF BASELINE detected");
     }
-        
+
+    // ===== HANDLE BASKETBALL WHAT-IF VALIDATION CSV =====
+    else if (
+      slug.length === 3 &&
+      slug[0] === "basketball" &&
+      slug[1] === "whatif" &&
+      slug[2] === "validation-csv"
+    ) {
+      backendPath = `/basketball/whatif/validation-csv`;
+      console.log("🏀 BASKETBALL WHAT-IF VALIDATION CSV detected");
+    }
+
     // ===== HANDLE BASKETBALL WHAT-IF ROUTES =====
     else if (
       slug.length === 2 &&
@@ -570,7 +590,7 @@ export async function POST(
       fetchOptions = {
         method: "POST",
         body: formData,
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(300000),
       };
 
       console.log("📦 FormData fetch options prepared");
@@ -579,6 +599,17 @@ export async function POST(
       const body = await request.json();
       console.log("📋 JSON body keys:", Object.keys(body));
 
+      // Determine timeout based on endpoint
+      let timeout = 120000; // 2 minutes default for whatif calculations
+      if (
+        backendPath.includes("export") ||
+        backendPath.includes("validation-csv")
+      ) {
+        timeout = 300000; // 5 minutes for exports and CSV generation
+      } else if (backendPath.includes("baseline")) {
+        timeout = 60000; // 1 minute for baseline (should be fast)
+      }
+
       fetchOptions = {
         method: "POST",
         headers: {
@@ -586,9 +617,7 @@ export async function POST(
           Accept: "application/json",
         },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(
-          backendPath.includes("export") ? 300000 : 60000,
-        ),
+        signal: AbortSignal.timeout(timeout),
       };
     }
 
@@ -605,6 +634,35 @@ export async function POST(
       },
     });
 
+    // ===== HANDLE CSV RESPONSE (validation-csv endpoint returns CSV, not JSON) =====
+    if (backendPath.includes("validation-csv")) {
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          "❌ Validation CSV backend error:",
+          errorText.substring(0, 500),
+        );
+        return NextResponse.json(
+          {
+            error: `Backend request failed: ${response.status}`,
+            details: errorText.substring(0, 200),
+          },
+          { status: response.status },
+        );
+      }
+      const csvText = await response.text();
+      console.log("📄 Returning CSV response:", csvText.length, "bytes");
+      return new NextResponse(csvText, {
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition":
+            response.headers.get("Content-Disposition") ||
+            'attachment; filename="validation.csv"',
+        },
+      });
+    }
+
+    // ===== HANDLE JSON RESPONSES (all other endpoints) =====
     const responseText = await response.text();
     console.log("📄 Backend raw response:", responseText.substring(0, 500));
 
