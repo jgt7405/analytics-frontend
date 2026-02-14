@@ -27,7 +27,7 @@ function NavigationContent() {
       // Rule 4: If on team page, use team's conference
       const teamConf = searchParams.get("teamConf");
       if (teamConf && isTeamPage) {
-        // Ã¢Å“â€¦ FIXED: Don't encode - searchParams.get() returns decoded value
+        // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIXED: Don't encode - searchParams.get() returns decoded value
         // Link href will handle encoding automatically
         return `${basePath}?conf=${teamConf}`;
       }
@@ -36,7 +36,7 @@ function NavigationContent() {
       const currentConf = searchParams.get("conf");
       const confToUse =
         currentConf && currentConf !== "All Teams" ? currentConf : "Big 12";
-      // Ã¢Å“â€¦ FIXED: Don't encode - Link href will handle encoding automatically
+      // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIXED: Don't encode - Link href will handle encoding automatically
       return `${basePath}?conf=${confToUse}`;
     },
     [searchParams, isTeamPage],
@@ -102,6 +102,11 @@ function NavigationContent() {
       name: "Compare",
       path: addConferenceToUrl("/basketball/compare"),
       description: "Compare teams side by side",
+    },
+    {
+      name: "What If",
+      path: addConferenceToUrl("/basketball/whatif"),
+      description: "What If Conference Scenarios",
     },
   ];
 
@@ -250,6 +255,8 @@ function NavigationContent() {
       >
         {navItems.map((item) => {
           const isActive = pathname === item.path.split("?")[0];
+          const words = item.name.split(" ");
+          const isMultiWord = words.length > 1;
           return (
             <Link
               key={item.path}
@@ -257,12 +264,21 @@ function NavigationContent() {
               className={cn(
                 navStyles.tabButton,
                 isActive && navStyles.tabButtonActive,
+                isMultiWord &&
+                  "text-xs flex flex-col items-center justify-center leading-none py-1",
               )}
               aria-current={isActive ? "page" : undefined}
               aria-label={`${item.name} - ${item.description}`}
             >
               {isActive && <span className="sr-only">Current page: </span>}
-              {item.name}
+              {isMultiWord ? (
+                <>
+                  <span>{words.slice(0, -1).join(" ")}</span>
+                  <span>{words[words.length - 1]}</span>
+                </>
+              ) : (
+                item.name
+              )}
             </Link>
           );
         })}
