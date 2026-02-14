@@ -86,7 +86,7 @@ export default function BasketballTeamScheduleChart({
     teamPts?: number,
     oppPts?: number,
     status?: string,
-    oppKpRank?: number
+    oppKpRank?: number,
   ) => {
     if (
       status === "Scheduled" ||
@@ -121,7 +121,7 @@ export default function BasketballTeamScheduleChart({
           {schedule.map((game, index) => (
             <tr
               key={index}
-              className={`hover:bg-gray-50 transition-colors ${
+              className={`${
                 game.status === "W"
                   ? "border-2 border-green-500 bg-green-50"
                   : game.status === "L"
@@ -182,7 +182,7 @@ export default function BasketballTeamScheduleChart({
                     game.team_points,
                     game.opp_points,
                     game.status,
-                    game.opp_kp_rank || game.kenpom_rank
+                    game.opp_kp_rank || game.kenpom_rank,
                   )}
                 </span>
               </td>
