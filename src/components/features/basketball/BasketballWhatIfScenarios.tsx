@@ -4,7 +4,7 @@ import ConferenceSelector from "@/components/common/ConferenceSelector";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { getCellColor } from "@/lib/color-utils";
-import { Camera, Download } from "lucide-react";
+import { ArrowDown, ArrowUp, Camera, Download, Loader } from "lucide-react";
 
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
@@ -391,7 +391,7 @@ function ScreenshotBtn({
       title="Download screenshot"
     >
       {capturing ? (
-        <span className="animate-spin">âŸ³</span>
+        <Loader size={12} className="animate-spin" />
       ) : (
         <Camera size={12} />
       )}
@@ -474,8 +474,12 @@ function ProbabilityTable({
 
   const sortIndicator = (col: SortCol) =>
     sortCol === col ? (
-      <span className="ml-0.5 text-[9px]">
-        {sortDir === "desc" ? "â–¼" : "â–²"}
+      <span className="ml-0.5 inline">
+        {sortDir === "desc" ? (
+          <ArrowDown size={12} className="inline" />
+        ) : (
+          <ArrowUp size={12} className="inline" />
+        )}
       </span>
     ) : null;
 
@@ -592,118 +596,6 @@ function ProbabilityTable({
 }
 
 // â”€â”€ Full Standings Comparison Table (restored â€” Change 8) â”€â”€
-
-// ── Team Filter Component ──
-function TeamFilter({
-  teams,
-  selectedTeams,
-  onTeamToggle,
-}: {
-  teams: Array<{ team_id: number; team_name: string; logo_url?: string }>;
-  selectedTeams: Set<number>;
-  onTeamToggle: (teamId: number) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const sortedTeams = [...teams].sort((a, b) =>
-    a.team_name.localeCompare(b.team_name),
-  );
-
-  const allSelected = selectedTeams.size === teams.length;
-  const someSelected =
-    selectedTeams.size > 0 && selectedTeams.size < teams.length;
-
-  const toggleAll = () => {
-    if (allSelected) {
-      // Deselect all - toggle each selected team
-      selectedTeams.forEach((teamId) => {
-        onTeamToggle(teamId);
-      });
-    } else {
-      // Select all - toggle each unselected team
-      sortedTeams.forEach((t) => {
-        if (!selectedTeams.has(t.team_id)) {
-          onTeamToggle(t.team_id);
-        }
-      });
-    }
-  };
-
-  if (!teams.length) return null;
-
-  return (
-    <div
-      className="relative w-full"
-      ref={dropdownRef}
-      onMouseLeave={() => setIsOpen(false)}
-    >
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded bg-white hover:border-gray-400 focus:ring-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors text-left text-gray-700"
-      >
-        <span className="flex items-center justify-between">
-          <span>
-            {allSelected
-              ? "All Teams"
-              : someSelected
-                ? `${selectedTeams.size} of ${teams.length}`
-                : "No Teams"}
-          </span>
-          <span className="text-[11px]">▼</span>
-        </span>
-      </button>
-      {isOpen && (
-        <div
-          className="absolute top-full left-0 bg-white border border-gray-300 rounded-b shadow-lg z-20 max-h-64 overflow-y-auto"
-          style={{ width: "100%" }}
-        >
-          <div className="bg-white border-b border-gray-300 p-2">
-            <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded text-xs">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                onChange={toggleAll}
-                className="w-4 h-4 cursor-pointer"
-                style={{
-                  backgroundColor: allSelected ? "rgb(0, 151, 178)" : "white",
-                  borderColor: "rgb(0, 151, 178)",
-                  accentColor: "rgb(0, 151, 178)",
-                }}
-              />
-              <span className="font-medium">
-                {allSelected ? "Deselect All" : "Select All"}
-              </span>
-            </label>
-          </div>
-          <div className="p-2 space-y-0">
-            {sortedTeams.map((team) => (
-              <label
-                key={team.team_id}
-                className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded text-xs"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedTeams.has(team.team_id)}
-                  onChange={() => onTeamToggle(team.team_id)}
-                  className="w-4 h-4 cursor-pointer"
-                  style={{
-                    backgroundColor: selectedTeams.has(team.team_id)
-                      ? "rgb(0, 151, 178)"
-                      : "white",
-                    borderColor: "rgb(0, 151, 178)",
-                    accentColor: "rgb(0, 151, 178)",
-                  }}
-                />
-                <span>{team.team_name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 function FullStandingsTable({
   baseline,
   whatif,
@@ -872,14 +764,12 @@ export default function BasketballWhatIfScenarios() {
   );
   const [whatIfData, setWhatIfData] = useState<WhatIfResponse | null>(null);
   const [hasCalculated, setHasCalculated] = useState(false);
-  const [selectedTeams, setSelectedTeams] = useState<Set<number>>(new Set());
 
   const firstPlaceRef = useRef<HTMLDivElement>(null);
   const top4Ref = useRef<HTMLDivElement>(null);
   const top8Ref = useRef<HTMLDivElement>(null);
   const standingsNoTiesRef = useRef<HTMLDivElement>(null);
   const standingsWithTiesRef = useRef<HTMLDivElement>(null);
-  const teamsInitializedRef = useRef(false);
 
   const {
     data: confData,
@@ -965,8 +855,6 @@ export default function BasketballWhatIfScenarios() {
       setGameSelections(new Map());
       setWhatIfData(null);
       setHasCalculated(false);
-      setSelectedTeams(new Set());
-      teamsInitializedRef.current = false;
       fetchBaseline(c);
     },
     [fetchBaseline],
@@ -1007,20 +895,6 @@ export default function BasketballWhatIfScenarios() {
     }
   }, [selectedConference, fetchBaseline]);
 
-  // Initialize selected teams to all teams when data loads (only once per conference)
-  useEffect(() => {
-    if (
-      whatIfData?.current_projections_no_ties &&
-      !teamsInitializedRef.current
-    ) {
-      const allTeamIds = new Set(
-        whatIfData.current_projections_no_ties.map((t) => t.team_id),
-      );
-      setSelectedTeams(allTeamIds);
-      teamsInitializedRef.current = true;
-    }
-  }, [whatIfData]);
-
   const [isDownloadingCSV, setIsDownloadingCSV] = useState(false);
 
   const handleDownloadCSV = useCallback(async () => {
@@ -1050,18 +924,6 @@ export default function BasketballWhatIfScenarios() {
       setIsDownloadingCSV(false);
     }
   }, [selectedConference, gameSelections]);
-
-  const handleTeamToggle = useCallback((teamId: number) => {
-    setSelectedTeams((prev) => {
-      const next = new Set(prev);
-      if (next.has(teamId)) {
-        next.delete(teamId);
-      } else {
-        next.add(teamId);
-      }
-      return next;
-    });
-  }, []);
 
   // Build selection legend HTML for screenshots
   const selectionLegendHtml = useMemo(() => {
@@ -1096,29 +958,12 @@ export default function BasketballWhatIfScenarios() {
     );
   }, [whatIfData?.games]);
 
-  // Filter games by selected teams
-  const filteredGamesByDate = useMemo(() => {
-    if (selectedTeams.size === 0) return {};
-    const filtered: Record<string, WhatIfGame[]> = {};
-    Object.entries(gamesByDate).forEach(([date, games]) => {
-      const filteredGames = games.filter(
-        (g) =>
-          selectedTeams.has(g.home_team_id) ||
-          selectedTeams.has(g.away_team_id),
-      );
-      if (filteredGames.length > 0) {
-        filtered[date] = filteredGames;
-      }
-    });
-    return filtered;
-  }, [gamesByDate, selectedTeams]);
-
   const sortedDates = useMemo(
     () =>
-      Object.keys(filteredGamesByDate).sort(
+      Object.keys(gamesByDate).sort(
         (a, b) => new Date(a).getTime() - new Date(b).getTime(),
       ),
-    [filteredGamesByDate],
+    [gamesByDate],
   );
 
   const numTeams = whatIfData?.data_no_ties?.length ?? 16;
@@ -1178,36 +1023,17 @@ export default function BasketballWhatIfScenarios() {
         {/* â•â•â• LEFT PANEL â•â•â• */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-4">
-            {/* Conference & Teams — inline */}
-            <div className="mb-4 flex items-center gap-3">
+            {/* Conference â€” inline */}
+            <div className="mb-4 flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                 Conference
               </label>
-              <div className="[&_.conference-selector]:static [&_.conference-selector]:transform-none flex-1">
+              <div className="[&_.conference-selector]:static [&_.conference-selector]:transform-none">
                 <ConferenceSelector
                   conferences={conferences}
                   selectedConference={selectedConference}
                   onChange={handleConferenceChange}
                   loading={conferencesLoading}
-                />
-              </div>
-            </div>
-
-            <div className="mb-4 flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Teams
-              </label>
-              <div className="flex-1">
-                <TeamFilter
-                  teams={
-                    whatIfData?.current_projections_no_ties?.map((t) => ({
-                      team_id: t.team_id,
-                      team_name: t.team_name,
-                      logo_url: t.logo_url,
-                    })) || []
-                  }
-                  selectedTeams={selectedTeams}
-                  onTeamToggle={handleTeamToggle}
                 />
               </div>
             </div>
@@ -1229,7 +1055,7 @@ export default function BasketballWhatIfScenarios() {
                       {date}
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {filteredGamesByDate[date].map((g) => (
+                      {gamesByDate[date].map((g) => (
                         <GameCard
                           key={g.game_id}
                           game={g}
