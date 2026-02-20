@@ -280,6 +280,8 @@ export interface NCAATeam {
   NCAA_Sweet_Sixteen: number;
   NCAA_Second_Round: number;
   NCAA_First_Round: number;
+  ncaa_actual_region?: string | null;
+  ncaa_actual_seed?: number | null;
 }
 
 // Seed Distribution Types
@@ -644,6 +646,8 @@ export interface ThemeColors {
 export interface NCAATeamApiResponse {
   data: NCAATeam[];
   conferences: string[];
+  has_actual_bracket?: boolean;
+  regions?: string[];
 }
 
 export interface Theme {

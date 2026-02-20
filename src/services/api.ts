@@ -132,8 +132,12 @@ interface NCAATeamResponse {
     NCAA_Sweet_Sixteen: number;
     NCAA_Second_Round: number;
     NCAA_First_Round: number;
+    ncaa_actual_region?: string | null;
+    ncaa_actual_seed?: number | null;
   }>;
   conferences: string[];
+  has_actual_bracket?: boolean;
+  regions?: string[];
 }
 
 interface TeamDataApiResponse {
@@ -166,7 +170,7 @@ interface HealthCheckResponse {
 class ApiClient {
   private createUserFriendlyError(
     error: unknown,
-    endpoint: string
+    endpoint: string,
   ): BasketballApiError {
     let apiError: ApiError;
 
@@ -243,12 +247,12 @@ class ApiClient {
         endpoint,
         apiErrorType: apiError.type,
         retryable: apiError.retryable,
-      }
+      },
     );
 
     return new BasketballApiError(
       apiError,
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
   }
 
@@ -278,7 +282,7 @@ class ApiClient {
     ];
 
     return validEndpoints.some(
-      (valid) => endpoint.startsWith(valid) || endpoint === valid
+      (valid) => endpoint.startsWith(valid) || endpoint === valid,
     );
   }
 
@@ -289,16 +293,16 @@ class ApiClient {
       data: T | null;
       error: unknown;
     },
-    retries = 3
+    retries = 3,
   ): Promise<T> {
     if (!this.validateEndpoint(endpoint)) {
-      console.warn(`⚠️  Potentially invalid endpoint: ${endpoint}`);
+      console.warn(`âš ï¸  Potentially invalid endpoint: ${endpoint}`);
     }
 
     const startTime = Date.now();
     const fullUrl = `${API_BASE_URL}${endpoint}`;
 
-    console.log(`🔄 Making API call to: ${fullUrl}`);
+    console.log(`ðŸ”„ Making API call to: ${fullUrl}`);
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -317,7 +321,7 @@ class ApiClient {
         monitoring.trackApiCall(endpoint, "GET", duration, response.status);
 
         if (!response.ok) {
-          console.error(`❌ API Error Details:`, {
+          console.error(`âŒ API Error Details:`, {
             status: response.status,
             statusText: response.statusText,
             url: response.url,
@@ -332,12 +336,12 @@ class ApiClient {
             {
               status: response.status,
               statusText: response.statusText,
-            }
+            },
           );
         }
 
         const rawData = await response.json();
-        console.log(`✅ API Success for ${endpoint}:`, {
+        console.log(`âœ… API Success for ${endpoint}:`, {
           status: response.status,
           dataKeys: Object.keys(rawData || {}),
         });
@@ -345,15 +349,15 @@ class ApiClient {
         const validation = validator(rawData);
 
         if (!validation.success) {
-          console.error("❌ API validation failed:", validation.error);
+          console.error("âŒ API validation failed:", validation.error);
           throw new Error(
-            `Validation failed: ${JSON.stringify(validation.error)}`
+            `Validation failed: ${JSON.stringify(validation.error)}`,
           );
         }
 
         return validation.data!;
       } catch (error) {
-        console.error(`❌ API Request failed (attempt ${i + 1}/${retries}):`, {
+        console.error(`âŒ API Request failed (attempt ${i + 1}/${retries}):`, {
           endpoint,
           error: error instanceof Error ? error.message : String(error),
           fullUrl,
@@ -387,7 +391,7 @@ class ApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting standings for: ${sanitized} -> ${formattedConf}`);
+    console.log(`ðŸ€ Getting standings for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "standings_requested",
@@ -404,7 +408,7 @@ class ApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting CWV for: ${sanitized} -> ${formattedConf}`);
+    console.log(`ðŸ€ Getting CWV for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "cwv_requested",
@@ -421,7 +425,7 @@ class ApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting schedule for: ${sanitized} -> ${formattedConf}`);
+    console.log(`ðŸ€ Getting schedule for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "schedule_requested",
@@ -430,7 +434,7 @@ class ApiClient {
 
     const rawResponse = await this.request(
       `/conf_schedule/${formattedConf}`,
-      validateSchedule
+      validateSchedule,
     );
 
     // Backend now returns teams, team_logos, and summary directly
@@ -446,7 +450,7 @@ class ApiClient {
 
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}`);
+    console.log(`ðŸ€ Getting TWV for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "twv_requested",
@@ -468,7 +472,7 @@ class ApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     console.log(
-      `🏀 Getting conf tourney for: ${sanitized} -> ${formattedConf}`
+      `ðŸ€ Getting conf tourney for: ${sanitized} -> ${formattedConf}`,
     );
 
     monitoring.trackEvent({
@@ -491,7 +495,7 @@ class ApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     console.log(
-      `🏀 Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}`
+      `ðŸ€ Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}`,
     );
 
     monitoring.trackEvent({
@@ -513,7 +517,7 @@ class ApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting seed data for: ${sanitized} -> ${formattedConf}`);
+    console.log(`ðŸ€ Getting seed data for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "seed_requested",
@@ -529,7 +533,7 @@ class ApiClient {
 
   async getTeamData(teamName: string): Promise<TeamDataApiResponse> {
     const encoded = encodeURIComponent(teamName);
-    console.log(`🏀 Getting team data for: ${teamName} -> ${encoded}`);
+    console.log(`ðŸ€ Getting team data for: ${teamName} -> ${encoded}`);
 
     return this.request(`/team/${encoded}`, (data) => ({
       success: true,
@@ -539,7 +543,7 @@ class ApiClient {
   }
 
   async getUnifiedConferenceData(): Promise<UnifiedConferenceDataResponse> {
-    console.log(`🏀 Getting unified conference data`);
+    console.log(`ðŸ€ Getting unified conference data`);
 
     return this.request(`/unified_conference_data`, (data) => ({
       success: true,
@@ -550,12 +554,12 @@ class ApiClient {
 
   // Football API methods
   async getFootballStandings(
-    conference: string
+    conference: string,
   ): Promise<FootballStandingsApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
     console.log(
-      `🏈 Getting football standings for: ${sanitized} -> ${formattedConf}`
+      `ðŸˆ Getting football standings for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(`/football/standings/${formattedConf}`, (data) => ({
@@ -566,12 +570,12 @@ class ApiClient {
   }
 
   async getFootballSchedule(
-    conference: string
+    conference: string,
   ): Promise<FootballScheduleResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
     console.log(
-      `🏈 Getting football schedule for: ${sanitized} -> ${formattedConf}`
+      `ðŸˆ Getting football schedule for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(`/football/conf_schedule/${formattedConf}`, (data) => ({
@@ -586,7 +590,7 @@ class ApiClient {
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
     console.log(
-      `🏈 Getting football TWV for: ${sanitized} -> ${formattedConf}`
+      `ðŸˆ Getting football TWV for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(`/football/twv/${formattedConf}`, (data) => ({
@@ -600,7 +604,7 @@ class ApiClient {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
     console.log(
-      `🏈 Getting football CWV for: ${sanitized} -> ${formattedConf}`
+      `ðŸˆ Getting football CWV for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(`/football/cwv/${formattedConf}`, (data) => ({
@@ -611,13 +615,13 @@ class ApiClient {
   }
 
   async getFootballPlayoffs(
-    conference: string
+    conference: string,
   ): Promise<FootballPlayoffApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
     console.log(
-      `🏈 Getting football playoffs for: ${sanitized} -> ${formattedConf}`
+      `ðŸˆ Getting football playoffs for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(`/football/playoffs/${formattedConf}`, (data) => ({
@@ -631,7 +635,7 @@ class ApiClient {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    console.log(`🏈 Getting CFP data for: ${sanitized} -> ${formattedConf}`);
+    console.log(`ðŸˆ Getting CFP data for: ${sanitized} -> ${formattedConf}`);
 
     return this.request(`/cfp/${formattedConf}`, (data) => ({
       success: true,
@@ -645,7 +649,7 @@ class ApiClient {
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
     console.log(
-      `🏈 Getting football seed for: ${sanitized} -> ${formattedConf}`
+      `ðŸˆ Getting football seed for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(`/football_seed/${formattedConf}`, (data) => ({
@@ -656,7 +660,7 @@ class ApiClient {
   }
 
   async getFootballConfData(): Promise<FootballConferenceApiResponse> {
-    console.log(`🏈 Getting football conference data`);
+    console.log(`ðŸˆ Getting football conference data`);
 
     return this.request(`/football_conf_data`, (data) => ({
       success: true,
@@ -666,23 +670,23 @@ class ApiClient {
   }
 
   async getFootballTeams(): Promise<FootballTeamsApiResponse> {
-    console.log("🏈 API: About to call /football_teams");
+    console.log("ðŸˆ API: About to call /football_teams");
     const result = await this.request(`/football_teams`, (data) => {
-      console.log("🏈 API: Raw response data:", data);
+      console.log("ðŸˆ API: Raw response data:", data);
       return {
         success: true,
         data: data as FootballTeamsApiResponse,
         error: null,
       };
     });
-    console.log("🏈 API: Final result:", result);
+    console.log("ðŸˆ API: Final result:", result);
     return result;
   }
 
   async getFootballTeam(teamName: string): Promise<FootballTeamData> {
     const sanitizedTeamName = sanitizeInput(teamName);
     const response = await fetch(
-      `${API_BASE_URL}/football_team/${encodeURIComponent(sanitizedTeamName)}`
+      `${API_BASE_URL}/football_team/${encodeURIComponent(sanitizedTeamName)}`,
     );
 
     if (!response.ok) {
@@ -693,7 +697,7 @@ class ApiClient {
   }
 
   async healthCheck(): Promise<HealthCheckResponse> {
-    console.log("🏥 Performing health check");
+    console.log("ðŸ¥ Performing health check");
 
     try {
       const response = await fetch(`${API_BASE_URL}/health`, {
@@ -714,7 +718,7 @@ class ApiClient {
         timestamp: Date.now(),
       };
     } catch (error) {
-      console.error("❌ Health check failed:", error);
+      console.error("âŒ Health check failed:", error);
       monitoring.trackError(error as Error, {
         endpoint: "/health",
         operation: "health_check",
@@ -735,7 +739,7 @@ class ApiClient {
       url += `?${searchParams.toString()}`;
     }
 
-    console.log(`🔄 Generic GET request to: ${url}`);
+    console.log(`ðŸ”„ Generic GET request to: ${url}`);
     const startTime = Date.now();
 
     try {
@@ -752,7 +756,7 @@ class ApiClient {
       monitoring.trackApiCall(endpoint, "GET", duration, response.status);
 
       if (!response.ok) {
-        console.error(`❌ Generic GET Error:`, {
+        console.error(`âŒ Generic GET Error:`, {
           status: response.status,
           statusText: response.statusText,
           url: response.url,
@@ -762,12 +766,12 @@ class ApiClient {
       }
 
       const data = await response.json();
-      console.log(`✅ Generic GET Success for ${endpoint}:`, {
+      console.log(`âœ… Generic GET Success for ${endpoint}:`, {
         status: response.status,
       });
       return data as T;
     } catch (error) {
-      console.error(`❌ Generic GET failed:`, {
+      console.error(`âŒ Generic GET failed:`, {
         endpoint,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -780,7 +784,7 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, body: unknown): Promise<T> {
-    console.log(`🔄 Generic POST request to: ${API_BASE_URL}${endpoint}`);
+    console.log(`ðŸ”„ Generic POST request to: ${API_BASE_URL}${endpoint}`);
     const startTime = Date.now();
 
     try {
@@ -798,7 +802,7 @@ class ApiClient {
       monitoring.trackApiCall(endpoint, "POST", duration, response.status);
 
       if (!response.ok) {
-        console.error(`❌ Generic POST Error:`, {
+        console.error(`âŒ Generic POST Error:`, {
           status: response.status,
           statusText: response.statusText,
           url: response.url,
@@ -808,12 +812,12 @@ class ApiClient {
       }
 
       const data = await response.json();
-      console.log(`✅ Generic POST Success for ${endpoint}:`, {
+      console.log(`âœ… Generic POST Success for ${endpoint}:`, {
         status: response.status,
       });
       return data as T;
     } catch (error) {
-      console.error(`❌ Generic POST failed:`, {
+      console.error(`âŒ Generic POST failed:`, {
         endpoint,
         error: error instanceof Error ? error.message : String(error),
       });

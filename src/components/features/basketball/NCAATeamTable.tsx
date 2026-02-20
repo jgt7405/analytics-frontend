@@ -14,6 +14,7 @@ interface NCAATeamTableProps {
   ncaaData: NCAATeam[];
   className?: string;
   showAllTeams?: boolean;
+  hasActualBracket?: boolean;
 }
 
 type RoundKey =
@@ -29,13 +30,14 @@ function NCAATeamTable({
   ncaaData,
   className,
   showAllTeams = false,
+  hasActualBracket = false,
 }: NCAATeamTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
   const [sortColumn, setSortColumn] = useState<RoundKey | null>(null);
   const [rowsToShow, setRowsToShow] = useState<number>(ncaaData.length);
   const [inputValue, setInputValue] = useState<string>(
-    ncaaData.length.toString()
+    ncaaData.length.toString(),
   );
 
   // Reset to show all rows when switching to "All Teams"
@@ -61,7 +63,7 @@ function NCAATeamTable({
         "NCAA_Championship",
         "NCAA_Champion",
       ] as const,
-    []
+    [],
   );
 
   const fieldToLabel: Record<string, string> = {
@@ -78,6 +80,23 @@ function NCAATeamTable({
 
   const sortedTeams = useMemo(() => {
     const teams = [...ncaaData];
+
+    if (hasActualBracket && !sortColumn) {
+      // When actual bracket exists and no column sort, default sort by seed
+      return teams.sort((a, b) => {
+        const aSeed = a.ncaa_actual_seed ?? 999;
+        const bSeed = b.ncaa_actual_seed ?? 999;
+        if (aSeed !== bSeed) return aSeed - bSeed;
+        // Tiebreak by champion probability
+        const reverseRounds = [...roundOrder].reverse();
+        for (const round of reverseRounds) {
+          const aVal = (a[round as keyof NCAATeam] as number) || 0;
+          const bVal = (b[round as keyof NCAATeam] as number) || 0;
+          if (aVal !== bVal) return bVal - aVal;
+        }
+        return a.team_name.localeCompare(b.team_name);
+      });
+    }
 
     if (sortColumn) {
       // When a specific column is selected, sort by that column first
@@ -114,7 +133,7 @@ function NCAATeamTable({
       // Final tiebreaker: alphabetical order by team name
       return a.team_name.localeCompare(b.team_name);
     });
-  }, [ncaaData, roundOrder, sortColumn]);
+  }, [ncaaData, roundOrder, sortColumn, hasActualBracket]);
 
   // Apply row limit filter
   const displayedTeams = useMemo(() => {
@@ -147,7 +166,7 @@ function NCAATeamTable({
   const tableClassName = cn(
     tableStyles.tableContainer,
     "ncaa-tourney-table",
-    className
+    className,
   );
 
   // Format percentage without decimal if it's a whole number
@@ -203,7 +222,7 @@ function NCAATeamTable({
         >
           <thead>
             <tr>
-              {/* Rank column */}
+              {/* Rank/Seed column */}
               <th
                 className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
                   isMobile ? "text-xs" : "text-sm"
@@ -275,7 +294,7 @@ function NCAATeamTable({
           <tbody>
             {displayedTeams.map((team, index) => (
               <tr key={`${team.team_name}-${index}`}>
-                {/* Rank cell */}
+                {/* Rank/Seed cell - show actual seed when bracket exists */}
                 <td
                   className={`sticky left-0 z-20 bg-white text-center ${
                     isMobile ? "text-xs" : "text-sm"
@@ -293,7 +312,9 @@ function NCAATeamTable({
                     verticalAlign: "middle",
                   }}
                 >
-                  {index + 1}
+                  {hasActualBracket && team.ncaa_actual_seed
+                    ? team.ncaa_actual_seed
+                    : index + 1}
                 </td>
                 {/* Team cell */}
                 <td

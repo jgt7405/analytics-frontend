@@ -25,8 +25,8 @@ export function sanitizeInput(input: string): string {
 
 export function validateConference(conference: string): boolean {
   try {
-    // Allow "All Teams" as a special case
-    if (conference === "All Teams") {
+    // Allow special filter values
+    if (conference === "All Teams" || conference === "All Tourney Teams") {
       return true;
     }
     ConferenceSchema.parse(conference);
@@ -45,7 +45,7 @@ interface ValidationResult<T> {
 
 // Simple validation functions for API responses
 export function validateStandings(
-  data: unknown
+  data: unknown,
 ): ValidationResult<StandingsApiResponse> {
   try {
     if (
@@ -95,7 +95,7 @@ export function validateCWV(data: unknown): ValidationResult<CWVApiResponse> {
 }
 
 export function validateSchedule(
-  data: unknown
+  data: unknown,
 ): ValidationResult<ScheduleApiResponse> {
   try {
     // Basketball API returns: { conferences: [], data: [] }

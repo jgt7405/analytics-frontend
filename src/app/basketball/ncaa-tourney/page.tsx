@@ -13,14 +13,14 @@ import { useNCAATeam } from "@/hooks/useNCAATeam";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 export default function NCAATeamPage() {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
   const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
+    preferences.defaultConference,
   );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     "All Teams",
@@ -39,7 +39,7 @@ export default function NCAATeamPage() {
     useConferenceUrl(
       setSelectedConference,
       availableConferences,
-      true // HAS "All Teams" for NCAA tournament
+      true, // HAS "All Teams" for NCAA tournament
     );
 
   useEffect(() => {
@@ -52,28 +52,61 @@ export default function NCAATeamPage() {
   // Handle conference changes
   const handleConferenceChange = (conference: string) => {
     handleUrlConferenceChange(conference);
-    if (conference !== "All Teams") {
+    if (conference !== "All Teams" && conference !== "All Tourney Teams") {
       updatePreference("defaultConference", conference);
     }
   };
 
-  // Update available conferences - HAS "All Teams"
+  // Extract has_actual_bracket and regions from response
+  const hasActualBracket = useMemo(() => {
+    if (
+      !ncaaResponse ||
+      typeof ncaaResponse !== "object" ||
+      ncaaResponse === null
+    ) {
+      return false;
+    }
+    const response = ncaaResponse as unknown as Record<string, unknown>;
+    return response.has_actual_bracket === true;
+  }, [ncaaResponse]);
+
+  // Update available conferences/regions dynamically based on actual bracket
   useEffect(() => {
     if (
       ncaaResponse &&
       typeof ncaaResponse === "object" &&
       ncaaResponse !== null
     ) {
-      // Cast to unknown first, then to Record<string, unknown>
       const response = ncaaResponse as unknown as Record<string, unknown>;
-      if (Array.isArray(response.conferences)) {
+
+      if (
+        response.has_actual_bracket === true &&
+        Array.isArray(response.regions)
+      ) {
+        // Actual bracket mode: show regions instead of conferences
+        setAvailableConferences([
+          "All Tourney Teams",
+          ...(response.regions as string[]),
+        ]);
+        // If current selection is a conference (not a region or special value),
+        // switch to All Tourney Teams
+        const validSelections = [
+          "All Tourney Teams",
+          "All Teams",
+          ...(response.regions as string[]),
+        ];
+        if (!validSelections.includes(selectedConference)) {
+          setSelectedConference("All Tourney Teams");
+        }
+      } else if (Array.isArray(response.conferences)) {
+        // Default mode: show conferences
         setAvailableConferences([
           "All Teams",
           ...(response.conferences as string[]),
         ]);
       }
     }
-  }, [ncaaResponse]);
+  }, [ncaaResponse]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get data safely from response
   const ncaaData = (() => {
@@ -84,7 +117,6 @@ export default function NCAATeamPage() {
     ) {
       return null;
     }
-    // Cast to unknown first, then to Record<string, unknown>
     const response = ncaaResponse as unknown as Record<string, unknown>;
     return Array.isArray(response.data) ? response.data : null;
   })();
@@ -142,6 +174,10 @@ export default function NCAATeamPage() {
     );
   }
 
+  const isShowingAll =
+    selectedConference === "All Teams" ||
+    selectedConference === "All Tourney Teams";
+
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
@@ -160,7 +196,7 @@ export default function NCAATeamPage() {
           {ncaaLoading ? (
             <BasketballTableSkeleton
               tableType="ncaa"
-              rows={selectedConference === "All Teams" ? 25 : 15}
+              rows={isShowingAll ? 25 : 15}
               teamCols={7}
               showSummaryRows={false}
             />
@@ -173,7 +209,7 @@ export default function NCAATeamPage() {
                       fallback={
                         <BasketballTableSkeleton
                           tableType="ncaa"
-                          rows={selectedConference === "All Teams" ? 25 : 15}
+                          rows={isShowingAll ? 25 : 15}
                           teamCols={7}
                           showSummaryRows={false}
                         />
@@ -183,7 +219,8 @@ export default function NCAATeamPage() {
                         <NCAATeamTable
                           ncaaData={ncaaData}
                           className="ncaa-table"
-                          showAllTeams={selectedConference === "All Teams"}
+                          showAllTeams={isShowingAll}
+                          hasActualBracket={hasActualBracket}
                         />
                       )}
                     </Suspense>
@@ -195,7 +232,7 @@ export default function NCAATeamPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Probabilities to reach each round of the NCAA
-                            touranment based on 1,000 season simulations using
+                            tournament based on 1,000 season simulations using
                             composite ratings based on kenpom, barttorvik and
                             evanmiya.
                           </div>
