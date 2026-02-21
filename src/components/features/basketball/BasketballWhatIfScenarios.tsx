@@ -1201,8 +1201,7 @@ export default function BasketballWhatIfScenarios() {
                   Current reflects current probabilities; what if reflects
                   updated probabilities with game results selected. Change is
                   the difference between current and what if. Ties broken based
-                  on Big 12 tiebreaker rules (future update to include
-                  individual conference tiebreakers).
+                  on each conference's tiebreaker rules.
                 </p>
               </div>
             )}

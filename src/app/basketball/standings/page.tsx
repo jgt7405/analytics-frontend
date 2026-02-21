@@ -24,7 +24,7 @@ export default function StandingsPage() {
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
   const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
+    preferences.defaultConference,
   );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     preferences.defaultConference,
@@ -42,7 +42,7 @@ export default function StandingsPage() {
 
   const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
     setSelectedConference,
-    availableConferences
+    availableConferences,
   );
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function StandingsPage() {
       trackEvent,
       endMeasurement,
       selectedConference,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -338,8 +338,8 @@ export default function StandingsPage() {
                       <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
-                            Final seeding order with all ties broken by standard
-                            tiebreaker rules.
+                            Final seeding order with all ties broken by
+                            conference's tiebreaker rules.
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Represents tournament seeding scenarios.
