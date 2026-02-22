@@ -380,41 +380,85 @@ export default function BasketballTeamScheduleDifficulty({
       (g) => g.status === "W" || g.status === "L",
     );
 
-    const wins = completedGames.filter((g) => g.status === "W").length;
-    const losses = completedGames.filter((g) => g.status === "L").length;
+    // Check if showing remaining games only
+    const isRemainingOnly =
+      allTeamGames.length > 0 &&
+      allTeamGames.every((g) => g.status !== "W" && g.status !== "L");
 
-    // Expected wins: sum of all win probabilities
-    const expectedWins = completedGames.reduce(
-      (sum, g) => sum + (g.kenpom_win_prob || 0),
-      0,
-    );
-    const expectedLosses = completedGames.length - expectedWins;
+    if (isRemainingOnly) {
+      // For remaining games: show 0-0 record, expected wins from remaining games, TWV = 0
+      const expectedWinsLow = lowProbGames.reduce(
+        (sum, g) => sum + (g.kenpom_win_prob || 0),
+        0,
+      );
+      const totalGamesLow = lowProbGames.length;
+      const expectedLossesLow = totalGamesLow - expectedWinsLow;
 
-    // Forecast win %
-    const forecastWinPct =
-      completedGames.length > 0
-        ? (expectedWins / completedGames.length) * 100
-        : 0;
+      // Include high prob games in totals
+      const expectedWinsHigh = highProbGames.reduce(
+        (sum, g) => sum + (g.kenpom_win_prob || 0),
+        0,
+      );
+      const totalGamesHigh = highProbGames.length;
+      const expectedLossesHigh = totalGamesHigh - expectedWinsHigh;
 
-    // True Win Value
-    const twv = wins - expectedWins;
+      const totalExpectedWins = expectedWinsLow + expectedWinsHigh;
+      const totalExpectedLosses = expectedLossesLow + expectedLossesHigh;
+      const totalGames = totalGamesLow + totalGamesHigh;
 
-    // Actual win %
-    const actualWinPct =
-      completedGames.length > 0 ? (wins / completedGames.length) * 100 : 0;
+      const forecastWinPct =
+        totalGames > 0 ? (totalExpectedWins / totalGames) * 100 : 0;
 
-    return {
-      wins,
-      losses,
-      expectedWins,
-      expectedLosses,
-      forecastWinPct,
-      twv,
-      actualWinPct,
-      highProbWins: highProbRecord.wins,
-      highProbLosses: highProbRecord.losses,
-      highProbGames: highProbGames.length,
-    };
+      return {
+        wins: 0,
+        losses: 0,
+        expectedWins: totalExpectedWins,
+        expectedLosses: totalExpectedLosses,
+        forecastWinPct,
+        twv: 0,
+        actualWinPct: 0,
+        highProbWins: highProbRecord.wins,
+        highProbLosses: highProbRecord.losses,
+        highProbGames: highProbGames.length,
+      };
+    } else {
+      // For completed games: normal calculation including >95% games
+      const wins = completedGames.filter((g) => g.status === "W").length;
+      const losses = completedGames.filter((g) => g.status === "L").length;
+
+      // Expected wins: sum of all win probabilities (both low and high prob)
+      const expectedWins = completedGames.reduce(
+        (sum, g) => sum + (g.kenpom_win_prob || 0),
+        0,
+      );
+      const expectedLosses = completedGames.length - expectedWins;
+
+      // Forecast win %
+      const forecastWinPct =
+        completedGames.length > 0
+          ? (expectedWins / completedGames.length) * 100
+          : 0;
+
+      // True Win Value
+      const twv = wins - expectedWins;
+
+      // Actual win %
+      const actualWinPct =
+        completedGames.length > 0 ? (wins / completedGames.length) * 100 : 0;
+
+      return {
+        wins,
+        losses,
+        expectedWins,
+        expectedLosses,
+        forecastWinPct,
+        twv,
+        actualWinPct,
+        highProbWins: highProbRecord.wins,
+        highProbLosses: highProbRecord.losses,
+        highProbGames: highProbGames.length,
+      };
+    }
   }, [lowProbGames, highProbGames, highProbRecord]);
 
   return (
@@ -520,7 +564,7 @@ export default function BasketballTeamScheduleDifficulty({
         >
           <rect width={CHART_WIDTH} height={TOTAL_CHART_HEIGHT} fill="white" />
 
-          {/* ========== TOP SECTION (Ã¢â€°Â¤95% games) ========== */}
+          {/* ========== TOP SECTION (ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤95% games) ========== */}
 
           {/* Percentile gridlines */}
           {percentiles.map((percentile) => {
