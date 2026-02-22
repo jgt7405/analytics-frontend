@@ -897,18 +897,21 @@ function TeamFilterDropdown({
       </button>
       {isOpen && (
         <div
-          className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-[240px] overflow-y-auto"
+          className="absolute z-30 mt-1 w-full rounded-md shadow-lg max-h-[240px] overflow-y-auto"
           style={{ backgroundColor: "#ffffff" }}
         >
           <button
             onClick={handleSelectAll}
-            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-gray-50 border-b border-gray-100"
+            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs border-0"
+            style={{ backgroundColor: "#ffffff", border: "none" }}
           >
             <span
-              className="flex items-center justify-center w-4 h-4 rounded border transition-colors"
+              className="flex items-center justify-center w-4 h-4 rounded transition-colors"
               style={{
-                backgroundColor: allSelected ? TEAL_COLOR : "white",
-                borderColor: allSelected ? TEAL_COLOR : "#9ca3af",
+                backgroundColor: allSelected ? TEAL_COLOR : "#ffffff",
+                border: allSelected
+                  ? `2px solid ${TEAL_COLOR}`
+                  : "2px solid #9ca3af",
               }}
             >
               {allSelected && <Check size={12} strokeWidth={3} color="white" />}
@@ -921,13 +924,16 @@ function TeamFilterDropdown({
               <button
                 key={t.team_id}
                 onClick={() => handleToggleTeam(t.team_id)}
-                className="flex items-center gap-2 w-full px-3 py-1 text-xs hover:bg-gray-50"
+                className="flex items-center gap-2 w-full px-3 py-1 text-xs border-0"
+                style={{ backgroundColor: "#ffffff", border: "none" }}
               >
                 <span
-                  className="flex items-center justify-center w-4 h-4 rounded border transition-colors"
+                  className="flex items-center justify-center w-4 h-4 rounded transition-colors"
                   style={{
-                    backgroundColor: checked ? TEAL_COLOR : "white",
-                    borderColor: checked ? TEAL_COLOR : "#9ca3af",
+                    backgroundColor: checked ? TEAL_COLOR : "#ffffff",
+                    border: checked
+                      ? `2px solid ${TEAL_COLOR}`
+                      : "2px solid #9ca3af",
                   }}
                 >
                   {checked && <Check size={12} strokeWidth={3} color="white" />}

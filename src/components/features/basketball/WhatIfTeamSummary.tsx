@@ -472,8 +472,11 @@ export default function WhatIfTeamSummary({
           </table>
         </div>
 
-        {/* Explainer text (change 6) */}
-        <p className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100">
+        {/* Explainer text (change 6) - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
+        <p
+          className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100"
+          data-no-screenshot
+        >
           Shows how selected game outcomes affect this team&apos;s seed
           probabilities. Current reflects pre-selection probabilities; What If
           reflects updated probabilities after applying selected game results.

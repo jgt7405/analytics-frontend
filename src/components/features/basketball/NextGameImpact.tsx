@@ -494,8 +494,11 @@ export default function NextGameImpact({
             </table>
           </div>
 
-          {/* Explainer text (change 6) */}
-          <p className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100">
+          {/* Explainer text (change 6) - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
+          <p
+            className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100"
+            data-no-screenshot
+          >
             Shows projected impact of the team&apos;s next scheduled conference
             game on seed probabilities. Win and Loss columns show how
             probabilities change if the team wins or loses that game.
