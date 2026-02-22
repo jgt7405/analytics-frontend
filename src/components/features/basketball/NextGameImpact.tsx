@@ -1,12 +1,10 @@
 // components/features/basketball/NextGameImpact.tsx
-// Compact widget showing how a team's next game affects their seed projections
-
 "use client";
 
 import type { WhatIfGame, WhatIfTeamResult } from "@/hooks/useBasketballWhatIf";
 import { getCellColor } from "@/lib/color-utils";
 import { Camera, Loader } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const TEAL_COLOR = "rgb(0, 151, 178)";
 
@@ -52,7 +50,6 @@ function getLogoUrl(filename?: string): string | undefined {
   return `/images/team_logos/${filename}`;
 }
 
-// — Screenshot helper (matches main component pattern) —
 async function captureScreenshot(
   element: HTMLElement,
   filename: string,
@@ -76,18 +73,14 @@ async function captureScreenshot(
       | undefined;
   }
   if (!html2canvas) return;
-
   const clone = element.cloneNode(true) as HTMLElement;
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
-
   const contentWidth = Math.min(
     element.scrollWidth + 48,
     element.offsetWidth + 48,
   );
-
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
-
   const header = document.createElement("div");
   header.style.cssText =
     "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #e5e7eb;";
@@ -105,13 +98,17 @@ async function captureScreenshot(
   header.appendChild(titleSpan);
   header.appendChild(date);
   wrapper.appendChild(header);
-
   clone.style.cssText = "overflow:visible!important;width:100%!important;";
   wrapper.appendChild(clone);
-
+  // Explainer text
+  const explainer = document.createElement("div");
+  explainer.style.cssText =
+    "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
+  explainer.innerHTML =
+    "Shows projected impact of the team's next scheduled conference game on seed probabilities. Win and Loss columns show how probabilities change if the team wins or loses that game.";
+  wrapper.appendChild(explainer);
   document.body.appendChild(wrapper);
   await new Promise((r) => setTimeout(r, 400));
-
   const canvas = await html2canvas(wrapper, {
     backgroundColor: "#ffffff",
     scale: 2,
@@ -120,23 +117,28 @@ async function captureScreenshot(
     logging: false,
   });
   document.body.removeChild(wrapper);
-
   const link = document.createElement("a");
   link.download = filename;
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
 
+const COL_METRIC = { minWidth: "110px" };
+const COL_DATA = { minWidth: "65px", width: "65px" };
+
 export default function NextGameImpact({
   conference,
   teams,
   games: _games,
+  selectedTeamId,
+  onTeamChange,
 }: {
   conference: string | null;
   teams: WhatIfTeamResult[];
   games: WhatIfGame[];
+  selectedTeamId: number | null;
+  onTeamChange: (id: number | null) => void;
 }) {
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [impactData, setImpactData] = useState<NextGameImpactData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -144,35 +146,27 @@ export default function NextGameImpact({
   const contentRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Sort teams by avg standing for the dropdown
+  // Sort teams alphabetically for the dropdown (change 3)
   const sortedTeams = useMemo(
     () =>
-      [...teams].sort(
-        (a, b) =>
-          (a.avg_conference_standing ?? 99) - (b.avg_conference_standing ?? 99),
+      [...teams].sort((a, b) =>
+        (a.team_name ?? "").localeCompare(b.team_name ?? ""),
       ),
     [teams],
   );
 
-  // Auto-select first-place team when teams change
+  // Reset data when conference changes
   useEffect(() => {
-    if (sortedTeams.length > 0) {
-      setSelectedTeamId(sortedTeams[0].team_id);
-    } else {
-      setSelectedTeamId(null);
-    }
     setImpactData(null);
-  }, [sortedTeams]);
+  }, [conference]);
 
-  // Fetch impact data when team or conference changes — cancels any in-flight request
+  // Fetch impact data when team changes — cancels any in-flight request
   useEffect(() => {
     if (!selectedTeamId || !conference) return;
 
-    // Abort any previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
@@ -197,7 +191,7 @@ export default function NextGameImpact({
         }
       })
       .catch((e) => {
-        if (controller.signal.aborted) return; // Ignore aborted requests
+        if (controller.signal.aborted) return;
         console.error("Next-game impact error:", e);
         setImpactData(null);
         setFetchError(e instanceof Error ? e.message : "Failed to load");
@@ -209,19 +203,8 @@ export default function NextGameImpact({
     };
   }, [selectedTeamId, conference]);
 
-  const handleTeamChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const tid = parseInt(e.target.value);
-      if (!isNaN(tid)) {
-        setSelectedTeamId(tid);
-      }
-    },
-    [],
-  );
-
   if (!conference || teams.length === 0) return null;
 
-  const selectedTeam = sortedTeams.find((t) => t.team_id === selectedTeamId);
   const game = impactData?.game;
   const teamKey = selectedTeamId ? String(selectedTeamId) : null;
   const teamMetrics = teamKey
@@ -241,22 +224,20 @@ export default function NextGameImpact({
     label: string;
     key: keyof NextGameMetrics;
     isPercent: boolean;
-    invertDelta?: boolean;
   }[] = [
     { label: "#1 Seed %", key: "first_seed_pct", isPercent: true },
     { label: "Top 4 %", key: "top4_pct", isPercent: true },
     { label: "Top 8 %", key: "top8_pct", isPercent: true },
-    { label: "Avg Seed", key: "avg_seed", isPercent: false, invertDelta: true },
+    { label: "Avg Seed", key: "avg_seed", isPercent: false },
     { label: "Proj Conf Wins", key: "avg_conf_wins", isPercent: false },
   ];
 
   const numTeams = teamMetrics?.num_teams ?? 16;
-  const teamShortName = selectedTeam?.team_name?.split(" ").pop() ?? "";
 
   return (
     <div className="bg-white rounded-lg shadow p-4 mt-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-base font-medium">Next Game Impact</h3>
+        <h3 className="text-base font-medium">Team Detail</h3>
         <div className="flex items-center gap-2" data-no-screenshot>
           {game && teamMetrics && (
             <button
@@ -264,10 +245,13 @@ export default function NextGameImpact({
                 if (!contentRef.current || capturing) return;
                 setCapturing(true);
                 try {
+                  const team = sortedTeams.find(
+                    (t) => t.team_id === selectedTeamId,
+                  );
                   await captureScreenshot(
                     contentRef.current,
-                    `next_game_impact_${teamShortName.toLowerCase()}.png`,
-                    `Next Game Impact - ${selectedTeam?.team_name}`,
+                    `next_game_impact_${(team?.team_name ?? "team").replace(/\s+/g, "_").toLowerCase()}.png`,
+                    `Next Game Impact - ${team?.team_name ?? ""}`,
                   );
                 } catch (e) {
                   console.error("Screenshot failed:", e);
@@ -288,14 +272,17 @@ export default function NextGameImpact({
         </div>
       </div>
 
-      {/* Team selector */}
-      <div className="flex items-center gap-2 mb-3" data-no-screenshot>
+      {/* Shared team selector - controls both NGI and WhatIfTeamSummary */}
+      <div className="mb-3" data-no-screenshot>
         <select
           value={selectedTeamId ?? ""}
-          onChange={handleTeamChange}
-          className="text-xs border border-gray-300 rounded px-2 py-1 flex-1"
-          style={{ maxWidth: "100%" }}
+          onChange={(e) => {
+            const val = e.target.value;
+            onTeamChange(val ? parseInt(val) : null);
+          }}
+          className="w-full px-3 py-1.5 border border-gray-300 rounded-md bg-white text-xs hover:border-gray-400 transition-colors"
         >
+          <option value="">Select Team</option>
           {sortedTeams.map((t) => (
             <option key={t.team_id} value={t.team_id}>
               {t.team_name}
@@ -304,8 +291,12 @@ export default function NextGameImpact({
         </select>
       </div>
 
-      {/* Content (screenshotable area) */}
-      {isLoading ? (
+      {/* Next Game Impact Content */}
+      {!selectedTeamId ? (
+        <p className="text-xs text-gray-400 italic py-2">
+          Select a team to see next game impact and what-if summary
+        </p>
+      ) : isLoading ? (
         <div className="flex items-center justify-center py-4">
           <div
             className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
@@ -321,6 +312,7 @@ export default function NextGameImpact({
         <p className="text-xs text-gray-400 italic py-2">{impactData.error}</p>
       ) : game && teamMetrics && winMetrics && lossMetrics ? (
         <div ref={contentRef}>
+          <h4 className="text-sm font-medium mb-2">Next Game Impact</h4>
           {/* Matchup header */}
           <div className="flex items-center justify-center gap-2 mb-3 py-1.5 bg-gray-50 rounded">
             <div className="flex items-center gap-1">
@@ -352,35 +344,32 @@ export default function NextGameImpact({
           </div>
 
           {/* Summary Metrics Table */}
-          <table
-            className="text-sm"
-            style={{ width: "auto", minWidth: "280px" }}
-          >
+          <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-gray-500">
                 <th
                   className="text-left py-1.5 px-2 font-normal"
-                  style={{ minWidth: "110px" }}
+                  style={COL_METRIC}
                 >
                   Metric
                 </th>
                 <th
                   className="text-center py-1.5 px-2 font-normal"
-                  style={{ minWidth: "60px" }}
+                  style={COL_DATA}
                 >
                   Current
                 </th>
                 <th
                   className="text-center py-1.5 px-2 font-normal"
-                  style={{ minWidth: "60px", color: "rgb(40, 167, 69)" }}
+                  style={{ ...COL_DATA, color: "rgb(40, 167, 69)" }}
                 >
-                  {teamShortName} Win
+                  Win
                 </th>
                 <th
                   className="text-center py-1.5 px-2 font-normal"
-                  style={{ minWidth: "60px", color: "rgb(220, 53, 69)" }}
+                  style={{ ...COL_DATA, color: "rgb(220, 53, 69)" }}
                 >
-                  {teamShortName} Loss
+                  Loss
                 </th>
               </tr>
             </thead>
@@ -431,33 +420,30 @@ export default function NextGameImpact({
           {/* Seed Distribution Table */}
           <div className="mt-4">
             <h4 className="text-sm font-medium mb-2">Seed Probabilities</h4>
-            <table
-              className="text-sm"
-              style={{ width: "auto", minWidth: "280px" }}
-            >
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-gray-500">
                   <th
                     className="text-left py-1.5 px-2 font-normal"
-                    style={{ minWidth: "50px" }}
+                    style={COL_METRIC}
                   >
                     Seed
                   </th>
                   <th
                     className="text-center py-1.5 px-2 font-normal"
-                    style={{ minWidth: "60px" }}
+                    style={COL_DATA}
                   >
                     Current
                   </th>
                   <th
                     className="text-center py-1.5 px-2 font-normal"
-                    style={{ minWidth: "60px", color: "rgb(40, 167, 69)" }}
+                    style={{ ...COL_DATA, color: "rgb(40, 167, 69)" }}
                   >
                     Win
                   </th>
                   <th
                     className="text-center py-1.5 px-2 font-normal"
-                    style={{ minWidth: "60px", color: "rgb(220, 53, 69)" }}
+                    style={{ ...COL_DATA, color: "rgb(220, 53, 69)" }}
                   >
                     Loss
                   </th>
@@ -507,6 +493,13 @@ export default function NextGameImpact({
               </tbody>
             </table>
           </div>
+
+          {/* Explainer text (change 6) */}
+          <p className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100">
+            Shows projected impact of the team&apos;s next scheduled conference
+            game on seed probabilities. Win and Loss columns show how
+            probabilities change if the team wins or loses that game.
+          </p>
         </div>
       ) : null}
     </div>

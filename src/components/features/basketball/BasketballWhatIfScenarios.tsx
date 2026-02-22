@@ -4,9 +4,10 @@ import ConferenceSelector from "@/components/common/ConferenceSelector";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { getCellColor } from "@/lib/color-utils";
-import { Camera, Download } from "lucide-react";
+import { Camera, Check, ChevronDown, Download, Loader } from "lucide-react";
 
 import NextGameImpact from "@/components/features/basketball/NextGameImpact";
+import WhatIfTeamSummary from "@/components/features/basketball/WhatIfTeamSummary";
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
   useBasketballWhatIf,
@@ -43,7 +44,7 @@ function getStandingProb(team: WhatIfTeamResult, standing: number): number {
   return (team[key] as number) ?? 0;
 }
 
-// â”€â”€ Screenshot helper â”€â”€
+// – Screenshot helper –
 async function captureScreenshot(
   element: HTMLElement,
   selectionLegendHtml: string | null,
@@ -66,6 +67,19 @@ async function captureScreenshot(
 
   const clone = element.cloneNode(true) as HTMLElement;
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
+
+  // Remove only the page-level explainer text (not the component's built-in explainer)
+  clone.querySelectorAll("p").forEach((el) => {
+    const text = el.textContent?.trim() || "";
+    // Remove paragraphs that are page-level explainers (longer, multi-sentence explanations at bottom)
+    if (
+      text.length > 100 &&
+      text.includes("probabilities") &&
+      !el.closest("table")
+    ) {
+      el.remove();
+    }
+  });
 
   // Measure actual content width for tighter screenshots
   const contentWidth = Math.min(
@@ -107,14 +121,6 @@ async function captureScreenshot(
     wrapper.appendChild(legendDiv);
   }
 
-  // Explainer text at bottom of every screenshot
-  const explainer = document.createElement("div");
-  explainer.style.cssText =
-    "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
-  explainer.innerHTML =
-    "Current reflects current probabilities; what if reflects updated probabilities with game results selected.<br/>Change is the difference between current and what if.<br/>Ties broken based on Big 12 tiebreaker rules (future update to include individual conference tiebreakers).";
-  wrapper.appendChild(explainer);
-
   document.body.appendChild(wrapper);
   await new Promise((r) => setTimeout(r, 400));
 
@@ -142,7 +148,10 @@ declare global {
   }
 }
 
-// â”€â”€ Small Components â”€â”€
+// – CSV –
+// CSV is generated server-side via /basketball/whatif/validation-csv endpoint
+
+// – Small Components –
 function TeamLogo({
   src,
   alt,
@@ -354,7 +363,7 @@ function SelectionLegend({
   );
 }
 
-// â”€â”€ Screenshot Button â”€â”€
+// – Screenshot Button –
 function ScreenshotBtn({
   targetRef,
   filename,
@@ -389,7 +398,7 @@ function ScreenshotBtn({
       title="Download screenshot"
     >
       {capturing ? (
-        <span className="animate-spin">âŸ³</span>
+        <Loader size={12} className="animate-spin" />
       ) : (
         <Camera size={12} />
       )}
@@ -398,9 +407,9 @@ function ScreenshotBtn({
   );
 }
 
-// â”€â”€ Probability Table (reusable for 1st, Top 4, Top 8) â”€â”€
+// – Probability Table (reusable for 1st, Top 4, Top 8) –
 // Change 5: sortable column headers
-// Change 6: "After" â†’ "What If"
+// Change 6: "After" → "What If"
 // Change 9: no bold in data cells
 type SortCol = "before" | "after" | "change" | null;
 type SortDir = "asc" | "desc";
@@ -472,9 +481,19 @@ function ProbabilityTable({
 
   const sortIndicator = (col: SortCol) =>
     sortCol === col ? (
-      <span className="ml-0.5 text-[9px]">
-        {sortDir === "desc" ? "â–¼" : "â–²"}
-      </span>
+      <svg
+        className="ml-0.5 inline-block"
+        width="8"
+        height="8"
+        viewBox="0 0 8 8"
+        fill="currentColor"
+      >
+        {sortDir === "desc" ? (
+          <polygon points="0,2 8,2 4,7" />
+        ) : (
+          <polygon points="0,6 8,6 4,1" />
+        )}
+      </svg>
     ) : null;
 
   const thClass =
@@ -499,7 +518,7 @@ function ProbabilityTable({
             <tr className="border-b border-gray-200 text-gray-500">
               <th
                 className="text-left py-2 px-2 font-normal"
-                style={{ minWidth: "140px" }}
+                style={{ minWidth: "40px" }}
               >
                 Team
               </th>
@@ -542,7 +561,9 @@ function ProbabilityTable({
                       alt={team.team_name}
                       size={18}
                     />
-                    <span className="text-sm">{team.team_name}</span>
+                    <span className="text-sm hidden sm:inline">
+                      {team.team_name}
+                    </span>
                   </div>
                 </td>
                 {hasCalculated ? (
@@ -589,7 +610,7 @@ function ProbabilityTable({
   );
 }
 
-// â”€â”€ Full Standings Comparison Table (restored â€” Change 8) â”€â”€
+// Full Standings Comparison Table with sortable headers (Change 7)
 function FullStandingsTable({
   baseline,
   whatif,
@@ -605,20 +626,75 @@ function FullStandingsTable({
   screenshotRef: React.RefObject<HTMLDivElement>;
   selectionHtml: string | null;
 }) {
-  if (!baseline.length || !whatif.length) return null;
+  const [sortKey, setSortKey] = useState<string>("avg");
+  const [sortAsc, setSortAsc] = useState(true);
 
-  const baselineMap = new Map(baseline.map((t) => [t.team_id, t]));
+  const baselineMap = useMemo(
+    () => new Map(baseline.map((t) => [t.team_id, t])),
+    [baseline],
+  );
   const maxStandings = numTeams;
 
-  const sortedTeams = [...whatif].sort(
-    (a, b) =>
-      (a.avg_conference_standing ?? 99) - (b.avg_conference_standing ?? 99),
+  const getProb = useCallback(
+    (team: WhatIfTeamResult, standing: number): number => {
+      const key = `standing_${standing}_prob`;
+      return ((team as unknown as Record<string, unknown>)[key] as number) ?? 0;
+    },
+    [],
   );
 
-  const getProb = (team: WhatIfTeamResult, standing: number): number => {
-    const key = `standing_${standing}_prob`;
-    return ((team as unknown as Record<string, unknown>)[key] as number) ?? 0;
+  const sortedTeams = useMemo(() => {
+    if (!whatif.length) return [];
+    return [...whatif].sort((a, b) => {
+      let aVal: number, bVal: number;
+      if (sortKey === "avg") {
+        aVal = a.avg_conference_standing ?? 99;
+        bVal = b.avg_conference_standing ?? 99;
+      } else if (sortKey === "wins") {
+        aVal = a.avg_projected_conf_wins ?? 0;
+        bVal = b.avg_projected_conf_wins ?? 0;
+      } else if (sortKey.startsWith("s_")) {
+        const standing = parseInt(sortKey.slice(2));
+        aVal = getProb(a, standing);
+        bVal = getProb(b, standing);
+      } else {
+        aVal = a.avg_conference_standing ?? 99;
+        bVal = b.avg_conference_standing ?? 99;
+      }
+      return sortAsc ? aVal - bVal : bVal - aVal;
+    });
+  }, [whatif, sortKey, sortAsc, getProb]);
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortAsc((prev) => !prev);
+    } else {
+      setSortKey(key);
+      setSortAsc(key === "avg");
+    }
   };
+
+  const sortArrow = (key: string) =>
+    sortKey === key ? (
+      <svg
+        className="ml-0.5 inline-block"
+        width="7"
+        height="7"
+        viewBox="0 0 8 8"
+        fill="currentColor"
+      >
+        {sortAsc ? (
+          <polygon points="0,6 8,6 4,1" />
+        ) : (
+          <polygon points="0,2 8,2 4,7" />
+        )}
+      </svg>
+    ) : null;
+
+  const thSort =
+    "text-center py-2 px-1.5 font-normal cursor-pointer hover:text-gray-800 select-none";
+
+  if (!baseline.length || !whatif.length) return null;
 
   return (
     <div className="mb-6">
@@ -641,12 +717,21 @@ function FullStandingsTable({
                 <th className="text-left py-2 px-2 font-normal sticky left-0 bg-gray-50 z-10">
                   Team
                 </th>
-                <th className="text-center py-2 px-2 font-normal">Wins</th>
-                <th className="text-center py-2 px-2 font-normal">Avg</th>
+                <th className={thSort} onClick={() => handleSort("wins")}>
+                  Wins{sortArrow("wins")}
+                </th>
+                <th className={thSort} onClick={() => handleSort("avg")}>
+                  Avg{sortArrow("avg")}
+                </th>
                 {Array.from({ length: maxStandings }, (_, i) => (
-                  <th key={i} className="text-center py-2 px-1.5 font-normal">
+                  <th
+                    key={i}
+                    className={thSort}
+                    onClick={() => handleSort(`s_${i + 1}`)}
+                  >
                     {i + 1}
                     {i === 0 ? "st" : i === 1 ? "nd" : i === 2 ? "rd" : "th"}
+                    {sortArrow(`s_${i + 1}`)}
                   </th>
                 ))}
               </tr>
@@ -658,7 +743,6 @@ function FullStandingsTable({
                   ? (team.avg_projected_conf_wins ?? 0) -
                     (bl.avg_projected_conf_wins ?? 0)
                   : 0;
-
                 return (
                   <tr
                     key={team.team_id}
@@ -671,7 +755,7 @@ function FullStandingsTable({
                           alt={team.team_name}
                           size={16}
                         />
-                        <span className="whitespace-nowrap">
+                        <span className="whitespace-nowrap hidden sm:inline">
                           {team.team_name}
                         </span>
                       </div>
@@ -711,7 +795,6 @@ function FullStandingsTable({
                       const blVal = bl ? getProb(bl, standing) : val;
                       const delta = val - blVal;
                       const hasChange = Math.abs(delta) > 0.05;
-
                       return (
                         <td
                           key={standing}
@@ -719,8 +802,8 @@ function FullStandingsTable({
                           style={{
                             backgroundColor: hasChange
                               ? delta > 0
-                                ? "rgba(40, 167, 69, 0.08)"
-                                : "rgba(220, 53, 69, 0.06)"
+                                ? "rgba(40,167,69,0.08)"
+                                : "rgba(220,53,69,0.06)"
                               : "transparent",
                           }}
                         >
@@ -746,9 +829,125 @@ function FullStandingsTable({
   );
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// Team Filter Dropdown (multi-select with checkboxes)
+// UPDATED: Teams sorted alphabetically, unchecked boxes have gray outline with white background
+function TeamFilterDropdown({
+  teams,
+  selectedIds,
+  onChange,
+}: {
+  teams: WhatIfTeamResult[];
+  selectedIds: Set<number>;
+  onChange: (ids: Set<number>) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [isOpen]);
+
+  const allSelected = teams.length > 0 && selectedIds.size === teams.length;
+  const noneSelected = selectedIds.size === 0;
+
+  const handleSelectAll = () => {
+    onChange(allSelected ? new Set() : new Set(teams.map((t) => t.team_id)));
+  };
+
+  const handleToggleTeam = (teamId: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(teamId)) next.delete(teamId);
+    else next.add(teamId);
+    onChange(next);
+  };
+
+  const label = allSelected
+    ? "All Teams"
+    : noneSelected
+      ? "Select Teams"
+      : `${selectedIds.size} of ${teams.length} Teams`;
+
+  // CHANGE 1: Sort teams alphabetically
+  const sortedTeams = useMemo(() => {
+    return [...teams].sort((a, b) => a.team_name.localeCompare(b.team_name));
+  }, [teams]);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full px-3 py-1.5 border border-gray-300 rounded-md text-xs hover:border-gray-400 transition-colors min-w-[200px]"
+        style={{ backgroundColor: "#ffffff" }}
+      >
+        <span className="truncate">{label}</span>
+        <ChevronDown
+          size={14}
+          className={`ml-1 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+      {isOpen && (
+        <div
+          className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-[240px] overflow-y-auto"
+          style={{ backgroundColor: "#ffffff" }}
+        >
+          <button
+            onClick={handleSelectAll}
+            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-gray-50 border-b border-gray-100"
+          >
+            <span
+              className="flex items-center justify-center w-4 h-4 rounded border transition-colors"
+              style={{
+                backgroundColor: allSelected ? TEAL_COLOR : "white",
+                borderColor: allSelected ? TEAL_COLOR : "#9ca3af",
+              }}
+            >
+              {allSelected && <Check size={12} strokeWidth={3} color="white" />}
+            </span>
+            <span className="font-medium">Select All</span>
+          </button>
+          {sortedTeams.map((t) => {
+            const checked = selectedIds.has(t.team_id);
+            return (
+              <button
+                key={t.team_id}
+                onClick={() => handleToggleTeam(t.team_id)}
+                className="flex items-center gap-2 w-full px-3 py-1 text-xs hover:bg-gray-50"
+              >
+                <span
+                  className="flex items-center justify-center w-4 h-4 rounded border transition-colors"
+                  style={{
+                    backgroundColor: checked ? TEAL_COLOR : "white",
+                    borderColor: checked ? TEAL_COLOR : "#9ca3af",
+                  }}
+                >
+                  {checked && <Check size={12} strokeWidth={3} color="white" />}
+                </span>
+                {t.logo_url && (
+                  <TeamLogo src={t.logo_url} alt={t.team_name} size={16} />
+                )}
+                <span>{t.team_name}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 // Main Component
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 export default function BasketballWhatIfScenarios() {
   const [selectedConference, setSelectedConference] = useState<string | null>(
     null,
@@ -758,12 +957,19 @@ export default function BasketballWhatIfScenarios() {
   );
   const [whatIfData, setWhatIfData] = useState<WhatIfResponse | null>(null);
   const [hasCalculated, setHasCalculated] = useState(false);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [selectedDetailTeamId, setSelectedDetailTeamId] = useState<
+    number | null
+  >(null);
 
   const firstPlaceRef = useRef<HTMLDivElement>(null);
   const top4Ref = useRef<HTMLDivElement>(null);
   const top8Ref = useRef<HTMLDivElement>(null);
   const standingsNoTiesRef = useRef<HTMLDivElement>(null);
   const standingsWithTiesRef = useRef<HTMLDivElement>(null);
+  const teamFilterInitialized = useRef(false);
 
   const {
     data: confData,
@@ -781,7 +987,7 @@ export default function BasketballWhatIfScenarios() {
   const { mutate: fetchWhatIf, isPending: isCalculating } =
     useBasketballWhatIf();
 
-  // Lightweight baseline fetch â€” no simulations, just pre-computed data + games
+  // Lightweight baseline fetch – no simulations, just pre-computed data + games
   const [isLoadingBaseline, setIsLoadingBaseline] = useState(false);
 
   const fetchBaseline = useCallback(async (conf: string) => {
@@ -847,12 +1053,33 @@ export default function BasketballWhatIfScenarios() {
     (c: string) => {
       setSelectedConference(c);
       setGameSelections(new Map());
+      setSelectedTeamIds(new Set());
+      teamFilterInitialized.current = false;
+      setSelectedDetailTeamId(null);
       setWhatIfData(null);
       setHasCalculated(false);
       fetchBaseline(c);
     },
     [fetchBaseline],
   );
+
+  // Build sorted team list from loaded data
+  const conferenceTeams = useMemo(() => {
+    const teams =
+      whatIfData?.current_projections_no_ties ?? whatIfData?.data_no_ties ?? [];
+    return [...teams].sort(
+      (a, b) =>
+        (a.avg_conference_standing ?? 99) - (b.avg_conference_standing ?? 99),
+    );
+  }, [whatIfData?.current_projections_no_ties, whatIfData?.data_no_ties]);
+
+  // Auto-select all teams only on initial conference load (not on user uncheck)
+  useEffect(() => {
+    if (conferenceTeams.length > 0 && !teamFilterInitialized.current) {
+      setSelectedTeamIds(new Set(conferenceTeams.map((t) => t.team_id)));
+      teamFilterInitialized.current = true;
+    }
+  }, [conferenceTeams]);
 
   const handleGameSelection = useCallback((gid: number, wid: number) => {
     setGameSelections((prev) => {
@@ -941,7 +1168,15 @@ export default function BasketballWhatIfScenarios() {
 
   const gamesByDate = useMemo(() => {
     if (!whatIfData?.games) return {};
-    return whatIfData.games.reduce(
+    const filtered =
+      selectedTeamIds.size > 0
+        ? whatIfData.games.filter(
+            (g) =>
+              selectedTeamIds.has(g.home_team_id) ||
+              selectedTeamIds.has(g.away_team_id),
+          )
+        : whatIfData.games;
+    return filtered.reduce(
       (acc, g) => {
         const d = g.date || "Unknown";
         if (!acc[d]) acc[d] = [];
@@ -950,7 +1185,7 @@ export default function BasketballWhatIfScenarios() {
       },
       {} as Record<string, WhatIfGame[]>,
     );
-  }, [whatIfData?.games]);
+  }, [whatIfData?.games, selectedTeamIds]);
 
   const sortedDates = useMemo(
     () =>
@@ -1014,10 +1249,10 @@ export default function BasketballWhatIfScenarios() {
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* â•â•â• LEFT PANEL â•â•â• */}
+        {/* ▓▓▓ LEFT PANEL ▓▓▓ */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow p-4">
-            {/* Conference â€” inline */}
+            {/* Conference – inline */}
             <div className="mb-4 flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                 Conference
@@ -1032,6 +1267,20 @@ export default function BasketballWhatIfScenarios() {
               </div>
             </div>
 
+            {/* Team Filter */}
+            {conferenceTeams.length > 0 && (
+              <div className="mb-3 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                  Teams
+                </label>
+                <TeamFilterDropdown
+                  teams={conferenceTeams}
+                  selectedIds={selectedTeamIds}
+                  onChange={setSelectedTeamIds}
+                />
+              </div>
+            )}
+
             <div className="mb-2 flex items-baseline justify-between">
               <h3 className="text-sm font-medium">
                 Select Game Winners and Calculate New What If Probabilities
@@ -1042,7 +1291,7 @@ export default function BasketballWhatIfScenarios() {
             </div>
 
             {whatIfData?.games && whatIfData.games.length > 0 ? (
-              <div className="max-h-[50vh] overflow-y-auto pr-1 mb-4">
+              <div className="max-h-[30vh] lg:max-h-[50vh] overflow-y-auto pr-1 mb-4">
                 {sortedDates.map((date) => (
                   <div key={date} className="mb-3">
                     <p className="text-[11px] text-gray-500 mb-1.5 sticky top-0 bg-white py-0.5 z-10">
@@ -1091,20 +1340,45 @@ export default function BasketballWhatIfScenarios() {
             </div>
           </div>
 
-          {/* Next Game Impact Widget */}
-          {whatIfData?.games && whatIfData.data_no_ties && (
-            <NextGameImpact
-              conference={selectedConference}
-              teams={
-                whatIfData.current_projections_no_ties ??
-                whatIfData.data_no_ties
-              }
-              games={whatIfData.games}
-            />
-          )}
+          {/* Team Detail: Next Game Impact + What If Summary - desktop only */}
+          <div className="hidden lg:block">
+            {whatIfData?.games &&
+              whatIfData.games.length > 0 &&
+              whatIfData.data_no_ties && (
+                <>
+                  <NextGameImpact
+                    conference={selectedConference}
+                    teams={
+                      whatIfData.current_projections_no_ties ??
+                      whatIfData.data_no_ties
+                    }
+                    games={whatIfData.games}
+                    selectedTeamId={selectedDetailTeamId}
+                    onTeamChange={setSelectedDetailTeamId}
+                  />
+                  {/* What If Summary renders inside the same card area */}
+                  {hasCalculated &&
+                    selectedDetailTeamId &&
+                    displayBaseline.length > 0 && (
+                      <div className="bg-white rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
+                        <WhatIfTeamSummary
+                          baseline={
+                            whatIfData?.current_projections_no_ties ?? []
+                          }
+                          whatif={whatIfData?.data_no_ties ?? []}
+                          games={whatIfData.games}
+                          selections={gameSelections}
+                          hasCalculated={hasCalculated}
+                          selectedTeamId={selectedDetailTeamId}
+                        />
+                      </div>
+                    )}
+                </>
+              )}
+          </div>
         </div>
 
-        {/* â•â•â• RIGHT PANEL â•â•â• */}
+        {/* ▓▓▓ RIGHT PANEL ▓▓▓ */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow p-4">
             {/* Header */}
@@ -1175,7 +1449,7 @@ export default function BasketballWhatIfScenarios() {
               )}
           </div>
 
-          {/* â•â•â• FULL STANDINGS TABLES (restored â€” Change 8) â•â•â• */}
+          {/* ▓▓▓ FULL STANDINGS TABLES (restored – Change 8) ▓▓▓ */}
           {hasCalculated && displayBaseline.length > 0 && (
             <div className="bg-white rounded-lg shadow p-4 mt-6">
               <FullStandingsTable
@@ -1207,8 +1481,7 @@ export default function BasketballWhatIfScenarios() {
                   Current reflects current probabilities; what if reflects
                   updated probabilities with game results selected. Change is
                   the difference between current and what if. Ties broken based
-                  on Big 12 tiebreaker rules (future update to include
-                  individual conference tiebreakers).
+                  on each individual conference tiebreaker rules.
                 </p>
               </div>
             )}
@@ -1228,6 +1501,40 @@ export default function BasketballWhatIfScenarios() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* Team Detail: Next Game Impact + What If Summary - mobile only */}
+        <div className="lg:hidden">
+          {whatIfData?.games &&
+            whatIfData.games.length > 0 &&
+            whatIfData.data_no_ties && (
+              <>
+                <NextGameImpact
+                  conference={selectedConference}
+                  teams={
+                    whatIfData.current_projections_no_ties ??
+                    whatIfData.data_no_ties
+                  }
+                  games={whatIfData.games}
+                  selectedTeamId={selectedDetailTeamId}
+                  onTeamChange={setSelectedDetailTeamId}
+                />
+                {hasCalculated &&
+                  selectedDetailTeamId &&
+                  displayBaseline.length > 0 && (
+                    <div className="bg-white rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
+                      <WhatIfTeamSummary
+                        baseline={whatIfData?.current_projections_no_ties ?? []}
+                        whatif={whatIfData?.data_no_ties ?? []}
+                        games={whatIfData.games}
+                        selections={gameSelections}
+                        hasCalculated={hasCalculated}
+                        selectedTeamId={selectedDetailTeamId}
+                      />
+                    </div>
+                  )}
+              </>
+            )}
         </div>
       </div>
     </div>
