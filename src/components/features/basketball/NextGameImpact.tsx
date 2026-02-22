@@ -1,0 +1,514 @@
+// components/features/basketball/NextGameImpact.tsx
+// Compact widget showing how a team's next game affects their seed projections
+
+"use client";
+
+import type { WhatIfGame, WhatIfTeamResult } from "@/hooks/useBasketballWhatIf";
+import { getCellColor } from "@/lib/color-utils";
+import { Camera, Loader } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const TEAL_COLOR = "rgb(0, 151, 178)";
+
+interface NextGameMetrics {
+  first_seed_pct: number;
+  top4_pct: number;
+  top8_pct: number;
+  avg_seed: number;
+  avg_conf_wins: number;
+  num_teams: number;
+  [key: `seed_${number}_pct`]: number;
+}
+
+interface NextGameImpactData {
+  success: boolean;
+  team_id: number;
+  team_name: string;
+  opponent_id: number;
+  opponent_name: string;
+  is_home: boolean;
+  game: {
+    game_id: number;
+    date: string;
+    home_team: string;
+    away_team: string;
+    home_team_id: number;
+    away_team_id: number;
+    home_team_logo: string;
+    away_team_logo: string;
+    home_probability: number | null;
+    away_probability: number | null;
+  } | null;
+  current: Record<number, NextGameMetrics>;
+  with_win: Record<number, NextGameMetrics>;
+  with_loss: Record<number, NextGameMetrics>;
+  calculation_time: number;
+  error?: string;
+}
+
+function getLogoUrl(filename?: string): string | undefined {
+  if (!filename) return undefined;
+  if (filename.startsWith("http") || filename.startsWith("/")) return filename;
+  return `/images/team_logos/${filename}`;
+}
+
+// — Screenshot helper (matches main component pattern) —
+async function captureScreenshot(
+  element: HTMLElement,
+  filename: string,
+  chartTitle?: string,
+) {
+  if (typeof window === "undefined") return;
+  let html2canvas = (window as unknown as Record<string, unknown>)
+    .html2canvas as
+    | ((el: HTMLElement, opts?: object) => Promise<HTMLCanvasElement>)
+    | undefined;
+  if (!html2canvas) {
+    await new Promise<void>((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error("Failed to load html2canvas"));
+      document.body.appendChild(s);
+    });
+    html2canvas = (window as unknown as Record<string, unknown>).html2canvas as
+      | ((el: HTMLElement, opts?: object) => Promise<HTMLCanvasElement>)
+      | undefined;
+  }
+  if (!html2canvas) return;
+
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
+
+  const contentWidth = Math.min(
+    element.scrollWidth + 48,
+    element.offsetWidth + 48,
+  );
+
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
+
+  const header = document.createElement("div");
+  header.style.cssText =
+    "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #e5e7eb;";
+  const logo = document.createElement("img");
+  logo.src = "/images/JThom_Logo.png";
+  logo.style.cssText = "height:40px;width:auto;";
+  const titleSpan = document.createElement("div");
+  titleSpan.textContent = chartTitle || "Next Game Impact";
+  titleSpan.style.cssText =
+    "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
+  const date = document.createElement("div");
+  date.textContent = new Date().toLocaleDateString();
+  date.style.cssText = "font-size:12px;color:#6b7280;";
+  header.appendChild(logo);
+  header.appendChild(titleSpan);
+  header.appendChild(date);
+  wrapper.appendChild(header);
+
+  clone.style.cssText = "overflow:visible!important;width:100%!important;";
+  wrapper.appendChild(clone);
+
+  document.body.appendChild(wrapper);
+  await new Promise((r) => setTimeout(r, 400));
+
+  const canvas = await html2canvas(wrapper, {
+    backgroundColor: "#ffffff",
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+  });
+  document.body.removeChild(wrapper);
+
+  const link = document.createElement("a");
+  link.download = filename;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+export default function NextGameImpact({
+  conference,
+  teams,
+  games: _games,
+}: {
+  conference: string | null;
+  teams: WhatIfTeamResult[];
+  games: WhatIfGame[];
+}) {
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [impactData, setImpactData] = useState<NextGameImpactData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [capturing, setCapturing] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Sort teams by avg standing for the dropdown
+  const sortedTeams = useMemo(
+    () =>
+      [...teams].sort(
+        (a, b) =>
+          (a.avg_conference_standing ?? 99) - (b.avg_conference_standing ?? 99),
+      ),
+    [teams],
+  );
+
+  // Auto-select first-place team when teams change
+  useEffect(() => {
+    if (sortedTeams.length > 0) {
+      setSelectedTeamId(sortedTeams[0].team_id);
+    } else {
+      setSelectedTeamId(null);
+    }
+    setImpactData(null);
+  }, [sortedTeams]);
+
+  // Fetch impact data when team or conference changes — cancels any in-flight request
+  useEffect(() => {
+    if (!selectedTeamId || !conference) return;
+
+    // Abort any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    setIsLoading(true);
+    setFetchError(null);
+    setImpactData(null);
+
+    fetch("/api/proxy/basketball/whatif/next-game-impact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conference, team_id: selectedTeamId }),
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Impact fetch failed: ${res.status}`);
+        return res.json();
+      })
+      .then((data: NextGameImpactData) => {
+        if (!controller.signal.aborted) {
+          setImpactData(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((e) => {
+        if (controller.signal.aborted) return; // Ignore aborted requests
+        console.error("Next-game impact error:", e);
+        setImpactData(null);
+        setFetchError(e instanceof Error ? e.message : "Failed to load");
+        setIsLoading(false);
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [selectedTeamId, conference]);
+
+  const handleTeamChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const tid = parseInt(e.target.value);
+      if (!isNaN(tid)) {
+        setSelectedTeamId(tid);
+      }
+    },
+    [],
+  );
+
+  if (!conference || teams.length === 0) return null;
+
+  const selectedTeam = sortedTeams.find((t) => t.team_id === selectedTeamId);
+  const game = impactData?.game;
+  const teamKey = selectedTeamId ? String(selectedTeamId) : null;
+  const teamMetrics = teamKey
+    ? ((impactData?.current as Record<string, NextGameMetrics>)?.[teamKey] ??
+      null)
+    : null;
+  const winMetrics = teamKey
+    ? ((impactData?.with_win as Record<string, NextGameMetrics>)?.[teamKey] ??
+      null)
+    : null;
+  const lossMetrics = teamKey
+    ? ((impactData?.with_loss as Record<string, NextGameMetrics>)?.[teamKey] ??
+      null)
+    : null;
+
+  const summaryMetrics: {
+    label: string;
+    key: keyof NextGameMetrics;
+    isPercent: boolean;
+    invertDelta?: boolean;
+  }[] = [
+    { label: "#1 Seed %", key: "first_seed_pct", isPercent: true },
+    { label: "Top 4 %", key: "top4_pct", isPercent: true },
+    { label: "Top 8 %", key: "top8_pct", isPercent: true },
+    { label: "Avg Seed", key: "avg_seed", isPercent: false, invertDelta: true },
+    { label: "Proj Conf Wins", key: "avg_conf_wins", isPercent: false },
+  ];
+
+  const numTeams = teamMetrics?.num_teams ?? 16;
+  const teamShortName = selectedTeam?.team_name?.split(" ").pop() ?? "";
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4 mt-4">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-base font-medium">Next Game Impact</h3>
+        <div className="flex items-center gap-2" data-no-screenshot>
+          {game && teamMetrics && (
+            <button
+              onClick={async () => {
+                if (!contentRef.current || capturing) return;
+                setCapturing(true);
+                try {
+                  await captureScreenshot(
+                    contentRef.current,
+                    `next_game_impact_${teamShortName.toLowerCase()}.png`,
+                    `Next Game Impact - ${selectedTeam?.team_name}`,
+                  );
+                } catch (e) {
+                  console.error("Screenshot failed:", e);
+                }
+                setCapturing(false);
+              }}
+              className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 border border-gray-200 rounded hover:bg-gray-50 transition"
+              title="Download screenshot"
+            >
+              {capturing ? (
+                <Loader size={12} className="animate-spin" />
+              ) : (
+                <Camera size={12} />
+              )}
+              <span className="hidden sm:inline">Screenshot</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Team selector */}
+      <div className="flex items-center gap-2 mb-3" data-no-screenshot>
+        <select
+          value={selectedTeamId ?? ""}
+          onChange={handleTeamChange}
+          className="text-xs border border-gray-300 rounded px-2 py-1 flex-1"
+          style={{ maxWidth: "100%" }}
+        >
+          {sortedTeams.map((t) => (
+            <option key={t.team_id} value={t.team_id}>
+              {t.team_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Content (screenshotable area) */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-4">
+          <div
+            className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+            style={{
+              borderColor: `${TEAL_COLOR} transparent transparent transparent`,
+            }}
+          />
+          <span className="text-xs text-gray-400 ml-2">Calculating...</span>
+        </div>
+      ) : fetchError ? (
+        <p className="text-xs text-red-400 italic py-2">{fetchError}</p>
+      ) : impactData?.error ? (
+        <p className="text-xs text-gray-400 italic py-2">{impactData.error}</p>
+      ) : game && teamMetrics && winMetrics && lossMetrics ? (
+        <div ref={contentRef}>
+          {/* Matchup header */}
+          <div className="flex items-center justify-center gap-2 mb-3 py-1.5 bg-gray-50 rounded">
+            <div className="flex items-center gap-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={getLogoUrl(game.away_team_logo)}
+                alt={game.away_team}
+                className="w-5 h-5 object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+              <span className="text-[11px] font-medium">{game.away_team}</span>
+            </div>
+            <span className="text-[10px] text-gray-400">@</span>
+            <div className="flex items-center gap-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={getLogoUrl(game.home_team_logo)}
+                alt={game.home_team}
+                className="w-5 h-5 object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+              <span className="text-[11px] font-medium">{game.home_team}</span>
+            </div>
+            <span className="text-[9px] text-gray-400 ml-1">{game.date}</span>
+          </div>
+
+          {/* Summary Metrics Table */}
+          <table
+            className="text-sm"
+            style={{ width: "auto", minWidth: "280px" }}
+          >
+            <thead>
+              <tr className="border-b border-gray-200 text-gray-500">
+                <th
+                  className="text-left py-1.5 px-2 font-normal"
+                  style={{ minWidth: "110px" }}
+                >
+                  Metric
+                </th>
+                <th
+                  className="text-center py-1.5 px-2 font-normal"
+                  style={{ minWidth: "60px" }}
+                >
+                  Current
+                </th>
+                <th
+                  className="text-center py-1.5 px-2 font-normal"
+                  style={{ minWidth: "60px", color: "rgb(40, 167, 69)" }}
+                >
+                  {teamShortName} Win
+                </th>
+                <th
+                  className="text-center py-1.5 px-2 font-normal"
+                  style={{ minWidth: "60px", color: "rgb(220, 53, 69)" }}
+                >
+                  {teamShortName} Loss
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {summaryMetrics.map(({ label, key, isPercent }) => {
+                const cur = teamMetrics[key] as number;
+                const win = winMetrics[key] as number;
+                const loss = lossMetrics[key] as number;
+                return (
+                  <tr key={key} className="border-b border-gray-100">
+                    <td className="py-1.5 px-2 text-sm">{label}</td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={isPercent ? getCellColor(cur, "blue") : undefined}
+                    >
+                      {isPercent
+                        ? cur > 0
+                          ? `${cur.toFixed(1)}%`
+                          : ""
+                        : cur.toFixed(2)}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={isPercent ? getCellColor(win, "blue") : undefined}
+                    >
+                      {isPercent
+                        ? win > 0
+                          ? `${win.toFixed(1)}%`
+                          : ""
+                        : win.toFixed(2)}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={isPercent ? getCellColor(loss, "blue") : undefined}
+                    >
+                      {isPercent
+                        ? loss > 0
+                          ? `${loss.toFixed(1)}%`
+                          : ""
+                        : loss.toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* Seed Distribution Table */}
+          <div className="mt-4">
+            <h4 className="text-sm font-medium mb-2">Seed Probabilities</h4>
+            <table
+              className="text-sm"
+              style={{ width: "auto", minWidth: "280px" }}
+            >
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-500">
+                  <th
+                    className="text-left py-1.5 px-2 font-normal"
+                    style={{ minWidth: "50px" }}
+                  >
+                    Seed
+                  </th>
+                  <th
+                    className="text-center py-1.5 px-2 font-normal"
+                    style={{ minWidth: "60px" }}
+                  >
+                    Current
+                  </th>
+                  <th
+                    className="text-center py-1.5 px-2 font-normal"
+                    style={{ minWidth: "60px", color: "rgb(40, 167, 69)" }}
+                  >
+                    Win
+                  </th>
+                  <th
+                    className="text-center py-1.5 px-2 font-normal"
+                    style={{ minWidth: "60px", color: "rgb(220, 53, 69)" }}
+                  >
+                    Loss
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: numTeams }, (_, i) => {
+                  const seed = i + 1;
+                  const seedKey = `seed_${seed}_pct` as keyof NextGameMetrics;
+                  const cur = (teamMetrics[seedKey] as number) ?? 0;
+                  const win = (winMetrics[seedKey] as number) ?? 0;
+                  const loss = (lossMetrics[seedKey] as number) ?? 0;
+                  if (cur === 0 && win === 0 && loss === 0) return null;
+                  return (
+                    <tr key={seed} className="border-b border-gray-100">
+                      <td className="py-1.5 px-2">
+                        {seed}
+                        {seed === 1
+                          ? "st"
+                          : seed === 2
+                            ? "nd"
+                            : seed === 3
+                              ? "rd"
+                              : "th"}
+                      </td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getCellColor(cur, "blue")}
+                      >
+                        {cur > 0 ? `${cur.toFixed(1)}%` : ""}
+                      </td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getCellColor(win, "blue")}
+                      >
+                        {win > 0 ? `${win.toFixed(1)}%` : ""}
+                      </td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getCellColor(loss, "blue")}
+                      >
+                        {loss > 0 ? `${loss.toFixed(1)}%` : ""}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

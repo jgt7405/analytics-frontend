@@ -4,8 +4,9 @@ import ConferenceSelector from "@/components/common/ConferenceSelector";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { getCellColor } from "@/lib/color-utils";
-import { ArrowDown, ArrowUp, Camera, Download, Loader } from "lucide-react";
+import { Camera, Download } from "lucide-react";
 
+import NextGameImpact from "@/components/features/basketball/NextGameImpact";
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
   useBasketballWhatIf,
@@ -140,9 +141,6 @@ declare global {
     ) => Promise<HTMLCanvasElement>;
   }
 }
-
-// â”€â”€ CSV â”€â”€
-// CSV is generated server-side via /basketball/whatif/validation-csv endpoint
 
 // â”€â”€ Small Components â”€â”€
 function TeamLogo({
@@ -391,7 +389,7 @@ function ScreenshotBtn({
       title="Download screenshot"
     >
       {capturing ? (
-        <Loader size={12} className="animate-spin" />
+        <span className="animate-spin">âŸ³</span>
       ) : (
         <Camera size={12} />
       )}
@@ -474,12 +472,8 @@ function ProbabilityTable({
 
   const sortIndicator = (col: SortCol) =>
     sortCol === col ? (
-      <span className="ml-0.5 inline">
-        {sortDir === "desc" ? (
-          <ArrowDown size={12} className="inline" />
-        ) : (
-          <ArrowUp size={12} className="inline" />
-        )}
+      <span className="ml-0.5 text-[9px]">
+        {sortDir === "desc" ? "â–¼" : "â–²"}
       </span>
     ) : null;
 
@@ -1096,6 +1090,18 @@ export default function BasketballWhatIfScenarios() {
               )}
             </div>
           </div>
+
+          {/* Next Game Impact Widget */}
+          {whatIfData?.games && whatIfData.data_no_ties && (
+            <NextGameImpact
+              conference={selectedConference}
+              teams={
+                whatIfData.current_projections_no_ties ??
+                whatIfData.data_no_ties
+              }
+              games={whatIfData.games}
+            />
+          )}
         </div>
 
         {/* â•â•â• RIGHT PANEL â•â•â• */}
@@ -1201,7 +1207,8 @@ export default function BasketballWhatIfScenarios() {
                   Current reflects current probabilities; what if reflects
                   updated probabilities with game results selected. Change is
                   the difference between current and what if. Ties broken based
-                  on each conference's tiebreaker rules.
+                  on Big 12 tiebreaker rules (future update to include
+                  individual conference tiebreakers).
                 </p>
               </div>
             )}

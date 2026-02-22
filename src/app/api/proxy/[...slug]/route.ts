@@ -544,6 +544,17 @@ export async function POST(
       console.log("🏀 BASKETBALL WHAT-IF BASELINE detected");
     }
 
+    // ===== HANDLE BASKETBALL WHAT-IF NEXT-GAME-IMPACT =====
+    else if (
+      slug.length === 3 &&
+      slug[0] === "basketball" &&
+      slug[1] === "whatif" &&
+      slug[2] === "next-game-impact"
+    ) {
+      backendPath = `/basketball/whatif/next-game-impact`;
+      console.log("🏀 BASKETBALL WHAT-IF NEXT-GAME-IMPACT detected");
+    }
+
     // ===== HANDLE BASKETBALL WHAT-IF VALIDATION CSV =====
     else if (
       slug.length === 3 &&
