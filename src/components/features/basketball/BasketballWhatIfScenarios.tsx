@@ -897,18 +897,25 @@ function TeamFilterDropdown({
       </button>
       {isOpen && (
         <div
-          className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-[240px] overflow-y-auto"
-          style={{ backgroundColor: "#ffffff" }}
+          className="absolute z-30 mt-1 w-full rounded-md shadow-lg max-h-[240px] overflow-y-auto"
+          style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
         >
           <button
             onClick={handleSelectAll}
-            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-gray-50 border-b border-gray-100"
+            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs"
+            style={{
+              backgroundColor: "#ffffff",
+              border: "none",
+              borderBottom: "none",
+            }}
           >
             <span
-              className="flex items-center justify-center w-4 h-4 rounded border transition-colors"
+              className="flex items-center justify-center w-4 h-4 rounded transition-colors"
               style={{
-                backgroundColor: allSelected ? TEAL_COLOR : "white",
-                borderColor: allSelected ? TEAL_COLOR : "#9ca3af",
+                backgroundColor: allSelected ? TEAL_COLOR : "#ffffff",
+                border: allSelected
+                  ? `2px solid ${TEAL_COLOR}`
+                  : "2px solid #9ca3af",
               }}
             >
               {allSelected && <Check size={12} strokeWidth={3} color="white" />}
@@ -921,13 +928,20 @@ function TeamFilterDropdown({
               <button
                 key={t.team_id}
                 onClick={() => handleToggleTeam(t.team_id)}
-                className="flex items-center gap-2 w-full px-3 py-1 text-xs hover:bg-gray-50"
+                className="flex items-center gap-2 w-full px-3 py-1 text-xs"
+                style={{
+                  backgroundColor: "#ffffff",
+                  border: "none",
+                  borderBottom: "none",
+                }}
               >
                 <span
-                  className="flex items-center justify-center w-4 h-4 rounded border transition-colors"
+                  className="flex items-center justify-center w-4 h-4 rounded transition-colors"
                   style={{
-                    backgroundColor: checked ? TEAL_COLOR : "white",
-                    borderColor: checked ? TEAL_COLOR : "#9ca3af",
+                    backgroundColor: checked ? TEAL_COLOR : "#ffffff",
+                    border: checked
+                      ? `2px solid ${TEAL_COLOR}`
+                      : "2px solid #9ca3af",
                   }}
                 >
                   {checked && <Check size={12} strokeWidth={3} color="white" />}
@@ -1250,7 +1264,7 @@ export default function BasketballWhatIfScenarios() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ▓▓▓ LEFT PANEL ▓▓▓ */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 order-1">
           <div className="bg-white rounded-lg shadow p-4">
             {/* Conference – inline */}
             <div className="mb-4 flex items-center gap-2">
@@ -1378,8 +1392,42 @@ export default function BasketballWhatIfScenarios() {
           </div>
         </div>
 
+        {/* Team Detail: Next Game Impact + What If Summary - mobile only (after game selection, before conference analysis) */}
+        <div className="lg:hidden order-2">
+          {whatIfData?.games &&
+            whatIfData.games.length > 0 &&
+            whatIfData.data_no_ties && (
+              <>
+                <NextGameImpact
+                  conference={selectedConference}
+                  teams={
+                    whatIfData.current_projections_no_ties ??
+                    whatIfData.data_no_ties
+                  }
+                  games={whatIfData.games}
+                  selectedTeamId={selectedDetailTeamId}
+                  onTeamChange={setSelectedDetailTeamId}
+                />
+                {hasCalculated &&
+                  selectedDetailTeamId &&
+                  displayBaseline.length > 0 && (
+                    <div className="bg-white rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
+                      <WhatIfTeamSummary
+                        baseline={whatIfData?.current_projections_no_ties ?? []}
+                        whatif={whatIfData?.data_no_ties ?? []}
+                        games={whatIfData.games}
+                        selections={gameSelections}
+                        hasCalculated={hasCalculated}
+                        selectedTeamId={selectedDetailTeamId}
+                      />
+                    </div>
+                  )}
+              </>
+            )}
+        </div>
+
         {/* ▓▓▓ RIGHT PANEL ▓▓▓ */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 order-3 lg:order-2">
           <div className="bg-white rounded-lg shadow p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
@@ -1501,40 +1549,6 @@ export default function BasketballWhatIfScenarios() {
               </button>
             </div>
           )}
-        </div>
-
-        {/* Team Detail: Next Game Impact + What If Summary - mobile only */}
-        <div className="lg:hidden">
-          {whatIfData?.games &&
-            whatIfData.games.length > 0 &&
-            whatIfData.data_no_ties && (
-              <>
-                <NextGameImpact
-                  conference={selectedConference}
-                  teams={
-                    whatIfData.current_projections_no_ties ??
-                    whatIfData.data_no_ties
-                  }
-                  games={whatIfData.games}
-                  selectedTeamId={selectedDetailTeamId}
-                  onTeamChange={setSelectedDetailTeamId}
-                />
-                {hasCalculated &&
-                  selectedDetailTeamId &&
-                  displayBaseline.length > 0 && (
-                    <div className="bg-white rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
-                      <WhatIfTeamSummary
-                        baseline={whatIfData?.current_projections_no_ties ?? []}
-                        whatif={whatIfData?.data_no_ties ?? []}
-                        games={whatIfData.games}
-                        selections={gameSelections}
-                        hasCalculated={hasCalculated}
-                        selectedTeamId={selectedDetailTeamId}
-                      />
-                    </div>
-                  )}
-              </>
-            )}
         </div>
       </div>
     </div>

@@ -110,6 +110,15 @@ async function captureScreenshot(
 const COL_METRIC = { minWidth: "110px" };
 const COL_DATA = { minWidth: "65px", width: "65px" };
 
+interface WhatIfTeamSummaryProps {
+  baseline: WhatIfTeamResult[];
+  whatif: WhatIfTeamResult[];
+  games: WhatIfGame[];
+  selections: Map<number, number>;
+  hasCalculated: boolean;
+  selectedTeamId: number | null;
+}
+
 export default function WhatIfTeamSummary({
   baseline,
   whatif,
@@ -117,14 +126,7 @@ export default function WhatIfTeamSummary({
   selections,
   hasCalculated,
   selectedTeamId,
-}: {
-  baseline: WhatIfTeamResult[];
-  whatif: WhatIfTeamResult[];
-  games: WhatIfGame[];
-  selections: Map<number, number>;
-  hasCalculated: boolean;
-  selectedTeamId: number | null;
-}) {
+}: WhatIfTeamSummaryProps) {
   const [capturing, setCapturing] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -157,21 +159,22 @@ export default function WhatIfTeamSummary({
     })
     .filter(Boolean) as Array<{ game: WhatIfGame; winnerId: number }>;
 
-  // Summary metrics
   type MetricDef = {
     label: string;
     getValue: (t: WhatIfTeamResult) => number;
     isPercent: boolean;
     hideIfZero?: boolean;
   };
-  const summaryMetrics: MetricDef[] = [
+
+  // Conference metrics
+  const confMetrics: MetricDef[] = [
     {
-      label: "#1 Seed %",
+      label: "#1 Seed Prob",
       getValue: (t) => t.standing_1_prob ?? 0,
       isPercent: true,
     },
     {
-      label: "Top 4 %",
+      label: "Top 4 Seed Prob",
       getValue: (t) => {
         let s = 0;
         for (let i = 1; i <= 4; i++) s += getStandingProb(t, i);
@@ -180,7 +183,7 @@ export default function WhatIfTeamSummary({
       isPercent: true,
     },
     {
-      label: "Top 8 %",
+      label: "Top 8 Seed Prob",
       getValue: (t) => {
         let s = 0;
         for (let i = 1; i <= Math.min(8, numTeams); i++)
@@ -199,8 +202,12 @@ export default function WhatIfTeamSummary({
       getValue: (t) => t.avg_projected_conf_wins ?? 0,
       isPercent: false,
     },
+  ];
+
+  // NCAA metrics
+  const ncaaMetrics: MetricDef[] = [
     {
-      label: "NCAA Tourney %",
+      label: "In Tourney Prob",
       getValue: (t) => t.tournament_bid_pct ?? 0,
       isPercent: true,
     },
@@ -212,10 +219,9 @@ export default function WhatIfTeamSummary({
     },
   ];
 
+  const allMetrics = [...confMetrics, ...ncaaMetrics];
   const maxAbsChange = Math.max(
-    ...summaryMetrics.map((m) =>
-      Math.abs(m.getValue(wiTeam) - m.getValue(blTeam)),
-    ),
+    ...allMetrics.map((m) => Math.abs(m.getValue(wiTeam) - m.getValue(blTeam))),
     0.1,
   );
 
@@ -229,6 +235,111 @@ export default function WhatIfTeamSummary({
     if (isPercent) return value > 0 ? `${value.toFixed(1)}%` : "";
     return value.toFixed(1);
   };
+
+  // Shared table header
+  const tableHeader = (
+    <thead>
+      <tr className="border-b border-gray-200 text-gray-500">
+        <th className="text-left py-1.5 px-2 font-normal" style={COL_METRIC}>
+          Metric
+        </th>
+        <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>
+          Current
+        </th>
+        <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>
+          What If
+        </th>
+        <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>
+          Change
+        </th>
+      </tr>
+    </thead>
+  );
+
+  // Shared seed table header
+  const seedTableHeader = (
+    <thead>
+      <tr className="border-b border-gray-200 text-gray-500">
+        <th className="text-left py-1.5 px-2 font-normal" style={COL_METRIC}>
+          Seed
+        </th>
+        <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>
+          Current
+        </th>
+        <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>
+          What If
+        </th>
+        <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>
+          Change
+        </th>
+      </tr>
+    </thead>
+  );
+
+  // Render a metrics table body
+  const renderMetricsRows = (metrics: MetricDef[]) =>
+    metrics.map(({ label, getValue, isPercent, hideIfZero }) => {
+      const cur = getValue(blTeam);
+      const wi = getValue(wiTeam);
+      const change = wi - cur;
+      return (
+        <tr key={label} className="border-b border-gray-100">
+          <td className="py-1.5 px-2 text-sm">{label}</td>
+          <td
+            className="text-center py-1.5 px-2 tabular-nums"
+            style={isPercent ? getCellColor(cur, "blue") : undefined}
+          >
+            {formatMetric(cur, isPercent, hideIfZero)}
+          </td>
+          <td
+            className="text-center py-1.5 px-2 tabular-nums"
+            style={isPercent ? getCellColor(wi, "blue") : undefined}
+          >
+            {formatMetric(wi, isPercent, hideIfZero)}
+          </td>
+          <td
+            className="text-center py-1.5 px-2 tabular-nums"
+            style={getDeltaColor(change, maxAbsChange)}
+          >
+            {Math.abs(change) < 0.05 || (hideIfZero && cur === 0 && wi === 0)
+              ? "\u2014"
+              : change > 0
+                ? `+${change.toFixed(1)}${isPercent ? "%" : ""}`
+                : `${change.toFixed(1)}${isPercent ? "%" : ""}`}
+          </td>
+        </tr>
+      );
+    });
+
+  // Conference seed max abs for delta coloring
+  const confSeedMaxAbs = Math.max(
+    ...Array.from({ length: numTeams }, (_, j) =>
+      Math.abs(getStandingProb(wiTeam, j + 1) - getStandingProb(blTeam, j + 1)),
+    ),
+    0.1,
+  );
+
+  // NCAA seed data
+  const blBidPct = blTeam.tournament_bid_pct ?? 0;
+  const wiBidPct = wiTeam.tournament_bid_pct ?? 0;
+  const blDist = blTeam.ncaa_seed_distribution ?? {};
+  const wiDist = wiTeam.ncaa_seed_distribution ?? {};
+  const allNcaaSeeds = Array.from(
+    new Set([...Object.keys(blDist), ...Object.keys(wiDist)]),
+  )
+    .map(Number)
+    .filter((n) => !isNaN(n))
+    .sort((a, b) => a - b);
+  const blOutPct = 100 - blBidPct;
+  const wiOutPct = 100 - wiBidPct;
+  const outChange = wiOutPct - blOutPct;
+  const ncaaSeedMaxAbs = Math.max(
+    ...allNcaaSeeds.map((s) =>
+      Math.abs((wiDist[String(s)] ?? 0) - (blDist[String(s)] ?? 0)),
+    ),
+    Math.abs(outChange),
+    0.1,
+  );
 
   return (
     <div className="mt-6 pt-4 border-t border-gray-200">
@@ -332,109 +443,21 @@ export default function WhatIfTeamSummary({
           </div>
         )}
 
-        {/* Summary Metrics Table - Change 5: gray "What If" header instead of teal */}
+        {/* ============================================================ */}
+        {/* SECTION 1: Conference Tournament Probabilities               */}
+        {/* ============================================================ */}
+        <h4 className="text-sm font-semibold mb-1">
+          Conference Tournament Probabilities
+        </h4>
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 text-gray-500">
-              <th
-                className="text-left py-1.5 px-2 font-normal"
-                style={COL_METRIC}
-              >
-                Metric
-              </th>
-              <th
-                className="text-center py-1.5 px-2 font-normal"
-                style={COL_DATA}
-              >
-                Current
-              </th>
-              <th
-                className="text-center py-1.5 px-2 font-normal"
-                style={COL_DATA}
-              >
-                What If
-              </th>
-              <th
-                className="text-center py-1.5 px-2 font-normal"
-                style={COL_DATA}
-              >
-                Change
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {summaryMetrics.map(
-              ({ label, getValue, isPercent, hideIfZero }) => {
-                const cur = getValue(blTeam);
-                const wi = getValue(wiTeam);
-                const change = wi - cur;
-                return (
-                  <tr key={label} className="border-b border-gray-100">
-                    <td className="py-1.5 px-2 text-sm">{label}</td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={isPercent ? getCellColor(cur, "blue") : undefined}
-                    >
-                      {formatMetric(cur, isPercent, hideIfZero)}
-                    </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={isPercent ? getCellColor(wi, "blue") : undefined}
-                    >
-                      {formatMetric(wi, isPercent, hideIfZero)}
-                    </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getDeltaColor(change, maxAbsChange)}
-                    >
-                      {Math.abs(change) < 0.05 ||
-                      (hideIfZero && cur === 0 && wi === 0)
-                        ? "\u2014"
-                        : change > 0
-                          ? `+${change.toFixed(1)}${isPercent ? "%" : ""}`
-                          : `${change.toFixed(1)}${isPercent ? "%" : ""}`}
-                    </td>
-                  </tr>
-                );
-              },
-            )}
-          </tbody>
+          {tableHeader}
+          <tbody>{renderMetricsRows(confMetrics)}</tbody>
         </table>
 
-        {/* Conference Seed Distribution Table */}
-        <div className="mt-4">
-          <h4 className="text-sm font-medium mb-2">
-            Conference Seed Probabilities
-          </h4>
+        {/* Conference Seed Distribution (no heading, small visual break) */}
+        <div className="mt-3">
           <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 text-gray-500">
-                <th
-                  className="text-left py-1.5 px-2 font-normal"
-                  style={COL_METRIC}
-                >
-                  Seed
-                </th>
-                <th
-                  className="text-center py-1.5 px-2 font-normal"
-                  style={COL_DATA}
-                >
-                  Current
-                </th>
-                <th
-                  className="text-center py-1.5 px-2 font-normal"
-                  style={COL_DATA}
-                >
-                  What If
-                </th>
-                <th
-                  className="text-center py-1.5 px-2 font-normal"
-                  style={COL_DATA}
-                >
-                  Change
-                </th>
-              </tr>
-            </thead>
+            {seedTableHeader}
             <tbody>
               {Array.from({ length: numTeams }, (_, i) => {
                 const seed = i + 1;
@@ -442,15 +465,6 @@ export default function WhatIfTeamSummary({
                 const wi = getStandingProb(wiTeam, seed);
                 const change = wi - cur;
                 if (cur === 0 && wi === 0) return null;
-                const seedMaxAbs = Math.max(
-                  ...Array.from({ length: numTeams }, (_, j) =>
-                    Math.abs(
-                      getStandingProb(wiTeam, j + 1) -
-                        getStandingProb(blTeam, j + 1),
-                    ),
-                  ),
-                  0.1,
-                );
                 return (
                   <tr key={seed} className="border-b border-gray-100">
                     <td className="py-1.5 px-2">
@@ -477,7 +491,7 @@ export default function WhatIfTeamSummary({
                     </td>
                     <td
                       className="text-center py-1.5 px-2 tabular-nums"
-                      style={getDeltaColor(change, seedMaxAbs)}
+                      style={getDeltaColor(change, confSeedMaxAbs)}
                     >
                       {Math.abs(change) < 0.05
                         ? "\u2014"
@@ -492,148 +506,103 @@ export default function WhatIfTeamSummary({
           </table>
         </div>
 
-        {/* NCAA Tournament Seed Distribution */}
-        {(() => {
-          const blBidPct = blTeam.tournament_bid_pct ?? 0;
-          const wiBidPct = wiTeam.tournament_bid_pct ?? 0;
-          const blDist = blTeam.ncaa_seed_distribution ?? {};
-          const wiDist = wiTeam.ncaa_seed_distribution ?? {};
-          const allSeeds = Array.from(
-            new Set([...Object.keys(blDist), ...Object.keys(wiDist)]),
-          )
-            .map(Number)
-            .filter((n) => !isNaN(n))
-            .sort((a, b) => a - b);
+        {/* ============================================================ */}
+        {/* Gray divider                                                 */}
+        {/* ============================================================ */}
+        <div className="my-4 border-t border-gray-300" />
 
-          // Don't show if no seed data at all
-          if (allSeeds.length === 0 && blBidPct === 0 && wiBidPct === 0)
-            return null;
+        {/* ============================================================ */}
+        {/* SECTION 2: NCAA Tournament Probabilities                     */}
+        {/* ============================================================ */}
+        <h4 className="text-sm font-semibold mb-1">
+          NCAA Tournament Probabilities
+        </h4>
+        <table className="w-full text-sm">
+          {tableHeader}
+          <tbody>{renderMetricsRows(ncaaMetrics)}</tbody>
+        </table>
 
-          // Calculate Out of Tournament percentages
-          const blOutPct = 100 - blBidPct;
-          const wiOutPct = 100 - wiBidPct;
-          const outChange = wiOutPct - blOutPct;
+        {/* NCAA Seed Distribution (no heading, small visual break) */}
+        {(allNcaaSeeds.length > 0 || blBidPct > 0 || wiBidPct > 0) && (
+          <div className="mt-3">
+            <table className="w-full text-sm">
+              {seedTableHeader}
+              <tbody>
+                {allNcaaSeeds.map((seed) => {
+                  const cur = blDist[String(seed)] ?? 0;
+                  const wi = wiDist[String(seed)] ?? 0;
+                  const change = wi - cur;
+                  if (cur === 0 && wi === 0) return null;
+                  return (
+                    <tr key={seed} className="border-b border-gray-100">
+                      <td className="py-1.5 px-2">{seed}</td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getCellColor(cur, "blue")}
+                      >
+                        {cur > 0 ? `${cur.toFixed(1)}%` : ""}
+                      </td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getCellColor(wi, "blue")}
+                      >
+                        {wi > 0 ? `${wi.toFixed(1)}%` : ""}
+                      </td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getDeltaColor(change, ncaaSeedMaxAbs)}
+                      >
+                        {Math.abs(change) < 0.05
+                          ? "\u2014"
+                          : change > 0
+                            ? `+${change.toFixed(1)}%`
+                            : `${change.toFixed(1)}%`}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {/* Out of Tournament row */}
+                <tr className="border-b border-gray-100">
+                  <td className="py-1.5 px-2 text-gray-500 italic text-xs">
+                    Out
+                  </td>
+                  <td
+                    className="text-center py-1.5 px-2 tabular-nums"
+                    style={getCellColor(blOutPct, "yellow")}
+                  >
+                    {blOutPct > 0.05 ? `${blOutPct.toFixed(1)}%` : ""}
+                  </td>
+                  <td
+                    className="text-center py-1.5 px-2 tabular-nums"
+                    style={getCellColor(wiOutPct, "yellow")}
+                  >
+                    {wiOutPct > 0.05 ? `${wiOutPct.toFixed(1)}%` : ""}
+                  </td>
+                  <td
+                    className="text-center py-1.5 px-2 tabular-nums"
+                    style={getDeltaColor(outChange, ncaaSeedMaxAbs)}
+                  >
+                    {Math.abs(outChange) < 0.05
+                      ? "\u2014"
+                      : outChange > 0
+                        ? `+${outChange.toFixed(1)}%`
+                        : `${outChange.toFixed(1)}%`}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
 
-          // Include out-of-tourney in max abs for delta coloring
-          const ncaaSeedMaxAbs = Math.max(
-            ...allSeeds.map((s) =>
-              Math.abs((wiDist[String(s)] ?? 0) - (blDist[String(s)] ?? 0)),
-            ),
-            Math.abs(outChange),
-            0.1,
-          );
-
-          return (
-            <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">
-                NCAA Seed Distribution
-              </h4>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 text-gray-500">
-                    <th
-                      className="text-left py-1.5 px-2 font-normal"
-                      style={COL_METRIC}
-                    >
-                      Seed
-                    </th>
-                    <th
-                      className="text-center py-1.5 px-2 font-normal"
-                      style={COL_DATA}
-                    >
-                      Current
-                    </th>
-                    <th
-                      className="text-center py-1.5 px-2 font-normal"
-                      style={COL_DATA}
-                    >
-                      What If
-                    </th>
-                    <th
-                      className="text-center py-1.5 px-2 font-normal"
-                      style={COL_DATA}
-                    >
-                      Change
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allSeeds.map((seed) => {
-                    const cur = blDist[String(seed)] ?? 0;
-                    const wi = wiDist[String(seed)] ?? 0;
-                    const change = wi - cur;
-                    if (cur === 0 && wi === 0) return null;
-                    return (
-                      <tr key={seed} className="border-b border-gray-100">
-                        <td className="py-1.5 px-2">{seed}</td>
-                        <td
-                          className="text-center py-1.5 px-2 tabular-nums"
-                          style={getCellColor(cur, "blue")}
-                        >
-                          {cur > 0 ? `${cur.toFixed(1)}%` : ""}
-                        </td>
-                        <td
-                          className="text-center py-1.5 px-2 tabular-nums"
-                          style={getCellColor(wi, "blue")}
-                        >
-                          {wi > 0 ? `${wi.toFixed(1)}%` : ""}
-                        </td>
-                        <td
-                          className="text-center py-1.5 px-2 tabular-nums"
-                          style={getDeltaColor(change, ncaaSeedMaxAbs)}
-                        >
-                          {Math.abs(change) < 0.05
-                            ? "\u2014"
-                            : change > 0
-                              ? `+${change.toFixed(1)}%`
-                              : `${change.toFixed(1)}%`}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {/* Out of Tournament row */}
-                  <tr className="border-b border-gray-100">
-                    <td className="py-1.5 px-2 text-gray-500 italic text-xs">
-                      Out
-                    </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getCellColor(blOutPct, "yellow")}
-                    >
-                      {blOutPct > 0.05 ? `${blOutPct.toFixed(1)}%` : ""}
-                    </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getCellColor(wiOutPct, "yellow")}
-                    >
-                      {wiOutPct > 0.05 ? `${wiOutPct.toFixed(1)}%` : ""}
-                    </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getDeltaColor(outChange, ncaaSeedMaxAbs)}
-                    >
-                      {Math.abs(outChange) < 0.05
-                        ? "\u2014"
-                        : outChange > 0
-                          ? `+${outChange.toFixed(1)}%`
-                          : `${outChange.toFixed(1)}%`}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          );
-        })()}
-
-        {/* Explainer text (change 6) - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
+        {/* Explainer text - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
         <p
           className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100"
           data-no-screenshot
         >
-          Shows how selected game outcomes affect this team&apos;s seed
-          probabilities. Current reflects pre-selection probabilities; What If
-          reflects updated probabilities after applying selected game results.
-          Ties broken based on each individual conference tiebreaker rules.
+          Shows how selected game outcomes affect this team&apos;s conference
+          and NCAA tournament probabilities. Current reflects pre-selection
+          probabilities; What If reflects updated probabilities after applying
+          selected game results.
         </p>
       </div>
     </div>

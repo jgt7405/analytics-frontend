@@ -224,18 +224,33 @@ export default function NextGameImpact({
       null)
     : null;
 
-  const summaryMetrics: {
+  // Conference metrics
+  const confMetrics: {
     label: string;
     key: keyof NextGameMetrics;
     isPercent: boolean;
   }[] = [
-    { label: "#1 Seed %", key: "first_seed_pct", isPercent: true },
-    { label: "Top 4 %", key: "top4_pct", isPercent: true },
-    { label: "Top 8 %", key: "top8_pct", isPercent: true },
+    { label: "#1 Seed Prob", key: "first_seed_pct", isPercent: true },
+    { label: "Top 4 Seed Prob", key: "top4_pct", isPercent: true },
+    { label: "Top 8 Seed Prob", key: "top8_pct", isPercent: true },
     { label: "Avg Seed", key: "avg_seed", isPercent: false },
     { label: "Proj Conf Wins", key: "avg_conf_wins", isPercent: false },
-    { label: "NCAA Tourney %", key: "tournament_bid_pct", isPercent: true },
-    { label: "Avg NCAA Seed", key: "average_seed", isPercent: false },
+  ];
+
+  // NCAA metrics
+  const ncaaMetrics: {
+    label: string;
+    key: keyof NextGameMetrics;
+    isPercent: boolean;
+    hideIfZero?: boolean;
+  }[] = [
+    { label: "In Tourney Prob", key: "tournament_bid_pct", isPercent: true },
+    {
+      label: "Avg NCAA Seed",
+      key: "average_seed",
+      isPercent: false,
+      hideIfZero: true,
+    },
   ];
 
   const numTeams = teamMetrics?.num_teams ?? 16;
@@ -349,7 +364,12 @@ export default function NextGameImpact({
             <span className="text-[9px] text-gray-400 ml-1">{game.date}</span>
           </div>
 
-          {/* Summary Metrics Table */}
+          {/* ============================================================ */}
+          {/* SECTION 1: Conference Tournament Probabilities               */}
+          {/* ============================================================ */}
+          <h4 className="text-sm font-semibold mb-1">
+            Conference Tournament Probabilities
+          </h4>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-gray-500">
@@ -380,13 +400,10 @@ export default function NextGameImpact({
               </tr>
             </thead>
             <tbody>
-              {summaryMetrics.map(({ label, key, isPercent }) => {
+              {confMetrics.map(({ label, key, isPercent }) => {
                 const cur = (teamMetrics[key] as number) ?? 0;
                 const win = (winMetrics[key] as number) ?? 0;
                 const loss = (lossMetrics[key] as number) ?? 0;
-                const curNull = teamMetrics[key] == null;
-                const winNull = winMetrics[key] == null;
-                const lossNull = lossMetrics[key] == null;
                 return (
                   <tr key={key} className="border-b border-gray-100">
                     <td className="py-1.5 px-2 text-sm">{label}</td>
@@ -394,37 +411,31 @@ export default function NextGameImpact({
                       className="text-center py-1.5 px-2 tabular-nums"
                       style={isPercent ? getCellColor(cur, "blue") : undefined}
                     >
-                      {curNull
-                        ? "\u2014"
-                        : isPercent
-                          ? cur > 0
-                            ? `${cur.toFixed(1)}%`
-                            : ""
-                          : cur.toFixed(1)}
+                      {isPercent
+                        ? cur > 0
+                          ? `${cur.toFixed(1)}%`
+                          : ""
+                        : cur.toFixed(1)}
                     </td>
                     <td
                       className="text-center py-1.5 px-2 tabular-nums"
                       style={isPercent ? getCellColor(win, "blue") : undefined}
                     >
-                      {winNull
-                        ? "\u2014"
-                        : isPercent
-                          ? win > 0
-                            ? `${win.toFixed(1)}%`
-                            : ""
-                          : win.toFixed(1)}
+                      {isPercent
+                        ? win > 0
+                          ? `${win.toFixed(1)}%`
+                          : ""
+                        : win.toFixed(1)}
                     </td>
                     <td
                       className="text-center py-1.5 px-2 tabular-nums"
                       style={isPercent ? getCellColor(loss, "blue") : undefined}
                     >
-                      {lossNull
-                        ? "\u2014"
-                        : isPercent
-                          ? loss > 0
-                            ? `${loss.toFixed(1)}%`
-                            : ""
-                          : loss.toFixed(1)}
+                      {isPercent
+                        ? loss > 0
+                          ? `${loss.toFixed(1)}%`
+                          : ""
+                        : loss.toFixed(1)}
                     </td>
                   </tr>
                 );
@@ -432,9 +443,8 @@ export default function NextGameImpact({
             </tbody>
           </table>
 
-          {/* Seed Distribution Table */}
-          <div className="mt-4">
-            <h4 className="text-sm font-medium mb-2">Seed Probabilities</h4>
+          {/* Conference Seed Distribution (no heading, small visual break) */}
+          <div className="mt-3">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-gray-500">
@@ -509,14 +519,242 @@ export default function NextGameImpact({
             </table>
           </div>
 
+          {/* ============================================================ */}
+          {/* Gray divider                                                 */}
+          {/* ============================================================ */}
+          <div className="my-4 border-t border-gray-300" />
+
+          {/* ============================================================ */}
+          {/* SECTION 2: NCAA Tournament Probabilities                     */}
+          {/* ============================================================ */}
+          <h4 className="text-sm font-semibold mb-1">
+            NCAA Tournament Probabilities
+          </h4>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 text-gray-500">
+                <th
+                  className="text-left py-1.5 px-2 font-normal"
+                  style={COL_METRIC}
+                >
+                  Metric
+                </th>
+                <th
+                  className="text-center py-1.5 px-2 font-normal"
+                  style={COL_DATA}
+                >
+                  Current
+                </th>
+                <th
+                  className="text-center py-1.5 px-2 font-normal"
+                  style={{ ...COL_DATA, color: "rgb(40, 167, 69)" }}
+                >
+                  Win
+                </th>
+                <th
+                  className="text-center py-1.5 px-2 font-normal"
+                  style={{ ...COL_DATA, color: "rgb(220, 53, 69)" }}
+                >
+                  Loss
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {ncaaMetrics.map(({ label, key, isPercent, hideIfZero }) => {
+                const cur = (teamMetrics[key] as number) ?? 0;
+                const win = (winMetrics[key] as number) ?? 0;
+                const loss = (lossMetrics[key] as number) ?? 0;
+                const curNull =
+                  teamMetrics[key] == null || (hideIfZero && cur === 0);
+                const winNull =
+                  winMetrics[key] == null || (hideIfZero && win === 0);
+                const lossNull =
+                  lossMetrics[key] == null || (hideIfZero && loss === 0);
+                return (
+                  <tr key={key} className="border-b border-gray-100">
+                    <td className="py-1.5 px-2 text-sm">{label}</td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={isPercent ? getCellColor(cur, "blue") : undefined}
+                    >
+                      {curNull
+                        ? "\u2014"
+                        : isPercent
+                          ? cur > 0
+                            ? `${cur.toFixed(1)}%`
+                            : ""
+                          : cur.toFixed(1)}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={isPercent ? getCellColor(win, "blue") : undefined}
+                    >
+                      {winNull
+                        ? "\u2014"
+                        : isPercent
+                          ? win > 0
+                            ? `${win.toFixed(1)}%`
+                            : ""
+                          : win.toFixed(1)}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={isPercent ? getCellColor(loss, "blue") : undefined}
+                    >
+                      {lossNull
+                        ? "\u2014"
+                        : isPercent
+                          ? loss > 0
+                            ? `${loss.toFixed(1)}%`
+                            : ""
+                          : loss.toFixed(1)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* NCAA Seed Distribution (no heading, small visual break) */}
+          {(() => {
+            const curDist =
+              (teamMetrics.ncaa_seed_distribution as
+                | Record<string, number>
+                | undefined) ?? {};
+            const winDist =
+              (winMetrics.ncaa_seed_distribution as
+                | Record<string, number>
+                | undefined) ?? {};
+            const lossDist =
+              (lossMetrics.ncaa_seed_distribution as
+                | Record<string, number>
+                | undefined) ?? {};
+            const curBid = (teamMetrics.tournament_bid_pct as number) ?? 0;
+            const winBid = (winMetrics.tournament_bid_pct as number) ?? 0;
+            const lossBid = (lossMetrics.tournament_bid_pct as number) ?? 0;
+            const allSeeds = Array.from(
+              new Set([
+                ...Object.keys(curDist),
+                ...Object.keys(winDist),
+                ...Object.keys(lossDist),
+              ]),
+            )
+              .map(Number)
+              .filter((n) => !isNaN(n))
+              .sort((a, b) => a - b);
+
+            if (
+              allSeeds.length === 0 &&
+              curBid === 0 &&
+              winBid === 0 &&
+              lossBid === 0
+            )
+              return null;
+
+            const curOut = 100 - curBid;
+            const winOut = 100 - winBid;
+            const lossOut = 100 - lossBid;
+
+            return (
+              <div className="mt-3">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-gray-500">
+                      <th
+                        className="text-left py-1.5 px-2 font-normal"
+                        style={COL_METRIC}
+                      >
+                        Seed
+                      </th>
+                      <th
+                        className="text-center py-1.5 px-2 font-normal"
+                        style={COL_DATA}
+                      >
+                        Current
+                      </th>
+                      <th
+                        className="text-center py-1.5 px-2 font-normal"
+                        style={{ ...COL_DATA, color: "rgb(40, 167, 69)" }}
+                      >
+                        Win
+                      </th>
+                      <th
+                        className="text-center py-1.5 px-2 font-normal"
+                        style={{ ...COL_DATA, color: "rgb(220, 53, 69)" }}
+                      >
+                        Loss
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allSeeds.map((seed) => {
+                      const c = curDist[String(seed)] ?? 0;
+                      const w = winDist[String(seed)] ?? 0;
+                      const l = lossDist[String(seed)] ?? 0;
+                      if (c === 0 && w === 0 && l === 0) return null;
+                      return (
+                        <tr key={seed} className="border-b border-gray-100">
+                          <td className="py-1.5 px-2">{seed}</td>
+                          <td
+                            className="text-center py-1.5 px-2 tabular-nums"
+                            style={getCellColor(c, "blue")}
+                          >
+                            {c > 0 ? `${c.toFixed(1)}%` : ""}
+                          </td>
+                          <td
+                            className="text-center py-1.5 px-2 tabular-nums"
+                            style={getCellColor(w, "blue")}
+                          >
+                            {w > 0 ? `${w.toFixed(1)}%` : ""}
+                          </td>
+                          <td
+                            className="text-center py-1.5 px-2 tabular-nums"
+                            style={getCellColor(l, "blue")}
+                          >
+                            {l > 0 ? `${l.toFixed(1)}%` : ""}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {/* Out of Tournament row */}
+                    <tr className="border-b border-gray-100">
+                      <td className="py-1.5 px-2 text-gray-500 italic text-xs">
+                        Out
+                      </td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getCellColor(curOut, "yellow")}
+                      >
+                        {curOut > 0.05 ? `${curOut.toFixed(1)}%` : ""}
+                      </td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getCellColor(winOut, "yellow")}
+                      >
+                        {winOut > 0.05 ? `${winOut.toFixed(1)}%` : ""}
+                      </td>
+                      <td
+                        className="text-center py-1.5 px-2 tabular-nums"
+                        style={getCellColor(lossOut, "yellow")}
+                      >
+                        {lossOut > 0.05 ? `${lossOut.toFixed(1)}%` : ""}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+
           {/* Explainer text - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
           <p
             className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100"
             data-no-screenshot
           >
             Shows projected impact of the team&apos;s next scheduled conference
-            game on seed probabilities. Win and Loss columns show how
-            probabilities change if the team wins or loses that game.
+            game on conference and NCAA tournament probabilities. Win and Loss
+            columns show how probabilities change if the team wins or loses that
+            game.
           </p>
         </div>
       ) : null}
