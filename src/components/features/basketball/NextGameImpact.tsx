@@ -16,6 +16,10 @@ interface NextGameMetrics {
   avg_conf_wins: number;
   num_teams: number;
   [key: `seed_${number}_pct`]: number;
+  // NCAA tournament projection fields
+  tournament_bid_pct?: number;
+  average_seed?: number | null;
+  ncaa_seed_distribution?: Record<string, number>;
 }
 
 interface NextGameImpactData {
@@ -230,6 +234,8 @@ export default function NextGameImpact({
     { label: "Top 8 %", key: "top8_pct", isPercent: true },
     { label: "Avg Seed", key: "avg_seed", isPercent: false },
     { label: "Proj Conf Wins", key: "avg_conf_wins", isPercent: false },
+    { label: "NCAA Tourney %", key: "tournament_bid_pct", isPercent: true },
+    { label: "Avg NCAA Seed", key: "average_seed", isPercent: false },
   ];
 
   const numTeams = teamMetrics?.num_teams ?? 16;
@@ -375,9 +381,12 @@ export default function NextGameImpact({
             </thead>
             <tbody>
               {summaryMetrics.map(({ label, key, isPercent }) => {
-                const cur = teamMetrics[key] as number;
-                const win = winMetrics[key] as number;
-                const loss = lossMetrics[key] as number;
+                const cur = (teamMetrics[key] as number) ?? 0;
+                const win = (winMetrics[key] as number) ?? 0;
+                const loss = (lossMetrics[key] as number) ?? 0;
+                const curNull = teamMetrics[key] == null;
+                const winNull = winMetrics[key] == null;
+                const lossNull = lossMetrics[key] == null;
                 return (
                   <tr key={key} className="border-b border-gray-100">
                     <td className="py-1.5 px-2 text-sm">{label}</td>
@@ -385,31 +394,37 @@ export default function NextGameImpact({
                       className="text-center py-1.5 px-2 tabular-nums"
                       style={isPercent ? getCellColor(cur, "blue") : undefined}
                     >
-                      {isPercent
-                        ? cur > 0
-                          ? `${cur.toFixed(1)}%`
-                          : ""
-                        : cur.toFixed(2)}
+                      {curNull
+                        ? "\u2014"
+                        : isPercent
+                          ? cur > 0
+                            ? `${cur.toFixed(1)}%`
+                            : ""
+                          : cur.toFixed(1)}
                     </td>
                     <td
                       className="text-center py-1.5 px-2 tabular-nums"
                       style={isPercent ? getCellColor(win, "blue") : undefined}
                     >
-                      {isPercent
-                        ? win > 0
-                          ? `${win.toFixed(1)}%`
-                          : ""
-                        : win.toFixed(2)}
+                      {winNull
+                        ? "\u2014"
+                        : isPercent
+                          ? win > 0
+                            ? `${win.toFixed(1)}%`
+                            : ""
+                          : win.toFixed(1)}
                     </td>
                     <td
                       className="text-center py-1.5 px-2 tabular-nums"
                       style={isPercent ? getCellColor(loss, "blue") : undefined}
                     >
-                      {isPercent
-                        ? loss > 0
-                          ? `${loss.toFixed(1)}%`
-                          : ""
-                        : loss.toFixed(2)}
+                      {lossNull
+                        ? "\u2014"
+                        : isPercent
+                          ? loss > 0
+                            ? `${loss.toFixed(1)}%`
+                            : ""
+                          : loss.toFixed(1)}
                     </td>
                   </tr>
                 );
@@ -494,7 +509,7 @@ export default function NextGameImpact({
             </table>
           </div>
 
-          {/* Explainer text (change 6) - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
+          {/* Explainer text - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
           <p
             className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100"
             data-no-screenshot

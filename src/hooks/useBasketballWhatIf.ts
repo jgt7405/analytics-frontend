@@ -45,6 +45,10 @@ export interface WhatIfTeamResult {
   standing_8_prob?: number;
   // Allow dynamic standing_N_prob keys for conferences with >8 teams
   [key: `standing_${number}_prob`]: number | undefined;
+  // NCAA tournament projection fields
+  tournament_bid_pct?: number;
+  average_seed?: number | null;
+  ncaa_seed_distribution?: Record<string, number>;
 }
 
 export interface WhatIfMetadata {
@@ -176,6 +180,11 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => {
     logo_url: (team.logo_url as string) || "",
     avg_projected_conf_wins: (team.avg_projected_conf_wins as number) || 0,
     avg_conference_standing: (team.avg_conference_standing as number) || 0,
+    // NCAA tournament projection fields
+    tournament_bid_pct: (team.tournament_bid_pct as number) ?? 0,
+    average_seed: (team.average_seed as number | null) ?? null,
+    ncaa_seed_distribution:
+      (team.ncaa_seed_distribution as Record<string, number>) ?? {},
   };
 
   // Copy all standing_N_prob keys (supports conferences with >8 teams)
@@ -252,7 +261,11 @@ const calculateBasketballWhatIf = async (
     data.data_with_ties?.length || 0,
     "teams",
   );
-  console.log("  Ã¢Å“â€¦ data_no_ties:", data.data_no_ties?.length || 0, "teams");
+  console.log(
+    "  Ã¢Å“â€¦ data_no_ties:",
+    data.data_no_ties?.length || 0,
+    "teams",
+  );
   console.log(
     "  Ã¢Å“â€¦ current_projections_with_ties:",
     data.current_projections_with_ties?.length || 0,

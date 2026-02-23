@@ -162,6 +162,7 @@ export default function WhatIfTeamSummary({
     label: string;
     getValue: (t: WhatIfTeamResult) => number;
     isPercent: boolean;
+    hideIfZero?: boolean;
   };
   const summaryMetrics: MetricDef[] = [
     {
@@ -198,6 +199,17 @@ export default function WhatIfTeamSummary({
       getValue: (t) => t.avg_projected_conf_wins ?? 0,
       isPercent: false,
     },
+    {
+      label: "NCAA Tourney %",
+      getValue: (t) => t.tournament_bid_pct ?? 0,
+      isPercent: true,
+    },
+    {
+      label: "Avg NCAA Seed",
+      getValue: (t) => t.average_seed ?? 0,
+      isPercent: false,
+      hideIfZero: true,
+    },
   ];
 
   const maxAbsChange = Math.max(
@@ -206,6 +218,17 @@ export default function WhatIfTeamSummary({
     ),
     0.1,
   );
+
+  // Helper to format metric values with null handling
+  const formatMetric = (
+    value: number,
+    isPercent: boolean,
+    hideIfZero?: boolean,
+  ) => {
+    if (hideIfZero && value === 0) return "\u2014";
+    if (isPercent) return value > 0 ? `${value.toFixed(1)}%` : "";
+    return value.toFixed(1);
+  };
 
   return (
     <div className="mt-6 pt-4 border-t border-gray-200">
@@ -340,52 +363,49 @@ export default function WhatIfTeamSummary({
             </tr>
           </thead>
           <tbody>
-            {summaryMetrics.map(({ label, getValue, isPercent }) => {
-              const cur = getValue(blTeam);
-              const wi = getValue(wiTeam);
-              const change = wi - cur;
-              return (
-                <tr key={label} className="border-b border-gray-100">
-                  <td className="py-1.5 px-2 text-sm">{label}</td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={isPercent ? getCellColor(cur, "blue") : undefined}
-                  >
-                    {isPercent
-                      ? cur > 0
-                        ? `${cur.toFixed(1)}%`
-                        : ""
-                      : cur.toFixed(2)}
-                  </td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={isPercent ? getCellColor(wi, "blue") : undefined}
-                  >
-                    {isPercent
-                      ? wi > 0
-                        ? `${wi.toFixed(1)}%`
-                        : ""
-                      : wi.toFixed(2)}
-                  </td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={getDeltaColor(change, maxAbsChange)}
-                  >
-                    {Math.abs(change) < 0.05
-                      ? "\u2014"
-                      : change > 0
-                        ? `+${change.toFixed(1)}${isPercent ? "%" : ""}`
-                        : `${change.toFixed(1)}${isPercent ? "%" : ""}`}
-                  </td>
-                </tr>
-              );
-            })}
+            {summaryMetrics.map(
+              ({ label, getValue, isPercent, hideIfZero }) => {
+                const cur = getValue(blTeam);
+                const wi = getValue(wiTeam);
+                const change = wi - cur;
+                return (
+                  <tr key={label} className="border-b border-gray-100">
+                    <td className="py-1.5 px-2 text-sm">{label}</td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={isPercent ? getCellColor(cur, "blue") : undefined}
+                    >
+                      {formatMetric(cur, isPercent, hideIfZero)}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={isPercent ? getCellColor(wi, "blue") : undefined}
+                    >
+                      {formatMetric(wi, isPercent, hideIfZero)}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={getDeltaColor(change, maxAbsChange)}
+                    >
+                      {Math.abs(change) < 0.05 ||
+                      (hideIfZero && cur === 0 && wi === 0)
+                        ? "\u2014"
+                        : change > 0
+                          ? `+${change.toFixed(1)}${isPercent ? "%" : ""}`
+                          : `${change.toFixed(1)}${isPercent ? "%" : ""}`}
+                    </td>
+                  </tr>
+                );
+              },
+            )}
           </tbody>
         </table>
 
-        {/* Seed Distribution Table */}
+        {/* Conference Seed Distribution Table */}
         <div className="mt-4">
-          <h4 className="text-sm font-medium mb-2">Seed Probabilities</h4>
+          <h4 className="text-sm font-medium mb-2">
+            Conference Seed Probabilities
+          </h4>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-gray-500">
@@ -471,6 +491,139 @@ export default function WhatIfTeamSummary({
             </tbody>
           </table>
         </div>
+
+        {/* NCAA Tournament Seed Distribution */}
+        {(() => {
+          const blBidPct = blTeam.tournament_bid_pct ?? 0;
+          const wiBidPct = wiTeam.tournament_bid_pct ?? 0;
+          const blDist = blTeam.ncaa_seed_distribution ?? {};
+          const wiDist = wiTeam.ncaa_seed_distribution ?? {};
+          const allSeeds = Array.from(
+            new Set([...Object.keys(blDist), ...Object.keys(wiDist)]),
+          )
+            .map(Number)
+            .filter((n) => !isNaN(n))
+            .sort((a, b) => a - b);
+
+          // Don't show if no seed data at all
+          if (allSeeds.length === 0 && blBidPct === 0 && wiBidPct === 0)
+            return null;
+
+          // Calculate Out of Tournament percentages
+          const blOutPct = 100 - blBidPct;
+          const wiOutPct = 100 - wiBidPct;
+          const outChange = wiOutPct - blOutPct;
+
+          // Include out-of-tourney in max abs for delta coloring
+          const ncaaSeedMaxAbs = Math.max(
+            ...allSeeds.map((s) =>
+              Math.abs((wiDist[String(s)] ?? 0) - (blDist[String(s)] ?? 0)),
+            ),
+            Math.abs(outChange),
+            0.1,
+          );
+
+          return (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">
+                NCAA Seed Distribution
+              </h4>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-gray-500">
+                    <th
+                      className="text-left py-1.5 px-2 font-normal"
+                      style={COL_METRIC}
+                    >
+                      Seed
+                    </th>
+                    <th
+                      className="text-center py-1.5 px-2 font-normal"
+                      style={COL_DATA}
+                    >
+                      Current
+                    </th>
+                    <th
+                      className="text-center py-1.5 px-2 font-normal"
+                      style={COL_DATA}
+                    >
+                      What If
+                    </th>
+                    <th
+                      className="text-center py-1.5 px-2 font-normal"
+                      style={COL_DATA}
+                    >
+                      Change
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allSeeds.map((seed) => {
+                    const cur = blDist[String(seed)] ?? 0;
+                    const wi = wiDist[String(seed)] ?? 0;
+                    const change = wi - cur;
+                    if (cur === 0 && wi === 0) return null;
+                    return (
+                      <tr key={seed} className="border-b border-gray-100">
+                        <td className="py-1.5 px-2">{seed}</td>
+                        <td
+                          className="text-center py-1.5 px-2 tabular-nums"
+                          style={getCellColor(cur, "blue")}
+                        >
+                          {cur > 0 ? `${cur.toFixed(1)}%` : ""}
+                        </td>
+                        <td
+                          className="text-center py-1.5 px-2 tabular-nums"
+                          style={getCellColor(wi, "blue")}
+                        >
+                          {wi > 0 ? `${wi.toFixed(1)}%` : ""}
+                        </td>
+                        <td
+                          className="text-center py-1.5 px-2 tabular-nums"
+                          style={getDeltaColor(change, ncaaSeedMaxAbs)}
+                        >
+                          {Math.abs(change) < 0.05
+                            ? "\u2014"
+                            : change > 0
+                              ? `+${change.toFixed(1)}%`
+                              : `${change.toFixed(1)}%`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* Out of Tournament row */}
+                  <tr className="border-b border-gray-100">
+                    <td className="py-1.5 px-2 text-gray-500 italic text-xs">
+                      Out
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={getCellColor(blOutPct, "yellow")}
+                    >
+                      {blOutPct > 0.05 ? `${blOutPct.toFixed(1)}%` : ""}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={getCellColor(wiOutPct, "yellow")}
+                    >
+                      {wiOutPct > 0.05 ? `${wiOutPct.toFixed(1)}%` : ""}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={getDeltaColor(outChange, ncaaSeedMaxAbs)}
+                    >
+                      {Math.abs(outChange) < 0.05
+                        ? "\u2014"
+                        : outChange > 0
+                          ? `+${outChange.toFixed(1)}%`
+                          : `${outChange.toFixed(1)}%`}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
 
         {/* Explainer text (change 6) - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
         <p
