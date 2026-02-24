@@ -13,6 +13,19 @@ import { getCellColor } from "@/lib/color-utils";
 import { Download, Search, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+// ─── Responsive Hook (inline) ────────────────────────────────────────────────
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface TeamGameData {
@@ -318,10 +331,10 @@ function buildTeamNarrative(
   return parts.join(" ");
 }
 
-// ─── Vertical Mini Schedule Strip ────────────────────────────────────────────
-// Vertical layout: most difficult at top, least at bottom, with home/away/neutral sections
+// ─── 3-Column Schedule Strip (Away | Neutral | Home) ─────────────────────────
+// Matches the team page layout: 3 columns, each with stacked rectangles sorted by difficulty
 
-function VerticalScheduleStrip({
+function ThreeColumnSchedule({
   schedule,
   upcomingOpponent,
   upcomingDate,
@@ -330,75 +343,101 @@ function VerticalScheduleStrip({
   upcomingOpponent: string;
   upcomingDate: string;
 }) {
-  // Sort games by difficulty (lowest win prob = most difficult at top)
-  const gamesWithProb = schedule
-    .filter((g) => g.team_win_prob !== undefined && g.team_win_prob !== null)
-    .sort((a, b) => (a.team_win_prob ?? 1) - (b.team_win_prob ?? 1));
+  // Group by location and sort by kenpom rank (hardest at top)
+  const grouped = { Away: [] as TeamGameData[], Neutral: [] as TeamGameData[], Home: [] as TeamGameData[] };
+  const records = { Away: { w: 0, l: 0 }, Neutral: { w: 0, l: 0 }, Home: { w: 0, l: 0 } };
 
-  // Group by location
-  const homeGames = gamesWithProb.filter((g) => g.location === "Home");
-  const awayGames = gamesWithProb.filter((g) => g.location === "Away");
-  const neutralGames = gamesWithProb.filter((g) => g.location === "Neutral");
+  schedule.forEach((g) => {
+    const loc = g.location as "Away" | "Neutral" | "Home";
+    if (grouped[loc]) {
+      grouped[loc].push(g);
+      if (g.status === "W") records[loc].w++;
+      else if (g.status === "L") records[loc].l++;
+    }
+  });
 
-  const renderSection = (label: string, games: TeamGameData[]) => {
-    if (games.length === 0) return null;
-    return (
-      <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 9, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{label}</div>
-        {games.map((g, i) => {
-          const isThisGame = g.opponent === upcomingOpponent && g.date === upcomingDate;
-          const isWin = g.status === "W";
-          const isLoss = g.status === "L";
-          const isFuture = !isWin && !isLoss;
-          let bg = "#e5e7eb"; // gray for future
-          let textColor = "#6b7280";
-          if (isThisGame) { bg = TEAL; textColor = "white"; }
-          else if (isWin) { bg = "#dcfce7"; textColor = "#16a34a"; }
-          else if (isLoss) { bg = "#fee2e2"; textColor = "#dc2626"; }
+  // Sort each group by kenpom rank (best rank = hardest opponent at top)
+  (["Away", "Neutral", "Home"] as const).forEach((loc) => {
+    grouped[loc].sort((a, b) => {
+      const aRank = (!a.kenpom_rank || a.kenpom_rank === 999) ? 9999 : a.kenpom_rank;
+      const bRank = (!b.kenpom_rank || b.kenpom_rank === 999) ? 9999 : b.kenpom_rank;
+      return aRank - bRank;
+    });
+  });
 
-          const prob = g.team_win_prob !== undefined ? (g.team_win_prob * 100).toFixed(0) : "—";
+  const BOX_W = typeof window !== "undefined" && window.innerWidth <= 768 ? 54 : 64;
+  const BOX_H = typeof window !== "undefined" && window.innerWidth <= 768 ? 28 : 32;
+  const LOGO_SIZE = typeof window !== "undefined" && window.innerWidth <= 768 ? 18 : 22;
 
-          return (
-            <div
-              key={`${g.date}-${g.opponent}-${i}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "2px 4px",
-                borderRadius: 3,
-                backgroundColor: bg,
-                marginBottom: 2,
-                border: isThisGame ? `1.5px solid ${TEAL}` : "1px solid transparent",
-              }}
-            >
-              {g.opponent_logo && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={getLogoUrl(g.opponent_logo)}
-                  alt=""
-                  style={{ width: 14, height: 14, objectFit: "contain", flexShrink: 0 }}
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-              )}
-              <span style={{ fontSize: 9, color: isThisGame ? "white" : textColor, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {g.opponent}
-              </span>
-              <span style={{ fontSize: 9, color: isThisGame ? "white" : "#9ca3af", flexShrink: 0 }}>
-                {isWin ? "W" : isLoss ? "L" : isFuture ? "" : ""} {prob}%
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    );
+  const getBorderColor = (g: TeamGameData, isUpcoming: boolean) => {
+    if (isUpcoming) return TEAL;
+    if (g.status === "W") return "#22c55e";
+    if (g.status === "L") return "#ef4444";
+    return "#d1d5db";
+  };
+
+  const getBgColor = (g: TeamGameData, isUpcoming: boolean) => {
+    if (isUpcoming) return `${TEAL}15`;
+    return "white";
   };
 
   return (
-    <div>
-      {renderSection("Home", homeGames)}
-      {renderSection("Away", awayGames)}
-      {renderSection("Neutral", neutralGames)}
+    <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+      {(["Away", "Neutral", "Home"] as const).map((loc) => (
+        <div key={loc} style={{ flexShrink: 0 }}>
+          <div style={{ textAlign: "center", marginBottom: 4 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#6b7280" }}>{loc}</div>
+            <div style={{ fontSize: 9, color: "#9ca3af" }}>{records[loc].w}-{records[loc].l}</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+            {grouped[loc].length > 0 ? (
+              grouped[loc].map((g, idx) => {
+                const isUpcoming = g.opponent === upcomingOpponent && g.date === upcomingDate;
+                return (
+                  <div
+                    key={`${g.date}-${g.opponent}-${idx}`}
+                    title={`${g.opponent} (${g.kenpom_rank && g.kenpom_rank !== 999 ? `#${g.kenpom_rank}` : "Non D1"}) - ${g.status === "W" ? "Win" : g.status === "L" ? "Loss" : "Upcoming"}`}
+                    style={{
+                      width: BOX_W,
+                      height: BOX_H,
+                      border: `2px solid ${getBorderColor(g, isUpcoming)}`,
+                      borderRadius: 4,
+                      backgroundColor: getBgColor(g, isUpcoming),
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "0 4px",
+                      boxShadow: isUpcoming ? `0 0 0 1px ${TEAL}40` : "none",
+                    }}
+                  >
+                    {g.opponent_logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={getLogoUrl(g.opponent_logo)}
+                        alt={g.opponent}
+                        style={{ width: LOGO_SIZE, height: LOGO_SIZE, objectFit: "contain", flexShrink: 0 }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    ) : (
+                      <div style={{ width: LOGO_SIZE, height: LOGO_SIZE }} />
+                    )}
+                    <span style={{ fontSize: 8, color: "#6b7280", fontWeight: 500, textAlign: "right" }}>
+                      {g.kenpom_rank && g.kenpom_rank !== 999 ? `#${g.kenpom_rank}` : ""}
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{
+                width: BOX_W, height: BOX_H,
+                border: "1px dashed #d1d5db", borderRadius: 4,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 9, color: "#9ca3af",
+              }}>None</div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -454,7 +493,9 @@ function ChartLogoHeader({ logoUrl, teamName, size = 28 }: { logoUrl?: string; t
 }
 
 // ─── Next Game Impact Inline Component ───────────────────────────────────────
-// Shows FULL conference + NCAA tournament impact matching the whatif page output
+// Matches the whatif page NextGameImpact component layout exactly:
+// Section 1: Conference Tournament (summary metrics + seed probabilities)
+// Section 2: NCAA Tournament Probabilities
 
 function NextGameImpactInline({
   teamId,
@@ -510,213 +551,224 @@ function NextGameImpactInline({
   const COL_METRIC = { minWidth: "100px" };
   const COL_DATA = { minWidth: "50px", width: "50px" };
 
-  // Conference summary metrics (matching whatif page)
-  const confMetrics: { label: string; key: keyof NextGameMetrics; isPercent: boolean }[] = [
+  // Summary metrics - matches whatif page NextGameImpact exactly
+  const summaryMetrics: { label: string; key: keyof NextGameMetrics; isPercent: boolean }[] = [
     { label: "#1 Seed %", key: "first_seed_pct", isPercent: true },
     { label: "Top 4 %", key: "top4_pct", isPercent: true },
+    { label: "Top 8 %", key: "top8_pct", isPercent: true },
     { label: "Avg Seed", key: "avg_seed", isPercent: false },
     { label: "Proj Conf Wins", key: "avg_conf_wins", isPercent: false },
   ];
 
-  // NCAA Tournament data from team_info (win_seed_counts)
-  const winSeedCounts = teamInfo.win_seed_counts || [];
-
-  // Compute NCAA summary metrics from win_seed_counts
-  const totalScenarios = winSeedCounts.reduce((sum, e) => sum + (e.Count || 0), 0);
-  const inTournament = winSeedCounts.filter((e) => e.Tournament_Status && e.Tournament_Status !== "Out of Tournament");
-  const inTournamentCount = inTournament.reduce((sum, e) => sum + (e.Count || 0), 0);
-  const bidPct = totalScenarios > 0 ? (inTournamentCount / totalScenarios) * 100 : (teamInfo.tournament_bid_pct ?? 0);
+  // NCAA Tournament data from team_info
+  const bidPct = teamInfo.tournament_bid_pct ?? 0;
   const avgSeed = teamInfo.average_seed;
 
-  // Aggregate NCAA seed distribution
-  const ncaaSeedDist = new Map<string, number>();
+  // Aggregate NCAA data from win_seed_counts
+  const winSeedCounts = teamInfo.win_seed_counts || [];
+  const totalScenarios = winSeedCounts.reduce((sum, e) => sum + (e.Count || 0), 0);
+
   const ncaaStatusDist = new Map<string, number>();
+  const ncaaSeedDist = new Map<string, number>();
+  let autoBidTotal = 0;
+  let atLargeTotal = 0;
+
   for (const entry of winSeedCounts) {
     const count = entry.Count || 0;
-    if (entry.Seed && entry.Seed !== "None" && totalScenarios > 0) {
-      ncaaSeedDist.set(entry.Seed, (ncaaSeedDist.get(entry.Seed) || 0) + count);
-    }
     if (entry.Tournament_Status && totalScenarios > 0) {
       ncaaStatusDist.set(entry.Tournament_Status, (ncaaStatusDist.get(entry.Tournament_Status) || 0) + count);
     }
+    if (entry.Seed && entry.Seed !== "None" && totalScenarios > 0) {
+      ncaaSeedDist.set(entry.Seed, (ncaaSeedDist.get(entry.Seed) || 0) + count);
+    }
+    if (totalScenarios > 0) {
+      autoBidTotal += ((entry.Auto_Bid_Pct ?? 0) * count) / totalScenarios;
+      atLargeTotal += ((entry.At_Large_Pct ?? 0) * count) / totalScenarios;
+    }
   }
-  // Sort seeds numerically
+
+  const sortedStatus = [...ncaaStatusDist.entries()]
+    .map(([status, count]) => ({ status, pct: totalScenarios > 0 ? (count / totalScenarios) * 100 : 0 }))
+    .sort((a, b) => b.pct - a.pct);
+
   const sortedSeeds = [...ncaaSeedDist.entries()]
     .map(([seed, count]) => ({ seed, pct: totalScenarios > 0 ? (count / totalScenarios) * 100 : 0 }))
     .sort((a, b) => parseInt(a.seed) - parseInt(b.seed))
     .filter((s) => s.pct > 0);
 
-  // Tournament status distribution
-  const sortedStatus = [...ncaaStatusDist.entries()]
-    .map(([status, count]) => ({ status, pct: totalScenarios > 0 ? (count / totalScenarios) * 100 : 0 }))
-    .sort((a, b) => b.pct - a.pct);
-
-  // Bid category from Auto_Bid_Pct and At_Large_Pct
-  let autoBidPct = 0;
-  let atLargePct = 0;
-  for (const entry of winSeedCounts) {
-    const count = entry.Count || 0;
-    if (totalScenarios > 0) {
-      autoBidPct += ((entry.Auto_Bid_Pct ?? 0) * count) / totalScenarios;
-      atLargePct += ((entry.At_Large_Pct ?? 0) * count) / totalScenarios;
-    }
-  }
-
   return (
     <div>
-      {/* Matchup header */}
-      <div className="flex items-center justify-center gap-2 mb-3 py-1 bg-gray-50 rounded">
+      {/* Matchup header - matches whatif page */}
+      <div className="flex items-center justify-center gap-2 mb-3 py-1.5 bg-gray-50 rounded">
         <div className="flex items-center gap-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={getLogoUrl(game.away_team_logo)} alt={game.away_team} className="w-4 h-4 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-          <span className="text-[10px] font-medium">{game.away_team}</span>
+          <img src={getLogoUrl(game.away_team_logo)} alt={game.away_team} className="w-5 h-5 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          <span className="text-[11px] font-medium">{game.away_team}</span>
         </div>
-        <span className="text-[9px] text-gray-400">@</span>
+        <span className="text-[10px] text-gray-400">@</span>
         <div className="flex items-center gap-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={getLogoUrl(game.home_team_logo)} alt={game.home_team} className="w-4 h-4 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-          <span className="text-[10px] font-medium">{game.home_team}</span>
+          <img src={getLogoUrl(game.home_team_logo)} alt={game.home_team} className="w-5 h-5 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          <span className="text-[11px] font-medium">{game.home_team}</span>
         </div>
+        <span className="text-[9px] text-gray-400 ml-1">{game.date}</span>
       </div>
 
-      {/* ═══ SECTION 1: Conference Tournament Impact ═══ */}
-      <h5 style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Conference Tournament</h5>
+      {/* ═══ CONFERENCE TOURNAMENT PROBABILITIES ═══ */}
+      <h4 className="text-sm font-medium mb-2">Conference Tournament Probabilities</h4>
 
-      {/* Conference Summary Metrics */}
-      <table className="w-full text-xs mb-2">
+      {/* Summary Metrics Table - matches whatif NextGameImpact */}
+      <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200 text-gray-500">
-            <th className="text-left py-1 px-1.5 font-normal" style={COL_METRIC}>Metric</th>
-            <th className="text-center py-1 px-1.5 font-normal" style={COL_DATA}>Now</th>
-            <th className="text-center py-1 px-1.5 font-normal" style={{ ...COL_DATA, color: "rgb(40, 167, 69)" }}>Win</th>
-            <th className="text-center py-1 px-1.5 font-normal" style={{ ...COL_DATA, color: "rgb(220, 53, 69)" }}>Loss</th>
+            <th className="text-left py-1.5 px-2 font-normal" style={COL_METRIC}>Metric</th>
+            <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>Current</th>
+            <th className="text-center py-1.5 px-2 font-normal" style={{ ...COL_DATA, color: "rgb(40, 167, 69)" }}>Win</th>
+            <th className="text-center py-1.5 px-2 font-normal" style={{ ...COL_DATA, color: "rgb(220, 53, 69)" }}>Loss</th>
           </tr>
         </thead>
         <tbody>
-          {confMetrics.map(({ label, key, isPercent }) => {
+          {summaryMetrics.map(({ label, key, isPercent }) => {
             const cur = teamMetrics[key] as number;
             const win = winMetrics[key] as number;
             const loss = lossMetrics[key] as number;
             return (
               <tr key={key} className="border-b border-gray-100">
-                <td className="py-1 px-1.5">{label}</td>
-                <td className="text-center py-1 px-1.5 tabular-nums" style={isPercent ? getCellColor(cur, "blue") : undefined}>{isPercent ? (cur > 0 ? `${cur.toFixed(1)}%` : "") : cur.toFixed(2)}</td>
-                <td className="text-center py-1 px-1.5 tabular-nums" style={isPercent ? getCellColor(win, "blue") : undefined}>{isPercent ? (win > 0 ? `${win.toFixed(1)}%` : "") : win.toFixed(2)}</td>
-                <td className="text-center py-1 px-1.5 tabular-nums" style={isPercent ? getCellColor(loss, "blue") : undefined}>{isPercent ? (loss > 0 ? `${loss.toFixed(1)}%` : "") : loss.toFixed(2)}</td>
+                <td className="py-1.5 px-2 text-sm">{label}</td>
+                <td className="text-center py-1.5 px-2 tabular-nums" style={isPercent ? getCellColor(cur, "blue") : undefined}>{isPercent ? (cur > 0 ? `${cur.toFixed(1)}%` : "") : cur.toFixed(2)}</td>
+                <td className="text-center py-1.5 px-2 tabular-nums" style={isPercent ? getCellColor(win, "blue") : undefined}>{isPercent ? (win > 0 ? `${win.toFixed(1)}%` : "") : win.toFixed(2)}</td>
+                <td className="text-center py-1.5 px-2 tabular-nums" style={isPercent ? getCellColor(loss, "blue") : undefined}>{isPercent ? (loss > 0 ? `${loss.toFixed(1)}%` : "") : loss.toFixed(2)}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
 
-      {/* Conf Seed Distribution */}
-      <h5 style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", marginBottom: 3, marginTop: 8 }}>Conf Seed Probabilities</h5>
-      <table className="w-full text-xs mb-3">
-        <thead>
-          <tr className="border-b border-gray-200 text-gray-500">
-            <th className="text-left py-1 px-1.5 font-normal" style={COL_METRIC}>Seed</th>
-            <th className="text-center py-1 px-1.5 font-normal" style={COL_DATA}>Now</th>
-            <th className="text-center py-1 px-1.5 font-normal" style={{ ...COL_DATA, color: "rgb(40, 167, 69)" }}>Win</th>
-            <th className="text-center py-1 px-1.5 font-normal" style={{ ...COL_DATA, color: "rgb(220, 53, 69)" }}>Loss</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: numTeams }, (_, i) => {
-            const seed = i + 1;
-            const seedKey = `seed_${seed}_pct` as keyof NextGameMetrics;
-            const cur = (teamMetrics[seedKey] as number) ?? 0;
-            const win = (winMetrics[seedKey] as number) ?? 0;
-            const loss = (lossMetrics[seedKey] as number) ?? 0;
-            if (cur === 0 && win === 0 && loss === 0) return null;
-            return (
-              <tr key={seed} className="border-b border-gray-100">
-                <td className="py-1 px-1.5">{ordinal(seed)}</td>
-                <td className="text-center py-1 px-1.5 tabular-nums" style={getCellColor(cur, "blue")}>{cur > 0 ? `${cur.toFixed(1)}%` : ""}</td>
-                <td className="text-center py-1 px-1.5 tabular-nums" style={getCellColor(win, "blue")}>{win > 0 ? `${win.toFixed(1)}%` : ""}</td>
-                <td className="text-center py-1 px-1.5 tabular-nums" style={getCellColor(loss, "blue")}>{loss > 0 ? `${loss.toFixed(1)}%` : ""}</td>
+      {/* Seed Probabilities - matches whatif NextGameImpact */}
+      <div className="mt-4">
+        <h4 className="text-sm font-medium mb-2">Seed Probabilities</h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200 text-gray-500">
+              <th className="text-left py-1.5 px-2 font-normal" style={COL_METRIC}>Seed</th>
+              <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>Current</th>
+              <th className="text-center py-1.5 px-2 font-normal" style={{ ...COL_DATA, color: "rgb(40, 167, 69)" }}>Win</th>
+              <th className="text-center py-1.5 px-2 font-normal" style={{ ...COL_DATA, color: "rgb(220, 53, 69)" }}>Loss</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: numTeams }, (_, i) => {
+              const seed = i + 1;
+              const seedKey = `seed_${seed}_pct` as keyof NextGameMetrics;
+              const cur = (teamMetrics[seedKey] as number) ?? 0;
+              const win = (winMetrics[seedKey] as number) ?? 0;
+              const loss = (lossMetrics[seedKey] as number) ?? 0;
+              if (cur === 0 && win === 0 && loss === 0) return null;
+              return (
+                <tr key={seed} className="border-b border-gray-100">
+                  <td className="py-1.5 px-2">{ordinal(seed)}</td>
+                  <td className="text-center py-1.5 px-2 tabular-nums" style={getCellColor(cur, "blue")}>{cur > 0 ? `${cur.toFixed(1)}%` : ""}</td>
+                  <td className="text-center py-1.5 px-2 tabular-nums" style={getCellColor(win, "blue")}>{win > 0 ? `${win.toFixed(1)}%` : ""}</td>
+                  <td className="text-center py-1.5 px-2 tabular-nums" style={getCellColor(loss, "blue")}>{loss > 0 ? `${loss.toFixed(1)}%` : ""}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ═══ NCAA TOURNAMENT PROBABILITIES ═══ */}
+      <div className="mt-4 pt-3 border-t border-gray-200">
+        <h4 className="text-sm font-medium mb-2">NCAA Tournament Probabilities</h4>
+
+        {/* NCAA Summary Stats */}
+        <table className="w-full text-sm mb-3">
+          <thead>
+            <tr className="border-b border-gray-200 text-gray-500">
+              <th className="text-left py-1.5 px-2 font-normal" style={COL_METRIC}>Metric</th>
+              <th className="text-center py-1.5 px-2 font-normal" style={COL_DATA}>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b border-gray-100">
+              <td className="py-1.5 px-2 text-sm">Tournament Bid %</td>
+              <td className="text-center py-1.5 px-2 tabular-nums" style={getCellColor(bidPct, "blue")}>{bidPct > 0 ? `${bidPct.toFixed(1)}%` : ""}</td>
+            </tr>
+            {avgSeed !== undefined && avgSeed !== null && avgSeed > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1.5 px-2 text-sm">Avg Seed</td>
+                <td className="text-center py-1.5 px-2 tabular-nums">{avgSeed.toFixed(1)}</td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            )}
+            {autoBidTotal > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1.5 px-2 text-sm">Auto Bid %</td>
+                <td className="text-center py-1.5 px-2 tabular-nums" style={getCellColor(autoBidTotal, "blue")}>{autoBidTotal.toFixed(1)}%</td>
+              </tr>
+            )}
+            {atLargeTotal > 0 && (
+              <tr className="border-b border-gray-100">
+                <td className="py-1.5 px-2 text-sm">At-Large %</td>
+                <td className="text-center py-1.5 px-2 tabular-nums" style={getCellColor(atLargeTotal, "blue")}>{atLargeTotal.toFixed(1)}%</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
 
-      {/* ═══ SECTION 2: NCAA Tournament Projections ═══ */}
-      <h5 style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 4, marginTop: 12, textTransform: "uppercase", letterSpacing: 0.5, borderTop: "1px solid #e5e7eb", paddingTop: 8 }}>NCAA Tournament</h5>
-
-      {/* NCAA Summary Stats */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-        <div style={{ padding: "4px 8px", backgroundColor: "#f0f9ff", borderRadius: 4, border: "1px solid #bae6fd" }}>
-          <span style={{ fontSize: 10, color: "#6b7280" }}>Bid %: </span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#0369a1" }}>{bidPct.toFixed(1)}%</span>
-        </div>
-        {avgSeed !== undefined && avgSeed !== null && avgSeed > 0 && (
-          <div style={{ padding: "4px 8px", backgroundColor: "#f0f9ff", borderRadius: 4, border: "1px solid #bae6fd" }}>
-            <span style={{ fontSize: 10, color: "#6b7280" }}>Avg Seed: </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#0369a1" }}>{avgSeed.toFixed(1)}</span>
+        {/* Tournament Status Distribution */}
+        {sortedStatus.length > 0 && (
+          <div className="mt-3">
+            <h4 className="text-sm font-medium mb-2">Tournament Status</h4>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-500">
+                  <th className="text-left py-1.5 px-2 font-normal">Status</th>
+                  <th className="text-center py-1.5 px-2 font-normal" style={{ width: 65 }}>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedStatus.map(({ status, pct }) => {
+                  const isOut = status === "Out of Tournament";
+                  return (
+                    <tr key={status} className="border-b border-gray-100">
+                      <td className="py-1.5 px-2" style={{ color: isOut ? "#a16207" : "#374151", fontWeight: isOut ? 500 : 400 }}>{status}</td>
+                      <td className="text-center py-1.5 px-2 tabular-nums" style={isOut ? { backgroundColor: "#fef9c3", color: "#a16207" } : getCellColor(pct, "blue")}>{pct > 0 ? `${pct.toFixed(1)}%` : ""}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
-        {autoBidPct > 0 && (
-          <div style={{ padding: "4px 8px", backgroundColor: "#f0fdf4", borderRadius: 4, border: "1px solid #bbf7d0" }}>
-            <span style={{ fontSize: 10, color: "#6b7280" }}>Auto Bid: </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#15803d" }}>{autoBidPct.toFixed(1)}%</span>
-          </div>
-        )}
-        {atLargePct > 0 && (
-          <div style={{ padding: "4px 8px", backgroundColor: "#fefce8", borderRadius: 4, border: "1px solid #fde68a" }}>
-            <span style={{ fontSize: 10, color: "#6b7280" }}>At-Large: </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#a16207" }}>{atLargePct.toFixed(1)}%</span>
+
+        {/* NCAA Seed Distribution */}
+        {sortedSeeds.length > 0 && (
+          <div className="mt-3">
+            <h4 className="text-sm font-medium mb-2">NCAA Seed Distribution</h4>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-500">
+                  <th className="text-left py-1.5 px-2 font-normal">Seed</th>
+                  <th className="text-center py-1.5 px-2 font-normal" style={{ width: 65 }}>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedSeeds.map(({ seed, pct }) => (
+                  <tr key={seed} className="border-b border-gray-100">
+                    <td className="py-1.5 px-2">{ordinal(parseInt(seed))}</td>
+                    <td className="text-center py-1.5 px-2 tabular-nums" style={getCellColor(pct, "blue")}>{pct > 0 ? `${pct.toFixed(1)}%` : ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
-      {/* Tournament Status Distribution */}
-      {sortedStatus.length > 0 && (
-        <>
-          <h5 style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", marginBottom: 3 }}>Tournament Status</h5>
-          <table className="w-full text-xs mb-3">
-            <thead>
-              <tr className="border-b border-gray-200 text-gray-500">
-                <th className="text-left py-1 px-1.5 font-normal">Status</th>
-                <th className="text-center py-1 px-1.5 font-normal" style={{ width: 60 }}>%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedStatus.map(({ status, pct }) => {
-                const isOut = status === "Out of Tournament";
-                return (
-                  <tr key={status} className="border-b border-gray-100">
-                    <td className="py-1 px-1.5" style={{ color: isOut ? "#eab308" : "#374151", fontWeight: isOut ? 500 : 400 }}>{status}</td>
-                    <td className="text-center py-1 px-1.5 tabular-nums" style={isOut ? { backgroundColor: "#fef9c3", color: "#a16207" } : getCellColor(pct, "blue")}>{pct > 0 ? `${pct.toFixed(1)}%` : ""}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </>
-      )}
-
-      {/* NCAA Seed Distribution */}
-      {sortedSeeds.length > 0 && (
-        <>
-          <h5 style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", marginBottom: 3 }}>NCAA Seed Distribution</h5>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-gray-200 text-gray-500">
-                <th className="text-left py-1 px-1.5 font-normal">Seed</th>
-                <th className="text-center py-1 px-1.5 font-normal" style={{ width: 60 }}>%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedSeeds.map(({ seed, pct }) => (
-                <tr key={seed} className="border-b border-gray-100">
-                  <td className="py-1 px-1.5">{ordinal(parseInt(seed))}</td>
-                  <td className="text-center py-1 px-1.5 tabular-nums" style={getCellColor(pct, "blue")}>{pct > 0 ? `${pct.toFixed(1)}%` : ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
+      {/* Explainer text - matches whatif page */}
+      <p className="text-[9px] text-gray-400 leading-relaxed mt-3 pt-2 border-t border-gray-100">
+        Shows projected impact of the team&apos;s next scheduled conference game on seed probabilities. Win and Loss columns show how probabilities change if the team wins or loses that game.
+      </p>
     </div>
   );
 }
@@ -819,6 +871,14 @@ export default function GamePreviewPage() {
   const [awayConfStandings, setAwayConfStandings] = useState<ConferenceStandingsTeam[]>([]);
   const [homeConfStandings, setHomeConfStandings] = useState<ConferenceStandingsTeam[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
+  // Responsive grid: 2-col on desktop, 1-col on mobile
+  const twoColGrid: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+    gap: isMobile ? 12 : 16,
+  };
 
   useEffect(() => {
     const loadGames = async () => {
@@ -940,7 +1000,7 @@ export default function GamePreviewPage() {
                       </div>
 
                       {/* ═══ Printable Preview Area ═══ */}
-                      <div ref={previewRef} style={{ backgroundColor: "white", padding: 20 }}>
+                      <div ref={previewRef} style={{ backgroundColor: "white", padding: isMobile ? 10 : 20 }}>
 
                         {/* Header Banner */}
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, paddingBottom: 8, borderBottom: "2px solid #e5e7eb" }}>
@@ -954,7 +1014,7 @@ export default function GamePreviewPage() {
                         <HeadToHeadComparison awayTeam={selectedGame.away_team} homeTeam={selectedGame.home_team} awayMetrics={awayMetrics} homeMetrics={homeMetrics} awayInfo={awayTeamData.team_info} homeInfo={homeTeamData.team_info} />
 
                         {/* 2. Team Narratives + Vertical Schedule + Location Records */}
-                        <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div style={{ marginTop: 16, ...twoColGrid }}>
                           {/* Away team narrative */}
                           <div style={{ padding: 10, backgroundColor: "#f9fafb", borderRadius: 8, border: "1px solid #e5e7eb" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
@@ -967,7 +1027,7 @@ export default function GamePreviewPage() {
                             <LocationRecordBadges metrics={awayMetrics} highlightLocation="Away" />
                             <div style={{ marginTop: 8 }}>
                               <span style={{ fontSize: 10, color: "#9ca3af", display: "block", marginBottom: 3 }}>Season Schedule (by difficulty)</span>
-                              <VerticalScheduleStrip schedule={awayTeamData.schedule} upcomingOpponent={selectedGame.home_team} upcomingDate={selectedGameDate} />
+                              <ThreeColumnSchedule schedule={awayTeamData.schedule} upcomingOpponent={selectedGame.home_team} upcomingDate={selectedGameDate} />
                             </div>
                           </div>
                           {/* Home team narrative */}
@@ -982,7 +1042,7 @@ export default function GamePreviewPage() {
                             <LocationRecordBadges metrics={homeMetrics} highlightLocation="Home" />
                             <div style={{ marginTop: 8 }}>
                               <span style={{ fontSize: 10, color: "#9ca3af", display: "block", marginBottom: 3 }}>Season Schedule (by difficulty)</span>
-                              <VerticalScheduleStrip schedule={homeTeamData.schedule} upcomingOpponent={selectedGame.away_team} upcomingDate={selectedGameDate} />
+                              <ThreeColumnSchedule schedule={homeTeamData.schedule} upcomingOpponent={selectedGame.away_team} upcomingDate={selectedGameDate} />
                             </div>
                           </div>
                         </div>
@@ -990,7 +1050,7 @@ export default function GamePreviewPage() {
                         {/* 3. Next Game Win/Loss Impact - Conference + NCAA (full output) */}
                         <div style={{ marginTop: 20 }}>
                           <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, paddingBottom: 5, borderBottom: "1px solid #e5e7eb" }}>Next Game Win/Loss Impact</h3>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                          <div style={twoColGrid}>
                             <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 10, backgroundColor: "white" }}>
                               <NextGameImpactInline teamId={awayTeamData.team_info.team_id} conference={awayTeamData.team_info.conference} teamInfo={awayTeamData.team_info} />
                             </div>
@@ -1005,7 +1065,7 @@ export default function GamePreviewPage() {
                       {/* 4. Win Values Over Time (interactive - outside PDF) */}
                       <div style={{ marginTop: 24 }}>
                         <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, paddingBottom: 5, borderBottom: "1px solid #e5e7eb" }}>Win Values Over Time</h3>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div style={twoColGrid}>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, backgroundColor: "white" }}>
                             <ChartLogoHeader logoUrl={awayTeamData.team_info.logo_url} teamName={selectedGame.away_team} />
                             <TeamWinValues schedule={awayTeamData.schedule} logoUrl={awayTeamData.team_info.logo_url} primaryColor={awayTeamData.team_info.primary_color} />
@@ -1020,7 +1080,7 @@ export default function GamePreviewPage() {
                       {/* 5. Schedule Difficulty (interactive - outside PDF) */}
                       <div style={{ marginTop: 24 }}>
                         <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, paddingBottom: 5, borderBottom: "1px solid #e5e7eb" }}>Schedule Difficulty</h3>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div style={twoColGrid}>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, backgroundColor: "white" }}>
                             <ChartLogoHeader logoUrl={awayTeamData.team_info.logo_url} teamName={selectedGame.away_team} />
                             <BasketballTeamScheduleDifficulty
@@ -1049,7 +1109,7 @@ export default function GamePreviewPage() {
                       {/* 6. Season Wins Breakdown (interactive - outside PDF) */}
                       <div style={{ marginTop: 24 }}>
                         <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, paddingBottom: 5, borderBottom: "1px solid #e5e7eb" }}>Season Wins Breakdown</h3>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div style={twoColGrid}>
                           <div>
                             <ChartLogoHeader logoUrl={awayTeamData.team_info.logo_url} teamName={selectedGame.away_team} />
                             <BasketballTeamWinsBreakdown schedule={awayTeamData.schedule} teamName={selectedGame.away_team} conference={awayTeamData.team_info.conference} primaryColor={awayTeamData.team_info.primary_color || "#18627b"} secondaryColor={awayTeamData.team_info.secondary_color} logoUrl={awayTeamData.team_info.logo_url} />
