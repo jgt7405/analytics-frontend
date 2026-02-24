@@ -100,6 +100,7 @@ interface ComputedMetrics {
   awayRecord: string;
   neutralRecord: string;
   currentConfStanding: number | null;
+  confPosition: string;
 }
 
 interface NextGameMetrics {
@@ -138,11 +139,19 @@ interface NextGameImpactData {
   error?: string;
 }
 
+interface ConferenceStandingsTeam {
+  team_name: string;
+  teamid: number;
+  conference_record: string;
+  conf_wins: number;
+  conf_losses: number;
+}
+
 const TEAL = "#0097b2";
 
 // ─── Utility Functions ───────────────────────────────────────────────────────
 
-function computeMetrics(schedule: TeamGameData[], teamInfo: TeamInfo): ComputedMetrics {
+function computeMetrics(schedule: TeamGameData[], teamInfo: TeamInfo, confPosition: string): ComputedMetrics {
   const completedGames = schedule.filter((g) => g.status === "W" || g.status === "L");
   let streakCount = 0;
   let streakType = "";
@@ -172,14 +181,13 @@ function computeMetrics(schedule: TeamGameData[], teamInfo: TeamInfo): ComputedM
     awayRecord: byLoc("Away"),
     neutralRecord: byLoc("Neutral"),
     currentConfStanding: teamInfo.current_conf_standing || null,
+    confPosition,
   };
 }
 
 function getGameDifficultyRank(schedule: TeamGameData[], opponentName: string, gameDate: string, locationFilter?: string): number | null {
-  // Filter to location if provided (e.g. only "Home" games for home team)
   let games = schedule;
   if (locationFilter) games = games.filter((g) => g.location === locationFilter);
-  // Sort by difficulty: lowest win prob = hardest
   const withProb = games
     .filter((g) => g.team_win_prob !== undefined && g.team_win_prob !== null)
     .sort((a, b) => (a.team_win_prob ?? 1) - (b.team_win_prob ?? 1));
@@ -198,6 +206,58 @@ function getLogoUrl(filename?: string): string | undefined {
   if (filename.startsWith("http") || filename.startsWith("/")) return filename;
   return `/images/team_logos/${filename}`;
 }
+
+/** Compute conference position with ties from standings data */
+function computeConfPosition(teamName: string, standings: ConferenceStandingsTeam[]): string {
+  if (!standings.length) return "—";
+  // Sort by conf_wins DESC, then conf_losses ASC
+  const sorted = [...standings].sort((a, b) => {
+    if (b.conf_wins !== a.conf_wins) return b.conf_wins - a.conf_wins;
+    return a.conf_losses - b.conf_losses;
+  });
+  // Assign positions with ties
+  let position = 1;
+  let prevWins = -1;
+  let prevLosses = -1;
+  const positionMap = new Map<string, number>();
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].conf_wins !== prevWins || sorted[i].conf_losses !== prevLosses) {
+      position = i + 1;
+    }
+    positionMap.set(sorted[i].team_name, position);
+    prevWins = sorted[i].conf_wins;
+    prevLosses = sorted[i].conf_losses;
+  }
+  const pos = positionMap.get(teamName);
+  if (!pos) return "—";
+  // Check if tied
+  const samePos = sorted.filter((t) => positionMap.get(t.team_name) === pos);
+  if (samePos.length > 1) return `T-${ordinal(pos)}`;
+  return ordinal(pos);
+}
+
+/** Fetch conference standings for position calculation */
+async function fetchConferenceStandings(conference: string): Promise<ConferenceStandingsTeam[]> {
+  try {
+    const confFormatted = conference.replace(/ /g, "_");
+    const response = await fetch(`/api/proxy/standings/${confFormatted}`);
+    if (!response.ok) return [];
+    const json = await response.json();
+    // The standings endpoint returns { data: [...], conferences: [...] }
+    const data = json.data || json;
+    if (!Array.isArray(data)) return [];
+    return data.map((t: Record<string, unknown>) => ({
+      team_name: String(t.team_name || ""),
+      teamid: Number(t.teamid || 0),
+      conference_record: String(t.conference_record || "0-0"),
+      conf_wins: Number(t.conference_wins || 0),
+      conf_losses: Number(t.conference_losses || 0),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 
 function buildTeamNarrative(
   teamName: string, metrics: ComputedMetrics, teamInfo: TeamInfo,
@@ -258,9 +318,10 @@ function buildTeamNarrative(
   return parts.join(" ");
 }
 
-// ─── Mini Schedule Strip ─────────────────────────────────────────────────────
+// ─── Vertical Mini Schedule Strip ────────────────────────────────────────────
+// Vertical layout: most difficult at top, least at bottom, with home/away/neutral sections
 
-function MiniScheduleStrip({
+function VerticalScheduleStrip({
   schedule,
   upcomingOpponent,
   upcomingDate,
@@ -269,46 +330,75 @@ function MiniScheduleStrip({
   upcomingOpponent: string;
   upcomingDate: string;
 }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
-      {schedule.map((g, i) => {
-        const isThisGame = g.opponent === upcomingOpponent && g.date === upcomingDate;
-        const isWin = g.status === "W";
-        const isLoss = g.status === "L";
-        let bg = "#d1d5db"; // gray for future
-        if (isThisGame) bg = TEAL;
-        else if (isWin) bg = "#16a34a";
-        else if (isLoss) bg = "#dc2626";
+  // Sort games by difficulty (lowest win prob = most difficult at top)
+  const gamesWithProb = schedule
+    .filter((g) => g.team_win_prob !== undefined && g.team_win_prob !== null)
+    .sort((a, b) => (a.team_win_prob ?? 1) - (b.team_win_prob ?? 1));
 
-        return (
-          <div
-            key={`${g.date}-${g.opponent}-${i}`}
-            title={`${g.date} ${g.status === "W" || g.status === "L" ? g.status : ""} vs ${g.opponent}`}
-            style={{
-              width: 18,
-              height: 18,
-              borderRadius: 2,
-              backgroundColor: bg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              border: isThisGame ? `2px solid ${TEAL}` : "none",
-              boxShadow: isThisGame ? `0 0 0 1px white, 0 0 0 3px ${TEAL}` : "none",
-            }}
-          >
-            {g.opponent_logo && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={getLogoUrl(g.opponent_logo)}
-                alt=""
-                style={{ width: 12, height: 12, objectFit: "contain", opacity: isThisGame ? 1 : 0.85 }}
-                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-              />
-            )}
-          </div>
-        );
-      })}
+  // Group by location
+  const homeGames = gamesWithProb.filter((g) => g.location === "Home");
+  const awayGames = gamesWithProb.filter((g) => g.location === "Away");
+  const neutralGames = gamesWithProb.filter((g) => g.location === "Neutral");
+
+  const renderSection = (label: string, games: TeamGameData[]) => {
+    if (games.length === 0) return null;
+    return (
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 9, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{label}</div>
+        {games.map((g, i) => {
+          const isThisGame = g.opponent === upcomingOpponent && g.date === upcomingDate;
+          const isWin = g.status === "W";
+          const isLoss = g.status === "L";
+          const isFuture = !isWin && !isLoss;
+          let bg = "#e5e7eb"; // gray for future
+          let textColor = "#6b7280";
+          if (isThisGame) { bg = TEAL; textColor = "white"; }
+          else if (isWin) { bg = "#dcfce7"; textColor = "#16a34a"; }
+          else if (isLoss) { bg = "#fee2e2"; textColor = "#dc2626"; }
+
+          const prob = g.team_win_prob !== undefined ? (g.team_win_prob * 100).toFixed(0) : "—";
+
+          return (
+            <div
+              key={`${g.date}-${g.opponent}-${i}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "2px 4px",
+                borderRadius: 3,
+                backgroundColor: bg,
+                marginBottom: 2,
+                border: isThisGame ? `1.5px solid ${TEAL}` : "1px solid transparent",
+              }}
+            >
+              {g.opponent_logo && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={getLogoUrl(g.opponent_logo)}
+                  alt=""
+                  style={{ width: 14, height: 14, objectFit: "contain", flexShrink: 0 }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+              )}
+              <span style={{ fontSize: 9, color: isThisGame ? "white" : textColor, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {g.opponent}
+              </span>
+              <span style={{ fontSize: 9, color: isThisGame ? "white" : "#9ca3af", flexShrink: 0 }}>
+                {isWin ? "W" : isLoss ? "L" : isFuture ? "" : ""} {prob}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {renderSection("Home", homeGames)}
+      {renderSection("Away", awayGames)}
+      {renderSection("Neutral", neutralGames)}
     </div>
   );
 }
@@ -352,7 +442,19 @@ function LocationRecordBadges({
   );
 }
 
+// ─── Chart Logo Header ───────────────────────────────────────────────────────
+// Renders team logo centered above a chart section
+
+function ChartLogoHeader({ logoUrl, teamName, size = 28 }: { logoUrl?: string; teamName: string; size?: number }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+      <TeamLogo logoUrl={logoUrl} teamName={teamName} size={size} />
+    </div>
+  );
+}
+
 // ─── Next Game Impact Inline Component ───────────────────────────────────────
+// Shows FULL conference + NCAA tournament impact matching the whatif page output
 
 function NextGameImpactInline({
   teamId,
@@ -408,7 +510,7 @@ function NextGameImpactInline({
   const COL_METRIC = { minWidth: "100px" };
   const COL_DATA = { minWidth: "50px", width: "50px" };
 
-  // Conference metrics
+  // Conference summary metrics (matching whatif page)
   const confMetrics: { label: string; key: keyof NextGameMetrics; isPercent: boolean }[] = [
     { label: "#1 Seed %", key: "first_seed_pct", isPercent: true },
     { label: "Top 4 %", key: "top4_pct", isPercent: true },
@@ -416,9 +518,49 @@ function NextGameImpactInline({
     { label: "Proj Conf Wins", key: "avg_conf_wins", isPercent: false },
   ];
 
-  // NCAA Tournament static info from team_info
-  const bidPct = teamInfo.tournament_bid_pct;
+  // NCAA Tournament data from team_info (win_seed_counts)
+  const winSeedCounts = teamInfo.win_seed_counts || [];
+
+  // Compute NCAA summary metrics from win_seed_counts
+  const totalScenarios = winSeedCounts.reduce((sum, e) => sum + (e.Count || 0), 0);
+  const inTournament = winSeedCounts.filter((e) => e.Tournament_Status && e.Tournament_Status !== "Out of Tournament");
+  const inTournamentCount = inTournament.reduce((sum, e) => sum + (e.Count || 0), 0);
+  const bidPct = totalScenarios > 0 ? (inTournamentCount / totalScenarios) * 100 : (teamInfo.tournament_bid_pct ?? 0);
   const avgSeed = teamInfo.average_seed;
+
+  // Aggregate NCAA seed distribution
+  const ncaaSeedDist = new Map<string, number>();
+  const ncaaStatusDist = new Map<string, number>();
+  for (const entry of winSeedCounts) {
+    const count = entry.Count || 0;
+    if (entry.Seed && entry.Seed !== "None" && totalScenarios > 0) {
+      ncaaSeedDist.set(entry.Seed, (ncaaSeedDist.get(entry.Seed) || 0) + count);
+    }
+    if (entry.Tournament_Status && totalScenarios > 0) {
+      ncaaStatusDist.set(entry.Tournament_Status, (ncaaStatusDist.get(entry.Tournament_Status) || 0) + count);
+    }
+  }
+  // Sort seeds numerically
+  const sortedSeeds = [...ncaaSeedDist.entries()]
+    .map(([seed, count]) => ({ seed, pct: totalScenarios > 0 ? (count / totalScenarios) * 100 : 0 }))
+    .sort((a, b) => parseInt(a.seed) - parseInt(b.seed))
+    .filter((s) => s.pct > 0);
+
+  // Tournament status distribution
+  const sortedStatus = [...ncaaStatusDist.entries()]
+    .map(([status, count]) => ({ status, pct: totalScenarios > 0 ? (count / totalScenarios) * 100 : 0 }))
+    .sort((a, b) => b.pct - a.pct);
+
+  // Bid category from Auto_Bid_Pct and At_Large_Pct
+  let autoBidPct = 0;
+  let atLargePct = 0;
+  for (const entry of winSeedCounts) {
+    const count = entry.Count || 0;
+    if (totalScenarios > 0) {
+      autoBidPct += ((entry.Auto_Bid_Pct ?? 0) * count) / totalScenarios;
+      atLargePct += ((entry.At_Large_Pct ?? 0) * count) / totalScenarios;
+    }
+  }
 
   return (
     <div>
@@ -437,9 +579,11 @@ function NextGameImpactInline({
         </div>
       </div>
 
-      {/* Conference Tournament Impact */}
+      {/* ═══ SECTION 1: Conference Tournament Impact ═══ */}
       <h5 style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Conference Tournament</h5>
-      <table className="w-full text-xs mb-3">
+
+      {/* Conference Summary Metrics */}
+      <table className="w-full text-xs mb-2">
         <thead>
           <tr className="border-b border-gray-200 text-gray-500">
             <th className="text-left py-1 px-1.5 font-normal" style={COL_METRIC}>Metric</th>
@@ -465,8 +609,8 @@ function NextGameImpactInline({
         </tbody>
       </table>
 
-      {/* Seed Distribution */}
-      <h5 style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Conf Seed Probabilities</h5>
+      {/* Conf Seed Distribution */}
+      <h5 style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", marginBottom: 3, marginTop: 8 }}>Conf Seed Probabilities</h5>
       <table className="w-full text-xs mb-3">
         <thead>
           <tr className="border-b border-gray-200 text-gray-500">
@@ -496,25 +640,87 @@ function NextGameImpactInline({
         </tbody>
       </table>
 
-      {/* NCAA Tournament Summary */}
-      <h5 style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>NCAA Tournament</h5>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        {bidPct !== undefined && (
-          <div style={{ padding: "4px 8px", backgroundColor: "#f0f9ff", borderRadius: 4, border: "1px solid #bae6fd" }}>
-            <span style={{ fontSize: 10, color: "#6b7280" }}>Bid %: </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#0369a1" }}>{bidPct.toFixed(1)}%</span>
-          </div>
-        )}
-        {avgSeed !== undefined && avgSeed > 0 && (
+      {/* ═══ SECTION 2: NCAA Tournament Projections ═══ */}
+      <h5 style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 4, marginTop: 12, textTransform: "uppercase", letterSpacing: 0.5, borderTop: "1px solid #e5e7eb", paddingTop: 8 }}>NCAA Tournament</h5>
+
+      {/* NCAA Summary Stats */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+        <div style={{ padding: "4px 8px", backgroundColor: "#f0f9ff", borderRadius: 4, border: "1px solid #bae6fd" }}>
+          <span style={{ fontSize: 10, color: "#6b7280" }}>Bid %: </span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#0369a1" }}>{bidPct.toFixed(1)}%</span>
+        </div>
+        {avgSeed !== undefined && avgSeed !== null && avgSeed > 0 && (
           <div style={{ padding: "4px 8px", backgroundColor: "#f0f9ff", borderRadius: 4, border: "1px solid #bae6fd" }}>
             <span style={{ fontSize: 10, color: "#6b7280" }}>Avg Seed: </span>
             <span style={{ fontSize: 12, fontWeight: 600, color: "#0369a1" }}>{avgSeed.toFixed(1)}</span>
           </div>
         )}
+        {autoBidPct > 0 && (
+          <div style={{ padding: "4px 8px", backgroundColor: "#f0fdf4", borderRadius: 4, border: "1px solid #bbf7d0" }}>
+            <span style={{ fontSize: 10, color: "#6b7280" }}>Auto Bid: </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#15803d" }}>{autoBidPct.toFixed(1)}%</span>
+          </div>
+        )}
+        {atLargePct > 0 && (
+          <div style={{ padding: "4px 8px", backgroundColor: "#fefce8", borderRadius: 4, border: "1px solid #fde68a" }}>
+            <span style={{ fontSize: 10, color: "#6b7280" }}>At-Large: </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#a16207" }}>{atLargePct.toFixed(1)}%</span>
+          </div>
+        )}
       </div>
+
+      {/* Tournament Status Distribution */}
+      {sortedStatus.length > 0 && (
+        <>
+          <h5 style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", marginBottom: 3 }}>Tournament Status</h5>
+          <table className="w-full text-xs mb-3">
+            <thead>
+              <tr className="border-b border-gray-200 text-gray-500">
+                <th className="text-left py-1 px-1.5 font-normal">Status</th>
+                <th className="text-center py-1 px-1.5 font-normal" style={{ width: 60 }}>%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedStatus.map(({ status, pct }) => {
+                const isOut = status === "Out of Tournament";
+                return (
+                  <tr key={status} className="border-b border-gray-100">
+                    <td className="py-1 px-1.5" style={{ color: isOut ? "#eab308" : "#374151", fontWeight: isOut ? 500 : 400 }}>{status}</td>
+                    <td className="text-center py-1 px-1.5 tabular-nums" style={isOut ? { backgroundColor: "#fef9c3", color: "#a16207" } : getCellColor(pct, "blue")}>{pct > 0 ? `${pct.toFixed(1)}%` : ""}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* NCAA Seed Distribution */}
+      {sortedSeeds.length > 0 && (
+        <>
+          <h5 style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", marginBottom: 3 }}>NCAA Seed Distribution</h5>
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-gray-200 text-gray-500">
+                <th className="text-left py-1 px-1.5 font-normal">Seed</th>
+                <th className="text-center py-1 px-1.5 font-normal" style={{ width: 60 }}>%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedSeeds.map(({ seed, pct }) => (
+                <tr key={seed} className="border-b border-gray-100">
+                  <td className="py-1 px-1.5">{ordinal(parseInt(seed))}</td>
+                  <td className="text-center py-1 px-1.5 tabular-nums" style={getCellColor(pct, "blue")}>{pct > 0 ? `${pct.toFixed(1)}%` : ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
     </div>
   );
 }
+
 
 // ─── Head-to-Head Comparison ─────────────────────────────────────────────────
 
@@ -522,7 +728,7 @@ function HeadToHeadComparison({ awayTeam, homeTeam, awayMetrics, homeMetrics, aw
   const metrics: { label: string; awayValue: string; homeValue: string; isStreak?: boolean }[] = [
     { label: "Record", awayValue: awayMetrics.overallRecord, homeValue: homeMetrics.overallRecord },
     { label: "Conf. Record", awayValue: awayMetrics.conferenceRecord, homeValue: homeMetrics.conferenceRecord },
-    { label: "Conf Position", awayValue: awayMetrics.currentConfStanding ? ordinal(awayMetrics.currentConfStanding) : "—", homeValue: homeMetrics.currentConfStanding ? ordinal(homeMetrics.currentConfStanding) : "—" },
+    { label: "Conf Position", awayValue: awayMetrics.confPosition, homeValue: homeMetrics.confPosition },
     { label: "Composite Rating", awayValue: awayMetrics.kenpomRank ? `#${awayMetrics.kenpomRank}` : "N/A", homeValue: homeMetrics.kenpomRank ? `#${homeMetrics.kenpomRank}` : "N/A" },
     { label: "Current Streak", awayValue: awayMetrics.currentStreak, homeValue: homeMetrics.currentStreak, isStreak: true },
     { label: "Last 5", awayValue: awayMetrics.last5, homeValue: homeMetrics.last5 },
@@ -610,6 +816,8 @@ export default function GamePreviewPage() {
   const [awayTeamData, setAwayTeamData] = useState<TeamDataResponse | null>(null);
   const [homeTeamData, setHomeTeamData] = useState<TeamDataResponse | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [awayConfStandings, setAwayConfStandings] = useState<ConferenceStandingsTeam[]>([]);
+  const [homeConfStandings, setHomeConfStandings] = useState<ConferenceStandingsTeam[]>([]);
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -630,7 +838,7 @@ export default function GamePreviewPage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedGame) { setAwayTeamData(null); setHomeTeamData(null); return; }
+    if (!selectedGame) { setAwayTeamData(null); setHomeTeamData(null); setAwayConfStandings([]); setHomeConfStandings([]); return; }
     const loadPreview = async () => {
       setIsLoadingPreview(true);
       setError(null);
@@ -641,6 +849,16 @@ export default function GamePreviewPage() {
         ]);
         setAwayTeamData(awayResp as unknown as TeamDataResponse);
         setHomeTeamData(homeResp as unknown as TeamDataResponse);
+
+        // Fetch conference standings for position calculation
+        const awayConf = (awayResp as unknown as TeamDataResponse).team_info.conference;
+        const homeConf = (homeResp as unknown as TeamDataResponse).team_info.conference;
+        const [awayStandings, homeStandings] = await Promise.all([
+          fetchConferenceStandings(awayConf),
+          awayConf === homeConf ? fetchConferenceStandings(homeConf) : fetchConferenceStandings(homeConf),
+        ]);
+        setAwayConfStandings(awayStandings);
+        setHomeConfStandings(awayConf === homeConf ? awayStandings : homeStandings);
       } catch { setError("Failed to load team preview data."); }
       finally { setIsLoadingPreview(false); }
     };
@@ -655,8 +873,13 @@ export default function GamePreviewPage() {
   }, [upcomingGames, conferenceFilter, teamFilter]);
 
   const availableConferences = useMemo(() => ["All", ...conferences.filter((c) => c && c !== "FCS")], [conferences]);
-  const awayMetrics = useMemo(() => awayTeamData ? computeMetrics(awayTeamData.schedule, awayTeamData.team_info) : null, [awayTeamData]);
-  const homeMetrics = useMemo(() => homeTeamData ? computeMetrics(homeTeamData.schedule, homeTeamData.team_info) : null, [homeTeamData]);
+
+  // Compute conf positions
+  const awayConfPosition = useMemo(() => awayTeamData ? computeConfPosition(awayTeamData.team_info.team_name, awayConfStandings) : "—", [awayTeamData, awayConfStandings]);
+  const homeConfPosition = useMemo(() => homeTeamData ? computeConfPosition(homeTeamData.team_info.team_name, homeConfStandings) : "—", [homeTeamData, homeConfStandings]);
+
+  const awayMetrics = useMemo(() => awayTeamData ? computeMetrics(awayTeamData.schedule, awayTeamData.team_info, awayConfPosition) : null, [awayTeamData, awayConfPosition]);
+  const homeMetrics = useMemo(() => homeTeamData ? computeMetrics(homeTeamData.schedule, homeTeamData.team_info, homeConfPosition) : null, [homeTeamData, homeConfPosition]);
   const handlePDF = useCallback(async () => { if (!selectedGame) return; setIsPdfGenerating(true); try { await generatePDF(previewRef, selectedGame.label); } finally { setIsPdfGenerating(false); } }, [selectedGame]);
   const gameKey = (g: UpcomingGame) => `${g.away_team}@${g.home_team}-${g.date_sort}`;
 
@@ -730,7 +953,7 @@ export default function GamePreviewPage() {
                         {/* 1. Head-to-Head Comparison */}
                         <HeadToHeadComparison awayTeam={selectedGame.away_team} homeTeam={selectedGame.home_team} awayMetrics={awayMetrics} homeMetrics={homeMetrics} awayInfo={awayTeamData.team_info} homeInfo={homeTeamData.team_info} />
 
-                        {/* 2. Team Narratives + Schedule Strips + Location Records */}
+                        {/* 2. Team Narratives + Vertical Schedule + Location Records */}
                         <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                           {/* Away team narrative */}
                           <div style={{ padding: 10, backgroundColor: "#f9fafb", borderRadius: 8, border: "1px solid #e5e7eb" }}>
@@ -743,8 +966,8 @@ export default function GamePreviewPage() {
                             </p>
                             <LocationRecordBadges metrics={awayMetrics} highlightLocation="Away" />
                             <div style={{ marginTop: 8 }}>
-                              <span style={{ fontSize: 10, color: "#9ca3af", display: "block", marginBottom: 3 }}>Season Schedule</span>
-                              <MiniScheduleStrip schedule={awayTeamData.schedule} upcomingOpponent={selectedGame.home_team} upcomingDate={selectedGameDate} />
+                              <span style={{ fontSize: 10, color: "#9ca3af", display: "block", marginBottom: 3 }}>Season Schedule (by difficulty)</span>
+                              <VerticalScheduleStrip schedule={awayTeamData.schedule} upcomingOpponent={selectedGame.home_team} upcomingDate={selectedGameDate} />
                             </div>
                           </div>
                           {/* Home team narrative */}
@@ -758,13 +981,13 @@ export default function GamePreviewPage() {
                             </p>
                             <LocationRecordBadges metrics={homeMetrics} highlightLocation="Home" />
                             <div style={{ marginTop: 8 }}>
-                              <span style={{ fontSize: 10, color: "#9ca3af", display: "block", marginBottom: 3 }}>Season Schedule</span>
-                              <MiniScheduleStrip schedule={homeTeamData.schedule} upcomingOpponent={selectedGame.away_team} upcomingDate={selectedGameDate} />
+                              <span style={{ fontSize: 10, color: "#9ca3af", display: "block", marginBottom: 3 }}>Season Schedule (by difficulty)</span>
+                              <VerticalScheduleStrip schedule={homeTeamData.schedule} upcomingOpponent={selectedGame.away_team} upcomingDate={selectedGameDate} />
                             </div>
                           </div>
                         </div>
 
-                        {/* 3. Next Game Win/Loss Impact */}
+                        {/* 3. Next Game Win/Loss Impact - Conference + NCAA (full output) */}
                         <div style={{ marginTop: 20 }}>
                           <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, paddingBottom: 5, borderBottom: "1px solid #e5e7eb" }}>Next Game Win/Loss Impact</h3>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -784,9 +1007,11 @@ export default function GamePreviewPage() {
                         <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, paddingBottom: 5, borderBottom: "1px solid #e5e7eb" }}>Win Values Over Time</h3>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, backgroundColor: "white" }}>
+                            <ChartLogoHeader logoUrl={awayTeamData.team_info.logo_url} teamName={selectedGame.away_team} />
                             <TeamWinValues schedule={awayTeamData.schedule} logoUrl={awayTeamData.team_info.logo_url} primaryColor={awayTeamData.team_info.primary_color} />
                           </div>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, backgroundColor: "white" }}>
+                            <ChartLogoHeader logoUrl={homeTeamData.team_info.logo_url} teamName={selectedGame.home_team} />
                             <TeamWinValues schedule={homeTeamData.schedule} logoUrl={homeTeamData.team_info.logo_url} primaryColor={homeTeamData.team_info.primary_color} />
                           </div>
                         </div>
@@ -797,21 +1022,25 @@ export default function GamePreviewPage() {
                         <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, paddingBottom: 5, borderBottom: "1px solid #e5e7eb" }}>Schedule Difficulty</h3>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, backgroundColor: "white" }}>
+                            <ChartLogoHeader logoUrl={awayTeamData.team_info.logo_url} teamName={selectedGame.away_team} />
                             <BasketballTeamScheduleDifficulty
                               schedule={awayTeamData.schedule}
                               allScheduleData={(awayTeamData.all_schedule_data as AllScheduleGame[]) || []}
                               teamConference={awayTeamData.team_info.conference}
                               teamColor={awayTeamData.team_info.primary_color || TEAL}
                               teamName={selectedGame.away_team}
+                              highlightOpponent={selectedGame.home_team}
                             />
                           </div>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12, backgroundColor: "white" }}>
+                            <ChartLogoHeader logoUrl={homeTeamData.team_info.logo_url} teamName={selectedGame.home_team} />
                             <BasketballTeamScheduleDifficulty
                               schedule={homeTeamData.schedule}
                               allScheduleData={(homeTeamData.all_schedule_data as AllScheduleGame[]) || []}
                               teamConference={homeTeamData.team_info.conference}
                               teamColor={homeTeamData.team_info.primary_color || TEAL}
                               teamName={selectedGame.home_team}
+                              highlightOpponent={selectedGame.away_team}
                             />
                           </div>
                         </div>
@@ -821,8 +1050,14 @@ export default function GamePreviewPage() {
                       <div style={{ marginTop: 24 }}>
                         <h3 style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10, paddingBottom: 5, borderBottom: "1px solid #e5e7eb" }}>Season Wins Breakdown</h3>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                          <BasketballTeamWinsBreakdown schedule={awayTeamData.schedule} teamName={selectedGame.away_team} conference={awayTeamData.team_info.conference} primaryColor={awayTeamData.team_info.primary_color || "#18627b"} secondaryColor={awayTeamData.team_info.secondary_color} logoUrl={awayTeamData.team_info.logo_url} />
-                          <BasketballTeamWinsBreakdown schedule={homeTeamData.schedule} teamName={selectedGame.home_team} conference={homeTeamData.team_info.conference} primaryColor={homeTeamData.team_info.primary_color || "#18627b"} secondaryColor={homeTeamData.team_info.secondary_color} logoUrl={homeTeamData.team_info.logo_url} />
+                          <div>
+                            <ChartLogoHeader logoUrl={awayTeamData.team_info.logo_url} teamName={selectedGame.away_team} />
+                            <BasketballTeamWinsBreakdown schedule={awayTeamData.schedule} teamName={selectedGame.away_team} conference={awayTeamData.team_info.conference} primaryColor={awayTeamData.team_info.primary_color || "#18627b"} secondaryColor={awayTeamData.team_info.secondary_color} logoUrl={awayTeamData.team_info.logo_url} />
+                          </div>
+                          <div>
+                            <ChartLogoHeader logoUrl={homeTeamData.team_info.logo_url} teamName={selectedGame.home_team} />
+                            <BasketballTeamWinsBreakdown schedule={homeTeamData.schedule} teamName={selectedGame.home_team} conference={homeTeamData.team_info.conference} primaryColor={homeTeamData.team_info.primary_color || "#18627b"} secondaryColor={homeTeamData.team_info.secondary_color} logoUrl={homeTeamData.team_info.logo_url} />
+                          </div>
                         </div>
                       </div>
                     </>
