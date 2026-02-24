@@ -258,6 +258,9 @@ export async function GET(
           case "ncaa-projections":
             backendPath = `/basketball/ncaa-projections`;
             break;
+          case "upcoming_games":
+            backendPath = `/basketball/upcoming_games`;
+            break;
           default:
             return NextResponse.json(
               { error: "Unknown basketball endpoint" },

@@ -58,6 +58,7 @@ async function captureScreenshot(
   element: HTMLElement,
   filename: string,
   chartTitle?: string,
+  teamLogoUrl?: string,
 ) {
   if (typeof window === "undefined") return;
   let html2canvas = (window as unknown as Record<string, unknown>)
@@ -95,12 +96,23 @@ async function captureScreenshot(
   titleSpan.textContent = chartTitle || "Next Game Impact";
   titleSpan.style.cssText =
     "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
+  // Right side: team logo above date
+  const rightCol = document.createElement("div");
+  rightCol.style.cssText =
+    "display:flex;flex-direction:column;align-items:center;gap:2px;";
+  if (teamLogoUrl) {
+    const teamLogo = document.createElement("img");
+    teamLogo.src = teamLogoUrl;
+    teamLogo.style.cssText = "height:28px;width:28px;object-fit:contain;";
+    rightCol.appendChild(teamLogo);
+  }
   const date = document.createElement("div");
   date.textContent = new Date().toLocaleDateString();
   date.style.cssText = "font-size:12px;color:#6b7280;";
+  rightCol.appendChild(date);
   header.appendChild(logo);
   header.appendChild(titleSpan);
-  header.appendChild(date);
+  header.appendChild(rightCol);
   wrapper.appendChild(header);
   clone.style.cssText = "overflow:visible!important;width:100%!important;";
   wrapper.appendChild(clone);
@@ -273,6 +285,7 @@ export default function NextGameImpact({
                     contentRef.current,
                     `next_game_impact_${(team?.team_name ?? "team").replace(/\s+/g, "_").toLowerCase()}.png`,
                     `Next Game Impact - ${team?.team_name ?? ""}`,
+                    team?.logo_url,
                   );
                 } catch (e) {
                   console.error("Screenshot failed:", e);

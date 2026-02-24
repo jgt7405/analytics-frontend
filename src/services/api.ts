@@ -268,6 +268,7 @@ class ApiClient {
       "/team/",
       "/unified_conference_data",
       "/basketball_teams",
+      "/basketball/upcoming_games",
       "/football_teams",
       "/football_conf_data",
       "/football/standings/",
