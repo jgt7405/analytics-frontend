@@ -84,7 +84,7 @@ export default function BasketballTeamScheduleDifficulty({
   teamConference,
   logoUrl: _logoUrl,
   teamColor = "#0097b2",
-  teamName,
+  teamName: _teamName,
 }: BasketballTeamScheduleDifficultyProps) {
   const [comparisonFilter, setComparisonFilter] =
     useState<ComparisonFilter>("power_6");
@@ -142,18 +142,12 @@ export default function BasketballTeamScheduleDifficulty({
   }, [teamGames]);
 
   // Get comparison dataset for low probability games only
+  // This builds the percentile distribution from ALL teams in the selected category
+  // (e.g., all Power 5 teams' games), not just the selected team's games
   const comparisonDataset = useMemo(() => {
     if (!allScheduleData) return [];
 
-    // Filter to only THIS team's games if teamName is provided
-    let teamScheduleData = allScheduleData;
-    if (teamName) {
-      teamScheduleData = allScheduleData.filter(
-        (game: AllScheduleGame) => game.team === teamName,
-      );
-    }
-
-    const filtered = teamScheduleData.filter((game: AllScheduleGame) => {
+    const filtered = allScheduleData.filter((game: AllScheduleGame) => {
       // Only include games <= 95%
       if ((game.kenpom_win_prob || 0) > THRESHOLD) return false;
 
@@ -207,7 +201,7 @@ export default function BasketballTeamScheduleDifficulty({
     });
 
     return filtered;
-  }, [allScheduleData, comparisonFilter, teamConference, gameFilter, teamName]);
+  }, [allScheduleData, comparisonFilter, teamConference, gameFilter]);
 
   // Get all games (both <95% and >95%) for comparison dataset
 
@@ -238,6 +232,8 @@ export default function BasketballTeamScheduleDifficulty({
 
   // Position games in top section (low probability)
   const teamGamePositions = useMemo((): GameWithPosition[] => {
+    if (percentiles.length === 0) return [];
+
     return lowProbGames.map((game, index) => {
       const kenpomProb = game.kenpom_win_prob!;
       let percentilePosition = 100;

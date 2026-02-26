@@ -214,22 +214,70 @@ function computeMetrics(
   };
 }
 
-function getGameDifficultyRank(
+function buildGameDifficultyContext(
   schedule: TeamGameData[],
   opponentName: string,
   gameDate: string,
-  locationFilter?: string,
-): number | null {
-  let games = schedule;
-  if (locationFilter)
-    games = games.filter((g) => g.location === locationFilter);
-  const withProb = games
+  locationFilter: string,
+  teamName: string,
+): string {
+  const locGames = schedule.filter((g) => g.location === locationFilter);
+  const withProb = locGames
     .filter((g) => g.team_win_prob !== undefined && g.team_win_prob !== null)
     .sort((a, b) => (a.team_win_prob ?? 1) - (b.team_win_prob ?? 1));
+
   const idx = withProb.findIndex(
     (g) => g.opponent === opponentName && g.date === gameDate,
   );
-  return idx >= 0 ? idx + 1 : null;
+  if (idx < 0 || withProb.length === 0) return "";
+
+  const rank = idx + 1;
+  const total = withProb.length;
+  const locLabel = locationFilter.toLowerCase();
+
+  // Games harder than this one (lower index = harder)
+  const harderGames = withProb.slice(0, idx);
+  const harderWins = harderGames.filter((g) => g.status === "W").length;
+  const harderLosses = harderGames.filter((g) => g.status === "L").length;
+  const harderUpcoming = harderGames.filter(
+    (g) => g.status !== "W" && g.status !== "L",
+  ).length;
+
+  const parts: string[] = [];
+  parts.push(
+    `This is the ${ordinal(rank)} most difficult ${locLabel} game of ${total} for ${teamName}.`,
+  );
+
+  if (harderGames.length > 0) {
+    const resultParts: string[] = [];
+    if (harderWins > 0 && harderLosses > 0) {
+      resultParts.push(
+        `they are ${harderWins}-${harderLosses} in more difficult ${locLabel} games`,
+      );
+    } else if (harderLosses > 0 && harderWins === 0) {
+      resultParts.push(
+        `they have lost all ${harderLosses} more difficult ${locLabel} game${harderLosses !== 1 ? "s" : ""}`,
+      );
+    } else if (harderWins > 0 && harderLosses === 0) {
+      resultParts.push(
+        `they have won all ${harderWins} more difficult ${locLabel} game${harderWins !== 1 ? "s" : ""}`,
+      );
+    }
+    if (harderUpcoming > 0) {
+      resultParts.push(
+        `${harderUpcoming} tougher ${locLabel} game${harderUpcoming !== 1 ? "s" : ""} remaining`,
+      );
+    }
+    if (resultParts.length > 0) {
+      parts.push(
+        resultParts.join(" with ").charAt(0).toUpperCase() +
+          resultParts.join(" with ").slice(1) +
+          ".",
+      );
+    }
+  }
+
+  return parts.join(" ");
 }
 
 function ordinal(n: number): string {
@@ -365,17 +413,15 @@ function buildTeamNarrative(
       tourneyDesc = `a long shot for the tournament at ${bidPct.toFixed(0)}%`;
   }
 
-  // Game difficulty ranking
+  // Game difficulty context
   const locFilter = isHome ? "Home" : "Away";
-  const diffRank = getGameDifficultyRank(
+  const diffContext = buildGameDifficultyContext(
     schedule,
     opponentName,
     gameDate,
     locFilter,
+    teamName,
   );
-  const totalLocGames = schedule.filter(
-    (g) => g.location === locFilter && g.team_win_prob !== undefined,
-  ).length;
 
   const parts: string[] = [];
   parts.push(
@@ -388,13 +434,397 @@ function buildTeamNarrative(
   if (tourneyDesc) parts.push(`They are currently ${tourneyDesc}.`);
   if (teamInfo.average_seed)
     parts.push(`Projected average seed: ${teamInfo.average_seed.toFixed(1)}.`);
-  if (diffRank && totalLocGames) {
-    parts.push(
-      `This is their ${ordinal(diffRank)} most difficult ${locFilter.toLowerCase()} game of ${totalLocGames}.`,
-    );
-  }
+  if (diffContext) parts.push(diffContext);
   return parts.join(" ");
 }
+
+// ─── Dynamic Section Narratives ──────────────────────────────────────────────
+
+function buildHeadToHeadNarrative(
+  awayTeam: string,
+  homeTeam: string,
+  awayMetrics: ComputedMetrics,
+  homeMetrics: ComputedMetrics,
+  awayInfo: TeamInfo,
+  homeInfo: TeamInfo,
+  winProb: number | null,
+): string {
+  const parts: string[] = [];
+
+  // Win probability lead
+  if (winProb !== null) {
+    const homeWinPct = winProb > 1 ? winProb : winProb * 100;
+    const awayWinPct = 100 - homeWinPct;
+    const favorite = homeWinPct > awayWinPct ? homeTeam : awayTeam;
+    const favPct = Math.round(Math.max(homeWinPct, awayWinPct));
+    if (favPct >= 75) {
+      parts.push(
+        `${favorite} is a heavy favorite at ${favPct}% win probability.`,
+      );
+    } else if (favPct >= 60) {
+      parts.push(`${favorite} is favored at ${favPct}% win probability.`);
+    } else {
+      parts.push(
+        `This projects as a toss-up — ${favorite} is a slim favorite at ${favPct}%.`,
+      );
+    }
+  }
+
+  // Rating comparison
+  if (awayMetrics.kenpomRank && homeMetrics.kenpomRank) {
+    const gap = Math.abs(awayMetrics.kenpomRank - homeMetrics.kenpomRank);
+    if (gap >= 50) {
+      const higher =
+        awayMetrics.kenpomRank < homeMetrics.kenpomRank ? awayTeam : homeTeam;
+      parts.push(
+        `${higher} holds a significant ratings edge (#${Math.min(awayMetrics.kenpomRank, homeMetrics.kenpomRank)} vs #${Math.max(awayMetrics.kenpomRank, homeMetrics.kenpomRank)} Composite).`,
+      );
+    } else if (gap >= 15) {
+      const higher =
+        awayMetrics.kenpomRank < homeMetrics.kenpomRank ? awayTeam : homeTeam;
+      parts.push(
+        `${higher} is the higher-rated team (#${Math.min(awayMetrics.kenpomRank, homeMetrics.kenpomRank)} vs #${Math.max(awayMetrics.kenpomRank, homeMetrics.kenpomRank)} Composite).`,
+      );
+    } else {
+      parts.push(
+        `Closely rated teams — ${awayTeam} #${awayMetrics.kenpomRank} vs ${homeTeam} #${homeMetrics.kenpomRank} Composite.`,
+      );
+    }
+  }
+
+  // Streak comparison
+  const awayStreakW = awayMetrics.currentStreak.startsWith("W")
+    ? parseInt(awayMetrics.currentStreak.slice(1))
+    : 0;
+  const homeStreakW = homeMetrics.currentStreak.startsWith("W")
+    ? parseInt(homeMetrics.currentStreak.slice(1))
+    : 0;
+  const awayStreakL = awayMetrics.currentStreak.startsWith("L")
+    ? parseInt(awayMetrics.currentStreak.slice(1))
+    : 0;
+  const homeStreakL = homeMetrics.currentStreak.startsWith("L")
+    ? parseInt(homeMetrics.currentStreak.slice(1))
+    : 0;
+
+  if (awayStreakW >= 3 && homeStreakW >= 3) {
+    parts.push(
+      `Both teams are hot — ${awayTeam} has won ${awayStreakW} straight, ${homeTeam} has won ${homeStreakW} in a row.`,
+    );
+  } else if (awayStreakW >= 3 && homeStreakL >= 3) {
+    parts.push(
+      `Momentum favors ${awayTeam} (${awayStreakW}-game win streak) against a ${homeTeam} squad that has dropped ${homeStreakL} straight.`,
+    );
+  } else if (homeStreakW >= 3 && awayStreakL >= 3) {
+    parts.push(
+      `${homeTeam} carries a ${homeStreakW}-game win streak while ${awayTeam} looks to snap a ${awayStreakL}-game skid.`,
+    );
+  }
+
+  // Conference position
+  if (
+    awayMetrics.confPosition !== "—" &&
+    homeMetrics.confPosition !== "—" &&
+    awayInfo.conference === homeInfo.conference
+  ) {
+    parts.push(
+      `In conference play, ${awayTeam} sits ${awayMetrics.confPosition} while ${homeTeam} is ${homeMetrics.confPosition}.`,
+    );
+  }
+
+  return (
+    parts.join(" ") ||
+    `${awayTeam} (${awayMetrics.overallRecord}) visits ${homeTeam} (${homeMetrics.overallRecord}) in this matchup.`
+  );
+}
+
+function buildNextGameImpactNarrative(
+  awayTeam: string,
+  homeTeam: string,
+  awayInfo: TeamInfo,
+  homeInfo: TeamInfo,
+): string {
+  const parts: string[] = [];
+
+  // Tournament bid implications
+  const awayBid = awayInfo.tournament_bid_pct;
+  const homeBid = homeInfo.tournament_bid_pct;
+
+  if (awayBid !== undefined && homeBid !== undefined) {
+    if (awayBid >= 25 && awayBid <= 75 && homeBid >= 25 && homeBid <= 75) {
+      parts.push(
+        `Both teams are on the bubble — ${awayTeam} at ${awayBid.toFixed(0)}% and ${homeTeam} at ${homeBid.toFixed(0)}% tournament probability. This game could be pivotal for NCAA Tournament hopes.`,
+      );
+    } else if (awayBid >= 25 && awayBid <= 75) {
+      parts.push(
+        `${awayTeam} is on the bubble at ${awayBid.toFixed(0)}% tournament probability, while ${homeTeam} sits at ${homeBid.toFixed(0)}%. A big game for ${awayTeam}'s tournament case.`,
+      );
+    } else if (homeBid >= 25 && homeBid <= 75) {
+      parts.push(
+        `${homeTeam} is on the bubble at ${homeBid.toFixed(0)}% tournament probability, while ${awayTeam} sits at ${awayBid.toFixed(0)}%. The outcome carries major implications for ${homeTeam}.`,
+      );
+    } else if (awayBid >= 95 && homeBid >= 95) {
+      parts.push(
+        `${awayTeam} (${awayBid.toFixed(0)}%) and ${homeTeam} (${homeBid.toFixed(0)}%) are both tournament locks, but seeding implications are still at stake.`,
+      );
+    } else {
+      parts.push(
+        `${awayTeam} has a ${awayBid.toFixed(0)}% tournament bid probability while ${homeTeam} is at ${homeBid.toFixed(0)}%.`,
+      );
+    }
+  }
+
+  // Average seed implications
+  if (awayInfo.average_seed && homeInfo.average_seed) {
+    parts.push(
+      `Projected seeds: ${awayTeam} at ${awayInfo.average_seed.toFixed(1)}, ${homeTeam} at ${homeInfo.average_seed.toFixed(1)}.`,
+    );
+  }
+
+  return (
+    parts.join(" ") ||
+    `How a win or loss shifts conference tournament seeding and NCAA Tournament projections for ${awayTeam} and ${homeTeam}.`
+  );
+}
+
+function buildWinValuesNarrative(
+  awayTeam: string,
+  homeTeam: string,
+  awaySchedule: TeamGameData[],
+  homeSchedule: TeamGameData[],
+): string {
+  const getLatestTwv = (schedule: TeamGameData[]) => {
+    const completed = schedule.filter(
+      (g) => g.status === "W" || g.status === "L",
+    );
+    if (completed.length === 0) return null;
+    return completed[completed.length - 1].twv ?? null;
+  };
+  const getLatestCwv = (schedule: TeamGameData[]) => {
+    const completed = schedule.filter(
+      (g) =>
+        (g.status === "W" || g.status === "L") &&
+        g.cwv !== undefined &&
+        g.cwv !== null,
+    );
+    if (completed.length === 0) return null;
+    return completed[completed.length - 1].cwv ?? null;
+  };
+
+  const awayTwv = getLatestTwv(awaySchedule);
+  const homeTwv = getLatestTwv(homeSchedule);
+  const awayCwv = getLatestCwv(awaySchedule);
+  const homeCwv = getLatestCwv(homeSchedule);
+
+  const parts: string[] = [];
+
+  // TWV comparison
+  if (awayTwv !== null && homeTwv !== null) {
+    const twvDesc = (team: string, twv: number) => {
+      if (twv >= 2)
+        return `${team} has significantly outperformed expectations (TWV: ${twv > 0 ? "+" : ""}${twv.toFixed(1)})`;
+      if (twv >= 0.5)
+        return `${team} is modestly exceeding expectations (TWV: +${twv.toFixed(1)})`;
+      if (twv > -0.5)
+        return `${team} is performing roughly as expected (TWV: ${twv >= 0 ? "+" : ""}${twv.toFixed(1)})`;
+      if (twv > -2)
+        return `${team} is slightly underperforming (TWV: ${twv.toFixed(1)})`;
+      return `${team} has significantly underperformed expectations (TWV: ${twv.toFixed(1)})`;
+    };
+    parts.push(
+      `${twvDesc(awayTeam, awayTwv)}, while ${twvDesc(homeTeam, homeTwv).charAt(0).toLowerCase() + twvDesc(homeTeam, homeTwv).slice(1)}.`,
+    );
+  }
+
+  // CWV highlight
+  if (awayCwv !== null && homeCwv !== null) {
+    if (Math.abs(awayCwv - homeCwv) >= 2) {
+      const better = awayCwv > homeCwv ? awayTeam : homeTeam;
+      const worse = awayCwv > homeCwv ? homeTeam : awayTeam;
+      const betterCwv = Math.max(awayCwv, homeCwv);
+      const worseCwv = Math.min(awayCwv, homeCwv);
+      parts.push(
+        `In conference play, ${better} (CWV: ${betterCwv > 0 ? "+" : ""}${betterCwv.toFixed(1)}) has been notably stronger than ${worse} (CWV: ${worseCwv > 0 ? "+" : ""}${worseCwv.toFixed(1)}).`,
+      );
+    } else {
+      parts.push(
+        `In conference play, ${awayTeam} (CWV: ${awayCwv >= 0 ? "+" : ""}${awayCwv.toFixed(1)}) and ${homeTeam} (CWV: ${homeCwv >= 0 ? "+" : ""}${homeCwv.toFixed(1)}) are tracking similarly.`,
+      );
+    }
+  }
+
+  return (
+    parts.join(" ") ||
+    `Team Win Value (TWV) tracks how ${awayTeam}'s and ${homeTeam}'s actual wins compare to their expected win probability across the season.`
+  );
+}
+
+function buildScheduleDifficultyNarrative(
+  awayTeam: string,
+  homeTeam: string,
+  awaySchedule: TeamGameData[],
+  homeSchedule: TeamGameData[],
+): string {
+  const avgDifficulty = (schedule: TeamGameData[]) => {
+    const withProb = schedule.filter(
+      (g) => g.kenpom_win_prob !== undefined && g.kenpom_win_prob !== null,
+    );
+    if (withProb.length === 0) return null;
+    return (
+      withProb.reduce((sum, g) => sum + (g.kenpom_win_prob ?? 0), 0) /
+      withProb.length
+    );
+  };
+
+  const hardestGame = (schedule: TeamGameData[]) => {
+    const withProb = schedule.filter(
+      (g) => g.kenpom_win_prob !== undefined && g.kenpom_win_prob !== null,
+    );
+    if (withProb.length === 0) return null;
+    return withProb.reduce((min, g) =>
+      (g.kenpom_win_prob ?? 1) < (min.kenpom_win_prob ?? 1) ? g : min,
+    );
+  };
+
+  const countTopGames = (schedule: TeamGameData[], threshold: number) => {
+    return schedule.filter(
+      (g) =>
+        g.kenpom_rank && g.kenpom_rank !== 999 && g.kenpom_rank <= threshold,
+    ).length;
+  };
+
+  const parts: string[] = [];
+
+  const awayAvg = avgDifficulty(awaySchedule);
+  const homeAvg = avgDifficulty(homeSchedule);
+
+  if (awayAvg !== null && homeAvg !== null) {
+    const harder = awayAvg < homeAvg ? awayTeam : homeTeam;
+    const harderAvg = Math.min(awayAvg, homeAvg);
+    const easierAvg = Math.max(awayAvg, homeAvg);
+    if (Math.abs(awayAvg - homeAvg) >= 0.08) {
+      parts.push(
+        `${harder} has faced the tougher schedule (avg win prob ${(harderAvg * 100).toFixed(0)}% vs ${(easierAvg * 100).toFixed(0)}%).`,
+      );
+    } else {
+      parts.push(
+        `Both teams have faced similar schedule difficulty (avg win prob ~${(((awayAvg + homeAvg) / 2) * 100).toFixed(0)}%).`,
+      );
+    }
+  }
+
+  // Top-25 / Top-50 games
+  const awayTop25 = countTopGames(awaySchedule, 25);
+  const homeTop25 = countTopGames(homeSchedule, 25);
+  if (awayTop25 > 0 || homeTop25 > 0) {
+    parts.push(
+      `${awayTeam} has played ${awayTop25} top-25 opponent${awayTop25 !== 1 ? "s" : ""} vs ${homeTop25} for ${homeTeam}.`,
+    );
+  }
+
+  // Hardest game
+  const awayHardest = hardestGame(awaySchedule);
+  const homeHardest = hardestGame(homeSchedule);
+  if (awayHardest && homeHardest) {
+    parts.push(
+      `Toughest tests: ${awayTeam} faced ${awayHardest.opponent}${awayHardest.kenpom_rank && awayHardest.kenpom_rank !== 999 ? ` (#${awayHardest.kenpom_rank})` : ""}, ${homeTeam} faced ${homeHardest.opponent}${homeHardest.kenpom_rank && homeHardest.kenpom_rank !== 999 ? ` (#${homeHardest.kenpom_rank})` : ""}.`,
+    );
+  }
+
+  return (
+    parts.join(" ") ||
+    `Comparing ${awayTeam}'s and ${homeTeam}'s schedule difficulty across their seasons.`
+  );
+}
+
+function buildWinsBreakdownNarrative(
+  awayTeam: string,
+  homeTeam: string,
+  awaySchedule: TeamGameData[],
+  homeSchedule: TeamGameData[],
+): string {
+  const getWinsByCategory = (schedule: TeamGameData[]) => {
+    let quality = 0; // top-50
+    let mid = 0; // 51-150
+    let low = 0; // 151+
+    let confWins = 0;
+    let confLosses = 0;
+    schedule.forEach((g) => {
+      if (g.status === "W") {
+        if (g.kenpom_rank && g.kenpom_rank !== 999 && g.kenpom_rank <= 50)
+          quality++;
+        else if (g.kenpom_rank && g.kenpom_rank !== 999 && g.kenpom_rank <= 150)
+          mid++;
+        else low++;
+      }
+      if (g.team_conf && (g.status === "W" || g.status === "L")) {
+        if (g.status === "W") confWins++;
+        else confLosses++;
+      }
+    });
+    const losses = schedule.filter((g) => g.status === "L").length;
+    const badLosses = schedule.filter(
+      (g) =>
+        g.status === "L" &&
+        g.kenpom_rank &&
+        g.kenpom_rank !== 999 &&
+        g.kenpom_rank > 150,
+    ).length;
+    return { quality, mid, low, losses, badLosses, confWins, confLosses };
+  };
+
+  const away = getWinsByCategory(awaySchedule);
+  const home = getWinsByCategory(homeSchedule);
+  const parts: string[] = [];
+
+  // Quality wins comparison
+  if (away.quality > 0 || home.quality > 0) {
+    if (away.quality > home.quality) {
+      parts.push(
+        `${awayTeam} has the resume edge with ${away.quality} top-50 win${away.quality !== 1 ? "s" : ""} vs ${home.quality} for ${homeTeam}.`,
+      );
+    } else if (home.quality > away.quality) {
+      parts.push(
+        `${homeTeam} holds more quality wins with ${home.quality} top-50 win${home.quality !== 1 ? "s" : ""} vs ${away.quality} for ${awayTeam}.`,
+      );
+    } else if (away.quality > 0) {
+      parts.push(
+        `Both teams have ${away.quality} top-50 win${away.quality !== 1 ? "s" : ""}.`,
+      );
+    }
+  }
+
+  // Bad losses
+  if (away.badLosses > 0 || home.badLosses > 0) {
+    if (away.badLosses > 0 && home.badLosses > 0) {
+      parts.push(
+        `Both teams have blemishes — ${awayTeam} with ${away.badLosses} loss${away.badLosses !== 1 ? "es" : ""} to sub-150 teams, ${homeTeam} with ${home.badLosses}.`,
+      );
+    } else if (away.badLosses > 0) {
+      parts.push(
+        `${awayTeam} carries ${away.badLosses} loss${away.badLosses !== 1 ? "es" : ""} to sub-150 opponents.`,
+      );
+    } else {
+      parts.push(
+        `${homeTeam} carries ${home.badLosses} loss${home.badLosses !== 1 ? "es" : ""} to sub-150 opponents.`,
+      );
+    }
+  }
+
+  return (
+    parts.join(" ") ||
+    `A breakdown of how ${awayTeam}'s and ${homeTeam}'s wins and losses distribute across opponent quality tiers.`
+  );
+}
+
+// ─── Section Description Style ───────────────────────────────────────────────
+
+const sectionDescStyle: React.CSSProperties = {
+  fontSize: 11,
+  color: "#6b7280",
+  lineHeight: 1.5,
+  marginBottom: 10,
+  marginTop: 2,
+};
 
 // ─── 3-Column Schedule Strip (Away | Neutral | Home) ─────────────────────────
 // Smaller, more illustrative version with teal highlighting only for the specific next game
@@ -408,6 +838,24 @@ function ThreeColumnSchedule({
   upcomingOpponent: string;
   upcomingDate: string;
 }) {
+  // Find the next unplayed game chronologically, with fallback to the selected game's opponent/date
+  const nextGame = (() => {
+    // First try: find chronologically next unplayed game
+    const chronoNext = [...schedule]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .find((g) => g.status !== "W" && g.status !== "L");
+    if (chronoNext) return chronoNext;
+    // Fallback: match by the selected game's opponent and date
+    if (upcomingOpponent && upcomingDate) {
+      return (
+        schedule.find(
+          (g) => g.opponent === upcomingOpponent && g.date === upcomingDate,
+        ) || null
+      );
+    }
+    return null;
+  })();
+
   // Group by location and sort by kenpom rank (hardest at top)
   const grouped = {
     Away: [] as TeamGameData[],
@@ -445,20 +893,21 @@ function ThreeColumnSchedule({
   const BOX_H = 24;
   const LOGO_SIZE = 14;
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // HIGHLIGHTING LOGIC - Only the specific next game gets teal, other upcoming get gray
-  // ═══════════════════════════════════════════════════════════════════════════
-  const getBorderColor = (g: TeamGameData, isNextGame: boolean) => {
-    if (isNextGame) return TEAL;
+  // Check if a game is the next upcoming game
+  const isNextGame = (g: TeamGameData) => {
+    if (!nextGame) return false;
+    return g.opponent === nextGame.opponent && g.date === nextGame.date;
+  };
+
+  const getBorderColor = (g: TeamGameData) => {
+    if (isNextGame(g)) return TEAL;
     if (g.status === "W") return "#22c55e";
     if (g.status === "L") return "#ef4444";
-    // Upcoming games (not the next game) get gray outline
-    if (!g.status || (g.status !== "W" && g.status !== "L")) return "#d1d5db";
     return "#d1d5db";
   };
 
-  const getBgColor = (g: TeamGameData, isNextGame: boolean) => {
-    if (isNextGame) return `${TEAL}25`;
+  const getBgColor = (g: TeamGameData) => {
+    if (isNextGame(g)) return `${TEAL}25`;
     return "white";
   };
 
@@ -484,11 +933,7 @@ function ThreeColumnSchedule({
           >
             {grouped[loc].length > 0 ? (
               grouped[loc].map((g, idx) => {
-                // ═════════════════════════════════════════════════════════════
-                // KEY LOGIC: Check if this game matches the upcoming opponent and date
-                // ═════════════════════════════════════════════════════════════
-                const isNextGame =
-                  g.opponent === upcomingOpponent && g.date === upcomingDate;
+                const nextGameMatch = isNextGame(g);
 
                 return (
                   <div
@@ -497,24 +942,14 @@ function ThreeColumnSchedule({
                     style={{
                       width: BOX_W,
                       height: BOX_H,
-                      // ═════════════════════════════════════════════════════════════
-                      // HIGHLIGHTING APPLIED HERE
-                      // When isNextGame=true, border becomes TEAL (#0097b2)
-                      // ═════════════════════════════════════════════════════════════
-                      border: `2px solid ${getBorderColor(g, isNextGame)}`,
+                      border: `2px solid ${getBorderColor(g)}`,
                       borderRadius: 3,
-                      // ═════════════════════════════════════════════════════════════
-                      // Background also becomes TEAL with 25% opacity when isNextGame=true
-                      // ═════════════════════════════════════════════════════════════
-                      backgroundColor: getBgColor(g, isNextGame),
+                      backgroundColor: getBgColor(g),
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: "0 2px",
-                      // ═════════════════════════════════════════════════════════════
-                      // Subtle glow effect when isNextGame=true
-                      // ═════════════════════════════════════════════════════════════
-                      boxShadow: isNextGame ? `0 0 0 1px ${TEAL}40` : "none",
+                      boxShadow: nextGameMatch ? `0 0 0 1px ${TEAL}40` : "none",
                     }}
                   >
                     {g.opponent_logo ? (
@@ -533,7 +968,20 @@ function ThreeColumnSchedule({
                         }}
                       />
                     ) : (
-                      <div style={{ width: LOGO_SIZE, height: LOGO_SIZE }} />
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src="/images/team_logos/default.png"
+                        alt={g.opponent}
+                        style={{
+                          width: LOGO_SIZE,
+                          height: LOGO_SIZE,
+                          objectFit: "contain",
+                          flexShrink: 0,
+                        }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
                     )}
                     <span
                       style={{
@@ -546,7 +994,7 @@ function ThreeColumnSchedule({
                     >
                       {g.kenpom_rank && g.kenpom_rank !== 999
                         ? `#${g.kenpom_rank}`
-                        : ""}
+                        : "Non D1"}
                     </span>
                   </div>
                 );
@@ -757,7 +1205,7 @@ function NextGameImpactInline({
                     ? cur > 0
                       ? `${cur.toFixed(1)}%`
                       : ""
-                    : cur.toFixed(2)}
+                    : cur.toFixed(1)}
                 </td>
                 <td
                   className="text-center py-1 px-1 tabular-nums"
@@ -767,7 +1215,7 @@ function NextGameImpactInline({
                     ? win > 0
                       ? `${win.toFixed(1)}%`
                       : ""
-                    : win.toFixed(2)}
+                    : win.toFixed(1)}
                 </td>
                 <td
                   className="text-center py-1 px-1 tabular-nums"
@@ -777,7 +1225,7 @@ function NextGameImpactInline({
                     ? loss > 0
                       ? `${loss.toFixed(1)}%`
                       : ""
-                    : loss.toFixed(2)}
+                    : loss.toFixed(1)}
                 </td>
               </tr>
             );
@@ -1096,6 +1544,7 @@ function HeadToHeadComparison({
   homeMetrics,
   awayInfo,
   homeInfo,
+  winProb,
 }: {
   awayTeam: string;
   homeTeam: string;
@@ -1103,7 +1552,13 @@ function HeadToHeadComparison({
   homeMetrics: ComputedMetrics;
   awayInfo: TeamInfo;
   homeInfo: TeamInfo;
+  winProb: number | null;
 }) {
+  // winProb is the home team's win probability (0-1 scale or 0-100)
+  const homeWinPct =
+    winProb !== null ? (winProb > 1 ? winProb : winProb * 100) : null;
+  const awayWinPct = homeWinPct !== null ? 100 - homeWinPct : null;
+
   const metrics: {
     label: string;
     awayValue: string;
@@ -1129,6 +1584,11 @@ function HeadToHeadComparison({
       label: "Composite Rating",
       awayValue: awayMetrics.kenpomRank ? `#${awayMetrics.kenpomRank}` : "N/A",
       homeValue: homeMetrics.kenpomRank ? `#${homeMetrics.kenpomRank}` : "N/A",
+    },
+    {
+      label: "Win Probability",
+      awayValue: awayWinPct !== null ? `${Math.round(awayWinPct)}%` : "N/A",
+      homeValue: homeWinPct !== null ? `${Math.round(homeWinPct)}%` : "N/A",
     },
     {
       label: "Current Streak",
@@ -1229,7 +1689,7 @@ function HeadToHeadComparison({
           </span>
         </div>
       </div>
-      {/* Metrics Rows - colored backgrounds on values only, white labels */}
+      {/* Metrics Rows */}
       {metrics.map((m, idx) => (
         <div
           key={m.label}
@@ -1449,20 +1909,6 @@ export default function GamePreviewPage() {
         setAwayTeamData(awayResp as unknown as TeamDataResponse);
         setHomeTeamData(homeResp as unknown as TeamDataResponse);
 
-        // Debug: Log what we got
-        const awayData = awayResp as unknown as TeamDataResponse;
-        const homeData = homeResp as unknown as TeamDataResponse;
-        console.log(
-          "Away team all_schedule_data:",
-          awayData.all_schedule_data?.length,
-          "items",
-        );
-        console.log(
-          "Home team all_schedule_data:",
-          homeData.all_schedule_data?.length,
-          "items",
-        );
-
         // Fetch conference standings for position calculation
         const awayConf = (awayResp as unknown as TeamDataResponse).team_info
           .conference;
@@ -1570,32 +2016,7 @@ export default function GamePreviewPage() {
   const gameKey = (g: UpcomingGame) =>
     `${g.away_team}@${g.home_team}-${g.date_sort}`;
 
-  // ═════════════════════════════════════════════════════════════════════════════
-  // ★ THE KEY FIX: Change how selectedGameDate is calculated
-  // ═════════════════════════════════════════════════════════════════════════════
-  // OLD CODE (doesn't work - causes date format mismatch):
-  // const selectedGameDate = selectedGame?.date_sort
-  //   ? (() => {
-  //       try {
-  //         const d = new Date(selectedGame.date_sort);
-  //         return `${d.getMonth() + 1}/${d.getDate()}`;  // Returns "2/25"
-  //       } catch {
-  //         return "";
-  //       }
-  //     })()
-  //   : "";
-  //
-  // NEW CODE (works - uses date_sort directly):
-  // ═════════════════════════════════════════════════════════════════════════════
   const selectedGameDate = selectedGame?.date_sort || "";
-  // ═════════════════════════════════════════════════════════════════════════════
-  // WHY THIS WORKS:
-  // - selectedGame.date_sort is already in ISO format: "2025-02-25"
-  // - game.date in the schedule is also in ISO format: "2025-02-25"
-  // - Now the comparison in ThreeColumnSchedule works:
-  //   g.date === upcomingDate → "2025-02-25" === "2025-02-25" → TRUE ✅
-  // - When TRUE, getBorderColor and getBgColor apply teal highlighting
-  // ═════════════════════════════════════════════════════════════════════════════
 
   return (
     <PageLayoutWrapper title="Game Preview" isLoading={isLoading}>
@@ -1815,8 +2236,8 @@ export default function GamePreviewPage() {
                             borderBottom: "2px solid #e5e7eb",
                           }}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src="/images/JThom_Logo.png"
                               alt="Logo"
@@ -1841,6 +2262,17 @@ export default function GamePreviewPage() {
                         </div>
 
                         {/* 1. Head-to-Head Comparison */}
+                        <p style={sectionDescStyle}>
+                          {buildHeadToHeadNarrative(
+                            selectedGame.away_team,
+                            selectedGame.home_team,
+                            awayMetrics,
+                            homeMetrics,
+                            awayTeamData.team_info,
+                            homeTeamData.team_info,
+                            selectedGame.win_prob,
+                          )}
+                        </p>
                         <HeadToHeadComparison
                           awayTeam={selectedGame.away_team}
                           homeTeam={selectedGame.home_team}
@@ -1848,6 +2280,7 @@ export default function GamePreviewPage() {
                           homeMetrics={homeMetrics}
                           awayInfo={awayTeamData.team_info}
                           homeInfo={homeTeamData.team_info}
+                          winProb={selectedGame.win_prob}
                         />
 
                         {/* 2. Team Narratives + 3-Column Schedule */}
@@ -1913,10 +2346,6 @@ export default function GamePreviewPage() {
                               >
                                 Season Schedule (by difficulty)
                               </span>
-                              {/* ═══════════════════════════════════════════════════════════ */}
-                              {/* ThreeColumnSchedule - Highlights next game with TEAL */}
-                              {/* Now that selectedGameDate is correct format, highlighting works! */}
-                              {/* ═══════════════════════════════════════════════════════════ */}
                               <ThreeColumnSchedule
                                 schedule={awayTeamData.schedule}
                                 upcomingOpponent={selectedGame.home_team}
@@ -1986,10 +2415,6 @@ export default function GamePreviewPage() {
                               >
                                 Season Schedule (by difficulty)
                               </span>
-                              {/* ═══════════════════════════════════════════════════════════ */}
-                              {/* ThreeColumnSchedule - Highlights next game with TEAL */}
-                              {/* Now that selectedGameDate is correct format, highlighting works! */}
-                              {/* ═══════════════════════════════════════════════════════════ */}
                               <ThreeColumnSchedule
                                 schedule={homeTeamData.schedule}
                                 upcomingOpponent={selectedGame.away_team}
@@ -2006,13 +2431,21 @@ export default function GamePreviewPage() {
                               fontSize: 13,
                               fontWeight: 600,
                               color: "#374151",
-                              marginBottom: 10,
+                              marginBottom: 4,
                               paddingBottom: 5,
                               borderBottom: "1px solid #e5e7eb",
                             }}
                           >
                             Next Game Win/Loss Impact
                           </h3>
+                          <p style={sectionDescStyle}>
+                            {buildNextGameImpactNarrative(
+                              selectedGame.away_team,
+                              selectedGame.home_team,
+                              awayTeamData.team_info,
+                              homeTeamData.team_info,
+                            )}
+                          </p>
                           <div style={twoColGrid}>
                             <div
                               style={{
@@ -2054,13 +2487,21 @@ export default function GamePreviewPage() {
                             fontSize: 13,
                             fontWeight: 600,
                             color: "#374151",
-                            marginBottom: 10,
+                            marginBottom: 4,
                             paddingBottom: 5,
                             borderBottom: "1px solid #e5e7eb",
                           }}
                         >
                           Win Values Over Time
                         </h3>
+                        <p style={sectionDescStyle}>
+                          {buildWinValuesNarrative(
+                            selectedGame.away_team,
+                            selectedGame.home_team,
+                            awayTeamData.schedule,
+                            homeTeamData.schedule,
+                          )}
+                        </p>
                         <div style={twoColGrid}>
                           <div
                             style={{
@@ -2156,13 +2597,21 @@ export default function GamePreviewPage() {
                             fontSize: 13,
                             fontWeight: 600,
                             color: "#374151",
-                            marginBottom: 10,
+                            marginBottom: 4,
                             paddingBottom: 5,
                             borderBottom: "1px solid #e5e7eb",
                           }}
                         >
                           Schedule Difficulty
                         </h3>
+                        <p style={sectionDescStyle}>
+                          {buildScheduleDifficultyNarrative(
+                            selectedGame.away_team,
+                            selectedGame.home_team,
+                            awayTeamData.schedule,
+                            homeTeamData.schedule,
+                          )}
+                        </p>
                         <div style={twoColGrid}>
                           <div
                             style={{
@@ -2268,13 +2717,21 @@ export default function GamePreviewPage() {
                             fontSize: 13,
                             fontWeight: 600,
                             color: "#374151",
-                            marginBottom: 10,
+                            marginBottom: 4,
                             paddingBottom: 5,
                             borderBottom: "1px solid #e5e7eb",
                           }}
                         >
                           Season Wins Breakdown
                         </h3>
+                        <p style={sectionDescStyle}>
+                          {buildWinsBreakdownNarrative(
+                            selectedGame.away_team,
+                            selectedGame.home_team,
+                            awayTeamData.schedule,
+                            homeTeamData.schedule,
+                          )}
+                        </p>
                         <div style={twoColGrid}>
                           <div>
                             <div
