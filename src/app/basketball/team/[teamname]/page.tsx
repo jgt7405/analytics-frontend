@@ -428,6 +428,7 @@ export default function BasketballTeamPage({
                 <BasketballTeamScheduleChart
                   schedule={schedule}
                   navigateToTeam={navigateToTeam}
+                  teamName={team_info.team_name}
                 />
               </div>
 
@@ -792,6 +793,7 @@ export default function BasketballTeamPage({
                     <BasketballTeamScheduleChart
                       schedule={schedule}
                       navigateToTeam={navigateToTeam}
+                      teamName={team_info.team_name}
                     />
                   </div>
 
