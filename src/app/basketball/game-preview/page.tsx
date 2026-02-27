@@ -228,6 +228,12 @@ function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function joinWithAnd(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
 /** Join sentence fragments with ". " and capitalize each. */
 function joinSentences(parts: string[], separator = ". "): string {
   return parts.map((p) => cap(p.trim())).join(separator);
@@ -298,7 +304,7 @@ function buildTeamNarrative(
   _teamInfo: TeamInfo,
   isHome: boolean,
   opponentName: string,
-  gameDate: string,
+  _gameDate: string,
   schedule: TeamGameData[],
 ): string {
   const [overallW, overallL] = metrics.overallRecord.split("-").map(Number);
@@ -339,14 +345,14 @@ function buildTeamNarrative(
   const locW = locCompleted.filter((g) => g.status === "W").length;
   const locL = locCompleted.filter((g) => g.status === "L").length;
 
-  // Rank this game by difficulty within location games
+  // Rank this game by difficulty within location games using kenpom_win_prob
   const withProb = locGames
-    .filter((g) => g.team_win_prob !== undefined && g.team_win_prob !== null)
-    .sort((a, b) => (a.team_win_prob ?? 1) - (b.team_win_prob ?? 1));
+    .filter(
+      (g) => g.kenpom_win_prob !== undefined && g.kenpom_win_prob !== null,
+    )
+    .sort((a, b) => (a.kenpom_win_prob ?? 1) - (b.kenpom_win_prob ?? 1));
 
-  const gameIdx = withProb.findIndex(
-    (g) => g.opponent === opponentName && g.date === gameDate,
-  );
+  const gameIdx = withProb.findIndex((g) => g.opponent === opponentName);
 
   const parts: string[] = [];
   parts.push(
@@ -359,8 +365,9 @@ function buildTeamNarrative(
   if (gameIdx >= 0 && withProb.length > 0) {
     const rank = gameIdx + 1;
     const total = withProb.length;
+    const gameProb = Math.round((withProb[gameIdx].kenpom_win_prob ?? 0) * 100);
     parts.push(
-      `This is the ${ordinal(rank)} most difficult ${locLabel} game of ${total} for ${teamName}.`,
+      `This is the ${ordinal(rank)} most difficult ${locLabel} game of ${total} for ${teamName} (with ${gameProb}% win probability for the 30th rated team).`,
     );
 
     // Record in harder games
@@ -764,14 +771,8 @@ function buildScheduleDifficultyNarrative(
   homeTeam: string,
   awaySchedule: TeamGameData[],
   homeSchedule: TeamGameData[],
-  gameLocation: { away: string; home: string },
 ): string {
-  const teamParagraph = (
-    team: string,
-    schedule: TeamGameData[],
-    opp: string,
-    loc: string,
-  ) => {
+  const teamParagraph = (team: string, schedule: TeamGameData[]) => {
     const completed = schedule.filter(
       (g) => g.status === "W" || g.status === "L",
     );
@@ -782,126 +783,75 @@ function buildScheduleDifficultyNarrative(
 
     const actualWinPct = Math.round((wins.length / totalGames) * 100);
 
-    // Expected wins based on team_win_prob (the #30 rated team's expected results)
+    // Expected wins based on kenpom_win_prob (30th rated team) over ALL completed games
     const withProb = completed.filter(
-      (g) => g.team_win_prob !== undefined && g.team_win_prob !== null,
+      (g) => g.kenpom_win_prob !== undefined && g.kenpom_win_prob !== null,
     );
     const expectedWins = withProb.reduce(
-      (sum, g) => sum + (g.team_win_prob ?? 0),
+      (sum, g) => sum + (g.kenpom_win_prob ?? 0),
       0,
     );
     const expectedWinPct =
       withProb.length > 0
         ? Math.round((expectedWins / withProb.length) * 100)
         : null;
-    const latestTwv = completed[completed.length - 1].twv ?? null;
+    const twv = wins.length - expectedWins;
 
     const parts: string[] = [];
     parts.push(
       `At a ${wins.length}-${losses.length} record ${team} has won ${actualWinPct}% of their games.`,
     );
 
-    if (expectedWinPct !== null && latestTwv !== null) {
+    if (expectedWinPct !== null) {
       parts.push(
-        `The 30th rated team would have expected ${expectedWins.toFixed(1)} wins for a ${expectedWinPct}% win percent — putting their TWV at ${latestTwv >= 0 ? "+" : ""}${latestTwv.toFixed(1)}.`,
+        `The 30th rated team would have expected ${expectedWins.toFixed(1)} wins for a ${expectedWinPct}% win percent — putting their TWV at ${twv >= 0 ? "+" : ""}${twv.toFixed(1)}.`,
       );
     }
 
-    // Game difficulty ranking within same-location games (Home/Away/Neutral)
-    const allSameLoc = schedule.filter(
-      (g) =>
-        g.location === loc &&
-        g.team_win_prob !== undefined &&
-        g.team_win_prob !== null,
-    );
-    const thisGame = allSameLoc.find((g) => g.opponent === opp);
-    if (thisGame && allSameLoc.length > 1) {
-      // Sort by difficulty: lowest win_prob = hardest
-      const sorted = [...allSameLoc].sort(
-        (a, b) => (a.team_win_prob ?? 0.5) - (b.team_win_prob ?? 0.5),
-      );
-      const diffRank = sorted.findIndex((g) => g.opponent === opp) + 1;
-      const locLabel = loc.toLowerCase();
-
-      // Record in harder games (games ranked higher difficulty, i.e. lower index)
-      const harderGames = sorted.slice(0, diffRank - 1);
-      const harderCompleted = harderGames.filter(
-        (g) => g.status === "W" || g.status === "L",
-      );
-      const harderWins = harderCompleted.filter((g) => g.status === "W").length;
-      const harderLosses = harderCompleted.filter(
-        (g) => g.status === "L",
-      ).length;
-
-      // Record in easier games
-      const easierGames = sorted.slice(diffRank);
-      const easierCompleted = easierGames.filter(
-        (g) => g.status === "W" || g.status === "L",
-      );
-      const easierWins = easierCompleted.filter((g) => g.status === "W").length;
-      const easierLosses = easierCompleted.filter(
-        (g) => g.status === "L",
-      ).length;
-
-      parts.push(
-        `This is their ${ordinal(diffRank)} most difficult ${locLabel} game out of ${allSameLoc.length}.`,
-      );
-      if (harderCompleted.length > 0) {
-        parts.push(
-          `They are ${harderWins}-${harderLosses} in the more difficult ${locLabel} games they have played.`,
-        );
-      }
-      if (easierCompleted.length > 0) {
-        parts.push(
-          `In the easier ${locLabel} games played they are ${easierWins}-${easierLosses}.`,
-        );
-      }
-    }
-
-    // Top wins (lowest kenpom_win_prob = hardest wins)
+    // Top wins — use kenpom_win_prob (30th rated team win probability)
     const qualityWins = wins
       .filter(
         (g) =>
           g.kenpom_rank &&
           g.kenpom_rank !== 999 &&
-          g.team_win_prob !== undefined,
+          g.kenpom_win_prob !== undefined,
       )
-      .sort((a, b) => (a.team_win_prob ?? 1) - (b.team_win_prob ?? 1));
+      .sort((a, b) => (a.kenpom_win_prob ?? 1) - (b.kenpom_win_prob ?? 1));
     if (qualityWins.length > 0) {
-      const topWins = qualityWins.slice(0, 3).map((g) => {
-        const pct =
-          g.team_win_prob !== undefined
-            ? Math.round((g.team_win_prob ?? 0) * 100)
+      const topWins = qualityWins.slice(0, 3).map((g, i) => {
+        const prob =
+          g.kenpom_win_prob !== undefined
+            ? Math.round((g.kenpom_win_prob ?? 0) * 100)
             : null;
-        return `${g.opponent}${pct !== null ? ` (${pct} percentile)` : ""}`;
+        return `${g.opponent}${prob !== null ? ` (${prob}%${i === 0 ? " win probability for 30th rated team" : " probability"})` : ""}`;
       });
-      parts.push(`Top wins include ${topWins.join(", ")}.`);
+      parts.push(`Top wins include ${joinWithAnd(topWins)}.`);
     }
 
-    // Worst losses (highest kenpom_win_prob = easiest losses = worst)
+    // Worst losses — use kenpom_win_prob
     const badLosses = losses
       .filter(
         (g) =>
           g.kenpom_rank &&
           g.kenpom_rank !== 999 &&
-          g.team_win_prob !== undefined,
+          g.kenpom_win_prob !== undefined,
       )
-      .sort((a, b) => (b.team_win_prob ?? 0) - (a.team_win_prob ?? 0));
+      .sort((a, b) => (b.kenpom_win_prob ?? 0) - (a.kenpom_win_prob ?? 0));
     if (badLosses.length > 0) {
       const worstLosses = badLosses.slice(0, 3).map((g) => {
-        const pct =
-          g.team_win_prob !== undefined
-            ? Math.round((g.team_win_prob ?? 0) * 100)
+        const prob =
+          g.kenpom_win_prob !== undefined
+            ? Math.round((g.kenpom_win_prob ?? 0) * 100)
             : null;
-        return `${g.opponent}${pct !== null ? ` (${pct} percentile)` : ""}`;
+        return `${g.opponent}${prob !== null ? ` (${prob}% probability)` : ""}`;
       });
-      parts.push(`Worst losses include ${worstLosses.join(", ")}.`);
+      parts.push(`Worst losses include ${joinWithAnd(worstLosses)}.`);
     }
 
     return parts.join(" ");
   };
 
-  return `${teamParagraph(awayTeam, awaySchedule, homeTeam, gameLocation.away)}\n\n${teamParagraph(homeTeam, homeSchedule, awayTeam, gameLocation.home)}`;
+  return `${teamParagraph(awayTeam, awaySchedule)}\n\n${teamParagraph(homeTeam, homeSchedule)}`;
 }
 
 function buildWinsBreakdownNarrative(
@@ -922,32 +872,32 @@ function buildWinsBreakdownNarrative(
       (g) => g.status === "W" || g.status === "L",
     );
     const currentWins = completed.filter((g) => g.status === "W").length;
+    const currentLosses = completed.filter((g) => g.status === "L").length;
     // Include ALL remaining games (regular season + conference tournament)
     const remaining = schedule.filter(
       (g) => g.status !== "W" && g.status !== "L",
     );
     const parts: string[] = [];
 
-    // Expected total wins: current wins + sum of ALL remaining win probs
+    // Expected total wins using kenpom_win_prob (matches Proj Final Record in chart)
     const remainingWithProb = remaining.filter(
-      (g) => g.team_win_prob !== undefined && g.team_win_prob !== null,
+      (g) => g.kenpom_win_prob !== undefined && g.kenpom_win_prob !== null,
     );
     const remainingExpectedWins = remainingWithProb.reduce(
-      (sum, g) => sum + (g.team_win_prob ?? 0),
+      (sum, g) => sum + (g.kenpom_win_prob ?? 0),
       0,
     );
     const projectedWinsExact = currentWins + remainingExpectedWins;
     const projLow = Math.floor(projectedWinsExact);
     const projHigh = Math.ceil(projectedWinsExact);
-    const projLosses =
-      completed.filter((g) => g.status === "L").length +
-      (remainingWithProb.length - remainingExpectedWins);
-    const projLossLow = Math.floor(projLosses);
-    const projLossHigh = Math.ceil(projLosses);
+    const projLossesExact =
+      currentLosses + (remainingWithProb.length - remainingExpectedWins);
+    const projLossLow = Math.floor(projLossesExact);
+    const projLossHigh = Math.ceil(projLossesExact);
 
     const avgSeed = info?.average_seed;
 
-    // Express projected wins as "between X and Y" or exact if whole number
+    // Express projected wins as "between X and Y" or "close to X"
     if (projLow === projHigh) {
       parts.push(
         `${team} is projected to finish with around ${projLow} wins (${projLow}-${projLossLow})${avgSeed ? ` which would put them at around a ${avgSeed.toFixed(0)} seed` : ""}.`,
@@ -958,13 +908,13 @@ function buildWinsBreakdownNarrative(
       );
     }
 
-    // Rank this specific game among remaining by easiness (highest win prob = easiest)
+    // Rank this specific game among remaining by easiness using kenpom_win_prob
     if (remaining.length > 0 && opponent) {
       const remainingSorted = [...remaining]
         .filter(
-          (g) => g.team_win_prob !== undefined && g.team_win_prob !== null,
+          (g) => g.kenpom_win_prob !== undefined && g.kenpom_win_prob !== null,
         )
-        .sort((a, b) => (b.team_win_prob ?? 0) - (a.team_win_prob ?? 0));
+        .sort((a, b) => (b.kenpom_win_prob ?? 0) - (a.kenpom_win_prob ?? 0));
 
       const gameRank = remainingSorted.findIndex(
         (g) => g.opponent === opponent,
@@ -995,37 +945,45 @@ function buildWinsBreakdownNarrative(
       );
     }
 
-    // Floor/ceiling from win_seed_counts if available
+    // Seed range and no-more-wins from win_seed_counts
     if (info && info.win_seed_counts && info.win_seed_counts.length > 0) {
       const wsc = info.win_seed_counts;
+      // Best seed (exclude "Out", "None", non-numeric)
       const withSeeds = wsc.filter(
-        (e) => e.Seed && e.Seed !== "Out" && e.Count > 0,
+        (e) => e.Seed && e.Seed !== "Out" && e.Seed !== "None" && e.Count > 0,
       );
-      if (withSeeds.length > 0) {
-        const seeds = withSeeds
-          .map((e) => parseInt(String(e.Seed)))
-          .filter((n) => !isNaN(n));
-        if (seeds.length > 0) {
-          const bestSeed = Math.min(...seeds);
-          const worstSeed = Math.max(...seeds);
-          if (bestSeed < worstSeed) {
-            parts.push(
-              `Seed range across scenarios goes from a ${bestSeed} seed at best to a ${worstSeed} seed at worst.`,
-            );
-          }
-        }
-      }
+      const seeds = withSeeds
+        .map((e) => parseInt(String(e.Seed)))
+        .filter((n) => !isNaN(n));
 
+      // No more wins scenario
       const currentWinEntry = wsc.find((e) => e.Wins === currentWins);
-      if (currentWinEntry && currentWinEntry.Seed) {
-        const noMoreSeed = currentWinEntry.Seed;
-        if (noMoreSeed !== "Out") {
+      const noMoreSeed = currentWinEntry?.Seed;
+      const noMoreIsOut =
+        !noMoreSeed || noMoreSeed === "Out" || noMoreSeed === "None";
+
+      if (seeds.length > 0) {
+        const bestSeed = Math.min(...seeds);
+        parts.push(
+          `Top end seed possibility looks to be around a ${bestSeed} seed`,
+        );
+        if (noMoreIsOut) {
           parts.push(
-            `With no more wins they would project as around a ${noMoreSeed} seed.`,
+            `and with no more wins they would project to be out of the tournament.`,
           );
         } else {
           parts.push(
-            `With no more wins they would likely be out of the tournament.`,
+            `and with no more wins they would project as around a ${noMoreSeed} seed.`,
+          );
+        }
+      } else if (currentWinEntry) {
+        if (noMoreIsOut) {
+          parts.push(
+            `With no more wins they would project to be out of the tournament.`,
+          );
+        } else {
+          parts.push(
+            `With no more wins they would project as around a ${noMoreSeed} seed.`,
           );
         }
       }
@@ -1959,11 +1917,11 @@ async function generatePDF(
       orientation: string;
       unit: string;
       format: string;
+      compress?: boolean;
     }) => JsPDFInstance;
   };
   if (!jspdfModule) return;
 
-  // Find all page sections marked with data-pdf-page
   const pages = Array.from(
     pdfContainerRef.current.querySelectorAll<HTMLElement>("[data-pdf-page]"),
   );
@@ -1973,29 +1931,162 @@ async function generatePDF(
     orientation: "portrait",
     unit: "mm",
     format: "letter",
+    compress: true,
   });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 5;
   const usableWidth = pageWidth - margin * 2;
   const usableHeight = pageHeight - margin * 2;
+  const renderWidth = 1100;
 
+  // Helper: convert image URL to base64
+  async function toBase64(url: string): Promise<string | null> {
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject();
+        img.src = url;
+        setTimeout(reject, 3000);
+      });
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const ctx = c.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(img, 0, 0);
+      return c.toDataURL("image/png");
+    } catch {
+      return null;
+    }
+  }
+
+  // 1. Temporarily fix overflow on ALL elements in the container
+  const overflowEls: { el: HTMLElement; orig: string }[] = [];
+  pdfContainerRef.current.querySelectorAll<HTMLElement>("*").forEach((el) => {
+    const style = window.getComputedStyle(el);
+    if (
+      style.overflowX === "auto" ||
+      style.overflowX === "hidden" ||
+      style.overflowX === "scroll" ||
+      style.overflowY === "auto" ||
+      style.overflowY === "hidden" ||
+      style.overflowY === "scroll" ||
+      style.overflow === "hidden"
+    ) {
+      overflowEls.push({
+        el,
+        orig:
+          el.style.overflow +
+          "|" +
+          el.style.overflowX +
+          "|" +
+          el.style.overflowY,
+      });
+      el.style.overflow = "visible";
+      el.style.overflowX = "visible";
+      el.style.overflowY = "visible";
+    }
+  });
+
+  // 2. Convert SVG <image> hrefs to inline base64 (logos inside Wins Breakdown charts)
+  const svgImageRestores: {
+    el: SVGImageElement;
+    origHref: string | null;
+    origXlink: string | null;
+  }[] = [];
+  const svgImages = Array.from(
+    pdfContainerRef.current.querySelectorAll("image"),
+  );
+  await Promise.all(
+    svgImages.map(async (svgImg) => {
+      const href =
+        svgImg.getAttribute("href") ||
+        svgImg.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+      if (href && !href.startsWith("data:")) {
+        const origHref = svgImg.getAttribute("href");
+        const origXlink = svgImg.getAttributeNS(
+          "http://www.w3.org/1999/xlink",
+          "href",
+        );
+        const fullUrl = href.startsWith("/")
+          ? `${window.location.origin}${href}`
+          : href;
+        const b64 = await toBase64(fullUrl);
+        if (b64) {
+          svgImageRestores.push({ el: svgImg, origHref, origXlink });
+          svgImg.setAttribute("href", b64);
+          svgImg.setAttributeNS(
+            "http://www.w3.org/1999/xlink",
+            "xlink:href",
+            b64,
+          );
+        }
+      }
+    }),
+  );
+
+  // 2b. Convert <img> inside SVG <foreignObject> to inline base64 (logos inside Schedule Difficulty charts)
+  const foreignObjImgRestores: { el: HTMLImageElement; origSrc: string }[] = [];
+  const foreignObjects = Array.from(
+    pdfContainerRef.current.querySelectorAll("foreignObject img"),
+  );
+  await Promise.all(
+    foreignObjects.map(async (imgEl) => {
+      const img = imgEl as HTMLImageElement;
+      const src = img.getAttribute("src");
+      if (src && !src.startsWith("data:")) {
+        const fullUrl = src.startsWith("/")
+          ? `${window.location.origin}${src}`
+          : src;
+        const b64 = await toBase64(fullUrl);
+        if (b64) {
+          foreignObjImgRestores.push({ el: img, origSrc: src });
+          img.src = b64;
+        }
+      }
+    }),
+  );
+
+  // 3. Wait for all HTML images to be loaded
+  const htmlImages = Array.from(
+    pdfContainerRef.current.querySelectorAll("img"),
+  );
+  await Promise.all(
+    htmlImages.map((img) => {
+      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        setTimeout(resolve, 3000);
+      });
+    }),
+  );
+
+  // Small delay to let everything settle
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
+  // 4. Render each page
   for (let i = 0; i < pages.length; i++) {
     if (i > 0) pdf.addPage();
 
     const el = pages[i];
     const canvas = await html2canvas(el, {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
+      allowTaint: false,
       logging: false,
       backgroundColor: "#ffffff",
-      windowWidth: Math.max(el.scrollWidth, 960),
+      windowWidth: renderWidth,
+      width: renderWidth,
+      imageTimeout: 5000,
     });
 
-    const imgData = canvas.toDataURL("image/png");
+    const imgData = canvas.toDataURL("image/jpeg", 0.85);
     const imgRatio = canvas.height / canvas.width;
 
-    // Fit the image as large as possible within the usable area
     let w = usableWidth;
     let h = w * imgRatio;
     if (h > usableHeight) {
@@ -2004,8 +2095,32 @@ async function generatePDF(
     }
     const x = margin + (usableWidth - w) / 2;
     const y = margin;
-    pdf.addImage(imgData, "PNG", x, y, w, h);
+    pdf.addImage(imgData, "JPEG", x, y, w, h);
   }
+
+  // 5. Restore SVG image hrefs
+  svgImageRestores.forEach(({ el, origHref, origXlink }) => {
+    if (origHref !== null) el.setAttribute("href", origHref);
+    if (origXlink !== null)
+      el.setAttributeNS(
+        "http://www.w3.org/1999/xlink",
+        "xlink:href",
+        origXlink,
+      );
+  });
+
+  // 5b. Restore foreignObject img src
+  foreignObjImgRestores.forEach(({ el, origSrc }) => {
+    el.src = origSrc;
+  });
+
+  // 6. Restore overflow styles
+  overflowEls.forEach(({ el, orig }) => {
+    const [ov, ovx, ovy] = orig.split("|");
+    el.style.overflow = ov;
+    el.style.overflowX = ovx;
+    el.style.overflowY = ovy;
+  });
 
   const safeName = gameName
     .replace(/[^a-zA-Z0-9\-_ ]/g, "")
@@ -2850,7 +2965,6 @@ export default function GamePreviewPage() {
                                 selectedGame.home_team,
                                 awayTeamData.schedule,
                                 homeTeamData.schedule,
-                                { away: "Away", home: "Home" },
                               );
                               const [awayNarr, homeNarr] = full.split("\n\n");
                               const narrStyle: React.CSSProperties = {
