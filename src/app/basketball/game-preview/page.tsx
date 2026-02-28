@@ -271,28 +271,41 @@ function computeConfPosition(
 ): string {
   if (!standings.length) return "—";
   const sorted = [...standings].sort((a, b) => {
+    // Sort by conference wins (descending), then by conference losses (ascending)
     if (b.conf_wins !== a.conf_wins) return b.conf_wins - a.conf_wins;
-    return a.conf_losses - b.conf_losses;
+    if (a.conf_losses !== b.conf_losses) return a.conf_losses - b.conf_losses;
+    // If tied on wins/losses, maintain stable sort order
+    return 0;
   });
-  let position = 1;
+
+  const positionMap = new Map<string, number>();
+  let currentPosition = 1;
   let prevWins = -1;
   let prevLosses = -1;
-  const positionMap = new Map<string, number>();
+
   for (let i = 0; i < sorted.length; i++) {
-    if (
-      sorted[i].conf_wins !== prevWins ||
-      sorted[i].conf_losses !== prevLosses
-    ) {
-      position = i + 1;
+    const team = sorted[i];
+
+    // Check if this team has different record than previous
+    if (team.conf_wins !== prevWins || team.conf_losses !== prevLosses) {
+      // New record tier - update position to account for ties
+      currentPosition = i + 1;
+      prevWins = team.conf_wins;
+      prevLosses = team.conf_losses;
     }
-    positionMap.set(sorted[i].team_name, position);
-    prevWins = sorted[i].conf_wins;
-    prevLosses = sorted[i].conf_losses;
+
+    positionMap.set(team.team_name, currentPosition);
   }
+
   const pos = positionMap.get(teamName);
   if (!pos) return "—";
-  const samePos = sorted.filter((t) => positionMap.get(t.team_name) === pos);
-  if (samePos.length > 1) return `T-${ordinal(pos)}`;
+
+  // Count how many teams are at this position
+  const teamsAtPosition = Array.from(positionMap.values()).filter(
+    (p) => p === pos,
+  ).length;
+
+  if (teamsAtPosition > 1) return `T-${ordinal(pos)}`;
   return ordinal(pos);
 }
 
@@ -302,7 +315,7 @@ async function fetchConferenceStandings(
   try {
     const confFormatted = conference.replace(/ /g, "_");
     const response = await fetch(
-      `/api/proxy/basketball/conf_champ_analysis/${confFormatted}`,
+      `/api/proxy/standings/${confFormatted}`, // ← CORRECT endpoint (has conference_wins/losses)
     );
     if (!response.ok) return [];
     const json = await response.json();
@@ -1837,7 +1850,7 @@ function HeadToHeadComparison({
       homeValue: homeMetrics.overallRecord,
     },
     {
-      label: "Conf. Record",
+      label: "Conf Record",
       awayValue: awayMetrics.conferenceRecord,
       homeValue: homeMetrics.conferenceRecord,
     },
@@ -2438,9 +2451,7 @@ export default function GamePreviewPage() {
           homeConfChamp,
         ] = await Promise.all([
           fetchConferenceStandings(awayConf),
-          awayConf === homeConf
-            ? fetchConferenceStandings(homeConf)
-            : fetchConferenceStandings(homeConf),
+          fetchConferenceStandings(homeConf),
           fetchImpact(awayConf, awayTeamId),
           fetchImpact(homeConf, homeTeamId),
           fetchConfChampDataForTeam(
@@ -2453,9 +2464,7 @@ export default function GamePreviewPage() {
           ),
         ]);
         setAwayConfStandings(awayStandings);
-        setHomeConfStandings(
-          awayConf === homeConf ? awayStandings : homeStandings,
-        );
+        setHomeConfStandings(homeStandings);
         setAwayImpactData(awayImpact);
         setHomeImpactData(homeImpact);
         setAwayConfChampData(awayConfChamp);
