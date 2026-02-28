@@ -3014,14 +3014,59 @@ export default function GamePreviewPage() {
                                 lineHeight: 1.5,
                                 marginBottom: 12,
                               };
-                              return (
+                              return isMobile ? (
+                                <div style={twoColGrid}>
+                                  {/* Away Team: Commentary + Component */}
+                                  <div>
+                                    <p style={narrStyle}>{awayNarr}</p>
+                                    <div
+                                      style={{
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 8,
+                                        padding: 10,
+                                        backgroundColor: "white",
+                                      }}
+                                    >
+                                      <NextGameImpactInline
+                                        teamId={awayTeamData.team_info.team_id}
+                                        conference={
+                                          awayTeamData.team_info.conference
+                                        }
+                                        teamInfo={awayTeamData.team_info}
+                                        impactData={awayImpactData}
+                                      />
+                                    </div>
+                                  </div>
+                                  {/* Home Team: Commentary + Component */}
+                                  <div>
+                                    <p style={narrStyle}>{homeNarr}</p>
+                                    <div
+                                      style={{
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 8,
+                                        padding: 10,
+                                        backgroundColor: "white",
+                                      }}
+                                    >
+                                      <NextGameImpactInline
+                                        teamId={homeTeamData.team_info.team_id}
+                                        conference={
+                                          homeTeamData.team_info.conference
+                                        }
+                                        teamInfo={homeTeamData.team_info}
+                                        impactData={homeImpactData}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
                                 <>
-                                  {/* Row 1: Paragraphs */}
+                                  {/* Desktop: Row 1: Paragraphs */}
                                   <div style={twoColGrid}>
                                     <p style={narrStyle}>{awayNarr}</p>
                                     <p style={narrStyle}>{homeNarr}</p>
                                   </div>
-                                  {/* Row 2: Components */}
+                                  {/* Desktop: Row 2: Components */}
                                   <div style={twoColGrid}>
                                     <div
                                       style={{
@@ -3091,14 +3136,119 @@ export default function GamePreviewPage() {
                                 lineHeight: 1.5,
                                 marginBottom: 12,
                               };
-                              return (
+                              return isMobile ? (
+                                <div style={twoColGrid}>
+                                  {/* Away Team: Commentary + Component */}
+                                  <div>
+                                    <p style={narrStyle}>{awayNarr}</p>
+                                    <div
+                                      style={{
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 8,
+                                        padding: 8,
+                                        backgroundColor: "white",
+                                        overflowX: "auto",
+                                        overflowY: "hidden",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          marginBottom: 8,
+                                          gap: 6,
+                                        }}
+                                      >
+                                        <TeamLogo
+                                          logoUrl={
+                                            awayTeamData.team_info.logo_url ||
+                                            ""
+                                          }
+                                          teamName={selectedGame.away_team}
+                                          size={20}
+                                        />
+                                        <span
+                                          style={{
+                                            fontWeight: 600,
+                                            fontSize: 12,
+                                            color: "#374151",
+                                          }}
+                                        >
+                                          {selectedGame.away_team}
+                                        </span>
+                                      </div>
+                                      <TeamWinValues
+                                        schedule={awayTeamData.schedule}
+                                        logoUrl={
+                                          awayTeamData.team_info.logo_url || ""
+                                        }
+                                        primaryColor={
+                                          awayTeamData.team_info.primary_color
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                  {/* Home Team: Commentary + Component */}
+                                  <div>
+                                    <p style={narrStyle}>{homeNarr}</p>
+                                    <div
+                                      style={{
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 8,
+                                        padding: 8,
+                                        backgroundColor: "white",
+                                        overflowX: "auto",
+                                        overflowY: "hidden",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          marginBottom: 8,
+                                          gap: 6,
+                                        }}
+                                      >
+                                        <TeamLogo
+                                          logoUrl={
+                                            homeTeamData.team_info.logo_url ||
+                                            ""
+                                          }
+                                          teamName={selectedGame.home_team}
+                                          size={20}
+                                        />
+                                        <span
+                                          style={{
+                                            fontWeight: 600,
+                                            fontSize: 12,
+                                            color: "#374151",
+                                          }}
+                                        >
+                                          {selectedGame.home_team}
+                                        </span>
+                                      </div>
+                                      <TeamWinValues
+                                        schedule={homeTeamData.schedule}
+                                        logoUrl={
+                                          homeTeamData.team_info.logo_url || ""
+                                        }
+                                        primaryColor={
+                                          homeTeamData.team_info.primary_color
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
                                 <>
-                                  {/* Row 1: Paragraphs */}
+                                  {/* Desktop: Row 1: Paragraphs */}
                                   <div style={twoColGrid}>
                                     <p style={narrStyle}>{awayNarr}</p>
                                     <p style={narrStyle}>{homeNarr}</p>
                                   </div>
-                                  {/* Row 2: Components */}
+                                  {/* Desktop: Row 2: Components */}
                                   <div style={twoColGrid}>
                                     <div
                                       style={{
@@ -3238,14 +3388,131 @@ export default function GamePreviewPage() {
                                 lineHeight: 1.5,
                                 marginBottom: 12,
                               };
-                              return (
+                              return isMobile ? (
+                                <div style={twoColGrid}>
+                                  {/* Away Team: Commentary + Component */}
+                                  <div>
+                                    <p style={narrStyle}>{awayNarr}</p>
+                                    <div
+                                      style={{
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 8,
+                                        padding: 12,
+                                        backgroundColor: "white",
+                                        overflowX: "auto",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          marginBottom: 10,
+                                          gap: 6,
+                                        }}
+                                      >
+                                        <TeamLogo
+                                          logoUrl={
+                                            awayTeamData.team_info.logo_url ||
+                                            ""
+                                          }
+                                          teamName={selectedGame.away_team}
+                                          size={24}
+                                        />
+                                        <span
+                                          style={{
+                                            fontWeight: 600,
+                                            fontSize: 13,
+                                            color: "#374151",
+                                          }}
+                                        >
+                                          {selectedGame.away_team}
+                                        </span>
+                                      </div>
+                                      <BasketballTeamScheduleDifficulty
+                                        schedule={awayTeamData.schedule}
+                                        allScheduleData={
+                                          (awayTeamData.all_schedule_data as
+                                            | AllScheduleGame[]
+                                            | undefined) || []
+                                        }
+                                        teamConference={
+                                          awayTeamData.team_info.conference
+                                        }
+                                        teamColor={
+                                          awayTeamData.team_info
+                                            .primary_color || TEAL
+                                        }
+                                        teamName={selectedGame.away_team}
+                                      />
+                                    </div>
+                                  </div>
+                                  {/* Home Team: Commentary + Component */}
+                                  <div>
+                                    <p style={narrStyle}>{homeNarr}</p>
+                                    <div
+                                      style={{
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: 8,
+                                        padding: 12,
+                                        backgroundColor: "white",
+                                        overflowX: "auto",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          marginBottom: 10,
+                                          gap: 6,
+                                        }}
+                                      >
+                                        <TeamLogo
+                                          logoUrl={
+                                            homeTeamData.team_info.logo_url ||
+                                            ""
+                                          }
+                                          teamName={selectedGame.home_team}
+                                          size={24}
+                                        />
+                                        <span
+                                          style={{
+                                            fontWeight: 600,
+                                            fontSize: 13,
+                                            color: "#374151",
+                                          }}
+                                        >
+                                          {selectedGame.home_team}
+                                        </span>
+                                      </div>
+                                      <BasketballTeamScheduleDifficulty
+                                        schedule={homeTeamData.schedule}
+                                        allScheduleData={
+                                          (homeTeamData.all_schedule_data as
+                                            | AllScheduleGame[]
+                                            | undefined) || []
+                                        }
+                                        teamConference={
+                                          homeTeamData.team_info.conference
+                                        }
+                                        teamColor={
+                                          homeTeamData.team_info
+                                            .primary_color || TEAL
+                                        }
+                                        teamName={selectedGame.home_team}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
                                 <>
-                                  {/* Row 1: Paragraphs */}
+                                  {/* Desktop: Row 1: Paragraphs */}
                                   <div style={twoColGrid}>
                                     <p style={narrStyle}>{awayNarr}</p>
                                     <p style={narrStyle}>{homeNarr}</p>
                                   </div>
-                                  {/* Row 2: Components */}
+                                  {/* Desktop: Row 2: Components */}
                                   <div style={twoColGrid}>
                                     <div
                                       style={{
@@ -3391,14 +3658,117 @@ export default function GamePreviewPage() {
                                 lineHeight: 1.5,
                                 marginBottom: 12,
                               };
-                              return (
+                              return isMobile ? (
+                                <div style={twoColGrid}>
+                                  {/* Away Team: Commentary + Component */}
+                                  <div>
+                                    <p style={narrStyle}>{awayNarr}</p>
+                                    <div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          marginBottom: 10,
+                                          gap: 6,
+                                        }}
+                                      >
+                                        <TeamLogo
+                                          logoUrl={
+                                            awayTeamData.team_info.logo_url ||
+                                            ""
+                                          }
+                                          teamName={selectedGame.away_team}
+                                          size={24}
+                                        />
+                                        <span
+                                          style={{
+                                            fontWeight: 600,
+                                            fontSize: 13,
+                                            color: "#374151",
+                                          }}
+                                        >
+                                          {selectedGame.away_team}
+                                        </span>
+                                      </div>
+                                      <BasketballTeamWinsBreakdown
+                                        schedule={awayTeamData.schedule}
+                                        teamName={selectedGame.away_team}
+                                        conference={
+                                          awayTeamData.team_info.conference
+                                        }
+                                        primaryColor={
+                                          awayTeamData.team_info
+                                            .primary_color || "#18627b"
+                                        }
+                                        secondaryColor={
+                                          awayTeamData.team_info.secondary_color
+                                        }
+                                        logoUrl={
+                                          awayTeamData.team_info.logo_url || ""
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                  {/* Home Team: Commentary + Component */}
+                                  <div>
+                                    <p style={narrStyle}>{homeNarr}</p>
+                                    <div>
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          marginBottom: 10,
+                                          gap: 6,
+                                        }}
+                                      >
+                                        <TeamLogo
+                                          logoUrl={
+                                            homeTeamData.team_info.logo_url ||
+                                            ""
+                                          }
+                                          teamName={selectedGame.home_team}
+                                          size={24}
+                                        />
+                                        <span
+                                          style={{
+                                            fontWeight: 600,
+                                            fontSize: 13,
+                                            color: "#374151",
+                                          }}
+                                        >
+                                          {selectedGame.home_team}
+                                        </span>
+                                      </div>
+                                      <BasketballTeamWinsBreakdown
+                                        schedule={homeTeamData.schedule}
+                                        teamName={selectedGame.home_team}
+                                        conference={
+                                          homeTeamData.team_info.conference
+                                        }
+                                        primaryColor={
+                                          homeTeamData.team_info
+                                            .primary_color || "#18627b"
+                                        }
+                                        secondaryColor={
+                                          homeTeamData.team_info.secondary_color
+                                        }
+                                        logoUrl={
+                                          homeTeamData.team_info.logo_url || ""
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
                                 <>
-                                  {/* Row 1: Paragraphs */}
+                                  {/* Desktop: Row 1: Paragraphs */}
                                   <div style={twoColGrid}>
                                     <p style={narrStyle}>{awayNarr}</p>
                                     <p style={narrStyle}>{homeNarr}</p>
                                   </div>
-                                  {/* Row 2: Components */}
+                                  {/* Desktop: Row 2: Components */}
                                   <div style={twoColGrid}>
                                     <div>
                                       <div
