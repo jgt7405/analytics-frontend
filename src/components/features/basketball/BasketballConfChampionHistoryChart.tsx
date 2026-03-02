@@ -25,7 +25,7 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 interface ChampionHistoryData {
@@ -42,6 +42,7 @@ interface ChampionHistoryData {
 
 interface BasketballConfChampionHistoryChartProps {
   championData: ChampionHistoryData[];
+  selectedConference: string;
 }
 
 interface TeamDataPoint {
@@ -65,10 +66,11 @@ interface ChartDimensions {
 
 export default function BasketballConfChampionHistoryChart({
   championData,
+  selectedConference,
 }: BasketballConfChampionHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", TeamDataPoint[], string> | null>(
-    null
+    null,
   );
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
@@ -86,7 +88,7 @@ export default function BasketballConfChampionHistoryChart({
 
     const timeout = setTimeout(updateDimensions, 500);
     return () => clearTimeout(timeout);
-  }, [championData]);
+  }, [championData, selectedConference]);
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -94,6 +96,7 @@ export default function BasketballConfChampionHistoryChart({
     return `${month}/${day}/${year}`;
   };
 
+  // Filter by date AND ensure data belongs to selected conference
   const filteredChampionData = championData.filter((item) => {
     const itemDate = new Date(item.date);
     const cutoffDate = new Date("2025-08-22");
@@ -130,7 +133,7 @@ export default function BasketballConfChampionHistoryChart({
 
   const dates = [
     ...new Set(
-      Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
+      Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date)),
     ),
   ].sort((a, b) => {
     // Sort using the full date (with year)
@@ -296,7 +299,7 @@ export default function BasketballConfChampionHistoryChart({
                     document.removeEventListener("click", handleClickOutside);
                     document.removeEventListener(
                       "touchstart",
-                      handleClickOutside
+                      handleClickOutside,
                     );
                     document.body.removeChild(tooltipEl);
                   }
@@ -401,7 +404,7 @@ export default function BasketballConfChampionHistoryChart({
         min: 0,
         max: (() => {
           const allValues = Object.values(mappedTeamData).flatMap((team) =>
-            team.data.map((d: TeamDataPoint) => d.y)
+            team.data.map((d: TeamDataPoint) => d.y),
           );
           const maxValue = Math.max(...allValues);
           return Math.max(20, Math.ceil(maxValue / 10) * 10);
@@ -433,7 +436,7 @@ export default function BasketballConfChampionHistoryChart({
     const { top, bottom } = chartDimensions.chartArea;
     const maxY = (() => {
       const allValues = Object.values(mappedTeamData).flatMap((team) =>
-        team.data.map((d: TeamDataPoint) => d.y)
+        team.data.map((d: TeamDataPoint) => d.y),
       );
       const maxValue = Math.max(...allValues);
       return Math.max(20, Math.ceil(maxValue / 10) * 10);
@@ -560,7 +563,7 @@ export default function BasketballConfChampionHistoryChart({
                     </svg>
                   </div>
                 );
-              }
+              },
             )}
 
             <div className="absolute right-0 top-0">

@@ -18,7 +18,7 @@ const BasketballConfChampionHistoryChart = lazy(
   () =>
     import(
       "@/components/features/basketball/BasketballConfChampionHistoryChart"
-    )
+    ),
 );
 
 export default function ConfTourneyPage() {
@@ -26,7 +26,7 @@ export default function ConfTourneyPage() {
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
   const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
+    preferences.defaultConference,
   );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     preferences.defaultConference,
@@ -162,6 +162,7 @@ export default function ConfTourneyPage() {
                         <Suspense fallback={<BasketballTableSkeleton />}>
                           <BasketballConfChampionHistoryChart
                             championData={historyData.champion_data}
+                            selectedConference={selectedConference}
                           />
                         </Suspense>
                       </div>
