@@ -355,6 +355,13 @@ async function fetchConfChampDataForTeam(
   }
 }
 
+/** Helper to get a readable location phrase from a location filter string. */
+function locationPhrase(locLabel: string): string {
+  if (locLabel === "home") return "at home";
+  if (locLabel === "neutral") return "on neutral courts";
+  return "on the road";
+}
+
 function buildTeamNarrative(
   teamName: string,
   metrics: ComputedMetrics,
@@ -393,7 +400,12 @@ function buildTeamNarrative(
   else if (l5w <= 1) recentForm = "struggling to find wins lately";
 
   // ─── Rich game difficulty context ───
-  const locFilter = isHome ? "Home" : "Away";
+  // Determine actual game location from schedule (handles neutral-site games)
+  const upcomingGame = schedule.find(
+    (g) => g.opponent === opponentName && g.status !== "W" && g.status !== "L",
+  );
+  const locFilter =
+    upcomingGame?.location === "Neutral" ? "Neutral" : isHome ? "Home" : "Away";
   const locLabel = locFilter.toLowerCase();
   const locGames = schedule.filter((g) => g.location === locFilter);
   const locCompleted = locGames.filter(
@@ -448,9 +460,7 @@ function buildTeamNarrative(
     }
 
     // Overall location record
-    parts.push(
-      `Overall they are ${locW}-${locL} ${locLabel === "home" ? "at home" : "on the road"}.`,
-    );
+    parts.push(`Overall they are ${locW}-${locL} ${locationPhrase(locLabel)}.`);
 
     // Easier games context
     const easierGames = withProb.slice(gameIdx + 1);
@@ -470,9 +480,7 @@ function buildTeamNarrative(
       );
     }
   } else {
-    parts.push(
-      `Overall they are ${locW}-${locL} ${locLabel === "home" ? "at home" : "on the road"}.`,
-    );
+    parts.push(`Overall they are ${locW}-${locL} ${locationPhrase(locLabel)}.`);
   }
 
   return parts.join(" ");
