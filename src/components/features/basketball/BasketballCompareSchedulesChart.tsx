@@ -879,7 +879,7 @@ export default function BasketballCompareSchedulesChart({
                   '"Roboto Condensed", system-ui, -apple-system, sans-serif',
               }}
             >
-              #30 Fcst:
+              #50 Fcst:
             </text>
             <text
               x={MARGIN.left - 35}
@@ -907,7 +907,7 @@ export default function BasketballCompareSchedulesChart({
                   '"Roboto Condensed", system-ui, -apple-system, sans-serif',
               }}
             >
-              #30 Fcst %:
+              #50 Fcst %:
             </text>
             <text
               x={MARGIN.left - 35}
@@ -1093,7 +1093,7 @@ export default function BasketballCompareSchedulesChart({
             transform={`rotate(-90, ${MARGIN.left - 55}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Difficulty Percentile: Games &lt;95% Probability for 30th Rated Team
+            Difficulty Percentile: Games &lt;95% Probability for 50th Rated Team
           </text>
 
           {/* Right Y-axis label */}
@@ -1104,7 +1104,7 @@ export default function BasketballCompareSchedulesChart({
             transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 55}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Win Probability for #30 Rated Team
+            Win Probability for #50 Rated Team
           </text>
 
           {/* Team columns */}
@@ -1213,7 +1213,7 @@ export default function BasketballCompareSchedulesChart({
                   <div>Location: {hoveredGame.location}</div>
                   <div>
                     {(hoveredGame.winProb * 100).toFixed(0)}% Win Probability
-                    for 30th Rated Team
+                    for 50th Rated Team
                   </div>
                   <div>
                     #{gameRank.toLocaleString()} Most Difficult Game (

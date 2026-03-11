@@ -732,7 +732,7 @@ export default function BasketballTeamScheduleDifficulty({
             transform={`rotate(-90, ${TOP_MARGIN.left - 45}, ${TOP_MARGIN.top + TOP_PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Difficulty Percentile: Games &lt;95% Probability for 30th Rated Team
+            Difficulty Percentile: Games &lt;95% Probability for 50th Rated Team
           </text>
 
           <text
@@ -742,7 +742,7 @@ export default function BasketballTeamScheduleDifficulty({
             transform={`rotate(90, ${TOP_MARGIN.left + TOP_PLOT_WIDTH + 45}, ${TOP_MARGIN.top + TOP_PLOT_HEIGHT / 2})`}
             className="text-sm fill-gray-700 font-medium"
           >
-            Win Probability of 30th Rated Team
+            Win Probability of 50th Rated Team
           </text>
 
           <text
@@ -861,7 +861,7 @@ export default function BasketballTeamScheduleDifficulty({
                   <div>Location: {hoveredGame.location}</div>
                   <div>
                     {((hoveredGame.kenpom_win_prob || 0) * 100).toFixed(0)}% Win
-                    Probability for 30th Rated Team
+                    Probability for 50th Rated Team
                   </div>
                   <div>
                     #{gameRank.toLocaleString()} Most Difficult Game (
@@ -893,7 +893,7 @@ export default function BasketballTeamScheduleDifficulty({
               </div>
             </div>
             <div>
-              <div className="font-medium text-gray-700">#30 Fcst:</div>
+              <div className="font-medium text-gray-700">#50 Fcst:</div>
               <div>
                 {teamStats.expectedWins.toFixed(1)}-
                 {teamStats.expectedLosses.toFixed(1)}
@@ -906,7 +906,7 @@ export default function BasketballTeamScheduleDifficulty({
               </div>
             </div>
             <div>
-              <div className="font-medium text-gray-700">#30 Fcst %:</div>
+              <div className="font-medium text-gray-700">#50 Fcst %:</div>
               <div>{teamStats.forecastWinPct.toFixed(0)}%</div>
             </div>
             <div>

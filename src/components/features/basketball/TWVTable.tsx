@@ -255,7 +255,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                       </div>
                       <div className="text-gray-700">
                         # of wins above (or below) what would be expected by the
-                        30th rated team with the same schedule.
+                        50th rated team with the same schedule.
                       </div>
                     </div>
                   </div>
@@ -349,7 +349,7 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
                     <div className="text-gray-900 text-sm">
                       <div className="font-semibold mb-2">Expected Record</div>
                       <div className="text-gray-700">
-                        Win/loss record that would be expected by the 30th rated
+                        Win/loss record that would be expected by the 50th rated
                         team with the same schedule.
                       </div>
                     </div>

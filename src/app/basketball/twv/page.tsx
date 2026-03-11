@@ -20,7 +20,7 @@ export default function TWVPage() {
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
   const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference
+    preferences.defaultConference,
   );
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     "All Teams",
@@ -39,7 +39,7 @@ export default function TWVPage() {
     useConferenceUrl(
       setSelectedConference,
       availableConferences,
-      true // HAS "All Teams" for TWV
+      true, // HAS "All Teams" for TWV
     );
 
   // Track page load
@@ -222,13 +222,13 @@ export default function TWVPage() {
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             TWV (True Win Value) shows actual wins compared to
-                            expected wins for a team ranked 30th by composite
+                            expected wins for a team ranked 50th by composite
                             ratings based on kenpom, barttorvik and evanmiya
                           </div>
                           <div style={{ marginTop: "6px" }}>
                             Positive values indicate overperformance, negative
                             values indicate underperformance relative to the
-                            30th rated team.
+                            50th rated team.
                           </div>
                         </div>
                       </div>

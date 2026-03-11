@@ -155,7 +155,7 @@ export default function BasketballTeamScheduleChart({
             <th className="text-left p-2 font-bold">Opp</th>
             <th className="text-center p-2 font-bold">Rtg</th>
             <th className="text-center p-2 font-bold">Win %</th>
-            <th className="text-center p-2 font-bold">#30 Win%</th>
+            <th className="text-center p-2 font-bold">#50 Win%</th>
             <th className="text-center p-2 font-bold">Score</th>
           </tr>
         </thead>
