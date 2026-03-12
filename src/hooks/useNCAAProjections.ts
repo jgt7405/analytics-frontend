@@ -14,6 +14,7 @@ export interface NCAATeam {
   netrtg?: number;
   logo_url: string;
   conf_logo_url?: string;
+  is_conf_tourney_winner?: boolean;  // NEW: Tracks if team won completed conf tournament
 }
 
 export interface NCAAProjectionsResponse {
