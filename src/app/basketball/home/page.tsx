@@ -68,13 +68,29 @@ export default function BasketballHome() {
                         NCAA tournament projections based on 1,000 season
                         simulations using composite ratings.
                       </div>
-<div style={{ marginTop: "6px" }}>
+                      <div style={{ marginTop: "6px" }}>
                         Featured in{" "}
-                        <a href="https://bracketproject.blogspot.com/" ...>
+                        <a
+                          href="https://bracketproject.blogspot.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "#3b82f6",
+                            textDecoration: "underline",
+                          }}
+                        >
                           Bracket Matrix Blog
                         </a>
                         . Bracket Matrix site{" "}
-                        <a href="http://bracketmatrix.com/" ...>
+                        <a
+                          href="http://bracketmatrix.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "#3b82f6",
+                            textDecoration: "underline",
+                          }}
+                        >
                           here
                         </a>
                         .
