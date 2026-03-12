@@ -155,128 +155,140 @@ function NCAABracketTable({ className }: NCAABracketTableProps) {
     return "1px solid #e5e7eb";
   };
 
-  const renderTeamRow = (
+const renderTeamRow = (
     team: NCAATeamWithConfLogo,
     index: number,
     isLastInGroup: boolean
-  ) => (
-    <tr key={`${team.teamid}-${index}`}>
-      {/* Seed Cell */}
-      <td
-        className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
-        style={{
-          width: seedColWidth,
-          minWidth: seedColWidth,
-          maxWidth: seedColWidth,
-          height: cellHeight,
-          position: "sticky",
-          left: 0,
-          border: "1px solid #e5e7eb",
-          borderTop: "none",
-          borderRight: "1px solid #e5e7eb",
-          borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-        }}
-      >
-        {team.seed || "-"}
-      </td>
+  ) => {
+    // Only highlight teams that have SECURED auto bid (won completed conf tourney game)
+    // Not teams with projected "Auto Bid" status
+    const isSecuredAutoBid = team.is_conf_tourney_winner === true;
+    const rowBgColor = isSecuredAutoBid ? "#dcfce7" : "white"; // light green
+    const rowBorderColor = isSecuredAutoBid ? "#16a34a" : "#e5e7eb"; // darker green
 
-      {/* Team Cell (with logo and name) */}
-      <td
-        className={`sticky z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-        style={{
-          width: teamColWidth,
-          minWidth: teamColWidth,
-          maxWidth: teamColWidth,
-          height: cellHeight,
-          position: "sticky",
-          left: seedColWidth,
-          border: "1px solid #e5e7eb",
-          borderTop: "none",
-          borderLeft: "none",
-          borderRight: "2px solid #d1d5db",
-          borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <TeamLogo
-            logoUrl={team.logo_url}
-            teamName={team.team_name}
-            size={isMobile ? 24 : 28}
-            onClick={() => navigateToTeam(team.team_name)}
-            className="flex-shrink-0"
-          />
-          <span className="truncate">{team.team_name}</span>
-        </div>
-      </td>
+    return (
+      <tr key={`${team.teamid}-${index}`} style={{ backgroundColor: rowBgColor }}>
+        {/* Seed Cell */}
+        <td
+          className={`sticky left-0 z-20 text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          style={{
+            width: seedColWidth,
+            minWidth: seedColWidth,
+            maxWidth: seedColWidth,
+            height: cellHeight,
+            position: "sticky",
+            left: 0,
+            backgroundColor: rowBgColor,
+            border: "1px solid " + rowBorderColor,
+            borderTop: "none",
+            borderRight: "1px solid " + rowBorderColor,
+            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
+          }}
+        >
+          {team.seed || "-"}
+        </td>
 
-      {/* Conference Cell - with logo from backend */}
-      <td
-        className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
-        style={{
-          width: confColWidth,
-          minWidth: confColWidth,
-          maxWidth: confColWidth,
-          height: cellHeight,
-          border: "1px solid #e5e7eb",
-          borderTop: "none",
-          borderLeft: "none",
-          borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {team.conf_logo_url ? (
-          <TeamLogo
-            logoUrl={team.conf_logo_url}
-            teamName={team.full_conference_name}
-            size={isMobile ? 20 : 24}
-            className="flex-shrink-0"
-          />
-        ) : (
-          <span className="text-xs text-gray-500">-</span>
-        )}
-      </td>
+        {/* Team Cell (with logo and name) */}
+        <td
+          className={`sticky z-20 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+          style={{
+            width: teamColWidth,
+            minWidth: teamColWidth,
+            maxWidth: teamColWidth,
+            height: cellHeight,
+            position: "sticky",
+            left: seedColWidth,
+            backgroundColor: rowBgColor,
+            border: "1px solid " + rowBorderColor,
+            borderTop: "none",
+            borderLeft: "none",
+            borderRight: "2px solid " + (isSecuredAutoBid ? "#16a34a" : "#d1d5db"),
+            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <TeamLogo
+              logoUrl={team.logo_url}
+              teamName={team.team_name}
+              size={isMobile ? 24 : 28}
+              onClick={() => navigateToTeam(team.team_name)}
+              className="flex-shrink-0"
+            />
+            <span className="truncate">{team.team_name}</span>
+          </div>
+        </td>
 
-      {/* Category Cell */}
-      <td
-        className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
-        style={{
-          width: categoryColWidth,
-          minWidth: categoryColWidth,
-          maxWidth: categoryColWidth,
-          height: cellHeight,
-          border: "1px solid #e5e7eb",
-          borderTop: "none",
-          borderLeft: "none",
-          borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-          backgroundColor: getCategoryBgColor(team.category),
-          color: getCategoryTextColor(team.category),
-          fontWeight: "500",
-        }}
-      >
-        {team.category}
-      </td>
+        {/* Conference Cell - with logo from backend */}
+        <td
+          className={`text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          style={{
+            width: confColWidth,
+            minWidth: confColWidth,
+            maxWidth: confColWidth,
+            height: cellHeight,
+            backgroundColor: rowBgColor,
+            border: "1px solid " + rowBorderColor,
+            borderTop: "none",
+            borderLeft: "none",
+            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {team.conf_logo_url ? (
+            <TeamLogo
+              logoUrl={team.conf_logo_url}
+              teamName={team.full_conference_name}
+              size={isMobile ? 20 : 24}
+              className="flex-shrink-0"
+            />
+          ) : (
+            <span className="text-xs text-gray-500">-</span>
+          )}
+        </td>
 
-      {/* Proj TWV Cell */}
-      <td
-        className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
-        style={{
-          width: twvColWidth,
-          minWidth: twvColWidth,
-          maxWidth: twvColWidth,
-          height: cellHeight,
-          border: "1px solid #e5e7eb",
-          borderTop: "none",
-          borderLeft: "none",
-          borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-          fontWeight: "500",
-        }}
-      >
-        {team.post_conf_tourney_twv.toFixed(2)}
-      </td>
-    </tr>
-  );
+        {/* Category Cell */}
+        <td
+          className={`text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          style={{
+            width: categoryColWidth,
+            minWidth: categoryColWidth,
+            maxWidth: categoryColWidth,
+            height: cellHeight,
+            border: "1px solid " + rowBorderColor,
+            borderTop: "none",
+            borderLeft: "none",
+            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
+            backgroundColor: getCategoryBgColor(team.category),
+            color: getCategoryTextColor(team.category),
+            fontWeight: "500",
+          }}
+        >
+          {team.category}
+        </td>
+
+        {/* Proj TWV Cell */}
+        <td
+          className={`text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          style={{
+            width: twvColWidth,
+            minWidth: twvColWidth,
+            maxWidth: twvColWidth,
+            height: cellHeight,
+            backgroundColor: rowBgColor,
+            border: "1px solid " + rowBorderColor,
+            borderTop: "none",
+            borderLeft: "none",
+            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
+            fontWeight: "500",
+          }}
+        >
+          {team.post_conf_tourney_twv.toFixed(2)}
+        </td>
+      </tr>
+    );
+  };
 
   return (
     <div>
