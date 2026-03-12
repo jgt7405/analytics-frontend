@@ -68,32 +68,31 @@ export default function BasketballHome() {
                         NCAA tournament projections based on 1,000 season
                         simulations using composite ratings.
                       </div>
-                      <div style={{ marginTop: "6px" }}>
+<div style={{ marginTop: "6px" }}>
                         Featured in{" "}
-                        <a
-                          href="https://bracketproject.blogspot.com/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "#3b82f6",
-                            textDecoration: "underline",
-                          }}
-                        >
+                        <a href="https://bracketproject.blogspot.com/" ...>
                           Bracket Matrix Blog
                         </a>
                         . Bracket Matrix site{" "}
-                        <a
-                          href="http://bracketmatrix.com/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "#3b82f6",
-                            textDecoration: "underline",
-                          }}
-                        >
+                        <a href="http://bracketmatrix.com/" ...>
                           here
                         </a>
                         .
+                      </div>
+                      <div style={{ marginTop: "6px" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            width: "12px",
+                            height: "12px",
+                            backgroundColor: "#dcfce7",
+                            border: "1px solid #16a34a",
+                            borderRadius: "2px",
+                            marginRight: "6px",
+                            verticalAlign: "middle",
+                          }}
+                        ></span>
+                        <span>Team secured auto bid</span>
                       </div>
                     </div>
                   </div>
