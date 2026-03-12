@@ -155,7 +155,8 @@ function NCAABracketTable({ className }: NCAABracketTableProps) {
     return "1px solid #e5e7eb";
   };
 
-const renderTeamRow = (
+  // Render a team row with conditional highlighting for secured auto bids
+  const renderTeamRow = (
     team: NCAATeamWithConfLogo,
     index: number,
     isLastInGroup: boolean
@@ -163,14 +164,14 @@ const renderTeamRow = (
     // Only highlight teams that have SECURED auto bid (won completed conf tourney game)
     // Not teams with projected "Auto Bid" status
     const isSecuredAutoBid = team.is_conf_tourney_winner === true;
-    const rowBgColor = isSecuredAutoBid ? "#dcfce7" : "white"; // light green
-    const rowBorderColor = isSecuredAutoBid ? "#16a34a" : "#e5e7eb"; // darker green
+    const teamCellBgColor = isSecuredAutoBid ? "#dcfce7" : "white"; // light green only for team cell
+    const teamCellBorderColor = isSecuredAutoBid ? "#16a34a" : "#d1d5db"; // darker green border only for team cell
 
     return (
-      <tr key={`${team.teamid}-${index}`} style={{ backgroundColor: rowBgColor }}>
+      <tr key={`${team.teamid}-${index}`}>
         {/* Seed Cell */}
         <td
-          className={`sticky left-0 z-20 text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
             width: seedColWidth,
             minWidth: seedColWidth,
@@ -178,17 +179,16 @@ const renderTeamRow = (
             height: cellHeight,
             position: "sticky",
             left: 0,
-            backgroundColor: rowBgColor,
-            border: "1px solid " + rowBorderColor,
+            border: "1px solid #e5e7eb",
             borderTop: "none",
-            borderRight: "1px solid " + rowBorderColor,
+            borderRight: "1px solid #e5e7eb",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
           }}
         >
           {team.seed || "-"}
         </td>
 
-        {/* Team Cell (with logo and name) */}
+        {/* Team Cell (with logo and name) - HIGHLIGHTED FOR SECURED AUTO BIDS */}
         <td
           className={`sticky z-20 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
@@ -198,11 +198,11 @@ const renderTeamRow = (
             height: cellHeight,
             position: "sticky",
             left: seedColWidth,
-            backgroundColor: rowBgColor,
-            border: "1px solid " + rowBorderColor,
+            backgroundColor: teamCellBgColor,
+            border: "1px solid " + teamCellBorderColor,
             borderTop: "none",
             borderLeft: "none",
-            borderRight: "2px solid " + (isSecuredAutoBid ? "#16a34a" : "#d1d5db"),
+            borderRight: "2px solid " + teamCellBorderColor,
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
           }}
         >
@@ -220,14 +220,13 @@ const renderTeamRow = (
 
         {/* Conference Cell - with logo from backend */}
         <td
-          className={`text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
             width: confColWidth,
             minWidth: confColWidth,
             maxWidth: confColWidth,
             height: cellHeight,
-            backgroundColor: rowBgColor,
-            border: "1px solid " + rowBorderColor,
+            border: "1px solid #e5e7eb",
             borderTop: "none",
             borderLeft: "none",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
@@ -250,13 +249,13 @@ const renderTeamRow = (
 
         {/* Category Cell */}
         <td
-          className={`text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
             width: categoryColWidth,
             minWidth: categoryColWidth,
             maxWidth: categoryColWidth,
             height: cellHeight,
-            border: "1px solid " + rowBorderColor,
+            border: "1px solid #e5e7eb",
             borderTop: "none",
             borderLeft: "none",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
@@ -270,14 +269,13 @@ const renderTeamRow = (
 
         {/* Proj TWV Cell */}
         <td
-          className={`text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
             width: twvColWidth,
             minWidth: twvColWidth,
             maxWidth: twvColWidth,
             height: cellHeight,
-            backgroundColor: rowBgColor,
-            border: "1px solid " + rowBorderColor,
+            border: "1px solid #e5e7eb",
             borderTop: "none",
             borderLeft: "none",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
