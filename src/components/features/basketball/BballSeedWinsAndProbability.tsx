@@ -10,6 +10,15 @@ import { useEffect, useMemo, useState } from "react";
 
 interface ConfChampData extends SeedWinsTeam {
   wins_probabilities?: Record<string, number>;
+  wins_required_info?: Record<
+    string,
+    {
+      wins_threshold: number | null;
+      wins_additional_needed: number | null;
+      max_probability: number;
+      category: "Normal" | "Needs Help" | "Not Possible";
+    }
+  >;
 }
 
 interface SeedWinRequirement {
@@ -179,11 +188,6 @@ export default function BballSeedWinsAndProbability({
   const paddingHorizontal = isMobile ? 4 : 6;
   const chartGap = 24;
 
-  const getWinsField = (seed: SeedLevel): keyof ConfChampData => {
-    if (seed === "bubble") return "wins_for_bubble";
-    return `wins_for_${seed}_seed` as keyof ConfChampData;
-  };
-
   const confChampData = useMemo(
     () => (seedWinsResponse?.data as ConfChampData[]) || [],
     [seedWinsResponse],
@@ -191,6 +195,7 @@ export default function BballSeedWinsAndProbability({
 
   const processedData = useMemo(() => {
     const winsGrouped: Record<number | string, SeedWinRequirement[]> = {
+      "Needs Help": [],
       "Not Possible": [],
     };
     const probGrouped: Record<ProbabilityCategory, SeedProbabilityTeam[]> = {
@@ -214,137 +219,65 @@ export default function BballSeedWinsAndProbability({
       `DEBUG: Processing ${confChampData.length} teams, selectedSeed=${selectedSeed}`,
     );
 
-    // Debug: Log South Carolina's raw data if it exists
-    const southCarolina = confChampData.find(
-      (team: ConfChampData) => team.team_name === "South Carolina",
-    );
-    if (southCarolina) {
-      console.log(
-        "DEBUG: South Carolina raw data from backend:",
-        southCarolina,
-      );
-      console.log(
-        "DEBUG: South Carolina wins_probabilities:",
-        southCarolina.wins_probabilities,
-      );
-      console.log(
-        "DEBUG: South Carolina wins_for_11_seed:",
-        southCarolina.wins_for_11_seed,
-      );
-    }
-
     confChampData.forEach((team: ConfChampData) => {
-      const winsField = getWinsField(selectedSeed);
-      const winsTarget = Math.ceil((team[winsField] as number) || 0);
-      const gamesRemaining =
-        team.total_possible_pre_ncaa_games -
-        (team.actual_total_wins + team.actual_total_losses);
-      const winsRequired = winsTarget - team.actual_total_wins;
-
-      // Check if team has already met the requirement
-      const alreadyMet = winsRequired <= 0;
-      // Only "Not Possible" if physically impossible AND not already met
-      const isPossible =
-        alreadyMet || (winsRequired <= gamesRemaining && winsRequired > 0);
-
-      // DEBUG
-      if (team.team_name === "Arizona" || team.team_name === "TCU") {
-        console.log(
-          `DEBUG ${team.team_name}: winsField=${winsField}, winsTarget=${winsTarget}, actual_wins=${team.actual_total_wins}, winsRequired=${winsRequired}, alreadyMet=${alreadyMet}, isPossible=${isPossible}`,
-        );
+      if (!team.wins_required_info) {
+        console.warn(`Missing wins_required_info for ${team.team_name}`);
+        return;
       }
 
+      const requiredInfo = team.wins_required_info[selectedSeed];
+
+      if (!requiredInfo) {
+        console.warn(
+          `No wins_required_info for ${team.team_name}, seed ${selectedSeed}`,
+        );
+        return;
+      }
+
+      const { wins_additional_needed, category } = requiredInfo;
+
+      // Get probability from wins_probabilities
+      const probability = team.wins_probabilities?.[selectedSeed] || 0;
+      // Determine probability category
+      let probCategory: ProbabilityCategory;
+      if (category === "Not Possible") {
+        probCategory = "Not Possible";
+      } else if (wins_additional_needed === 0) {
+        // Teams that need 0 wins have already met the requirement
+        probCategory = "Already Met";
+      } else {
+        probCategory = getProbabilityCategory(probability);
+      }
+
+      // Create wins data
       const winsData: SeedWinRequirement = {
         team_id: team.team_id,
         team_name: team.team_name,
         logo_url: team.logo_url,
-        winsRequired: Math.max(0, winsRequired),
-        totalWinsPossible: gamesRemaining,
-        isPossible,
+        winsRequired: wins_additional_needed ?? 0,
+        totalWinsPossible:
+          team.total_possible_pre_ncaa_games -
+          (team.actual_total_wins + team.actual_total_losses),
+        isPossible: category !== "Not Possible",
         actual_total_wins: team.actual_total_wins,
         actual_total_losses: team.actual_total_losses,
       };
 
-      if (!isPossible) {
+      // Group wins required by category
+      if (category === "Needs Help") {
+        winsGrouped["Needs Help"].push(winsData);
+      } else if (category === "Not Possible") {
         winsGrouped["Not Possible"].push(winsData);
-      } else {
-        const winsKey = winsData.winsRequired;
+      } else if (category === "Normal") {
+        // For "Normal", group by wins_additional_needed
+        const winsKey = wins_additional_needed ?? 0;
         if (!winsGrouped[winsKey]) {
           winsGrouped[winsKey] = [];
         }
         winsGrouped[winsKey].push(winsData);
       }
 
-      let probability: number;
-      let probCategory: ProbabilityCategory;
-
-      // Check if it's physically impossible to achieve this seed
-      if (winsRequired > gamesRemaining) {
-        probability = 0;
-        probCategory = "Not Possible";
-      } else if (winsRequired <= 0) {
-        // Already achieved
-        probability = 100;
-        probCategory = "Already Met";
-      } else {
-        // Get probability directly from backend calculation
-        const teamData = team as unknown as ConfChampData;
-        const backendProbs = teamData.wins_probabilities || {};
-        const probValue = backendProbs[selectedSeed];
-
-        // If the value is an object or array, something is wrong with the data structure
-        if (typeof probValue === "object") {
-          console.warn(
-            `WARNING: ${team.team_name} has object value for seed ${selectedSeed}:`,
-            probValue,
-          );
-          probability = 0;
-        } else {
-          probability = Number(probValue) || 0;
-        }
-
-        probCategory = getProbabilityCategory(probability);
-      }
-
-      // DEBUG - Enhanced logging for debugging
-      if (
-        team.team_name === "Arizona" ||
-        team.team_name === "TCU" ||
-        team.team_name === "South Carolina"
-      ) {
-        const teamData = team as unknown as ConfChampData;
-        console.log(
-          `DEBUG ${team.team_name}: selectedSeed=${selectedSeed}, probability=${probability}, probCategory=${probCategory}`,
-        );
-        console.log(
-          `DEBUG ${team.team_name}: winsRequired=${winsRequired}, gamesRemaining=${gamesRemaining}`,
-        );
-        console.log(
-          `DEBUG ${team.team_name}: winsField=${getWinsField(selectedSeed)}, winsTarget=${Math.ceil((team[getWinsField(selectedSeed)] as number) || 0)}`,
-        );
-        console.log(
-          `DEBUG ${team.team_name}: actual_wins=${team.actual_total_wins}, actual_losses=${team.actual_total_losses}`,
-        );
-        const backendProbs = teamData.wins_probabilities || {};
-        console.log(
-          `DEBUG ${team.team_name}: backendProbs object keys:`,
-          Object.keys(backendProbs),
-        );
-        console.log(
-          `DEBUG ${team.team_name}: backendProbs[${selectedSeed}] =`,
-          backendProbs[selectedSeed],
-        );
-        console.log(
-          `DEBUG ${team.team_name}: typeof backendProbs[${selectedSeed}] =`,
-          typeof backendProbs[selectedSeed],
-        );
-        console.log(
-          `DEBUG ${team.team_name}: Full wins_probabilities object:`,
-          teamData.wins_probabilities,
-        );
-        console.log(`DEBUG ${team.team_name}: Full team object=`, teamData);
-      }
-
+      // Create probability data
       const probData: SeedProbabilityTeam = {
         team_id: team.team_id,
         team_name: team.team_name,
@@ -352,192 +285,158 @@ export default function BballSeedWinsAndProbability({
         actual_total_wins: team.actual_total_wins,
         actual_total_losses: team.actual_total_losses,
         probability,
-        winsRequired,
-        gamesRemaining,
+        winsRequired: wins_additional_needed ?? 0,
+        gamesRemaining:
+          team.total_possible_pre_ncaa_games -
+          (team.actual_total_wins + team.actual_total_losses),
       };
 
       probGrouped[probCategory].push(probData);
     });
 
+    // Sort probability teams within each category
     Object.keys(probGrouped).forEach((category) => {
       probGrouped[category as ProbabilityCategory].sort((a, b) => {
-        // First sort by games remaining (ascending - fewest games first)
-        if (a.gamesRemaining !== b.gamesRemaining) {
-          return a.gamesRemaining - b.gamesRemaining;
-        }
-        // Then by probability (descending - highest probability first)
-        if (a.probability !== b.probability) {
-          return b.probability - a.probability;
-        }
-        // Then by current wins (descending - most wins first)
-        if (a.actual_total_wins !== b.actual_total_wins) {
-          return b.actual_total_wins - a.actual_total_wins;
-        }
-        // Finally alphabetically by team name
-        return a.team_name.localeCompare(b.team_name);
+        if (a.team_name < b.team_name) return -1;
+        if (a.team_name > b.team_name) return 1;
+        return 0;
       });
-    });
-
-    // Sort wins groups by wins required (ascending: fewer wins needed first) within each group
-    Object.keys(winsGrouped).forEach((key) => {
-      winsGrouped[key].sort((a, b) => a.winsRequired - b.winsRequired);
     });
 
     return { winsGrouped, probGrouped };
   }, [confChampData, selectedSeed]);
 
   const sortedWinsLevels = useMemo(() => {
-    const levels = Object.keys(processedData.winsGrouped)
-      .filter((key) => key !== "Not Possible")
-      .map((key) => parseInt(key))
-      .sort((a, b) => a - b);
+    const levels: Array<string | number> = Object.keys(
+      processedData.winsGrouped,
+    )
+      .filter((w) => w !== "Not Possible") // Exclude "Not Possible" - it's rendered separately
+      .map((w) => {
+        if (w === "Needs Help") return { key: w as string | number, sort: 999 };
+        return { key: parseInt(w) as string | number, sort: parseInt(w) };
+      })
+      .sort((a, b) => a.sort - b.sort)
+      .map((item) => item.key);
     return levels;
   }, [processedData.winsGrouped]);
 
-  const renderWinsTeams = (winsTeams: SeedWinRequirement[]) => {
-    const winsTeamWidth = logoSize + gapBetweenLogos;
-    const winsMaxTeamsWidth =
-      Math.min(winsTeams.length, maxLogosPerRow) * winsTeamWidth +
-      gapBetweenLogos;
+  const renderWinsTeams = (teams: SeedWinRequirement[]) => {
+    if (teams.length === 0) {
+      return (
+        <div
+          style={{
+            fontSize: isMobile ? "11px" : "12px",
+            color: "#9ca3af",
+            flex: 1,
+          }}
+        >
+          -
+        </div>
+      );
+    }
+
+    const rows: SeedWinRequirement[][] = [];
+    for (let i = 0; i < teams.length; i += maxLogosPerRow) {
+      rows.push(teams.slice(i, i + maxLogosPerRow));
+    }
 
     return (
       <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "flex-start",
-          justifyContent: "flex-start",
-          gap: gapBetweenLogos,
-          flexWrap: "wrap",
-          boxSizing: "border-box",
-          maxWidth: winsMaxTeamsWidth,
-        }}
+        style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}
       >
-        {winsTeams.map((team) => (
+        {rows.map((row, rowIdx) => (
           <div
-            key={`wins-team-${team.team_id}`}
+            key={rowIdx}
             style={{
-              flexShrink: 0,
               display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
+              flexDirection: "row",
+              gap: gapBetweenLogos,
+              flexWrap: "wrap",
             }}
           >
-            {team.logo_url && (
-              <Image
-                src={team.logo_url}
-                alt={team.team_name}
-                width={logoSize}
-                height={logoSize}
-                style={{
-                  width: logoSize,
-                  height: logoSize,
-                  objectFit: "contain",
-                  borderRadius: 2,
-                  cursor: "pointer",
-                }}
-                onClick={() => {
+            {row.map((team) => (
+              <div
+                key={team.team_id}
+                style={{ cursor: "pointer" }}
+                onClick={() =>
                   router.push(
                     `/basketball/team/${encodeURIComponent(team.team_name)}`,
-                  );
-                }}
-                title={`${team.team_name}: ${team.winsRequired} more wins needed, up to ${team.totalWinsPossible} games remaining`}
-              />
-            )}
-            <div
-              style={{
-                fontSize: isMobile ? "9px" : "10px",
-                fontWeight: "400",
-                color: "#6b7280",
-                textAlign: "center",
-                minWidth: logoSize,
-                cursor: "pointer",
-              }}
-              onClick={() => {
-                router.push(
-                  `/basketball/team/${encodeURIComponent(team.team_name)}`,
-                );
-              }}
-              title={`${team.team_name}: ${team.winsRequired} wins needed`}
-            >
-              {team.actual_total_wins}-{team.actual_total_losses}
-            </div>
+                  )
+                }
+                title={team.team_name}
+              >
+                <Image
+                  src={team.logo_url}
+                  alt={team.team_name}
+                  width={logoSize}
+                  height={logoSize}
+                  style={{
+                    borderRadius: 3,
+                    opacity: team.isPossible ? 1 : 0.4,
+                  }}
+                />
+              </div>
+            ))}
           </div>
         ))}
       </div>
     );
   };
 
-  const renderProbTeams = (probTeams: SeedProbabilityTeam[]) => {
-    const probTeamWidth = logoSize + gapBetweenLogos;
-    const probMaxTeamsWidth =
-      Math.min(probTeams.length, maxLogosPerRow) * probTeamWidth +
-      gapBetweenLogos;
+  const renderProbTeams = (teams: SeedProbabilityTeam[]) => {
+    if (teams.length === 0) {
+      return (
+        <div
+          style={{
+            fontSize: isMobile ? "11px" : "12px",
+            color: "#9ca3af",
+            flex: 1,
+          }}
+        >
+          -
+        </div>
+      );
+    }
+
+    const rows: SeedProbabilityTeam[][] = [];
+    for (let i = 0; i < teams.length; i += maxLogosPerRow) {
+      rows.push(teams.slice(i, i + maxLogosPerRow));
+    }
 
     return (
       <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "flex-start",
-          justifyContent: "flex-start",
-          gap: gapBetweenLogos,
-          flexWrap: "wrap",
-          boxSizing: "border-box",
-          maxWidth: probMaxTeamsWidth,
-        }}
+        style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}
       >
-        {probTeams.map((team) => (
+        {rows.map((row, rowIdx) => (
           <div
-            key={`prob-team-${team.team_id}`}
+            key={rowIdx}
             style={{
-              flexShrink: 0,
               display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
+              flexDirection: "row",
+              gap: gapBetweenLogos,
+              flexWrap: "wrap",
             }}
           >
-            {team.logo_url && (
-              <Image
-                src={team.logo_url}
-                alt={team.team_name}
-                width={logoSize}
-                height={logoSize}
-                style={{
-                  width: logoSize,
-                  height: logoSize,
-                  objectFit: "contain",
-                  borderRadius: 2,
-                  cursor: "pointer",
-                }}
-                onClick={() => {
+            {row.map((team) => (
+              <div
+                key={team.team_id}
+                style={{ cursor: "pointer" }}
+                onClick={() =>
                   router.push(
                     `/basketball/team/${encodeURIComponent(team.team_name)}`,
-                  );
-                }}
-                title={`${team.team_name}: ${team.probability}% probability`}
-              />
-            )}
-            <div
-              style={{
-                fontSize: isMobile ? "9px" : "10px",
-                fontWeight: "400",
-                color: "#6b7280",
-                textAlign: "center",
-                minWidth: logoSize,
-                cursor: "pointer",
-              }}
-              onClick={() => {
-                router.push(
-                  `/basketball/team/${encodeURIComponent(team.team_name)}`,
-                );
-              }}
-              title={`${team.team_name}: ${team.probability}%`}
-            >
-              {team.actual_total_wins}-{team.actual_total_losses}
-            </div>
+                  )
+                }
+                title={team.team_name}
+              >
+                <Image
+                  src={team.logo_url}
+                  alt={team.team_name}
+                  width={logoSize}
+                  height={logoSize}
+                  style={{ borderRadius: 3 }}
+                />
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -547,21 +446,16 @@ export default function BballSeedWinsAndProbability({
   if (isLoading) {
     return (
       <div
-        data-component-type="bball-seed-wins-and-probability"
         style={{
           display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          boxSizing: "border-box",
-          alignItems: "center",
           justifyContent: "center",
-          minHeight: 300,
+          alignItems: "center",
+          height: "400px",
+          fontSize: "14px",
+          color: "#6b7280",
         }}
       >
-        <div style={{ color: "#9ca3af", fontSize: "14px" }}>
-          Loading data...
-        </div>
+        Loading...
       </div>
     );
   }
@@ -569,76 +463,67 @@ export default function BballSeedWinsAndProbability({
   if (error) {
     return (
       <div
-        data-component-type="bball-seed-wins-and-probability"
         style={{
           display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          boxSizing: "border-box",
-          alignItems: "center",
           justifyContent: "center",
-          minHeight: 300,
+          alignItems: "center",
+          height: "400px",
+          fontSize: "14px",
+          color: "#dc2626",
         }}
       >
-        <div style={{ color: "#dc2626", fontSize: "14px" }}>
-          Error loading data
-        </div>
+        Error loading seed projection data
       </div>
     );
   }
 
   return (
     <div
-      data-component-type="bball-seed-wins-and-probability"
-      data-selected-seed={selectedSeed}
       style={{
         display: "flex",
         flexDirection: "column",
-        width: "100%",
         height: "100%",
         boxSizing: "border-box",
       }}
     >
+      {/* SEED DROPDOWN */}
       <div
         style={{
-          paddingLeft: paddingHorizontal,
-          paddingRight: paddingHorizontal,
-          paddingTop: 4,
-          paddingBottom: 4,
-          boxSizing: "border-box",
-          flexShrink: 0,
           display: "flex",
           flexDirection: "row",
-          alignItems: "center",
           gap: 12,
+          paddingLeft: paddingHorizontal,
+          paddingRight: paddingHorizontal,
+          paddingTop: 12,
+          paddingBottom: 12,
+          borderBottom: "2px solid #d1d5db",
+          boxSizing: "border-box",
+          flexShrink: 0,
         }}
       >
         <label
           style={{
             fontSize: isMobile ? "12px" : "13px",
-            fontWeight: "400",
+            fontWeight: "500",
             color: "#374151",
-            whiteSpace: "nowrap",
+            display: "flex",
+            alignItems: "center",
           }}
         >
-          Select Seed Target:
+          Selected Seed:
         </label>
-
         <select
           value={selectedSeed}
           onChange={(e) => setSelectedSeed(e.target.value as SeedLevel)}
           style={{
-            width: isMobile ? "140px" : "170px",
             padding: "6px 8px",
-            fontSize: isMobile ? "12px" : "13px",
-            fontWeight: "400",
-            color: "#374151",
-            backgroundColor: "#ffffff",
+            borderRadius: "4px",
             border: "1px solid #d1d5db",
-            borderRadius: 6,
+            fontSize: isMobile ? "12px" : "13px",
+            backgroundColor: "white",
+            color: "#1f2937",
             cursor: "pointer",
-            boxSizing: "border-box",
+            fontWeight: "500",
           }}
         >
           {seedLevels.map((seed) => (
@@ -649,34 +534,12 @@ export default function BballSeedWinsAndProbability({
         </select>
       </div>
 
-      {/* Target Seed display for screenshots - hidden from normal view */}
-      <div
-        style={{
-          paddingLeft: paddingHorizontal,
-          paddingRight: paddingHorizontal,
-          paddingTop: 6,
-          paddingBottom: 2,
-          boxSizing: "border-box",
-          flexShrink: 0,
-          display: "none",
-          fontSize: isMobile ? "13px" : "14px",
-          fontWeight: "400",
-          color: "#1f2937",
-        }}
-        className="seed-target-display"
-      >
-        Target Seed:{" "}
-        {seedLevels.find((s) => s.value === selectedSeed)?.label ||
-          selectedSeed}
-      </div>
-
+      {/* CHARTS */}
       <div
         style={{
           display: "flex",
           flexDirection: "row",
-          gap: 4,
           flex: 1,
-          boxSizing: "border-box",
           overflow: "auto",
           paddingLeft: paddingHorizontal,
           paddingRight: paddingHorizontal,
@@ -739,7 +602,11 @@ export default function BballSeedWinsAndProbability({
           <div style={{ flex: 1, overflow: "auto" }}>
             {sortedWinsLevels.map((winsLevel) => {
               const winsTeams = processedData.winsGrouped[winsLevel] || [];
-              const isZeroWins = winsLevel === 0;
+              const isZeroWins =
+                typeof winsLevel === "number" && winsLevel === 0;
+              const isNeedsHelp =
+                typeof winsLevel === "string" && winsLevel === "Needs Help";
+
               return (
                 <div
                   key={`wins-${winsLevel}`}
@@ -753,7 +620,11 @@ export default function BballSeedWinsAndProbability({
                     paddingTop: 2,
                     paddingBottom: 2,
                     borderBottom: "1px solid #f3f4f6",
-                    backgroundColor: isZeroWins ? "#f0fdf4" : "transparent",
+                    backgroundColor: isNeedsHelp
+                      ? "#fef3c7"
+                      : isZeroWins
+                        ? "#f0fdf4"
+                        : "transparent",
                     boxSizing: "border-box",
                   }}
                 >
@@ -763,12 +634,17 @@ export default function BballSeedWinsAndProbability({
                       flexShrink: 0,
                       fontSize: isMobile ? "11px" : "12px",
                       fontWeight: "400",
-                      color: isZeroWins ? "#166534" : "#1f2937",
+                      color: isNeedsHelp
+                        ? "#92400e"
+                        : isZeroWins
+                          ? "#166534"
+                          : "#1f2937",
                       textAlign: "left",
                       boxSizing: "border-box",
+                      lineHeight: "1.2",
                     }}
                   >
-                    {winsLevel}
+                    {isNeedsHelp ? "Needs\nHelp" : winsLevel}
                   </div>
                   {renderWinsTeams(winsTeams)}
                 </div>
@@ -913,6 +789,7 @@ export default function BballSeedWinsAndProbability({
         </div>
       </div>
 
+      {/* FOOTER EXPLANATION */}
       <div
         style={{
           marginTop: 12,
@@ -927,13 +804,14 @@ export default function BballSeedWinsAndProbability({
         }}
       >
         <div style={{ marginBottom: 6 }}>
-          Wins Required: Additional wins required to reach the selected seed
-          threshold.
+          Wins Required: Shows teams grouped by additional wins needed to reach
+          the selected seed, "Needs Help" if they cannot guarantee it but have a
+          chance, or "Not Possible" if it's mathematically impossible.
         </div>
         <div style={{ marginBottom: 6 }}>
-          Probability: Likelihood of achieving the minimum wins required based
-          on 1,000 simulations using composite ratings based on kenpom,
-          barttorvik and evanmiya
+          Probability: Likelihood of achieving the selected seed based on 1,000
+          simulations using composite ratings from KenPom, BarTorvik, and
+          EvanMiya.
         </div>
       </div>
     </div>

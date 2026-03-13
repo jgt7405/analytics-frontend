@@ -21,6 +21,15 @@ export interface SeedWinsTeam {
   wins_for_11_seed: number;
   wins_for_bubble: number;
   wins_probabilities?: Record<string, number>;
+  wins_required_info?: Record<
+    string,
+    {
+      wins_threshold: number | null;
+      wins_additional_needed: number | null;
+      max_probability: number;
+      category: "Normal" | "Needs Help" | "Not Possible";
+    }
+  >;
   pct_prob_win_conf_tourney_game_1?: number;
   pct_prob_win_conf_tourney_game_2?: number;
   pct_prob_win_conf_tourney_game_3?: number;
@@ -58,7 +67,7 @@ export const useBasketballSeedWinsData = (conference: string | null) => {
 
       try {
         const response = await fetch(
-          `/api/proxy/basketball/conf_champ_analysis/${confFormatted}`
+          `/api/proxy/basketball/conf_champ_analysis/${confFormatted}`,
         );
 
         if (!response.ok) {
@@ -69,7 +78,7 @@ export const useBasketballSeedWinsData = (conference: string | null) => {
             body: errorText,
           });
           throw new Error(
-            `HTTP ${response.status}: Failed to fetch seed wins data for ${conference}`
+            `HTTP ${response.status}: Failed to fetch seed wins data for ${conference}`,
           );
         }
 
@@ -106,7 +115,7 @@ export const useBasketballSeedWinsData = (conference: string | null) => {
               team_name: String(team.team_name || ""),
               team_id: String(team.team_id || team.teamid || ""),
               logo_url: String(
-                team.logo_url || `/images/team_logos/${team.team_name}.png`
+                team.logo_url || `/images/team_logos/${team.team_name}.png`,
               ),
               actual_total_wins: actualWins,
               actual_total_losses: actualLosses,
@@ -140,6 +149,16 @@ export const useBasketballSeedWinsData = (conference: string | null) => {
                 "11": 0,
                 bubble: 0,
               },
+              wins_required_info:
+                (team.wins_required_info as Record<
+                  string,
+                  {
+                    wins_threshold: number | null;
+                    wins_additional_needed: number | null;
+                    max_probability: number;
+                    category: "Normal" | "Needs Help" | "Not Possible";
+                  }
+                >) || {},
               pct_prob_win_conf_tourney_game_1:
                 Number(team.pct_prob_win_conf_tourney_game_1) || 0,
               pct_prob_win_conf_tourney_game_2:
@@ -155,11 +174,11 @@ export const useBasketballSeedWinsData = (conference: string | null) => {
               season_total_proj_wins_avg:
                 Number(team.season_total_proj_wins_avg) || 0,
             };
-          }
+          },
         );
 
         console.log(
-          `[SeedWinsData] Successfully loaded ${mappedData.length} teams for ${conference}`
+          `[SeedWinsData] Successfully loaded ${mappedData.length} teams for ${conference}`,
         );
 
         return {
@@ -169,7 +188,7 @@ export const useBasketballSeedWinsData = (conference: string | null) => {
       } catch (error) {
         console.error(
           `[SeedWinsData] Error fetching for ${conference}:`,
-          error
+          error,
         );
         throw error;
       }
