@@ -16,7 +16,7 @@ declare global {
 }
 
 export default function BasketballChartPage() {
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [html2canvasLoaded, setHtml2canvasLoaded] = useState(false);
@@ -65,6 +65,80 @@ export default function BasketballChartPage() {
       img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
       img.src = url;
     });
+  };
+
+  const handleDownloadTeamSchedule = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch("/api/proxy/team_schedule");
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch team schedule: ${response.statusText}`
+        );
+      }
+
+      const jsonData = await response.json();
+
+      if (
+        !jsonData.success ||
+        !jsonData.data ||
+        jsonData.data.length === 0
+      ) {
+        alert("No team schedule data available");
+        setIsLoading(false);
+        return;
+      }
+
+      // Convert JSON to CSV
+      const data = jsonData.data;
+      const headers = Object.keys(data[0]);
+      const csvContent = [
+        headers.join(","),
+        ...data.map((row: Record<string, any>) =>
+          headers
+            .map((header) => {
+              const value = row[header];
+              // Handle null/undefined
+              if (value === null || value === undefined) {
+                return "";
+              }
+              // Escape quotes and wrap in quotes if contains comma or quotes
+              const stringValue = String(value);
+              if (
+                stringValue.includes(",") ||
+                stringValue.includes('"') ||
+                stringValue.includes("\n")
+              ) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+              }
+              return stringValue;
+            })
+            .join(",")
+        ),
+      ].join("\n");
+
+      // Download file
+      const timestamp = new Date().toISOString().split("T")[0];
+      const filename = `bball_team_schedule_${timestamp}.csv`;
+      const link = document.createElement("a");
+      link.href =
+        "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert(
+        `Failed to download: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleScreenshot = async () => {
@@ -333,14 +407,22 @@ export default function BasketballChartPage() {
           </div>
 
           {/* Action Buttons - NOT captured in screenshot */}
-          <div className="mt-6 flex gap-3 justify-end">
+          <div className="mt-6 flex gap-3 justify-end flex-wrap">
+            <button
+              onClick={handleDownloadTeamSchedule}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              {isLoading ? "Loading Schedule..." : "Download Team Schedule"}
+            </button>
             <button
               onClick={() => setIsScreenshotModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
               disabled={!html2canvasLoaded}
             >
               <Download className="w-4 h-4" />
-              Download
+              Download Chart
             </button>
             <button
               onClick={handleShareX}
@@ -369,7 +451,7 @@ export default function BasketballChartPage() {
                 {/* Modal Header */}
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Download Screenshot
+                    Download Chart Screenshot
                   </h2>
                   <button
                     onClick={() => setIsScreenshotModalOpen(false)}
