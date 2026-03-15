@@ -36,6 +36,9 @@ export async function GET(
         case "teams":
           backendPath = `/basketball_teams`;
           break;
+        case "team_schedule":
+          backendPath = `/team-schedule`;
+          break;
         default:
           return NextResponse.json(
             { error: "Unknown single endpoint" },
