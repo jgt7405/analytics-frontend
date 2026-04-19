@@ -4,6 +4,18 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Helper: Forward the ?season= query parameter from the incoming request
+ * to the backend URL. If no season param exists, returns empty string.
+ */
+function getSeasonQueryString(request: NextRequest): string {
+  const season = request.nextUrl.searchParams.get("season");
+  if (season) {
+    return `?season=${encodeURIComponent(season)}`;
+  }
+  return "";
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
@@ -348,8 +360,11 @@ export async function GET(
       );
     }
 
-    // Make request to Railway backend with improved caching and error handling
-    const backendUrl = `${BACKEND_BASE_URL}${backendPath}`;
+    // =========================================================================
+    // SEASON ARCHIVE: Forward ?season= query parameter to the backend
+    // =========================================================================
+    const seasonQuery = getSeasonQueryString(_request);
+    const backendUrl = `${BACKEND_BASE_URL}${backendPath}${seasonQuery}`;
     console.log("Backend URL:", backendUrl);
 
     const response = await fetch(backendUrl, {
@@ -590,7 +605,11 @@ export async function POST(
       );
     }
 
-    const backendUrl = `${BACKEND_BASE_URL}${backendPath}`;
+    // =========================================================================
+    // SEASON ARCHIVE: Forward ?season= query parameter to the backend for POSTs
+    // =========================================================================
+    const seasonQuery = getSeasonQueryString(request);
+    const backendUrl = `${BACKEND_BASE_URL}${backendPath}${seasonQuery}`;
     console.log("🌐 Backend URL:", backendUrl);
 
     let fetchOptions: RequestInit;
