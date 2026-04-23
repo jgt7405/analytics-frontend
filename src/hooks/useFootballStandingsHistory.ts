@@ -44,12 +44,16 @@ interface FootballStandingsHistoryResponse {
   };
 }
 
-export const useFootballStandingsHistory = (conference: string) => {
+export const useFootballStandingsHistory = (
+  conference: string,
+  season?: string,
+) => {
   return useQuery<FootballStandingsHistoryResponse, Error>({
-    queryKey: ["football-standings-history", conference],
+    queryKey: ["football-standings-history", conference, season],
     queryFn: async () => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        `/api/proxy/football/standings/${conference}/history`
+        `/api/proxy/football/standings/${conference}/history${seasonQuery}`,
       );
       if (!response.ok) {
         throw new Error("Failed to fetch standings history");

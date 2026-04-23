@@ -3,23 +3,25 @@ import { FootballScheduleResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchFootballSchedule = async (
-  conference: string
+  conference: string,
+  season?: string,
 ): Promise<FootballScheduleResponse> => {
   // ✅ FIXED: Format conference name like other football hooks
   const formattedConf = conference.replace(/\s+/g, "_");
+  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
 
   console.log(
-    `🏈 Getting football schedule for: ${conference} -> ${formattedConf}`
+    `🏈 Getting football schedule for: ${conference} -> ${formattedConf}`,
   );
 
   // Use the correct proxy endpoint with formatted conference name
   const response = await fetch(
-    `/api/proxy/football/conf_schedule/${formattedConf}`
+    `/api/proxy/football/conf_schedule/${formattedConf}${seasonQuery}`,
   );
 
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch football schedule: ${response.statusText}`
+      `Failed to fetch football schedule: ${response.statusText}`,
     );
   }
 
@@ -33,18 +35,19 @@ const fetchFootballSchedule = async (
   }
   console.log(
     "🔍 FRONTEND: First few teams summary:",
-    Object.entries(data.summary || {}).slice(0, 3)
+    Object.entries(data.summary || {}).slice(0, 3),
   );
 
   return data;
 };
 
-export const useFootballSchedule = (conference: string) => {
+export const useFootballSchedule = (conference: string, season?: string) => {
   return useQuery({
-    queryKey: ["football-schedule", conference],
-    queryFn: () => fetchFootballSchedule(conference),
+    queryKey: ["football-schedule", conference, season],
+    queryFn: () => fetchFootballSchedule(conference, season),
     enabled: !!conference,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 };

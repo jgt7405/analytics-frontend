@@ -11,6 +11,7 @@ export interface GameSelection {
 export interface WhatIfRequest {
   conference: string;
   selections: GameSelection[];
+  season?: string;
 }
 
 export interface WhatIfResponse {
@@ -83,16 +84,20 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => ({
 });
 
 const calculateWhatIf = async (
-  request: WhatIfRequest
+  request: WhatIfRequest,
 ): Promise<WhatIfResponse> => {
   console.log("📤 Sending what-if request:", request);
 
-  const response = await fetch("/api/proxy/football/whatif", {
+  // Remove season from request body, pass as query param instead
+  const { season, ...requestBody } = request;
+  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+
+  const response = await fetch(`/api/proxy/football/whatif${seasonQuery}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(request),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {

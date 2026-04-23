@@ -45,17 +45,21 @@ interface BasketballTeamAllHistoryResponse {
   };
 }
 
-export const useBasketballTeamAllHistory = (teamName: string) => {
+export const useBasketballTeamAllHistory = (
+  teamName: string,
+  season?: string,
+) => {
   return useQuery<BasketballTeamAllHistoryResponse, Error>({
-    queryKey: ["basketball-team-all-history", teamName],
+    queryKey: ["basketball-team-all-history", teamName, season],
     queryFn: async () => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       // Fetch both endpoints in parallel
       const [confWinsResponse, ncaaResponse] = await Promise.all([
         fetch(
-          `/api/proxy/basketball/team/${encodeURIComponent(teamName)}/history/conf_wins`
+          `/api/proxy/basketball/team/${encodeURIComponent(teamName)}/history/conf_wins${seasonQuery}`,
         ),
         fetch(
-          `/api/proxy/basketball/ncaa/${encodeURIComponent(teamName)}/history`
+          `/api/proxy/basketball/ncaa/${encodeURIComponent(teamName)}/history${seasonQuery}`,
         ),
       ]);
 

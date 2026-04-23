@@ -17,12 +17,13 @@ interface BasketballConfDataHistoryResponse {
   debug?: Record<string, unknown>;
 }
 
-export function useBasketballConfDataHistory() {
+export function useBasketballConfDataHistory(season?: string) {
   return useQuery<BasketballConfDataHistoryResponse>({
-    queryKey: ["basketball-conf-data-history"],
+    queryKey: ["basketball-conf-data-history", season],
     queryFn: async () => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        "/api/proxy/unified_conference_data/history"
+        `/api/proxy/unified_conference_data/history${seasonQuery}`,
       );
       if (!response.ok) {
         throw new Error("Failed to fetch basketball conference data history");

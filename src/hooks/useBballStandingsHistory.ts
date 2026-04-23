@@ -36,12 +36,16 @@ interface BballStandingsHistoryResponse {
   };
 }
 
-export function useBballStandingsHistory(conference: string) {
+export function useBballStandingsHistory(
+  conference: string,
+  season?: string,
+) {
   return useQuery<BballStandingsHistoryResponse>({
-    queryKey: ["bball-standings-history", conference],
+    queryKey: ["bball-standings-history", conference, season],
     queryFn: async () => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        `/api/proxy/standings/${conference.replace(" ", "_")}/history`
+        `/api/proxy/standings/${conference.replace(" ", "_")}/history${seasonQuery}`,
       );
       if (!response.ok)
         throw new Error("Failed to fetch basketball standings history");

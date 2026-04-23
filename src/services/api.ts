@@ -297,13 +297,13 @@ class ApiClient {
     retries = 3,
   ): Promise<T> {
     if (!this.validateEndpoint(endpoint)) {
-      console.warn(`âš ï¸  Potentially invalid endpoint: ${endpoint}`);
+      console.warn(`⚠️  Potentially invalid endpoint: ${endpoint}`);
     }
 
     const startTime = Date.now();
     const fullUrl = `${API_BASE_URL}${endpoint}`;
 
-    console.log(`ðŸ”„ Making API call to: ${fullUrl}`);
+    console.log(`📄 Making API call to: ${fullUrl}`);
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -322,7 +322,7 @@ class ApiClient {
         monitoring.trackApiCall(endpoint, "GET", duration, response.status);
 
         if (!response.ok) {
-          console.error(`âŒ API Error Details:`, {
+          console.error(`❌ API Error Details:`, {
             status: response.status,
             statusText: response.statusText,
             url: response.url,
@@ -342,7 +342,7 @@ class ApiClient {
         }
 
         const rawData = await response.json();
-        console.log(`âœ… API Success for ${endpoint}:`, {
+        console.log(`✅ API Success for ${endpoint}:`, {
           status: response.status,
           dataKeys: Object.keys(rawData || {}),
         });
@@ -350,7 +350,7 @@ class ApiClient {
         const validation = validator(rawData);
 
         if (!validation.success) {
-          console.error("âŒ API validation failed:", validation.error);
+          console.error("❌ API validation failed:", validation.error);
           throw new Error(
             `Validation failed: ${JSON.stringify(validation.error)}`,
           );
@@ -358,7 +358,7 @@ class ApiClient {
 
         return validation.data!;
       } catch (error) {
-        console.error(`âŒ API Request failed (attempt ${i + 1}/${retries}):`, {
+        console.error(`❌ API Request failed (attempt ${i + 1}/${retries}):`, {
           endpoint,
           error: error instanceof Error ? error.message : String(error),
           fullUrl,
@@ -392,7 +392,7 @@ class ApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`ðŸ€ Getting standings for: ${sanitized} -> ${formattedConf}`);
+    console.log(`🏀 Getting standings for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "standings_requested",
@@ -409,7 +409,7 @@ class ApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`ðŸ€ Getting CWV for: ${sanitized} -> ${formattedConf}`);
+    console.log(`🏀 Getting CWV for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "cwv_requested",
@@ -426,7 +426,7 @@ class ApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`ðŸ€ Getting schedule for: ${sanitized} -> ${formattedConf}`);
+    console.log(`🏀 Getting schedule for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "schedule_requested",
@@ -451,7 +451,7 @@ class ApiClient {
 
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    console.log(`ðŸ€ Getting TWV for: ${sanitized} -> ${formattedConf}`);
+    console.log(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "twv_requested",
@@ -473,7 +473,7 @@ class ApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     console.log(
-      `ðŸ€ Getting conf tourney for: ${sanitized} -> ${formattedConf}`,
+      `🏀 Getting conf tourney for: ${sanitized} -> ${formattedConf}`,
     );
 
     monitoring.trackEvent({
@@ -496,7 +496,7 @@ class ApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     console.log(
-      `ðŸ€ Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}`,
+      `🏀 Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}`,
     );
 
     monitoring.trackEvent({
@@ -518,7 +518,7 @@ class ApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`ðŸ€ Getting seed data for: ${sanitized} -> ${formattedConf}`);
+    console.log(`🏀 Getting seed data for: ${sanitized} -> ${formattedConf}`);
 
     monitoring.trackEvent({
       name: "seed_requested",
@@ -534,7 +534,7 @@ class ApiClient {
 
   async getTeamData(teamName: string): Promise<TeamDataApiResponse> {
     const encoded = encodeURIComponent(teamName);
-    console.log(`ðŸ€ Getting team data for: ${teamName} -> ${encoded}`);
+    console.log(`🏀 Getting team data for: ${teamName} -> ${encoded}`);
 
     return this.request(`/team/${encoded}`, (data) => ({
       success: true,
@@ -544,7 +544,7 @@ class ApiClient {
   }
 
   async getUnifiedConferenceData(): Promise<UnifiedConferenceDataResponse> {
-    console.log(`ðŸ€ Getting unified conference data`);
+    console.log(`🏀 Getting unified conference data`);
 
     return this.request(`/unified_conference_data`, (data) => ({
       success: true,
@@ -556,63 +556,84 @@ class ApiClient {
   // Football API methods
   async getFootballStandings(
     conference: string,
+    season?: string,
   ): Promise<FootballStandingsApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     console.log(
-      `ðŸˆ Getting football standings for: ${sanitized} -> ${formattedConf}`,
+      `🏈 Getting football standings for: ${sanitized} -> ${formattedConf}`,
     );
 
-    return this.request(`/football/standings/${formattedConf}`, (data) => ({
-      success: true,
-      data: data as FootballStandingsApiResponse,
-      error: null,
-    }));
+    return this.request(
+      `/football/standings/${formattedConf}${seasonQuery}`,
+      (data) => ({
+        success: true,
+        data: data as FootballStandingsApiResponse,
+        error: null,
+      }),
+    );
   }
 
   async getFootballSchedule(
     conference: string,
+    season?: string,
   ): Promise<FootballScheduleResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     console.log(
-      `ðŸˆ Getting football schedule for: ${sanitized} -> ${formattedConf}`,
+      `🏈 Getting football schedule for: ${sanitized} -> ${formattedConf}`,
     );
 
-    return this.request(`/football/conf_schedule/${formattedConf}`, (data) => ({
-      success: true,
-      data: data as FootballScheduleResponse,
-      error: null,
-    }));
+    return this.request(
+      `/football/conf_schedule/${formattedConf}${seasonQuery}`,
+      (data) => ({
+        success: true,
+        data: data as FootballScheduleResponse,
+        error: null,
+      }),
+    );
   }
 
-  async getFootballTWV(conference: string): Promise<FootballTWVApiResponse> {
+  async getFootballTWV(
+    conference: string,
+    season?: string,
+  ): Promise<FootballTWVApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     console.log(
-      `ðŸˆ Getting football TWV for: ${sanitized} -> ${formattedConf}`,
+      `🏈 Getting football TWV for: ${sanitized} -> ${formattedConf}`,
     );
 
-    return this.request(`/football/twv/${formattedConf}`, (data) => ({
+    return this.request(`/football/twv/${formattedConf}${seasonQuery}`, (data) => ({
       success: true,
       data: data as FootballTWVApiResponse,
       error: null,
     }));
   }
 
-  async getFootballCWV(conference: string): Promise<FootballCWVApiResponse> {
+  async getFootballCWV(
+    conference: string,
+    season?: string,
+  ): Promise<FootballCWVApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     console.log(
-      `ðŸˆ Getting football CWV for: ${sanitized} -> ${formattedConf}`,
+      `🏈 Getting football CWV for: ${sanitized} -> ${formattedConf}`,
     );
 
-    return this.request(`/football/cwv/${formattedConf}`, (data) => ({
-      success: true,
-      data: data as FootballCWVApiResponse,
-      error: null,
-    }));
+    return this.request(
+      `/football/cwv/${formattedConf}${seasonQuery}`,
+      (data) => ({
+        success: true,
+        data: data as FootballCWVApiResponse,
+        error: null,
+      }),
+    );
   }
 
   async getFootballPlayoffs(
@@ -622,7 +643,7 @@ class ApiClient {
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
     console.log(
-      `ðŸˆ Getting football playoffs for: ${sanitized} -> ${formattedConf}`,
+      `🏈 Getting football playoffs for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(`/football/playoffs/${formattedConf}`, (data) => ({
@@ -632,62 +653,104 @@ class ApiClient {
     }));
   }
 
-  async getCFP(conference: string): Promise<FootballCFPApiResponse> {
+  async getFootballConfChamp(
+    conference: string,
+    season?: string,
+  ): Promise<FootballCFPApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    console.log(`ðŸˆ Getting CFP data for: ${sanitized} -> ${formattedConf}`);
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(
+      `🏈 Getting football conf champ for: ${sanitized} -> ${formattedConf}`,
+    );
 
-    return this.request(`/cfp/${formattedConf}`, (data) => ({
+    return this.request(
+      `/football/conf_champ/${formattedConf}${seasonQuery}`,
+      (data) => ({
+        success: true,
+        data: data as FootballCFPApiResponse,
+        error: null,
+      }),
+    );
+  }
+
+  async getFootballSeed(
+    conference: string,
+    season?: string,
+  ): Promise<FootballSeedApiResponse> {
+    const sanitized = sanitizeInput(conference);
+    const formattedConf =
+      sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(
+      `🏈 Getting football seed for: ${sanitized} -> ${formattedConf}`,
+    );
+
+    return this.request(
+      `/football_seed/${formattedConf}${seasonQuery}`,
+      (data) => ({
+        success: true,
+        data: data as FootballSeedApiResponse,
+        error: null,
+      }),
+    );
+  }
+
+  async getCFP(
+    conference: string,
+    season?: string,
+  ): Promise<FootballCFPApiResponse> {
+    const sanitized = sanitizeInput(conference);
+    const formattedConf =
+      sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(`🏈 Getting CFP data for: ${sanitized} -> ${formattedConf}`);
+
+    return this.request(`/cfp/${formattedConf}${seasonQuery}`, (data) => ({
       success: true,
       data: data as FootballCFPApiResponse,
       error: null,
     }));
   }
 
-  async getFootballSeed(conference: string): Promise<FootballSeedApiResponse> {
-    const sanitized = sanitizeInput(conference);
-    const formattedConf =
-      sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    console.log(
-      `ðŸˆ Getting football seed for: ${sanitized} -> ${formattedConf}`,
+  async getFootballTeams(season?: string): Promise<FootballTeamsApiResponse> {
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log("🏈 API: About to call /football_teams");
+    const result = await this.request(
+      `/football_teams${seasonQuery}`,
+      (data) => {
+        console.log("🏈 API: Raw response data:", data);
+        return {
+          success: true,
+          data: data as FootballTeamsApiResponse,
+          error: null,
+        };
+      },
     );
-
-    return this.request(`/football_seed/${formattedConf}`, (data) => ({
-      success: true,
-      data: data as FootballSeedApiResponse,
-      error: null,
-    }));
+    console.log("🏈 API: Final result:", result);
+    return result;
   }
 
-  async getFootballConfData(): Promise<FootballConferenceApiResponse> {
-    console.log(`ðŸˆ Getting football conference data`);
+  async getFootballConfData(season?: string): Promise<FootballConferenceApiResponse> {
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(`🏈 Getting football conference data`);
 
-    return this.request(`/football_conf_data`, (data) => ({
+    return this.request(`/football_conf_data${seasonQuery}`, (data) => ({
       success: true,
       data: data as FootballConferenceApiResponse,
       error: null,
     }));
   }
 
-  async getFootballTeams(): Promise<FootballTeamsApiResponse> {
-    console.log("ðŸˆ API: About to call /football_teams");
-    const result = await this.request(`/football_teams`, (data) => {
-      console.log("ðŸˆ API: Raw response data:", data);
-      return {
-        success: true,
-        data: data as FootballTeamsApiResponse,
-        error: null,
-      };
-    });
-    console.log("ðŸˆ API: Final result:", result);
-    return result;
-  }
-
-  async getFootballTeam(teamName: string): Promise<FootballTeamData> {
+  async getFootballTeam(
+    teamName: string,
+    season?: string,
+  ): Promise<FootballTeamData> {
     const sanitizedTeamName = sanitizeInput(teamName);
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     const response = await fetch(
-      `${API_BASE_URL}/football_team/${encodeURIComponent(sanitizedTeamName)}`,
+      `${API_BASE_URL}/football_team/${encodeURIComponent(sanitizedTeamName)}${seasonQuery}`,
     );
 
     if (!response.ok) {
@@ -698,7 +761,7 @@ class ApiClient {
   }
 
   async healthCheck(): Promise<HealthCheckResponse> {
-    console.log("ðŸ¥ Performing health check");
+    console.log("💚 Performing health check");
 
     try {
       const response = await fetch(`${API_BASE_URL}/health`, {
@@ -719,7 +782,7 @@ class ApiClient {
         timestamp: Date.now(),
       };
     } catch (error) {
-      console.error("âŒ Health check failed:", error);
+      console.error("❌ Health check failed:", error);
       monitoring.trackError(error as Error, {
         endpoint: "/health",
         operation: "health_check",
@@ -740,7 +803,7 @@ class ApiClient {
       url += `?${searchParams.toString()}`;
     }
 
-    console.log(`ðŸ”„ Generic GET request to: ${url}`);
+    console.log(`📄 Generic GET request to: ${url}`);
     const startTime = Date.now();
 
     try {
@@ -757,7 +820,7 @@ class ApiClient {
       monitoring.trackApiCall(endpoint, "GET", duration, response.status);
 
       if (!response.ok) {
-        console.error(`âŒ Generic GET Error:`, {
+        console.error(`❌ Generic GET Error:`, {
           status: response.status,
           statusText: response.statusText,
           url: response.url,
@@ -767,12 +830,12 @@ class ApiClient {
       }
 
       const data = await response.json();
-      console.log(`âœ… Generic GET Success for ${endpoint}:`, {
+      console.log(`✅ Generic GET Success for ${endpoint}:`, {
         status: response.status,
       });
       return data as T;
     } catch (error) {
-      console.error(`âŒ Generic GET failed:`, {
+      console.error(`❌ Generic GET failed:`, {
         endpoint,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -785,7 +848,7 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, body: unknown): Promise<T> {
-    console.log(`ðŸ”„ Generic POST request to: ${API_BASE_URL}${endpoint}`);
+    console.log(`📄 Generic POST request to: ${API_BASE_URL}${endpoint}`);
     const startTime = Date.now();
 
     try {
@@ -803,7 +866,7 @@ class ApiClient {
       monitoring.trackApiCall(endpoint, "POST", duration, response.status);
 
       if (!response.ok) {
-        console.error(`âŒ Generic POST Error:`, {
+        console.error(`❌ Generic POST Error:`, {
           status: response.status,
           statusText: response.statusText,
           url: response.url,
@@ -813,12 +876,12 @@ class ApiClient {
       }
 
       const data = await response.json();
-      console.log(`âœ… Generic POST Success for ${endpoint}:`, {
+      console.log(`✅ Generic POST Success for ${endpoint}:`, {
         status: response.status,
       });
       return data as T;
     } catch (error) {
-      console.error(`âŒ Generic POST failed:`, {
+      console.error(`❌ Generic POST failed:`, {
         endpoint,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -848,15 +911,16 @@ export const getTeamData = (teamName: string) => api.getTeamData(teamName);
 export const getUnifiedConferenceData = () => api.getUnifiedConferenceData();
 
 // Football API exports
-export const getFootballStandings = (conference: string) =>
-  api.getFootballStandings(conference);
-export const getFootballTWV = (conference: string) =>
-  api.getFootballTWV(conference);
-export const getFootballCWV = (conference: string) =>
-  api.getFootballCWV(conference);
+export const getFootballStandings = (conference: string, season?: string) =>
+  api.getFootballStandings(conference, season);
+export const getFootballTWV = (conference: string, season?: string) =>
+  api.getFootballTWV(conference, season);
+export const getFootballCWV = (conference: string, season?: string) =>
+  api.getFootballCWV(conference, season);
 export const getFootballPlayoffs = (conference: string) =>
   api.getFootballPlayoffs(conference);
-export const getFootballCFP = (conference: string) => api.getCFP(conference);
+export const getFootballCFP = (conference: string, season?: string) =>
+  api.getCFP(conference, season);
 
 // Legacy function names for compatibility
 export const getConfScheduleData = (conference: string) =>

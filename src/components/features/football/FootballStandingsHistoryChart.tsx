@@ -285,10 +285,10 @@ export default function FootballStandingsHistoryChart({
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <div style="font-weight: 600; color: #1f2937;">${formatDate(currentDate)}</div>
               <button id="tooltip-close" style="
-                background: none; 
-                border: none; 
-                font-size: 16px; 
-                cursor: pointer; 
+                background: none;
+                border: none;
+                font-size: 16px;
+                cursor: pointer;
                 color: #6b7280;
                 padding: 0;
                 margin: 0;

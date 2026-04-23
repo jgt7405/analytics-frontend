@@ -14,7 +14,7 @@ export interface NCAATeam {
   netrtg?: number;
   logo_url: string;
   conf_logo_url?: string;
-  is_conf_tourney_winner?: boolean;  // NEW: Tracks if team won completed conf tournament
+  is_conf_tourney_winner?: boolean; // NEW: Tracks if team won completed conf tournament
 }
 
 export interface NCAAProjectionsResponse {
@@ -33,11 +33,14 @@ interface UseNCAAProjectionsReturn {
   refetch: () => void;
 }
 
-export function useNCAAProjections(): UseNCAAProjectionsReturn {
+export function useNCAAProjections(season?: string): UseNCAAProjectionsReturn {
+  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["ncaa-projections"],
+    queryKey: ["ncaa-projections", season],
     queryFn: async () => {
-      const response = await fetch("/api/proxy/basketball/ncaa-projections");
+      const response = await fetch(
+        `/api/proxy/basketball/ncaa-projections${seasonQuery}`,
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch NCAA projections");
       }

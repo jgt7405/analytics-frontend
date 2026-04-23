@@ -17,59 +17,75 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function FootballStandingsPage() {
+interface FootballStandingsPageProps {
+  params: {
+    season?: string;
+  };
+}
+
+export default function FootballStandingsPage({ params }: FootballStandingsPageProps) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
+  const searchParams = useSearchParams();
   const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>([
     preferences.defaultConference,
   ]);
+
+  // Determine if this is current or archive mode
+  const paramSeason = params?.season || "current";
+  const isArchiveMode = paramSeason !== "current";
 
   const {
     data: standingsResponse,
     isLoading: standingsLoading,
     error: standingsError,
     refetch,
-  } = useFootballStandings(selectedConference);
+  } = useFootballStandings(selectedConference, isArchiveMode ? paramSeason : undefined);
 
   const { data: historyData } = useFootballStandingsHistory(selectedConference);
 
-  // Dynamic season calculation based on data availability
+  // Dynamic season calculation based on is_current data timestamp (for current mode only)
   const currentSeason = useMemo(() => {
-    const today = new Date();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
+    // Archive mode: use the season from URL params
+    if (isArchiveMode) {
+      return paramSeason;
+    }
 
-    // Default: Before March 1: current season is previous year to this year
-    // After March 1: current season is this year to next year
-    let potentialSeason = month < 3 ? `${year - 1}-${year}` : `${year}-${year + 1}`;
+    // Current mode: derive season from is_current data timestamp
+    if (standingsResponse?.data && standingsResponse.data.length > 0) {
+      // Find the most recent is_current entry to get its timestamp
+      const currentSeasonData = standingsResponse.data.find(
+        (team: any) => team.is_current === true
+      );
 
-    // Only flip to new season if we have data for it
-    if (month >= 3 && historyData) {
-      const nextSeasonYear = year;
-      const nextSeasonStart = new Date(`${nextSeasonYear}-08-01`);
-      const nextSeasonEnd = new Date(`${nextSeasonYear}-12-08`);
+      if (currentSeasonData?.updated_at || currentSeasonData?.version_date) {
+        const dateString = currentSeasonData.updated_at || currentSeasonData.version_date;
+        const dataDate = new Date(dateString);
+        const month = dataDate.getMonth() + 1;
+        const year = dataDate.getFullYear();
 
-      // Check if any history data exists in the next season range
-      const hasNextSeasonData = historyData.timeline_data?.some(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= nextSeasonStart && itemDate <= nextSeasonEnd;
-      });
-
-      if (hasNextSeasonData) {
-        potentialSeason = `${year}-${year + 1}`;
-      } else {
-        // Stay on previous season if no new data
-        potentialSeason = `${year - 1}-${year}`;
+        // If data date is on or after April 1, season is current year to next year
+        // If data date is before April 1, season is previous year to current year
+        if (month >= 4) {
+          return `${year}-${year + 1}`;
+        } else {
+          return `${year - 1}-${year}`;
+        }
       }
     }
 
-    return potentialSeason;
-  }, [historyData]);
+    // Fallback to default logic if no is_current data found
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    return month < 3 ? `${year - 1}-${year}` : `${year}-${year + 1}`;
+  }, [standingsResponse, isArchiveMode, paramSeason]);
 
-  // Filter history data to only include current season
+  // Filter history data to only include current/archive season
   const filteredHistoryData = useMemo(() => {
     if (!historyData) return null;
 
@@ -101,6 +117,14 @@ export default function FootballStandingsPage() {
     }
   }, [standingsResponse]);
 
+  // Handle URL conference parameter
+  useEffect(() => {
+    const confParam = searchParams.get("conf");
+    if (confParam) {
+      setSelectedConference(confParam);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     startMeasurement("football-standings-page-load");
     trackEvent({
@@ -108,12 +132,14 @@ export default function FootballStandingsPage() {
       properties: {
         page: "football-standings",
         conference: selectedConference,
+        mode: isArchiveMode ? "archive" : "current",
+        season: currentSeason,
       },
     });
     return () => {
       endMeasurement("football-standings-page-load");
     };
-  }, [startMeasurement, endMeasurement, trackEvent, selectedConference]);
+  }, [startMeasurement, endMeasurement, trackEvent, selectedConference, isArchiveMode, currentSeason]);
 
   useEffect(() => {
     if (selectedConference !== preferences.defaultConference) {
@@ -121,7 +147,6 @@ export default function FootballStandingsPage() {
     }
   }, [selectedConference, preferences.defaultConference, updatePreference]);
 
-  // Replace the existing handleConferenceChange with URL-aware version
   const handleConferenceChange = (conference: string) => {
     // Use the URL-aware conference change handler
     handleUrlConferenceChange(conference);
@@ -134,6 +159,7 @@ export default function FootballStandingsPage() {
       properties: {
         page: "football-standings",
         conference,
+        mode: isArchiveMode ? "archive" : "current",
       },
     });
   };

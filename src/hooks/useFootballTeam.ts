@@ -69,10 +69,10 @@ interface FootballTeamData {
   }>;
 }
 
-export const useFootballTeam = (teamName: string) => {
+export const useFootballTeam = (teamName: string, season?: string) => {
   return useQuery<FootballTeamData, Error>({
-    queryKey: ["football-team", teamName],
-    queryFn: () => api.getFootballTeam(teamName),
+    queryKey: ["football-team", teamName, season],
+    queryFn: () => api.getFootballTeam(teamName, season),
     enabled: !!teamName,
     staleTime: 5 * 60 * 1000,
     retry: 3,

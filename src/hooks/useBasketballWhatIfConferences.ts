@@ -8,12 +8,15 @@ interface ConferencesResponse {
   count: number;
 }
 
-export function useBasketballWhatIfConferences() {
+export function useBasketballWhatIfConferences(season?: string) {
   return useQuery<string[]>({
-    queryKey: ["basketball-whatif-conferences"],
+    queryKey: ["basketball-whatif-conferences", season],
     queryFn: async () => {
       // Use dedicated endpoint that returns all 31 D1 conferences
-      const response = await fetch("/api/proxy/basketball/whatif/conferences");
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+      const response = await fetch(
+        `/api/proxy/basketball/whatif/conferences${seasonQuery}`,
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch basketball conferences");

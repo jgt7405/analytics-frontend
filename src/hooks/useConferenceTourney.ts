@@ -1,9 +1,9 @@
 import { api } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 
-export const useConferenceTourney = (conference: string) => {
+export const useConferenceTourney = (conference: string, season?: string) => {
   return useQuery<any, Error>({
-    queryKey: ["conf-tourney", conference],
+    queryKey: ["conf-tourney", conference, season],
     queryFn: () => api.getConfTourney(conference),
     enabled: !!conference,
     staleTime: 5 * 60 * 1000,

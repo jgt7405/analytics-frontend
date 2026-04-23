@@ -69,16 +69,20 @@ interface AllHistoryData {
   cfp: CFPHistoryResponse;
 }
 
-export const useFootballTeamAllHistory = (teamName: string) => {
+export const useFootballTeamAllHistory = (
+  teamName: string,
+  season?: string,
+) => {
   return useQuery<AllHistoryData, Error>({
-    queryKey: ["football-team-all-history", teamName],
+    queryKey: ["football-team-all-history", teamName, season],
     queryFn: async () => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const [confWinsResponse, cfpResponse] = await Promise.all([
         fetch(
-          `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins`
+          `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins${seasonQuery}`,
         ),
         fetch(
-          `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history`
+          `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history${seasonQuery}`,
         ),
       ]);
 

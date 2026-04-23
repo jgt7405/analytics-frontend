@@ -46,12 +46,16 @@ interface BasketballConfTourneyHistoryResponse {
   };
 }
 
-export const useBasketballConfTourneyHistory = (conference: string) => {
+export const useBasketballConfTourneyHistory = (
+  conference: string,
+  season?: string,
+) => {
   return useQuery<BasketballConfTourneyHistoryResponse, Error>({
-    queryKey: ["basketball-conf-tourney-history", conference],
+    queryKey: ["basketball-conf-tourney-history", conference, season],
     queryFn: async () => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        `/api/proxy/conf_tourney/${conference}/history`
+        `/api/proxy/conf_tourney/${conference}/history${seasonQuery}`,
       );
       if (!response.ok) {
         throw new Error("Failed to fetch conference tournament history");

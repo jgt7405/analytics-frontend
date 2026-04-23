@@ -57,13 +57,16 @@ interface CombinedBasketballConfResponse {
   nonconfData: BasketballNonconfAnalysisResponse;
 }
 
-export function useBasketballConfData() {
+export function useBasketballConfData(season?: string) {
   return useQuery<CombinedBasketballConfResponse>({
-    queryKey: ["basketball-conf-data"],
+    queryKey: ["basketball-conf-data", season],
     queryFn: async () => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const [confResponse, nonconfResponse] = await Promise.all([
-        fetch("/api/proxy/unified_conference_data"),
-        fetch("/api/proxy/basketball/nonconf_analysis/All_Teams"),
+        fetch(`/api/proxy/unified_conference_data${seasonQuery}`),
+        fetch(
+          `/api/proxy/basketball/nonconf_analysis/All_Teams${seasonQuery}`,
+        ),
       ]);
 
       if (!confResponse.ok) {

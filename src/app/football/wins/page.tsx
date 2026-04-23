@@ -20,7 +20,7 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
-export default function FootballWinsPage() {
+export default function FootballWinsPage({ season }: { season?: string }) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -42,7 +42,7 @@ export default function FootballWinsPage() {
     isLoading: standingsLoading,
     error: standingsError,
     refetch,
-  } = useFootballStandings(selectedConference);
+  } = useFootballStandings(selectedConference, season);
 
   // Update available conferences when data loads
   useEffect(() => {
@@ -59,12 +59,13 @@ export default function FootballWinsPage() {
       properties: {
         page: "football-wins",
         conference: selectedConference,
+        season: season || "current",
       },
     });
     return () => {
       endMeasurement("football-wins-page-load");
     };
-  }, [selectedConference, startMeasurement, endMeasurement, trackEvent]);
+  }, [selectedConference, season, startMeasurement, endMeasurement, trackEvent]);
 
   // Track successful data loading
   useEffect(() => {
@@ -75,6 +76,7 @@ export default function FootballWinsPage() {
         properties: {
           page: "football-wins",
           conference: selectedConference,
+          season: season || "current",
           loadTime,
           teamsCount: standingsResponse.data?.length || 0,
         },
@@ -84,6 +86,7 @@ export default function FootballWinsPage() {
     standingsLoading,
     standingsResponse,
     selectedConference,
+    season,
     endMeasurement,
     trackEvent,
   ]);
@@ -99,6 +102,7 @@ export default function FootballWinsPage() {
           page: "football-wins",
           fromConference: selectedConference,
           toConference: conference,
+          season: season || "current",
         },
       });
       endMeasurement("conference-change");
@@ -110,6 +114,7 @@ export default function FootballWinsPage() {
       trackEvent,
       endMeasurement,
       selectedConference,
+      season,
     ]
   );
 
@@ -121,11 +126,12 @@ export default function FootballWinsPage() {
         properties: {
           page: "football-wins",
           conference: selectedConference,
+          season: season || "current",
           errorMessage: standingsError.message,
         },
       });
     }
-  }, [standingsError, selectedConference, trackEvent]);
+  }, [standingsError, selectedConference, season, trackEvent]);
 
   if (standingsError) {
     return (

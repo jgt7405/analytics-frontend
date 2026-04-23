@@ -10,6 +10,7 @@ export interface GameSelection {
 export interface WhatIfRequest {
   conference: string;
   selections: GameSelection[];
+  season?: string;
 }
 
 export interface WhatIfGame {
@@ -227,14 +228,18 @@ const mapGame = (game: BackendGame): WhatIfGame => {
 const calculateBasketballWhatIf = async (
   request: WhatIfRequest,
 ): Promise<WhatIfResponse> => {
-  console.log("Ã°Å¸Ââ‚¬ Sending basketball what-if request:", request);
+  console.log("🎯 Sending basketball what-if request:", request);
 
-  const response = await fetch("/api/proxy/basketball/whatif", {
+  // Remove season from the request body sent to the API
+  const { season, ...requestBody } = request;
+  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+
+  const response = await fetch(`/api/proxy/basketball/whatif${seasonQuery}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(request),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
@@ -242,7 +247,7 @@ const calculateBasketballWhatIf = async (
       error: string;
     }
     const errorData = (await response.json()) as ErrorResponse;
-    console.error("Ã¢Å¡Â Ã¯Â¸Â Basketball what-if API error:", errorData);
+    console.error("❌ Basketball what-if API error:", errorData);
     throw new Error(
       errorData.error || "Failed to calculate basketball what-if scenarios",
     );
@@ -257,28 +262,28 @@ const calculateBasketballWhatIf = async (
   // Log data availability
   console.log("Response fields available:");
   console.log(
-    "  Ã¢Å“â€¦ data_with_ties:",
+    "  ➤ data_with_ties:",
     data.data_with_ties?.length || 0,
     "teams",
   );
   console.log(
-    "  Ã¢Å“â€¦ data_no_ties:",
+    "  ➤ data_no_ties:",
     data.data_no_ties?.length || 0,
     "teams",
   );
   console.log(
-    "  Ã¢Å“â€¦ current_projections_with_ties:",
+    "  ➤ current_projections_with_ties:",
     data.current_projections_with_ties?.length || 0,
     "teams",
   );
   console.log(
-    "  Ã¢Å“â€¦ current_projections_no_ties:",
+    "  ➤ current_projections_no_ties:",
     data.current_projections_no_ties?.length || 0,
     "teams",
   );
-  console.log("  Ã¢Å“â€¦ games:", data.games?.length || 0, "games");
+  console.log("  ➤ games:", data.games?.length || 0, "games");
   console.log(
-    "  Ã¢Å“â€¦ scenario_results:",
+    "  ➤ scenario_results:",
     data.scenario_results?.length || 0,
     "scenarios",
   );
@@ -327,7 +332,7 @@ const calculateBasketballWhatIf = async (
     calculation_time: data.calculation_time,
   };
 
-  console.log("Ã¢Å“â€¦ Mapped data ready:", {
+  console.log("✔️ Mapped data ready:", {
     with_ties_teams: mappedData.data_with_ties.length,
     no_ties_teams: mappedData.data_no_ties.length,
     games: mappedData.games.length,

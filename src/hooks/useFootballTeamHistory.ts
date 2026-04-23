@@ -1,16 +1,17 @@
 // hooks/useFootballTeamHistory.ts
 import { useQuery } from "@tanstack/react-query";
 
-export const useFootballTeamHistory = (teamName: string) => {
+export const useFootballTeamHistory = (teamName: string, season?: string) => {
   return useQuery({
-    queryKey: ["football-team-history", teamName],
+    queryKey: ["football-team-history", teamName, season],
     queryFn: async () => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const [confWinsResponse, cfpHistoryResponse] = await Promise.all([
         fetch(
-          `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins`
+          `/api/proxy/football/team/${encodeURIComponent(teamName)}/history/conf_wins${seasonQuery}`,
         ),
         fetch(
-          `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history`
+          `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history${seasonQuery}`,
         ),
       ]);
 

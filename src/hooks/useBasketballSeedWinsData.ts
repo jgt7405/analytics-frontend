@@ -49,11 +49,15 @@ export interface SeedWinsResponse {
  * Used by BballSeedWinsRequired component and related visualizations
  *
  * @param conference - Conference name or "All Teams"
+ * @param season - Optional season parameter for archive pages
  * @returns Query result with seed wins data array
  */
-export const useBasketballSeedWinsData = (conference: string | null) => {
+export const useBasketballSeedWinsData = (
+  conference: string | null,
+  season?: string,
+) => {
   return useQuery<SeedWinsResponse, Error>({
-    queryKey: ["basketball-seed-wins-data", conference],
+    queryKey: ["basketball-seed-wins-data", conference, season],
     queryFn: async () => {
       if (!conference) {
         throw new Error("Conference is required");
@@ -65,9 +69,11 @@ export const useBasketballSeedWinsData = (conference: string | null) => {
           ? "All_Teams"
           : conference.replace(/\s+/g, "_");
 
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+
       try {
         const response = await fetch(
-          `/api/proxy/basketball/conf_champ_analysis/${confFormatted}`,
+          `/api/proxy/basketball/conf_champ_analysis/${confFormatted}${seasonQuery}`,
         );
 
         if (!response.ok) {

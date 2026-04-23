@@ -15,12 +15,13 @@ interface FootballConfHistoryResponse {
   timeline_data: ConfHistoryData[];
 }
 
-export function useFootballConfDataHistory() {
+export function useFootballConfDataHistory(season?: string) {
   return useQuery({
-    queryKey: ["football-conf-data-history"],
+    queryKey: ["football-conf-data-history", season],
     queryFn: async (): Promise<FootballConfHistoryResponse> => {
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       return api.get<FootballConfHistoryResponse>(
-        "/football_conf_data/history"
+        `/football_conf_data/history${seasonQuery}`,
       );
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

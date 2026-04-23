@@ -64,11 +64,12 @@ interface FootballCFPHistoryResponse {
   };
 }
 
-export const useFootballCFPHistory = (conference: string) => {
+export const useFootballCFPHistory = (conference: string, season?: string) => {
   return useQuery<FootballCFPHistoryResponse, Error>({
-    queryKey: ["football-cfp-history", conference],
+    queryKey: ["football-cfp-history", conference, season],
     queryFn: async () => {
-      const response = await fetch(`/api/proxy/cfp/${conference}/history`);
+      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+      const response = await fetch(`/api/proxy/cfp/${conference}/history${seasonQuery}`);
       if (!response.ok) {
         throw new Error("Failed to fetch CFP history");
       }

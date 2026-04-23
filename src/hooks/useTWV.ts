@@ -2,9 +2,9 @@
 import { api } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 
-export const useTWV = (conference: string) => {
+export const useTWV = (conference: string, season?: string) => {
   return useQuery<any, Error>({
-    queryKey: ["twv", conference],
+    queryKey: ["twv", conference, season],
     queryFn: () => api.getTWV(conference),
     enabled: !!conference,
     staleTime: 5 * 60 * 1000,

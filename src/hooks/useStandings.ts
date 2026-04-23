@@ -2,11 +2,11 @@ import { api } from "@/services/api";
 import { StandingsApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
 
-export const useStandings = (conference: string) => {
+export const useStandings = (conference: string, season?: string) => {
   return useQuery<StandingsApiResponse, Error>({
-    queryKey: ["standings", conference],
+    queryKey: ["standings", conference, season],
     queryFn: async () => {
-      console.log("Fetching standings for:", conference);
+      console.log("Fetching standings for:", conference, season);
       try {
         const result = await api.getStandings(conference);
         console.log("Standings API success:", result);
