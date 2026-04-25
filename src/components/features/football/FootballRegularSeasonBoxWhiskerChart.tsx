@@ -10,10 +10,12 @@ import { useEffect, useMemo, useState } from "react";
 
 interface FootballRegularSeasonBoxWhiskerChartProps {
   standings: FootballStanding[];
+  season?: string;
 }
 
 export default function FootballRegularSeasonBoxWhiskerChart({
   standings,
+  season,
 }: FootballRegularSeasonBoxWhiskerChartProps) {
   const router = useRouter();
   const { isMobile } = useResponsive();
@@ -82,7 +84,10 @@ export default function FootballRegularSeasonBoxWhiskerChart({
   };
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/football/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+      : `/football/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   // Early returns come after all hooks

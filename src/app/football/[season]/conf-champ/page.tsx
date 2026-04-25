@@ -192,6 +192,7 @@ export default function FootballConfChampArchivePage({
                         <FootballConfChampTable
                           confChampData={confChampResponse.data}
                           className="conf-champ-table"
+                          season={params.season}
                         />
                       )}
                     </Suspense>

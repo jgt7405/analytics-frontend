@@ -12,20 +12,25 @@ import { memo, useCallback, useMemo } from "react";
 interface FootballStandingsTableProps {
   standings: FootballStanding[];
   className?: string;
+  season?: string;
 }
 
 function FootballStandingsTable({
   standings,
   className,
+  season,
 }: FootballStandingsTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/football/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+        : `/football/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router]
+    [router, season]
   );
 
   const sortedTeams = useMemo(() => {

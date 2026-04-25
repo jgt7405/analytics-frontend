@@ -204,6 +204,7 @@ export default function FootballTWVArchivePage({
                           twvData={twvResponse.data}
                           className="twv-table"
                           showAllTeams={selectedConference === "All Teams"}
+                          season={params.season}
                         />
                       )}
                     </Suspense>

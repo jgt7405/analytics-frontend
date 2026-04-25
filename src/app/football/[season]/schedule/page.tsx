@@ -302,6 +302,7 @@ export default function ArchiveFootballSchedulePage({
                             teamLogos={scheduleResponse.team_logos}
                             summary={scheduleResponse.summary}
                             renderSummaryTable={false}
+                            season={season}
                           />
                         </Suspense>
                       </div>
@@ -382,6 +383,7 @@ export default function ArchiveFootballSchedulePage({
                             teamLogos={scheduleResponse.team_logos}
                             summary={scheduleResponse.summary}
                             renderMainTable={false}
+                            season={season}
                           />
                         </Suspense>
                       </div>

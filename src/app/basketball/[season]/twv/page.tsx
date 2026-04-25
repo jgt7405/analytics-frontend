@@ -260,6 +260,7 @@ export default function ArchiveTWVPage({
                           twvData={twvResponse.data}
                           className="twv-table"
                           showAllTeams={selectedConference === "All Teams"}
+                          season={params.season}
                         />
                       )}
                     </Suspense>

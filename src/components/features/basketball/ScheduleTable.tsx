@@ -27,6 +27,7 @@ interface BasketballScheduleTableProps {
   className?: string;
   renderMainTable?: boolean;
   renderSummaryTable?: boolean;
+  season?: string;
 }
 
 function BasketballScheduleTable({
@@ -37,15 +38,19 @@ function BasketballScheduleTable({
   className,
   renderMainTable = true,
   renderSummaryTable = true,
+  season,
 }: BasketballScheduleTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+        : `/basketball/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router]
+    [router, season]
   );
 
   const getLocationStyle = useCallback((location: string) => {

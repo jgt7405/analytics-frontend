@@ -22,9 +22,10 @@ interface TWVTableProps {
   twvData: TWVTeam[];
   className?: string;
   showAllTeams?: boolean;
+  season?: string;
 }
 
-function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
+function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
   const [rowsToShow, setRowsToShow] = useState<number>(twvData.length);
@@ -45,9 +46,12 @@ function TWVTable({ twvData, className, showAllTeams = false }: TWVTableProps) {
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+        : `/basketball/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router],
+    [router, season],
   );
 
   // Use ranks from backend - no recalculation

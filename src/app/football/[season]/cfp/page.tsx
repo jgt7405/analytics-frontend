@@ -153,6 +153,7 @@ export default function FootballCFPArchivePage({
                       <FootballCFPTable
                         cfpData={cfpResponse.data}
                         showAllTeams={selectedConference === "All Teams"}
+                        season={params.season}
                       />
                     )}
                   </Suspense>

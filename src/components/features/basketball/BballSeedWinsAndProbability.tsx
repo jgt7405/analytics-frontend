@@ -156,11 +156,13 @@ const getProbabilityCategory = (probability: number): ProbabilityCategory => {
 interface BballSeedWinsAndProbabilityProps {
   conference: string | null;
   _maxHeight?: number;
+  season?: string;
 }
 
 export default function BballSeedWinsAndProbability({
   conference,
   _maxHeight = 800,
+  season,
 }: BballSeedWinsAndProbabilityProps) {
   void _maxHeight;
 
@@ -358,11 +360,12 @@ export default function BballSeedWinsAndProbability({
               <div
                 key={team.team_id}
                 style={{ cursor: "pointer" }}
-                onClick={() =>
-                  router.push(
-                    `/basketball/team/${encodeURIComponent(team.team_name)}`,
-                  )
-                }
+                onClick={() => {
+                  const path = season
+                    ? `/basketball/${season}/team/${encodeURIComponent(team.team_name)}`
+                    : `/basketball/team/${encodeURIComponent(team.team_name)}`;
+                  router.push(path);
+                }}
                 title={team.team_name}
               >
                 <Image
@@ -421,11 +424,12 @@ export default function BballSeedWinsAndProbability({
               <div
                 key={team.team_id}
                 style={{ cursor: "pointer" }}
-                onClick={() =>
-                  router.push(
-                    `/basketball/team/${encodeURIComponent(team.team_name)}`,
-                  )
-                }
+                onClick={() => {
+                  const path = season
+                    ? `/basketball/${season}/team/${encodeURIComponent(team.team_name)}`
+                    : `/basketball/team/${encodeURIComponent(team.team_name)}`;
+                  router.push(path);
+                }}
                 title={team.team_name}
               >
                 <Image

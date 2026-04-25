@@ -14,6 +14,7 @@ interface SeedTableProps {
   seedData: SeedTeam[];
   className?: string;
   showAllTeams?: boolean;
+  season?: string;
 }
 
 type SortColumn =
@@ -30,6 +31,7 @@ function SeedTable({
   seedData,
   className,
   showAllTeams = false,
+  season,
 }: SeedTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -40,7 +42,10 @@ function SeedTable({
   );
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+      : `/basketball/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   // Generate seed columns 1-16

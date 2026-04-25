@@ -26,6 +26,7 @@ interface FootballSeedTableProps {
   seedData: FootballSeedTeam[];
   className?: string;
   showAllTeams?: boolean;
+  season?: string;
 }
 
 type SortColumn =
@@ -43,6 +44,7 @@ function FootballSeedTable({
   seedData,
   className,
   showAllTeams = false,
+  season,
 }: FootballSeedTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -61,7 +63,10 @@ function FootballSeedTable({
   }, [showAllTeams, seedData.length]);
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/football/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+      : `/football/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   const sortedTeams = useMemo(() => {

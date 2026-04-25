@@ -261,6 +261,7 @@ export default function FootballStandingsPage({ params }: FootballStandingsPageP
                     {standingsResponse?.data && (
                       <FootballStandingsTable
                         standings={standingsResponse.data}
+                        season={paramSeason}
                       />
                     )}
                   </Suspense>
@@ -317,6 +318,7 @@ export default function FootballStandingsPage({ params }: FootballStandingsPageP
                     {standingsResponse?.data && (
                       <FootballStandingsTableNoTies
                         standings={standingsResponse.data}
+                        season={paramSeason}
                       />
                     )}
                   </Suspense>

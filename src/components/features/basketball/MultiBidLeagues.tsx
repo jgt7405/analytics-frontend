@@ -20,9 +20,10 @@ interface ConferenceBidInfo {
 
 interface MultiBidLeaguesProps {
   className?: string;
+  season?: string;
 }
 
-function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
+function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
   const { isMobile } = useResponsive();
   const { data, loading, error } = useNCAAProjections();
   const router = useRouter();
@@ -30,9 +31,12 @@ function MultiBidLeagues({ className }: MultiBidLeaguesProps) {
   // Navigation handler for team clicks
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+        : `/basketball/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router]
+    [router, season]
   );
 
   // Calculate average seed for a set of teams

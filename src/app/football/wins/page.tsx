@@ -219,6 +219,7 @@ export default function FootballWinsPage({ season }: { season?: string }) {
                   <div className="box-whisker-container">
                     <FootballBoxWhiskerChart
                       standings={standingsResponse?.data || []}
+                      season={season}
                     />
                   </div>
 
@@ -262,6 +263,7 @@ export default function FootballWinsPage({ season }: { season?: string }) {
                   <div className="wins-table">
                     <FootballWinsTable
                       standings={standingsResponse?.data || []}
+                      season={season}
                     />
                   </div>
 
@@ -307,6 +309,7 @@ export default function FootballWinsPage({ season }: { season?: string }) {
                   <div className="regular-season-box-whisker-container">
                     <FootballRegularSeasonBoxWhiskerChart
                       standings={standingsResponse?.data || []}
+                      season={season}
                     />
                   </div>
 
@@ -354,6 +357,7 @@ export default function FootballWinsPage({ season }: { season?: string }) {
                   <div className="regular-season-wins-table">
                     <FootballRegularSeasonWinsTable
                       standings={standingsResponse?.data || []}
+                      season={season}
                     />
                   </div>
 

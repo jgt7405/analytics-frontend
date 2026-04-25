@@ -30,18 +30,22 @@ interface HoverState {
 interface CWVTableProps {
   cwvData: CWVData;
   className?: string;
+  season?: string;
 }
 
-function CWVTable({ cwvData, className }: CWVTableProps) {
+function CWVTable({ cwvData, className, season }: CWVTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
   const [hoveredGame, setHoveredGame] = useState<HoverState | null>(null);
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+        : `/basketball/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router],
+    [router, season],
   );
 
   const sortedTeams = useMemo(() => {

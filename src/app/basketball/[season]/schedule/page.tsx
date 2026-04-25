@@ -320,6 +320,7 @@ export default function ArchiveSchedulePage({
                             teamLogos={scheduleResponse.team_logos}
                             summary={scheduleResponse.summary}
                             renderSummaryTable={false}
+                            season={season}
                           />
                         </Suspense>
                       </div>
@@ -402,6 +403,7 @@ export default function ArchiveSchedulePage({
                             teamLogos={scheduleResponse.team_logos}
                             summary={scheduleResponse.summary}
                             renderMainTable={false}
+                            season={season}
                           />
                         </Suspense>
                       </div>

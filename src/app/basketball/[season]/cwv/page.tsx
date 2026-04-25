@@ -261,6 +261,7 @@ export default function ArchiveCWVPage({
                         <CWVTable
                           cwvData={cwvResponse.data}
                           className="cwv-table"
+                          season={params.season}
                         />
                       )}
                     </Suspense>

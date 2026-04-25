@@ -10,9 +10,10 @@ import { useEffect, useMemo, useState } from "react";
 
 interface BoxWhiskerChartProps {
   standings: Standing[];
+  season?: string;
 }
 
-export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
+export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartProps) {
   const router = useRouter();
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
@@ -43,7 +44,10 @@ export default function BoxWhiskerChart({ standings }: BoxWhiskerChartProps) {
   };
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+      : `/basketball/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   if (!standings || standings.length === 0) {

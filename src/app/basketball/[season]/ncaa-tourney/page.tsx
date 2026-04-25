@@ -272,6 +272,7 @@ export default function ArchiveNCAATeamPage({
                           className="ncaa-table"
                           showAllTeams={isShowingAll}
                           hasActualBracket={hasActualBracket}
+                          season={params.season}
                         />
                       )}
                     </Suspense>

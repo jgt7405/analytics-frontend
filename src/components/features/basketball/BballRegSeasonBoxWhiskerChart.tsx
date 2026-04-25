@@ -10,10 +10,12 @@ import { useEffect, useMemo, useState } from "react";
 
 interface BballRegSeasonBoxWhiskerChartProps {
   standings: Standing[];
+  season?: string;
 }
 
 export default function BballRegSeasonBoxWhiskerChart({
   standings,
+  season,
 }: BballRegSeasonBoxWhiskerChartProps) {
   const router = useRouter();
   const { isMobile } = useResponsive();
@@ -39,7 +41,10 @@ export default function BballRegSeasonBoxWhiskerChart({
   };
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+      : `/basketball/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   if (!standings || standings.length === 0) {

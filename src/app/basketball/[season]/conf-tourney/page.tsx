@@ -201,6 +201,7 @@ export default function ArchiveConfTourneyPage({
                       {tourneyResponse?.data && (
                         <ConferenceTourneyTable
                           tourneyData={tourneyResponse.data}
+                          season={params.season}
                         />
                       )}
                     </Suspense>

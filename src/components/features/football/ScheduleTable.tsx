@@ -25,6 +25,7 @@ interface FootballScheduleTableProps {
   className?: string;
   renderMainTable?: boolean;
   renderSummaryTable?: boolean;
+  season?: string;
 }
 
 function FootballScheduleTable({
@@ -35,15 +36,19 @@ function FootballScheduleTable({
   className,
   renderMainTable = true,
   renderSummaryTable = true,
+  season,
 }: FootballScheduleTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/football/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+        : `/football/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router]
+    [router, season]
   );
 
   const getLocationStyle = useCallback((location: string) => {

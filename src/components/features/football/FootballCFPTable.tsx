@@ -14,6 +14,7 @@ interface FootballCFPTableProps {
   cfpData: FootballCFPTeam[];
   className?: string;
   showAllTeams?: boolean;
+  season?: string;
 }
 
 type RoundKey =
@@ -27,6 +28,7 @@ function FootballCFPTable({
   cfpData,
   className,
   showAllTeams = false,
+  season,
 }: FootballCFPTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -45,7 +47,10 @@ function FootballCFPTable({
   }, [showAllTeams, cfpData.length]);
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/football/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+      : `/football/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   const roundOrder = useMemo(

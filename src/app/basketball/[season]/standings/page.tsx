@@ -341,7 +341,7 @@ export default function ArchiveStandingsPage({
                       }
                     >
                       {standingsResponse?.data && (
-                        <StandingsTable standings={standingsResponse.data} />
+                        <StandingsTable standings={standingsResponse.data} season={params.season} />
                       )}
                     </Suspense>
                   </div>
@@ -399,6 +399,7 @@ export default function ArchiveStandingsPage({
                       {standingsResponse?.data && (
                         <StandingsTableNoTies
                           standings={standingsResponse.data}
+                          season={params.season}
                         />
                       )}
                     </Suspense>

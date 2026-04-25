@@ -295,6 +295,7 @@ export default function ArchiveWinsPage({
                   <div className="box-whisker-container">
                     <BoxWhiskerChart
                       standings={standingsResponse?.data || []}
+                      season={params.season}
                     />
                   </div>
 
@@ -337,7 +338,7 @@ export default function ArchiveWinsPage({
                 {/* Conference Wins Table Section */}
                 <div className="mb-8">
                   <div className="wins-table">
-                    <WinsTable standings={standingsResponse?.data || []} />
+                    <WinsTable standings={standingsResponse?.data || []} season={params.season} />
                   </div>
 
                   {/* Buttons and Explainer for Wins Table */}
@@ -383,6 +384,7 @@ export default function ArchiveWinsPage({
                   <div className="regular-season-box-whisker-container">
                     <BballRegSeasonBoxWhiskerChart
                       standings={standingsResponse?.data || []}
+                      season={params.season}
                     />
                   </div>
 
@@ -430,6 +432,7 @@ export default function ArchiveWinsPage({
                   <div className="regular-season-wins-table">
                     <BballRegSeasonWinsTable
                       standings={standingsResponse?.data || []}
+                      season={params.season}
                     />
                   </div>
 

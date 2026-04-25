@@ -15,6 +15,7 @@ interface NCAATeamTableProps {
   className?: string;
   showAllTeams?: boolean;
   hasActualBracket?: boolean;
+  season?: string;
 }
 
 type RoundKey =
@@ -31,6 +32,7 @@ function NCAATeamTable({
   className,
   showAllTeams = false,
   hasActualBracket = false,
+  season,
 }: NCAATeamTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -49,7 +51,10 @@ function NCAATeamTable({
   }, [showAllTeams, ncaaData.length]);
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+      : `/basketball/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   const roundOrder = useMemo(

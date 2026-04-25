@@ -22,12 +22,14 @@ interface FootballTWVTableProps {
   twvData: FootballTWVTeam[];
   className?: string;
   showAllTeams?: boolean;
+  season?: string;
 }
 
 function FootballTWVTable({
   twvData,
   className,
   showAllTeams = false,
+  season,
 }: FootballTWVTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -44,9 +46,12 @@ function FootballTWVTable({
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/football/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+        : `/football/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router]
+    [router, season]
   );
 
   // Calculate proper ranks with tie handling

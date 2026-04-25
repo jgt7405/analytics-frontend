@@ -131,6 +131,7 @@ export default function ArchiveSeedPage({ params }: ArchiveSeedPageProps) {
                   <SeedTable
                     seedData={seedResponse.data}
                     showAllTeams={selectedConference === "All Teams"}
+                    season={params.season}
                   />
                 )}
               </Suspense>

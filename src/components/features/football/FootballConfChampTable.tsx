@@ -19,17 +19,22 @@ interface FootballConfChampTeam {
 interface FootballConfChampTableProps {
   confChampData: FootballConfChampTeam[];
   className?: string;
+  season?: string;
 }
 
 function FootballConfChampTable({
   confChampData,
   className,
+  season,
 }: FootballConfChampTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/football/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+      : `/football/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   // Only show columns that have data (mirroring basketball logic)

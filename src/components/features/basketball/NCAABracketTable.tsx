@@ -10,6 +10,7 @@ import { useCallback, useMemo } from "react";
 
 interface NCAABracketTableProps {
   className?: string;
+  season?: string;
 }
 
 // Extend NCAATeam interface to include conf_logo_url
@@ -17,16 +18,19 @@ interface NCAATeamWithConfLogo extends NCAATeam {
   conf_logo_url?: string;
 }
 
-function NCAABracketTable({ className }: NCAABracketTableProps) {
+function NCAABracketTable({ className, season }: NCAABracketTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
   const { data, loading, error } = useNCAAProjections();
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+        : `/basketball/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router]
+    [router, season]
   );
 
   // Combine all teams and sort appropriately

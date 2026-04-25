@@ -25,6 +25,7 @@ interface FootballConfChampProbProps {
   hasWhatIf: boolean;
   hasCalculated: boolean;
   isScreenshotMode?: boolean;
+  season?: string;
 }
 
 type SortColumn = "team" | "current" | "whatif" | "change" | null;
@@ -36,6 +37,7 @@ function FootballConfChampProb({
   className,
   hasCalculated,
   isScreenshotMode = false,
+  season,
 }: FootballConfChampProbProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -43,7 +45,10 @@ function FootballConfChampProb({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/football/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+      : `/football/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   // Combine current and what-if data

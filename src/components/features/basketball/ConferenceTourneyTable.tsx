@@ -25,17 +25,22 @@ interface TourneyTeam {
 interface ConferenceTourneyTableProps {
   tourneyData: TourneyTeam[];
   className?: string;
+  season?: string;
 }
 
 function ConferenceTourneyTable({
   tourneyData,
   className,
+  season,
 }: ConferenceTourneyTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
+    const path = season
+      ? `/basketball/${season}/team/${encodeURIComponent(teamName)}`
+      : `/basketball/team/${encodeURIComponent(teamName)}`;
+    router.push(path);
   };
 
   const roundOrder = useMemo(

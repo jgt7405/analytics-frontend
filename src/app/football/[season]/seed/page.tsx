@@ -129,6 +129,7 @@ export default function FootballSeedArchivePage({
                       seedData={seedResponse.data}
                       className="seed-table"
                       showAllTeams={selectedConference === "All Teams"}
+                      season={params.season}
                     />
                   )}
                 </Suspense>

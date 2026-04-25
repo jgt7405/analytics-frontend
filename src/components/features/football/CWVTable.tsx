@@ -19,18 +19,22 @@ interface GameData {
 interface CWVTableProps {
   cwvData: FootballCWVData;
   className?: string;
+  season?: string;
 }
 
-function CWVTable({ cwvData, className }: CWVTableProps) {
+function CWVTable({ cwvData, className, season }: CWVTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
 
   // ✅ ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const navigateToTeam = useCallback(
     (teamName: string) => {
-      router.push(`/football/team/${encodeURIComponent(teamName)}`);
+      const path = season
+        ? `/football/${season}/team/${encodeURIComponent(teamName)}`
+        : `/football/team/${encodeURIComponent(teamName)}`;
+      router.push(path);
     },
-    [router]
+    [router, season]
   );
 
   const sortedTeams = useMemo(() => {
