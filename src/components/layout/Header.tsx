@@ -13,7 +13,13 @@ function Header() {
     : "/images/JThom_Logo.png";
 
   // Logo links to home based on current sport
-  const logoLink = isFootball ? "/football/wins" : "/basketball/home";
+  const archiveSeasonMatch = pathname.match(/\/(football|basketball)\/(\d{4}-\d{2})\//);
+  const archiveSeason = archiveSeasonMatch ? archiveSeasonMatch[2] : null;
+  const sport = isFootball ? "football" : "basketball";
+  const basePage = isFootball ? "wins" : "home";
+  const logoLink = archiveSeason
+    ? `/${sport}/${archiveSeason}/${basePage}`
+    : `/${sport}/${basePage}`;
 
   return (
     <header

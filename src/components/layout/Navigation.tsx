@@ -36,8 +36,15 @@ function NavigationContent() {
       // Rule 4: If on team page, use team's conference
       const teamConf = searchParams.get("teamConf");
       if (teamConf && isTeamPage) {
-        // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIXED: Don't encode - searchParams.get() returns decoded value
-        // Link href will handle encoding automatically
+        // If in archive mode, inject season into the path before returning
+        if (isArchiveMode && archiveSeason && archiveSport) {
+          const baseSportPattern = new RegExp(`^/${archiveSport}`);
+          const archiveBasePath = basePath.replace(
+            baseSportPattern,
+            `/${archiveSport}/${archiveSeason}`
+          );
+          return `${archiveBasePath}?conf=${teamConf}`;
+        }
         return `${basePath}?conf=${teamConf}`;
       }
 
@@ -66,7 +73,7 @@ function NavigationContent() {
   const basketballNavItems = [
     {
       name: "Home",
-      path: "/basketball/home",
+      path: addConferenceToUrl("/basketball/home"),
       description: "Basketball home",
     },
     {
