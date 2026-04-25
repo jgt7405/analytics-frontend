@@ -21,6 +21,15 @@ function NavigationContent() {
   const isFootball = pathname.startsWith("/football");
   const isTeamPage = pathname.includes("/team/");
 
+  // Detect archive mode and extract season from pathname
+  // Archive patterns: /football/2025-26/wins, /basketball/2025-26/standings, /basketball/2025-26/team/BYU
+  const archiveSeasonMatch = pathname.match(
+    /\/(football|basketball)\/(\d{4}-\d{2})\//
+  );
+  const isArchiveMode = !!archiveSeasonMatch;
+  const archiveSeason = archiveSeasonMatch ? archiveSeasonMatch[2] : null;
+  const archiveSport = archiveSeasonMatch ? archiveSeasonMatch[1] : null;
+
   // Helper function to add conference to URL following all rules
   const addConferenceToUrl = useCallback(
     (basePath: string) => {
@@ -36,10 +45,22 @@ function NavigationContent() {
       const currentConf = searchParams.get("conf");
       const confToUse =
         currentConf && currentConf !== "All Teams" ? currentConf : "Big 12";
+
+      // If in archive mode, inject season into basePath
+      if (isArchiveMode && archiveSeason && archiveSport) {
+        // Convert basePath from /sport/page to /sport/season/page
+        const baseSportPattern = new RegExp(`^/${archiveSport}`);
+        const archiveBasePath = basePath.replace(
+          baseSportPattern,
+          `/${archiveSport}/${archiveSeason}`
+        );
+        return `${archiveBasePath}?conf=${confToUse}`;
+      }
+
       // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIXED: Don't encode - Link href will handle encoding automatically
       return `${basePath}?conf=${confToUse}`;
     },
-    [searchParams, isTeamPage],
+    [searchParams, isTeamPage, isArchiveMode, archiveSeason, archiveSport],
   );
 
   const basketballNavItems = [
@@ -177,11 +198,18 @@ function NavigationContent() {
 
   // Helper for sport switching links
   // Rule 2: Always use Big 12 when switching sports
+  // But if in archive mode, switch to the OTHER sport's archive (same season)
   const getSportSwitchUrl = useCallback(() => {
+    if (isArchiveMode && archiveSeason) {
+      // Switch sports but stay in archive with same season
+      const targetSport = isFootball ? "basketball" : "football";
+      return `/${targetSport}/${archiveSeason}/wins?conf=Big 12`;
+    }
+    // Normal mode: switch to current season
     return isFootball
       ? `/basketball/wins?conf=Big 12`
       : `/football/wins?conf=Big 12`;
-  }, [isFootball]);
+  }, [isFootball, isArchiveMode, archiveSeason]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);

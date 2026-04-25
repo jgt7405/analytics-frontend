@@ -1,4 +1,3 @@
-// src/hooks/useBballStandingsHistory.ts
 import { useQuery } from "@tanstack/react-query";
 
 interface TimelineData {

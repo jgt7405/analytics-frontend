@@ -1,4 +1,3 @@
-// src/hooks/useCWV.ts
 import { api } from "@/services/api";
 import { CWVApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
@@ -6,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 export const useCWV = (conference: string, season?: string) => {
   return useQuery<CWVApiResponse, Error>({
     queryKey: ["cwv", conference, season],
-    queryFn: () => api.getCWV(conference),
+    queryFn: () => api.getCWV(conference, season),
     enabled: !!conference,
     staleTime: 5 * 60 * 1000,
     retry: 3,

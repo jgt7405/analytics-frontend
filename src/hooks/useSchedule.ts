@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 export const useSchedule = (conference: string, season?: string) => {
   return useQuery<ScheduleApiResponse, Error>({
     queryKey: ["schedule", conference, season],
-    queryFn: () => api.getSchedule(conference),
+    queryFn: () => api.getSchedule(conference, season),
     enabled: !!conference,
     staleTime: 5 * 60 * 1000,
     retry: 3,

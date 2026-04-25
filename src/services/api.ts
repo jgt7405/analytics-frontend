@@ -385,56 +385,59 @@ class ApiClient {
   }
 
   // Basketball API methods
-  async getStandings(conference: string): Promise<StandingsApiResponse> {
+  async getStandings(conference: string, season?: string): Promise<StandingsApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting standings for: ${sanitized} -> ${formattedConf}`);
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(`🏀 Getting standings for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
 
     monitoring.trackEvent({
       name: "standings_requested",
-      properties: { conference: formattedConf },
+      properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/standings/${formattedConf}`, validateStandings);
+    return this.request(`/standings/${formattedConf}${seasonQuery}`, validateStandings);
   }
 
-  async getCWV(conference: string): Promise<CWVApiResponse> {
+  async getCWV(conference: string, season?: string): Promise<CWVApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting CWV for: ${sanitized} -> ${formattedConf}`);
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(`🏀 Getting CWV for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
 
     monitoring.trackEvent({
       name: "cwv_requested",
-      properties: { conference: formattedConf },
+      properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/cwv/${formattedConf}`, validateCWV);
+    return this.request(`/cwv/${formattedConf}${seasonQuery}`, validateCWV);
   }
 
-  async getSchedule(conference: string): Promise<ScheduleApiResponse> {
+  async getSchedule(conference: string, season?: string): Promise<ScheduleApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting schedule for: ${sanitized} -> ${formattedConf}`);
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(`🏀 Getting schedule for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
 
     monitoring.trackEvent({
       name: "schedule_requested",
-      properties: { conference: formattedConf },
+      properties: { conference: formattedConf, season },
     });
 
     const rawResponse = await this.request(
-      `/conf_schedule/${formattedConf}`,
+      `/conf_schedule/${formattedConf}${seasonQuery}`,
       validateSchedule,
     );
 
@@ -442,7 +445,7 @@ class ApiClient {
     return rawResponse as ScheduleApiResponse;
   }
 
-  async getTWV(conference: string): Promise<TWVApiResponse> {
+  async getTWV(conference: string, season?: string): Promise<TWVApiResponse> {
     const sanitized = sanitizeInput(conference);
 
     if (sanitized !== "All Teams" && !validateConference(sanitized)) {
@@ -451,14 +454,15 @@ class ApiClient {
 
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}`);
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
 
     monitoring.trackEvent({
       name: "twv_requested",
-      properties: { conference: formattedConf },
+      properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/twv/${formattedConf}`, (data) => ({
+    return this.request(`/twv/${formattedConf}${seasonQuery}`, (data) => ({
       success: true,
       data: data as TWVApiResponse,
       error: null,
@@ -511,21 +515,22 @@ class ApiClient {
     }));
   }
 
-  async getSeedData(conference: string): Promise<SeedApiResponse> {
+  async getSeedData(conference: string, season?: string): Promise<SeedApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    console.log(`🏀 Getting seed data for: ${sanitized} -> ${formattedConf}`);
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+    console.log(`🏀 Getting seed data for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
 
     monitoring.trackEvent({
       name: "seed_requested",
-      properties: { conference: formattedConf },
+      properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/seed/${formattedConf}`, (data) => ({
+    return this.request(`/seed/${formattedConf}${seasonQuery}`, (data) => ({
       success: true,
       data: data as SeedApiResponse,
       error: null,

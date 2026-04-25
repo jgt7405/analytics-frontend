@@ -45,6 +45,7 @@ export default function ArchiveWinsPage({
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
 
+  // ✅ Extract season from URL params
   const season = params.season;
   const [selectedConference, setSelectedConference] = useState("Big 12");
   const [availableConferences, setAvailableConferences] = useState<string[]>(
@@ -107,6 +108,7 @@ export default function ArchiveWinsPage({
     }
   }, [searchParams, hasInitialized]);
 
+  // ✅ CRITICAL: Pass season to useStandings
   const {
     data: standingsResponse,
     isLoading: standingsLoading,
@@ -130,7 +132,7 @@ export default function ArchiveWinsPage({
         page: "basketball-wins",
         conference: selectedConference,
         mode: "archive",
-        season,
+        season, // ✅ Include season
       },
     });
     return () => {
@@ -148,7 +150,7 @@ export default function ArchiveWinsPage({
           page: "basketball-wins",
           conference: selectedConference,
           mode: "archive",
-          season,
+          season, // ✅ Include season
           loadTime,
           teamsCount: standingsResponse.data?.length || 0,
         },
@@ -173,7 +175,7 @@ export default function ArchiveWinsPage({
         properties: {
           page: "basketball-wins",
           mode: "archive",
-          season,
+          season, // ✅ Include season
           fromConference: selectedConference,
           toConference: conference,
         },
@@ -187,7 +189,7 @@ export default function ArchiveWinsPage({
       trackEvent,
       endMeasurement,
       selectedConference,
-      season,
+      season, // ✅ Add to deps
     ]
   );
 
@@ -199,7 +201,7 @@ export default function ArchiveWinsPage({
         properties: {
           page: "basketball-wins",
           mode: "archive",
-          season,
+          season, // ✅ Include season
           conference: selectedConference,
           errorMessage: standingsError.message,
         },

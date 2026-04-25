@@ -1,4 +1,3 @@
-// src/hooks/useFootballTWV.ts
 import { FootballTWVApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 
@@ -9,7 +8,6 @@ const fetchFootballTWV = async (
   const encodedConference = encodeURIComponent(conference.replace(/\s+/g, "_"));
   const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
 
-  // Call Railway backend directly (same as your basketball routes)
   const response = await fetch(`/api/proxy/football/twv/${encodedConference}${seasonQuery}`);
 
   if (!response.ok) {
@@ -23,8 +21,8 @@ export const useFootballTWV = (conference: string, season?: string) => {
   return useQuery({
     queryKey: ["football-twv", conference, season],
     queryFn: () => fetchFootballTWV(conference, season),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 };
