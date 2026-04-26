@@ -1,5 +1,6 @@
 "use client";
 
+import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
@@ -42,6 +43,7 @@ interface ConfHistoryData {
 
 interface FootballConfBidsHistoryChartProps {
   timelineData: ConfHistoryData[];
+  season?: string;
 }
 
 interface ChartDimensions {
@@ -60,6 +62,7 @@ type ConferenceData = {
 
 export default function FootballConfBidsHistoryChart({
   timelineData,
+  season,
 }: FootballConfBidsHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
@@ -87,18 +90,12 @@ export default function FootballConfBidsHistoryChart({
     return () => clearTimeout(timeout);
   }, [timelineData]);
 
-  const formatDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day, 12, 0, 0);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  };
+  const range = getFootballDateRange(season, timelineData);
+  const filteredByRange = filterDataToRange(timelineData, range);
 
-  const filteredData = timelineData.filter((item) => {
+  const filteredData = filteredByRange.filter((item) => {
     const confName = item.conference_name.toLowerCase();
-    const itemDate = new Date(item.date);
-    const cutoffDate = new Date("2025-08-22");
-
-    return !confName.includes("fcs") && itemDate >= cutoffDate;
+    return !confName.includes("fcs");
   });
 
   const sortedData = filteredData.sort(
@@ -119,7 +116,11 @@ export default function FootballConfBidsHistoryChart({
     }
   });
 
-  // Build conference data from deduplicated items
+  const allDatesFromData = [...new Set(sortedData.map((d) => d.date))].sort();
+  const chartLabels = buildChartLabels(allDatesFromData, range, "football");
+  const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
+
+  // Build conference data from deduplicated items with remapped dates
   const confData: Record<string, ConferenceData> = {};
   Array.from(dataByConfAndDate.values()).forEach((item) => {
     if (!confData[item.conference_name]) {
@@ -128,19 +129,16 @@ export default function FootballConfBidsHistoryChart({
         conf_info: item.conf_info,
       };
     }
-    confData[item.conference_name].data.push({
-      x: formatDate(item.date),
-      y: item.avg_bids,
-    });
+    const dataIndex = dateIndexMap.get(item.date);
+    if (dataIndex !== undefined) {
+      confData[item.conference_name].data.push({
+        x: chartLabels[dataIndex].displayLabel,
+        y: item.avg_bids,
+      });
+    }
   });
 
-  const allDates = [
-    ...new Set(
-      Array.from(dataByConfAndDate.values()).map((item) =>
-        formatDate(item.date)
-      )
-    ),
-  ];
+  const allDates = chartLabels.map((l) => l.displayLabel);
 
   const conferencesForLogos = Object.entries(confData)
     .map(([confName, conf]) => {
@@ -290,12 +288,12 @@ export default function FootballConfBidsHistoryChart({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = allDates[dataIndex];
+            const displayDate = chartLabels[dataIndex]?.displayLabel;
 
             const confsAtDate = Object.entries(confData)
               .map(([confName, conf]) => {
                 const dataPoint = conf.data.find(
-                  (d: { x: string; y: number }) => d.x === currentDate
+                  (d: { x: string; y: number }) => d.x === displayDate
                 );
                 return {
                   name: confName,
@@ -308,7 +306,7 @@ export default function FootballConfBidsHistoryChart({
             // Close button
             let innerHtml = `
              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+               <div style="font-weight: 600; color: #1f2937;">${displayDate}</div>
                <button id="tooltip-close" style="
                  background: none; 
                  border: none; 
@@ -450,14 +448,7 @@ export default function FootballConfBidsHistoryChart({
       padding: { left: 10, right: 100 },
     },
     animation: {
-      onComplete: () => {
-        if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-          setChartDimensions({
-            chartArea: chartRef.current.chartArea,
-            canvas: chartRef.current.canvas,
-          });
-        }
-      },
+      duration: 750,
     },
   };
 

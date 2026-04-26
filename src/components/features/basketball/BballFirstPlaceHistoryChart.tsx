@@ -1,6 +1,7 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
+import { buildChartLabels, filterDataToRange, getBasketballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
@@ -42,6 +43,7 @@ interface FirstPlaceData {
 
 interface BballFirstPlaceHistoryChartProps {
   firstPlaceData: FirstPlaceData[];
+  season?: string;
 }
 
 interface ChartDimensions {
@@ -65,6 +67,7 @@ interface TeamInfo {
 
 export default function BballFirstPlaceHistoryChart({
   firstPlaceData,
+  season,
 }: BballFirstPlaceHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", TeamDataPoint[], string> | null>(
@@ -88,18 +91,8 @@ export default function BballFirstPlaceHistoryChart({
     return () => clearTimeout(timeout);
   }, [firstPlaceData]);
 
-  const formatDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split("-").map(Number);
-    // Return full date with year for internal tracking
-    return `${month}/${day}/${year}`;
-  };
-
-  // Filter data starting from 8/22
-  const filteredFirstPlaceData = firstPlaceData.filter((item) => {
-    const itemDate = new Date(item.date);
-    const cutoffDate = new Date("2025-08-22");
-    return itemDate >= cutoffDate;
-  });
+  const range = getBasketballDateRange(season, firstPlaceData);
+  const filteredFirstPlaceData = filterDataToRange(firstPlaceData, range);
 
   // Deduplicate by team and date, keeping earliest version_id
   const dataByTeamAndDate = new Map<string, FirstPlaceData>();
@@ -115,7 +108,11 @@ export default function BballFirstPlaceHistoryChart({
     }
   });
 
-  // Build team data from deduplicated items
+  const allDatesFromData = [...new Set(filteredFirstPlaceData.map((d) => d.date))].sort();
+  const chartLabels = buildChartLabels(allDatesFromData, range, "basketball");
+  const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
+
+  // Build team data from deduplicated items with remapped dates
   const teamData: Record<string, TeamInfo> = {};
   Array.from(dataByTeamAndDate.values()).forEach((item) => {
     if (!teamData[item.team_name]) {
@@ -124,59 +121,17 @@ export default function BballFirstPlaceHistoryChart({
         team_info: item.team_info,
       };
     }
-    const formatted = formatDate(item.date);
-    teamData[item.team_name].data.push({
-      x: formatted,
-      y: item.first_place_pct,
-    });
-  });
-
-  const dates = [
-    ...new Set(
-      Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
-    ),
-  ].sort((a, b) => {
-    // Sort using the full date (with year)
-    const [aMonth, aDay, aYear] = a.split("/").map(Number);
-    const [bMonth, bDay, bYear] = b.split("/").map(Number);
-    const dateA = new Date(aYear, aMonth - 1, aDay, 12, 0, 0);
-    const dateB = new Date(bYear, bMonth - 1, bDay, 12, 0, 0);
-    return dateA.getTime() - dateB.getTime();
-  });
-
-  // Create display labels that show the year transition points
-  const displayLabels = dates.map((dateStr, index) => {
-    const [month, day, year] = dateStr.split("/").map(Number);
-    const displayDate = `${month}/${day}`;
-
-    // Show year only if year changed from previous date (not on first date)
-    if (index > 0) {
-      const prevYear = parseInt(dates[index - 1].split("/")[2], 10);
-      if (year !== prevYear) {
-        return `${displayDate} ${year}`;
-      }
+    const dataIndex = dateIndexMap.get(item.date);
+    if (dataIndex !== undefined) {
+      teamData[item.team_name].data.push({
+        x: chartLabels[dataIndex].displayLabel,
+        y: item.first_place_pct,
+      });
     }
-
-    return displayDate;
   });
 
-  // Create a mapping from full dates to array indices for chart x-axis
-  const dateIndexMap = new Map<string, number>();
-  dates.forEach((date, index) => {
-    dateIndexMap.set(date, index);
-  });
-
-  // Re-map team data to use display labels instead of date strings
-  const mappedTeamData: Record<string, TeamInfo> = {};
-  Object.entries(teamData).forEach(([teamName, teamInfo]) => {
-    mappedTeamData[teamName] = {
-      data: teamInfo.data.map((point) => ({
-        x: displayLabels[dateIndexMap.get(point.x as string) || 0],
-        y: point.y,
-      })),
-      team_info: teamInfo.team_info,
-    };
-  });
+  const displayLabels = chartLabels.map((l) => l.displayLabel);
+  const mappedTeamData = teamData;
 
   const teamsForLogos = Object.entries(mappedTeamData)
     .map(([teamName, team]) => {
@@ -417,14 +372,7 @@ export default function BballFirstPlaceHistoryChart({
       padding: { left: 10, right: 100 },
     },
     animation: {
-      onComplete: () => {
-        if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-          setChartDimensions({
-            chartArea: chartRef.current.chartArea,
-            canvas: chartRef.current.canvas,
-          });
-        }
-      },
+      duration: 750,
     },
   };
 

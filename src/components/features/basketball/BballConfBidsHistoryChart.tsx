@@ -1,5 +1,6 @@
 "use client";
 
+import { buildChartLabels, filterDataToRange, getBasketballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
@@ -42,6 +43,7 @@ interface ConfHistoryData {
 
 interface BballConfBidsHistoryChartProps {
   timelineData: ConfHistoryData[];
+  season?: string;
 }
 
 interface ChartDimensions {
@@ -60,6 +62,7 @@ type ConferenceData = {
 
 export default function BballConfBidsHistoryChart({
   timelineData,
+  season,
 }: BballConfBidsHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
@@ -87,18 +90,18 @@ export default function BballConfBidsHistoryChart({
     return () => clearTimeout(timeout);
   }, [timelineData]);
 
-  const formatDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day, 12, 0, 0);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  };
+  const range = getBasketballDateRange(season, timelineData);
+  const filteredData = filterDataToRange(timelineData, range);
 
-  // Filter and sort data
-  const sortedData = timelineData.sort(
+  const sortedData = filteredData.sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  // Build conference data
+  const allDatesFromData = [...new Set(sortedData.map((d) => d.date))].sort();
+  const chartLabels = buildChartLabels(allDatesFromData, range, "basketball");
+  const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
+
+  // Build conference data with remapped dates
   const confData: Record<string, ConferenceData> = {};
   sortedData.forEach((item) => {
     if (!confData[item.conference]) {
@@ -107,15 +110,16 @@ export default function BballConfBidsHistoryChart({
         conference_info: item.conference_info,
       };
     }
-    confData[item.conference].data.push({
-      x: formatDate(item.date),
-      y: item.avg_bids,
-    });
+    const dataIndex = dateIndexMap.get(item.date);
+    if (dataIndex !== undefined) {
+      confData[item.conference].data.push({
+        x: chartLabels[dataIndex].displayLabel,
+        y: item.avg_bids,
+      });
+    }
   });
 
-  const allDates = [
-    ...new Set(sortedData.map((item) => formatDate(item.date))),
-  ];
+  const allDates = chartLabels.map((l) => l.displayLabel);
 
   // Only show conferences with >= 1.1 bids
   const conferencesForLogos = Object.entries(confData)
@@ -264,12 +268,12 @@ export default function BballConfBidsHistoryChart({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = allDates[dataIndex];
+            const displayDate = chartLabels[dataIndex]?.displayLabel;
 
             const confsAtDate = Object.entries(confData)
               .map(([confName, conf]) => {
                 const dataPoint = conf.data.find(
-                  (d: { x: string; y: number }) => d.x === currentDate
+                  (d: { x: string; y: number }) => d.x === displayDate
                 );
                 return {
                   name: confName,
@@ -281,7 +285,7 @@ export default function BballConfBidsHistoryChart({
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <div style="font-weight: 600; color: #1f2937;">${displayDate}</div>
                 <button id="tooltip-close" style="
                   background: none; 
                   border: none; 
@@ -416,14 +420,7 @@ export default function BballConfBidsHistoryChart({
       padding: { left: 10, right: 100 },
     },
     animation: {
-      onComplete: () => {
-        if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-          setChartDimensions({
-            chartArea: chartRef.current.chartArea,
-            canvas: chartRef.current.canvas,
-          });
-        }
-      },
+      duration: 750,
     },
   };
 
