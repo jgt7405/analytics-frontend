@@ -82,9 +82,18 @@ export default function BballStandingsHistoryChart({
   useEffect(() => {
     const updateDimensions = () => {
       if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-        setChartDimensions({
-          chartArea: chartRef.current.chartArea,
-          canvas: chartRef.current.canvas,
+        const area = chartRef.current.chartArea;
+        setChartDimensions(prev => {
+          if (
+            prev &&
+            prev.chartArea.top === area.top &&
+            prev.chartArea.bottom === area.bottom &&
+            prev.chartArea.left === area.left &&
+            prev.chartArea.right === area.right
+          ) {
+            return prev;
+          }
+          return { chartArea: area, canvas: chartRef.current!.canvas };
         });
       }
     };

@@ -2,6 +2,11 @@
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getBasketballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -46,6 +51,7 @@ interface BasketballTeamFirstPlaceHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  season?: string;
 }
 
 export default function BasketballTeamFirstPlaceHistory({
@@ -53,6 +59,7 @@ export default function BasketballTeamFirstPlaceHistory({
   primaryColor = "#3b82f6",
   secondaryColor,
   logoUrl,
+  season,
 }: BasketballTeamFirstPlaceHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,7 +70,7 @@ export default function BasketballTeamFirstPlaceHistory({
     data: allHistoryData,
     isLoading: loading,
     error: queryError,
-  } = useBasketballTeamAllHistory(teamName);
+  } = useBasketballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
 
@@ -71,11 +78,6 @@ export default function BasketballTeamFirstPlaceHistory({
     const [year, month, day] = dateString.split("-").map(Number);
     const centralDate = new Date(year, month - 1, day, 12, 0, 0);
     return centralDate;
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
   };
 
   useEffect(() => {
@@ -91,11 +93,8 @@ export default function BasketballTeamFirstPlaceHistory({
       return;
     }
 
-    const cutoffDate = new Date("2024-11-01");
-    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-      const itemDate = new Date(point.date);
-      return itemDate >= cutoffDate;
-    });
+    const range = getBasketballDateRange(season, rawData);
+    const filteredData = filterDataToRange(rawData, range);
 
     const dataByDate = new Map<string, HistoricalDataPoint>();
     filteredData.forEach((point: HistoricalDataPoint) => {
@@ -115,7 +114,7 @@ export default function BasketballTeamFirstPlaceHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
@@ -140,16 +139,19 @@ export default function BasketballTeamFirstPlaceHistory({
     return secondaryColor;
   })();
 
-  const labels = data.map((point) => formatDateForDisplay(point.date));
+  const range = getBasketballDateRange(season, data);
+  const dataDates = data.map((point) => point.date);
+  const chartLabels = buildChartLabels(dataDates, range, "basketball");
+  const dataByDate = new Map(data.map((point) => [point.date, point]));
 
-  const firstPlaceWithTiesData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.first_place_with_ties,
-  }));
-  const firstPlaceNoTiesData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.first_place_no_ties,
-  }));
+  const firstPlaceWithTiesData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.first_place_with_ties : null;
+  });
+  const firstPlaceNoTiesData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.first_place_no_ties : null;
+  });
 
   const datasets = [
     {
@@ -181,7 +183,7 @@ export default function BasketballTeamFirstPlaceHistory({
   ];
 
   const chartData = {
-    labels: labels,
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets,
   };
 
@@ -264,13 +266,15 @@ export default function BasketballTeamFirstPlaceHistory({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = labels[dataIndex];
-            const firstPlaceWithTies = data[dataIndex].first_place_with_ties;
-            const firstPlaceNoTies = data[dataIndex].first_place_no_ties;
+            const label = chartLabels[dataIndex];
+            const dataPoint = dataByDate.get(label.isoDate);
+            if (!dataPoint) return;
+            const firstPlaceWithTies = dataPoint.first_place_with_ties;
+            const firstPlaceNoTies = dataPoint.first_place_no_ties;
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <div style="font-weight: 600; color: #1f2937;">${label.displayLabel}</div>
                 <button id="tooltip-close" style="
                   background: none; 
                   border: none; 

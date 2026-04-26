@@ -19,7 +19,7 @@ import { useStandings } from "@/hooks/useStandings";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState, useMemo } from "react";
 
 const BballRegSeasonBoxWhiskerChart = lazy(
   () => import("@/components/features/basketball/BballRegSeasonBoxWhiskerChart")
@@ -115,6 +115,25 @@ export default function ArchiveStandingsPage({
     hasInitialized ? selectedConference : "Big 12",
     season
   );
+
+  // Filter history data to only include current season
+  const filteredHistoryData = useMemo(() => {
+    if (!historyData) return null;
+
+    const seasonYear = parseInt(season.split('-')[0]);
+    const seasonStart = `${seasonYear}-10-30`;
+    const seasonEnd = `${seasonYear + 1}-03-15`;
+
+    return {
+      ...historyData,
+      timeline_data: historyData.timeline_data?.filter(item => {
+        return item.date >= seasonStart && item.date <= seasonEnd;
+      }) || [],
+      first_place_data: historyData.first_place_data?.filter(item => {
+        return item.date >= seasonStart && item.date <= seasonEnd;
+      }) || [],
+    };
+  }, [historyData, season]);
 
   // Update available conferences when data loads
   useEffect(() => {
@@ -436,7 +455,7 @@ export default function ArchiveStandingsPage({
               </ErrorBoundary>
 
               {/* Historical Charts */}
-              {historyData && (
+              {filteredHistoryData && (
                 <div className="space-y-6 mb-8">
                   {/* Chart 3: Conference Rankings History */}
                   <ErrorBoundary level="component">
@@ -447,8 +466,9 @@ export default function ArchiveStandingsPage({
                       </h1>
                       <div className="standings-history-chart">
                         <BballStandingsHistoryChart
-                          timelineData={historyData.timeline_data}
+                          timelineData={filteredHistoryData.timeline_data}
                           conferenceSize={standingsResponse?.data?.length || 12}
+                          season={season}
                         />
                       </div>
 
@@ -490,7 +510,8 @@ export default function ArchiveStandingsPage({
                       </h1>
                       <div className="first-place-chart">
                         <BballFirstPlaceHistoryChart
-                          firstPlaceData={historyData.first_place_data}
+                          firstPlaceData={filteredHistoryData.first_place_data}
+                          season={season}
                         />
                       </div>
 
@@ -531,7 +552,7 @@ export default function ArchiveStandingsPage({
                       </h1>
                       <div className="standings-progression-table">
                         <BballStandingsProgressionTable
-                          timelineData={historyData.timeline_data}
+                          timelineData={filteredHistoryData.timeline_data}
                           conferenceSize={standingsResponse?.data?.length || 12}
                         />
                       </div>

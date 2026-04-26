@@ -2,6 +2,11 @@
 
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getFootballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -46,6 +51,7 @@ interface FootballTeamFirstPlaceHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  season?: string;
 }
 
 export default function FootballTeamFirstPlaceHistory({
@@ -53,6 +59,7 @@ export default function FootballTeamFirstPlaceHistory({
   primaryColor = "#3b82f6",
   secondaryColor,
   logoUrl,
+  season,
 }: FootballTeamFirstPlaceHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,7 +71,7 @@ export default function FootballTeamFirstPlaceHistory({
     data: allHistoryData,
     isLoading: loading,
     error: queryError,
-  } = useFootballTeamAllHistory(teamName);
+  } = useFootballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
 
@@ -72,11 +79,6 @@ export default function FootballTeamFirstPlaceHistory({
     const [year, month, day] = dateString.split("-").map(Number);
     const centralDate = new Date(year, month - 1, day, 12, 0, 0);
     return centralDate;
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
   };
 
   // Process the data when allHistoryData changes
@@ -93,12 +95,9 @@ export default function FootballTeamFirstPlaceHistory({
       return;
     }
 
-    // Filter data starting from 8/22
-    const cutoffDate = new Date("2025-08-22");
-    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-      const itemDate = new Date(point.date);
-      return itemDate >= cutoffDate;
-    });
+    // Filter data to season range
+    const range = getFootballDateRange(season, rawData);
+    const filteredData = filterDataToRange(rawData, range);
 
     // Deduplicate by date, keeping earliest version_id
     const dataByDate = new Map<string, HistoricalDataPoint>();
@@ -119,7 +118,7 @@ export default function FootballTeamFirstPlaceHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
@@ -145,16 +144,20 @@ export default function FootballTeamFirstPlaceHistory({
     return secondaryColor;
   })();
 
-  const labels = data.map((point) => formatDateForDisplay(point.date));
+  // Build chart labels and datasets
+  const range = getFootballDateRange(season, data);
+  const dataDates = data.map((point) => point.date);
+  const chartLabels = buildChartLabels(dataDates, range, "football");
+  const dataByDate = new Map(data.map((point) => [point.date, point]));
 
-  const firstPlaceWithTiesData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.first_place_with_ties,
-  }));
-  const firstPlaceNoTiesData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.first_place_no_ties,
-  }));
+  const firstPlaceWithTiesData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.first_place_with_ties : null;
+  });
+  const firstPlaceNoTiesData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.first_place_no_ties : null;
+  });
 
   const datasets = [
     {
@@ -186,7 +189,7 @@ export default function FootballTeamFirstPlaceHistory({
   ];
 
   const chartData = {
-    labels: labels,
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets,
   };
 
@@ -267,13 +270,16 @@ export default function FootballTeamFirstPlaceHistory({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = labels[dataIndex];
-            const firstPlaceWithTies = data[dataIndex].first_place_with_ties;
-            const firstPlaceNoTies = data[dataIndex].first_place_no_ties;
+            const label = chartLabels[dataIndex];
+            const dataPoint = dataByDate.get(label.isoDate);
+            if (!dataPoint) return;
+
+            const firstPlaceWithTies = dataPoint.first_place_with_ties;
+            const firstPlaceNoTies = dataPoint.first_place_no_ties;
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <div style="font-weight: 600; color: #1f2937;">${label.displayLabel}</div>
                 <button id="tooltip-close" style="
                   background: none; 
                   border: none; 

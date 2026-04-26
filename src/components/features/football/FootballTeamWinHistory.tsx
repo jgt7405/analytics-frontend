@@ -2,6 +2,11 @@
 
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getFootballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -41,6 +46,7 @@ interface FootballTeamWinHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  season?: string;
 }
 
 export default function FootballTeamWinHistory({
@@ -48,6 +54,7 @@ export default function FootballTeamWinHistory({
   primaryColor = "#3b82f6",
   secondaryColor,
   logoUrl,
+  season,
 }: FootballTeamWinHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,7 +66,7 @@ export default function FootballTeamWinHistory({
     data: allHistoryData,
     isLoading,
     error: queryError,
-  } = useFootballTeamAllHistory(teamName);
+  } = useFootballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
 
@@ -67,11 +74,6 @@ export default function FootballTeamWinHistory({
     const [year, month, day] = dateString.split("-").map(Number);
     const centralDate = new Date(year, month - 1, day, 12, 0, 0);
     return centralDate;
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
   };
 
   // Process the data when allHistoryData changes
@@ -82,13 +84,8 @@ export default function FootballTeamWinHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-
-    // Filter data starting from 8/22
-    const cutoffDate = new Date("2025-08-22");
-    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-      const itemDate = new Date(point.date);
-      return itemDate >= cutoffDate;
-    });
+    const range = getFootballDateRange(season, rawData);
+    const filteredData = filterDataToRange(rawData, range);
 
     // Group by date and take the FIRST entry per day (earliest version_id)
     const dataByDate = new Map<string, HistoricalDataPoint>();
@@ -114,7 +111,7 @@ export default function FootballTeamWinHistory({
     });
 
     setData(uniqueData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
@@ -140,15 +137,23 @@ export default function FootballTeamWinHistory({
     return secondaryColor;
   })();
 
-  const labels = data.map((point) => formatDateForDisplay(point.date));
-  const confWinsData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.projected_conf_wins,
-  }));
-  const totalWinsData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.projected_total_wins,
-  }));
+  const range = getFootballDateRange(season, data);
+  const dataDates = data.map((point) => point.date);
+  const chartLabels = buildChartLabels(dataDates, range, "football");
+
+  // Create a map from date to data point for quick lookup
+  const dataByDate = new Map(data.map((point) => [point.date, point]));
+
+  // Remap datasets to match full label array (with nulls for missing dates)
+  const totalWinsData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? { x: label.displayLabel, y: point.projected_total_wins } : null;
+  });
+
+  const confWinsData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? { x: label.displayLabel, y: point.projected_conf_wins } : null;
+  });
 
   const datasets = [
     {
@@ -180,7 +185,7 @@ export default function FootballTeamWinHistory({
   ];
 
   const chartData = {
-    labels: labels,
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets,
   };
 
@@ -261,9 +266,12 @@ export default function FootballTeamWinHistory({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = labels[dataIndex];
-            const totalWins = data[dataIndex].projected_total_wins;
-            const confWins = data[dataIndex].projected_conf_wins;
+            const label = chartLabels[dataIndex];
+            const point = dataByDate.get(label.isoDate);
+            if (!point) return;
+            const currentDate = label.displayLabel;
+            const totalWins = point.projected_total_wins;
+            const confWins = point.projected_conf_wins;
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">

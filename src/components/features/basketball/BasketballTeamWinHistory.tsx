@@ -2,6 +2,11 @@
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getBasketballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -41,6 +46,7 @@ interface BasketballTeamWinHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  season?: string;
 }
 
 export default function BasketballTeamWinHistory({
@@ -48,6 +54,7 @@ export default function BasketballTeamWinHistory({
   primaryColor = "#3b82f6",
   secondaryColor,
   logoUrl,
+  season,
 }: BasketballTeamWinHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +65,7 @@ export default function BasketballTeamWinHistory({
     data: allHistoryData,
     isLoading,
     error: queryError,
-  } = useBasketballTeamAllHistory(teamName);
+  } = useBasketballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
 
@@ -68,11 +75,6 @@ export default function BasketballTeamWinHistory({
     return centralDate;
   };
 
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
-  };
-
   useEffect(() => {
     if (!allHistoryData?.confWins?.data) {
       setData([]);
@@ -80,11 +82,8 @@ export default function BasketballTeamWinHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-    const cutoffDate = new Date("2024-11-01");
-    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-      const itemDate = new Date(point.date);
-      return itemDate >= cutoffDate;
-    });
+    const range = getBasketballDateRange(season, rawData);
+    const filteredData = filterDataToRange(rawData, range);
 
     const dataByDate = new Map<string, HistoricalDataPoint>();
 
@@ -108,7 +107,7 @@ export default function BasketballTeamWinHistory({
     });
 
     setData(uniqueData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
@@ -133,15 +132,20 @@ export default function BasketballTeamWinHistory({
     return secondaryColor;
   })();
 
-  const labels = data.map((point) => formatDateForDisplay(point.date));
-  const confWinsData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.projected_conf_wins,
-  }));
-  const totalWinsData = data.map((point, index) => ({
-    x: labels[index],
-    y: point.projected_total_wins,
-  }));
+  // Build chart labels and datasets
+  const range = getBasketballDateRange(season, data);
+  const dataDates = data.map((point) => point.date);
+  const chartLabels = buildChartLabels(dataDates, range, "basketball");
+  const dataByDate = new Map(data.map((point) => [point.date, point]));
+
+  const confWinsData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.projected_conf_wins : null;
+  });
+  const totalWinsData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.projected_total_wins : null;
+  });
 
   const datasets = [
     {
@@ -173,7 +177,7 @@ export default function BasketballTeamWinHistory({
   ];
 
   const chartData = {
-    labels: labels,
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets,
   };
 
@@ -256,13 +260,16 @@ export default function BasketballTeamWinHistory({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = labels[dataIndex];
-            const totalWins = data[dataIndex].projected_total_wins;
-            const confWins = data[dataIndex].projected_conf_wins;
+            const label = chartLabels[dataIndex];
+            const dataPoint = dataByDate.get(label.isoDate);
+            if (!dataPoint) return;
+
+            const totalWins = dataPoint.projected_total_wins;
+            const confWins = dataPoint.projected_conf_wins;
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <div style="font-weight: 600; color: #1f2937;">${label.displayLabel}</div>
                 <button id="tooltip-close" style="
                   background: none; 
                   border: none; 

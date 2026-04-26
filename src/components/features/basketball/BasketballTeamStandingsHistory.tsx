@@ -2,6 +2,10 @@
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  filterDataToRange,
+  getBasketballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -46,6 +50,7 @@ interface BasketballTeamStandingsHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  season?: string;
 }
 
 export default function BasketballTeamStandingsHistory({
@@ -53,6 +58,7 @@ export default function BasketballTeamStandingsHistory({
   primaryColor = "#3b82f6",
   secondaryColor,
   logoUrl,
+  season,
 }: BasketballTeamStandingsHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,7 +70,7 @@ export default function BasketballTeamStandingsHistory({
     data: allHistoryData,
     isLoading: loading,
     error: queryError,
-  } = useBasketballTeamAllHistory(teamName);
+  } = useBasketballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
 
@@ -94,11 +100,8 @@ export default function BasketballTeamStandingsHistory({
       return;
     }
 
-    const cutoffDate = new Date("2024-11-01");
-    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-      const itemDate = new Date(point.date);
-      return itemDate >= cutoffDate;
-    });
+    const range = getBasketballDateRange(season, rawData);
+    const filteredData = filterDataToRange(rawData, range);
 
     const dataByDate = new Map<string, HistoricalDataPoint>();
     filteredData.forEach((point: HistoricalDataPoint) => {
@@ -118,7 +121,7 @@ export default function BasketballTeamStandingsHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {

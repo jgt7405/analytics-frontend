@@ -17,12 +17,13 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
+import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Download } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 interface WinSeedCountEntry {
   Wins: number;
@@ -95,6 +96,43 @@ export default function BasketballTeamPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  // Fetch all history data to detect season from data timestamps
+  const { data: historyData } = useBasketballTeamAllHistory(teamname);
+
+  // Data-driven season calculation - checks basketball season boundaries
+  const currentSeason = useMemo(() => {
+    // First check if we have conf wins history data with timestamps
+    if (historyData?.confWins?.data && historyData.confWins.data.length > 0) {
+      const maxDate = historyData.confWins.data.reduce((max: string, item) =>
+        item.date > max ? item.date : max,
+        historyData.confWins.data[0].date
+      );
+      const [dataYear, dataMonth] = maxDate.split('-').map(Number);
+
+      // Basketball season: Oct 30 - Mar 15 (spans two calendar years)
+      // If data is April-Sep (past the 3/15 boundary), we're in off-season, look for next season
+      if (dataMonth >= 4 && dataMonth <= 9) {
+        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+      }
+      // If data is Jan-Mar, season started last year
+      if (dataMonth >= 1 && dataMonth <= 3) {
+        return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
+      }
+      // If data is Oct-Dec, season starts this year
+      if (dataMonth >= 10) {
+        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+      }
+    }
+
+    // Fallback: check current date
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    // Before April: use previous year season, After April: use current year season
+    return month < 4 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
+  }, [historyData]);
 
   useEffect(() => {
     setMounted(true);
@@ -445,6 +483,7 @@ export default function BasketballTeamPage({
                   logoUrl={team_info.logo_url}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  season={currentSeason}
                 />
               </div>
 
@@ -547,6 +586,7 @@ export default function BasketballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
 
@@ -562,6 +602,7 @@ export default function BasketballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
 
@@ -577,6 +618,7 @@ export default function BasketballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
 
@@ -592,6 +634,7 @@ export default function BasketballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
 
@@ -606,6 +649,7 @@ export default function BasketballTeamPage({
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  season={currentSeason}
                 />
               </div>
 
@@ -620,6 +664,7 @@ export default function BasketballTeamPage({
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  season={currentSeason}
                 />
               </div>
             </div>
@@ -880,6 +925,7 @@ export default function BasketballTeamPage({
                       logoUrl={team_info.logo_url}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -908,6 +954,7 @@ export default function BasketballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -923,6 +970,7 @@ export default function BasketballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -938,6 +986,7 @@ export default function BasketballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -953,6 +1002,7 @@ export default function BasketballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -967,6 +1017,7 @@ export default function BasketballTeamPage({
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -981,6 +1032,7 @@ export default function BasketballTeamPage({
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      season={currentSeason}
                     />
                   </div>
                 </div>

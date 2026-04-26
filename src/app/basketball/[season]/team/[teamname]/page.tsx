@@ -458,6 +458,7 @@ export default function ArchiveBasketballTeamPage({
                   logoUrl={team_info.logo_url}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  season={season}
                 />
               </div>
 
@@ -899,6 +900,7 @@ export default function ArchiveBasketballTeamPage({
                       logoUrl={team_info.logo_url}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      season={season}
                     />
                   </div>
 

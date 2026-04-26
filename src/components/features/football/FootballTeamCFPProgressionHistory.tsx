@@ -2,6 +2,11 @@
 
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getFootballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart, PointStyle, TooltipModel } from "chart.js";
 import {
   CategoryScale,
@@ -45,6 +50,7 @@ interface FootballTeamCFPProgressionHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  season?: string;
 }
 
 interface CFPRoundDataPoint {
@@ -65,6 +71,7 @@ export default function FootballTeamCFPProgressionHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
+  season,
 }: FootballTeamCFPProgressionHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,14 +83,10 @@ export default function FootballTeamCFPProgressionHistory({
     data: allHistoryData,
     isLoading: loading,
     error: queryError,
-  } = useFootballTeamAllHistory(teamName);
+  } = useFootballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
 
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
-  };
 
   // Process the data when allHistoryData changes
   useEffect(() => {
@@ -134,25 +137,23 @@ export default function FootballTeamCFPProgressionHistory({
       });
     });
 
-    const cutoffDate = new Date("2025-08-22");
-    const finalData = Array.from(dataByDate.values())
-      .filter((item) => {
-        const itemDate = new Date(item.date!);
-        return itemDate >= cutoffDate;
-      })
-      .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime())
-      .map((item) => ({
-        date: item.date!,
-        team_name: item.team_name!,
-        team_info: item.team_info!,
-        cfp_quarterfinals_pct: item.cfp_quarterfinals_pct!,
-        cfp_semifinals_pct: item.cfp_semifinals_pct!,
-        cfp_championship_pct: item.cfp_championship_pct!,
-        cfp_champion_pct: item.cfp_champion_pct!,
-      }));
+    const allData = Array.from(dataByDate.values()).map((item) => ({
+      date: item.date!,
+      team_name: item.team_name!,
+      team_info: item.team_info!,
+      cfp_quarterfinals_pct: item.cfp_quarterfinals_pct!,
+      cfp_semifinals_pct: item.cfp_semifinals_pct!,
+      cfp_championship_pct: item.cfp_championship_pct!,
+      cfp_champion_pct: item.cfp_champion_pct!,
+    }));
+
+    const range = getFootballDateRange(season, allData);
+    const finalData = filterDataToRange(allData, range).sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
 
     setData(finalData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
@@ -163,20 +164,24 @@ export default function FootballTeamCFPProgressionHistory({
       ? "#ef4444"
       : "#10b981";
 
-  const labels = data.map((item) => formatDateForDisplay(item.date));
+  // Build chart labels and datasets
+  const range = getFootballDateRange(season, data);
+  const dataDates = data.map((item) => item.date);
+  const chartLabels = buildChartLabels(dataDates, range, "football");
+  const dataByDate = new Map(data.map((item) => [item.date, item]));
 
   // Get team logo from the first available data point
   const teamLogo = data.length > 0 ? data[0].team_info.logo_url : null;
 
   const chartData = {
-    labels,
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets: [
       {
         label: "Quarterfinals",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.cfp_quarterfinals_pct,
-        })),
+        data: chartLabels.map((label) => {
+          const point = dataByDate.get(label.isoDate);
+          return point ? point.cfp_quarterfinals_pct : null;
+        }),
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
         borderWidth: 2,
@@ -188,10 +193,10 @@ export default function FootballTeamCFPProgressionHistory({
       },
       {
         label: "Semifinals",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.cfp_semifinals_pct,
-        })),
+        data: chartLabels.map((label) => {
+          const point = dataByDate.get(label.isoDate);
+          return point ? point.cfp_semifinals_pct : null;
+        }),
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
         borderWidth: 2,
@@ -202,10 +207,10 @@ export default function FootballTeamCFPProgressionHistory({
       },
       {
         label: "Championship Game",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.cfp_championship_pct,
-        })),
+        data: chartLabels.map((label) => {
+          const point = dataByDate.get(label.isoDate);
+          return point ? point.cfp_championship_pct : null;
+        }),
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 2,
@@ -217,10 +222,10 @@ export default function FootballTeamCFPProgressionHistory({
       },
       {
         label: "Champion",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.cfp_champion_pct,
-        })),
+        data: chartLabels.map((label) => {
+          const point = dataByDate.get(label.isoDate);
+          return point ? point.cfp_champion_pct : null;
+        }),
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 3,
@@ -359,12 +364,13 @@ export default function FootballTeamCFPProgressionHistory({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = labels[dataIndex];
-            const point = data[dataIndex];
+            const label = chartLabels[dataIndex];
+            const point = dataByDate.get(label.isoDate);
+            if (!point) return;
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
+                <div style="font-weight: 600; color: #1f2937;">${label.displayLabel}</div>
                 <button id="tooltip-close" style="
                   background: none; 
                   border: none; 

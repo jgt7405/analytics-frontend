@@ -2,6 +2,11 @@
 
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getFootballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -46,12 +51,14 @@ interface FootballTeamRankHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  season?: string;
 }
 
 export default function FootballTeamRankHistory({
   teamName,
   primaryColor = "#3b82f6",
   logoUrl,
+  season,
 }: FootballTeamRankHistoryProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", (number | null)[], string> | null>(
@@ -64,7 +71,7 @@ export default function FootballTeamRankHistory({
     data: allHistoryData,
     isLoading,
     error: queryError,
-  } = useFootballTeamAllHistory(teamName);
+  } = useFootballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
 
@@ -72,11 +79,6 @@ export default function FootballTeamRankHistory({
     const [year, month, day] = dateString.split("-").map(Number);
     const centralDate = new Date(year, month - 1, day, 12, 0, 0);
     return centralDate;
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
   };
 
   // Process the data when allHistoryData changes
@@ -87,17 +89,11 @@ export default function FootballTeamRankHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-
-    // Filter data starting from 8/22 and only include entries with sagarin_rank
-    const cutoffDate = new Date("2025-08-22");
-    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-      const itemDate = new Date(point.date);
-      return (
-        itemDate >= cutoffDate &&
-        point.sagarin_rank !== null &&
-        point.sagarin_rank !== undefined
-      );
-    });
+    const range = getFootballDateRange(season, rawData);
+    const filteredData = filterDataToRange(rawData, range).filter(
+      (point: HistoricalDataPoint) =>
+        point.sagarin_rank !== null && point.sagarin_rank !== undefined
+    );
 
     // Group by date and take the FIRST entry per day (earliest version_id)
     const dataByDate = new Map<string, HistoricalDataPoint>();
@@ -123,7 +119,7 @@ export default function FootballTeamRankHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   // Chart options
   const options = {
@@ -199,11 +195,13 @@ export default function FootballTeamRankHistory({
 
           if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const dataPoint = data[dataIndex];
+            const label = chartLabels[dataIndex];
+            const dataPoint = dataByDate.get(label.isoDate);
+            if (!dataPoint) return;
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #374151;">${formatDateForDisplay(dataPoint.date)}</div>
+                <div style="font-weight: 600; color: #374151;">${label.displayLabel}</div>
                 <button id="tooltip-close" style="background: none; border: none; font-size: 16px; color: #6b7280; cursor: pointer; padding: 0; margin-left: 12px;">&times;</button>
               </div>
             `;
@@ -357,12 +355,22 @@ export default function FootballTeamRankHistory({
   } as const;
 
   // Chart data
+  const range = getFootballDateRange(season, data);
+  const dataDates = data.map((point) => point.date);
+  const chartLabels = buildChartLabels(dataDates, range, "football");
+  const dataByDate = new Map(data.map((point) => [point.date, point]));
+
+  const rankData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.sagarin_rank : null;
+  });
+
   const chartData = {
-    labels: data.map((point) => formatDateForDisplay(point.date)),
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets: [
       {
         label: "Rating Rank",
-        data: data.map((point) => point.sagarin_rank),
+        data: rankData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: isMobile ? 2 : 3,

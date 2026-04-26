@@ -42,50 +42,59 @@ export default function FootballStandingsPage() {
     const month = today.getMonth() + 1;
     const year = today.getFullYear();
 
-    // Default: Before March 1: current season is previous year to this year
-    // After March 1: current season is this year to next year
-    let potentialSeason = month < 3 ? `${year - 1}-${year}` : `${year}-${year + 1}`;
+    // Check standings data first for most recent timestamp
+    if (standingsResponse?.data && standingsResponse.data.length > 0) {
+      // Try to get the latest timestamp from standings
+      const firstTeam = standingsResponse.data[0];
+      const timestamp = (firstTeam as any)?.updated_at || (firstTeam as any)?.version_date;
 
-    // Only flip to new season if we have data for it
-    if (month >= 3 && historyData) {
-      const nextSeasonYear = year;
-      const nextSeasonStart = new Date(`${nextSeasonYear}-08-01`);
-      const nextSeasonEnd = new Date(`${nextSeasonYear}-12-08`);
+      if (timestamp) {
+        const dataDate = new Date(timestamp);
+        const dataMonth = dataDate.getMonth() + 1;
+        const dataYear = dataDate.getFullYear();
 
-      // Check if any history data exists in the next season range
-      const hasNextSeasonData = historyData.timeline_data?.some(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= nextSeasonStart && itemDate <= nextSeasonEnd;
-      });
-
-      if (hasNextSeasonData) {
-        potentialSeason = `${year}-${year + 1}`;
-      } else {
-        // Stay on previous season if no new data
-        potentialSeason = `${year - 1}-${year}`;
+        // If standings data is after 12/15, we're in a new season year
+        if (dataMonth > 12 || (dataMonth === 12 && dataMonth > 15) || dataMonth >= 1) {
+          // Data is in or past the season, use that year
+          return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+        }
       }
     }
 
-    return potentialSeason;
-  }, [historyData]);
+    // Check history data as secondary source
+    if (historyData?.timeline_data && historyData.timeline_data.length > 0) {
+      // Find the latest data point
+      const maxDate = historyData.timeline_data.reduce((max: string, item) =>
+        item.date > max ? item.date : max,
+        historyData.timeline_data[0].date
+      );
+      const [dataYear, dataMonth] = maxDate.split('-').map(Number);
+
+      // If latest data is in season window, use that year
+      if (dataMonth >= 8 || dataMonth <= 3) {
+        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+      }
+    }
+
+    // Fallback: Before March: use previous year season, After March: use current year season
+    return month < 3 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
+  }, [standingsResponse, historyData]);
 
   // Filter history data to only include current season
   const filteredHistoryData = useMemo(() => {
     if (!historyData) return null;
 
     const seasonYear = parseInt(currentSeason.split('-')[0]);
-    const seasonStart = new Date(`${seasonYear}-08-01T00:00:00Z`);
-    const seasonEnd = new Date(`${seasonYear}-12-08T23:59:59Z`);
+    const seasonStart = `${seasonYear}-08-15`;
+    const seasonEnd = `${seasonYear}-12-15`;
 
     return {
       ...historyData,
       timeline_data: historyData.timeline_data?.filter(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= seasonStart && itemDate <= seasonEnd;
+        return item.date >= seasonStart && item.date <= seasonEnd;
       }) || [],
       first_place_data: historyData.first_place_data?.filter(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= seasonStart && itemDate <= seasonEnd;
+        return item.date >= seasonStart && item.date <= seasonEnd;
       }) || [],
     };
   }, [historyData, currentSeason]);
@@ -340,6 +349,7 @@ export default function FootballStandingsPage() {
                       <FootballStandingsHistoryChart
                         timelineData={filteredHistoryData.timeline_data}
                         conferenceSize={standingsResponse?.data?.length || 12}
+                        season={currentSeason}
                       />
                     </div>
 
@@ -380,6 +390,7 @@ export default function FootballStandingsPage() {
                     <div className="first-place-chart">
                       <FootballFirstPlaceChart
                         firstPlaceData={filteredHistoryData.first_place_data}
+                        season={currentSeason}
                       />
                     </div>
 

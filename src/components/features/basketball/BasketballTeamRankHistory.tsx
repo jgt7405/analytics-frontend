@@ -2,6 +2,11 @@
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getBasketballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -46,12 +51,14 @@ interface BasketballTeamRankHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  season?: string;
 }
 
 export default function BasketballTeamRankHistory({
   teamName,
   primaryColor = "#3b82f6",
   logoUrl,
+  season,
 }: BasketballTeamRankHistoryProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", (number | null)[], string> | null>(
@@ -63,7 +70,7 @@ export default function BasketballTeamRankHistory({
     data: allHistoryData,
     isLoading,
     error: queryError,
-  } = useBasketballTeamAllHistory(teamName);
+  } = useBasketballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
 
@@ -73,11 +80,6 @@ export default function BasketballTeamRankHistory({
     return centralDate;
   };
 
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
-  };
-
   useEffect(() => {
     if (!allHistoryData?.confWins?.data) {
       setData([]);
@@ -85,39 +87,34 @@ export default function BasketballTeamRankHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-    const cutoffDate = new Date("2024-11-01");
-    const filteredData = rawData.filter((point: HistoricalDataPoint) => {
-      const itemDate = new Date(point.date);
-      return (
-        itemDate >= cutoffDate &&
-        point.kenpom_rank !== null &&
-        point.kenpom_rank !== undefined
-      );
-    });
+    const range = getBasketballDateRange(season, rawData);
+    const filteredData = filterDataToRange(rawData, range);
 
-    const dataByDate = new Map<string, HistoricalDataPoint>();
+    const dataByDateMap = new Map<string, HistoricalDataPoint>();
 
     filteredData.forEach((point: HistoricalDataPoint) => {
-      const dateKey = point.date;
+      if (point.kenpom_rank !== null && point.kenpom_rank !== undefined) {
+        const dateKey = point.date;
 
-      if (!dataByDate.has(dateKey)) {
-        dataByDate.set(dateKey, point);
-      } else {
-        const existing = dataByDate.get(dateKey)!;
-        if (point.version_id < existing.version_id) {
-          dataByDate.set(dateKey, point);
+        if (!dataByDateMap.has(dateKey)) {
+          dataByDateMap.set(dateKey, point);
+        } else {
+          const existing = dataByDateMap.get(dateKey)!;
+          if (point.version_id < existing.version_id) {
+            dataByDateMap.set(dateKey, point);
+          }
         }
       }
     });
 
-    const processedData = Array.from(dataByDate.values()).sort((a, b) => {
+    const processedData = Array.from(dataByDateMap.values()).sort((a, b) => {
       const dateA = parseDateCentralTime(a.date);
       const dateB = parseDateCentralTime(b.date);
       return dateA.getTime() - dateB.getTime();
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   const options = {
     responsive: true,
@@ -192,10 +189,11 @@ export default function BasketballTeamRankHistory({
           if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const dataPoint = data[dataIndex];
+            const displayDate = `${dataPoint.date.split("-")[1]}/${dataPoint.date.split("-")[2]}`;
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #374151;">${formatDateForDisplay(dataPoint.date)}</div>
+                <div style="font-weight: 600; color: #374151;">${displayDate}</div>
                 <button id="tooltip-close" style="background: none; border: none; font-size: 16px; color: #6b7280; cursor: pointer; padding: 0; margin-left: 12px;">&times;</button>
               </div>
             `;
@@ -347,12 +345,22 @@ export default function BasketballTeamRankHistory({
     },
   } as const;
 
+  const range = getBasketballDateRange(season, data);
+  const dataDates = data.map((point) => point.date);
+  const chartLabels = buildChartLabels(dataDates, range, "basketball");
+  const dataByDate = new Map(data.map((point) => [point.date, point]));
+
+  const rankData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.kenpom_rank : null;
+  });
+
   const chartData = {
-    labels: data.map((point) => formatDateForDisplay(point.date)),
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets: [
       {
         label: "Rating",
-        data: data.map((point) => point.kenpom_rank),
+        data: rankData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: isMobile ? 2 : 3,

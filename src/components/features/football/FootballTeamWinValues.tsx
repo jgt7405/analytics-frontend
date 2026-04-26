@@ -1,6 +1,7 @@
 "use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
+import { getFootballDateRange } from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -42,6 +43,7 @@ interface FootballTeamGame {
 interface FootballTeamWinValuesProps {
   schedule: FootballTeamGame[];
   logoUrl?: string;
+  season?: string;
 }
 
 interface GameWithDate extends FootballTeamGame {
@@ -58,6 +60,7 @@ interface ContinuousDataPoint {
 export default function FootballTeamWinValues({
   schedule,
   logoUrl,
+  season,
 }: FootballTeamWinValuesProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
@@ -131,15 +134,19 @@ export default function FootballTeamWinValues({
 
     gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
-    // Filter to start from 8/22/2025 and end at current date
-    const startDate = new Date(2025, 7, 22); // August 22, 2025
-    const currentDate = new Date();
-    currentDate.setHours(23, 59, 59, 999);
+    // Get date range based on season
+    const range = getFootballDateRange(season, gameWithDates);
+    const startDate = range.start;
+
+    // Use the earlier of today or season end date (don't show future)
+    const today = new Date();
+    const endDate = today < range.end ? new Date(today) : new Date(range.end);
+    endDate.setHours(23, 59, 59, 999);
 
     const allDates: Date[] = [];
     const iterDate = new Date(startDate);
 
-    while (iterDate <= currentDate) {
+    while (iterDate <= endDate) {
       allDates.push(new Date(iterDate));
       iterDate.setDate(iterDate.getDate() + 1);
     }

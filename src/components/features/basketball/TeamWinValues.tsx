@@ -1,6 +1,7 @@
 "use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
+import { getBasketballDateRange } from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
   CategoryScale,
@@ -43,6 +44,7 @@ interface TeamWinValuesProps {
   logoUrl?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  season?: string;
 }
 
 interface GameWithDate extends TeamGame {
@@ -59,6 +61,7 @@ interface ContinuousDataPoint {
 export default function TeamWinValues({
   schedule,
   logoUrl,
+  season,
 }: TeamWinValuesProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<
@@ -105,21 +108,13 @@ export default function TeamWinValues({
 
     gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
-    const startDate = new Date(2025, 10, 1); // Changed to September 22, 2025
+    // Get date range based on season
+    const range = getBasketballDateRange(season, gameWithDates);
+    const startDate = range.start;
 
-    // Find the last game with actual data (status W or L)
-    const completedGames = gameWithDates.filter(
-      (game) => game.status === "W" || game.status === "L"
-    );
-
-    // Use either the last completed game date or today, whichever is earlier
-    const lastGameDate =
-      completedGames.length > 0
-        ? completedGames[completedGames.length - 1].dateObj
-        : new Date();
-
-    const currentDate = new Date();
-    const endDate = lastGameDate > currentDate ? lastGameDate : currentDate;
+    // Use the earlier of today or season end date (don't show future)
+    const today = new Date();
+    const endDate = today < range.end ? new Date(today) : new Date(range.end);
     endDate.setHours(23, 59, 59, 999);
 
     const allDates: Date[] = [];

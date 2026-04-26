@@ -403,6 +403,7 @@ export default function ArchiveFootballTeamPage({
                 <FootballTeamWinValues
                   schedule={schedule}
                   logoUrl={team_info.logo_url}
+                  season={season}
                 />
               </div>
 
@@ -465,6 +466,7 @@ export default function ArchiveFootballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={season}
                 />
               </div>
 
@@ -480,6 +482,7 @@ export default function ArchiveFootballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={season}
                 />
               </div>
 
@@ -495,6 +498,7 @@ export default function ArchiveFootballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={season}
                 />
               </div>
 
@@ -510,6 +514,7 @@ export default function ArchiveFootballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={season}
                 />
               </div>
 
@@ -524,6 +529,7 @@ export default function ArchiveFootballTeamPage({
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  season={season}
                 />
               </div>
 
@@ -538,6 +544,7 @@ export default function ArchiveFootballTeamPage({
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  season={season}
                 />
               </div>
             </div>
@@ -753,6 +760,7 @@ export default function ArchiveFootballTeamPage({
                     <FootballTeamWinValues
                       schedule={schedule}
                       logoUrl={team_info.logo_url}
+                      season={season}
                     />
                   </div>
 
@@ -784,6 +792,7 @@ export default function ArchiveFootballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={season}
                     />
                   </div>
 
@@ -799,6 +808,7 @@ export default function ArchiveFootballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={season}
                     />
                   </div>
 
@@ -814,6 +824,7 @@ export default function ArchiveFootballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={season}
                     />
                   </div>
 
@@ -829,6 +840,7 @@ export default function ArchiveFootballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={season}
                     />
                   </div>
 
@@ -843,6 +855,7 @@ export default function ArchiveFootballTeamPage({
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      season={season}
                     />
                   </div>
 
@@ -857,6 +870,7 @@ export default function ArchiveFootballTeamPage({
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      season={season}
                     />
                   </div>
                 </div>

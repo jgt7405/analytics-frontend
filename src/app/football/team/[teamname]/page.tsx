@@ -17,12 +17,13 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useFootballTeam } from "@/hooks/useFootballTeam";
+import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Download } from "lucide-react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation"; // ✅ ADD useSearchParams
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
 
 interface ApiRecordSeedCount {
   Record: string;
@@ -65,7 +66,39 @@ export default function FootballTeamPage({
     refetch,
   } = useFootballTeam(teamname);
 
+  // Fetch all history data to detect season from data timestamps
+  const { data: historyData } = useFootballTeamAllHistory(teamname);
+
   const error = queryError?.message || null;
+
+  // Data-driven season calculation - checks if data exists past 12/15
+  const currentSeason = useMemo(() => {
+    // First check if we have conf wins history data with timestamps
+    if (historyData?.confWins?.data && historyData.confWins.data.length > 0) {
+      const maxDate = historyData.confWins.data.reduce((max: string, item) =>
+        item.date > max ? item.date : max,
+        historyData.confWins.data[0].date
+      );
+      const [dataYear, dataMonth, dataDay] = maxDate.split('-').map(Number);
+
+      // If data exists past 12/15, shift to next season
+      if (dataMonth > 12 || (dataMonth === 12 && dataDay > 15)) {
+        return `${dataYear + 1}-${(dataYear + 2).toString().slice(-2)}`;
+      }
+      // If data is in season window (8+ or <= 3), use that year's season
+      if (dataMonth >= 8 || dataMonth <= 3) {
+        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+      }
+    }
+
+    // Fallback: check current date
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    // Before March: use previous year season, After March: use current year season
+    return month < 3 ? `${year - 1}-${year}` : `${year}-${(year + 1)}`;
+  }, [historyData]);
 
   // Track page view
   useEffect(() => {
@@ -390,6 +423,7 @@ export default function FootballTeamPage({
                 <FootballTeamWinValues
                   schedule={schedule}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
               {/* Mobile Schedule Difficulty */}
@@ -451,6 +485,7 @@ export default function FootballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
 
@@ -466,6 +501,7 @@ export default function FootballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
 
@@ -481,6 +517,7 @@ export default function FootballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
 
@@ -496,6 +533,7 @@ export default function FootballTeamPage({
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
                   logoUrl={team_info.logo_url}
+                  season={currentSeason}
                 />
               </div>
 
@@ -510,6 +548,7 @@ export default function FootballTeamPage({
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  season={currentSeason}
                 />
               </div>
 
@@ -524,6 +563,7 @@ export default function FootballTeamPage({
                   teamName={team_info.team_name}
                   primaryColor={team_info.primary_color}
                   secondaryColor={team_info.secondary_color}
+                  season={currentSeason}
                 />
               </div>
             </div>
@@ -738,6 +778,7 @@ export default function FootballTeamPage({
                     <FootballTeamWinValues
                       schedule={schedule}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -769,6 +810,7 @@ export default function FootballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -784,6 +826,7 @@ export default function FootballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -799,6 +842,7 @@ export default function FootballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -814,6 +858,7 @@ export default function FootballTeamPage({
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
                       logoUrl={team_info.logo_url}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -828,6 +873,7 @@ export default function FootballTeamPage({
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      season={currentSeason}
                     />
                   </div>
 
@@ -842,6 +888,7 @@ export default function FootballTeamPage({
                       teamName={team_info.team_name}
                       primaryColor={team_info.primary_color}
                       secondaryColor={team_info.secondary_color}
+                      season={currentSeason}
                     />
                   </div>
                 </div>

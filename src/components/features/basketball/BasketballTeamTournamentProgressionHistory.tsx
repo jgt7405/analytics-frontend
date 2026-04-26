@@ -2,6 +2,11 @@
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getBasketballDateRange,
+} from "@/lib/chartDateRange";
 import type { Chart, PointStyle, TooltipModel } from "chart.js";
 import {
   CategoryScale,
@@ -46,6 +51,7 @@ interface BasketballTeamTournamentProgressionHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  season?: string;
 }
 
 interface TournamentRoundDataPoint {
@@ -67,6 +73,7 @@ export default function BasketballTeamTournamentProgressionHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
+  season,
 }: BasketballTeamTournamentProgressionHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,14 +84,9 @@ export default function BasketballTeamTournamentProgressionHistory({
     data: allHistoryData,
     isLoading: loading,
     error: queryError,
-  } = useBasketballTeamAllHistory(teamName);
+  } = useBasketballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
-
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
-  };
 
   useEffect(() => {
     if (!allHistoryData?.ncaa) {
@@ -124,26 +126,25 @@ export default function BasketballTeamTournamentProgressionHistory({
       });
     });
 
-    const cutoffDate = new Date("2024-11-01");
-    const finalData = Array.from(dataByDate.values())
-      .filter((item) => {
-        const itemDate = new Date(item.date!);
-        return itemDate >= cutoffDate;
-      })
-      .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime())
-      .map((item) => ({
-        date: item.date!,
-        team_name: item.team_name!,
-        team_info: item.team_info!,
-        sweet_sixteen_pct: item.sweet_sixteen_pct!,
-        elite_eight_pct: item.elite_eight_pct!,
-        final_four_pct: item.final_four_pct!,
-        championship_pct: item.championship_pct!,
-        champion_pct: item.champion_pct!,
-      }));
+    const rawData = Array.from(dataByDate.values()).map((item) => ({
+      date: item.date!,
+      team_name: item.team_name!,
+      team_info: item.team_info!,
+      sweet_sixteen_pct: item.sweet_sixteen_pct!,
+      elite_eight_pct: item.elite_eight_pct!,
+      final_four_pct: item.final_four_pct!,
+      championship_pct: item.championship_pct!,
+      champion_pct: item.champion_pct!,
+    }));
+
+    const range = getBasketballDateRange(season, rawData);
+    const filteredData = filterDataToRange(rawData, range);
+    const finalData = filteredData.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
 
     setData(finalData);
-  }, [allHistoryData, teamName]);
+  }, [allHistoryData, teamName, season]);
 
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
@@ -154,18 +155,39 @@ export default function BasketballTeamTournamentProgressionHistory({
       ? "#ef4444"
       : "#10b981";
 
-  const labels = data.map((item) => formatDateForDisplay(item.date));
+  const range = getBasketballDateRange(season, data);
+  const dataDates = data.map((point) => point.date);
+  const chartLabels = buildChartLabels(dataDates, range, "basketball");
+  const dataByDate = new Map(data.map((point) => [point.date, point]));
   const teamLogo = data.length > 0 ? data[0].team_info.logo_url : null;
 
+  const sweetSixteenData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.sweet_sixteen_pct : null;
+  });
+  const eliteEightData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.elite_eight_pct : null;
+  });
+  const finalFourData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.final_four_pct : null;
+  });
+  const championshipData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.championship_pct : null;
+  });
+  const championData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.champion_pct : null;
+  });
+
   const chartData = {
-    labels,
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets: [
       {
         label: "Sweet Sixteen",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.sweet_sixteen_pct,
-        })),
+        data: sweetSixteenData,
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
         borderWidth: 2,
@@ -177,10 +199,7 @@ export default function BasketballTeamTournamentProgressionHistory({
       },
       {
         label: "Elite Eight",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.elite_eight_pct,
-        })),
+        data: eliteEightData,
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
         borderWidth: 2,
@@ -191,10 +210,7 @@ export default function BasketballTeamTournamentProgressionHistory({
       },
       {
         label: "Final Four",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.final_four_pct,
-        })),
+        data: finalFourData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 2,
@@ -206,10 +222,7 @@ export default function BasketballTeamTournamentProgressionHistory({
       },
       {
         label: "Championship Game",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.championship_pct,
-        })),
+        data: championshipData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 2,
@@ -220,10 +233,7 @@ export default function BasketballTeamTournamentProgressionHistory({
       },
       {
         label: "Champion",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.champion_pct,
-        })),
+        data: championData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 3,
@@ -365,8 +375,10 @@ export default function BasketballTeamTournamentProgressionHistory({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = labels[dataIndex];
-            const point = data[dataIndex];
+            const label = chartLabels[dataIndex];
+            const point = dataByDate.get(label.isoDate);
+            if (!point) return;
+            const currentDate = label.displayLabel;
 
             let innerHtml = `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -389,11 +401,12 @@ export default function BasketballTeamTournamentProgressionHistory({
               </div>
             `;
 
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Sweet Sixteen: ${point.sweet_sixteen_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Elite Eight: ${point.elite_eight_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Final Four: ${point.final_four_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Championship: ${point.championship_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Champion: ${point.champion_pct.toFixed(1)}%</div>`;
+            const displayData = point as TournamentProgressionDataPoint;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Sweet Sixteen: ${displayData.sweet_sixteen_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Elite Eight: ${displayData.elite_eight_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Final Four: ${displayData.final_four_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Championship: ${displayData.championship_pct.toFixed(1)}%</div>`;
+            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Champion: ${displayData.champion_pct.toFixed(1)}%</div>`;
 
             tooltipEl.innerHTML = innerHtml;
 

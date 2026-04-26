@@ -17,7 +17,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useStandings } from "@/hooks/useStandings";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState, useMemo } from "react";
 
 export default function StandingsPage() {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
@@ -38,7 +38,67 @@ export default function StandingsPage() {
   } = useStandings(selectedConference);
 
   const { data: historyData } = useBballStandingsHistory(selectedConference);
-  console.log("History data:", historyData);
+
+  // Dynamic season calculation based on data availability
+  const currentSeason = useMemo(() => {
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    // Check standings data first for most recent timestamp
+    if (standingsResponse?.data && standingsResponse.data.length > 0) {
+      const firstTeam = standingsResponse.data[0];
+      const timestamp = (firstTeam as any)?.updated_at || (firstTeam as any)?.version_date;
+
+      if (timestamp) {
+        const dataDate = new Date(timestamp);
+        const dataMonth = dataDate.getMonth() + 1;
+        const dataYear = dataDate.getFullYear();
+
+        // If standings data is after 3/15, we're in a new season year
+        if (dataMonth > 3 || (dataMonth === 3 && dataMonth > 15) || dataMonth >= 10) {
+          return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+        }
+      }
+    }
+
+    // Check history data as secondary source
+    if (historyData?.timeline_data && historyData.timeline_data.length > 0) {
+      // Find the latest data point
+      const maxDate = historyData.timeline_data.reduce((max: string, item) =>
+        item.date > max ? item.date : max,
+        historyData.timeline_data[0].date
+      );
+      const [dataYear, dataMonth] = maxDate.split('-').map(Number);
+
+      // If latest data is in season window (10/30 to 3/15), use that year
+      if (dataMonth >= 10 || dataMonth <= 3) {
+        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+      }
+    }
+
+    // Fallback: Before April: use previous year season, After April: use current year season
+    return month < 4 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
+  }, [standingsResponse, historyData]);
+
+  // Filter history data to only include current season
+  const filteredHistoryData = useMemo(() => {
+    if (!historyData) return null;
+
+    const seasonYear = parseInt(currentSeason.split('-')[0]);
+    const seasonStart = `${seasonYear}-10-30`;
+    const seasonEnd = `${seasonYear + 1}-03-15`;
+
+    return {
+      ...historyData,
+      timeline_data: historyData.timeline_data?.filter(item => {
+        return item.date >= seasonStart && item.date <= seasonEnd;
+      }) || [],
+      first_place_data: historyData.first_place_data?.filter(item => {
+        return item.date >= seasonStart && item.date <= seasonEnd;
+      }) || [],
+    };
+  }, [historyData, currentSeason]);
 
   const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
     setSelectedConference,
@@ -363,7 +423,7 @@ export default function StandingsPage() {
               </ErrorBoundary>
 
               {/* Historical Charts */}
-              {historyData && (
+              {filteredHistoryData && (
                 <div className="space-y-6 mb-8">
                   <ErrorBoundary level="component">
                     <div className="mb-8">
@@ -373,8 +433,9 @@ export default function StandingsPage() {
                       </h1>
                       <div className="standings-history-chart">
                         <BballStandingsHistoryChart
-                          timelineData={historyData.timeline_data}
+                          timelineData={filteredHistoryData.timeline_data}
                           conferenceSize={standingsResponse?.data?.length || 12}
+                          season={currentSeason}
                         />
                       </div>
 
@@ -414,7 +475,8 @@ export default function StandingsPage() {
                       </h1>
                       <div className="first-place-chart">
                         <BballFirstPlaceHistoryChart
-                          firstPlaceData={historyData.first_place_data}
+                          firstPlaceData={filteredHistoryData.first_place_data}
+                          season={currentSeason}
                         />
                       </div>
 
@@ -454,7 +516,7 @@ export default function StandingsPage() {
                       </h1>
                       <div className="standings-progression-table">
                         <BballStandingsProgressionTable
-                          timelineData={historyData.timeline_data}
+                          timelineData={filteredHistoryData.timeline_data}
                           conferenceSize={standingsResponse?.data?.length || 12}
                         />
                       </div>

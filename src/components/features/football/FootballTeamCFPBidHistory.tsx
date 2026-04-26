@@ -2,6 +2,11 @@
 
 import { useResponsive } from "@/hooks/useResponsive";
 import {
+  buildChartLabels,
+  filterDataToRange,
+  getFootballDateRange,
+} from "@/lib/chartDateRange";
+import {
   CategoryScale,
   Chart as ChartJS,
   Legend,
@@ -53,12 +58,14 @@ interface FootballTeamCFPBidHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  season?: string;
 }
 
 export default function FootballTeamCFPBidHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
+  season,
 }: FootballTeamCFPBidHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,10 +80,6 @@ export default function FootballTeamCFPBidHistory({
     return centralDate;
   };
 
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -126,18 +129,14 @@ export default function FootballTeamCFPBidHistory({
           }
         });
 
-        // Filter for dates from 8/22 onward and sort
-        const cutoffDate = new Date("2025-08-22");
-        const processedData = Array.from(dataByDate.values())
-          .filter((item) => {
-            const itemDate = parseDateCentralTime(item.date);
-            return itemDate >= cutoffDate;
-          })
-          .sort((a, b) => {
-            const dateA = parseDateCentralTime(a.date);
-            const dateB = parseDateCentralTime(b.date);
-            return dateA.getTime() - dateB.getTime();
-          });
+        // Filter to season range and sort
+        const allData = Array.from(dataByDate.values());
+        const range = getFootballDateRange(season, allData);
+        const processedData = filterDataToRange(allData, range).sort((a, b) => {
+          const dateA = parseDateCentralTime(a.date);
+          const dateB = parseDateCentralTime(b.date);
+          return dateA.getTime() - dateB.getTime();
+        });
 
         setData(processedData);
         setError(null);
@@ -152,7 +151,7 @@ export default function FootballTeamCFPBidHistory({
     if (teamName) {
       fetchData();
     }
-  }, [teamName]);
+  }, [teamName, season]);
 
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
@@ -163,20 +162,33 @@ export default function FootballTeamCFPBidHistory({
       ? "#ef4444"
       : "#10b981";
 
-  const labels = data.map((item) => formatDateForDisplay(item.date));
+  // Build chart labels and datasets
+  const range = getFootballDateRange(season, data);
+  const dataDates = data.map((item) => item.date);
+  const chartLabels = buildChartLabels(dataDates, range, "football");
+  const dataByDate = new Map(data.map((item) => [item.date, item]));
 
   // Get team logo from the first available data point
   const teamLogo = data.length > 0 ? data[0].team_info.logo_url : null;
 
+  const cfpBidData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.cfp_bid_pct : null;
+  });
+
+  const avgSeedData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point && point.average_seed && point.average_seed > 0
+      ? point.average_seed
+      : null;
+  });
+
   const chartData = {
-    labels,
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets: [
       {
         label: "CFP Bid Probability",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.cfp_bid_pct,
-        })),
+        data: cfpBidData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 2,
@@ -188,15 +200,7 @@ export default function FootballTeamCFPBidHistory({
       },
       {
         label: "Average Seed",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y:
-            item.average_seed === null ||
-            item.average_seed === undefined ||
-            item.average_seed === 0
-              ? null
-              : item.average_seed,
-        })),
+        data: avgSeedData,
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
         borderWidth: 2,
@@ -262,7 +266,7 @@ export default function FootballTeamCFPBidHistory({
           title: function (context: TooltipItem<"line">[]) {
             if (context.length > 0) {
               const dataIndex = context[0].dataIndex;
-              return labels[dataIndex];
+              return chartLabels[dataIndex].displayLabel;
             }
             return "";
           },
@@ -281,14 +285,17 @@ export default function FootballTeamCFPBidHistory({
           label: function (context: TooltipItem<"line">) {
             const dataIndex = context.dataIndex;
             const datasetIndex = context.datasetIndex;
+            const label = chartLabels[dataIndex];
+            const dataPoint = dataByDate.get(label.isoDate);
+            if (!dataPoint) return "";
 
             if (datasetIndex === 0) {
               // CFP Bid Probability
-              const cfpBidPct = data[dataIndex].cfp_bid_pct || 0;
+              const cfpBidPct = dataPoint.cfp_bid_pct || 0;
               return `CFP Bid Probability: ${cfpBidPct.toFixed(1)}%`;
             } else if (datasetIndex === 1) {
               // Average Seed
-              const avgSeed = data[dataIndex].average_seed || 0;
+              const avgSeed = dataPoint.average_seed || 0;
               return `Average Seed: ${avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A"}`;
             }
             return "";

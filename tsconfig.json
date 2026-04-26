@@ -23,7 +23,8 @@
     },
     "target": "ES2017",
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "**/*.ts",

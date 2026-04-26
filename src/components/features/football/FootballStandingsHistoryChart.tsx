@@ -1,6 +1,7 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
+import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
@@ -43,6 +44,7 @@ interface TimelineData {
 interface FootballStandingsHistoryChartProps {
   timelineData: TimelineData[];
   conferenceSize: number;
+  season?: string;
 }
 
 interface TeamDataPoint {
@@ -67,6 +69,7 @@ interface ChartDimensions {
 export default function FootballStandingsHistoryChart({
   timelineData,
   conferenceSize,
+  season,
 }: FootballStandingsHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", TeamDataPoint[], string> | null>(
@@ -79,9 +82,18 @@ export default function FootballStandingsHistoryChart({
   useEffect(() => {
     const updateDimensions = () => {
       if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-        setChartDimensions({
-          chartArea: chartRef.current.chartArea,
-          canvas: chartRef.current.canvas,
+        const area = chartRef.current.chartArea;
+        setChartDimensions(prev => {
+          if (
+            prev &&
+            prev.chartArea.top === area.top &&
+            prev.chartArea.bottom === area.bottom &&
+            prev.chartArea.left === area.left &&
+            prev.chartArea.right === area.right
+          ) {
+            return prev;
+          }
+          return { chartArea: area, canvas: chartRef.current!.canvas };
         });
       }
     };
@@ -90,18 +102,9 @@ export default function FootballStandingsHistoryChart({
     return () => clearTimeout(timeout);
   }, [timelineData, conferenceSize]);
 
-  // Filter data starting from 8/22
-  const filteredTimelineData = timelineData.filter((item) => {
-    const itemDate = new Date(item.date);
-    const cutoffDate = new Date("2025-08-22");
-    return itemDate >= cutoffDate;
-  });
+  const range = getFootballDateRange(season, timelineData);
+  const filteredTimelineData = filterDataToRange(timelineData, range);
 
-  const formatDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day, 12, 0, 0);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  };
 
   // Deduplicate by team and date, keeping earliest version_id
   const dataByTeamAndDate = new Map<string, TimelineData>();
@@ -117,7 +120,11 @@ export default function FootballStandingsHistoryChart({
     }
   });
 
-  // Build team data from deduplicated items
+  const allDatesFromData = [...new Set(filteredTimelineData.map((d) => d.date))].sort();
+  const chartLabels = buildChartLabels(allDatesFromData, range, "football");
+  const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
+
+  // Build team data from deduplicated items with remapped dates
   const teamData: Record<string, TeamInfo> = {};
   Array.from(dataByTeamAndDate.values()).forEach((item) => {
     if (!teamData[item.team_name]) {
@@ -126,21 +133,16 @@ export default function FootballStandingsHistoryChart({
         team_info: item.team_info,
       };
     }
-    teamData[item.team_name].data.push({
-      x: formatDate(item.date),
-      y: item.avg_standing,
-    });
+    const dataIndex = dateIndexMap.get(item.date);
+    if (dataIndex !== undefined) {
+      teamData[item.team_name].data.push({
+        x: chartLabels[dataIndex].displayLabel,
+        y: item.avg_standing,
+      });
+    }
   });
 
-  const dates = [
-    ...new Set(
-      Array.from(dataByTeamAndDate.values()).map((d) => formatDate(d.date))
-    ),
-  ].sort((a, b) => {
-    const dateA = new Date(a + "/2025");
-    const dateB = new Date(b + "/2025");
-    return dateA.getTime() - dateB.getTime();
-  });
+  const dates = chartLabels.map((l) => l.displayLabel);
 
   const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort();
   const lastDate = allDates[allDates.length - 1];
@@ -270,10 +272,11 @@ export default function FootballStandingsHistoryChart({
 
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = allDates[dataIndex];
+            const displayDate = chartLabels[dataIndex]?.displayLabel;
+            const isoDate = chartLabels[dataIndex]?.isoDate;
 
             const teamsAtDate = filteredTimelineData
-              .filter((item) => item.date === currentDate)
+              .filter((item) => item.date === isoDate)
               .map((item) => ({
                 name: item.team_name,
                 standing: item.avg_standing,
@@ -283,7 +286,7 @@ export default function FootballStandingsHistoryChart({
 
             let innerHtml = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div style="font-weight: 600; color: #1f2937;">${formatDate(currentDate)}</div>
+              <div style="font-weight: 600; color: #1f2937;">${displayDate}</div>
               <button id="tooltip-close" style="
                 background: none;
                 border: none;
@@ -417,14 +420,7 @@ export default function FootballStandingsHistoryChart({
       padding: { left: 10, right: 100 },
     },
     animation: {
-      onComplete: () => {
-        if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-          setChartDimensions({
-            chartArea: chartRef.current.chartArea,
-            canvas: chartRef.current.canvas,
-          });
-        }
-      },
+      duration: 750,
     },
   };
 

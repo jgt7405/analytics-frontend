@@ -1,6 +1,12 @@
 "use client";
 
+import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getBasketballDateRange,
+} from "@/lib/chartDateRange";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -53,19 +59,28 @@ interface BasketballTeamTournamentBidHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  season?: string;
 }
 
 export default function BasketballTeamTournamentBidHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
+  season,
 }: BasketballTeamTournamentBidHistoryProps) {
   const { isMobile } = useResponsive();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chartRef = useRef<any>(null);
+  const chartRef = useRef<ChartJS<"line", (number | null)[], string> | null>(
+    null
+  );
   const [data, setData] = useState<TournamentHistoricalDataPoint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    data: allHistoryData,
+    isLoading: loading,
+    error: queryError,
+  } = useBasketballTeamAllHistory(teamName, season);
+
+  const error = queryError?.message || null;
 
   const parseDateCentralTime = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
@@ -73,83 +88,57 @@ export default function BasketballTeamTournamentBidHistory({
     return centralDate;
   };
 
-  const formatDateForDisplay = (dateString: string) => {
-    const [, month, day] = dateString.split("-").map(Number);
-    return `${month}/${day}`;
-  };
-
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        const response = await fetch(
-          `/api/proxy/basketball/ncaa/${encodeURIComponent(teamName)}/history`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch NCAA tournament bid history");
-        }
-
-        const result = await response.json();
-
-        const tournamentBidData: TournamentHistoricalDataPoint[] =
-          result.ncaa?.tournament_bid_data || [];
-        const avgSeedData = result.ncaa?.average_seed_data || [];
-
-        const dataByDate = new Map<string, TournamentHistoricalDataPoint>();
-
-        tournamentBidData.forEach((point) => {
-          dataByDate.set(point.date, {
-            date: point.date,
-            tournament_bid_pct: point.tournament_bid_pct || 0,
-            average_seed: 0,
-            team_name: point.team_name,
-            team_info: point.team_info || {},
-          });
-        });
-
-        avgSeedData.forEach((point: SeedDataPoint) => {
-          if (dataByDate.has(point.date)) {
-            const existingPoint = dataByDate.get(point.date)!;
-            existingPoint.average_seed = point.average_seed || 0;
-          } else {
-            dataByDate.set(point.date, {
-              date: point.date,
-              tournament_bid_pct: 0,
-              average_seed: point.average_seed || 0,
-              team_name: point.team_name,
-              team_info: point.team_info || {},
-            });
-          }
-        });
-
-        const cutoffDate = new Date("2024-11-01");
-        const processedData = Array.from(dataByDate.values())
-          .filter((item) => {
-            const itemDate = parseDateCentralTime(item.date);
-            return itemDate >= cutoffDate;
-          })
-          .sort((a, b) => {
-            const dateA = parseDateCentralTime(a.date);
-            const dateB = parseDateCentralTime(b.date);
-            return dateA.getTime() - dateB.getTime();
-          });
-
-        setData(processedData);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-        setData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (teamName) {
-      fetchData();
+    if (!allHistoryData?.ncaa) {
+      setData([]);
+      return;
     }
-  }, [teamName]);
+
+    const ncaaData = allHistoryData.ncaa;
+    const dataByDate = new Map<string, TournamentHistoricalDataPoint>();
+
+    const tournamentBidData = ncaaData.tournament_bid_data || [];
+    const avgSeedData = ncaaData.average_seed_data || [];
+
+    tournamentBidData.forEach((point: TournamentHistoricalDataPoint) => {
+      dataByDate.set(point.date, {
+        date: point.date,
+        tournament_bid_pct: point.tournament_bid_pct || 0,
+        average_seed: 0,
+        team_name: point.team_name,
+        team_info: point.team_info || {},
+      });
+    });
+
+    avgSeedData.forEach((point: SeedDataPoint) => {
+      if (dataByDate.has(point.date)) {
+        const existingPoint = dataByDate.get(point.date)!;
+        existingPoint.average_seed = point.average_seed || 0;
+      } else {
+        dataByDate.set(point.date, {
+          date: point.date,
+          tournament_bid_pct: 0,
+          average_seed: point.average_seed || 0,
+          team_name: point.team_name,
+          team_info: point.team_info || {},
+        });
+      }
+    });
+
+    const range = getBasketballDateRange(season, Array.from(dataByDate.values()));
+    const filteredData = filterDataToRange(
+      Array.from(dataByDate.values()),
+      range
+    );
+
+    const processedData = filteredData.sort((a, b) => {
+      const dateA = parseDateCentralTime(a.date);
+      const dateB = parseDateCentralTime(b.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    setData(processedData);
+  }, [allHistoryData, teamName, season]);
 
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
@@ -160,18 +149,30 @@ export default function BasketballTeamTournamentBidHistory({
       ? "#ef4444"
       : "#10b981";
 
-  const labels = data.map((item) => formatDateForDisplay(item.date));
+  const range = getBasketballDateRange(season, data);
+  const dataDates = data.map((point) => point.date);
+  const chartLabels = buildChartLabels(dataDates, range, "basketball");
+  const dataByDate = new Map(data.map((point) => [point.date, point]));
   const teamLogo = data.length > 0 ? data[0].team_info.logo_url : null;
 
+  const bidData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.tournament_bid_pct * 100 : null;
+  });
+
+  const seedData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point && point.average_seed && point.average_seed > 0
+      ? point.average_seed
+      : null;
+  });
+
   const chartData = {
-    labels,
+    labels: chartLabels.map((l) => l.displayLabel),
     datasets: [
       {
         label: "NCAA Tournament Bid Probability",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y: item.tournament_bid_pct * 100,
-        })),
+        data: bidData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 2,
@@ -183,15 +184,7 @@ export default function BasketballTeamTournamentBidHistory({
       },
       {
         label: "Average Seed",
-        data: data.map((item, index) => ({
-          x: labels[index],
-          y:
-            item.average_seed === null ||
-            item.average_seed === undefined ||
-            item.average_seed === 0
-              ? null
-              : item.average_seed,
-        })),
+        data: seedData,
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
         borderWidth: 2,
@@ -257,7 +250,7 @@ export default function BasketballTeamTournamentBidHistory({
           title: function (context: TooltipItem<"line">[]) {
             if (context.length > 0) {
               const dataIndex = context[0].dataIndex;
-              return labels[dataIndex];
+              return chartLabels[dataIndex].displayLabel;
             }
             return "";
           },
@@ -273,12 +266,15 @@ export default function BasketballTeamTournamentBidHistory({
           label: function (context: TooltipItem<"line">) {
             const dataIndex = context.dataIndex;
             const datasetIndex = context.datasetIndex;
+            const label = chartLabels[dataIndex];
+            const point = dataByDate.get(label.isoDate);
+            if (!point) return "";
 
             if (datasetIndex === 0) {
-              const bidPct = (data[dataIndex].tournament_bid_pct || 0) * 100;
+              const bidPct = (point.tournament_bid_pct || 0) * 100;
               return `NCAA Bid Probability: ${bidPct.toFixed(1)}%`;
             } else if (datasetIndex === 1) {
-              const avgSeed = data[dataIndex].average_seed || 0;
+              const avgSeed = point.average_seed || 0;
               return `Average Seed: ${avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A"}`;
             }
             return "";

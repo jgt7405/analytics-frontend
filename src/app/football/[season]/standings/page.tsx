@@ -90,18 +90,16 @@ export default function FootballStandingsPage({ params }: FootballStandingsPageP
     if (!historyData) return null;
 
     const seasonYear = parseInt(currentSeason.split('-')[0]);
-    const seasonStart = new Date(`${seasonYear}-08-01T00:00:00Z`);
-    const seasonEnd = new Date(`${seasonYear}-12-08T23:59:59Z`);
+    const seasonStart = `${seasonYear}-08-15`;
+    const seasonEnd = `${seasonYear}-12-15`;
 
     return {
       ...historyData,
       timeline_data: historyData.timeline_data?.filter(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= seasonStart && itemDate <= seasonEnd;
+        return item.date >= seasonStart && item.date <= seasonEnd;
       }) || [],
       first_place_data: historyData.first_place_data?.filter(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= seasonStart && itemDate <= seasonEnd;
+        return item.date >= seasonStart && item.date <= seasonEnd;
       }) || [],
     };
   }, [historyData, currentSeason]);
@@ -368,6 +366,7 @@ export default function FootballStandingsPage({ params }: FootballStandingsPageP
                       <FootballStandingsHistoryChart
                         timelineData={filteredHistoryData.timeline_data}
                         conferenceSize={standingsResponse?.data?.length || 12}
+                        season={params.season}
                       />
                     </div>
 
@@ -408,6 +407,7 @@ export default function FootballStandingsPage({ params }: FootballStandingsPageP
                     <div className="first-place-chart">
                       <FootballFirstPlaceChart
                         firstPlaceData={filteredHistoryData.first_place_data}
+                        season={params.season}
                       />
                     </div>
 
