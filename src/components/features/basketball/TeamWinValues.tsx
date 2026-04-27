@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
 import { getBasketballDateRange } from "@/lib/chartDateRange";
@@ -17,16 +17,6 @@ import {
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { Line } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 interface TeamGame {
   date: string;

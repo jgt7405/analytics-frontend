@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
 import {
@@ -20,16 +20,6 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 interface CFPHistoricalDataPoint {
   date: string;

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
@@ -18,16 +18,6 @@ import {
 } from "chart.js";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 interface ChampGameHistoryData {
   team_name: string;

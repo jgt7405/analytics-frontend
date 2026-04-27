@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import "@/lib/chartjs-setup";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { buildChartLabels, filterDataToRange, getBasketballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -18,16 +19,6 @@ import {
 } from "chart.js";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-);
 
 interface ChampionHistoryData {
   team_name: string;

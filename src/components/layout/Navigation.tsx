@@ -440,7 +440,7 @@ function NavigationContent() {
 
 export default function Navigation() {
   return (
-    <Suspense fallback={<div>Loading navigation...</div>}>
+    <Suspense fallback={<div className="h-10 w-full" aria-hidden />}>
       <NavigationContent />
     </Suspense>
   );

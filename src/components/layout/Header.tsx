@@ -31,8 +31,8 @@ function Header() {
           <Image
             src={logoSrc}
             alt="JThom Analytics Logo"
-            width={0}
-            height={0}
+            width={100}
+            height={40}
             className="header-logo"
             style={{ width: "100px", height: "auto", marginTop: "4px" }}
             priority={true}

@@ -48,12 +48,10 @@ export default function BasketballHome() {
           {/* NCAA Bracket Table Section */}
           <ErrorBoundary level="component">
             <div className="mb-8">
-              <div className="ncaa-bracket-table" ref={ncaaTableRef}>
+              <div className="ncaa-bracket-table min-h-[600px]" ref={ncaaTableRef}>
                 <Suspense
                   fallback={
-                    <div className="p-4 text-gray-500">
-                      Loading tournament data...
-                    </div>
+                    <div className="min-h-[600px] bg-gray-50 animate-pulse rounded-lg" />
                   }
                 >
                   <NCAABracketTable />
@@ -132,12 +130,10 @@ export default function BasketballHome() {
                 Potential Multi-Bid Conferences
               </h2>
 
-              <div className="multibid-leagues-table" ref={multiBidRef}>
+              <div className="multibid-leagues-table min-h-[300px]" ref={multiBidRef}>
                 <Suspense
                   fallback={
-                    <div className="p-4 text-gray-500">
-                      Loading conference data...
-                    </div>
+                    <div className="min-h-[300px] bg-gray-50 animate-pulse rounded-lg" />
                   }
                 >
                   <MultiBidLeagues />

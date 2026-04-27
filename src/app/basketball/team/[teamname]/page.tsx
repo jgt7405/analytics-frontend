@@ -1,18 +1,40 @@
 "use client";
 
 import ScreenshotModal from "@/components/common/ScreenshotModal";
-import BasketballTeamFirstPlaceHistory from "@/components/features/basketball/BasketballTeamFirstPlaceHistory";
-import BasketballTeamRankHistory from "@/components/features/basketball/BasketballTeamRankHistory";
 import BasketballTeamScheduleChart from "@/components/features/basketball/BasketballTeamScheduleChart";
 import BasketballTeamScheduleDifficulty from "@/components/features/basketball/BasketballTeamScheduleDifficulty";
-import BasketballTeamStandingsHistory from "@/components/features/basketball/BasketballTeamStandingsHistory";
-import BasketballTeamTournamentBidHistory from "@/components/features/basketball/BasketballTeamTournamentBidHistory";
-import BasketballTeamTournamentProgressionHistory from "@/components/features/basketball/BasketballTeamTournamentProgressionHistory";
-import BasketballTeamWinHistory from "@/components/features/basketball/BasketballTeamWinHistory";
 import BasketballTeamWinsBreakdown from "@/components/features/basketball/BasketballTeamWinsBreakdown";
 import TeamSchedule from "@/components/features/basketball/TeamSchedule";
 import TeamSeedProjections from "@/components/features/basketball/TeamSeedProjections";
 import TeamWinValues from "@/components/features/basketball/TeamWinValues";
+import dynamic from "next/dynamic";
+
+const ChartSkeleton = () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />;
+
+const BasketballTeamRankHistory = dynamic(
+  () => import("@/components/features/basketball/BasketballTeamRankHistory"),
+  { ssr: false, loading: ChartSkeleton },
+);
+const BasketballTeamWinHistory = dynamic(
+  () => import("@/components/features/basketball/BasketballTeamWinHistory"),
+  { ssr: false, loading: ChartSkeleton },
+);
+const BasketballTeamStandingsHistory = dynamic(
+  () => import("@/components/features/basketball/BasketballTeamStandingsHistory"),
+  { ssr: false, loading: ChartSkeleton },
+);
+const BasketballTeamFirstPlaceHistory = dynamic(
+  () => import("@/components/features/basketball/BasketballTeamFirstPlaceHistory"),
+  { ssr: false, loading: ChartSkeleton },
+);
+const BasketballTeamTournamentBidHistory = dynamic(
+  () => import("@/components/features/basketball/BasketballTeamTournamentBidHistory"),
+  { ssr: false, loading: ChartSkeleton },
+);
+const BasketballTeamTournamentProgressionHistory = dynamic(
+  () => import("@/components/features/basketball/BasketballTeamTournamentProgressionHistory"),
+  { ssr: false, loading: ChartSkeleton },
+);
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";

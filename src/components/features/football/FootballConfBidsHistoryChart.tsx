@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -18,16 +18,6 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 interface ConfHistoryData {
   conference_name: string;

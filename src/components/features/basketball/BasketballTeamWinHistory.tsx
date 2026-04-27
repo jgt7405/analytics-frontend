@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -22,16 +22,6 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 interface HistoricalDataPoint {
   date: string;
