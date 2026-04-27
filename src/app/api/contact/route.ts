@@ -43,6 +43,18 @@ async function sendEmailAsync(
   message: string,
 ) {
   try {
+    console.log("📧 Starting email send for:", { name, email });
+
+    // Validate environment variables
+    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error("❌ Missing email configuration:", {
+        host: !!process.env.EMAIL_HOST,
+        user: !!process.env.EMAIL_USER,
+        pass: !!process.env.EMAIL_PASS,
+      });
+      return;
+    }
+
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: parseInt(process.env.EMAIL_PORT || "587"),
@@ -53,7 +65,12 @@ async function sendEmailAsync(
       },
     });
 
-    await transporter.sendMail({
+    console.log("🔗 Testing SMTP connection...");
+    await transporter.verify();
+    console.log("✅ SMTP connection verified");
+
+    console.log("📨 Sending email...");
+    const info = await transporter.sendMail({
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: "jacob@jthomanalytics.com",
       subject: `New Contact Form Submission from ${name}`,
@@ -68,8 +85,12 @@ async function sendEmailAsync(
       replyTo: email,
     });
 
-    console.log("Contact form email sent successfully");
+    console.log("✅ Contact form email sent successfully:", info.messageId);
   } catch (error) {
-    console.error("Error sending contact form email:", error);
+    console.error("❌ Error sending contact form email:", {
+      message: error instanceof Error ? error.message : String(error),
+      code: (error as any)?.code,
+      command: (error as any)?.command,
+    });
   }
 }
