@@ -17,19 +17,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create a transporter using your email service
-    // This example uses Gmail, but you can change it to your email service
+    // Send email asynchronously without waiting for response
+    sendEmailAsync(name, email, phone, message).catch((error) => {
+      console.error("Error sending email in background:", error);
+    });
+
+    // Respond immediately to the user
+    return NextResponse.json(
+      { success: true, message: "Thank you! We'll get back to you soon." },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Error processing contact form:", error);
+    return NextResponse.json(
+      { error: "Failed to process your request" },
+      { status: 500 },
+    );
+  }
+}
+
+async function sendEmailAsync(
+  name: string,
+  email: string,
+  phone: string,
+  message: string,
+) {
+  try {
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: parseInt(process.env.EMAIL_PORT || "587"),
-      secure: process.env.EMAIL_SECURE === "true", // true for 465, false for other ports
+      secure: process.env.EMAIL_SECURE === "true",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
 
-    // Send the email
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: "jacob@jthomanalytics.com",
@@ -45,15 +68,8 @@ export async function POST(request: NextRequest) {
       replyTo: email,
     });
 
-    return NextResponse.json(
-      { success: true, message: "Email sent successfully" },
-      { status: 200 },
-    );
+    console.log("Contact form email sent successfully");
   } catch (error) {
-    console.error("Error sending email:", error);
-    return NextResponse.json(
-      { error: "Failed to send email" },
-      { status: 500 },
-    );
+    console.error("Error sending contact form email:", error);
   }
 }
