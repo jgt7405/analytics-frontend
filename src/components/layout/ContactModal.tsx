@@ -63,7 +63,8 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
           setFormMessage("");
         }, 2000);
       } else {
-        setFormMessage("Error sending message. Please try again.");
+        const data = await response.json().catch(() => ({}));
+        setFormMessage(data.error || "Error sending message. Please try again.");
       }
     } catch (error) {
       setFormMessage("Error sending message. Please try again.");

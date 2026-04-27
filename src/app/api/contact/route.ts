@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { name, email, phone, message } = body;
 
-    // Validate that message is provided (only required field)
     if (!message) {
       return NextResponse.json(
         { error: "Message is required" },
@@ -17,42 +17,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send email asynchronously without waiting for response
-    sendEmailAsync(name, email, phone, message).catch((error) => {
-      console.error("Error sending email in background:", error);
-    });
-
-    // Respond immediately to the user
-    return NextResponse.json(
-      { success: true, message: "Thank you! We'll get back to you soon." },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error("Error processing contact form:", error);
-    return NextResponse.json(
-      { error: "Failed to process your request" },
-      { status: 500 },
-    );
-  }
-}
-
-async function sendEmailAsync(
-  name: string,
-  email: string,
-  phone: string,
-  message: string,
-) {
-  try {
-    console.log("📧 Starting email send for:", { name, email });
-
-    // Validate environment variables
     if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error("❌ Missing email configuration:", {
-        host: !!process.env.EMAIL_HOST,
-        user: !!process.env.EMAIL_USER,
-        pass: !!process.env.EMAIL_PASS,
-      });
-      return;
+      return NextResponse.json(
+        { error: "Email service not configured" },
+        { status: 500 },
+      );
     }
 
     const transporter = nodemailer.createTransport({
@@ -65,12 +34,7 @@ async function sendEmailAsync(
       },
     });
 
-    console.log("🔗 Testing SMTP connection...");
-    await transporter.verify();
-    console.log("✅ SMTP connection verified");
-
-    console.log("📨 Sending email...");
-    const info = await transporter.sendMail({
+    await transporter.sendMail({
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: "jacob@jthomanalytics.com",
       subject: `New Contact Form Submission from ${name}`,
@@ -85,12 +49,14 @@ async function sendEmailAsync(
       replyTo: email,
     });
 
-    console.log("✅ Contact form email sent successfully:", info.messageId);
+    return NextResponse.json(
+      { success: true, message: "Thank you! Your message has been sent successfully." },
+      { status: 200 },
+    );
   } catch (error) {
-    console.error("❌ Error sending contact form email:", {
-      message: error instanceof Error ? error.message : String(error),
-      code: (error as any)?.code,
-      command: (error as any)?.command,
-    });
+    return NextResponse.json(
+      { error: "Failed to send email. Please try again or email jacob@jthomanalytics.com directly." },
+      { status: 500 },
+    );
   }
 }
