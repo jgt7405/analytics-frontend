@@ -147,12 +147,12 @@ export default function FootballTeamWinHistory({
   // Remap datasets to match full label array (with nulls for missing dates)
   const totalWinsData = chartLabels.map((label) => {
     const point = dataByDate.get(label.isoDate);
-    return point ? { x: label.displayLabel, y: point.projected_total_wins } : null;
+    return point ? point.projected_total_wins : null;
   });
 
   const confWinsData = chartLabels.map((label) => {
     const point = dataByDate.get(label.isoDate);
-    return point ? { x: label.displayLabel, y: point.projected_conf_wins } : null;
+    return point ? point.projected_conf_wins : null;
   });
 
   const datasets = [
