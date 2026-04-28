@@ -25,7 +25,7 @@ interface MultiBidLeaguesProps {
 
 function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
   const { isMobile } = useResponsive();
-  const { data, loading, error } = useNCAAProjections();
+  const { data, loading, error } = useNCAAProjections(season);
   const router = useRouter();
 
   // Navigation handler for team clicks

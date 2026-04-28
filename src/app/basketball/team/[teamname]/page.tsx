@@ -133,9 +133,9 @@ export default function BasketballTeamPage({
       const [dataYear, dataMonth] = maxDate.split('-').map(Number);
 
       // Basketball season: Oct 30 - Mar 15 (spans two calendar years)
-      // If data is April-Sep (past the 3/15 boundary), we're in off-season, look for next season
+      // If data is April-Sep (past the 3/15 boundary), we're in off-season, use completed season
       if (dataMonth >= 4 && dataMonth <= 9) {
-        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+        return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
       }
       // If data is Jan-Mar, season started last year
       if (dataMonth >= 1 && dataMonth <= 3) {
@@ -152,8 +152,8 @@ export default function BasketballTeamPage({
     const month = today.getMonth() + 1;
     const year = today.getFullYear();
 
-    // Before April: use previous year season, After April: use current year season
-    return month < 4 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
+    // Before October: use previous year season, October+: use current year season
+    return month < 10 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
   }, [historyData]);
 
   useEffect(() => {

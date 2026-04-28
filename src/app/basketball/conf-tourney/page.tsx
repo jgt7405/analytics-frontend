@@ -12,7 +12,7 @@ import { useConferenceTourney } from "@/hooks/useConferenceTourney";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useMemo, useEffect, useState } from "react";
 
 const BasketballConfChampionHistoryChart = lazy(
   () =>
@@ -41,6 +41,38 @@ export default function ConfTourneyPage() {
 
   const { data: historyData } =
     useBasketballConfTourneyHistory(selectedConference);
+
+  // Calculate season from history data, similar to team page
+  const currentSeason = useMemo(() => {
+    if (historyData?.champion_data && historyData.champion_data.length > 0) {
+      const maxDate = historyData.champion_data.reduce((max: string, item) =>
+        item.date > max ? item.date : max,
+        historyData.champion_data[0].date
+      );
+      const [dataYear, dataMonth] = maxDate.split('-').map(Number);
+
+      // If data is April-Sep (past the 3/15 boundary), we're in off-season, use completed season
+      if (dataMonth >= 4 && dataMonth <= 9) {
+        return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
+      }
+      // If data is Jan-Mar, season started last year
+      if (dataMonth >= 1 && dataMonth <= 3) {
+        return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
+      }
+      // If data is Oct-Dec, season starts this year
+      if (dataMonth >= 10) {
+        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+      }
+    }
+
+    // Fallback: check current date
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    // Before October: use previous year season, October+: use current year season
+    return month < 10 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
+  }, [historyData]);
 
   useEffect(() => {
     trackEvent({
@@ -163,6 +195,7 @@ export default function ConfTourneyPage() {
                           <BasketballConfChampionHistoryChart
                             championData={historyData.champion_data}
                             selectedConference={selectedConference}
+                            season={currentSeason}
                           />
                         </Suspense>
                       </div>

@@ -78,7 +78,7 @@ export default function BballConfBidsHistoryChart({
 
     const timeout = setTimeout(updateDimensions, 1000);
     return () => clearTimeout(timeout);
-  }, [timelineData]);
+  }, [timelineData, season]);
 
   const range = getBasketballDateRange(season, timelineData);
   const filteredData = filterDataToRange(timelineData, range);

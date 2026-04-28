@@ -90,8 +90,9 @@ export default function TeamWinValues({
 
     const gameWithDates: GameWithDate[] = validGames.map((game) => {
       const [month, day] = game.date.split("/").map(Number);
-      // Changed: Use 2025 for months 9-12, 2026 for months 1-8
-      const year = month >= 9 ? 2025 : 2026;
+      // Derive year from season prop: Oct-Dec use season start year, Jan-Sep use next year
+      const seasonStartYear = parseInt(season.split('-')[0], 10);
+      const year = month >= 9 ? seasonStartYear : seasonStartYear + 1;
       const dateObj = new Date(year, month - 1, day);
       return { ...game, dateObj };
     });

@@ -21,7 +21,7 @@ interface NCAATeamWithConfLogo extends NCAATeam {
 function NCAABracketTable({ className, season }: NCAABracketTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
-  const { data, loading, error } = useNCAAProjections();
+  const { data, loading, error } = useNCAAProjections(season);
 
   const navigateToTeam = useCallback(
     (teamName: string) => {

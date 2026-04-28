@@ -82,7 +82,7 @@ export default function BasketballConfChampionHistoryChart({
 
     const timeout = setTimeout(updateDimensions, 500);
     return () => clearTimeout(timeout);
-  }, [championData, selectedConference]);
+  }, [championData, selectedConference, season]);
 
   const range = getBasketballDateRange(season, championData);
   const filteredChampionData = filterDataToRange(championData, range);

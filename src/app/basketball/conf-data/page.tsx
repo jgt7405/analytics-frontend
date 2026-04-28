@@ -40,6 +40,38 @@ export default function BasketballConfDataPage() {
   const conferenceData = confResponse?.conferenceData;
   const nonconfData = confResponse?.nonconfData;
 
+  // Calculate season from history data, similar to team page
+  const currentSeason = useMemo(() => {
+    if (historyData?.timeline_data && historyData.timeline_data.length > 0) {
+      const maxDate = historyData.timeline_data.reduce((max: string, item) =>
+        item.date > max ? item.date : max,
+        historyData.timeline_data[0].date
+      );
+      const [dataYear, dataMonth] = maxDate.split('-').map(Number);
+
+      // If data is April-Sep (past the 3/15 boundary), we're in off-season, use completed season
+      if (dataMonth >= 4 && dataMonth <= 9) {
+        return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
+      }
+      // If data is Jan-Mar, season started last year
+      if (dataMonth >= 1 && dataMonth <= 3) {
+        return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
+      }
+      // If data is Oct-Dec, season starts this year
+      if (dataMonth >= 10) {
+        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
+      }
+    }
+
+    // Fallback: check current date
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    // Before October: use previous year season, October+: use current year season
+    return month < 10 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
+  }, [historyData]);
+
   // Debug logging
   useEffect(() => {
     console.log("=== Basketball History Debug ===");
@@ -293,6 +325,7 @@ export default function BasketballConfDataPage() {
                     ) : filteredHistoryData.length > 0 ? (
                       <BballConfBidsHistoryChart
                         timelineData={filteredHistoryData}
+                        season={currentSeason}
                       />
                     ) : (
                       <div className="p-8 text-center">
