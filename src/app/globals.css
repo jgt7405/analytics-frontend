@@ -1,12 +1,12 @@
 /* src/app/globals.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @import "../styles/base/variables.css";
 @import "../styles/base/reset.css";
 @import "../styles/base/layout.css";
 @import "../styles/utilities/accessibility.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Apply Inter as default font */
 body {
