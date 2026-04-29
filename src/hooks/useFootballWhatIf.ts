@@ -44,6 +44,7 @@ interface BackendTeamResult {
   conf_champ_pct: number;
   playoff_bid_pct: number;
   cfp_bid_pct: number;
+  cfp_probability?: number;
   totalscenarios: number;
 }
 
@@ -78,7 +79,7 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => ({
   totalscenarios: team.totalscenarios || 1000,
   // Computed fields for UI compatibility
   projected_total_wins: team.avg_reg_season_wins || 0,
-  cfp_probability: team.cfp_bid_pct || team.playoff_bid_pct || 0,
+  cfp_probability: team.cfp_probability || team.cfp_bid_pct || team.playoff_bid_pct || 0,
   projected_conf_wins: team.avg_projected_conf_wins || 0,
   avg_conf_standing: team.avg_conference_standing || 0,
 });
