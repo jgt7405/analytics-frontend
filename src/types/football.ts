@@ -420,11 +420,15 @@ export interface WhatIfTeamResult {
 export interface WhatIfResponse {
   success: boolean;
   data: WhatIfTeamResult[];
+  current_projections: WhatIfTeamResult[];
+  games: WhatIfGame[];
   metadata: {
+    conference: string;
     num_scenarios: number;
-    num_selections: number;
     calculation_time: number;
-    selections: GameSelection[];
+    num_selections: number;
+    num_games: number;
+    num_current_projections: number;
   };
 }
 

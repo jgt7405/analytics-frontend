@@ -6,6 +6,7 @@ import {
 } from "@/components/common/ExportOptionsModal";
 import ScreenshotModal from "@/components/common/ScreenshotModal";
 import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
+import FootballCFPProb from "@/components/features/football/FootballCFPProb";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import {
   GameSelection,
@@ -174,6 +175,36 @@ export default function WhatIfCalculator() {
       logo_url: team.logo_url,
       currentProb: 0,
       whatIfProb: calculateTop2Probability(team),
+      change: 0,
+    }));
+  }, [whatIfResults]);
+
+  // CFP probability helpers
+  const calculateCFPProbability = (team: WhatIfTeamResult) => {
+    return team.cfp_probability || 0;
+  };
+
+  // Prepare data for CFP table
+  const currentCFPTableData = useMemo(() => {
+    return currentProjections.map((team) => ({
+      team_id: team.team_id,
+      team_name: team.team_name,
+      logo_url: team.logo_url,
+      currentProb: calculateCFPProbability(team),
+      whatIfProb: 0,
+      change: 0,
+    }));
+  }, [currentProjections]);
+
+  const whatIfCFPTableData = useMemo(() => {
+    if (whatIfResults.length === 0) return undefined;
+
+    return whatIfResults.map((team) => ({
+      team_id: team.team_id,
+      team_name: team.team_name,
+      logo_url: team.logo_url,
+      currentProb: 0,
+      whatIfProb: calculateCFPProbability(team),
       change: 0,
     }));
   }, [whatIfResults]);
@@ -540,6 +571,28 @@ export default function WhatIfCalculator() {
                   hasCalculated={whatIfResults.length > 0}
                   isScreenshotMode={isScreenshotMode}
                 />
+              )}
+
+              {/* CFP Probability Table */}
+              {currentCFPTableData.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                    CFP Probability
+                  </h3>
+                  {isLoadingData ? (
+                    <p className="text-gray-500 text-center py-12">
+                      Loading...
+                    </p>
+                  ) : (
+                    <FootballCFPProb
+                      currentData={currentCFPTableData}
+                      whatIfData={whatIfCFPTableData}
+                      hasWhatIf={whatIfResults.length > 0}
+                      hasCalculated={whatIfResults.length > 0}
+                      isScreenshotMode={isScreenshotMode}
+                    />
+                  )}
+                </div>
               )}
 
               {/* Game Selection Summary */}
