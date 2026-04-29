@@ -168,7 +168,7 @@ export default function FootballTeamsArchivePage({
   };
 
   const handleTeamClick = (teamName: string) => {
-    router.push(`/football/team/${encodeURIComponent(teamName)}?season=${season}`);
+    router.push(`/football/${season}/team/${encodeURIComponent(teamName)}`);
   };
 
   const formatBidPct = (value?: number) => {

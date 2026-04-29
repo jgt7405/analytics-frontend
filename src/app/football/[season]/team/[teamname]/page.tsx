@@ -90,7 +90,7 @@ export default function ArchiveFootballTeamPage({
   useEffect(() => {
     if (teamData?.team_info?.conference) {
       const params = new URLSearchParams(searchParams.toString());
-      params.set("teamConf", encodeURIComponent(teamData.team_info.conference));
+      params.set("teamConf", teamData.team_info.conference);
       const newUrl = `${window.location.pathname}?${params.toString()}`;
       window.history.replaceState({}, "", newUrl);
     }
