@@ -12,14 +12,10 @@ function Header() {
     ? "/images/JThom_Logo_Football.png"
     : "/images/JThom_Logo.png";
 
-  // Logo links to home based on current sport
-  const archiveSeasonMatch = pathname.match(/\/(football|basketball)\/(\d{4}-\d{2})\//);
-  const archiveSeason = archiveSeasonMatch ? archiveSeasonMatch[2] : null;
+  // Logo always links to main page, exiting any season archive context
   const sport = isFootball ? "football" : "basketball";
   const basePage = isFootball ? "wins" : "home";
-  const logoLink = archiveSeason
-    ? `/${sport}/${archiveSeason}/${basePage}`
-    : `/${sport}/${basePage}`;
+  const logoLink = `/${sport}/${basePage}`;
 
   return (
     <header
