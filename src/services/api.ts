@@ -492,23 +492,24 @@ class ApiClient {
     }));
   }
 
-  async getNCAATourney(conference: string): Promise<NCAATeamResponse> {
+  async getNCAATourney(conference: string, season?: string): Promise<NCAATeamResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     console.log(
-      `🏀 Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}`,
+      `🏀 Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
     );
 
     monitoring.trackEvent({
       name: "ncaa_tourney_requested",
-      properties: { conference: formattedConf },
+      properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/ncaa_tourney/${formattedConf}`, (data) => ({
+    return this.request(`/ncaa_tourney/${formattedConf}${seasonQuery}`, (data) => ({
       success: true,
       data: data as NCAATeamResponse,
       error: null,
