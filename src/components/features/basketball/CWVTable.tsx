@@ -289,7 +289,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
             {sortedTeams.map((team) => (
               <th
                 key={team.team_name}
-                className="bg-gray-50 dark:bg-slate-800 text-center font-normal p-0 cursor-pointer hover:bg-gray-100 dark:bg-slate-700"
+                className="bg-gray-50 dark:bg-slate-800 text-center font-normal p-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,

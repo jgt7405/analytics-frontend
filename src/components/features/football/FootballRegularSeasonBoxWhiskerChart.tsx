@@ -20,6 +20,7 @@ export default function FootballRegularSeasonBoxWhiskerChart({
   const router = useRouter();
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   // Sort teams by TWV (highest to lowest)
   const sortedTeams = useMemo(
@@ -75,12 +76,15 @@ export default function FootballRegularSeasonBoxWhiskerChart({
 
   useEffect(() => {
     setMounted(true);
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
   }, []);
 
   const adjustColorIfWhite = (color: string) => {
-    if (!color) return "#000000";
+    if (!color) return isDark ? "#e2e8f0" : "#000000";
     const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
-    return white.includes(color.toLowerCase()) ? "#000000" : color;
+    return white.includes(color.toLowerCase())
+      ? (isDark ? "#e2e8f0" : "#000000")
+      : color;
   };
 
   const navigateToTeam = (teamName: string) => {
@@ -175,10 +179,9 @@ export default function FootballRegularSeasonBoxWhiskerChart({
             {yAxisTicks.map((tick) => (
               <div
                 key={tick}
-                className="absolute w-full"
+                className="absolute w-full border-b border-gray-200 dark:border-gray-700"
                 style={{
                   top: `${scale(tick)}px`,
-                  borderBottom: "1px solid #e5e7eb",
                 }}
               />
             ))}

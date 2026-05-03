@@ -33,7 +33,7 @@ export default function ConferenceSelector({
           value={selectedConference}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled || filteredConferences.length === 0}
-          className={`px-3 py-1.5 border rounded-md bg-white dark:bg-slate-900 dark:bg-slate-800 min-w-[200px] transition-colors text-xs
+          className={`px-3 py-1.5 border rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-white min-w-[200px] transition-colors text-xs
            ${
              error
                ? "border-red-300 focus:ring-red-500 focus:border-red-500"

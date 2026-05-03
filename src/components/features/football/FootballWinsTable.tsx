@@ -101,16 +101,13 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
             {sortedTeams.map((team) => (
               <th
                 key={`${team.team_id}-${team.team_name}`}
-                className={`text-center font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`text-center font-normal px-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 border-b-2 border-b-gray-300 dark:border-b-gray-600 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
                   borderLeft: "none",
-                  borderBottom: "2px solid #d1d5db",
-                  backgroundColor: "#f9fafb",
                 }}
               >
                 <div className="flex flex-col items-center gap-1">
@@ -200,16 +197,13 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
               return (
                 <td
                   key={`${team.team_id}-${team.team_name}-avg`}
-                  className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`text-center font-medium bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 border-t-2 border-t-gray-300 dark:border-t-gray-600 ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     height: summaryRowHeight,
                     width: teamColWidth,
                     minWidth: teamColWidth,
                     maxWidth: teamColWidth,
-                    border: "1px solid #e5e7eb",
-                    borderTop: "2px solid #d1d5db",
                     borderLeft: "none",
-                    backgroundColor: "#f9fafb",
                   }}
                 >
                   {avgWins.toFixed(1)}
@@ -242,16 +236,13 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
               return (
                 <td
                   key={`${team.team_id}-${team.team_name}-curr`}
-                  className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`text-center font-medium bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     height: summaryRowHeight,
                     width: teamColWidth,
                     minWidth: teamColWidth,
                     maxWidth: teamColWidth,
-                    border: "1px solid #e5e7eb",
-                    borderTop: "none",
                     borderLeft: "none",
-                    backgroundColor: "#f9fafb",
                   }}
                 >
                   {confWins}-{confLosses}
