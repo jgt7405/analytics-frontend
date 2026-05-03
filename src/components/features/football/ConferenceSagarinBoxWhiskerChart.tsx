@@ -41,7 +41,7 @@ function ConferenceLogo({
   if (!logoUrl || imageError) {
     return (
       <div
-        className="flex items-center justify-center bg-gray-200 rounded text-xs font-bold text-gray-600"
+        className="flex items-center justify-center bg-gray-200 rounded text-xs font-bold text-gray-600 dark:text-gray-400"
         style={{ width: size, height: size }}
       >
         {conferenceName.substring(0, 3).toUpperCase()}
@@ -175,7 +175,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
   if (!conferenceData || conferenceData.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500">No conference data available</p>
+        <p className="text-gray-500 dark:text-gray-400">No conference data available</p>
       </div>
     );
   }
@@ -183,7 +183,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
   if (validConferences.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500">No valid Sagarin rating data available</p>
+        <p className="text-gray-500 dark:text-gray-400">No valid Sagarin rating data available</p>
       </div>
     );
   }
@@ -219,11 +219,11 @@ export default function ConferenceSagarinBoxWhiskerChart({
     10;
 
   return (
-    <div className={cn(components.table.container, "bg-white", className)}>
+    <div className={cn(components.table.container, "bg-white dark:bg-slate-900", className)}>
       <div className="relative">
         {/* Fixed Y-axis outside scroll container */}
         <div
-          className="absolute left-0 top-0 bg-white z-50"
+          className="absolute left-0 top-0 bg-white dark:bg-slate-900 z-50"
           style={{
             width: padding.left,
             height: chartHeight + logoHeight + padding.top + padding.bottom,
@@ -241,7 +241,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
             {yAxisTicks.map((tick) => (
               <div
                 key={tick}
-                className="absolute w-full text-right pr-1 text-gray-500 font-medium flex items-center justify-end"
+                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-400 font-medium flex items-center justify-end"
                 style={{
                   top: `${scale(tick)}px`,
                   height: "1px",

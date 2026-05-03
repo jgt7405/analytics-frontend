@@ -497,7 +497,7 @@ export default function FootballConfChampionHistoryChart({
   if (filteredChampionData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">
+        <div className="text-gray-500 dark:text-gray-400">
           No conference champion probability data available
         </div>
       </div>
@@ -599,7 +599,7 @@ export default function FootballConfChampionHistoryChart({
             <button
               key={team.team_name}
               onClick={() => handleTeamClick(team.team_name)}
-              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 dark:bg-slate-700 transition-colors cursor-pointer"
               style={{
                 opacity: isSelected ? 1 : 0.3,
                 filter: isSelected ? "none" : "grayscale(100%)",

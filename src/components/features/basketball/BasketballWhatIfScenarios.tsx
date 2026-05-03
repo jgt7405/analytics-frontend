@@ -231,7 +231,7 @@ function TeamTile({
           }}
         />
       ) : (
-        <span className="text-[8px] font-bold text-gray-500">
+        <span className="text-[8px] font-bold text-gray-500 dark:text-gray-400">
           {teamName.substring(0, 3)}
         </span>
       )}
@@ -309,7 +309,7 @@ function SelectionLegend({
 
   return (
     <div className="mb-3">
-      <p className="text-[11px] text-gray-500 mb-1">
+      <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
         Selections: {selections.size} game
         {selections.size !== 1 ? "s" : ""}
       </p>
@@ -319,7 +319,7 @@ function SelectionLegend({
           return (
             <div
               key={game.game_id}
-              className="flex items-center gap-0.5 bg-white rounded"
+              className="flex items-center gap-0.5 bg-white dark:bg-slate-900 rounded"
               style={{ border: "1px solid #d1d5db", padding: "1px 2px" }}
             >
               <span
@@ -394,7 +394,7 @@ function ScreenshotBtn({
         }
         setCapturing(false);
       }}
-      className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 border border-gray-200 rounded hover:bg-gray-50 transition"
+      className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
       title="Download screenshot"
     >
       {capturing ? (
@@ -497,7 +497,7 @@ function ProbabilityTable({
     ) : null;
 
   const thClass =
-    "text-center py-2 px-2 font-normal cursor-pointer hover:text-gray-800 select-none";
+    "text-center py-2 px-2 font-normal cursor-pointer hover:text-gray-800 dark:text-gray-100 select-none";
 
   return (
     <div className="mb-6">
@@ -515,7 +515,7 @@ function ProbabilityTable({
       <div ref={screenshotRef}>
         <table className="text-sm" style={{ width: "auto", minWidth: "320px" }}>
           <thead>
-            <tr className="border-b border-gray-200 text-gray-500">
+            <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
               <th
                 className="text-left py-2 px-2 font-normal"
                 style={{ minWidth: "40px" }}
@@ -692,7 +692,7 @@ function FullStandingsTable({
     ) : null;
 
   const thSort =
-    "text-center py-2 px-1.5 font-normal cursor-pointer hover:text-gray-800 select-none";
+    "text-center py-2 px-1.5 font-normal cursor-pointer hover:text-gray-800 dark:text-gray-100 select-none";
 
   if (!baseline.length || !whatif.length) return null;
 
@@ -710,11 +710,11 @@ function FullStandingsTable({
         </div>
       </div>
       <div ref={screenshotRef}>
-        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
           <table className="text-xs" style={{ width: "auto" }}>
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
-                <th className="text-left py-2 px-2 font-normal sticky left-0 bg-gray-50 z-10">
+              <tr className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                <th className="text-left py-2 px-2 font-normal sticky left-0 bg-gray-50 dark:bg-slate-800 z-10">
                   Team
                 </th>
                 <th className={thSort} onClick={() => handleSort("wins")}>
@@ -748,7 +748,7 @@ function FullStandingsTable({
                     key={team.team_id}
                     className={`border-b border-gray-100 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}
                   >
-                    <td className="py-0.5 px-2 sticky left-0 bg-white z-10">
+                    <td className="py-0.5 px-2 sticky left-0 bg-white dark:bg-slate-900 z-10">
                       <div className="flex items-center gap-1.5">
                         <TeamLogo
                           src={team.logo_url}
@@ -886,7 +886,7 @@ function TeamFilterDropdown({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full px-3 py-1.5 border border-gray-300 rounded-md text-xs hover:border-gray-400 transition-colors min-w-[200px]"
+        className="flex items-center justify-between w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-xs hover:border-gray-400 transition-colors min-w-[200px]"
         style={{ backgroundColor: "#ffffff" }}
       >
         <span className="truncate">{label}</span>
@@ -1235,7 +1235,7 @@ export default function BasketballWhatIfScenarios() {
   if (conferencesLoading || !selectedConference) {
     return (
       <div className="container mx-auto px-4 py-4">
-        <h1 className="text-xl font-normal text-gray-500">
+        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-400">
           What If Calculator
         </h1>
         <div className="flex justify-center py-20">
@@ -1248,7 +1248,7 @@ export default function BasketballWhatIfScenarios() {
   if (conferencesError) {
     return (
       <div className="container mx-auto px-4 py-4">
-        <h1 className="text-xl font-normal text-gray-500">
+        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-400">
           What If Calculator
         </h1>
         <ErrorMessage message={conferencesError.message} />
@@ -1258,17 +1258,17 @@ export default function BasketballWhatIfScenarios() {
 
   return (
     <div className="container mx-auto px-4 py-4">
-      <h1 className="text-xl font-normal text-gray-500 mb-6">
+      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-400 mb-6">
         What If Calculator
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ▓▓▓ LEFT PANEL ▓▓▓ */}
         <div className="lg:col-span-1 order-1">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4">
             {/* Conference – inline */}
             <div className="mb-4 flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                 Conference
               </label>
               <div className="[&_.conference-selector]:static [&_.conference-selector]:transform-none">
@@ -1284,7 +1284,7 @@ export default function BasketballWhatIfScenarios() {
             {/* Team Filter */}
             {conferenceTeams.length > 0 && (
               <div className="mb-3 flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   Teams
                 </label>
                 <TeamFilterDropdown
@@ -1308,7 +1308,7 @@ export default function BasketballWhatIfScenarios() {
               <div className="max-h-[30vh] lg:max-h-[50vh] overflow-y-auto pr-1 mb-4">
                 {sortedDates.map((date) => (
                   <div key={date} className="mb-3">
-                    <p className="text-[11px] text-gray-500 mb-1.5 sticky top-0 bg-white py-0.5 z-10">
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1.5 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">
                       {date}
                     </p>
                     <div className="flex flex-wrap gap-1">
@@ -1325,14 +1325,14 @@ export default function BasketballWhatIfScenarios() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic py-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400 italic py-4">
                 {isCalculating || isLoadingBaseline
                   ? "Loading games..."
                   : "No upcoming conference games found."}
               </p>
             )}
 
-            <div className="flex gap-2 pt-3 border-t border-gray-200">
+            <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={handleCalculate}
                 disabled={gameSelections.size === 0 || isCalculating}
@@ -1346,7 +1346,7 @@ export default function BasketballWhatIfScenarios() {
               {gameSelections.size > 0 && (
                 <button
                   onClick={handleReset}
-                  className="py-2 px-3 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition"
+                  className="py-2 px-3 text-sm text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
                 >
                   Reset
                 </button>
@@ -1374,7 +1374,7 @@ export default function BasketballWhatIfScenarios() {
                   {hasCalculated &&
                     selectedDetailTeamId &&
                     displayBaseline.length > 0 && (
-                      <div className="bg-white rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
+                      <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
                         <WhatIfTeamSummary
                           baseline={
                             whatIfData?.current_projections_no_ties ?? []
@@ -1411,7 +1411,7 @@ export default function BasketballWhatIfScenarios() {
                 {hasCalculated &&
                   selectedDetailTeamId &&
                   displayBaseline.length > 0 && (
-                    <div className="bg-white rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
                       <WhatIfTeamSummary
                         baseline={whatIfData?.current_projections_no_ties ?? []}
                         whatif={whatIfData?.data_no_ties ?? []}
@@ -1428,7 +1428,7 @@ export default function BasketballWhatIfScenarios() {
 
         {/* ▓▓▓ RIGHT PANEL ▓▓▓ */}
         <div className="lg:col-span-2 order-3 lg:order-2">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-medium">
@@ -1491,7 +1491,7 @@ export default function BasketballWhatIfScenarios() {
             {!isCalculating &&
               !isLoadingBaseline &&
               !displayBaseline.length && (
-                <p className="text-gray-500 text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
                   No team data available
                 </p>
               )}
@@ -1499,7 +1499,7 @@ export default function BasketballWhatIfScenarios() {
 
           {/* ▓▓▓ FULL STANDINGS TABLES (restored – Change 8) ▓▓▓ */}
           {hasCalculated && displayBaseline.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-4 mt-6">
+            <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 mt-6">
               <FullStandingsTable
                 baseline={whatIfData?.current_projections_no_ties ?? []}
                 whatif={whatIfData?.data_no_ties ?? []}
@@ -1540,7 +1540,7 @@ export default function BasketballWhatIfScenarios() {
               <button
                 onClick={handleDownloadCSV}
                 disabled={isDownloadingCSV}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:bg-slate-800 transition disabled:opacity-50"
               >
                 <Download size={13} />
                 {isDownloadingCSV

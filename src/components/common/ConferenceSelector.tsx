@@ -33,15 +33,15 @@ export default function ConferenceSelector({
           value={selectedConference}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled || filteredConferences.length === 0}
-          className={`px-3 py-1.5 border rounded-md bg-white dark:bg-slate-800 min-w-[200px] transition-colors text-xs
+          className={`px-3 py-1.5 border rounded-md bg-white dark:bg-slate-900 dark:bg-slate-800 min-w-[200px] transition-colors text-xs
            ${
              error
                ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-               : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+               : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
            }
            ${
              disabled || filteredConferences.length === 0
-               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+               ? "bg-gray-100 dark:bg-slate-700 text-gray-400 cursor-not-allowed"
                : "hover:border-gray-400"
            }
            focus:ring-2 focus:outline-none`}

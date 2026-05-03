@@ -111,7 +111,7 @@ export default function FootballTeamScheduleChart({
           {schedule.map((game, index) => (
             <tr
               key={index}
-              className={`border-b hover:bg-gray-50 transition-colors ${
+              className={`border-b hover:bg-gray-50 dark:bg-slate-800 transition-colors ${
                 game.status === "W"
                   ? "border-2 border-green-500 bg-green-50"
                   : game.status === "L"
@@ -163,7 +163,7 @@ export default function FootballTeamScheduleChart({
                       ? "text-green-600"
                       : game.status === "L"
                         ? "text-red-600"
-                        : "text-gray-600"
+                        : "text-gray-600 dark:text-gray-400"
                   }`}
                 >
                   {formatScore(game.team_points, game.opp_points, game.status)}

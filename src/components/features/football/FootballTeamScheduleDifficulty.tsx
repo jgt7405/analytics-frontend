@@ -327,7 +327,7 @@ export default function FootballTeamScheduleDifficulty({
 
     return (
       <div
-        className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50 min-w-[180px]"
+        className="absolute bg-white dark:bg-slate-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3 z-50 min-w-[180px]"
         style={{
           left: position.x,
           top: position.y,
@@ -350,7 +350,7 @@ export default function FootballTeamScheduleDifficulty({
             e.stopPropagation();
             handleGameClick(game);
           }}
-          className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center text-lg font-bold border-none bg-transparent cursor-pointer"
+          className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 dark:text-gray-400 w-6 h-6 flex items-center justify-center text-lg font-bold border-none bg-transparent cursor-pointer"
           style={{
             lineHeight: "1",
             userSelect: "none",
@@ -401,7 +401,7 @@ export default function FootballTeamScheduleDifficulty({
       )}
       <div className="mb-4 space-y-3" onClick={(e) => e.stopPropagation()}>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Compare against:
           </label>
           <div className="flex flex-wrap gap-2">
@@ -412,7 +412,7 @@ export default function FootballTeamScheduleDifficulty({
                 className={`px-3 py-1 ${isMobile ? "text-xs" : "text-sm"} rounded-md border transition-colors ${
                   comparisonFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                 }`}
               >
                 {option.label}
@@ -422,7 +422,7 @@ export default function FootballTeamScheduleDifficulty({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Show games:
           </label>
           <div className="flex gap-2">
@@ -433,7 +433,7 @@ export default function FootballTeamScheduleDifficulty({
                 className={`px-3 py-1 ${isMobile ? "text-xs" : "text-sm"} rounded-md border transition-colors ${
                   gameFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                 }`}
               >
                 {option.label}
@@ -450,7 +450,7 @@ export default function FootballTeamScheduleDifficulty({
         <svg
           width={CHART_WIDTH}
           height={CHART_HEIGHT}
-          className="border border-gray-200 rounded"
+          className="border border-gray-200 dark:border-gray-700 rounded"
         >
           <rect width={CHART_WIDTH} height={CHART_HEIGHT} fill="white" />
 
@@ -682,7 +682,7 @@ export default function FootballTeamScheduleDifficulty({
         )}
       </div>
 
-      <div className="mt-4 text-xs text-gray-600 text-center">
+      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 text-center">
         <div className="mb-2">
           <span className="font-medium">
             {teamGames.length.toLocaleString()}
@@ -694,7 +694,7 @@ export default function FootballTeamScheduleDifficulty({
           {comparisonDataset.length === 1 ? "game" : "games"} in{" "}
           {getFilterDescription()}
         </div>
-        <div className="text-gray-500">
+        <div className="text-gray-500 dark:text-gray-400">
           Win probabilities based on Sagarin ratings for #12 ranked team
         </div>
       </div>

@@ -389,14 +389,14 @@ export default function ScreenshotModal({
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={!isCapturing ? onClose : undefined}
       />
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+      <div className="relative bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Select Component to Screenshot
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-400"
             disabled={isCapturing}
           >
             <X size={24} />
@@ -413,14 +413,14 @@ export default function ScreenshotModal({
               key={option.id}
               onClick={() => handleScreenshot(option.selector, option.label)}
               disabled={isCapturing || !html2canvasLoaded}
-              className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full text-left px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="font-medium text-gray-900">{option.label}</div>
+              <div className="font-medium text-gray-900 dark:text-gray-100">{option.label}</div>
             </button>
           ))}
         </div>
         {isCapturing && (
-          <div className="mt-4 text-center text-sm text-gray-600">
+          <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
             Capturing...
           </div>
         )}
@@ -428,7 +428,7 @@ export default function ScreenshotModal({
           <button
             onClick={onClose}
             disabled={isCapturing}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-slate-800 disabled:opacity-50"
           >
             Cancel
           </button>

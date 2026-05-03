@@ -77,7 +77,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
   if (loading) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         Loading tournament data...
       </div>
     );
@@ -94,7 +94,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
   if (!data) {
     return (
-      <div className="p-4 text-center text-gray-500">No data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No data available</div>
     );
   }
 
@@ -175,7 +175,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
       <tr key={`${team.teamid}-${index}`}>
         {/* Seed Cell */}
         <td
-          className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
             width: seedColWidth,
             minWidth: seedColWidth,
@@ -224,7 +224,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
         {/* Conference Cell - with logo from backend */}
         <td
-          className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
             width: confColWidth,
             minWidth: confColWidth,
@@ -247,13 +247,13 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
               className="flex-shrink-0"
             />
           ) : (
-            <span className="text-xs text-gray-500">-</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">-</span>
           )}
         </td>
 
         {/* Category Cell */}
         <td
-          className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
             width: categoryColWidth,
             minWidth: categoryColWidth,
@@ -273,7 +273,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
         {/* Proj TWV Cell */}
         <td
-          className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+          className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
           style={{
             width: twvColWidth,
             minWidth: twvColWidth,
@@ -308,7 +308,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
             <tr>
               {/* Seed Column */}
               <th
-                className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: seedColWidth,
                   minWidth: seedColWidth,
@@ -326,7 +326,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
               {/* Team Column */}
               <th
-                className={`sticky z-30 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
@@ -345,7 +345,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
               {/* Conference Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: confColWidth,
                   minWidth: confColWidth,
@@ -362,7 +362,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
               {/* Category Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: categoryColWidth,
                   minWidth: categoryColWidth,
@@ -379,7 +379,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
               {/* Proj TWV Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: twvColWidth,
                   minWidth: twvColWidth,

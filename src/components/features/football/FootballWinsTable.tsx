@@ -55,7 +55,7 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No wins data available
       </div>
     );
@@ -86,7 +86,7 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs px-1" : "text-sm px-2"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs px-1" : "text-sm px-2"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -130,7 +130,7 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
           {winColumns.map((wins) => (
             <tr key={`wins-${wins}`}>
               <td
-                className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -178,9 +178,9 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
           ))}
 
           {/* Average Wins Row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -219,9 +219,9 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
           </tr>
 
           {/* Current Conference Record Row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,

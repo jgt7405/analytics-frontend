@@ -77,7 +77,7 @@ function FootballConfChampTable({
 
   if (!confChampData || confChampData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No conference championship data available
       </div>
     );
@@ -96,7 +96,7 @@ function FootballConfChampTable({
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -114,7 +114,7 @@ function FootballConfChampTable({
             {activeColumns.map((column) => (
               <th
                 key={column}
-                className="bg-gray-50 text-center font-normal"
+                className="bg-gray-50 dark:bg-slate-800 text-center font-normal"
                 style={{
                   height: headerHeight,
                   width: roundColWidth,
@@ -137,7 +137,7 @@ function FootballConfChampTable({
           {sortedTeams.map((team, index) => (
             <tr key={`${team.team_name}-${index}`}>
               <td
-                className={`sticky left-0 z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,

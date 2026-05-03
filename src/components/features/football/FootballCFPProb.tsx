@@ -206,7 +206,7 @@ function FootballCFPProb({
 
   if (!currentData || currentData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">No data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No data available</div>
     );
   }
 
@@ -227,7 +227,7 @@ function FootballCFPProb({
             <tr>
               {/* Rank Column */}
               <th
-                className={`${isScreenshotMode ? "" : "sticky left-0 z-30"} bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`${isScreenshotMode ? "" : "sticky left-0 z-30"} bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: rankColWidth,
                   minWidth: rankColWidth,
@@ -249,7 +249,7 @@ function FootballCFPProb({
 
               {/* Team Column */}
               <th
-                className={`${isScreenshotMode ? "" : "sticky z-30"} bg-gray-50 text-left font-normal px-2 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`${isScreenshotMode ? "" : "sticky z-30"} bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
                   sortColumn === "team" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("team")}
@@ -281,7 +281,7 @@ function FootballCFPProb({
 
               {/* Current Probability Column */}
               <th
-                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
                   sortColumn === "current" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("current")}
@@ -309,7 +309,7 @@ function FootballCFPProb({
 
               {/* What-If Probability Column */}
               <th
-                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
                   sortColumn === "whatif" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("whatif")}
@@ -337,7 +337,7 @@ function FootballCFPProb({
 
               {/* Change Column */}
               <th
-                className={`bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
                   sortColumn === "change" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("change")}
@@ -370,7 +370,7 @@ function FootballCFPProb({
               >
                 {/* Rank Cell */}
                 <td
-                  className={`${isScreenshotMode ? "" : "sticky left-0 z-20"} bg-white text-center ${
+                  className={`${isScreenshotMode ? "" : "sticky left-0 z-20"} bg-white dark:bg-slate-900 text-center ${
                     isMobile ? "text-xs" : "text-sm"
                   } font-medium`}
                   style={{
@@ -395,7 +395,7 @@ function FootballCFPProb({
 
                 {/* Team Cell */}
                 <td
-                  className={`${isScreenshotMode ? "" : "sticky z-20"} bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`${isScreenshotMode ? "" : "sticky z-20"} bg-white dark:bg-slate-900 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     width: teamColWidth,
                     minWidth: teamColWidth,

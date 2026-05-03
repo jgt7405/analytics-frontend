@@ -72,10 +72,10 @@ export class ErrorBoundary extends Component<
               </div>
 
               <div className="text-center space-y-4 max-w-md">
-                <h1 className="text-2xl font-semibold text-gray-800">
+                <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
                   Something went wrong
                 </h1>
-                <p className="text-base text-gray-900">
+                <p className="text-base text-gray-900 dark:text-gray-100">
                   We encountered an unexpected error while loading this page.
                   Please try refreshing or go back to the home page.
                 </p>

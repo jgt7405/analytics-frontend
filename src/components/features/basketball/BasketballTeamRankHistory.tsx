@@ -371,7 +371,7 @@ export default function BasketballTeamRankHistory({
         className="flex items-center justify-center"
         style={{ height: isMobile ? "200px" : "280px" }}
       >
-        <div className="text-gray-500 text-sm">Loading rank history...</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading rank history...</div>
       </div>
     );
   }
@@ -393,7 +393,7 @@ export default function BasketballTeamRankHistory({
         className="flex items-center justify-center"
         style={{ height: isMobile ? "200px" : "280px" }}
       >
-        <div className="text-gray-500 text-sm">
+        <div className="text-gray-500 dark:text-gray-400 text-sm">
           No ranking data available for the selected period
         </div>
       </div>

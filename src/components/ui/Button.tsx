@@ -20,7 +20,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       secondary:
         "bg-blue-500 text-white hover:bg-blue-600 focus-visible:ring-blue-500",
       outline: components.button.outline,
-      ghost: "text-gray-700 hover:bg-gray-100 focus-visible:ring-gray-500",
+      ghost: "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:bg-slate-700 focus-visible:ring-gray-500",
     };
 
     return (

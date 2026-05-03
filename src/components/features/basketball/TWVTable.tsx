@@ -129,7 +129,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
   if (!rankedTwvData || rankedTwvData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">No TWV data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No TWV data available</div>
     );
   }
 
@@ -149,7 +149,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
       {showAllTeams && (
         <div className="flex items-center gap-3 px-2">
           <label
-            className={`text-gray-700 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+            className={`text-gray-700 dark:text-gray-300 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
           >
             Show top:
           </label>
@@ -159,12 +159,12 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
             max={twvData.length}
             value={inputValue}
             onChange={handleRowsInputChange}
-            className={`border border-gray-300 rounded px-3 py-1 w-24 ${
+            className={`border border-gray-300 dark:border-gray-600 rounded px-3 py-1 w-24 ${
               isMobile ? "text-xs" : "text-sm"
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             placeholder={twvData.length.toString()}
           />
-          <span className={`text-gray-600 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={`text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
             teams (of {twvData.length})
           </span>
         </div>
@@ -190,7 +190,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
             <tr>
               {/* Rank Column */}
               <th
-                className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: rankColWidth,
                   minWidth: rankColWidth,
@@ -208,7 +208,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
               {/* Team Column */}
               <th
-                className={`sticky z-30 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
@@ -227,7 +227,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
               {/* TWV Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
                 style={{
                   width: twvColWidth,
                   minWidth: twvColWidth,
@@ -246,18 +246,18 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                 {/* Tooltip */}
                 {isHydrated && showTWVTooltip && (
                   <div
-                    className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
                       width: "300px",
                       minWidth: "300px",
                       left: "0",
                     }}
                   >
-                    <div className="text-gray-900 text-sm">
+                    <div className="text-gray-900 dark:text-gray-100 text-sm">
                       <div className="font-semibold mb-2">
                         TWV = True Win Value
                       </div>
-                      <div className="text-gray-700">
+                      <div className="text-gray-700 dark:text-gray-300">
                         # of wins above (or below) what would be expected by the
                         50th rated team with the same schedule.
                       </div>
@@ -268,7 +268,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
               {/* Actual Record Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
                 style={{
                   width: recordColWidth,
                   minWidth: recordColWidth,
@@ -296,16 +296,16 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                 {/* Tooltip */}
                 {isHydrated && showActualRecordTooltip && (
                   <div
-                    className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
                       width: "300px",
                       minWidth: "300px",
                       left: "0",
                     }}
                   >
-                    <div className="text-gray-900 text-sm">
+                    <div className="text-gray-900 dark:text-gray-100 text-sm">
                       <div className="font-semibold mb-2">Actual Record</div>
-                      <div className="text-gray-700">
+                      <div className="text-gray-700 dark:text-gray-300">
                         Current actual win/loss record.
                       </div>
                     </div>
@@ -315,7 +315,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
               {/* Expected Record Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
                 style={{
                   width: recordColWidth,
                   minWidth: recordColWidth,
@@ -343,16 +343,16 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                 {/* Tooltip */}
                 {isHydrated && showExpectedRecordTooltip && (
                   <div
-                    className="absolute top-full bg-white border border-gray-200 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
                       width: "320px",
                       minWidth: "320px",
                       left: "0",
                     }}
                   >
-                    <div className="text-gray-900 text-sm">
+                    <div className="text-gray-900 dark:text-gray-100 text-sm">
                       <div className="font-semibold mb-2">Expected Record</div>
-                      <div className="text-gray-700">
+                      <div className="text-gray-700 dark:text-gray-300">
                         Win/loss record that would be expected by the 50th rated
                         team with the same schedule.
                       </div>
@@ -367,7 +367,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
               <tr key={`${team.team_name}-${index}`}>
                 {/* Rank Cell */}
                 <td
-                  className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     width: rankColWidth,
                     minWidth: rankColWidth,
@@ -385,7 +385,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
                 {/* Team Cell */}
                 <td
-                  className={`sticky z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`sticky z-20 bg-white dark:bg-slate-900 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     width: teamColWidth,
                     minWidth: teamColWidth,
@@ -436,7 +436,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
                 {/* Actual Record Cell */}
                 <td
-                  className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     width: recordColWidth,
                     minWidth: recordColWidth,
@@ -453,7 +453,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
                 {/* Expected Record Cell */}
                 <td
-                  className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     width: recordColWidth,
                     minWidth: recordColWidth,

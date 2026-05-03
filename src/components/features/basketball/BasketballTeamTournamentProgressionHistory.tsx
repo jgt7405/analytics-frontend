@@ -511,7 +511,7 @@ export default function BasketballTeamTournamentProgressionHistory({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-pulse text-gray-500">
+        <div className="animate-pulse text-gray-500 dark:text-gray-400">
           Loading NCAA progression history...
         </div>
       </div>
@@ -532,7 +532,7 @@ export default function BasketballTeamTournamentProgressionHistory({
   if (data.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 text-sm">
+        <div className="text-gray-500 dark:text-gray-400 text-sm">
           No NCAA progression history available
         </div>
         <div className="text-gray-400 text-xs mt-1">

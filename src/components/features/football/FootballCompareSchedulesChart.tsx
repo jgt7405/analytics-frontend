@@ -668,20 +668,20 @@ export default function FootballCompareSchedulesChart({
 
   if (teams.length === 0 || teams.every((t) => t.games.length === 0)) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
         Select teams to view schedule comparison
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
       <h3 className="text-lg font-semibold mb-4">Compare Schedules</h3>
 
       {/* Filter Controls */}
       <div className="mb-4 space-y-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Compare against:
           </label>
           <div className="flex flex-wrap gap-2">
@@ -692,7 +692,7 @@ export default function FootballCompareSchedulesChart({
                 className={`px-3 py-1 text-sm rounded-md border transition-colors ${
                   comparisonFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                 }`}
               >
                 {option.label}
@@ -702,7 +702,7 @@ export default function FootballCompareSchedulesChart({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Show games:
           </label>
           <div className="flex gap-2">
@@ -713,7 +713,7 @@ export default function FootballCompareSchedulesChart({
                 className={`px-3 py-1 text-sm rounded-md border transition-colors ${
                   gameFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                 }`}
               >
                 {option.label}
@@ -728,7 +728,7 @@ export default function FootballCompareSchedulesChart({
         <svg
           width={CHART_WIDTH}
           height={CHART_HEIGHT + 120}
-          className="border border-gray-200 rounded"
+          className="border border-gray-200 dark:border-gray-700 rounded"
         >
           <rect width={CHART_WIDTH} height={CHART_HEIGHT + 120} fill="white" />
 
@@ -793,7 +793,7 @@ export default function FootballCompareSchedulesChart({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 text-xs text-gray-600 text-center">
+      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 text-center">
         <div className="flex justify-center gap-4">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-green-500"></div>

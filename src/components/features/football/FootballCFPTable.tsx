@@ -154,7 +154,7 @@ function FootballCFPTable({
 
   if (!cfpData || cfpData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">No CFP data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No CFP data available</div>
     );
   }
 
@@ -164,7 +164,7 @@ function FootballCFPTable({
       {showAllTeams && (
         <div className="flex items-center gap-3 px-2">
           <label
-            className={`text-gray-700 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+            className={`text-gray-700 dark:text-gray-300 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
           >
             Show top:
           </label>
@@ -174,12 +174,12 @@ function FootballCFPTable({
             max={cfpData.length}
             value={inputValue}
             onChange={handleRowsInputChange}
-            className={`border border-gray-300 rounded px-3 py-1 w-24 ${
+            className={`border border-gray-300 dark:border-gray-600 rounded px-3 py-1 w-24 ${
               isMobile ? "text-xs" : "text-sm"
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             placeholder={cfpData.length.toString()}
           />
-          <span className={`text-gray-600 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={`text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
             teams (of {cfpData.length})
           </span>
         </div>
@@ -198,7 +198,7 @@ function FootballCFPTable({
             <tr>
               {/* Rank column */}
               <th
-                className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
+                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -217,7 +217,7 @@ function FootballCFPTable({
               </th>
               {/* Team column */}
               <th
-                className={`sticky z-30 bg-gray-50 text-left font-normal px-2 ${
+                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -239,7 +239,7 @@ function FootballCFPTable({
               {allRounds.map((round) => (
                 <th
                   key={round}
-                  className={`bg-gray-50 text-center font-normal cursor-pointer hover:bg-gray-100 transition-colors ${
+                  className={`bg-gray-50 dark:bg-slate-800 text-center font-normal cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
                     sortColumn === round ? "bg-blue-100" : ""
                   }`}
                   onClick={() => handleColumnClick(round as RoundKey)}
@@ -270,7 +270,7 @@ function FootballCFPTable({
               <tr key={`${team.team_name}-${index}`}>
                 {/* Rank cell */}
                 <td
-                  className={`sticky left-0 z-20 bg-white text-center ${
+                  className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
                     isMobile ? "text-xs" : "text-sm"
                   } font-medium`}
                   style={{
@@ -290,9 +290,9 @@ function FootballCFPTable({
                 </td>
                 {/* Team cell */}
                 <td
-                  className={`sticky z-20 bg-white text-left px-2 ${
+                  className={`sticky z-20 bg-white dark:bg-slate-900 text-left px-2 ${
                     isMobile ? "text-xs" : "text-sm"
-                  } cursor-pointer hover:bg-gray-50 transition-colors`}
+                  } cursor-pointer hover:bg-gray-50 dark:bg-slate-800 transition-colors`}
                   style={{
                     width: firstColWidth,
                     minWidth: firstColWidth,

@@ -492,7 +492,7 @@ export default function BballConfBidsHistoryChart({
   if (datasets.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 p-4">
-        <p className="text-gray-500">
+        <p className="text-gray-500 dark:text-gray-400">
           No conference data available for display
         </p>
       </div>
@@ -500,7 +500,7 @@ export default function BballConfBidsHistoryChart({
   }
 
   return (
-    <div className="w-full bg-white">
+    <div className="w-full bg-white dark:bg-slate-900">
       <div
         className="relative w-full"
         style={{ height: `${chartHeight}px`, overflow: "visible" }}
@@ -625,7 +625,7 @@ export default function BballConfBidsHistoryChart({
             <button
               key={conf.conference}
               onClick={() => handleConferenceClick(conf.conference)}
-              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 dark:bg-slate-700 transition-colors cursor-pointer"
               style={{
                 opacity: isSelected ? 1 : 0.3,
                 filter: isSelected ? "none" : "grayscale(100%)",

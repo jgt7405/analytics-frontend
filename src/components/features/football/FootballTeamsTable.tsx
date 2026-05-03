@@ -39,7 +39,7 @@ export default function FootballTeamsTable({
 
   if (!teamsData?.length) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No teams data available
       </div>
     );
@@ -55,31 +55,31 @@ export default function FootballTeamsTable({
     <div className={`${tableClassName} relative overflow-x-auto`}>
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gray-50">
-            <th className="sticky left-0 z-20 bg-gray-50 text-left p-2 border border-gray-300 min-w-48">
+          <tr className="bg-gray-50 dark:bg-slate-800">
+            <th className="sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left p-2 border border-gray-300 dark:border-gray-600 min-w-48">
               Team
             </th>
-            <th className="text-center p-2 border border-gray-300 min-w-32">
+            <th className="text-center p-2 border border-gray-300 dark:border-gray-600 min-w-32">
               Conference
             </th>
-            <th className="text-center p-2 border border-gray-300 min-w-24">
+            <th className="text-center p-2 border border-gray-300 dark:border-gray-600 min-w-24">
               Overall
             </th>
-            <th className="text-center p-2 border border-gray-300 min-w-24">
+            <th className="text-center p-2 border border-gray-300 dark:border-gray-600 min-w-24">
               Conference
             </th>
-            <th className="text-center p-2 border border-gray-300 min-w-20">
+            <th className="text-center p-2 border border-gray-300 dark:border-gray-600 min-w-20">
               CFP %
             </th>
-            <th className="text-center p-2 border border-gray-300 min-w-20">
+            <th className="text-center p-2 border border-gray-300 dark:border-gray-600 min-w-20">
               Avg Seed
             </th>
           </tr>
         </thead>
         <tbody>
           {teamsData.map((team) => (
-            <tr key={team.team_id} className="hover:bg-gray-50">
-              <td className="sticky left-0 z-10 bg-white p-2 border border-gray-300">
+            <tr key={team.team_id} className="hover:bg-gray-50 dark:bg-slate-800">
+              <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 p-2 border border-gray-300 dark:border-gray-600">
                 <Link
                   href={`/football/team/${encodeURIComponent(team.team_name)}`}
                   className="flex items-center gap-2 hover:text-blue-600"
@@ -98,19 +98,19 @@ export default function FootballTeamsTable({
                   </span>
                 </Link>
               </td>
-              <td className="text-center p-2 border border-gray-300">
+              <td className="text-center p-2 border border-gray-300 dark:border-gray-600">
                 {team.conference}
               </td>
-              <td className="text-center p-2 border border-gray-300">
+              <td className="text-center p-2 border border-gray-300 dark:border-gray-600">
                 {team.overall_record}
               </td>
-              <td className="text-center p-2 border border-gray-300">
+              <td className="text-center p-2 border border-gray-300 dark:border-gray-600">
                 {team.conference_record}
               </td>
-              <td className="text-center p-2 border border-gray-300 font-medium">
+              <td className="text-center p-2 border border-gray-300 dark:border-gray-600 font-medium">
                 {team.cfp_bid_pct.toFixed(1)}%
               </td>
-              <td className="text-center p-2 border border-gray-300">
+              <td className="text-center p-2 border border-gray-300 dark:border-gray-600">
                 {team.average_seed?.toFixed(1) || "-"}
               </td>
             </tr>

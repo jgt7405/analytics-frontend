@@ -931,20 +931,20 @@ export default function BasketballCompareSchedulesChart({
 
   if (teams.length === 0 || teams.every((t) => t.games.length === 0)) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
         Select teams to view schedule comparison
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 pt-0">
+    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 pt-0">
       <h3 className="text-lg font-semibold mb-4">Compare Schedules</h3>
 
       {/* Filter Controls */}
       <div className="mb-4 space-y-1">
         <div>
-          <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Compare against:
           </label>
           <div className="flex flex-wrap gap-0.5 md:gap-2">
@@ -955,7 +955,7 @@ export default function BasketballCompareSchedulesChart({
                 className={`px-1 md:px-4 py-0.5 md:py-1 text-xs md:text-base rounded-md border transition-colors ${
                   comparisonFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                 }`}
               >
                 {option.label}
@@ -965,7 +965,7 @@ export default function BasketballCompareSchedulesChart({
         </div>
 
         <div>
-          <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Show games:
           </label>
           <div className="flex flex-wrap gap-0.5 md:gap-2">
@@ -976,7 +976,7 @@ export default function BasketballCompareSchedulesChart({
                 className={`px-1 md:px-4 py-0.5 md:py-1 text-xs md:text-base rounded-md border transition-colors ${
                   gameFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                 }`}
               >
                 {option.label}
@@ -986,7 +986,7 @@ export default function BasketballCompareSchedulesChart({
         </div>
 
         <div>
-          <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Location:
           </label>
           <div className="flex flex-wrap gap-0.5 md:gap-2">
@@ -997,7 +997,7 @@ export default function BasketballCompareSchedulesChart({
                 className={`px-1 md:px-4 py-0.5 md:py-1 text-xs md:text-base rounded-md border transition-colors ${
                   locationFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                 }`}
               >
                 {option.label}
@@ -1234,7 +1234,7 @@ export default function BasketballCompareSchedulesChart({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 text-xs text-gray-600">
+      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400">
         <div className="flex flex-wrap gap-4 justify-center">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
@@ -1245,7 +1245,7 @@ export default function BasketballCompareSchedulesChart({
             <span>Loss</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+            <div className="w-3 h-3 rounded-full bg-gray-50 dark:bg-slate-8000"></div>
             <span>Future Game</span>
           </div>
         </div>

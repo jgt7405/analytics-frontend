@@ -97,10 +97,10 @@ export default function TeamSchedule({
       {(["Away", "Neutral", "Home"] as const).map((location) => (
         <div key={location} className="flex-shrink-0">
           <div className="text-center mb-3">
-            <h3 className="text-sm font-semibold text-gray-600 -mb-1">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 -mb-1">
               {location}
             </h3>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               {groupedGames.records[location].wins}-
               {groupedGames.records[location].losses}
             </div>
@@ -111,7 +111,7 @@ export default function TeamSchedule({
               groupedGames.groups[location].map((game, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2 rounded bg-white cursor-pointer hover:opacity-80 transition-opacity"
+                  className="flex items-center justify-between p-2 rounded bg-white dark:bg-slate-900 cursor-pointer hover:opacity-80 transition-opacity"
                   style={{
                     width: boxWidth,
                     height: boxHeight,
@@ -127,7 +127,7 @@ export default function TeamSchedule({
                     teamName={game.opponent}
                     size={logoSize}
                   />
-                  <span className="text-xs text-gray-600 font-medium text-right">
+                  <span className="text-xs text-gray-600 dark:text-gray-400 font-medium text-right">
                     {game.kenpom_rank
                       ? game.kenpom_rank === 999
                         ? "Non D1"

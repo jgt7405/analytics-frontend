@@ -408,7 +408,7 @@ export default function FootballTeamStandingsHistory({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-pulse text-gray-500">
+        <div className="animate-pulse text-gray-500 dark:text-gray-400">
           Loading historical data...
         </div>
       </div>
@@ -429,7 +429,7 @@ export default function FootballTeamStandingsHistory({
   if (data.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 text-sm">Historical data coming soon</div>
+        <div className="text-gray-500 dark:text-gray-400 text-sm">Historical data coming soon</div>
         <div className="text-gray-400 text-xs mt-1">
           Chart will show projected standings over time once data is collected
         </div>

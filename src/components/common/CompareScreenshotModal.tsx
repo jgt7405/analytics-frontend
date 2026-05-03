@@ -503,23 +503,23 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col"
+        className="bg-white dark:bg-slate-900 rounded-lg max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
               Download Team Comparison
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Showing {visibleTeams.length} team
               {visibleTeams.length !== 1 ? "s" : ""}: {visibleTeams.join(", ")}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-400 transition-colors"
             disabled={downloading}
           >
             <svg
@@ -551,13 +551,13 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
             {componentOptions.map((option) => (
               <div
                 key={option.selector}
-                className="flex items-start justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:bg-slate-800 transition-colors"
               >
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900 mb-1">
+                  <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
                     {option.label}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     {option.description}
                   </div>
                 </div>
@@ -585,8 +585,8 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50">
-          <p className="text-xs text-gray-500 mb-3">
+        <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
             Each screenshot will include all visible team comparisons side by
             side.
           </p>

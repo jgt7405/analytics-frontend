@@ -54,7 +54,7 @@ export default function FootballTeamValues({
 
   if (chartData.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center text-gray-500 dark:text-gray-400 py-8">
         <p className="text-sm">Team Values Coming Soon</p>
         <p className="text-xs mt-1">
           Chart will show team performance values throughout the season.

@@ -65,10 +65,10 @@ export function BasketballTableSkeleton({
   showSummaryRows?: boolean;
 }) {
   return (
-    <div className="overflow-x-auto border border-gray-200 rounded-md bg-white">
+    <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-slate-900">
       <div className="min-w-full">
         {/* Header skeleton */}
-        <div className="bg-gray-50 border-b border-gray-200 p-3 sticky top-0 z-10">
+        <div className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-3 sticky top-0 z-10">
           <div className="flex gap-4 items-center">
             <div className="h-4 w-32 bg-gray-300 animate-pulse rounded flex-shrink-0" />
             {Array.from({ length: teamCols }).map((_, i) => (
@@ -83,7 +83,7 @@ export function BasketballTableSkeleton({
         {/* Row skeletons */}
         <div className="divide-y divide-gray-200">
           {Array.from({ length: rows }).map((_, i) => (
-            <div key={i} className="p-3 hover:bg-gray-50">
+            <div key={i} className="p-3 hover:bg-gray-50 dark:bg-slate-800">
               <div className="flex gap-4 items-center">
                 <div className="h-4 w-6 bg-gray-200 animate-pulse rounded flex-shrink-0" />
                 {Array.from({ length: teamCols }).map((_, j) => (
@@ -104,12 +104,12 @@ export function BasketballTableSkeleton({
 
         {/* Summary rows skeleton */}
         {showSummaryRows && (
-          <div className="bg-gray-50 border-t-2 border-gray-400">
+          <div className="bg-gray-50 dark:bg-slate-800 border-t-2 border-gray-400">
             {Array.from({ length: tableType === "standings" ? 2 : 3 }).map(
               (_, i) => (
                 <div
                   key={i}
-                  className="p-3 border-b border-gray-200 last:border-b-0"
+                  className="p-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
                 >
                   <div className="flex gap-4 items-center">
                     <div className="h-4 w-24 bg-gray-300 animate-pulse rounded flex-shrink-0" />
@@ -151,7 +151,7 @@ export function ConferenceSelectorSkeleton() {
   return (
     <div className="conference-selector">
       <div className="relative">
-        <div className="px-3 py-2 border border-gray-300 rounded-md bg-white min-w-[200px] text-xs">
+        <div className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-900 min-w-[200px] text-xs">
           <div className="h-4 w-32 bg-gray-300 animate-pulse rounded" />
         </div>
       </div>
@@ -169,7 +169,7 @@ export function BoxWhiskerChartSkeleton() {
   ];
 
   return (
-    <div className="relative w-full overflow-x-auto bg-white rounded-md border border-gray-200 p-6">
+    <div className="relative w-full overflow-x-auto bg-white dark:bg-slate-900 rounded-md border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-end justify-center gap-4 h-80">
         {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex flex-col items-center gap-2">

@@ -251,7 +251,7 @@ export default function WhatIfTeamSummary({
   // Shared table header
   const tableHeader = (
     <thead>
-      <tr className="border-b border-gray-200 text-gray-500">
+      <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
         <th className="text-left py-1.5 px-2 font-normal" style={COL_METRIC}>
           Metric
         </th>
@@ -271,7 +271,7 @@ export default function WhatIfTeamSummary({
   // Shared seed table header
   const seedTableHeader = (
     <thead>
-      <tr className="border-b border-gray-200 text-gray-500">
+      <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
         <th className="text-left py-1.5 px-2 font-normal" style={COL_METRIC}>
           Seed
         </th>
@@ -354,7 +354,7 @@ export default function WhatIfTeamSummary({
   );
 
   return (
-    <div className="mt-6 pt-4 border-t border-gray-200">
+    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-sm font-medium">What If Summary</h4>
         <div className="flex items-center gap-2" data-no-screenshot>
@@ -374,7 +374,7 @@ export default function WhatIfTeamSummary({
               }
               setCapturing(false);
             }}
-            className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 border border-gray-200 rounded hover:bg-gray-50 transition"
+            className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
             title="Download screenshot"
           >
             {capturing ? (
@@ -390,8 +390,8 @@ export default function WhatIfTeamSummary({
       <div ref={contentRef}>
         {/* Selected games display */}
         {selectedGames.length > 0 && (
-          <div className="mb-3 py-1.5 px-2 bg-gray-50 rounded">
-            <p className="text-[10px] text-gray-500 mb-1">
+          <div className="mb-3 py-1.5 px-2 bg-gray-50 dark:bg-slate-800 rounded">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">
               Selections ({selectedGames.length} game
               {selectedGames.length !== 1 ? "s" : ""}):
             </p>
@@ -401,7 +401,7 @@ export default function WhatIfTeamSummary({
                 return (
                   <div
                     key={game.game_id}
-                    className="flex items-center gap-0.5 bg-white rounded"
+                    className="flex items-center gap-0.5 bg-white dark:bg-slate-900 rounded"
                     style={{ border: "1px solid #d1d5db", padding: "1px 2px" }}
                   >
                     <span
@@ -522,7 +522,7 @@ export default function WhatIfTeamSummary({
         {/* ============================================================ */}
         {/* Gray divider                                                 */}
         {/* ============================================================ */}
-        <div className="my-4 border-t border-gray-300" />
+        <div className="my-4 border-t border-gray-300 dark:border-gray-600" />
 
         {/* ============================================================ */}
         {/* SECTION 2: NCAA Tournament Probabilities                     */}
@@ -576,7 +576,7 @@ export default function WhatIfTeamSummary({
                 })}
                 {/* Out of Tournament row */}
                 <tr className="border-b border-gray-100">
-                  <td className="py-1.5 px-2 text-gray-500 italic text-xs">
+                  <td className="py-1.5 px-2 text-gray-500 dark:text-gray-400 italic text-xs">
                     Out
                   </td>
                   <td

@@ -49,7 +49,7 @@ export default function FootballBoxWhiskerChart({
   if (!standings || standings.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500">No win distribution data available</p>
+        <p className="text-gray-500 dark:text-gray-400">No win distribution data available</p>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export default function FootballBoxWhiskerChart({
     sortedTeams.length * boxWidth + (sortedTeams.length - 1) * teamSpacing + 40;
 
   return (
-    <div className={cn(components.table.container, "bg-white")}>
+    <div className={cn(components.table.container, "bg-white dark:bg-slate-900")}>
       <div
         className="relative"
         style={{
@@ -104,7 +104,7 @@ export default function FootballBoxWhiskerChart({
       >
         {/* Y-axis container */}
         <div
-          className="absolute left-0 top-0 bg-white z-30"
+          className="absolute left-0 top-0 bg-white dark:bg-slate-900 z-30"
           style={{
             width: padding.left,
             height: "100%",
@@ -125,7 +125,7 @@ export default function FootballBoxWhiskerChart({
             {yAxisTicks.map((tick) => (
               <div
                 key={tick}
-                className="absolute w-full text-right pr-1 text-gray-500 font-medium flex items-center justify-end"
+                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-400 font-medium flex items-center justify-end"
                 style={{
                   top: `${scale(tick)}px`,
                   height: "1px",

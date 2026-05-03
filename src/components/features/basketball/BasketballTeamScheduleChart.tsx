@@ -235,7 +235,7 @@ export default function BasketballTeamScheduleChart({
                           ? "text-green-600"
                           : game.status === "L"
                             ? "text-red-600"
-                            : "text-gray-600"
+                            : "text-gray-600 dark:text-gray-400"
                       }`}
                     >
                       {scoreContent}

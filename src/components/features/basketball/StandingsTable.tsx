@@ -74,7 +74,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400 dark:text-gray-400">
         No standings data available
       </div>
     );
@@ -106,7 +106,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -123,7 +123,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
             {sortedTeams.map((team) => (
               <th
                 key={team.team_name}
-                className="bg-gray-50 dark:bg-slate-800 text-center font-normal"
+                className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center font-normal"
                 style={{
                   height: headerHeight,
                   width: teamColWidth,
@@ -156,7 +156,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
           {positions.map((position) => (
             <tr key={`position-${position}`}>
               <td
-                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -203,9 +203,9 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
           ))}
 
           {/* Summary row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
+          <tr className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -223,7 +223,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_name}-avg-position`}
-                className="bg-gray-50 dark:bg-slate-800 text-center"
+                className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center"
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -241,9 +241,9 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
           </tr>
 
           {/* Curr Conf Record row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
+          <tr className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -261,7 +261,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_name}-conf-record`}
-                className="bg-gray-50 dark:bg-slate-800 text-center"
+                className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center"
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,

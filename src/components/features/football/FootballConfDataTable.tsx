@@ -79,7 +79,7 @@ function FootballConfDataTable({
 
   if (!confData || confData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No conference data available
       </div>
     );
@@ -101,7 +101,7 @@ function FootballConfDataTable({
           <tr>
             {/* Conference Column */}
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-left font-normal px-2 ${
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                 isMobile ? "text-xs" : "text-sm"
               }`}
               style={{
@@ -123,7 +123,7 @@ function FootballConfDataTable({
             {bidColumns.map((bid) => (
               <th
                 key={`bid-${bid}`}
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -143,7 +143,7 @@ function FootballConfDataTable({
 
             {/* Average Column */}
             <th
-              className={`sticky bg-gray-50 text-center font-normal z-20 ${
+              className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
                 isMobile ? "text-xs" : "text-sm"
               }`}
               style={{
@@ -166,7 +166,7 @@ function FootballConfDataTable({
             <tr key={`${conf.conference_name}-${index}`}>
               {/* Conference Cell */}
               <td
-                className={`sticky left-0 z-20 bg-white text-left px-2 ${
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-left px-2 ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -232,7 +232,7 @@ function FootballConfDataTable({
 
               {/* Average Cell */}
               <td
-                className={`bg-white text-center ${
+                className={`bg-white dark:bg-slate-900 text-center ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{

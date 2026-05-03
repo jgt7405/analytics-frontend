@@ -60,7 +60,7 @@ function FootballRegularSeasonWinsTable({
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No regular season wins data available
       </div>
     );
@@ -91,7 +91,7 @@ function FootballRegularSeasonWinsTable({
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs px-1" : "text-sm px-2"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs px-1" : "text-sm px-2"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -135,7 +135,7 @@ function FootballRegularSeasonWinsTable({
           {winColumns.map((wins) => (
             <tr key={`reg-wins-${wins}`}>
               <td
-                className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -183,9 +183,9 @@ function FootballRegularSeasonWinsTable({
           ))}
 
           {/* Avg row */}
-          <tr className="bg-gray-50" key="avg-row">
+          <tr className="bg-gray-50 dark:bg-slate-800" key="avg-row">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 height: summaryRowHeight,
@@ -216,9 +216,9 @@ function FootballRegularSeasonWinsTable({
           </tr>
 
           {/* Sag12 row */}
-          <tr className="bg-gray-50" key="sag12-row">
+          <tr className="bg-gray-50 dark:bg-slate-800" key="sag12-row">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 height: summaryRowHeight,
@@ -249,9 +249,9 @@ function FootballRegularSeasonWinsTable({
           </tr>
 
           {/* TWV row */}
-          <tr className="bg-gray-50" key="twv-row">
+          <tr className="bg-gray-50 dark:bg-slate-800" key="twv-row">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 height: summaryRowHeight,
@@ -282,9 +282,9 @@ function FootballRegularSeasonWinsTable({
           </tr>
 
           {/* Curr Record row */}
-          <tr className="bg-gray-50" key="curr-record-row">
+          <tr className="bg-gray-50 dark:bg-slate-800" key="curr-record-row">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 height: summaryRowHeight,

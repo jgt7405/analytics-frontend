@@ -151,8 +151,8 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
       const game = gamesByRankAndTeam[rank]?.[teamName];
       if (!game) return null;
 
-      let backgroundColor = "white";
-      let textColor = "black";
+      let backgroundColor = "var(--bg-primary)";
+      let textColor = "var(--text-primary)";
       let content = "";
 
       if (game.status === "W") {
@@ -226,7 +226,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
   if (!cwvData || !cwvData.teams || !cwvData.games) {
     return (
-      <div className="p-4 text-center text-gray-500">No CWV data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No CWV data available</div>
     );
   }
 
@@ -256,7 +256,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -271,7 +271,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
               #
             </th>
             <th
-              className={`sticky z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: secondColWidth,
                 minWidth: secondColWidth,
@@ -289,7 +289,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
             {sortedTeams.map((team) => (
               <th
                 key={team.team_name}
-                className="bg-gray-50 text-center font-normal p-0 cursor-pointer hover:bg-gray-100"
+                className="bg-gray-50 dark:bg-slate-800 text-center font-normal p-0 cursor-pointer hover:bg-gray-100 dark:bg-slate-700"
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
@@ -316,7 +316,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           {visibleRanks.map((rank) => (
             <tr key={rank}>
               <td
-                className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -332,7 +332,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 {rank}
               </td>
               <td
-                className={`sticky z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: secondColWidth,
                   minWidth: secondColWidth,
@@ -371,10 +371,10 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           ))}
 
           {/* CWV row with color shading */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
               colSpan={2}
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth + secondColWidth,
                 minWidth: firstColWidth + secondColWidth,
@@ -415,10 +415,10 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           </tr>
 
           {/* Current Record row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
               colSpan={2}
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth + secondColWidth,
                 minWidth: firstColWidth + secondColWidth,
@@ -435,7 +435,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`record-${team.team_name}`}
-                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -453,10 +453,10 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           </tr>
 
           {/* Est Avg Team Record row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
               colSpan={2}
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth + secondColWidth,
                 minWidth: firstColWidth + secondColWidth,
@@ -473,7 +473,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`est-record-${team.team_name}`}
-                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -503,7 +503,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           if (game.status === "W" || game.status === "L") {
             tooltipContent = (
               <div className="text-xs space-y-0.5">
-                <div className="flex items-center gap-2 pb-1 border-b border-gray-200">
+                <div className="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-700">
                   {game.opponent_logo && (
                     <Image
                       src={game.opponent_logo}
@@ -517,7 +517,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 </div>
                 {game.location && <div>{game.location}</div>}
                 {game.date && (
-                  <div className="text-gray-600">
+                  <div className="text-gray-600 dark:text-gray-400">
                     {new Date(game.date + "T00:00:00").toLocaleDateString(
                       "en-US",
                       {
@@ -534,7 +534,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           } else if (game.date) {
             tooltipContent = (
               <div className="text-xs space-y-0.5">
-                <div className="flex items-center gap-2 pb-1 border-b border-gray-200">
+                <div className="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-700">
                   {game.opponent_logo && (
                     <Image
                       src={game.opponent_logo}
@@ -548,7 +548,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 </div>
                 {game.location && <div>{game.location}</div>}
                 {game.date && (
-                  <div className="text-gray-600">
+                  <div className="text-gray-600 dark:text-gray-400">
                     {new Date(game.date + "T00:00:00").toLocaleDateString(
                       "en-US",
                       {
@@ -602,7 +602,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
           return (
             <div
-              className="fixed bg-white border border-gray-300 rounded shadow-lg p-2 pointer-events-none z-50"
+              className="fixed bg-white dark:bg-slate-900 border border-gray-300 dark:border-gray-600 rounded shadow-lg p-2 pointer-events-none z-50"
               style={{
                 left: `${left}px`,
                 top: `${top}px`,

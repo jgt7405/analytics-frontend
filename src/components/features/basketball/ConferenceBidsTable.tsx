@@ -72,7 +72,7 @@ function ConferenceBidsTable({
 
   if (!confData || confData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No conference data available
       </div>
     );
@@ -94,7 +94,7 @@ function ConferenceBidsTable({
           <tr>
             {/* Conference Column */}
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: confColWidth,
                 minWidth: confColWidth,
@@ -114,7 +114,7 @@ function ConferenceBidsTable({
             {bidColumns.map((bid) => (
               <th
                 key={`bid-${bid}`}
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: bidColWidth,
                   minWidth: bidColWidth,
@@ -132,7 +132,7 @@ function ConferenceBidsTable({
 
             {/* Average Column */}
             <th
-              className={`sticky bg-gray-50 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: avgColWidth,
                 minWidth: avgColWidth,
@@ -153,7 +153,7 @@ function ConferenceBidsTable({
             <tr key={`${conf.conference_name}-${index}`}>
               {/* Conference Cell */}
               <td
-                className={`sticky left-0 z-20 bg-white text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: confColWidth,
                   minWidth: confColWidth,
@@ -215,7 +215,7 @@ function ConferenceBidsTable({
 
               {/* Average Cell */}
               <td
-                className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: cellHeight,
                   width: avgColWidth,

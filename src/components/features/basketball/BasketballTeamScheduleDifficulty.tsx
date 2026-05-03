@@ -488,7 +488,7 @@ export default function BasketballTeamScheduleDifficulty({
         )}
         <div className="mb-4 space-y-3" onClick={(e) => e.stopPropagation()}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Compare against:
             </label>
             <div className="flex flex-wrap gap-2">
@@ -499,7 +499,7 @@ export default function BasketballTeamScheduleDifficulty({
                   className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
                     comparisonFilter === option.value
                       ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                   }`}
                 >
                   {option.label}
@@ -509,7 +509,7 @@ export default function BasketballTeamScheduleDifficulty({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Show games:
             </label>
             <div className="flex gap-2">
@@ -520,7 +520,7 @@ export default function BasketballTeamScheduleDifficulty({
                   className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
                     gameFilter === option.value
                       ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                   }`}
                 >
                   {option.label}
@@ -530,7 +530,7 @@ export default function BasketballTeamScheduleDifficulty({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Location:
             </label>
             <div className="flex gap-2">
@@ -541,7 +541,7 @@ export default function BasketballTeamScheduleDifficulty({
                   className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
                     locationFilter === option.value
                       ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
                   }`}
                 >
                   {option.label}
@@ -556,7 +556,7 @@ export default function BasketballTeamScheduleDifficulty({
         <svg
           width={CHART_WIDTH}
           height={TOTAL_CHART_HEIGHT}
-          className="border border-gray-200 rounded"
+          className="border border-gray-200 dark:border-gray-700 rounded"
         >
           <rect width={CHART_WIDTH} height={TOTAL_CHART_HEIGHT} fill="white" />
 
@@ -882,35 +882,35 @@ export default function BasketballTeamScheduleDifficulty({
       </div>
 
       {/* Legend and stats */}
-      <div className="mt-2 text-xs text-gray-600">
+      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
         {/* Team Stats Summary - MOVED TO TOP */}
-        <div className="text-center mt-0 -pt-1 border-b border-gray-300 text-xs">
+        <div className="text-center mt-0 -pt-1 border-b border-gray-300 dark:border-gray-600 text-xs">
           <div className="grid grid-cols-5 gap-4 justify-center px-2">
             <div>
-              <div className="font-medium text-gray-700">Record:</div>
+              <div className="font-medium text-gray-700 dark:text-gray-300">Record:</div>
               <div style={{ color: teamColor }}>
                 {teamStats.wins}-{teamStats.losses}
               </div>
             </div>
             <div>
-              <div className="font-medium text-gray-700">#50 Fcst:</div>
+              <div className="font-medium text-gray-700 dark:text-gray-300">#50 Fcst:</div>
               <div>
                 {teamStats.expectedWins.toFixed(1)}-
                 {teamStats.expectedLosses.toFixed(1)}
               </div>
             </div>
             <div>
-              <div className="font-medium text-gray-700">Act Win %:</div>
+              <div className="font-medium text-gray-700 dark:text-gray-300">Act Win %:</div>
               <div style={{ color: teamColor }}>
                 {teamStats.actualWinPct.toFixed(0)}%
               </div>
             </div>
             <div>
-              <div className="font-medium text-gray-700">#50 Fcst %:</div>
+              <div className="font-medium text-gray-700 dark:text-gray-300">#50 Fcst %:</div>
               <div>{teamStats.forecastWinPct.toFixed(0)}%</div>
             </div>
             <div>
-              <div className="font-medium text-gray-700">TWV:</div>
+              <div className="font-medium text-gray-700 dark:text-gray-300">TWV:</div>
               <div
                 style={{
                   color:
@@ -929,7 +929,7 @@ export default function BasketballTeamScheduleDifficulty({
         </div>
 
         {/* Legend - MOVED ABOVE COMPARISON */}
-        <div className="flex flex-wrap gap-4 justify-center mt-2 pb-2 border-b border-gray-300">
+        <div className="flex flex-wrap gap-4 justify-center mt-2 pb-2 border-b border-gray-300 dark:border-gray-600">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
             <span>Win</span>
@@ -939,7 +939,7 @@ export default function BasketballTeamScheduleDifficulty({
             <span>Loss</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+            <div className="w-3 h-3 rounded-full bg-gray-50 dark:bg-slate-8000"></div>
             <span>Future Game</span>
           </div>
         </div>

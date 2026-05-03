@@ -78,7 +78,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400 dark:text-gray-400">
         No wins data available
       </div>
     );
@@ -110,7 +110,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -127,7 +127,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
             {sortedTeams.map((team) => (
               <th
                 key={team.team_name}
-                className="bg-gray-50 dark:bg-slate-800 text-center font-normal"
+                className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center font-normal"
                 style={{
                   height: headerHeight,
                   width: teamColWidth,
@@ -160,7 +160,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
           {winColumns.map((wins) => (
             <tr key={`wins-row-${wins}`}>
               <td
-                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -209,9 +209,9 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
           ))}
 
           {/* Summary rows */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
+          <tr className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -229,7 +229,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_name}-avg`}
-                className="bg-gray-50 dark:bg-slate-800 text-center"
+                className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center"
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -246,9 +246,9 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
             ))}
           </tr>
 
-          <tr className="bg-gray-50 dark:bg-slate-800">
+          <tr className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -269,7 +269,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
               return (
                 <td
                   key={`${team.team_name}-record`}
-                  className="bg-gray-50 dark:bg-slate-800 text-center"
+                  className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center"
                   style={{
                     height: summaryRowHeight,
                     width: teamColWidth,

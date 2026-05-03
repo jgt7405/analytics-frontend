@@ -78,7 +78,7 @@ function FootballStandingsTable({
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400 dark:text-gray-400">
         No standings data available
       </div>
     );
@@ -110,7 +110,7 @@ function FootballStandingsTable({
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -127,7 +127,7 @@ function FootballStandingsTable({
             {sortedTeams.map((team) => (
               <th
                 key={`header-${team.team_id}-${team.team_name}`}
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
@@ -154,7 +154,7 @@ function FootballStandingsTable({
           {positions.map((position) => (
             <tr key={`position-${position}`}>
               <td
-                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -203,9 +203,9 @@ function FootballStandingsTable({
             </tr>
           ))}
 
-          <tr className="bg-gray-50 dark:bg-slate-800">
+          <tr className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -223,7 +223,7 @@ function FootballStandingsTable({
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_id}-${team.team_name}-avg-position`}
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -240,9 +240,9 @@ function FootballStandingsTable({
           </tr>
 
           {/* NEW: Current Conference Record Row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
+          <tr className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -268,7 +268,7 @@ function FootballStandingsTable({
               return (
                 <td
                   key={`${team.team_id}-${team.team_name}-conf-record`}
-                  className={`bg-gray-50 dark:bg-slate-800 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     height: summaryRowHeight,
                     width: teamColWidth,

@@ -59,7 +59,7 @@ function BballRegSeasonWinsTable({
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No regular season wins data available
       </div>
     );
@@ -90,7 +90,7 @@ function BballRegSeasonWinsTable({
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${isMobile ? "text-xs px-1" : "text-sm px-2"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs px-1" : "text-sm px-2"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -105,7 +105,7 @@ function BballRegSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <th
                 key={`header-${team.team_name}-${index}`}
-                className={`bg-gray-50 text-center font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
@@ -133,7 +133,7 @@ function BballRegSeasonWinsTable({
           {winColumns.map((wins) => (
             <tr key={`reg-wins-${wins}`}>
               <td
-                className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -181,9 +181,9 @@ function BballRegSeasonWinsTable({
           ))}
 
           {/* Avg row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 height: summaryRowHeight,
@@ -199,7 +199,7 @@ function BballRegSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_name}-avg-reg-${index}`}
-                className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -214,9 +214,9 @@ function BballRegSeasonWinsTable({
           </tr>
 
           {/* KP40 row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 height: summaryRowHeight,
@@ -232,7 +232,7 @@ function BballRegSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_name}-kp40-reg-${index}`}
-                className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -247,9 +247,9 @@ function BballRegSeasonWinsTable({
           </tr>
 
           {/* TWV row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 height: summaryRowHeight,
@@ -265,7 +265,7 @@ function BballRegSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_name}-twv-reg-${index}`}
-                className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -280,9 +280,9 @@ function BballRegSeasonWinsTable({
           </tr>
 
           {/* Curr Record row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 height: summaryRowHeight,
@@ -300,7 +300,7 @@ function BballRegSeasonWinsTable({
               return (
                 <td
                   key={`${team.team_name}-curr-record-${index}`}
-                  className={`bg-gray-50 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`bg-gray-50 dark:bg-slate-800 text-center font-medium ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     height: summaryRowHeight,
                     width: teamColWidth,

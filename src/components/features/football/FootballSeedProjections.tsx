@@ -57,7 +57,7 @@ export default function FootballSeedProjections({
 
   if (processedData.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center text-gray-500 dark:text-gray-400 py-8">
         <p className="text-sm">CFP Projections Coming Soon</p>
         <p className="text-xs mt-1">
           College Football Playoff seed projections will appear here.
@@ -149,7 +149,7 @@ export default function FootballSeedProjections({
               className="w-3 h-3 rounded-sm"
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-gray-700">
+            <span className="text-gray-700 dark:text-gray-300">
               {item.label}: {item.percentage.toFixed(1)}%
             </span>
           </div>

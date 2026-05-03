@@ -476,7 +476,7 @@ export default function FootballStandingsHistoryChart({
 
   return (
     <div
-      className="bg-white rounded-lg p-4 border relative"
+      className="bg-white dark:bg-slate-900 rounded-lg p-4 border relative"
       style={{ zIndex: 10, isolation: "isolate" }}
     >
       <div
@@ -584,7 +584,7 @@ export default function FootballStandingsHistoryChart({
             <button
               key={team.team_name}
               onClick={() => handleTeamClick(team.team_name)}
-              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 dark:bg-slate-700 transition-colors cursor-pointer"
               style={{
                 opacity: isSelected ? 1 : 0.3,
                 filter: isSelected ? "none" : "grayscale(100%)",
