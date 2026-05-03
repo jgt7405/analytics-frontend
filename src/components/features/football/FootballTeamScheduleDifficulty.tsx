@@ -16,6 +16,8 @@ interface FootballTeamGame {
   location: string;
   status: string;
   sag12_win_prob?: number;
+  opp_rating?: number;
+  sagarin_rank?: number;
   team_conf?: string;
   team_conf_catg?: string;
 }
@@ -25,6 +27,8 @@ interface AllScheduleGame {
   opponent: string;
   opponent_primary_color?: string;
   sag12_win_prob: number;
+  opp_rating?: number;
+  sagarin_rank?: number;
   team_conf: string;
   team_conf_catg: string;
   status: string;
@@ -263,14 +267,19 @@ export default function FootballTeamScheduleDifficulty({
   }, [teamGamePositions, PLOT_HEIGHT]);
 
   const getGameRank = (game: PositionedGame) => {
-    const allGamesInFilter = comparisonDataset
-      .map((g) => g.sag12_win_prob)
-      .sort((a, b) => a - b);
-
     const gameProb = game.sag12_win_prob || 0;
-    const position = allGamesInFilter.findIndex((prob) => prob >= gameProb);
+    const gameOppRating = game.opp_rating;
 
-    return position === -1 ? allGamesInFilter.length : position + 1;
+    const harderCount = comparisonDataset.filter((g) => {
+      const gProb = g.sag12_win_prob || 0;
+      if (gProb < gameProb) return true;
+      if (gProb === gameProb && gameOppRating != null && g.opp_rating != null) {
+        return g.opp_rating > gameOppRating;
+      }
+      return false;
+    }).length;
+
+    return harderCount + 1;
   };
 
   const getFilterDescription = () => {
