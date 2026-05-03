@@ -72,6 +72,13 @@ function NCAAPageContent({ params }: ArchiveNCAAPageProps) {
   );
 
   useEffect(() => {
+    console.log(`🏀 NCAA Tourney - ${selectedConference} (season: ${season})`);
+    console.log("NCAA response:", ncaaResponse);
+    console.log("NCAA error:", ncaaError);
+    console.log("NCAA loading:", ncaaLoading);
+  }, [ncaaResponse, ncaaError, ncaaLoading, selectedConference, season]);
+
+  useEffect(() => {
     if (hasInitialized) {
       trackEvent({
         name: "page_view",

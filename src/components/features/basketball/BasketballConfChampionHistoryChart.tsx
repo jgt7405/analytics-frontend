@@ -87,6 +87,14 @@ export default function BasketballConfChampionHistoryChart({
   const range = getBasketballDateRange(season, championData);
   const filteredChampionData = filterDataToRange(championData, range);
 
+  // Debug logging
+  useEffect(() => {
+    console.log(`🏀 Champion History Chart Debug - ${selectedConference} (season: ${season})`);
+    console.log("Raw championData:", championData);
+    console.log("Date range:", range);
+    console.log("Filtered champion data:", filteredChampionData);
+  }, [championData, range, selectedConference, season]);
+
   const dataByTeamAndDate = new Map<string, ChampionHistoryData>();
   filteredChampionData.forEach((item: ChampionHistoryData) => {
     const key = `${item.team_name}-${item.date}`;

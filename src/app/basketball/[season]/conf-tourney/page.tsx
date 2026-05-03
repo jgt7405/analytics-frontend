@@ -73,11 +73,17 @@ function ConfTourneyPageContent({
   );
 
   // ✅ CRITICAL: Pass season to useBasketballConfTourneyHistory
-  const { data: historyData } =
+  const { data: historyData, error: historyError } =
     useBasketballConfTourneyHistory(
       hasInitialized ? selectedConference : preferences.defaultConference || "Big 12",
       season
     );
+
+  useEffect(() => {
+    console.log(`📊 Conf Tourney History - ${selectedConference} (season: ${season})`);
+    console.log("History data:", historyData);
+    console.log("History error:", historyError);
+  }, [historyData, historyError, selectedConference, season]);
 
   useEffect(() => {
     if (hasInitialized) {
@@ -255,6 +261,7 @@ function ConfTourneyPageContent({
                           <BasketballConfChampionHistoryChart
                             championData={historyData.champion_data}
                             selectedConference={selectedConference}
+                            season={season}
                           />
                         </Suspense>
                       </div>
