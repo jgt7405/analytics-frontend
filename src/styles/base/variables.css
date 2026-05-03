@@ -28,10 +28,26 @@
   --transition-slow: 500ms ease-in-out;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Color System */
+    --color-primary: #4ade80;
+    --color-primary-hover: #22c55e;
+    --color-accent: #60a5fa;
+
+    /* Semantic Colors */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+  }
+}
+
 /* Chart titles */
 h2 {
   font-size: clamp(1rem, 3vw, 1.25rem);
-  color: #666;
+  color: var(--text-secondary);
   font-weight: 500;
   margin: var(--space-md) 0;
   font-family: var(--font-roboto-condensed);
@@ -40,7 +56,7 @@ h2 {
 /* Explainer text */
 .explanation {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.3;
   font-family: var(--font-roboto-condensed);
 }

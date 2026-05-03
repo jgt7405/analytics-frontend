@@ -74,7 +74,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No standings data available
       </div>
     );
@@ -106,7 +106,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -114,8 +114,8 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
                 height: headerHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
-                borderRight: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Position
@@ -123,13 +123,13 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
             {sortedTeams.map((team) => (
               <th
                 key={team.team_name}
-                className="bg-gray-50 text-center font-normal"
+                className="bg-gray-50 dark:bg-slate-800 text-center font-normal"
                 style={{
                   height: headerHeight,
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -156,7 +156,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
           {positions.map((position) => (
             <tr key={`position-${position}`}>
               <td
-                className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -164,9 +164,9 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
                   height: cellHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 {position}
@@ -184,7 +184,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
                       width: teamColWidth,
                       minWidth: teamColWidth,
                       maxWidth: teamColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       backgroundColor: colorStyle.backgroundColor,
@@ -203,9 +203,9 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
           ))}
 
           {/* Summary row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -213,9 +213,9 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
-                borderTop: "2px solid #4b5563",
-                borderRight: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
+                borderTop: "2px solid var(--border-color)",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Avg Position
@@ -223,14 +223,14 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_name}-avg-position`}
-                className="bg-gray-50 text-center"
+                className="bg-gray-50 dark:bg-slate-800 text-center"
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
-                  borderTop: "2px solid #4b5563",
+                  border: "1px solid var(--border-color)",
+                  borderTop: "2px solid var(--border-color)",
                   borderLeft: "none",
                   fontSize: isMobile ? "12px" : "14px",
                 }}
@@ -241,9 +241,9 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
           </tr>
 
           {/* Curr Conf Record row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -251,9 +251,9 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "none",
-                borderRight: "1px solid #e5e7eb",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Curr Conf Record
@@ -261,13 +261,13 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_name}-conf-record`}
-                className="bg-gray-50 text-center"
+                className="bg-gray-50 dark:bg-slate-800 text-center"
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   fontSize: isMobile ? "12px" : "14px",

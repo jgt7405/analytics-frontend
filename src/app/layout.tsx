@@ -44,6 +44,11 @@ export default function RootLayout({
         <meta httpEquiv="Referrer-Policy" content="origin-when-cross-origin" />
         <meta name="theme-color" content="#ffffff" />
         <meta
+          name="theme-color"
+          content="#0f172a"
+          media="(prefers-color-scheme: dark)"
+        />
+        <meta
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
@@ -67,7 +72,7 @@ export default function RootLayout({
 
         {/* ✅ REMOVED: Don't preload logo here since it's already priority in Header component */}
       </head>
-      <body className={`min-h-screen bg-gray-50 ${robotoCondensed.className}`}>
+      <body className={`min-h-screen bg-gray-50 dark:bg-slate-900 ${robotoCondensed.className}`}>
         <GoogleAnalytics />
         <ChunkErrorHandler />
         <Providers>
