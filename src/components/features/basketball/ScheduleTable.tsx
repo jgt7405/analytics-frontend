@@ -56,13 +56,13 @@ function BasketballScheduleTable({
   const getLocationStyle = useCallback((location: string) => {
     switch (location) {
       case "Home":
-        return { backgroundColor: "#add8e6" };
+        return { backgroundColor: "rgba(173,216,230,0.3)" };
       case "Away":
-        return { backgroundColor: "#ffffe0" };
+        return { backgroundColor: "rgba(255,255,224,0.3)" };
       case "Neutral":
-        return { backgroundColor: "#e6e6fa" };
+        return { backgroundColor: "rgba(230,230,250,0.3)" };
       default:
-        return { backgroundColor: "#f0f0f0" };
+        return { backgroundColor: "var(--bg-secondary)" };
     }
   }, []);
 
@@ -162,9 +162,9 @@ function BasketballScheduleTable({
           nextGame && nextGame.date === value && nextGame.rowIndex === rowIndex;
 
         if (isNextGame) {
-          return { backgroundColor: "#d6ebf2", color: "#4b5563" }; // Next game color (light blue)
+          return { backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }; // Next game color
         } else {
-          return { backgroundColor: "#f0f0f0", color: "#4b5563" }; // Future games color (light gray)
+          return { backgroundColor: "var(--bg-secondary)", color: "var(--text-secondary)" }; // Future games color
         }
       }
 
@@ -218,7 +218,7 @@ function BasketballScheduleTable({
         const textColor = intensity > 0.5 ? "white" : "black";
         return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
       }
-      return { backgroundColor: "#ffffff" };
+      return { backgroundColor: "var(--bg-primary)" };
     },
     [summary]
   );
@@ -247,7 +247,7 @@ function BasketballScheduleTable({
     teams.length === 0
   ) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No basketball schedule data available
       </div>
     );
@@ -278,7 +278,7 @@ function BasketballScheduleTable({
                 <tr>
                   {/* Location Column */}
                   <th
-                    className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
+                    className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -298,7 +298,7 @@ function BasketballScheduleTable({
 
                   {/* Opponent Column */}
                   <th
-                    className={`sticky z-30 bg-gray-50 text-center font-normal ${
+                    className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -327,7 +327,7 @@ function BasketballScheduleTable({
 
                   {/* Win Probability Column */}
                   <th
-                    className={`sticky z-30 bg-gray-50 text-center font-normal ${
+                    className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -362,7 +362,7 @@ function BasketballScheduleTable({
                   {teams.map((team) => (
                     <th
                       key={team}
-                      className={`bg-gray-50 text-center font-normal sticky z-20`}
+                      className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20`}
                       style={{
                         height: headerHeight,
                         width: teamColWidth,
@@ -421,7 +421,7 @@ function BasketballScheduleTable({
 
                     {/* Opponent Cell */}
                     <td
-                      className={`sticky z-20 bg-white text-center ${
+                      className={`sticky z-20 bg-white dark:bg-slate-900 text-center ${
                         isMobile ? "text-xs" : "text-sm"
                       }`}
                       style={{
@@ -453,7 +453,7 @@ function BasketballScheduleTable({
 
                     {/* Win Probability Cell */}
                     <td
-                      className={`sticky z-20 bg-white text-center ${
+                      className={`sticky z-20 bg-white dark:bg-slate-900 text-center ${
                         isMobile ? "text-xs" : "text-sm"
                       }`}
                       style={{
@@ -517,10 +517,10 @@ function BasketballScheduleTable({
                 {summary && Object.keys(summary).length > 0 && (
                   <>
                     {/* Expected Wins Row */}
-                    <tr className="bg-gray-50">
+                    <tr className="bg-gray-50 dark:bg-slate-800">
                       <td
                         colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                        className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                           isMobile ? "text-xs" : "text-sm"
                         }`}
                         style={{
@@ -539,7 +539,7 @@ function BasketballScheduleTable({
                       {teams.map((team) => (
                         <td
                           key={`${team}-expected`}
-                          className="bg-gray-50 text-center relative p-0"
+                          className="bg-gray-50 dark:bg-slate-800 text-center relative p-0"
                           style={{
                             height: summaryRowHeight,
                             width: teamColWidth,
@@ -567,10 +567,10 @@ function BasketballScheduleTable({
                     </tr>
 
                     {/* Total Games Row */}
-                    <tr className="bg-gray-50">
+                    <tr className="bg-gray-50 dark:bg-slate-800">
                       <td
                         colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                        className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                           isMobile ? "text-xs" : "text-sm"
                         }`}
                         style={{
@@ -589,7 +589,7 @@ function BasketballScheduleTable({
                       {teams.map((team) => (
                         <td
                           key={`${team}-total`}
-                          className="bg-gray-50 text-center"
+                          className="bg-gray-50 dark:bg-slate-800 text-center"
                           style={{
                             height: summaryRowHeight,
                             width: teamColWidth,
@@ -609,10 +609,10 @@ function BasketballScheduleTable({
                     {/* Quartile rows */}
                     {(["top", "second", "third", "bottom"] as const).map(
                       (quartile) => (
-                        <tr key={quartile} className="bg-gray-50">
+                        <tr key={quartile} className="bg-gray-50 dark:bg-slate-800">
                           <td
                             colSpan={3}
-                            className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                            className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                               isMobile ? "text-xs" : "text-sm"
                             }`}
                             style={{
@@ -639,7 +639,7 @@ function BasketballScheduleTable({
                           {teams.map((team) => (
                             <td
                               key={`${team}-${quartile}-quartile`}
-                              className="bg-gray-50 text-center relative p-0"
+                              className="bg-gray-50 dark:bg-slate-800 text-center relative p-0"
                               style={{
                                 height: summaryRowHeight,
                                 width: teamColWidth,
@@ -698,7 +698,7 @@ function BasketballScheduleTable({
               <thead>
                 <tr>
                   <th
-                    className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
+                    className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -715,7 +715,7 @@ function BasketballScheduleTable({
                     Team
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -734,7 +734,7 @@ function BasketballScheduleTable({
                     Wins
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -753,7 +753,7 @@ function BasketballScheduleTable({
                     Games
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -774,7 +774,7 @@ function BasketballScheduleTable({
                     (Hardest)
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -793,7 +793,7 @@ function BasketballScheduleTable({
                     Quartile
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -812,7 +812,7 @@ function BasketballScheduleTable({
                     Quartile
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -850,7 +850,7 @@ function BasketballScheduleTable({
                     return (
                       <tr key={team}>
                         <td
-                          className={`sticky left-0 z-20 bg-white text-center ${
+                          className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
                             isMobile ? "text-xs" : "text-sm"
                           }`}
                           style={{

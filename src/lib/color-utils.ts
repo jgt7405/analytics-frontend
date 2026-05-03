@@ -11,7 +11,7 @@ export function getCellColor(
   scheme: ColorScheme = "blue"
 ): ColorStyle {
   if (value === 0) {
-    return { backgroundColor: "white", color: "transparent" };
+    return { backgroundColor: "var(--bg-primary)", color: "transparent" };
   }
 
   const intensity = Math.min(value / 100, 1);

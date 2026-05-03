@@ -235,7 +235,7 @@ function SeedTable({
 
   // Get yellow color for First/Next Four Out cells
   const getOutColor = (value: number) => {
-    if (value === 0) return { backgroundColor: "white", color: "transparent" };
+    if (value === 0) return { backgroundColor: "var(--bg-primary)", color: "transparent" };
     const white = [255, 255, 255];
     const yellow = [255, 230, 113];
 
@@ -260,7 +260,7 @@ function SeedTable({
 
   if (!seedData || seedData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No seed data available
       </div>
     );
@@ -283,7 +283,7 @@ function SeedTable({
       {showAllTeams && (
         <div className="flex items-center gap-3 px-2">
           <label
-            className={`text-gray-700 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+            className={`text-gray-700 dark:text-gray-300 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
           >
             Show top:
           </label>
@@ -298,7 +298,7 @@ function SeedTable({
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             placeholder={seedData.length.toString()}
           />
-          <span className={`text-gray-600 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={`text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
             teams (of {seedData.length})
           </span>
         </div>
@@ -320,7 +320,7 @@ function SeedTable({
             <tr>
               <th
                 rowSpan={2}
-                className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
+                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -340,7 +340,7 @@ function SeedTable({
 
               <th
                 rowSpan={2}
-                className={`sticky z-30 bg-gray-50 text-left font-normal px-2 ${
+                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -362,7 +362,7 @@ function SeedTable({
               {/* Seed Category Header - INCLUDES Wgtd Avg Seed + Seeds 1-16 */}
               <th
                 colSpan={seedColumns.length + 1}
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -379,7 +379,7 @@ function SeedTable({
               {/* NCAA Tournament Status Category Header */}
               <th
                 colSpan={tournamentStatusColumns.length}
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -396,7 +396,7 @@ function SeedTable({
               {/* Bid Category Header */}
               <th
                 colSpan={bidCategoryColumns.length}
-                className={`sticky bg-gray-50 text-center font-normal z-20 ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
                   isMobile ? "text-xs" : "text-sm"
                 }`}
                 style={{
@@ -415,7 +415,7 @@ function SeedTable({
             <tr>
               {/* Wgtd Avg Seed Column - FIRST under Seed category */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
                 } ${sortColumn === "average_seed" ? "bg-blue-100" : ""}`}
                 onClick={() => handleColumnClick("average_seed")}
@@ -445,7 +445,7 @@ function SeedTable({
               {seedColumns.map((seed) => (
                 <th
                   key={`seed-${seed}`}
-                  className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                  className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                     isMobile ? "text-xs" : "text-sm"
                   } ${sortColumn === seed.toString() ? "bg-blue-100" : ""}`}
                   onClick={() => handleColumnClick(seed.toString())}
@@ -471,7 +471,7 @@ function SeedTable({
 
               {/* In Tourney Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
                 } ${sortColumn === "tournament_bid_pct" ? "bg-blue-100" : ""}`}
                 onClick={() => handleColumnClick("tournament_bid_pct")}
@@ -499,7 +499,7 @@ function SeedTable({
 
               {/* First Four Out Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
                 } ${sortColumn === "first_four_out" ? "bg-blue-100" : ""}`}
                 onClick={() => handleColumnClick("first_four_out")}
@@ -527,7 +527,7 @@ function SeedTable({
 
               {/* Next Four Out Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
                 } ${sortColumn === "next_four_out" ? "bg-blue-100" : ""}`}
                 onClick={() => handleColumnClick("next_four_out")}
@@ -555,7 +555,7 @@ function SeedTable({
 
               {/* Out of Tourney Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
                 } ${sortColumn === "out_of_tourney" ? "bg-blue-100" : ""}`}
                 onClick={() => handleColumnClick("out_of_tourney")}
@@ -583,7 +583,7 @@ function SeedTable({
 
               {/* Auto Bid Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
                 } ${sortColumn === "auto_bid_overall_pct" ? "bg-blue-100" : ""}`}
                 onClick={() => handleColumnClick("auto_bid_overall_pct")}
@@ -611,7 +611,7 @@ function SeedTable({
 
               {/* At Large Column */}
               <th
-                className={`sticky bg-gray-50 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
+                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 transition-colors ${
                   isMobile ? "text-xs" : "text-sm"
                 } ${sortColumn === "at_large_overall_pct" ? "bg-blue-100" : ""}`}
                 onClick={() => handleColumnClick("at_large_overall_pct")}
@@ -643,7 +643,7 @@ function SeedTable({
               <tr key={`${team.team_name}-${index}`}>
                 {/* Rank Cell */}
                 <td
-                  className={`sticky left-0 z-20 bg-white text-center ${
+                  className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
                     isMobile ? "text-xs" : "text-sm"
                   } font-medium`}
                   style={{
@@ -663,7 +663,7 @@ function SeedTable({
 
                 {/* Team Cell */}
                 <td
-                  className={`sticky z-20 bg-white text-left px-2 ${
+                  className={`sticky z-20 bg-white dark:bg-slate-900 text-left px-2 ${
                     isMobile ? "text-xs" : "text-sm"
                   }`}
                   style={{
@@ -694,7 +694,7 @@ function SeedTable({
 
                 {/* Average Seed Cell */}
                 <td
-                  className={`bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     width: avgSeedColWidth,
                     minWidth: avgSeedColWidth,

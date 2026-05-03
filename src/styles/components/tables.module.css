@@ -26,6 +26,12 @@
   transition: background-color var(--transition-fast);
 }
 
+@media (prefers-color-scheme: dark) {
+  .tableRow:hover {
+    background-color: #1e293b;
+  }
+}
+
 /* Mobile responsive adjustments - simplified */
 @media (max-width: 768px) {
   .tableContainer {

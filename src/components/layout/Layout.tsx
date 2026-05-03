@@ -19,7 +19,7 @@ export default function Layout({
   controls,
 }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex flex-col">
       <Header />
       <main
         id="main-content"
@@ -31,10 +31,10 @@ export default function Layout({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             {title && (
               <div>
-                <h1 className="text-2xl font-normal text-gray-600">
+                <h1 className="text-2xl font-normal text-gray-600 dark:text-gray-300">
                   {title}
                   {subtitle && (
-                    <span className="text-lg ml-2 text-gray-500">
+                    <span className="text-lg ml-2 text-gray-500 dark:text-gray-400">
                       {subtitle}
                     </span>
                   )}

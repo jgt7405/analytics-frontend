@@ -15,13 +15,13 @@ function MethodologyModal({ isOpen, onClose }: MethodologyModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full">
         <div
-          className="flex items-center justify-between border-b border-gray-200"
+          className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700"
           style={{ padding: "6px 12px" }}
         >
           <h2
-            className="text-xl font-bold text-gray-500"
+            className="text-xl font-bold text-gray-500 dark:text-gray-300"
             style={{
               fontFamily: "Roboto Condensed, system-ui, sans-serif",
               margin: 0,
@@ -94,13 +94,13 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full">
         <div
-          className="flex items-center justify-between border-b border-gray-200"
+          className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700"
           style={{ padding: "6px 12px" }}
         >
           <h2
-            className="text-xl font-bold text-gray-500"
+            className="text-xl font-bold text-gray-500 dark:text-gray-300"
             style={{
               fontFamily: "Roboto Condensed, system-ui, sans-serif",
               margin: 0,
@@ -185,12 +185,12 @@ export default function Footer() {
 
   return (
     <>
-      <footer style={{ background: "white", marginTop: "-8px", paddingTop: 0 }}>
+      <footer style={{ background: "var(--bg-primary)", marginTop: "-8px", paddingTop: 0 }}>
         <div
           className="container mx-auto px-4"
           style={{
             borderTop: "none",
-            backgroundColor: "white",
+            backgroundColor: "var(--bg-primary)",
             padding: "2px 0 0 0",
           }}
         >

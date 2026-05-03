@@ -78,7 +78,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full">
         <div
           className="flex items-center justify-between border-b border-gray-200"
           style={{ padding: "6px 12px" }}

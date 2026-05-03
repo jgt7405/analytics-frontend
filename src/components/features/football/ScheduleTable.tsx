@@ -54,13 +54,13 @@ function FootballScheduleTable({
   const getLocationStyle = useCallback((location: string) => {
     switch (location) {
       case "Home":
-        return { backgroundColor: "#add8e6" };
+        return { backgroundColor: "rgba(173,216,230,0.3)" };
       case "Away":
-        return { backgroundColor: "#ffffe0" };
+        return { backgroundColor: "rgba(255,255,224,0.3)" };
       case "Neutral":
-        return { backgroundColor: "#e6e6fa" };
+        return { backgroundColor: "rgba(230,230,250,0.3)" };
       default:
-        return { backgroundColor: "#f0f0f0" };
+        return { backgroundColor: "var(--bg-secondary)" };
     }
   }, []);
 
@@ -166,9 +166,9 @@ function FootballScheduleTable({
           nextGame && nextGame.date === value && nextGame.rowIndex === rowIndex;
 
         if (isNextGame) {
-          return { backgroundColor: "#d6ebf2", color: "#4b5563" };
+          return { backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" };
         } else {
-          return { backgroundColor: "#f0f0f0", color: "#4b5563" };
+          return { backgroundColor: "var(--bg-secondary)", color: "var(--text-secondary)" };
         }
       }
 
@@ -217,7 +217,7 @@ function FootballScheduleTable({
         const textColor = intensity > 0.5 ? "white" : "black";
         return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
       }
-      return { backgroundColor: "#ffffff" };
+      return { backgroundColor: "var(--bg-primary)" };
     },
     [summary]
   );
@@ -245,7 +245,7 @@ function FootballScheduleTable({
     teams.length === 0
   ) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No football schedule data available
       </div>
     );
@@ -274,7 +274,7 @@ function FootballScheduleTable({
               <thead>
                 <tr>
                   <th
-                    className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
+                    className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -293,7 +293,7 @@ function FootballScheduleTable({
                   </th>
 
                   <th
-                    className={`sticky z-30 bg-gray-50 text-center font-normal ${
+                    className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -321,7 +321,7 @@ function FootballScheduleTable({
                   </th>
 
                   <th
-                    className={`sticky z-30 bg-gray-50 text-center font-normal ${
+                    className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -355,7 +355,7 @@ function FootballScheduleTable({
                   {teams.map((team) => (
                     <th
                       key={team}
-                      className={`bg-gray-50 text-center font-normal sticky z-20`}
+                      className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20`}
                       style={{
                         height: headerHeight,
                         width: teamColWidth,
@@ -411,7 +411,7 @@ function FootballScheduleTable({
                     </td>
 
                     <td
-                      className={`sticky z-20 bg-white text-center ${
+                      className={`sticky z-20 bg-white dark:bg-slate-900 text-center ${
                         isMobile ? "text-xs" : "text-sm"
                       }`}
                       style={{
@@ -442,7 +442,7 @@ function FootballScheduleTable({
                     </td>
 
                     <td
-                      className={`sticky z-20 bg-white text-center ${
+                      className={`sticky z-20 bg-white dark:bg-slate-900 text-center ${
                         isMobile ? "text-xs" : "text-sm"
                       }`}
                       style={{
@@ -503,10 +503,10 @@ function FootballScheduleTable({
 
                 {summary && Object.keys(summary).length > 0 && (
                   <>
-                    <tr className="bg-gray-50">
+                    <tr className="bg-gray-50 dark:bg-slate-800">
                       <td
                         colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                        className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                           isMobile ? "text-xs" : "text-sm"
                         }`}
                         style={{
@@ -531,7 +531,7 @@ function FootballScheduleTable({
                         return (
                           <td
                             key={`${team}-expected`}
-                            className="bg-gray-50 text-center relative p-0"
+                            className="bg-gray-50 dark:bg-slate-800 text-center relative p-0"
                             style={{
                               height: summaryRowHeight,
                               width: teamColWidth,
@@ -559,10 +559,10 @@ function FootballScheduleTable({
                       })}
                     </tr>
 
-                    <tr className="bg-gray-50">
+                    <tr className="bg-gray-50 dark:bg-slate-800">
                       <td
                         colSpan={3}
-                        className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                        className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                           isMobile ? "text-xs" : "text-sm"
                         }`}
                         style={{
@@ -587,7 +587,7 @@ function FootballScheduleTable({
                         return (
                           <td
                             key={`${team}-total`}
-                            className="bg-gray-50 text-center"
+                            className="bg-gray-50 dark:bg-slate-800 text-center"
                             style={{
                               height: summaryRowHeight,
                               width: teamColWidth,
@@ -607,10 +607,10 @@ function FootballScheduleTable({
 
                     {(["top", "second", "third", "bottom"] as const).map(
                       (quartile) => (
-                        <tr key={quartile} className="bg-gray-50">
+                        <tr key={quartile} className="bg-gray-50 dark:bg-slate-800">
                           <td
                             colSpan={3}
-                            className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${
+                            className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                               isMobile ? "text-xs" : "text-sm"
                             }`}
                             style={{
@@ -669,7 +669,7 @@ function FootballScheduleTable({
                             return (
                               <td
                                 key={`${team}-${quartile}-quartile`}
-                                className="bg-gray-50 text-center relative p-0"
+                                className="bg-gray-50 dark:bg-slate-800 text-center relative p-0"
                                 style={{
                                   height: summaryRowHeight,
                                   width: teamColWidth,
@@ -727,7 +727,7 @@ function FootballScheduleTable({
               <thead>
                 <tr>
                   <th
-                    className={`sticky left-0 z-30 bg-gray-50 text-center font-normal ${
+                    className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -744,7 +744,7 @@ function FootballScheduleTable({
                     Team
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -763,7 +763,7 @@ function FootballScheduleTable({
                     Wins
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -782,7 +782,7 @@ function FootballScheduleTable({
                     Games
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -803,7 +803,7 @@ function FootballScheduleTable({
                     (Hardest)
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -822,7 +822,7 @@ function FootballScheduleTable({
                     Quartile
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -841,7 +841,7 @@ function FootballScheduleTable({
                     Quartile
                   </th>
                   <th
-                    className={`bg-gray-50 text-center font-normal sticky z-20 ${
+                    className={`bg-gray-50 dark:bg-slate-800 text-center font-normal sticky z-20 ${
                       isMobile ? "text-xs" : "text-sm"
                     }`}
                     style={{
@@ -879,7 +879,7 @@ function FootballScheduleTable({
                     return (
                       <tr key={team}>
                         <td
-                          className={`sticky left-0 z-20 bg-white text-center ${
+                          className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
                             isMobile ? "text-xs" : "text-sm"
                           }`}
                           style={{

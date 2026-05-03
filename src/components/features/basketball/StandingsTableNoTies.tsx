@@ -69,7 +69,7 @@ function StandingsTableNoTies({
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
         No standings data available
       </div>
     );
@@ -101,7 +101,7 @@ function StandingsTableNoTies({
         <thead>
           <tr>
             <th
-              className={`sticky left-0 z-30 bg-gray-50 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -118,7 +118,7 @@ function StandingsTableNoTies({
             {sortedTeams.map((team) => (
               <th
                 key={team.team_name}
-                className="bg-gray-50 text-center font-normal"
+                className="bg-gray-50 dark:bg-slate-800 text-center font-normal"
                 style={{
                   height: headerHeight,
                   width: teamColWidth,
@@ -151,7 +151,7 @@ function StandingsTableNoTies({
           {positions.map((position) => (
             <tr key={`position-${position}`}>
               <td
-                className={`sticky left-0 z-20 bg-white text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
@@ -199,9 +199,9 @@ function StandingsTableNoTies({
           ))}
 
           {/* Summary row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -219,7 +219,7 @@ function StandingsTableNoTies({
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_name}-avg-position`}
-                className="bg-gray-50 text-center"
+                className="bg-gray-50 dark:bg-slate-800 text-center"
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
@@ -239,9 +239,9 @@ function StandingsTableNoTies({
           </tr>
 
           {/* Curr Conf Record row */}
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              className={`sticky left-0 z-20 bg-gray-50 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -259,7 +259,7 @@ function StandingsTableNoTies({
             {sortedTeams.map((team) => (
               <td
                 key={`${team.team_name}-conf-record`}
-                className="bg-gray-50 text-center"
+                className="bg-gray-50 dark:bg-slate-800 text-center"
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
