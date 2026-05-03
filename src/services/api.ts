@@ -469,23 +469,24 @@ class ApiClient {
     }));
   }
 
-  async getConfTourney(conference: string): Promise<ConfTourneyApiResponse> {
+  async getConfTourney(conference: string, season?: string): Promise<ConfTourneyApiResponse> {
     const sanitized = sanitizeInput(conference);
     if (!validateConference(sanitized)) {
       throw new Error("Invalid conference name");
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
+    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     console.log(
-      `🏀 Getting conf tourney for: ${sanitized} -> ${formattedConf}`,
+      `🏀 Getting conf tourney for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
     );
 
     monitoring.trackEvent({
       name: "conf_tourney_requested",
-      properties: { conference: formattedConf },
+      properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/conf_tourney/${formattedConf}`, (data) => ({
+    return this.request(`/conf_tourney/${formattedConf}${seasonQuery}`, (data) => ({
       success: true,
       data: data as ConfTourneyApiResponse,
       error: null,

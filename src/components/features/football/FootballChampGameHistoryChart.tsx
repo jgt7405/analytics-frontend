@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import "@/lib/chartjs-setup";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";

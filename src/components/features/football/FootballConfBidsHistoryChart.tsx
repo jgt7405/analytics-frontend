@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import "@/lib/chartjs-setup";
 import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";

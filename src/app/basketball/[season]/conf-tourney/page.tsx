@@ -29,7 +29,7 @@ interface ArchiveConfTourneyPageProps {
   };
 }
 
-export default function ArchiveConfTourneyPage({
+function ConfTourneyPageContent({
   params,
 }: ArchiveConfTourneyPageProps) {
   const { trackEvent } = useMonitoring();
@@ -297,5 +297,29 @@ export default function ArchiveConfTourneyPage({
         </div>
       </PageLayoutWrapper>
     </ErrorBoundary>
+  );
+}
+
+export default function ArchiveConfTourneyPage({
+  params,
+}: ArchiveConfTourneyPageProps) {
+  return (
+    <Suspense
+      fallback={
+        <PageLayoutWrapper
+          title="Conference Tournament Projections"
+          isLoading={true}
+        >
+          <BasketballTableSkeleton
+            tableType="standings"
+            rows={12}
+            teamCols={8}
+            showSummaryRows={false}
+          />
+        </PageLayoutWrapper>
+      }
+    >
+      <ConfTourneyPageContent params={params} />
+    </Suspense>
   );
 }

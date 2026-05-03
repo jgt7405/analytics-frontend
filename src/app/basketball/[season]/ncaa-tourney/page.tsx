@@ -22,9 +22,7 @@ interface ArchiveNCAAPageProps {
   };
 }
 
-export default function ArchiveNCAATeamPage({
-  params,
-}: ArchiveNCAAPageProps) {
+function NCAAPageContent({ params }: ArchiveNCAAPageProps) {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -317,5 +315,29 @@ export default function ArchiveNCAATeamPage({
         </div>
       </PageLayoutWrapper>
     </ErrorBoundary>
+  );
+}
+
+export default function ArchiveNCAATeamPage({
+  params,
+}: ArchiveNCAAPageProps) {
+  return (
+    <Suspense
+      fallback={
+        <PageLayoutWrapper
+          title="NCAA Tournament"
+          isLoading={true}
+        >
+          <BasketballTableSkeleton
+            tableType="ncaa"
+            rows={20}
+            teamCols={7}
+            showSummaryRows={false}
+          />
+        </PageLayoutWrapper>
+      }
+    >
+      <NCAAPageContent params={params} />
+    </Suspense>
   );
 }
