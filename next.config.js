@@ -176,7 +176,7 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/basketball/wins",
+        destination: "/football/wins",
         permanent: false,
       },
       {
