@@ -361,7 +361,7 @@ function FootballSeedTable({
             <tr>
               {/* Average Seed Column - Clickable */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "avg_seed" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("avg_seed")}
@@ -387,7 +387,7 @@ function FootballSeedTable({
               {seedColumns.map((seed) => (
                 <th
                   key={`seed-${seed}`}
-                  className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                  className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                     sortColumn === `seed_${seed}` ? "bg-blue-100" : ""
                   } ${isMobile ? "text-xs" : "text-sm"}`}
                   onClick={() =>
@@ -413,7 +413,7 @@ function FootballSeedTable({
 
               {/* In CFP % Column - Clickable */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "cfp_pct" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("cfp_pct")}
@@ -439,7 +439,7 @@ function FootballSeedTable({
 
               {/* First Four Out Column - Clickable */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "first_four_out" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("first_four_out")}
@@ -465,7 +465,7 @@ function FootballSeedTable({
 
               {/* Next Four Out Column - Clickable */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "next_four_out" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("next_four_out")}
@@ -491,7 +491,7 @@ function FootballSeedTable({
 
               {/* Out of Playoffs Column - Clickable */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "out_of_playoffs" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("out_of_playoffs")}
@@ -517,7 +517,7 @@ function FootballSeedTable({
 
               {/* Conference Champion Column - Clickable */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "conf_champ" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("conf_champ")}
@@ -543,7 +543,7 @@ function FootballSeedTable({
 
               {/* At Large Column - Clickable */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "at_large" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("at_large")}
