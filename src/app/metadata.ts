@@ -2,7 +2,7 @@ import { Metadata } from "next";
 
 export const baseMetadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://jthom-analytics.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://jthomanalytics.com"
   ),
   title: {
     default: "JThom Analytics - Sports analytics your eyes will love",
@@ -37,13 +37,9 @@ export const baseMetadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "/",
     siteName: "JThom Analytics",
     title: "JThom Analytics - Sports analytics your eyes will love",
     description:

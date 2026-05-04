@@ -177,7 +177,12 @@ const nextConfig = {
       {
         source: "/",
         destination: "/football/wins",
-        permanent: false,
+        permanent: true,
+      },
+      {
+        source: "/basketball/wins",
+        destination: "/football/wins",
+        permanent: true,
       },
       {
         source: "/sitemap.xml",
