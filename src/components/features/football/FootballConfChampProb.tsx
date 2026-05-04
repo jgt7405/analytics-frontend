@@ -286,7 +286,7 @@ function FootballConfChampProb({
 
               {/* Current Probability Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "current" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("current")}
@@ -314,7 +314,7 @@ function FootballConfChampProb({
 
               {/* What-If Probability Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "whatif" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("whatif")}
@@ -342,7 +342,7 @@ function FootballConfChampProb({
 
               {/* Change Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                   sortColumn === "change" ? "bg-blue-100" : ""
                 } ${isMobile ? "text-xs" : "text-sm"}`}
                 onClick={() => handleColumnClick("change")}
