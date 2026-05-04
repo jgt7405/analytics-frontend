@@ -260,11 +260,13 @@ export default function FootballComparePage() {
                             }`}
                             title={team.team_name}
                           >
-                            <img
-                              src={team.logo_url}
-                              alt={team.team_name}
-                              className="h-8 w-8 object-contain"
-                            />
+                            <div className="flex items-center justify-center bg-white rounded-full border-2 border-white h-8 w-8">
+                              <img
+                                src={team.logo_url}
+                                alt={team.team_name}
+                                className="h-6 w-6 object-contain"
+                              />
+                            </div>
                             {loadingTeams.has(team.team_name) && (
                               <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-slate-800 bg-opacity-60">
                                 <div className="w-2 h-2 border border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -315,11 +317,13 @@ export default function FootballComparePage() {
                     <span className="text-xs font-bold text-blue-600 w-5 h-5 flex items-center justify-center bg-blue-100 rounded-full">
                       {index + 1}
                     </span>
-                    <img
-                      src={team.teamLogo}
-                      alt={team.teamName}
-                      className="h-6 w-6 object-contain"
-                    />
+                    <div className="flex items-center justify-center bg-white rounded-full border-2 border-white h-7 w-7">
+                      <img
+                        src={team.teamLogo}
+                        alt={team.teamName}
+                        className="h-5 w-5 object-contain"
+                      />
+                    </div>
                     <span className="text-sm font-medium">{team.teamName}</span>
                     <button
                       onClick={() => removeTeam(team.teamName)}

@@ -409,14 +409,21 @@ export default function FootballCompareSchedulesChart({
     return (
       <g key={`team-${teamIndex}`}>
         {/* Team Logo at Top - centered between dividers */}
+        <circle
+          cx={columnX}
+          cy={MARGIN.top - 28}
+          r="26"
+          fill="white"
+          stroke="white"
+          strokeWidth="2"
+        />
         <image
-          x={columnX - 22}
+          x={columnX - 20}
           y={MARGIN.top - 50}
-          width="44"
-          height="44"
+          width="40"
+          height="40"
           href={teams[teamIndex].teamLogo}
           style={{
-            border: "2px solid #e5e7eb",
             borderRadius: "4px",
           }}
         />
@@ -427,7 +434,7 @@ export default function FootballCompareSchedulesChart({
           x2={columnX}
           y1={MARGIN.top}
           y2={MARGIN.top + PLOT_HEIGHT}
-          stroke="#374151"
+          stroke="#5a6270"
           strokeWidth={2}
         />
 
@@ -438,7 +445,7 @@ export default function FootballCompareSchedulesChart({
             x2={dividerX - 15}
             y1={MARGIN.top - 50}
             y2={MARGIN.top + PLOT_HEIGHT + 120}
-            stroke="#6b7280"
+            stroke="#4b5563"
             strokeWidth={1.5}
             strokeDasharray="5,5"
           />
@@ -519,20 +526,28 @@ export default function FootballCompareSchedulesChart({
 
               {/* Opponent Logo to the Left */}
               {game.opponentLogo && (
-                <image
-                  x={logoX}
-                  y={game.adjustedY - 12}
-                  width="24"
-                  height="24"
-                  href={game.opponentLogo}
-                  style={{
-                    border: isHovered
-                      ? `2px solid ${TEAL_COLOR}`
-                      : "1px solid #d1d5db",
-                    borderRadius: "4px",
-                    opacity: isHovered ? 1 : 0.7,
-                  }}
-                />
+                <g>
+                  <circle
+                    cx={logoX + 12}
+                    cy={game.adjustedY}
+                    r="14"
+                    fill="white"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    opacity={isHovered ? 1 : 0.8}
+                  />
+                  <image
+                    x={logoX}
+                    y={game.adjustedY - 12}
+                    width="24"
+                    height="24"
+                    href={game.opponentLogo}
+                    style={{
+                      borderRadius: "4px",
+                      opacity: isHovered ? 1 : 0.7,
+                    }}
+                  />
+                </g>
               )}
 
               {/* Game Dot on the Line - at exact percentile position */}
@@ -560,8 +575,8 @@ export default function FootballCompareSchedulesChart({
                     y={game.adjustedY - 55}
                     width="100"
                     height="45"
-                    fill="white"
-                    stroke="#e5e7eb"
+                    fill="#374151"
+                    stroke="#6b7280"
                     strokeWidth="1"
                     rx="4"
                   />
@@ -569,7 +584,7 @@ export default function FootballCompareSchedulesChart({
                     x={columnX}
                     y={game.adjustedY - 40}
                     textAnchor="middle"
-                    className="text-xs fill-gray-700 font-semibold"
+                    className="text-xs fill-gray-100 font-semibold"
                   >
                     {game.opponent}
                   </text>
@@ -577,7 +592,7 @@ export default function FootballCompareSchedulesChart({
                     x={columnX}
                     y={game.adjustedY - 28}
                     textAnchor="middle"
-                    className="text-xs fill-gray-600"
+                    className="text-xs fill-gray-300"
                   >
                     {(game.winProb * 100).toFixed(1)}%
                   </text>
@@ -585,7 +600,7 @@ export default function FootballCompareSchedulesChart({
                     x={columnX}
                     y={game.adjustedY - 16}
                     textAnchor="middle"
-                    className="text-xs fill-gray-600"
+                    className="text-xs fill-gray-300"
                   >
                     {game.status === "W"
                       ? "Win"
@@ -604,7 +619,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 35}
           textAnchor="middle"
-          className="text-xs font-semibold fill-gray-700"
+          className="text-xs font-semibold fill-gray-300"
         >
           {stats.wins}-{stats.losses}
         </text>
@@ -612,7 +627,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 50}
           textAnchor="middle"
-          className="text-xs fill-gray-600"
+          className="text-xs fill-gray-400"
         >
           {stats.expectedWins.toFixed(1)}-
           {(columnGames.length - stats.expectedWins).toFixed(1)}
@@ -623,10 +638,10 @@ export default function FootballCompareSchedulesChart({
           textAnchor="middle"
           className={`text-xs font-medium ${
             stats.twv > 0
-              ? "fill-green-600"
+              ? "fill-green-400"
               : stats.twv < 0
-                ? "fill-red-600"
-                : "fill-gray-600"
+                ? "fill-red-400"
+                : "fill-gray-400"
           }`}
         >
           {stats.twv > 0 ? "+" : ""}
@@ -640,7 +655,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 35}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-600"
+              className="text-xs font-medium fill-gray-400"
             >
               Record:
             </text>
@@ -648,7 +663,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 50}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-600"
+              className="text-xs font-medium fill-gray-400"
             >
               #12 Fcst:
             </text>
@@ -656,7 +671,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 65}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-600"
+              className="text-xs font-medium fill-gray-400"
             >
               TWV:
             </text>
@@ -730,7 +745,7 @@ export default function FootballCompareSchedulesChart({
           height={CHART_HEIGHT + 120}
           className="border border-gray-200 dark:border-gray-700 rounded"
         >
-          <rect width={CHART_WIDTH} height={CHART_HEIGHT + 120} fill="white" />
+          <rect width={CHART_WIDTH} height={CHART_HEIGHT + 120} fill="#1a1f2e" />
 
           {/* Grid Lines */}
           {percentiles.map((percentile) => {
@@ -742,14 +757,14 @@ export default function FootballCompareSchedulesChart({
                   x2={MARGIN.left + PLOT_WIDTH}
                   y1={y}
                   y2={y}
-                  stroke="#e5e7eb"
+                  stroke="#4b5563"
                   strokeWidth={1}
                 />
                 <text
                   x={MARGIN.left - 10}
                   y={y + 4}
                   textAnchor="end"
-                  className="text-xs fill-gray-600"
+                  className="text-xs fill-gray-400"
                 >
                   {percentile.percentile}%
                 </text>
@@ -757,7 +772,7 @@ export default function FootballCompareSchedulesChart({
                   x={MARGIN.left + PLOT_WIDTH + 10}
                   y={y + 4}
                   textAnchor="start"
-                  className="text-xs fill-gray-600"
+                  className="text-xs fill-gray-400"
                 >
                   {(percentile.value * 100).toFixed(0)}%
                 </text>
@@ -771,7 +786,7 @@ export default function FootballCompareSchedulesChart({
             y={MARGIN.top + PLOT_HEIGHT / 2}
             textAnchor="middle"
             transform={`rotate(-90, ${MARGIN.left - 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-            className="text-sm fill-gray-700 font-medium"
+            className="text-sm fill-gray-300 font-medium"
           >
             Difficulty Percentile
           </text>
@@ -782,7 +797,7 @@ export default function FootballCompareSchedulesChart({
             y={MARGIN.top + PLOT_HEIGHT / 2}
             textAnchor="middle"
             transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-            className="text-sm fill-gray-700 font-medium"
+            className="text-sm fill-gray-300 font-medium"
           >
             Win Probability for #12 Rated Team
           </text>
