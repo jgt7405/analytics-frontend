@@ -12,9 +12,9 @@ export default function HomePage() {
   useEffect(() => {
     console.log("🔄 HomePage useEffect triggered");
     console.log("📍 Current location:", window.location.href);
-    console.log("🎯 About to redirect to /basketball/home");
+    console.log("🎯 About to redirect to /football/wins");
 
-    router.replace("/basketball/home");
+    router.replace("/football/wins");
 
     // Add a timeout to check if redirect happened
     setTimeout(() => {
