@@ -204,7 +204,7 @@ function FootballSeedTable({
 
   // Get yellow color for First/Next Four Out cells
   const getOutColor = (value: number) => {
-    if (value === 0) return { backgroundColor: "white", color: "transparent" };
+    if (value === 0) return { backgroundColor: "var(--bg-primary)", color: "transparent" };
     const white = [255, 255, 255];
     const yellow = [255, 230, 113];
 

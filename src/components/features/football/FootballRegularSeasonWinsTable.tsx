@@ -97,7 +97,7 @@ function FootballRegularSeasonWinsTable({
                 minWidth: firstColWidth,
                 maxWidth: firstColWidth,
                 height: headerHeight,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderBottom: "2px solid #d1d5db",
               }}
             >
@@ -106,13 +106,15 @@ function FootballRegularSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <th
                 key={`header-${team.team_id}-${team.team_name}-${index}`}
-                className={`text-center font-normal px-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 border-b-2 border-b-gray-300 dark:border-b-gray-600 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`text-center font-normal px-1 bg-gray-50 dark:bg-slate-800 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
                   height: headerHeight,
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
+                  borderBottom: "2px solid var(--border-color)",
                 }}
               >
                 <div className="flex flex-col items-center gap-1">
@@ -140,9 +142,9 @@ function FootballRegularSeasonWinsTable({
                   height: cellHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 {wins}
@@ -161,7 +163,7 @@ function FootballRegularSeasonWinsTable({
                       width: teamColWidth,
                       minWidth: teamColWidth,
                       maxWidth: teamColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       backgroundColor: colorStyle.backgroundColor,
@@ -188,7 +190,7 @@ function FootballRegularSeasonWinsTable({
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "2px solid #d1d5db",
               }}
             >
@@ -197,11 +199,13 @@ function FootballRegularSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_id}-${team.team_name}-avg-reg-${index}`}
-                className={`text-center font-medium bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 border-t-2 border-t-gray-300 dark:border-t-gray-600 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`text-center font-medium bg-gray-50 dark:bg-slate-800 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
+                  borderTop: "2px solid var(--border-color)",
                 }}
               >
                 {(team.avg_reg_season_wins || 0).toFixed(1)}
@@ -218,7 +222,7 @@ function FootballRegularSeasonWinsTable({
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "none",
               }}
             >
@@ -227,10 +231,11 @@ function FootballRegularSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_id}-${team.team_name}-sag12-reg-${index}`}
-                className={`text-center font-medium bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`text-center font-medium bg-gray-50 dark:bg-slate-800 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -248,7 +253,7 @@ function FootballRegularSeasonWinsTable({
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "none",
               }}
             >
@@ -257,10 +262,11 @@ function FootballRegularSeasonWinsTable({
             {sortedTeams.map((team, index) => (
               <td
                 key={`${team.team_id}-${team.team_name}-twv-reg-${index}`}
-                className={`text-center font-medium bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`text-center font-medium bg-gray-50 dark:bg-slate-800 ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
                   height: summaryRowHeight,
                   width: teamColWidth,
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -278,7 +284,7 @@ function FootballRegularSeasonWinsTable({
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "none",
               }}
             >
@@ -290,10 +296,11 @@ function FootballRegularSeasonWinsTable({
               return (
                 <td
                   key={`${team.team_id}-${team.team_name}-curr-record-${index}`}
-                  className={`text-center font-medium bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={`text-center font-medium bg-gray-50 dark:bg-slate-800 ${isMobile ? "text-xs" : "text-sm"}`}
                   style={{
                     height: summaryRowHeight,
                     width: teamColWidth,
+                    border: "1px solid var(--border-color)",
                     borderLeft: "none",
                   }}
                 >

@@ -55,6 +55,11 @@ export default function BasketballTeamsPage() {
   const [teamsData, setTeamsData] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
 
   useEffect(() => {
     trackEvent({
@@ -156,17 +161,14 @@ export default function BasketballTeamsPage() {
   const TeamCard = ({ team }: { team: Team }) => (
     <div
       onClick={() => handleTeamClick(team.team_name)}
+      className="bg-white dark:bg-slate-800 rounded-lg cursor-pointer transition duration-200 h-full"
       style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         padding: isMobile ? "8px" : "12px",
-        backgroundColor: "white",
-        borderRadius: "8px",
-        boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-        cursor: "pointer",
+        boxShadow: isDark ? "0 2px 5px rgba(0,0,0,0.3)" : "0 2px 5px rgba(0,0,0,0.1)",
         transition: "transform 0.2s, box-shadow 0.2s",
-        height: "100%",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-2px)";
@@ -189,7 +191,7 @@ export default function BasketballTeamsPage() {
           textAlign: "center",
           fontSize: isMobile ? "12px" : "14px",
           fontWeight: "600",
-          color: team.primary_color || "#1f2937",
+          color: team.primary_color || (isDark ? "#f1f5f9" : "#1f2937"),
           lineHeight: "1.2",
         }}
       >
@@ -209,7 +211,7 @@ export default function BasketballTeamsPage() {
           <div
             style={{
               fontSize: isMobile ? "10px" : "11px",
-              color: "#9ca3af",
+              color: isDark ? "#9ca3af" : "#9ca3af",
             }}
           >
             Overall
@@ -218,6 +220,7 @@ export default function BasketballTeamsPage() {
             style={{
               fontSize: isMobile ? "11px" : "12px",
               fontWeight: "bold",
+              color: isDark ? "#f1f5f9" : "#1f2937",
             }}
           >
             {team.actual_total_wins}-{team.actual_total_losses}
@@ -228,7 +231,7 @@ export default function BasketballTeamsPage() {
           <div
             style={{
               fontSize: isMobile ? "10px" : "11px",
-              color: "#9ca3af",
+              color: isDark ? "#9ca3af" : "#9ca3af",
             }}
           >
             Conference
@@ -237,6 +240,7 @@ export default function BasketballTeamsPage() {
             style={{
               fontSize: isMobile ? "11px" : "12px",
               fontWeight: "bold",
+              color: isDark ? "#f1f5f9" : "#1f2937",
             }}
           >
             {team.actual_conference_wins}-{team.actual_conference_losses}
@@ -247,7 +251,7 @@ export default function BasketballTeamsPage() {
           <div
             style={{
               fontSize: isMobile ? "10px" : "11px",
-              color: "#9ca3af",
+              color: isDark ? "#9ca3af" : "#9ca3af",
             }}
           >
             NCAA Bid
@@ -256,6 +260,7 @@ export default function BasketballTeamsPage() {
             style={{
               fontSize: isMobile ? "11px" : "12px",
               fontWeight: "bold",
+              color: isDark ? "#f1f5f9" : "#1f2937",
             }}
           >
             {formatBidPct(team.tournament_bid_pct)}

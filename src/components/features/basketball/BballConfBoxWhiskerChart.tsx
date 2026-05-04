@@ -37,12 +37,13 @@ function ConferenceLogo({
   size?: number;
 }) {
   const [imageError, setImageError] = useState(false);
+  const circleSize = size + 6;
 
   if (!logoUrl || imageError) {
     return (
       <div
-        className="flex items-center justify-center bg-gray-200 rounded text-xs font-bold text-gray-600 dark:text-gray-400"
-        style={{ width: size, height: size }}
+        className="flex items-center justify-center bg-white rounded-full text-xs font-bold text-gray-600 dark:text-gray-400"
+        style={{ width: circleSize, height: circleSize }}
       >
         {conferenceName.substring(0, 3).toUpperCase()}
       </div>
@@ -50,21 +51,20 @@ function ConferenceLogo({
   }
 
   return (
-    <Image
-      src={logoUrl}
-      alt={conferenceName}
-      width={size}
-      height={size}
-      className="object-contain rounded"
-      onError={() => setImageError(true)}
-    />
+    <div
+      className="flex items-center justify-center bg-white rounded-full"
+      style={{ width: circleSize, height: circleSize }}
+    >
+      <Image
+        src={logoUrl}
+        alt={conferenceName}
+        width={size}
+        height={size}
+        className="object-contain rounded-full"
+        onError={() => setImageError(true)}
+      />
+    </div>
   );
-}
-
-function adjustColorIfWhite(color: string): string {
-  if (!color) return "#000000";
-  const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
-  return white.includes(color.toLowerCase()) ? "#000000" : color;
 }
 
 export default function BballConfBoxWhiskerChart({
@@ -73,10 +73,43 @@ export default function BballConfBoxWhiskerChart({
 }: BballConfBoxWhiskerChartProps) {
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
   }, []);
+
+  const adjustColorIfWhite = (color: string): string => {
+    if (!color) return isDark ? "#ffffff" : "#000000";
+
+    const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
+    const black = ["#000000", "#000", "black", "rgb(0,0,0)"];
+
+    if (white.includes(color.toLowerCase())) {
+      return isDark ? "#ffffff" : "#000000";
+    }
+
+    if (black.includes(color.toLowerCase())) {
+      return isDark ? "#ffffff" : "#000000";
+    }
+
+    // Check if color is a dark hex color
+    if (color.startsWith("#")) {
+      const hex = color.replace("#", "");
+      if (hex.length === 6 || hex.length === 3) {
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        if (brightness < 100) {
+          return isDark ? "#ffffff" : color;
+        }
+      }
+    }
+
+    return color;
+  };
 
   const validConferences = useMemo(() => {
     if (!conferenceData || !Array.isArray(conferenceData)) {
@@ -241,7 +274,7 @@ export default function BballConfBoxWhiskerChart({
                   className="absolute w-full"
                   style={{
                     top: `${padding.top + scale(tick)}px`,
-                    borderBottom: "1px solid #e5e7eb",
+                    borderBottom: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
                   }}
                 />
               ))}

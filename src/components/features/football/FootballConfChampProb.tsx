@@ -7,7 +7,7 @@ import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useState, useEffect } from "react";
 
 interface ConfChampTeam {
   team_name: string;
@@ -43,6 +43,11 @@ function FootballConfChampProb({
   const router = useRouter();
   const [sortColumn, setSortColumn] = useState<SortColumn>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
 
   const navigateToTeam = (teamName: string) => {
     const path = season
@@ -169,7 +174,7 @@ function FootballConfChampProb({
 
   // Get TWV-style color for change cells (matches TWV table exactly)
   const getChangeCellColor = (change: number) => {
-    if (change === 0) return { backgroundColor: "white", color: "black" };
+    if (change === 0) return { backgroundColor: isDark ? "#1a1f2e" : "white", color: isDark ? "transparent" : "black" };
 
     const blue = [24, 98, 123]; // Dark blue for positive values
     const white = [255, 255, 255]; // White baseline
@@ -465,7 +470,7 @@ function FootballConfChampProb({
                     borderLeft: "none",
                     ...(hasCalculated
                       ? getCellColor(team.whatIfProb)
-                      : { backgroundColor: "white", color: "transparent" }),
+                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
                   }}
                 >
                   <div
@@ -490,7 +495,7 @@ function FootballConfChampProb({
                     borderLeft: "none",
                     ...(hasCalculated
                       ? getChangeCellColor(team.change)
-                      : { backgroundColor: "white", color: "transparent" }),
+                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
                   }}
                 >
                   <div

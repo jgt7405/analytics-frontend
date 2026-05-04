@@ -17,6 +17,7 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
   const router = useRouter();
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   const sortedTeams = useMemo(
     () =>
@@ -29,6 +30,7 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
 
   useEffect(() => {
     setMounted(true);
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
   }, []);
 
   // Safe number conversion with NaN checking
@@ -38,9 +40,23 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
   };
 
   const adjustColorIfWhite = (color: string) => {
-    if (!color) return "#000000";
+    if (!color) return isDark ? "#e2e8f0" : "#000000";
     const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
-    return white.includes(color.toLowerCase()) ? "#000000" : color;
+    if (white.includes(color.toLowerCase())) {
+      return isDark ? "#e2e8f0" : "#000000";
+    }
+    // Check for very dark colors in dark mode
+    if (isDark && color.startsWith("#")) {
+      const hex = color.substring(1);
+      if (hex.length === 6) {
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        if (brightness < 50) return "#e2e8f0";
+      }
+    }
+    return color;
   };
 
   const navigateToTeam = (teamName: string) => {
@@ -167,7 +183,7 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
                 className="absolute w-full"
                 style={{
                   top: `${scale(tick)}px`,
-                  borderBottom: "1px solid #e5e7eb",
+                  borderBottom: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
                 }}
               />
             ))}
@@ -268,7 +284,7 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
                       top: medianPos - lineThickness / 2,
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: team.secondary_color || "#64748b", // <-- Apply the same function
+                      backgroundColor: adjustColorIfWhite(team.secondary_color || "#64748b"),
                     }}
                   />
 

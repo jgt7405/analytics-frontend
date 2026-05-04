@@ -1,0 +1,8 @@
+/* Header component styles */
+
+@media (prefers-color-scheme: dark) {
+  .headerLogo {
+    /* Invert and adjust colors to make teal appear in dark mode */
+    filter: invert(1) hue-rotate(180deg) saturate(1.2);
+  }
+}

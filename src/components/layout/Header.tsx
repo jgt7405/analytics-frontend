@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Navigation from "./Navigation";
+import styles from "./Header.module.css";
 
 function Header() {
   const pathname = usePathname();
@@ -29,7 +30,7 @@ function Header() {
             alt="JThom Analytics Logo"
             width={100}
             height={40}
-            className="header-logo dark:invert"
+            className={styles.headerLogo}
             style={{ width: "100px", height: "auto", marginTop: "4px" }}
             priority={true}
             sizes="100px"

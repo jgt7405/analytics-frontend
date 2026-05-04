@@ -118,8 +118,8 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                 height: headerHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
-                borderRight: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Conference Wins
@@ -133,7 +133,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -168,9 +168,9 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                   height: cellHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 {wins}
@@ -190,7 +190,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                       width: teamColWidth,
                       minWidth: teamColWidth,
                       maxWidth: teamColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       backgroundColor: colorStyle.backgroundColor,
@@ -219,9 +219,9 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "2px solid #4b5563",
-                borderRight: "1px solid #e5e7eb",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Avg Conf Wins
@@ -235,7 +235,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "2px solid #4b5563",
                   borderLeft: "none",
                   fontSize: isMobile ? "12px" : "14px",
@@ -256,9 +256,9 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "none",
-                borderRight: "1px solid #e5e7eb",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Curr Conf Record
@@ -275,7 +275,7 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                     width: teamColWidth,
                     minWidth: teamColWidth,
                     maxWidth: teamColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     fontSize: isMobile ? "12px" : "14px",

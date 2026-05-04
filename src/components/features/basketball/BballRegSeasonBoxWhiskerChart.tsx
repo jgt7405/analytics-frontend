@@ -20,6 +20,7 @@ export default function BballRegSeasonBoxWhiskerChart({
   const router = useRouter();
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   // Sort teams by average regular season wins (highest first)
   const sortedTeams = useMemo(
@@ -32,12 +33,38 @@ export default function BballRegSeasonBoxWhiskerChart({
 
   useEffect(() => {
     setMounted(true);
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
   }, []);
 
   const adjustColorIfWhite = (color: string) => {
-    if (!color) return "#000000";
+    if (!color) return isDark ? "#ffffff" : "#000000";
+
     const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
-    return white.includes(color.toLowerCase()) ? "#000000" : color;
+    const black = ["#000000", "#000", "black", "rgb(0,0,0)"];
+
+    if (white.includes(color.toLowerCase())) {
+      return isDark ? "#ffffff" : "#000000";
+    }
+
+    if (black.includes(color.toLowerCase())) {
+      return isDark ? "#ffffff" : "#000000";
+    }
+
+    // Check if color is a dark hex color
+    if (color.startsWith("#")) {
+      const hex = color.replace("#", "");
+      if (hex.length === 6 || hex.length === 3) {
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        if (brightness < 100) {
+          return isDark ? "#ffffff" : color;
+        }
+      }
+    }
+
+    return color;
   };
 
   const navigateToTeam = (teamName: string) => {
@@ -158,7 +185,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                 className="absolute w-full"
                 style={{
                   top: `${scale(tick)}px`,
-                  borderBottom: "1px solid #e5e7eb",
+                  borderBottom: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
                 }}
               />
             ))}
@@ -254,7 +281,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                       top: medianPos,
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: secondaryColor,
+                      backgroundColor: adjustColorIfWhite(secondaryColor),
                     }}
                   />
 

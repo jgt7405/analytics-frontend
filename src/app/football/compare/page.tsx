@@ -217,7 +217,7 @@ export default function FootballComparePage() {
       <ErrorBoundary level="page">
         <div className="space-y-6 p-4">
           {/* Team Selection Grid */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-lg font-semibold mb-6">Select Teams</h2>
 
             {/* Horizontally scrollable conference sections */}
@@ -234,12 +234,12 @@ export default function FootballComparePage() {
                       className="flex flex-col items-center"
                     >
                       {/* Conference Label */}
-                      <div className="text-sm font-semibold text-gray-700 mb-3 text-center h-10 flex items-center">
+                      <div className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3 text-center h-10 flex items-center">
                         {conference}
                       </div>
 
                       {/* Teams Grid - 3 across with minimal gap */}
-                      <div className="grid grid-cols-3 gap-1 border border-gray-300 p-2 bg-gray-50">
+                      <div className="grid grid-cols-3 gap-1 border border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-slate-900">
                         {teamsInConf.map((team) => (
                           <button
                             key={team.team_name}
@@ -248,10 +248,10 @@ export default function FootballComparePage() {
                               selectedTeams.length >= MAX_SELECTED_TEAMS &&
                               !selectedTeamNames.has(team.team_name)
                             }
-                            className={`relative flex items-center justify-center h-10 w-10 border border-gray-400 transition-all ${
+                            className={`relative flex items-center justify-center h-10 w-10 border border-gray-400 dark:border-gray-600 transition-all ${
                               selectedTeamNames.has(team.team_name)
                                 ? "ring-2 ring-blue-500 border-blue-500"
-                                : "bg-white hover:bg-gray-100"
+                                : "bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700"
                             } ${
                               selectedTeams.length >= MAX_SELECTED_TEAMS &&
                               !selectedTeamNames.has(team.team_name)
@@ -266,7 +266,7 @@ export default function FootballComparePage() {
                               className="h-8 w-8 object-contain"
                             />
                             {loadingTeams.has(team.team_name) && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-60">
+                              <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-slate-800 bg-opacity-60">
                                 <div className="w-2 h-2 border border-blue-600 border-t-transparent rounded-full animate-spin" />
                               </div>
                             )}
@@ -282,7 +282,7 @@ export default function FootballComparePage() {
 
           {/* Selected Teams Section */}
           {selectedTeams.length > 0 && (
-            <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
+            <div className="bg-blue-50 dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">
                   Selected Teams ({selectedTeams.length}/{MAX_SELECTED_TEAMS})
@@ -310,7 +310,7 @@ export default function FootballComparePage() {
                 {selectedTeams.map((team, index) => (
                   <div
                     key={team.teamName}
-                    className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border-2 border-blue-600 shadow-sm"
+                    className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-2 rounded-lg border-2 border-blue-600 dark:border-blue-400 shadow-sm"
                   >
                     <span className="text-xs font-bold text-blue-600 w-5 h-5 flex items-center justify-center bg-blue-100 rounded-full">
                       {index + 1}
@@ -335,7 +335,7 @@ export default function FootballComparePage() {
 
           {/* Schedule Comparison Chart */}
           {selectedTeams.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-auto">
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-auto">
               <FootballCompareSchedulesChart teams={selectedTeams} />
             </div>
           )}

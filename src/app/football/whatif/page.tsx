@@ -245,11 +245,11 @@ export default function WhatIfCalculator() {
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
       <div className="mb-4 page-header">
-        <h1 className="text-xl font-normal text-gray-500">
+        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-400">
           What If Calculator
         </h1>
       </div>
-      <p className="text-gray-600 mb-6 text-sm">
+      <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
         See how game outcomes impact team's probabilities to make conference
         championship game.
       </p>
@@ -257,13 +257,13 @@ export default function WhatIfCalculator() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Conference & Game Selection */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow p-6 sticky top-6 flex flex-col h-fit max-h-[calc(100vh-120px)]">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 sticky top-6 flex flex-col h-fit max-h-[calc(100vh-120px)]">
             {/* Top Section: Conference Dropdown */}
             <div className="mb-4">
               <select
                 value={selectedConference}
                 onChange={handleConferenceChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                 style={{ "--tw-ring-color": TEAL_COLOR } as React.CSSProperties}
                 disabled={isLoadingConferences}
               >
@@ -278,7 +278,7 @@ export default function WhatIfCalculator() {
 
             <div className="mb-3 flex items-baseline gap-2">
               <h2 className="text-xl font-semibold">Select Games</h2>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 {gameSelections.size}{" "}
                 {gameSelections.size === 1 ? "game" : "games"} selected
               </p>
@@ -293,18 +293,18 @@ export default function WhatIfCalculator() {
             {/* Future Games List - Scrollable */}
             <div className="flex-1 overflow-y-auto mb-4 pr-2">
               {!selectedConference && (
-                <p className="text-gray-500 text-center py-8 text-sm">
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8 text-sm">
                   Select a conference to view games
                 </p>
               )}
               {selectedConference && isLoadingData && (
-                <p className="text-gray-500 text-center py-8 text-sm">
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8 text-sm">
                   Loading games...
                 </p>
               )}
               {selectedConference && !isLoadingData && games.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 mb-2 text-sm">
+                  <p className="text-gray-500 dark:text-gray-400 mb-2 text-sm">
                     No future games available
                   </p>
                   <p className="text-xs text-gray-400">
@@ -320,7 +320,7 @@ export default function WhatIfCalculator() {
                     .sort()
                     .map((date) => (
                       <div key={date}>
-                        <div className="text-xs font-semibold text-gray-600 mb-1 px-1">
+                        <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 px-1">
                           {date}
                         </div>
 
@@ -343,8 +343,8 @@ export default function WhatIfCalculator() {
                                   gap: "4px",
                                   padding: "4px 2px",
                                   borderRadius: "12px",
-                                  border: `${selectedTeam ? "3px" : "2px"} solid ${selectedTeam ? TEAL_COLOR : "#9ca3af"}`,
-                                  backgroundColor: "white",
+                                  border: `${selectedTeam ? "3px" : "2px"} solid ${selectedTeam ? TEAL_COLOR : "#d1d5db"}`,
+                                  backgroundColor: "#1a1f2e",
                                   transition: "all 0.2s",
                                 }}
                                 title={`Game ${game.game_id}: selected=${selectedTeam}`}
@@ -542,7 +542,7 @@ export default function WhatIfCalculator() {
 
         {/* Right Column: Results Table */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-6 flex flex-col h-fit">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 flex flex-col h-fit">
             <div className="mb-4">
               <h2 className="text-xl font-semibold mb-2">
                 What If Results to Play in Conference Championship
@@ -556,13 +556,13 @@ export default function WhatIfCalculator() {
               data-screenshot={isScreenshotMode ? "true" : "false"}
             >
               {!selectedConference ? (
-                <p className="text-gray-500 text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400 text-center py-12">
                   Select a conference to view results
                 </p>
               ) : isLoadingData ? (
-                <p className="text-gray-500 text-center py-12">Loading...</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-12">Loading...</p>
               ) : currentTableData.length === 0 ? (
-                <p className="text-gray-500 text-center py-12">Loading...</p>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-12">Loading...</p>
               ) : (
                 <FootballConfChampProb
                   currentData={currentTableData}
@@ -580,7 +580,7 @@ export default function WhatIfCalculator() {
                     CFP Probability
                   </h3>
                   {isLoadingData ? (
-                    <p className="text-gray-500 text-center py-12">
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-12">
                       Loading...
                     </p>
                   ) : (
@@ -711,7 +711,7 @@ export default function WhatIfCalculator() {
             </div>
 
             {/* Explainer text below results */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <p className="text-xs text-gray-600 mb-4">
                 Probability that teams will finish season as top 2 rating after
                 applying tiebreak scenarios. For selected games, assumes 100%
