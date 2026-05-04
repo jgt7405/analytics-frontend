@@ -183,13 +183,15 @@ function FootballConfDataTable({
               >
                 <div className="flex items-center gap-2">
                   {conf.logo_url && (
-                    <Image
-                      src={conf.logo_url}
-                      alt={`${conf.conference_name} logo`}
-                      width={isMobile ? 20 : 24}
-                      height={isMobile ? 20 : 24}
-                      className="object-contain flex-shrink-0"
-                    />
+                    <div className="flex items-center justify-center bg-white rounded-full border-2 border-white flex-shrink-0" style={{ width: isMobile ? 26 : 32, height: isMobile ? 26 : 32 }}>
+                      <Image
+                        src={conf.logo_url}
+                        alt={`${conf.conference_name} logo`}
+                        width={isMobile ? 20 : 24}
+                        height={isMobile ? 20 : 24}
+                        className="object-contain"
+                      />
+                    </div>
                   )}
                   <span className="truncate">{conf.conference_name}</span>
                 </div>
