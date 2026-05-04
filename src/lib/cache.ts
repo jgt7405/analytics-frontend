@@ -102,12 +102,11 @@ export const queryClientConfig = {
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 10 * 60 * 1000, // Renamed from cacheTime in React Query v5
       retry: (failureCount: number, error: any) =>
-        failureCount < 2 && error.status !== 404,
+        failureCount < 2 && error?.status !== 404,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
-      // Add request deduplication
       refetchInterval: false,
       refetchIntervalInBackground: false,
     },

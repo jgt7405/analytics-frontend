@@ -13,93 +13,40 @@ const ChartSkeleton = () => <div className="h-64 bg-gray-100 dark:bg-slate-700 a
 
 const BasketballTeamRankHistory = dynamic(
   () => import("@/components/features/basketball/BasketballTeamRankHistory"),
-  { ssr: false, loading: ChartSkeleton },
+  { loading: ChartSkeleton },
 );
 const BasketballTeamWinHistory = dynamic(
   () => import("@/components/features/basketball/BasketballTeamWinHistory"),
-  { ssr: false, loading: ChartSkeleton },
+  { loading: ChartSkeleton },
 );
 const BasketballTeamStandingsHistory = dynamic(
   () => import("@/components/features/basketball/BasketballTeamStandingsHistory"),
-  { ssr: false, loading: ChartSkeleton },
+  { loading: ChartSkeleton },
 );
 const BasketballTeamFirstPlaceHistory = dynamic(
   () => import("@/components/features/basketball/BasketballTeamFirstPlaceHistory"),
-  { ssr: false, loading: ChartSkeleton },
+  { loading: ChartSkeleton },
 );
 const BasketballTeamTournamentBidHistory = dynamic(
   () => import("@/components/features/basketball/BasketballTeamTournamentBidHistory"),
-  { ssr: false, loading: ChartSkeleton },
+  { loading: ChartSkeleton },
 );
 const BasketballTeamTournamentProgressionHistory = dynamic(
   () => import("@/components/features/basketball/BasketballTeamTournamentProgressionHistory"),
-  { ssr: false, loading: ChartSkeleton },
+  { loading: ChartSkeleton },
 );
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
+import { useBasketballTeamData } from "@/hooks/useBasketballTeamData";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Download } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
-
-interface WinSeedCountEntry {
-  Wins: number;
-  Seed?: string;
-  Tournament_Status?: string;
-  Count: number;
-}
-
-interface TeamInfo {
-  team_name: string;
-  team_id: string;
-  conference: string;
-  logo_url: string;
-  conf_logo_url?: string;
-  primary_color: string;
-  secondary_color: string;
-  overall_record: string;
-  conference_record: string;
-  tournament_bid_pct?: number;
-  average_seed?: number;
-  kenpom_rank?: number;
-  seed_distribution: Record<string, number>;
-  win_seed_counts: WinSeedCountEntry[];
-}
-
-interface TeamGame {
-  date: string;
-  opponent: string;
-  opponent_logo?: string;
-  location: string;
-  status: string;
-  twv?: number;
-  cwv?: number;
-  kenpom_rank?: number;
-  opp_kp_rank?: number;
-  team_win_prob?: number;
-  kenpom_win_prob?: number;
-  team_points?: number;
-  opp_points?: number;
-}
-
-interface AllScheduleGame {
-  team: string;
-  opponent: string;
-  kenpom_win_prob: number;
-  team_conf: string;
-  status: string;
-}
-
-interface TeamData {
-  team_info: TeamInfo;
-  schedule: TeamGame[];
-  all_schedule_data?: AllScheduleGame[];
-}
+import { useEffect, useState, useMemo, useCallback } from "react";
 
 export default function BasketballTeamPage({
   params,
@@ -111,20 +58,14 @@ export default function BasketballTeamPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const teamname = decodeURIComponent(params.teamname);
 
-  const [teamData, setTeamData] = useState<TeamData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  // Fetch all history data to detect season from data timestamps
+  const { data: teamData, isLoading, error } = useBasketballTeamData(teamname);
   const { data: historyData } = useBasketballTeamAllHistory(teamname);
 
-  // Data-driven season calculation - checks basketball season boundaries
   const currentSeason = useMemo(() => {
-    // First check if we have conf wins history data with timestamps
     if (historyData?.confWins?.data && historyData.confWins.data.length > 0) {
       const maxDate = historyData.confWins.data.reduce((max: string, item) =>
         item.date > max ? item.date : max,
@@ -132,27 +73,20 @@ export default function BasketballTeamPage({
       );
       const [dataYear, dataMonth] = maxDate.split('-').map(Number);
 
-      // Basketball season: Oct 30 - Mar 15 (spans two calendar years)
-      // If data is April-Sep (past the 3/15 boundary), we're in off-season, use completed season
       if (dataMonth >= 4 && dataMonth <= 9) {
         return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
       }
-      // If data is Jan-Mar, season started last year
       if (dataMonth >= 1 && dataMonth <= 3) {
         return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
       }
-      // If data is Oct-Dec, season starts this year
       if (dataMonth >= 10) {
         return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
       }
     }
 
-    // Fallback: check current date
     const today = new Date();
     const month = today.getMonth() + 1;
     const year = today.getFullYear();
-
-    // Before October: use previous year season, October+: use current year season
     return month < 10 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
   }, [historyData]);
 
@@ -161,53 +95,25 @@ export default function BasketballTeamPage({
   }, []);
 
   useEffect(() => {
-    trackEvent({
-      name: "page_view",
-      properties: { page: "basketball-team", team: teamname },
-    });
-  }, [teamname, trackEvent]);
-
-  useEffect(() => {
-    const fetchTeamData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await fetch(
-          `/api/proxy/team/${encodeURIComponent(teamname)}`,
-        );
-
-        if (!response.ok) throw new Error("Failed to load team data");
-
-        const data = await response.json();
-        setTeamData(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load team data",
-        );
-      } finally {
-        setLoading(false);
+    if (mounted) {
+      trackEvent({
+        name: "page_view",
+        properties: { page: "basketball-team", team: teamname },
+      });
+      if (teamData?.team_info?.conference) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("teamConf", encodeURIComponent(teamData.team_info.conference));
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, "", newUrl);
       }
-    };
-
-    fetchTeamData();
-  }, [teamname]);
-
-  // ✅ SINGLE CLEAN EFFECT - Update URL with teamConf when team data loads
-  useEffect(() => {
-    if (teamData?.team_info?.conference && mounted) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("teamConf", encodeURIComponent(teamData.team_info.conference));
-      const newUrl = `${window.location.pathname}?${params.toString()}`;
-      window.history.replaceState({}, "", newUrl);
     }
-  }, [teamData?.team_info?.conference, mounted, searchParams]);
+  }, [teamname, mounted, teamData?.team_info?.conference, trackEvent, searchParams]);
 
-  const navigateToTeam = (targetTeam: string) => {
+  const navigateToTeam = useCallback((targetTeam: string) => {
     if (targetTeam && targetTeam !== teamname) {
       router.push(`/basketball/team/${encodeURIComponent(targetTeam)}`);
     }
-  };
+  }, [teamname, router]);
 
   const formatTournamentPct = (value?: number) => {
     if (value === null || value === undefined) return "-";
@@ -278,7 +184,7 @@ export default function BasketballTeamPage({
     },
   ];
 
-  if (!mounted || loading || !teamData) {
+  if (!mounted || isLoading || !teamData) {
     return (
       <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -293,7 +199,7 @@ export default function BasketballTeamPage({
       <ErrorBoundary level="page">
         <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
           <ErrorMessage
-            message={error}
+            message={error.message || "Failed to load team data"}
             onRetry={() => window.location.reload()}
             retryLabel="Reload Team Data"
           />
@@ -357,7 +263,6 @@ export default function BasketballTeamPage({
                       width={32}
                       height={32}
                       className="h-8 w-auto object-contain"
-                      unoptimized
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                       }}
