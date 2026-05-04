@@ -98,6 +98,11 @@ export default function FootballCompareSchedulesChart({
     useState<ComparisonFilter>("all_fbs");
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
 
   const CHART_HEIGHT = 650;
   const MARGIN = { top: 60, right: 100, bottom: 40, left: 100 };
@@ -434,7 +439,7 @@ export default function FootballCompareSchedulesChart({
           x2={columnX}
           y1={MARGIN.top}
           y2={MARGIN.top + PLOT_HEIGHT}
-          stroke="#5a6270"
+          stroke={isDark ? "#5a6270" : "#d1d5db"}
           strokeWidth={2}
         />
 
@@ -445,7 +450,7 @@ export default function FootballCompareSchedulesChart({
             x2={dividerX - 15}
             y1={MARGIN.top - 50}
             y2={MARGIN.top + PLOT_HEIGHT + 120}
-            stroke="#4b5563"
+            stroke={isDark ? "#4b5563" : "#e5e7eb"}
             strokeWidth={1.5}
             strokeDasharray="5,5"
           />
@@ -575,8 +580,8 @@ export default function FootballCompareSchedulesChart({
                     y={game.adjustedY - 55}
                     width="100"
                     height="45"
-                    fill="#374151"
-                    stroke="#6b7280"
+                    fill={isDark ? "#374151" : "white"}
+                    stroke={isDark ? "#6b7280" : "#e5e7eb"}
                     strokeWidth="1"
                     rx="4"
                   />
@@ -584,7 +589,7 @@ export default function FootballCompareSchedulesChart({
                     x={columnX}
                     y={game.adjustedY - 40}
                     textAnchor="middle"
-                    className="text-xs fill-gray-100 font-semibold"
+                    className={isDark ? "text-xs fill-gray-100 font-semibold" : "text-xs fill-gray-700 font-semibold"}
                   >
                     {game.opponent}
                   </text>
@@ -592,7 +597,7 @@ export default function FootballCompareSchedulesChart({
                     x={columnX}
                     y={game.adjustedY - 28}
                     textAnchor="middle"
-                    className="text-xs fill-gray-300"
+                    className={isDark ? "text-xs fill-gray-300" : "text-xs fill-gray-600"}
                   >
                     {(game.winProb * 100).toFixed(1)}%
                   </text>
@@ -600,7 +605,7 @@ export default function FootballCompareSchedulesChart({
                     x={columnX}
                     y={game.adjustedY - 16}
                     textAnchor="middle"
-                    className="text-xs fill-gray-300"
+                    className={isDark ? "text-xs fill-gray-300" : "text-xs fill-gray-600"}
                   >
                     {game.status === "W"
                       ? "Win"
@@ -619,7 +624,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 35}
           textAnchor="middle"
-          className="text-xs font-semibold fill-gray-300"
+          className={isDark ? "text-xs font-semibold fill-gray-300" : "text-xs font-semibold fill-gray-700"}
         >
           {stats.wins}-{stats.losses}
         </text>
@@ -627,7 +632,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 50}
           textAnchor="middle"
-          className="text-xs fill-gray-400"
+          className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
         >
           {stats.expectedWins.toFixed(1)}-
           {(columnGames.length - stats.expectedWins).toFixed(1)}
@@ -638,10 +643,10 @@ export default function FootballCompareSchedulesChart({
           textAnchor="middle"
           className={`text-xs font-medium ${
             stats.twv > 0
-              ? "fill-green-400"
+              ? isDark ? "fill-green-400" : "fill-green-600"
               : stats.twv < 0
-                ? "fill-red-400"
-                : "fill-gray-400"
+                ? isDark ? "fill-red-400" : "fill-red-600"
+                : isDark ? "fill-gray-400" : "fill-gray-600"
           }`}
         >
           {stats.twv > 0 ? "+" : ""}
@@ -655,7 +660,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 35}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-400"
+              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
             >
               Record:
             </text>
@@ -663,7 +668,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 50}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-400"
+              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
             >
               #12 Fcst:
             </text>
@@ -671,7 +676,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 65}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-400"
+              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
             >
               TWV:
             </text>
@@ -745,7 +750,7 @@ export default function FootballCompareSchedulesChart({
           height={CHART_HEIGHT + 120}
           className="border border-gray-200 dark:border-gray-700 rounded"
         >
-          <rect width={CHART_WIDTH} height={CHART_HEIGHT + 120} fill="#1a1f2e" />
+          <rect width={CHART_WIDTH} height={CHART_HEIGHT + 120} fill={isDark ? "#1a1f2e" : "white"} />
 
           {/* Grid Lines */}
           {percentiles.map((percentile) => {
@@ -757,14 +762,14 @@ export default function FootballCompareSchedulesChart({
                   x2={MARGIN.left + PLOT_WIDTH}
                   y1={y}
                   y2={y}
-                  stroke="#4b5563"
+                  stroke={isDark ? "#4b5563" : "#e5e7eb"}
                   strokeWidth={1}
                 />
                 <text
                   x={MARGIN.left - 10}
                   y={y + 4}
                   textAnchor="end"
-                  className="text-xs fill-gray-400"
+                  className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
                 >
                   {percentile.percentile}%
                 </text>
@@ -772,7 +777,7 @@ export default function FootballCompareSchedulesChart({
                   x={MARGIN.left + PLOT_WIDTH + 10}
                   y={y + 4}
                   textAnchor="start"
-                  className="text-xs fill-gray-400"
+                  className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
                 >
                   {(percentile.value * 100).toFixed(0)}%
                 </text>
@@ -786,7 +791,7 @@ export default function FootballCompareSchedulesChart({
             y={MARGIN.top + PLOT_HEIGHT / 2}
             textAnchor="middle"
             transform={`rotate(-90, ${MARGIN.left - 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-            className="text-sm fill-gray-300 font-medium"
+            className={isDark ? "text-sm fill-gray-300 font-medium" : "text-sm fill-gray-700 font-medium"}
           >
             Difficulty Percentile
           </text>
@@ -797,7 +802,7 @@ export default function FootballCompareSchedulesChart({
             y={MARGIN.top + PLOT_HEIGHT / 2}
             textAnchor="middle"
             transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-            className="text-sm fill-gray-300 font-medium"
+            className={isDark ? "text-sm fill-gray-300 font-medium" : "text-sm fill-gray-700 font-medium"}
           >
             Win Probability for #12 Rated Team
           </text>

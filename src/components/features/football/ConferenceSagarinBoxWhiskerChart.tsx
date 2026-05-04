@@ -37,13 +37,12 @@ function ConferenceLogo({
   size?: number;
 }) {
   const [imageError, setImageError] = useState(false);
-  const circleSize = size + 6;
 
   if (!logoUrl || imageError) {
     return (
       <div
-        className="flex items-center justify-center bg-white rounded-full text-xs font-bold text-gray-600 dark:text-gray-400"
-        style={{ width: circleSize, height: circleSize }}
+        className="flex items-center justify-center bg-gray-200 dark:bg-white rounded text-xs font-bold text-gray-600 dark:text-gray-400"
+        style={{ width: size, height: size }}
       >
         {conferenceName.substring(0, 3).toUpperCase()}
       </div>
@@ -51,19 +50,14 @@ function ConferenceLogo({
   }
 
   return (
-    <div
-      className="flex items-center justify-center bg-white rounded-full border-2 border-white"
-      style={{ width: circleSize, height: circleSize }}
-    >
-      <Image
-        src={logoUrl}
-        alt={conferenceName}
-        width={size}
-        height={size}
-        className="object-contain rounded-full"
-        onError={() => setImageError(true)}
-      />
-    </div>
+    <Image
+      src={logoUrl}
+      alt={conferenceName}
+      width={size}
+      height={size}
+      className="object-contain rounded"
+      onError={() => setImageError(true)}
+    />
   );
 }
 

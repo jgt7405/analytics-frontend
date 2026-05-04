@@ -37,7 +37,12 @@ export default function WhatIfCalculator() {
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
   const [exportStatus, setExportStatus] = useState("");
+  const [isDark, setIsDark] = useState(false);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
 
   // Export modal state
   const exportModal = useExportModal();
@@ -343,8 +348,8 @@ export default function WhatIfCalculator() {
                                   gap: "4px",
                                   padding: "4px 2px",
                                   borderRadius: "12px",
-                                  border: `${selectedTeam ? "3px" : "2px"} solid ${selectedTeam ? TEAL_COLOR : "#d1d5db"}`,
-                                  backgroundColor: "#1a1f2e",
+                                  border: `${selectedTeam ? "3px" : "2px"} solid ${selectedTeam ? TEAL_COLOR : isDark ? "#374151" : "#d1d5db"}`,
+                                  backgroundColor: isDark ? "#1a1f2e" : "#ffffff",
                                   transition: "all 0.2s",
                                 }}
                                 title={`Game ${game.game_id}: selected=${selectedTeam}`}
@@ -403,7 +408,7 @@ export default function WhatIfCalculator() {
                                           justifyContent: "center",
                                           fontSize: "10px",
                                           fontWeight: "bold",
-                                          color: "#374151",
+                                          color: isDark ? "#9ca3af" : "#374151",
                                         }}
                                       >
                                         {game.away_team
@@ -416,7 +421,7 @@ export default function WhatIfCalculator() {
                                     style={{
                                       fontSize: "10px",
                                       fontWeight: "500",
-                                      color: "#4b5563",
+                                      color: isDark ? "#d1d5db" : "#4b5563",
                                     }}
                                   >
                                     {(game.away_probability * 100).toFixed(0)}%
@@ -427,7 +432,7 @@ export default function WhatIfCalculator() {
                                   style={{
                                     fontSize: "10px",
                                     fontWeight: "bold",
-                                    color: "#9ca3af",
+                                    color: isDark ? "#6b7280" : "#9ca3af",
                                   }}
                                 >
                                   {separator}
@@ -487,7 +492,7 @@ export default function WhatIfCalculator() {
                                           justifyContent: "center",
                                           fontSize: "10px",
                                           fontWeight: "bold",
-                                          color: "#374151",
+                                          color: isDark ? "#9ca3af" : "#374151",
                                         }}
                                       >
                                         {game.home_team
@@ -500,7 +505,7 @@ export default function WhatIfCalculator() {
                                     style={{
                                       fontSize: "10px",
                                       fontWeight: "500",
-                                      color: "#4b5563",
+                                      color: isDark ? "#d1d5db" : "#4b5563",
                                     }}
                                   >
                                     {(game.home_probability * 100).toFixed(0)}%
