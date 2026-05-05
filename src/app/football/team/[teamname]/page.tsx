@@ -290,7 +290,8 @@ export default function FootballTeamPage({
                 {/* Mobile Stats */}
                 <div className="flex gap-2 -mt-2 mx-0">
                   <div
-                    className="bg-white dark:bg-slate-800 p-3 rounded-lg flex-1 border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 p-3 rounded-lg flex-1"
+                    style={{ border: "1px solid #d1d5db" }}
                   >
                     <div className="flex gap-3">
                       <div className="text-center flex-1">
@@ -313,7 +314,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 p-3 rounded-lg flex-1 border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 p-3 rounded-lg flex-1"
+                    style={{ border: "1px solid #d1d5db" }}
                   >
                     <div className="flex gap-3">
                       <div className="text-center flex-1">
@@ -341,7 +343,8 @@ export default function FootballTeamPage({
 
               {/* Mobile Schedule */}
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg mx-2 relative football-team-schedule border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg mx-2 relative football-team-schedule"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <div className="px-2 py-1 border-b border-gray-200 -mt-4 relative">
                   <h2 className="text-base font-semibold">Team Schedule</h2>
@@ -376,7 +379,8 @@ export default function FootballTeamPage({
 
               {/* Mobile Schedule Chart */}
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 relative football-schedule-chart border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 relative football-schedule-chart"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <div className="relative">
                   <h2 className="text-base font-semibold mb-1 -mt-2">
@@ -410,7 +414,8 @@ export default function FootballTeamPage({
 
               {/* Mobile Win Values */}
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-win-values border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-win-values"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   Win Values Over Time
@@ -423,7 +428,8 @@ export default function FootballTeamPage({
               </div>
               {/* Mobile Schedule Difficulty */}
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-schedule-difficulty border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-schedule-difficulty"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   Schedule Difficulty
@@ -452,7 +458,8 @@ export default function FootballTeamPage({
 
               {/* Mobile CFP Seed Projections */}
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-seed-projections border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-seed-projections"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   CFP Seed Projections
@@ -467,7 +474,8 @@ export default function FootballTeamPage({
 
               {/* Mobile History Components */}
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-rank-history border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-rank-history"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-lg font-semibold mb-1 -mt-2">
                   Rating Rank History
@@ -482,7 +490,8 @@ export default function FootballTeamPage({
               </div>
 
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-win-history border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-win-history"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   Projected Wins History
@@ -497,7 +506,8 @@ export default function FootballTeamPage({
               </div>
 
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-standings-history border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-standings-history"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   Projected Standings History
@@ -512,7 +522,8 @@ export default function FootballTeamPage({
               </div>
 
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-first-place-history border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-first-place-history"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   First Place Probability History
@@ -527,7 +538,8 @@ export default function FootballTeamPage({
               </div>
 
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-cfp-bid-history border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-cfp-bid-history"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   CFP Bid History
@@ -541,7 +553,8 @@ export default function FootballTeamPage({
               </div>
 
               <div
-                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-cfp-progression-history border border-gray-300 dark:border-gray-700"
+                className="bg-white dark:bg-slate-800 rounded-lg p-3 football-cfp-progression-history"
+                style={{ border: "1px solid #d1d5db" }}
               >
                 <h2 className="text-base font-semibold mb-1 -mt-2">
                   CFP Progression History
@@ -585,7 +598,8 @@ export default function FootballTeamPage({
 
                   <div className="flex gap-4">
                     <div
-                      className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-gray-300 dark:border-gray-700"
+                      className="bg-white dark:bg-slate-800 p-4 rounded-lg"
+                      style={{ border: "1px solid #d1d5db" }}
                     >
                       <div className="flex gap-4">
                         <div className="text-center">
@@ -608,7 +622,8 @@ export default function FootballTeamPage({
                     </div>
 
                     <div
-                      className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-gray-300 dark:border-gray-700"
+                      className="bg-white dark:bg-slate-800 p-4 rounded-lg"
+                      style={{ border: "1px solid #d1d5db" }}
                     >
                       <div className="flex gap-4">
                         <div className="text-center">
@@ -657,8 +672,8 @@ export default function FootballTeamPage({
                 {/* Left Column - Schedules */}
                 <div className="space-y-3">
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg relative football-team-schedule border border-gray-300 dark:border-gray-700"
-                    style={{ minWidth: "350px" }}
+                    className="bg-white dark:bg-slate-800 rounded-lg relative football-team-schedule"
+                    style={{ minWidth: "350px", border: "1px solid #d1d5db" }}
                   >
                     <div className="pt-0 px-3 pb-3 border-b border-gray-200 -mt-2 relative">
                       <h2 className="text-lg font-semibold">Team Schedule</h2>
@@ -692,7 +707,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 relative football-schedule-chart border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 relative football-schedule-chart"
+                    style={{ border: "1px solid #d1d5db" }}
                   >
                     <div className="relative">
                       <h2 className="text-lg font-semibold mb-1 -mt-2">
@@ -725,7 +741,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-schedule-difficulty border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-schedule-difficulty"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       Schedule Difficulty
@@ -752,7 +769,8 @@ export default function FootballTeamPage({
                 {/* Charts */}
                 <div className="space-y-3 col-span-2">
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-win-values border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-win-values"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       Win Values Over Time
@@ -765,7 +783,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-seed-projections border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-seed-projections"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       CFP Seed Projections
@@ -780,7 +799,8 @@ export default function FootballTeamPage({
 
                   {/* Desktop History Components */}
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-rank-history border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-rank-history"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       Rating Rank History
@@ -795,7 +815,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-win-history border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-win-history"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       Projected Wins History
@@ -810,7 +831,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-standings-history border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-standings-history"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       Projected Standings History
@@ -825,7 +847,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-first-place-history border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-first-place-history"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       First Place Probability History
@@ -840,7 +863,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-cfp-bid-history border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-cfp-bid-history"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       CFP Bid History
@@ -854,7 +878,8 @@ export default function FootballTeamPage({
                   </div>
 
                   <div
-                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-cfp-progression-history border border-gray-300 dark:border-gray-700"
+                    className="bg-white dark:bg-slate-800 rounded-lg p-3 football-cfp-progression-history"
+                style={{ border: "1px solid #d1d5db" }}
                   >
                     <h2 className="text-lg font-semibold mb-1 -mt-2">
                       CFP Progression History
