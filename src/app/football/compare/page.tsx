@@ -248,10 +248,10 @@ export default function FootballComparePage() {
                               selectedTeams.length >= MAX_SELECTED_TEAMS &&
                               !selectedTeamNames.has(team.team_name)
                             }
-                            className={`relative flex items-center justify-center h-10 w-10 border border-gray-400 dark:border-gray-600 transition-all ${
+                            className={`relative flex items-center justify-center h-10 w-10 border-2 rounded transition-all overflow-hidden ${
                               selectedTeamNames.has(team.team_name)
-                                ? "ring-2 ring-blue-500 border-blue-500"
-                                : "bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700"
+                                ? "border-[rgb(0,151,178)] shadow-lg ring-2 ring-[rgb(0,151,178)] ring-offset-1"
+                                : "bg-white dark:bg-slate-800 border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-slate-700"
                             } ${
                               selectedTeams.length >= MAX_SELECTED_TEAMS &&
                               !selectedTeamNames.has(team.team_name)
@@ -267,9 +267,16 @@ export default function FootballComparePage() {
                                 className="h-6 w-6 object-contain"
                               />
                             </div>
+                            {selectedTeamNames.has(team.team_name) && (
+                              <div className="absolute top-0 right-0 w-3 h-3 bg-[rgb(0,151,178)] rounded-full flex items-center justify-center">
+                                <div className="text-white text-[8px] font-bold">
+                                  ✓
+                                </div>
+                              </div>
+                            )}
                             {loadingTeams.has(team.team_name) && (
                               <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-slate-800 bg-opacity-60">
-                                <div className="w-2 h-2 border border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                <div className="w-2 h-2 border border-[rgb(0,151,178)] border-t-transparent rounded-full animate-spin" />
                               </div>
                             )}
                           </button>

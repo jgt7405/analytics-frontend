@@ -709,17 +709,12 @@ export default function FootballCompareSchedulesChart({
               <button
                 key={option.value}
                 onClick={() => setComparisonFilter(option.value)}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors flex items-center gap-2 ${
+                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
                   comparisonFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800"
                 }`}
               >
-                {comparisonFilter === option.value && (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
                 {option.label}
               </button>
             ))}
@@ -735,17 +730,12 @@ export default function FootballCompareSchedulesChart({
               <button
                 key={option.value}
                 onClick={() => setGameFilter(option.value)}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors flex items-center gap-2 ${
+                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
                   gameFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
                     : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800"
                 }`}
               >
-                {gameFilter === option.value && (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
                 {option.label}
               </button>
             ))}
