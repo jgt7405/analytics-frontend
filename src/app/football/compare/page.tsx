@@ -215,15 +215,15 @@ export default function FootballComparePage() {
   return (
     <PageLayoutWrapper title="Compare Schedules" isLoading={false}>
       <ErrorBoundary level="page">
-        <div className="space-y-6 p-4">
-          {/* Team Selection Grid */}
-          <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold mb-6">Select Teams</h2>
-
-            {/* Horizontally scrollable conference sections */}
-            <div className="overflow-x-auto pb-2">
-              <div className="flex gap-12 min-w-max">
-                {availableConferences.map((conference) => {
+        <div className="space-y-0 px-4 pt-0 pb-0 -mt-10">
+          {/* Scrollable Conference Cards with Team Logos */}
+          <div
+            className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 overflow-hidden"
+            data-debug="Conference Cards Section"
+          >
+            <div className="overflow-x-auto pb-1">
+              <div className="flex gap-3">
+                {availableConferences.map((conference, index) => {
                   const teamsInConf = allTeams
                     .filter((team) => team.conference === conference)
                     .sort((a, b) => a.team_name.localeCompare(b.team_name));
@@ -231,56 +231,64 @@ export default function FootballComparePage() {
                   return (
                     <div
                       key={conference}
-                      className="flex flex-col items-center"
+                      className="flex-shrink-0 flex items-start gap-3"
                     >
-                      {/* Conference Label */}
-                      <div className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3 text-center h-10 flex items-center">
-                        {conference}
-                      </div>
+                      {index > 0 && (
+                        <div className="w-px bg-gray-300 flex-shrink-0 self-stretch"></div>
+                      )}
+                      <div>
+                        <h3 className="text-xs text-gray-700 dark:text-gray-200 mb-2 px-1 font-normal border-b border-gray-200 dark:border-gray-700 pb-2 text-center min-w-20">
+                          {conference}
+                        </h3>
+                        <div
+                          className="grid gap-1"
+                          style={{
+                            gridTemplateRows: "repeat(6, minmax(0, 1fr))",
+                            gridAutoFlow: "column",
+                          }}
+                        >
+                          {teamsInConf.map((team) => {
+                            const isSelected = selectedTeamNames.has(
+                              team.team_name,
+                            );
+                            const isDisabled =
+                              !isSelected && selectedTeams.length >= MAX_SELECTED_TEAMS;
 
-                      {/* Teams Grid - 3 across with minimal gap */}
-                      <div className="grid grid-cols-3 gap-1 border border-gray-300 dark:border-gray-600 p-2 bg-gray-50 dark:bg-slate-900">
-                        {teamsInConf.map((team) => (
-                          <button
-                            key={team.team_name}
-                            onClick={() => handleTeamClick(team)}
-                            disabled={
-                              selectedTeams.length >= MAX_SELECTED_TEAMS &&
-                              !selectedTeamNames.has(team.team_name)
-                            }
-                            className={`relative flex items-center justify-center h-10 w-10 border-2 rounded transition-all overflow-hidden ${
-                              selectedTeamNames.has(team.team_name)
-                                ? "border-[rgb(0,151,178)] shadow-lg ring-2 ring-[rgb(0,151,178)] ring-offset-1"
-                                : "bg-white dark:bg-slate-800 border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-slate-700"
-                            } ${
-                              selectedTeams.length >= MAX_SELECTED_TEAMS &&
-                              !selectedTeamNames.has(team.team_name)
-                                ? "opacity-40 cursor-not-allowed"
-                                : "cursor-pointer"
-                            }`}
-                            title={team.team_name}
-                          >
-                            <div className="flex items-center justify-center bg-white rounded-full border-2 border-white h-8 w-8">
-                              <img
-                                src={team.logo_url}
-                                alt={team.team_name}
-                                className="h-6 w-6 object-contain"
-                              />
-                            </div>
-                            {selectedTeamNames.has(team.team_name) && (
-                              <div className="absolute top-0 right-0 w-3 h-3 bg-[rgb(0,151,178)] rounded-full flex items-center justify-center">
-                                <div className="text-white text-[8px] font-bold">
-                                  ✓
-                                </div>
-                              </div>
-                            )}
-                            {loadingTeams.has(team.team_name) && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-slate-800 bg-opacity-60">
-                                <div className="w-2 h-2 border border-[rgb(0,151,178)] border-t-transparent rounded-full animate-spin" />
-                              </div>
-                            )}
-                          </button>
-                        ))}
+                            return (
+                              <button
+                                key={team.team_name}
+                                onClick={() => handleTeamClick(team)}
+                                disabled={isDisabled}
+                                title={team.team_name}
+                                className={`relative w-10 h-10 rounded border-2 transition-all flex-shrink-0 overflow-hidden ${
+                                  isSelected
+                                    ? "border-[rgb(0,151,178)] shadow-lg ring-2 ring-[rgb(0,151,178)] ring-offset-1"
+                                    : isDisabled
+                                      ? "bg-gray-100 dark:bg-slate-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-50"
+                                      : "bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 hover:border-[rgb(0,151,178)] hover:shadow-md"
+                                }`}
+                              >
+                                <img
+                                  src={team.logo_url}
+                                  alt={team.team_name}
+                                  className="w-full h-full object-contain p-1"
+                                />
+                                {isSelected && (
+                                  <div className="absolute top-0 right-0 w-3 h-3 bg-[rgb(0,151,178)] rounded-full flex items-center justify-center">
+                                    <div className="text-white text-[8px] font-bold">
+                                      ✓
+                                    </div>
+                                  </div>
+                                )}
+                                {loadingTeams.has(team.team_name) && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-slate-800 bg-opacity-60">
+                                    <div className="w-2 h-2 border border-[rgb(0,151,178)] border-t-transparent rounded-full animate-spin" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   );
@@ -289,54 +297,42 @@ export default function FootballComparePage() {
             </div>
           </div>
 
-          {/* Selected Teams Section */}
+          {/* Selected Teams Summary */}
           {selectedTeams.length > 0 && (
-            <div className="bg-blue-50 dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">
+            <div
+              className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 -mt-10"
+              data-debug="Selected Teams Section"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-semibold">
                   Selected Teams ({selectedTeams.length}/{MAX_SELECTED_TEAMS})
                 </h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setIsScreenshotModalOpen(true)}
-                    className="px-4 py-2 text-sm bg-gray-700 text-white rounded-md hover:bg-gray-800 flex items-center gap-2 transition-colors"
-                    title="Download comparison"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
-                  </button>
-                  <button
-                    onClick={clearAllTeams}
-                    className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                  >
-                    Clear All
-                  </button>
-                </div>
+                <button
+                  onClick={clearAllTeams}
+                  className="text-xs text-red-600 hover:text-red-700 font-medium"
+                >
+                  Clear All
+                </button>
               </div>
-
-              {/* Selected Teams List */}
-              <div className="flex flex-wrap gap-2">
-                {selectedTeams.map((team, index) => (
+              <div className="flex flex-wrap gap-1">
+                {selectedTeams.map((team) => (
                   <div
                     key={team.teamName}
-                    className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-2 rounded-lg border-2 border-blue-600 dark:border-blue-400 shadow-sm"
+                    className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded border border-gray-300 text-xs"
                   >
-                    <span className="text-xs font-bold text-blue-600 w-5 h-5 flex items-center justify-center bg-blue-100 rounded-full">
-                      {index + 1}
-                    </span>
-                    <div className="flex items-center justify-center bg-white rounded-full border-2 border-white h-7 w-7">
+                    <div className="relative w-4 h-4">
                       <img
                         src={team.teamLogo}
                         alt={team.teamName}
-                        className="h-5 w-5 object-contain"
+                        className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="text-sm font-medium">{team.teamName}</span>
+                    <span className="text-gray-700">{team.teamName}</span>
                     <button
                       onClick={() => removeTeam(team.teamName)}
-                      className="text-gray-400 hover:text-red-600 font-bold ml-1"
+                      className="ml-1 text-gray-500 hover:text-red-600 font-bold"
                     >
-                      ✕
+                      ×
                     </button>
                   </div>
                 ))}
@@ -344,10 +340,39 @@ export default function FootballComparePage() {
             </div>
           )}
 
-          {/* Schedule Comparison Chart */}
+          {/* Comparison Chart */}
           {selectedTeams.length > 0 && (
-            <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-auto">
-              <FootballCompareSchedulesChart teams={selectedTeams} />
+            <>
+              <div
+                className="-mt-6"
+                data-debug="Chart Container"
+              >
+                <FootballCompareSchedulesChart teams={selectedTeams} />
+              </div>
+
+              <div
+                className="flex justify-end gap-3"
+                data-debug="Download Button Section"
+              >
+                <button
+                  onClick={() => setIsScreenshotModalOpen(true)}
+                  className="px-3 py-2 text-xs bg-gray-700 text-white rounded-md hover:bg-gray-800 flex items-center gap-2 transition-colors border border-gray-700"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Chart
+                </button>
+              </div>
+            </>
+          )}
+
+          {selectedTeams.length === 0 && (
+            <div
+              className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center text-sm"
+              data-debug="Empty State Section"
+            >
+              <p className="text-gray-500">
+                Select teams above to compare their schedules
+              </p>
             </div>
           )}
         </div>
