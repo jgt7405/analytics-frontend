@@ -79,6 +79,13 @@ interface SelectedTeam {
 }
 
 const MAX_SELECTED_TEAMS = 12;
+const PRIORITY_CONFERENCES = [
+  "Atlantic Coast",
+  "Big 12",
+  "Big Ten",
+  "Independent",
+  "Southeastern",
+];
 
 export default function FootballComparePage() {
   const [availableConferences, setAvailableConferences] = useState<string[]>(
@@ -125,9 +132,19 @@ export default function FootballComparePage() {
           const conferences = [
             ...new Set(data.data.map((team: Team) => team.conference)),
           ] as string[];
+
           const sortedConferences = conferences
             .filter((conf) => conf !== "FCS")
-            .sort();
+            .sort((a, b) => {
+              const aIndex = PRIORITY_CONFERENCES.indexOf(a);
+              const bIndex = PRIORITY_CONFERENCES.indexOf(b);
+
+              if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+              if (aIndex !== -1) return -1;
+              if (bIndex !== -1) return 1;
+              return a.localeCompare(b);
+            });
+
           setAvailableConferences(sortedConferences);
         }
       } catch (error) {
