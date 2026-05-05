@@ -180,11 +180,6 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: "/basketball/wins",
-        destination: "/football/wins",
-        permanent: true,
-      },
-      {
         source: "/sitemap.xml",
         destination:
           "https://jthomprodbackend-production.up.railway.app/api/sitemap.xml",
