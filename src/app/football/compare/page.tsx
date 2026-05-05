@@ -260,7 +260,7 @@ export default function FootballComparePage() {
                                 onClick={() => handleTeamClick(team)}
                                 disabled={isDisabled}
                                 title={team.team_name}
-                                className={`relative w-10 h-10 rounded border-2 transition-all flex-shrink-0 overflow-hidden ${
+                                className={`relative w-12 h-12 rounded border-2 transition-all flex-shrink-0 overflow-hidden ${
                                   isSelected
                                     ? "border-[rgb(0,151,178)] shadow-lg ring-2 ring-[rgb(0,151,178)] ring-offset-1"
                                     : isDisabled
@@ -271,7 +271,7 @@ export default function FootballComparePage() {
                                 <img
                                   src={team.logo_url}
                                   alt={team.team_name}
-                                  className="w-full h-full object-contain p-1"
+                                  className="w-full h-full object-contain"
                                 />
                                 {isSelected && (
                                   <div className="absolute top-0 right-0 w-3 h-3 bg-[rgb(0,151,178)] rounded-full flex items-center justify-center">
