@@ -46,11 +46,46 @@ export default function ArchiveWinsPage({
   const searchParams = useSearchParams();
 
   const season = params.season;
-  const [selectedConference, setSelectedConference] = useState("Big 12");
+  const [selectedConference, setSelectedConference] = useState(() => {
+    const confParam = searchParams.get("conf");
+    if (confParam) {
+      const decodedConf = decodeURIComponent(confParam);
+      const knownBasketballConferences = [
+        "Big 12",
+        "SEC",
+        "Big Ten",
+        "ACC",
+        "Pac-12",
+        "Big East",
+        "Mountain West",
+        "American",
+        "Atlantic 10",
+        "WCC",
+        "West Coast",
+        "Conference USA",
+        "MAC",
+        "Sun Belt",
+        "WAC",
+        "Ivy League",
+        "Patriot League",
+        "MAAC",
+        "CAA",
+        "Horizon League",
+        "Summit League",
+        "Southland",
+        "Big Sky",
+        "America East",
+        "NEC",
+        "MEAC",
+        "SWAC",
+      ];
+      return knownBasketballConferences.includes(decodedConf) ? decodedConf : "Big 12";
+    }
+    return "Big 12";
+  });
   const [availableConferences, setAvailableConferences] = useState<string[]>(
     []
   );
-  const [hasInitialized, setHasInitialized] = useState(false);
 
   const { handleConferenceChange: handleUrlChange } = useConferenceUrl(
     setSelectedConference,
@@ -58,61 +93,12 @@ export default function ArchiveWinsPage({
     false // Don't allow "All Teams" for basketball wins
   );
 
-  useEffect(() => {
-    if (!hasInitialized) {
-      const confParam = searchParams.get("conf");
-      if (confParam) {
-        const decodedConf = decodeURIComponent(confParam);
-        const knownBasketballConferences = [
-          "Big 12",
-          "SEC",
-          "Big Ten",
-          "ACC",
-          "Pac-12",
-          "Big East",
-          "Mountain West",
-          "American",
-          "Atlantic 10",
-          "WCC",
-          "West Coast",
-          "Conference USA",
-          "MAC",
-          "Sun Belt",
-          "WAC",
-          "Ivy League",
-          "Patriot League",
-          "MAAC",
-          "CAA",
-          "Horizon League",
-          "Summit League",
-          "Southland",
-          "Big Sky",
-          "America East",
-          "NEC",
-          "MEAC",
-          "SWAC",
-        ];
-
-        if (knownBasketballConferences.includes(decodedConf)) {
-          setSelectedConference(decodedConf);
-        } else {
-          setSelectedConference("Big 12");
-          const params = new URLSearchParams(searchParams.toString());
-          params.set("conf", "Big 12");
-          const newUrl = `${window.location.pathname}?${params.toString()}`;
-          window.history.replaceState({}, "", newUrl);
-        }
-      }
-      setHasInitialized(true);
-    }
-  }, [searchParams, hasInitialized]);
-
   const {
     data: standingsResponse,
     isLoading: standingsLoading,
     error: standingsError,
     refetch,
-  } = useStandings(hasInitialized ? selectedConference : "Big 12", season);
+  } = useStandings(selectedConference, season);
 
   // Update available conferences when data loads
   useEffect(() => {
@@ -136,7 +122,7 @@ export default function ArchiveWinsPage({
     return () => {
       endMeasurement("basketball-wins-page-load");
     };
-  }, [selectedConference, startMeasurement, endMeasurement, trackEvent, season]);
+  }, [season, startMeasurement, endMeasurement, trackEvent]);
 
   // Track successful data loading
   useEffect(() => {

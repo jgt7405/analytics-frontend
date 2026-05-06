@@ -58,7 +58,6 @@ export default function BasketballTeamPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   const teamname = decodeURIComponent(params.teamname);
 
@@ -91,23 +90,17 @@ export default function BasketballTeamPage({
   }, [historyData]);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      trackEvent({
-        name: "page_view",
-        properties: { page: "basketball-team", team: teamname },
-      });
-      if (teamData?.team_info?.conference) {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("teamConf", encodeURIComponent(teamData.team_info.conference));
-        const newUrl = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState({}, "", newUrl);
-      }
+    trackEvent({
+      name: "page_view",
+      properties: { page: "basketball-team", team: teamname },
+    });
+    if (teamData?.team_info?.conference) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("teamConf", encodeURIComponent(teamData.team_info.conference));
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, "", newUrl);
     }
-  }, [teamname, mounted, teamData?.team_info?.conference, trackEvent, searchParams]);
+  }, [teamname, teamData?.team_info?.conference, trackEvent, searchParams]);
 
   const navigateToTeam = useCallback((targetTeam: string) => {
     if (targetTeam && targetTeam !== teamname) {
@@ -184,7 +177,7 @@ export default function BasketballTeamPage({
     },
   ];
 
-  if (!mounted || isLoading || !teamData) {
+  if (isLoading || !teamData) {
     return (
       <div className="container mx-auto px-4 pt-6 pb-2 md:pt-6 md:pb-3">
         <div className="flex items-center justify-center min-h-[400px]">

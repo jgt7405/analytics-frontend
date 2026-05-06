@@ -7,10 +7,9 @@ export const useFootballConfData = (season?: string) => {
   return useQuery<FootballConferenceApiResponse, Error>({
     queryKey: ["football-conf-data-proxy-fixed", season],
     queryFn: () => api.getFootballConfData(season),
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 3,
-    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 };

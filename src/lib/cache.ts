@@ -96,22 +96,3 @@ class CacheManager {
 }
 
 export const cacheManager = new CacheManager();
-
-// React Query cache configuration enhancement
-export const queryClientConfig = {
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // Renamed from cacheTime in React Query v5
-      retry: (failureCount: number, error: any) =>
-        failureCount < 2 && error?.status !== 404,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-};

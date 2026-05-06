@@ -39,7 +39,7 @@ export default function FootballConfDataArchivePage({
     refetch,
   } = useFootballConfData(season);
 
-  const { data: historyData } = useFootballConfDataHistory();
+  const { data: historyData } = useFootballConfDataHistory(season);
 
   // Filter history data to only include archive season
   const filteredHistoryData = useMemo(() => {

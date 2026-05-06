@@ -46,7 +46,7 @@ export default function FootballConfChampArchivePage({
     refetch,
   } = useFootballConfChamp(selectedConference, season);
 
-  const { data: historyData } = useFootballStandingsHistory(selectedConference);
+  const { data: historyData } = useFootballStandingsHistory(selectedConference, season);
 
   // Filter history data to only include archive season
   const filteredHistoryData = useMemo(() => {

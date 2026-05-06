@@ -451,12 +451,10 @@ export async function GET(
       }
     }
 
-    // Return with no-cache headers
+    // Return with edge caching enabled
     return NextResponse.json(data, {
       headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
       },
     });
   } catch (error) {
@@ -764,9 +762,7 @@ export async function POST(
 
     return NextResponse.json(data, {
       headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
       },
     });
   } catch (error) {

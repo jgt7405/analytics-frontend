@@ -2,10 +2,6 @@
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
 import TableActionButtons from "@/components/common/TableActionButtons";
-import FootballBoxWhiskerChart from "@/components/features/football/FootballBoxWhiskerChart";
-import FootballRegularSeasonBoxWhiskerChart from "@/components/features/football/FootballRegularSeasonBoxWhiskerChart";
-import FootballRegularSeasonWinsTable from "@/components/features/football/FootballRegularSeasonWinsTable";
-import FootballWinsTable from "@/components/features/football/FootballWinsTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -18,7 +14,32 @@ import { useFootballStandings } from "@/hooks/useFootballStandings";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useState } from "react";
+
+const ChartSkeleton = () => (
+  <div className="h-64 bg-gray-100 dark:bg-slate-700 animate-pulse rounded-lg" />
+);
+
+const FootballBoxWhiskerChart = dynamic(
+  () => import("@/components/features/football/FootballBoxWhiskerChart"),
+  { loading: () => <BoxWhiskerChartSkeleton /> }
+);
+
+const FootballRegularSeasonBoxWhiskerChart = dynamic(
+  () => import("@/components/features/football/FootballRegularSeasonBoxWhiskerChart"),
+  { loading: () => <BoxWhiskerChartSkeleton /> }
+);
+
+const FootballRegularSeasonWinsTable = dynamic(
+  () => import("@/components/features/football/FootballRegularSeasonWinsTable"),
+  { loading: () => <BasketballTableSkeleton /> }
+);
+
+const FootballWinsTable = dynamic(
+  () => import("@/components/features/football/FootballWinsTable"),
+  { loading: () => <BasketballTableSkeleton /> }
+);
 
 export default function FootballWinsPage({ season }: { season?: string }) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
@@ -65,7 +86,7 @@ export default function FootballWinsPage({ season }: { season?: string }) {
     return () => {
       endMeasurement("football-wins-page-load");
     };
-  }, [selectedConference, season, startMeasurement, endMeasurement, trackEvent]);
+  }, [season, startMeasurement, endMeasurement, trackEvent]);
 
   // Track successful data loading
   useEffect(() => {
@@ -205,15 +226,7 @@ export default function FootballWinsPage({ season }: { season?: string }) {
               <BasketballTableSkeleton />
             </div>
           ) : (
-            <Suspense
-              fallback={
-                <div className="space-y-6">
-                  <BoxWhiskerChartSkeleton />
-                  <BasketballTableSkeleton />
-                </div>
-              }
-            >
-              <div className="space-y-6">
+            <div className="space-y-6">
                 {/* Conference Wins Box Whisker Chart Section */}
                 <div className="mb-8">
                   <div className="box-whisker-container">
@@ -399,7 +412,6 @@ export default function FootballWinsPage({ season }: { season?: string }) {
                   </div>
                 </div>
               </div>
-            </Suspense>
           )}
         </div>
       </PageLayoutWrapper>

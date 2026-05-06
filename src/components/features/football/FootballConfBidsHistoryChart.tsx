@@ -68,6 +68,8 @@ export default function FootballConfBidsHistoryChart({
   );
 
   useEffect(() => {
+    if (!chartRef.current?.canvas) return;
+
     const updateDimensions = () => {
       if (chartRef.current?.chartArea && chartRef.current?.canvas) {
         setChartDimensions({
@@ -77,8 +79,11 @@ export default function FootballConfBidsHistoryChart({
       }
     };
 
-    const timeout = setTimeout(updateDimensions, 1000);
-    return () => clearTimeout(timeout);
+    const observer = new ResizeObserver(updateDimensions);
+    observer.observe(chartRef.current.canvas);
+    updateDimensions();
+
+    return () => observer.disconnect();
   }, [timelineData]);
 
   const range = getFootballDateRange(season, timelineData);

@@ -69,6 +69,8 @@ export default function FootballChampGameHistoryChart({
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!chartRef.current?.canvas) return;
+
     const updateDimensions = () => {
       if (chartRef.current?.chartArea && chartRef.current?.canvas) {
         setChartDimensions({
@@ -78,8 +80,11 @@ export default function FootballChampGameHistoryChart({
       }
     };
 
-    const timeout = setTimeout(updateDimensions, 500);
-    return () => clearTimeout(timeout);
+    const observer = new ResizeObserver(updateDimensions);
+    observer.observe(chartRef.current.canvas);
+    updateDimensions();
+
+    return () => observer.disconnect();
   }, [champGameData]);
 
   const range = getFootballDateRange(season, champGameData);

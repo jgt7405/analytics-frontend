@@ -1,19 +1,40 @@
 "use client";
 
 import TableActionButtons from "@/components/common/TableActionButtons";
-import MultiBidLeagues from "@/components/features/basketball/MultiBidLeagues";
-import NCAABracketTable from "@/components/features/basketball/NCAABracketTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useNCAAProjections } from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
-import { Suspense, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
+import { useMemo, useRef } from "react";
+
+const ChartSkeleton = () => (
+  <div className="h-64 bg-gray-100 dark:bg-slate-700 animate-pulse rounded-lg" />
+);
+
+const NCAABracketTable = dynamic(
+  () => import("@/components/features/basketball/NCAABracketTable"),
+  {
+    loading: () => (
+      <div className="min-h-[600px] bg-gray-50 animate-pulse rounded-lg" />
+    ),
+  }
+);
+
+const MultiBidLeagues = dynamic(
+  () => import("@/components/features/basketball/MultiBidLeagues"),
+  {
+    loading: () => (
+      <div className="min-h-[300px] bg-gray-50 animate-pulse rounded-lg" />
+    ),
+  }
+);
 
 export default function BasketballHome() {
   const { isMobile } = useResponsive();
   const ncaaTableRef = useRef<HTMLDivElement>(null);
   const multiBidRef = useRef<HTMLDivElement>(null);
-  const { data } = useNCAAProjections();
+  const { data, isLoading } = useNCAAProjections();
 
   // Format the last updated timestamp
   const lastUpdated = useMemo(() => {
@@ -41,7 +62,7 @@ export default function BasketballHome() {
     <ErrorBoundary level="page">
       <PageLayoutWrapper
         title="Basketball Tournament Projections"
-        isLoading={false}
+        isLoading={isLoading}
         rightElement={`Updated: ${lastUpdated}`}
       >
         <div className="-mt-2 md:-mt-6">
@@ -49,13 +70,7 @@ export default function BasketballHome() {
           <ErrorBoundary level="component">
             <div className="mb-8">
               <div className="ncaa-bracket-table min-h-[600px]" ref={ncaaTableRef}>
-                <Suspense
-                  fallback={
-                    <div className="min-h-[600px] bg-gray-50 animate-pulse rounded-lg" />
-                  }
-                >
-                  <NCAABracketTable />
-                </Suspense>
+                <NCAABracketTable />
               </div>
 
               <div className="mt-6">
@@ -131,13 +146,7 @@ export default function BasketballHome() {
               </h2>
 
               <div className="multibid-leagues-table min-h-[300px]" ref={multiBidRef}>
-                <Suspense
-                  fallback={
-                    <div className="min-h-[300px] bg-gray-50 animate-pulse rounded-lg" />
-                  }
-                >
-                  <MultiBidLeagues />
-                </Suspense>
+                <MultiBidLeagues />
               </div>
 
               <div className="mt-6">
