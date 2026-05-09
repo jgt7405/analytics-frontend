@@ -389,33 +389,45 @@ export default function WhatIfCalculator() {
                                       padding: "2px",
                                     }}
                                   >
-                                    {game.away_team_logo ? (
-                                      <Image
-                                        src={game.away_team_logo}
-                                        alt={game.away_team}
-                                        width={24}
-                                        height={24}
-                                        className="object-contain"
-                                      />
-                                    ) : (
-                                      <div
-                                        style={{
-                                          width: "24px",
-                                          height: "24px",
-                                          borderRadius: "4px",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          fontSize: "10px",
-                                          fontWeight: "bold",
-                                          color: isDark ? "#9ca3af" : "#374151",
-                                        }}
-                                      >
-                                        {game.away_team
-                                          .substring(0, 2)
-                                          .toUpperCase()}
-                                      </div>
-                                    )}
+                                    <div
+                                      style={{
+                                        width: "24px",
+                                        height: "24px",
+                                        borderRadius: "50%",
+                                        backgroundColor: isDark ? "white" : "transparent",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      {game.away_team_logo ? (
+                                        <Image
+                                          src={game.away_team_logo}
+                                          alt={game.away_team}
+                                          width={24}
+                                          height={24}
+                                          className="object-contain"
+                                        />
+                                      ) : (
+                                        <div
+                                          style={{
+                                            width: "24px",
+                                            height: "24px",
+                                            borderRadius: "4px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            fontSize: "10px",
+                                            fontWeight: "bold",
+                                            color: isDark ? "#9ca3af" : "#374151",
+                                          }}
+                                        >
+                                          {game.away_team
+                                            .substring(0, 2)
+                                            .toUpperCase()}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                   <span
                                     style={{
@@ -473,33 +485,45 @@ export default function WhatIfCalculator() {
                                       padding: "2px",
                                     }}
                                   >
-                                    {game.home_team_logo ? (
-                                      <Image
-                                        src={game.home_team_logo}
-                                        alt={game.home_team}
-                                        width={24}
-                                        height={24}
-                                        className="object-contain"
-                                      />
-                                    ) : (
-                                      <div
-                                        style={{
-                                          width: "24px",
-                                          height: "24px",
-                                          borderRadius: "4px",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          fontSize: "10px",
-                                          fontWeight: "bold",
-                                          color: isDark ? "#9ca3af" : "#374151",
-                                        }}
-                                      >
-                                        {game.home_team
-                                          .substring(0, 2)
-                                          .toUpperCase()}
-                                      </div>
-                                    )}
+                                    <div
+                                      style={{
+                                        width: "24px",
+                                        height: "24px",
+                                        borderRadius: "50%",
+                                        backgroundColor: isDark ? "white" : "transparent",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      {game.home_team_logo ? (
+                                        <Image
+                                          src={game.home_team_logo}
+                                          alt={game.home_team}
+                                          width={24}
+                                          height={24}
+                                          className="object-contain"
+                                        />
+                                      ) : (
+                                        <div
+                                          style={{
+                                            width: "24px",
+                                            height: "24px",
+                                            borderRadius: "4px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            fontSize: "10px",
+                                            fontWeight: "bold",
+                                            color: isDark ? "#9ca3af" : "#374151",
+                                          }}
+                                        >
+                                          {game.home_team
+                                            .substring(0, 2)
+                                            .toUpperCase()}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                   <span
                                     style={{

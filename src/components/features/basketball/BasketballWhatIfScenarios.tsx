@@ -201,12 +201,14 @@ function TeamTile({
   probability,
   isSelected,
   onClick,
+  isDark,
 }: {
   logoUrl?: string;
   teamName: string;
   probability?: number | null;
   isSelected: boolean;
   onClick: () => void;
+  isDark: boolean;
 }) {
   return (
     <button
@@ -220,21 +222,33 @@ function TeamTile({
       }}
       title={teamName}
     >
-      {logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={logoUrl}
-          alt={teamName}
-          className="w-6 h-6 object-contain"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      ) : (
-        <span className="text-[8px] font-bold text-gray-500 dark:text-gray-400">
-          {teamName.substring(0, 3)}
-        </span>
-      )}
+      <div
+        style={{
+          width: 24,
+          height: 24,
+          borderRadius: "50%",
+          backgroundColor: isDark ? "white" : "transparent",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoUrl}
+            alt={teamName}
+            className="w-6 h-6 object-contain"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <span className="text-[8px] font-bold text-gray-500 dark:text-gray-400">
+            {teamName.substring(0, 3)}
+          </span>
+        )}
+      </div>
       {probability != null && (
         <span className="text-[8px] text-gray-400 mt-0.5">
           {Math.round(probability * 100)}%
@@ -256,10 +270,12 @@ function GameCard({
   game,
   selectedWinner,
   onSelect,
+  isDark,
 }: {
   game: WhatIfGame;
   selectedWinner: number | undefined;
   onSelect: (gid: number, wid: number) => void;
+  isDark: boolean;
 }) {
   const has = selectedWinner !== undefined;
   return (
@@ -275,6 +291,7 @@ function GameCard({
         probability={game.away_probability}
         isSelected={selectedWinner === game.away_team_id}
         onClick={() => onSelect(game.game_id, game.away_team_id)}
+        isDark={isDark}
       />
       <span className="text-[8px] text-gray-400">@</span>
       <TeamTile
@@ -283,6 +300,7 @@ function GameCard({
         probability={game.home_probability}
         isSelected={selectedWinner === game.home_team_id}
         onClick={() => onSelect(game.game_id, game.home_team_id)}
+        isDark={isDark}
       />
     </div>
   );
@@ -423,6 +441,7 @@ function ProbabilityTable({
   screenshotRef,
   screenshotFilename,
   selectionHtml,
+  isDark,
 }: {
   title: string;
   baseline: WhatIfTeamResult[];
@@ -432,6 +451,7 @@ function ProbabilityTable({
   screenshotRef: React.RefObject<HTMLDivElement>;
   screenshotFilename: string;
   selectionHtml: string | null;
+  isDark: boolean;
 }) {
   const [sortCol, setSortCol] = useState<SortCol>("after");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -556,11 +576,23 @@ function ProbabilityTable({
               <tr key={team.team_id} className="border-b border-gray-100">
                 <td className="py-1.5 px-2">
                   <div className="flex items-center gap-2">
-                    <TeamLogo
-                      src={team.logo_url}
-                      alt={team.team_name}
-                      size={18}
-                    />
+                    <div
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        backgroundColor: isDark ? "white" : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <TeamLogo
+                        src={team.logo_url}
+                        alt={team.team_name}
+                        size={18}
+                      />
+                    </div>
                     <span className="text-sm hidden sm:inline">
                       {team.team_name}
                     </span>
@@ -835,10 +867,12 @@ function TeamFilterDropdown({
   teams,
   selectedIds,
   onChange,
+  isDark,
 }: {
   teams: WhatIfTeamResult[];
   selectedIds: Set<number>;
   onChange: (ids: Set<number>) => void;
+  isDark: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -947,7 +981,17 @@ function TeamFilterDropdown({
                   {checked && <Check size={12} strokeWidth={3} color="white" />}
                 </span>
                 {t.logo_url && (
-                  <TeamLogo src={t.logo_url} alt={t.team_name} size={16} />
+                  <div
+                    className="flex items-center justify-center"
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      backgroundColor: checked && isDark ? "white" : "transparent",
+                    }}
+                  >
+                    <TeamLogo src={t.logo_url} alt={t.team_name} size={16} />
+                  </div>
                 )}
                 <span>{t.team_name}</span>
               </button>
@@ -977,6 +1021,11 @@ export default function BasketballWhatIfScenarios() {
   const [selectedDetailTeamId, setSelectedDetailTeamId] = useState<
     number | null
   >(null);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
 
   const firstPlaceRef = useRef<HTMLDivElement>(null);
   const top4Ref = useRef<HTMLDivElement>(null);
@@ -1291,6 +1340,7 @@ export default function BasketballWhatIfScenarios() {
                   teams={conferenceTeams}
                   selectedIds={selectedTeamIds}
                   onChange={setSelectedTeamIds}
+                  isDark={isDark}
                 />
               </div>
             )}
@@ -1318,6 +1368,7 @@ export default function BasketballWhatIfScenarios() {
                           game={g}
                           selectedWinner={gameSelections.get(g.game_id)}
                           onSelect={handleGameSelection}
+                          isDark={isDark}
                         />
                       ))}
                     </div>
@@ -1464,6 +1515,7 @@ export default function BasketballWhatIfScenarios() {
                     screenshotRef={firstPlaceRef}
                     screenshotFilename="first_place_pct.png"
                     selectionHtml={selectionLegendHtml}
+                    isDark={isDark}
                   />
                   <ProbabilityTable
                     title="What If Probabilities - Top 4 Seed in Conference"
@@ -1474,6 +1526,7 @@ export default function BasketballWhatIfScenarios() {
                     screenshotRef={top4Ref}
                     screenshotFilename="top_4_pct.png"
                     selectionHtml={selectionLegendHtml}
+                    isDark={isDark}
                   />
                   <ProbabilityTable
                     title="What If Probabilities - Top 8 Seed in Conference"
@@ -1484,6 +1537,7 @@ export default function BasketballWhatIfScenarios() {
                     screenshotRef={top8Ref}
                     screenshotFilename="top_8_pct.png"
                     selectionHtml={selectionLegendHtml}
+                    isDark={isDark}
                   />
                 </>
               )}

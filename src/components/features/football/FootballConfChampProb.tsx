@@ -422,12 +422,24 @@ function FootballConfChampProb({
                   <div
                     className={`flex items-center gap-2 ${isMobile ? "justify-center" : "justify-start"}`}
                   >
-                    <TeamLogo
-                      logoUrl={team.logo_url}
-                      teamName={team.team_name}
-                      size={isMobile ? 20 : 24}
-                      onClick={() => navigateToTeam(team.team_name)}
-                    />
+                    <div
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        backgroundColor: isDark ? "white" : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <TeamLogo
+                        logoUrl={team.logo_url}
+                        teamName={team.team_name}
+                        size={isMobile ? 20 : 24}
+                        onClick={() => navigateToTeam(team.team_name)}
+                      />
+                    </div>
                     {!isMobile && (
                       <span className="truncate">{team.team_name}</span>
                     )}
