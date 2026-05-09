@@ -287,8 +287,8 @@ function FootballSeedTable({
                   position: "sticky",
                   top: 0,
                   left: 0,
-                  border: "1px solid #e5e7eb",
-                  borderRight: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 #
@@ -306,9 +306,9 @@ function FootballSeedTable({
                   position: "sticky",
                   top: 0,
                   left: rankColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 Team
@@ -321,7 +321,7 @@ function FootballSeedTable({
                 style={{
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -335,7 +335,7 @@ function FootballSeedTable({
                 style={{
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -349,7 +349,7 @@ function FootballSeedTable({
                 style={{
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -370,7 +370,7 @@ function FootballSeedTable({
                   minWidth: avgSeedColWidth,
                   maxWidth: avgSeedColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -398,7 +398,7 @@ function FootballSeedTable({
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
                     height: headerHeight,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                   }}
@@ -422,7 +422,7 @@ function FootballSeedTable({
                   minWidth: statusColWidth,
                   maxWidth: statusColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -448,7 +448,7 @@ function FootballSeedTable({
                   minWidth: statusColWidth,
                   maxWidth: statusColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -474,7 +474,7 @@ function FootballSeedTable({
                   minWidth: statusColWidth,
                   maxWidth: statusColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -500,7 +500,7 @@ function FootballSeedTable({
                   minWidth: statusColWidth,
                   maxWidth: statusColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -526,7 +526,7 @@ function FootballSeedTable({
                   minWidth: bidColWidth,
                   maxWidth: bidColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -552,7 +552,7 @@ function FootballSeedTable({
                   minWidth: bidColWidth,
                   maxWidth: bidColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -586,9 +586,9 @@ function FootballSeedTable({
                       height: cellHeight,
                       position: "sticky",
                       left: 0,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
-                      borderRight: "1px solid #e5e7eb",
+                      borderRight: "1px solid var(--border-color)",
                     }}
                   >
                     {index + 1}
@@ -604,10 +604,10 @@ function FootballSeedTable({
                       height: cellHeight,
                       position: "sticky",
                       left: rankColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
-                      borderRight: "1px solid #e5e7eb",
+                      borderRight: "1px solid var(--border-color)",
                     }}
                   >
                     <div className="flex items-center gap-2">
@@ -631,7 +631,7 @@ function FootballSeedTable({
                       minWidth: avgSeedColWidth,
                       maxWidth: avgSeedColWidth,
                       height: cellHeight,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                     }}
@@ -658,7 +658,7 @@ function FootballSeedTable({
                           width: seedColWidth,
                           minWidth: seedColWidth,
                           maxWidth: seedColWidth,
-                          border: "1px solid #e5e7eb",
+                          border: "1px solid var(--border-color)",
                           borderTop: "none",
                           borderLeft: "none",
                           ...cellColorStyle,
@@ -681,7 +681,7 @@ function FootballSeedTable({
                       width: statusColWidth,
                       minWidth: statusColWidth,
                       maxWidth: statusColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       ...getCellColor(team.cfp_bid_pct || 0),
@@ -702,7 +702,7 @@ function FootballSeedTable({
                       width: statusColWidth,
                       minWidth: statusColWidth,
                       maxWidth: statusColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       ...getOutColor(
@@ -727,7 +727,7 @@ function FootballSeedTable({
                       width: statusColWidth,
                       minWidth: statusColWidth,
                       maxWidth: statusColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       ...getOutColor(
@@ -752,7 +752,7 @@ function FootballSeedTable({
                       width: statusColWidth,
                       minWidth: statusColWidth,
                       maxWidth: statusColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       ...getOutColor(outOfPlayoffsPct),
@@ -775,7 +775,7 @@ function FootballSeedTable({
                       width: bidColWidth,
                       minWidth: bidColWidth,
                       maxWidth: bidColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       ...getCellColor(team.conf_champ_overall_pct || 0),
@@ -798,7 +798,7 @@ function FootballSeedTable({
                       width: bidColWidth,
                       minWidth: bidColWidth,
                       maxWidth: bidColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       ...getCellColor(team.at_large_overall_pct || 0),

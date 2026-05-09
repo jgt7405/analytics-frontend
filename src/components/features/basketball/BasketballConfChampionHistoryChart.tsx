@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import "@/lib/chartjs-setup";
 import TeamLogo from "@/components/ui/TeamLogo";
@@ -89,7 +89,7 @@ export default function BasketballConfChampionHistoryChart({
 
   // Debug logging
   useEffect(() => {
-    console.log(`🏀 Champion History Chart Debug - ${selectedConference} (season: ${season})`);
+    console.log(`?? Champion History Chart Debug - ${selectedConference} (season: ${season})`);
     console.log("Raw championData:", championData);
     console.log("Date range:", range);
     console.log("Filtered champion data:", filteredChampionData);
@@ -229,7 +229,7 @@ export default function BasketballConfChampionHistoryChart({
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
-              border: "1px solid #e5e7eb",
+              border: "1px solid var(--border-color)",
               borderRadius: "8px",
               color: "#1f2937",
               fontFamily: "Inter, system-ui, sans-serif",

@@ -104,8 +104,8 @@ function FootballConfChampTable({
                 height: headerHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
-                borderRight: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
+                borderRight: "1px solid var(--border-color)",
                 verticalAlign: "middle",
               }}
             >
@@ -120,7 +120,7 @@ function FootballConfChampTable({
                   width: roundColWidth,
                   minWidth: roundColWidth,
                   maxWidth: roundColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   fontSize: isMobile ? "10px" : "12px",
                   whiteSpace: "pre-line",
@@ -145,9 +145,9 @@ function FootballConfChampTable({
                   height: cellHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ function FootballConfChampTable({
                       width: roundColWidth,
                       minWidth: roundColWidth,
                       maxWidth: roundColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       backgroundColor: colorStyle.backgroundColor,

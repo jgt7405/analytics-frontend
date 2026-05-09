@@ -432,7 +432,7 @@ function BowlPicksTable() {
           style={{
             width: "max-content",
             borderCollapse: "collapse",
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border-color)",
           }}
         >
           <thead>
@@ -447,7 +447,7 @@ function BowlPicksTable() {
               {/* Teams - First column */}
               <th
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -466,7 +466,7 @@ function BowlPicksTable() {
               {/* # - Not frozen */}
               <th
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -479,7 +479,7 @@ function BowlPicksTable() {
               {/* Bowl Name - Not frozen */}
               <th
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "left",
                   fontWeight: "600",
@@ -492,7 +492,7 @@ function BowlPicksTable() {
               {/* Winner */}
               <th
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -503,7 +503,7 @@ function BowlPicksTable() {
               </th>
               <th
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -514,7 +514,7 @@ function BowlPicksTable() {
               </th>
               <th
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -525,7 +525,7 @@ function BowlPicksTable() {
               </th>
               <th
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -540,7 +540,7 @@ function BowlPicksTable() {
                 <th
                   key={`${person}-winner`}
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 4px",
                     textAlign: "center",
                     fontWeight: "600",
@@ -556,7 +556,7 @@ function BowlPicksTable() {
                 <th
                   key={`${person}-points`}
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 3px",
                     textAlign: "center",
                     fontWeight: "600",
@@ -578,7 +578,7 @@ function BowlPicksTable() {
                 {/* Teams - First column */}
                 <td
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "12px",
@@ -615,7 +615,7 @@ function BowlPicksTable() {
                 {/* # - Not frozen */}
                 <td
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "12px",
@@ -627,7 +627,7 @@ function BowlPicksTable() {
                 {/* Bowl Name - Not frozen */}
                 <td
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 6px",
                     textAlign: "left",
                     fontSize: "12px",
@@ -644,7 +644,7 @@ function BowlPicksTable() {
                 {/* Winner */}
                 <td
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "12px",
@@ -669,7 +669,7 @@ function BowlPicksTable() {
                 {/* Date */}
                 <td
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "12px",
@@ -679,7 +679,7 @@ function BowlPicksTable() {
                 </td>
                 <td
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "12px",
@@ -689,7 +689,7 @@ function BowlPicksTable() {
                 </td>
                 <td
                   style={{
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     padding: "4px 6px",
                     textAlign: "center",
                     fontSize: "12px",
@@ -703,7 +703,7 @@ function BowlPicksTable() {
                   <td
                     key={`${game["#"]}-${person}-winner`}
                     style={{
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       padding: "4px 6px",
                       textAlign: "center",
                       fontSize: "12px",
@@ -749,7 +749,7 @@ function BowlPicksTable() {
                     <td
                       key={`${game["#"]}-${person}-points`}
                       style={{
-                        border: "1px solid #e5e7eb",
+                        border: "1px solid var(--border-color)",
                         padding: "4px 6px",
                         textAlign: "center",
                         fontSize: "12px",

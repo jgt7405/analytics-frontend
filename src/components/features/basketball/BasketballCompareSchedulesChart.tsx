@@ -1187,7 +1187,7 @@ export default function BasketballCompareSchedulesChart({
                   top: `${tooltipTop}px`,
                   width: "240px",
                   backgroundColor: "#ffffff",
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "6px",
                   padding: "12px",
                   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",

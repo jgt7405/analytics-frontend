@@ -889,7 +889,7 @@ export default function BballScatterplotChart({
                       x2={MARGIN.left + PLOT_WIDTH}
                       y1={y}
                       y2={y}
-                      stroke={isZeroLine ? "#000" : "#e5e7eb"}
+                      stroke={isZeroLine ? "#000" : "var(--border-color)"}
                       strokeWidth={isZeroLine ? 2 : 1}
                     />
                   </g>
@@ -909,7 +909,7 @@ export default function BballScatterplotChart({
                       x2={x}
                       y1={MARGIN.top}
                       y2={MARGIN.top + PLOT_HEIGHT}
-                      stroke={isZeroLine ? "#000" : "#e5e7eb"}
+                      stroke={isZeroLine ? "#000" : "var(--border-color)"}
                       strokeWidth={isZeroLine ? 2 : 1}
                     />
                   </g>

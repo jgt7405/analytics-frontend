@@ -245,8 +245,8 @@ function FootballCFPProb({
                         top: 0,
                         left: 0,
                       }),
-                  border: "1px solid #e5e7eb",
-                  borderRight: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 #
@@ -270,9 +270,9 @@ function FootballCFPProb({
                         top: 0,
                         left: rankColWidth,
                       }),
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
                 title="Click to sort by team name"
               >
@@ -297,7 +297,7 @@ function FootballCFPProb({
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
                   lineHeight: "1.2",
@@ -325,7 +325,7 @@ function FootballCFPProb({
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
                   lineHeight: "1.2",
@@ -353,7 +353,7 @@ function FootballCFPProb({
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
                 title="Click to sort by change"
@@ -390,9 +390,9 @@ function FootballCFPProb({
                           left: 0,
                           zIndex: 20,
                         }),
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                   }}
                 >
                   {index + 1}
@@ -413,10 +413,10 @@ function FootballCFPProb({
                           left: rankColWidth,
                           zIndex: 20,
                         }),
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                   }}
                 >
                   <div
@@ -442,7 +442,7 @@ function FootballCFPProb({
                     width: probColWidth,
                     minWidth: probColWidth,
                     maxWidth: probColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...getCellColor(team.currentProb),
@@ -465,7 +465,7 @@ function FootballCFPProb({
                     width: probColWidth,
                     minWidth: probColWidth,
                     maxWidth: probColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...(hasCalculated
@@ -490,7 +490,7 @@ function FootballCFPProb({
                     width: probColWidth,
                     minWidth: probColWidth,
                     maxWidth: probColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...(hasCalculated

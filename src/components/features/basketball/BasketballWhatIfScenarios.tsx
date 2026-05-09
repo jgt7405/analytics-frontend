@@ -92,7 +92,7 @@ async function captureScreenshot(
 
   const header = document.createElement("div");
   header.style.cssText =
-    "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #e5e7eb;";
+    "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid var(--border-color);";
   const logo = document.createElement("img");
   logo.src = "/images/JThom_Logo.png";
   logo.style.cssText = "height:40px;width:auto;";
@@ -117,7 +117,7 @@ async function captureScreenshot(
     const legendDiv = document.createElement("div");
     legendDiv.innerHTML = selectionLegendHtml;
     legendDiv.style.cssText =
-      "margin-top:12px;padding-top:10px;border-top:1px solid #e5e7eb;font-size:11px;color:#6b7280;";
+      "margin-top:12px;padding-top:10px;border-top:1px solid var(--border-color);font-size:11px;color:#6b7280;";
     wrapper.appendChild(legendDiv);
   }
 
@@ -898,7 +898,7 @@ function TeamFilterDropdown({
       {isOpen && (
         <div
           className="absolute z-30 mt-1 w-full rounded-md shadow-lg max-h-[240px] overflow-y-auto"
-          style={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
+          style={{ backgroundColor: "#ffffff", border: "1px solid var(--border-color)" }}
         >
           <button
             onClick={handleSelectAll}

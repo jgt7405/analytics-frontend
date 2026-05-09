@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -131,7 +131,7 @@ export default function BasketballTeamRankHistory({
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
-              border: "1px solid #e5e7eb",
+              border: "1px solid var(--border-color)",
               borderRadius: "8px",
               color: "#1f2937",
               fontFamily: "Inter, system-ui, sans-serif",
@@ -237,7 +237,7 @@ export default function BasketballTeamRankHistory({
                 top: "50%",
                 transform: "translateY(-50%)",
                 borderWidth: "6px 6px 6px 0",
-                borderColor: "transparent #e5e7eb transparent transparent",
+                borderColor: "transparent var(--border-color) transparent transparent",
               });
 
               const arrowInner = document.createElement("div");
@@ -258,7 +258,7 @@ export default function BasketballTeamRankHistory({
                 top: "50%",
                 transform: "translateY(-50%)",
                 borderWidth: "6px 0 6px 6px",
-                borderColor: "transparent transparent transparent #e5e7eb",
+                borderColor: "transparent transparent transparent var(--border-color)",
               });
 
               const arrowInner = document.createElement("div");

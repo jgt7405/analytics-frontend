@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import "@/lib/chartjs-setup";
 import TeamLogo from "@/components/ui/TeamLogo";
@@ -180,7 +180,7 @@ export default function BballStandingsHistoryChart({
     const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
     const color = isSelected
       ? team.team_info.primary_color || "#000000"
-      : "#d1d5db";
+      : "var(--border-color)";
 
     return {
       label: teamName,
@@ -223,7 +223,7 @@ export default function BballStandingsHistoryChart({
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
-              border: "1px solid #e5e7eb",
+              border: "1px solid var(--border-color)",
               borderRadius: "8px",
               color: "#1f2937",
               fontFamily: "Inter, system-ui, sans-serif",
@@ -449,7 +449,7 @@ export default function BballStandingsHistoryChart({
                 selectedTeams.size === 0 || selectedTeams.has(team.team_name);
               const teamColor = isSelected
                 ? team.team_info.primary_color || "#94a3b8"
-                : "#d1d5db";
+                : "var(--border-color)";
 
               return (
                 <div key={`end-${team.team_name}`}>
@@ -514,7 +514,7 @@ export default function BballStandingsHistoryChart({
                       style={{
                         color: isSelected
                           ? team.team_info.primary_color || "#000000"
-                          : "#d1d5db",
+                          : "var(--border-color)",
                         minWidth: "35px",
                         textAlign: "left",
                       }}

@@ -331,8 +331,8 @@ function SeedTable({
                   position: "sticky",
                   top: 0,
                   left: 0,
-                  border: "1px solid #e5e7eb",
-                  borderRight: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 #
@@ -351,9 +351,9 @@ function SeedTable({
                   position: "sticky",
                   top: 0,
                   left: rankColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 Team
@@ -369,7 +369,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -386,7 +386,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -403,7 +403,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -426,7 +426,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: headerHeight / 2,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -456,7 +456,7 @@ function SeedTable({
                     height: headerHeight / 2,
                     position: "sticky",
                     top: headerHeight / 2,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                   }}
@@ -482,7 +482,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: headerHeight / 2,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -510,7 +510,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: headerHeight / 2,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -538,7 +538,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: headerHeight / 2,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -566,7 +566,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: headerHeight / 2,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -594,7 +594,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: headerHeight / 2,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -622,7 +622,7 @@ function SeedTable({
                   height: headerHeight / 2,
                   position: "sticky",
                   top: headerHeight / 2,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   whiteSpace: "pre-line",
@@ -653,9 +653,9 @@ function SeedTable({
                     height: cellHeight,
                     position: "sticky",
                     left: 0,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                   }}
                 >
                   {index + 1}
@@ -673,10 +673,10 @@ function SeedTable({
                     height: cellHeight,
                     position: "sticky",
                     left: rankColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                   }}
                 >
                   <div className="flex items-center gap-2">
@@ -700,7 +700,7 @@ function SeedTable({
                     minWidth: avgSeedColWidth,
                     maxWidth: avgSeedColWidth,
                     height: cellHeight,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                   }}
@@ -723,7 +723,7 @@ function SeedTable({
                         width: seedColWidth,
                         minWidth: seedColWidth,
                         maxWidth: seedColWidth,
-                        border: "1px solid #e5e7eb",
+                        border: "1px solid var(--border-color)",
                         borderTop: "none",
                         borderLeft: "none",
                         backgroundColor: colorStyle.backgroundColor,
@@ -749,7 +749,7 @@ function SeedTable({
                     width: tourneyColWidth,
                     minWidth: tourneyColWidth,
                     maxWidth: tourneyColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...getCellColor(
@@ -776,7 +776,7 @@ function SeedTable({
                     width: outColWidth,
                     minWidth: outColWidth,
                     maxWidth: outColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...getOutColor(
@@ -803,7 +803,7 @@ function SeedTable({
                     width: outColWidth,
                     minWidth: outColWidth,
                     maxWidth: outColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...getOutColor(
@@ -830,7 +830,7 @@ function SeedTable({
                     width: outColWidth,
                     minWidth: outColWidth,
                     maxWidth: outColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...getOutColor(
@@ -867,7 +867,7 @@ function SeedTable({
                     width: bidColWidth,
                     minWidth: bidColWidth,
                     maxWidth: bidColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...getCellColor(team.auto_bid_overall_pct ?? 0),
@@ -892,7 +892,7 @@ function SeedTable({
                     width: bidColWidth,
                     minWidth: bidColWidth,
                     maxWidth: bidColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     ...getCellColor(team.at_large_overall_pct ?? 0),

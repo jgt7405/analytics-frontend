@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import "@/lib/chartjs-setup";
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
@@ -321,7 +321,7 @@ export default function BasketballTeamTournamentProgressionHistory({
 
             Object.assign(tooltipEl.style, {
               background: "#ffffff",
-              border: "1px solid #e5e7eb",
+              border: "1px solid var(--border-color)",
               borderRadius: "8px",
               color: "#1f2937",
               fontFamily: "Inter, system-ui, sans-serif",

@@ -239,8 +239,8 @@ function NCAATeamTable({
                   height: headerHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
-                  borderRight: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
+                  borderRight: "1px solid var(--border-color)",
                   verticalAlign: "middle",
                 }}
               >
@@ -258,9 +258,9 @@ function NCAATeamTable({
                   height: headerHeight,
                   position: "sticky",
                   left: rankColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                   verticalAlign: "middle",
                 }}
               >
@@ -279,7 +279,7 @@ function NCAATeamTable({
                     width: roundColWidth,
                     minWidth: roundColWidth,
                     maxWidth: roundColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderLeft: "none",
                     fontSize: isMobile ? "10px" : "12px",
                     whiteSpace: "pre-line",
@@ -311,9 +311,9 @@ function NCAATeamTable({
                     height: cellHeight,
                     position: "sticky",
                     left: 0,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                     verticalAlign: "middle",
                   }}
                 >
@@ -333,10 +333,10 @@ function NCAATeamTable({
                     height: cellHeight,
                     position: "sticky",
                     left: rankColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                     verticalAlign: "middle",
                   }}
                   onClick={() => navigateToTeam(team.team_name)}
@@ -366,7 +366,7 @@ function NCAATeamTable({
                         height: cellHeight,
                         backgroundColor: cellStyle.backgroundColor,
                         color: cellStyle.color,
-                        border: "1px solid #e5e7eb",
+                        border: "1px solid var(--border-color)",
                         borderTop: "none",
                         borderLeft: "none",
                         fontSize: isMobile ? "10px" : "12px",

@@ -183,7 +183,7 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
                 className="absolute w-full"
                 style={{
                   top: `${scale(tick)}px`,
-                  borderBottom: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+                  borderBottom: `1px solid ${isDark ? "#374151" : "var(--border-color)"}`,
                 }}
               />
             ))}

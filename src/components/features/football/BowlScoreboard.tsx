@@ -588,7 +588,7 @@ function BowlScoreboard() {
           style={{
             width: "max-content",
             borderCollapse: "collapse",
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border-color)",
           }}
         >
           <thead>
@@ -603,7 +603,7 @@ function BowlScoreboard() {
               <th
                 onClick={() => handleHeaderClick("name")}
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 8px",
                   textAlign: "left",
                   fontWeight: "600",
@@ -622,7 +622,7 @@ function BowlScoreboard() {
               <th
                 onClick={() => handleHeaderClick("totalPoints")}
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -636,7 +636,7 @@ function BowlScoreboard() {
               <th
                 onClick={() => handleHeaderClick("percentPoints")}
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -650,7 +650,7 @@ function BowlScoreboard() {
               <th
                 onClick={() => handleHeaderClick("totalPossible")}
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -664,7 +664,7 @@ function BowlScoreboard() {
               <th
                 onClick={() => handleHeaderClick("percentPossible")}
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -678,7 +678,7 @@ function BowlScoreboard() {
               <th
                 onClick={() => handleHeaderClick("percentRight")}
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -692,7 +692,7 @@ function BowlScoreboard() {
               <th
                 onClick={() => handleHeaderClick("pointsLeft")}
                 style={{
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   padding: "4px 6px",
                   textAlign: "center",
                   fontWeight: "600",
@@ -730,7 +730,7 @@ function BowlScoreboard() {
                 >
                   <td
                     style={{
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       padding: "4px 8px",
                       textAlign: "left",
                       fontSize: "12px",
@@ -746,7 +746,7 @@ function BowlScoreboard() {
                   </td>
                   <td
                     style={{
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       padding: "4px 6px",
                       textAlign: "center",
                       fontSize: "12px",
@@ -761,7 +761,7 @@ function BowlScoreboard() {
                   </td>
                   <td
                     style={{
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       padding: "4px 6px",
                       textAlign: "center",
                       fontSize: "12px",
@@ -776,7 +776,7 @@ function BowlScoreboard() {
                   </td>
                   <td
                     style={{
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       padding: "4px 6px",
                       textAlign: "center",
                       fontSize: "12px",
@@ -791,7 +791,7 @@ function BowlScoreboard() {
                   </td>
                   <td
                     style={{
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       padding: "4px 6px",
                       textAlign: "center",
                       fontSize: "12px",
@@ -806,7 +806,7 @@ function BowlScoreboard() {
                   </td>
                   <td
                     style={{
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       padding: "4px 6px",
                       textAlign: "center",
                       fontSize: "12px",
@@ -818,7 +818,7 @@ function BowlScoreboard() {
                   </td>
                   <td
                     style={{
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       padding: "4px 6px",
                       textAlign: "center",
                       fontSize: "12px",

@@ -199,8 +199,8 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                   position: "sticky",
                   top: 0,
                   left: 0,
-                  border: "1px solid #e5e7eb",
-                  borderRight: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 Rank
@@ -217,9 +217,9 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                   position: "sticky",
                   top: 0,
                   left: rankColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
-                  borderRight: "2px solid #d1d5db",
+                  borderRight: "2px solid var(--border-color)",
                 }}
               >
                 Team
@@ -235,7 +235,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   cursor: "help",
                 }}
@@ -276,7 +276,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   cursor: "help",
                 }}
@@ -323,7 +323,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   cursor: "help",
                 }}
@@ -375,9 +375,9 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                     height: cellHeight,
                     position: "sticky",
                     left: 0,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                   }}
                 >
                   {team.rank}
@@ -393,10 +393,10 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                     height: cellHeight,
                     position: "sticky",
                     left: rankColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
-                    borderRight: "2px solid #d1d5db",
+                    borderRight: "2px solid var(--border-color)",
                   }}
                 >
                   <div className="flex items-center gap-2">
@@ -419,7 +419,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                     minWidth: twvColWidth,
                     maxWidth: twvColWidth,
                     height: cellHeight,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                   }}
@@ -442,7 +442,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                     minWidth: recordColWidth,
                     maxWidth: recordColWidth,
                     height: cellHeight,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     padding: "6px 4px",
@@ -459,7 +459,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                     minWidth: recordColWidth,
                     maxWidth: recordColWidth,
                     height: cellHeight,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                     padding: "6px 4px",

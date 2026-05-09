@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { buildChartLabels, filterDataToRange, getBasketballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -213,7 +213,7 @@ export default function BballConfBidsHistoryChart({
             tooltipEl = document.createElement("div");
             tooltipEl.id = "chartjs-tooltip-bball-conf";
             tooltipEl.style.background = "#ffffff";
-            tooltipEl.style.border = "1px solid #e5e7eb";
+            tooltipEl.style.border = "1px solid var(--border-color)";
             tooltipEl.style.borderRadius = "8px";
             tooltipEl.style.color = "#1f2937";
             tooltipEl.style.fontFamily = "Inter, system-ui, sans-serif";

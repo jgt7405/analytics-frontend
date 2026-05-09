@@ -499,7 +499,7 @@ export default function BasketballTeamScheduleDifficulty({
                   className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
                     comparisonFilter === option.value
                       ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                      : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
+                      : "bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   {option.label}
@@ -520,7 +520,7 @@ export default function BasketballTeamScheduleDifficulty({
                   className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
                     gameFilter === option.value
                       ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                      : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
+                      : "bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   {option.label}
@@ -541,7 +541,7 @@ export default function BasketballTeamScheduleDifficulty({
                   className={`${isMobile ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-sm"} rounded-md border transition-colors ${
                     locationFilter === option.value
                       ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                      : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
+                      : "bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
                   }`}
                 >
                   {option.label}
@@ -836,7 +836,7 @@ export default function BasketballTeamScheduleDifficulty({
                   top: `${tooltipTop}px`,
                   width: "240px",
                   backgroundColor: "#ffffff",
-                  border: "1px solid #d1d5db",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "6px",
                   padding: "12px",
                   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",

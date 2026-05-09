@@ -156,7 +156,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
     if (isLastInGroup) {
       return "3px solid #1f2937"; // Dark separator
     }
-    return "1px solid #e5e7eb";
+    return "1px solid var(--border-color)";
   };
 
   // Render a team row with conditional highlighting for secured auto bids
@@ -169,7 +169,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
     // Not teams with projected "Auto Bid" status
     const isSecuredAutoBid = team.is_conf_tourney_winner === true;
     const teamCellBgColor = isSecuredAutoBid ? "#dcfce7" : "white"; // light green only for team cell
-    const teamCellBorderColor = isSecuredAutoBid ? "#16a34a" : "#d1d5db"; // darker green border only for team cell
+    const teamCellBorderColor = isSecuredAutoBid ? "#16a34a" : "var(--border-color)"; // darker green border only for team cell
 
     return (
       <tr key={`${team.teamid}-${index}`}>
@@ -183,9 +183,9 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
             height: cellHeight,
             position: "sticky",
             left: 0,
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border-color)",
             borderTop: "none",
-            borderRight: "1px solid #e5e7eb",
+            borderRight: "1px solid var(--border-color)",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
           }}
         >
@@ -230,7 +230,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
             minWidth: confColWidth,
             maxWidth: confColWidth,
             height: cellHeight,
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border-color)",
             borderTop: "none",
             borderLeft: "none",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
@@ -259,7 +259,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
             minWidth: categoryColWidth,
             maxWidth: categoryColWidth,
             height: cellHeight,
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border-color)",
             borderTop: "none",
             borderLeft: "none",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
@@ -279,7 +279,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
             minWidth: twvColWidth,
             maxWidth: twvColWidth,
             height: cellHeight,
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border-color)",
             borderTop: "none",
             borderLeft: "none",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
@@ -317,8 +317,8 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                   position: "sticky",
                   top: 0,
                   left: 0,
-                  border: "1px solid #e5e7eb",
-                  borderRight: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 Seed
@@ -335,9 +335,9 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                   position: "sticky",
                   top: 0,
                   left: seedColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
-                  borderRight: "2px solid #d1d5db",
+                  borderRight: "2px solid var(--border-color)",
                 }}
               >
                 Team
@@ -353,7 +353,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -370,7 +370,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -387,7 +387,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >

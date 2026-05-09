@@ -188,7 +188,7 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
                 position: "sticky",
                 left: 0,
                 border: "1px solid var(--border-color)",
-                borderTop: "2px solid #d1d5db",
+                borderTop: "2px solid var(--border-color)",
                 borderRight: "1px solid var(--border-color)",
               }}
             >

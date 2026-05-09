@@ -265,7 +265,7 @@ function BowlPicksProjectionChart() {
         <div
           style={{
             backgroundColor: "#ffffff",
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border-color)",
             borderRadius: "4px",
             padding: "8px",
           }}
@@ -312,7 +312,7 @@ function BowlPicksProjectionChart() {
         <div
           style={{
             backgroundColor: "#ffffff",
-            border: "1px solid #e5e7eb",
+            border: "1px solid var(--border-color)",
             borderRadius: "4px",
             padding: "8px",
           }}
@@ -594,7 +594,7 @@ function BowlPicksProjectionChart() {
         padding: "16px",
         backgroundColor: "#ffffff",
         borderRadius: "8px",
-        border: "1px solid #e5e7eb",
+        border: "1px solid var(--border-color)",
         marginBottom: "24px",
       }}
     >

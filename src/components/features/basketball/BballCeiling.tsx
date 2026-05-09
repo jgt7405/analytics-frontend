@@ -409,7 +409,7 @@ export default function BballCeiling({
         {/* Divider line */}
         <div
           style={{
-            backgroundColor: "#e5e7eb",
+            backgroundColor: "var(--border-color)",
             width: "1px",
             minHeight: fixedHeight,
             boxSizing: "border-box",
@@ -511,7 +511,7 @@ export default function BballCeiling({
           paddingRight: paddingHorizontal,
           paddingTop: 12,
           paddingBottom: 8,
-          borderBottom: "2px solid #e5e7eb",
+          borderBottom: "2px solid var(--border-color)",
           boxSizing: "border-box",
           flexShrink: 0,
         }}

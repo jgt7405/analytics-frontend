@@ -192,7 +192,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
         backgroundColor = isNextGame ? "#d6ebf2" : "#f0f0f0";
         content = formatDate(game.date);
-        textColor = "#4b5563";
+        textColor = "var(--border-color)";
       }
 
       const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -264,8 +264,8 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 height: headerHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
-                borderRight: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               #
@@ -279,9 +279,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 height: headerHeight,
                 position: "sticky",
                 left: firstColWidth,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderLeft: "none",
-                borderRight: "1px solid #e5e7eb",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Win Prob
@@ -295,7 +295,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
                   height: headerHeight,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
                 onClick={() => navigateToTeam(team.team_name)}
@@ -324,9 +324,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   height: cellHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 {rank}
@@ -340,10 +340,10 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   height: cellHeight,
                   position: "sticky",
                   left: firstColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 {winProbsByRank[rank]
@@ -359,7 +359,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                     width: teamColWidth,
                     minWidth: teamColWidth,
                     maxWidth: teamColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
                   }}
@@ -381,9 +381,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "none",
-                borderRight: "1px solid #e5e7eb",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Conf Win Value
@@ -397,7 +397,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                 }}
@@ -425,9 +425,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "none",
-                borderRight: "1px solid #e5e7eb",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Current Record
@@ -441,7 +441,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   padding: "2px",
@@ -463,9 +463,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderTop: "none",
-                borderRight: "1px solid #e5e7eb",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Est Avg Team Record
@@ -479,7 +479,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                   padding: "2px",

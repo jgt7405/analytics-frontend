@@ -103,8 +103,8 @@ function ConferenceBidsTable({
                 position: "sticky",
                 top: 0,
                 left: 0,
-                border: "1px solid #e5e7eb",
-                borderRight: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Conference
@@ -122,7 +122,7 @@ function ConferenceBidsTable({
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -140,7 +140,7 @@ function ConferenceBidsTable({
                 height: headerHeight,
                 position: "sticky",
                 top: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderLeft: "none",
               }}
             >
@@ -161,9 +161,9 @@ function ConferenceBidsTable({
                   height: cellHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ function ConferenceBidsTable({
                       width: bidColWidth,
                       minWidth: bidColWidth,
                       maxWidth: bidColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       backgroundColor: colorStyle.backgroundColor,
@@ -221,7 +221,7 @@ function ConferenceBidsTable({
                   width: avgColWidth,
                   minWidth: avgColWidth,
                   maxWidth: avgColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                 }}

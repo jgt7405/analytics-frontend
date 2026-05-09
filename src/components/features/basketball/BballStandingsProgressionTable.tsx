@@ -2,7 +2,7 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 interface TimelineData {
   team_name: string;
@@ -34,6 +34,11 @@ export default function BballStandingsProgressionTable({
 }: BballStandingsProgressionTableProps) {
   const { isMobile } = useResponsive();
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
 
   // Generate dates: 1st and 15th of each month, last date - IN PROPER CHRONOLOGICAL ORDER
   const selectedDates = useMemo(() => {
@@ -222,7 +227,7 @@ export default function BballStandingsProgressionTable({
   const cellHeight = isMobile ? 36 : 44;
   const cellWidth = isMobile ? 80 : 100;
   const axisLabelWidth = isMobile ? 28 : 36;
-  const borderColor = "#d1d5db";
+  const borderColor = isDark ? "#374151" : "#e5e7eb";
 
   if (!timelineData || timelineData.length === 0) {
     return (
@@ -298,7 +303,7 @@ export default function BballStandingsProgressionTable({
                     return (
                       <div
                         key={`${dateStr}-pos-${position}`}
-                        className="flex items-center justify-center bg-white dark:bg-slate-900 hover:bg-gray-50 dark:bg-slate-800 transition-colors"
+                        className="flex items-center justify-center bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800 transition-colors"
                         style={{
                           width: `${cellWidth}px`,
                           height: `${cellHeight}px`,

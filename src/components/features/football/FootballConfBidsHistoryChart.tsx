@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import "@/lib/chartjs-setup";
 import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
@@ -238,7 +238,7 @@ export default function FootballConfBidsHistoryChart({
             tooltipEl = document.createElement("div");
             tooltipEl.id = "chartjs-tooltip-conf";
             tooltipEl.style.background = "#ffffff";
-            tooltipEl.style.border = "1px solid #e5e7eb";
+            tooltipEl.style.border = "1px solid var(--border-color)";
             tooltipEl.style.borderRadius = "8px";
             tooltipEl.style.color = "#1f2937";
             tooltipEl.style.fontFamily = "Inter, system-ui, sans-serif";

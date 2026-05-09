@@ -98,7 +98,7 @@ function FootballRegularSeasonWinsTable({
                 maxWidth: firstColWidth,
                 height: headerHeight,
                 border: "1px solid var(--border-color)",
-                borderBottom: "2px solid #d1d5db",
+                borderBottom: "2px solid var(--border-color)",
               }}
             >
               Wins
@@ -191,7 +191,7 @@ function FootballRegularSeasonWinsTable({
                 position: "sticky",
                 left: 0,
                 border: "1px solid var(--border-color)",
-                borderTop: "2px solid #d1d5db",
+                borderTop: "2px solid var(--border-color)",
               }}
             >
               Avg

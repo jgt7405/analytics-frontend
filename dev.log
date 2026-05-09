@@ -1,0 +1,15 @@
+
+> jthom-analytics@0.1.0 dev
+> next dev --hostname 0.0.0.0
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+  ▲ Next.js 14.2.18
+  - Local:        http://localhost:3001
+  - Network:      http://0.0.0.0:3001
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · webpackBuildWorker
+    · missingSuspenseWithCSRBailout
+
+ ✓ Starting...
+ ✓ Ready in 25.7s

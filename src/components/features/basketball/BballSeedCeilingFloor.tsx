@@ -230,7 +230,7 @@ export default function BballSeedCeilingFloor({
               position: "sticky",
               left: 0,
               zIndex: 5,
-              borderRight: "1px solid #dee2e6",
+              borderRight: "1px solid var(--border-color)",
             }}
           >
             {/* Y-axis: team logos and pie charts */}
@@ -457,7 +457,7 @@ export default function BballSeedCeilingFloor({
           display: "flex",
           overflowX: isMobile ? "hidden" : "auto",
           backgroundColor: "white",
-          borderTop: "1px solid #dee2e6",
+          borderTop: "1px solid var(--border-color)",
           scrollbarGutter: "stable",
         }}
       >

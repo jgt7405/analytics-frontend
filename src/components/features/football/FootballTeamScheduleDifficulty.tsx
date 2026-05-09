@@ -463,7 +463,7 @@ export default function FootballTeamScheduleDifficulty({
                   x2={MARGIN.left + PLOT_WIDTH}
                   y1={y}
                   y2={y}
-                  stroke="#e5e7eb"
+                  stroke="var(--border-color)"
                   strokeWidth={1}
                 />
                 <text

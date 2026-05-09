@@ -112,8 +112,8 @@ function FootballConfDataTable({
                 position: "sticky",
                 top: 0,
                 left: 0,
-                border: "1px solid #e5e7eb",
-                borderRight: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
+                borderRight: "1px solid var(--border-color)",
               }}
             >
               Conference
@@ -133,7 +133,7 @@ function FootballConfDataTable({
                   height: headerHeight,
                   position: "sticky",
                   top: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >
@@ -153,7 +153,7 @@ function FootballConfDataTable({
                 height: headerHeight,
                 position: "sticky",
                 top: 0,
-                border: "1px solid #e5e7eb",
+                border: "1px solid var(--border-color)",
                 borderLeft: "none",
               }}
             >
@@ -176,9 +176,9 @@ function FootballConfDataTable({
                   height: cellHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ function FootballConfDataTable({
                       width: bidColWidth,
                       minWidth: bidColWidth,
                       maxWidth: bidColWidth,
-                      border: "1px solid #e5e7eb",
+                      border: "1px solid var(--border-color)",
                       borderTop: "none",
                       borderLeft: "none",
                       backgroundColor: colorStyle.backgroundColor,
@@ -242,7 +242,7 @@ function FootballConfDataTable({
                   width: avgColWidth,
                   minWidth: avgColWidth,
                   maxWidth: avgColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderTop: "none",
                   borderLeft: "none",
                 }}

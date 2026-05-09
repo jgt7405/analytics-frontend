@@ -190,7 +190,7 @@ function BballRegSeasonWinsTable({
                 position: "sticky",
                 left: 0,
                 border: "1px solid var(--border-color)",
-                borderTop: "2px solid #4b5563",
+                borderTop: "2px solid var(--border-color)",
                 borderRight: "1px solid var(--border-color)",
               }}
             >
@@ -204,7 +204,7 @@ function BballRegSeasonWinsTable({
                   height: summaryRowHeight,
                   width: teamColWidth,
                   border: "1px solid var(--border-color)",
-                  borderTop: "2px solid #4b5563",
+                  borderTop: "2px solid var(--border-color)",
                   borderLeft: "none",
                 }}
               >

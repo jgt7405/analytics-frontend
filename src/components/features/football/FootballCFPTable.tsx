@@ -208,8 +208,8 @@ function FootballCFPTable({
                   height: headerHeight,
                   position: "sticky",
                   left: 0,
-                  border: "1px solid #e5e7eb",
-                  borderRight: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
+                  borderRight: "1px solid var(--border-color)",
                   verticalAlign: "middle",
                 }}
               >
@@ -227,9 +227,9 @@ function FootballCFPTable({
                   height: headerHeight,
                   position: "sticky",
                   left: rankColWidth,
-                  border: "1px solid #e5e7eb",
+                  border: "1px solid var(--border-color)",
                   borderLeft: "none",
-                  borderRight: "1px solid #e5e7eb",
+                  borderRight: "1px solid var(--border-color)",
                   verticalAlign: "middle",
                 }}
               >
@@ -239,7 +239,7 @@ function FootballCFPTable({
               {allRounds.map((round) => (
                 <th
                   key={round}
-                  className={`bg-gray-50 dark:bg-slate-800 text-center font-normal cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                  className={`bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-center font-normal cursor-pointer transition-colors ${
                     sortColumn === round ? "bg-blue-100" : ""
                   }`}
                   onClick={() => handleColumnClick(round as RoundKey)}
@@ -248,7 +248,7 @@ function FootballCFPTable({
                     width: roundColWidth,
                     minWidth: roundColWidth,
                     maxWidth: roundColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderLeft: "none",
                     fontSize: isMobile ? "10px" : "12px",
                     whiteSpace: "pre-line",
@@ -280,9 +280,9 @@ function FootballCFPTable({
                     height: cellHeight,
                     position: "sticky",
                     left: 0,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                     verticalAlign: "middle",
                   }}
                 >
@@ -300,10 +300,10 @@ function FootballCFPTable({
                     height: cellHeight,
                     position: "sticky",
                     left: rankColWidth,
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
-                    borderRight: "1px solid #e5e7eb",
+                    borderRight: "1px solid var(--border-color)",
                     verticalAlign: "middle",
                   }}
                   onClick={() => navigateToTeam(team.team_name)}
@@ -334,7 +334,7 @@ function FootballCFPTable({
                         height: cellHeight,
                         backgroundColor: cellStyle.backgroundColor,
                         color: cellStyle.color,
-                        border: "1px solid #e5e7eb",
+                        border: "1px solid var(--border-color)",
                         borderTop: "none",
                         borderLeft: "none",
                         fontSize: isMobile ? "10px" : "12px",

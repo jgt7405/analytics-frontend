@@ -76,7 +76,7 @@ export default function FootballTeamSchedule({
       case "L":
         return "#ef4444"; // Red
       default:
-        return "#e5e7eb"; // Gray
+        return "var(--border-color)"; // Gray
     }
   };
 
@@ -154,7 +154,7 @@ export default function FootballTeamSchedule({
                 style={{
                   width: boxWidth,
                   height: boxHeight,
-                  border: "1px dashed #d1d5db",
+                  border: "1px dashed var(--border-color)",
                   borderRadius: "4px",
                 }}
               >
