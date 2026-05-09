@@ -99,6 +99,11 @@ export default function FootballComparePage() {
   }>({});
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [loadingTeams, setLoadingTeams] = useState<Set<string>>(new Set());
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
 
   const loadTeamData = useCallback(
     async (teamName: string): Promise<TeamData | null> => {
@@ -285,11 +290,23 @@ export default function FootballComparePage() {
                                       : "bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 hover:border-[rgb(0,151,178)] hover:shadow-md"
                                 }`}
                               >
-                                <img
-                                  src={team.logo_url}
-                                  alt={team.team_name}
-                                  className="w-full h-full object-contain"
-                                />
+                                <div
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    borderRadius: "50%",
+                                    backgroundColor: isDark ? "white" : "transparent",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <img
+                                    src={team.logo_url}
+                                    alt={team.team_name}
+                                    className="w-full h-full object-contain"
+                                  />
+                                </div>
                                 {isSelected && (
                                   <div className="absolute top-0 right-0 w-3 h-3 bg-[rgb(0,151,178)] rounded-full flex items-center justify-center">
                                     <div className="text-white text-[8px] font-bold">
