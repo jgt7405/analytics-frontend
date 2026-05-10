@@ -477,7 +477,10 @@ export async function GET(
  *   Calculates what-if scenarios
  *
  * - POST /api/proxy/football/whatif/export
- *   Exports what-if scenarios as CSV
+ *   Exports what-if scenarios as wide-format CSV
+ *
+ * - POST /api/proxy/football/whatif/structured-csv
+ *   Exports what-if scenarios in structured CSV format
  *
  * - POST /api/proxy/football/bowl-game-winner
  *   Marks a bowl game with a winner
@@ -550,6 +553,14 @@ export async function POST(
     ) {
       backendPath = `/football/whatif/export`;
       console.log("📥 FOOTBALL WHAT-IF EXPORT detected");
+    } else if (
+      slug.length === 3 &&
+      slug[0] === "football" &&
+      slug[1] === "whatif" &&
+      slug[2] === "structured-csv"
+    ) {
+      backendPath = `/football/whatif/structured-csv`;
+      console.log("📥 FOOTBALL WHAT-IF STRUCTURED CSV detected");
     }
 
     // ===== HANDLE BASKETBALL WHAT-IF BASELINE =====
