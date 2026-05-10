@@ -38,6 +38,7 @@ export default function WhatIfCalculator() {
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
   const [exportStatus, setExportStatus] = useState("");
   const [isDark, setIsDark] = useState(false);
+  const [isDownloadingCsv, setIsDownloadingCsv] = useState(false);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -151,6 +152,49 @@ export default function WhatIfCalculator() {
   const handleOpenScreenshotModal = () => {
     setIsScreenshotMode(true);
     setIsScreenshotModalOpen(true);
+  };
+
+  const handleDownloadCsv = async () => {
+    setIsDownloadingCsv(true);
+    try {
+      const selections = Array.from(gameSelections.entries()).map(
+        ([gameId, winnerId]) => ({
+          game_id: gameId,
+          winner_team_id: winnerId,
+        })
+      );
+
+      const response = await fetch("/api/proxy/football/whatif/structured-csv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conference: selectedConference,
+          selections,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        const blob = new Blob([data.csv_data], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = data.filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        setExportStatus(`✓ Downloaded: ${data.filename}`);
+        setTimeout(() => setExportStatus(""), 5000);
+      } else {
+        throw new Error(data.error || "Failed to generate CSV");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to download CSV";
+      setExportStatus(`✗ Error: ${message}`);
+      setTimeout(() => setExportStatus(""), 5000);
+    } finally {
+      setIsDownloadingCsv(false);
+    }
   };
 
   const calculateTop2Probability = (team: WhatIfTeamResult) => {
@@ -757,16 +801,15 @@ export default function WhatIfCalculator() {
 
             {/* Download Buttons */}
             <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end gap-3">
-              {/* New Wide-Format CSV Export Button - INVISIBLE */}
+              {/* Download CSV Button */}
               <button
-                onClick={exportModal.openModal}
-                disabled={!whatIfResults.length}
-                className="px-4 py-2 bg-white hover:bg-white disabled:bg-white disabled:cursor-not-allowed text-white rounded text-sm font-medium transition-colors flex items-center gap-2 border-0"
-                style={{ boxShadow: "none", outline: "none" }}
-                title="Export what-if data as wide-format CSV with pagination"
+                onClick={handleDownloadCsv}
+                disabled={!selectedConference || isDownloadingCsv}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded text-sm font-medium transition-colors flex items-center gap-2"
+                title="Download what-if data as structured CSV"
               >
                 <Download className="w-4 h-4" />
-                Export (Wide Format)
+                {isDownloadingCsv ? "Downloading..." : "Download CSV"}
               </button>
 
               {/* Screenshot Download Button */}
