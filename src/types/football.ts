@@ -164,20 +164,6 @@ export interface FootballScheduleResponse {
   >;
 }
 
-export interface FootballTWVTeam {
-  team_name: string;
-  team_id: string;
-  logo_url: string;
-  twv: number;
-  actual_record: string;
-  expected_record: string;
-  rank: number;
-}
-
-export interface FootballTWVApiResponse {
-  data: FootballTWVTeam[];
-  conferences: string[];
-}
 
 // Conference Championship Types
 export interface FootballConfChamp {

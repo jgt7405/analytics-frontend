@@ -101,13 +101,6 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
 
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
   // Experimental features
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "chart.js", "react-chartjs-2"],

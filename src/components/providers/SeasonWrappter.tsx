@@ -1,23 +1,13 @@
 // src/components/SeasonWrapper.tsx
+// Note: This component is not currently used. SeasonContext is not implemented.
+// Kept for reference but does not provide any functionality.
+
 "use client";
 
-import { SeasonContextProvider } from "@/context/SeasonContext";
-
 /**
- * SeasonWrapper is a client component that wraps your page content
- * with the SeasonContext provider.
- *
- * Usage in layout.tsx:
- * ```tsx
- * export default function Layout({ children }) {
- *   return (
- *     <SeasonWrapper>
- *       {children}
- *     </SeasonWrapper>
- *   );
- * }
- * ```
+ * SeasonWrapper is a placeholder for future season context functionality.
+ * Currently unused in the application.
  */
 export function SeasonWrapper({ children }: { children: React.ReactNode }) {
-  return <SeasonContextProvider>{children}</SeasonContextProvider>;
+  return <>{children}</>;
 }
