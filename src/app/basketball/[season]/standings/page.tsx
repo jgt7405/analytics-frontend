@@ -2,6 +2,23 @@
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
+
+// Generate static params for recent seasons to improve SEO and performance
+export async function generateStaticParams() {
+  try {
+    return [
+      { season: '2025-26' },
+      { season: '2024-25' },
+      { season: '2023-24' },
+    ];
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [
+      { season: '2025-26' },
+      { season: '2024-25' },
+    ];
+  }
+}
 import TableActionButtons from "@/components/common/TableActionButtons";
 import BballFirstPlaceHistoryChart from "@/components/features/basketball/BballFirstPlaceHistoryChart";
 import BballStandingsHistoryChart from "@/components/features/basketball/BballStandingsHistoryChart";

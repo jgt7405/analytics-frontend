@@ -2,6 +2,33 @@
 "use client";
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
+
+// Generate static params for recent seasons to improve SEO and performance
+export async function generateStaticParams() {
+  // Fetch available seasons from backend
+  try {
+    const response = await fetch(
+      'https://jthomprodbackend-production.up.railway.app/api/basketball_teams',
+      { next: { revalidate: 86400 } } // Cache for 24 hours
+    );
+    const data = await response.json();
+
+    // Extract unique seasons from the response (if available)
+    // Fallback to current and previous season if not available
+    return [
+      { season: '2025-26' },
+      { season: '2024-25' },
+      { season: '2023-24' },
+    ];
+  } catch (error) {
+    console.error('Error fetching seasons:', error);
+    // Fallback to known seasons
+    return [
+      { season: '2025-26' },
+      { season: '2024-25' },
+    ];
+  }
+}
 import TableActionButtons from "@/components/common/TableActionButtons";
 import WinsTable from "@/components/features/basketball/WinsTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
@@ -32,9 +59,9 @@ const BballRegSeasonWinsTable = lazy(
 );
 
 interface ArchiveWinsPageProps {
-  params: {
+  params: Promise<{
     season: string;
-  };
+  }>;
 }
 
 export default function ArchiveWinsPage({

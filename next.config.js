@@ -183,7 +183,7 @@ const nextConfig = {
         source: "/sitemap.xml",
         destination:
           "https://jthomprodbackend-production.up.railway.app/api/sitemap.xml",
-        permanent: false,
+        permanent: true,
       },
     ];
   },
