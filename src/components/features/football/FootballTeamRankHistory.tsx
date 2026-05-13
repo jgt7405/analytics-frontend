@@ -9,14 +9,7 @@ import {
 } from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
 import {
-  CategoryScale,
   Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
   type TooltipModel,
 } from "chart.js";
 import Image from "next/image";

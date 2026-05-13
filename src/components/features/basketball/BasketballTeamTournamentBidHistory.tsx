@@ -8,14 +8,7 @@ import {
   getBasketballDateRange,
 } from "@/lib/chartDateRange";
 import {
-  CategoryScale,
   Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
   type TooltipItem,
 } from "chart.js";
 import Image from "next/image";
@@ -27,17 +20,6 @@ interface TournamentHistoricalDataPoint {
   tournament_bid_pct: number;
   average_seed: number;
   team_name: string;
-  team_info: {
-    logo_url?: string;
-    primary_color?: string;
-    secondary_color?: string;
-  };
-}
-
-interface SeedDataPoint {
-  date: string;
-  team_name: string;
-  average_seed: number;
   team_info: {
     logo_url?: string;
     primary_color?: string;
@@ -90,7 +72,7 @@ export default function BasketballTeamTournamentBidHistory({
     const tournamentBidData = ncaaData.tournament_bid_data || [];
     const avgSeedData = ncaaData.average_seed_data || [];
 
-    tournamentBidData.forEach((point: TournamentHistoricalDataPoint) => {
+    tournamentBidData.forEach((point: any) => {
       dataByDate.set(point.date, {
         date: point.date,
         tournament_bid_pct: point.tournament_bid_pct || 0,
@@ -100,7 +82,7 @@ export default function BasketballTeamTournamentBidHistory({
       });
     });
 
-    avgSeedData.forEach((point: SeedDataPoint) => {
+    avgSeedData.forEach((point: any) => {
       if (dataByDate.has(point.date)) {
         const existingPoint = dataByDate.get(point.date)!;
         existingPoint.average_seed = point.average_seed || 0;

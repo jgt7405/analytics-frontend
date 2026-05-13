@@ -3,7 +3,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const TEAL_COLOR = "rgb(0, 151, 178)";
 const GRAY_COLOR = "#9ca3af";
 
 type ComparisonFilter =

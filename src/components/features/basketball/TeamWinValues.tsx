@@ -3,17 +3,7 @@
 import { useResponsive } from "@/hooks/useResponsive";
 import { getBasketballDateRange } from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
-import {
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  TooltipModel,
-} from "chart.js";
+import { Chart as ChartJS, TooltipModel, } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { Line } from "react-chartjs-2";
@@ -91,7 +81,7 @@ export default function TeamWinValues({
     const gameWithDates: GameWithDate[] = validGames.map((game) => {
       const [month, day] = game.date.split("/").map(Number);
       // Derive year from season prop: Oct-Dec use season start year, Jan-Sep use next year
-      const seasonStartYear = parseInt(season.split('-')[0], 10);
+      const seasonStartYear = season ? parseInt(season.split('-')[0], 10) : new Date().getFullYear();
       const year = month >= 9 ? seasonStartYear : seasonStartYear + 1;
       const dateObj = new Date(year, month - 1, day);
       return { ...game, dateObj };
@@ -486,3 +476,4 @@ export default function TeamWinValues({
     </div>
   );
 }
+

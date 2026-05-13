@@ -5,15 +5,8 @@ import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
-  CategoryScale,
   ChartArea,
   Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
   TooltipModel,
 } from "chart.js";
 import Image from "next/image";

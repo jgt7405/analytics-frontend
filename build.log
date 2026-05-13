@@ -1,0 +1,47 @@
+
+> jthom-analytics@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.18
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · optimizeCss
+    · webpackBuildWorker
+    · missingSuspenseWithCSRBailout
+
+   Creating an optimized production build ...
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\node_modules\next-pwa\register.js
+> [PWA] Service worker: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\public\sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\node_modules\next-pwa\register.js
+> [PWA] Service worker: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\public\sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\node_modules\next-pwa\register.js
+> [PWA] Service worker: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\public\sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/components/features/basketball/TeamWinValues.tsx:47:27
+Type error: Cannot find name 'ChartJS'. Did you mean 'Chart'?
+
+[0m [90m 45 |[39m }[33m:[39m [33mTeamWinValuesProps[39m) {[0m
+[0m [90m 46 |[39m   [36mconst[39m { isMobile } [33m=[39m useResponsive()[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 47 |[39m   [36mconst[39m chartRef [33m=[39m useRef[33m<[39m[33mChartJS[39m[33m<[39m[0m
+[0m [90m    |[39m                           [31m[1m^[22m[39m[0m
+[0m [90m 48 |[39m     [32m"line"[39m[33m,[39m[0m
+[0m [90m 49 |[39m     [33mArray[39m[33m<[39m{ x[33m:[39m string[33m;[39m y[33m:[39m number }[33m>[39m[33m,[39m[0m
+[0m [90m 50 |[39m     string[0m

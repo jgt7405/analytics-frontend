@@ -7,14 +7,6 @@ import {
   getFootballDateRange,
 } from "@/lib/chartDateRange";
 import {
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
   type TooltipItem,
 } from "chart.js";
 import Image from "next/image";

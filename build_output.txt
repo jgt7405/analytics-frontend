@@ -1,0 +1,35 @@
+
+> jthom-analytics@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.18
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · optimizeCss
+    · webpackBuildWorker
+    · missingSuspenseWithCSRBailout
+
+   Creating an optimized production build ...
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\node_modules\next-pwa\register.js
+> [PWA] Service worker: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\public\sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\node_modules\next-pwa\register.js
+> [PWA] Service worker: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\public\sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\node_modules\next-pwa\register.js
+> [PWA] Service worker: D:\Family Files\Documents\Jacob\New_Website\05.29.2025Web\sports-analytics\public\sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
