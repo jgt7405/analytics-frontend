@@ -6,15 +6,9 @@ import { buildChartLabels, filterDataToRange, getBasketballDateRange } from "@/l
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
-  CategoryScale,
   ChartArea,
   Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
   Title,
-  Tooltip,
   TooltipModel,
 } from "chart.js";
 import { useEffect, useRef, useState } from "react";
