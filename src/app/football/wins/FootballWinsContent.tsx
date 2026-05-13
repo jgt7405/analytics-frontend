@@ -17,10 +17,6 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 
-const ChartSkeleton = () => (
-  <div className="h-64 bg-gray-100 dark:bg-slate-700 animate-pulse rounded-lg" />
-);
-
 const FootballBoxWhiskerChart = dynamic(
   () => import("@/components/features/football/FootballBoxWhiskerChart"),
   { loading: () => <BoxWhiskerChartSkeleton /> }
