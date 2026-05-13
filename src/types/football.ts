@@ -67,6 +67,11 @@ export interface FootballStanding {
   conference_id?: number;
   kenpom_rank?: number;
   net_rating?: number;
+
+  // Data timestamps
+  updated_at?: string;
+  version_date?: string;
+  is_current?: boolean;
 }
 
 export interface FootballStandingsApiResponse {
