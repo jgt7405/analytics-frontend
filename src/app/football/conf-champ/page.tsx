@@ -153,9 +153,9 @@ export default function FootballConfChampPage() {
                         />
                       }
                     >
-                      {confChampResponse?.data && (
+                      {confChampResponse && typeof confChampResponse === 'object' && 'data' in confChampResponse && (confChampResponse as any).data && (
                         <FootballConfChampTable
-                          confChampData={confChampResponse.data}
+                          confChampData={(confChampResponse as any).data}
                           className="conf-champ-table"
                         />
                       )}

@@ -43,9 +43,10 @@ export default function FootballStandingsPage() {
     const year = today.getFullYear();
 
     // Check standings data first for most recent timestamp
-    if (standingsResponse?.data && standingsResponse.data.length > 0) {
+    const standingsData = standingsResponse && typeof standingsResponse === 'object' && 'data' in standingsResponse ? (standingsResponse as any).data : null;
+    if (standingsData && Array.isArray(standingsData) && standingsData.length > 0) {
       // Try to get the latest timestamp from standings
-      const firstTeam = standingsResponse.data[0];
+      const firstTeam = standingsData[0];
       const timestamp = (firstTeam as any)?.updated_at || (firstTeam as any)?.version_date;
 
       if (timestamp) {
@@ -244,9 +245,9 @@ export default function FootballStandingsPage() {
                       />
                     }
                   >
-                    {standingsResponse?.data && (
+                    {standingsData && (
                       <FootballStandingsTable
-                        standings={standingsResponse.data}
+                        standings={standingsData}
                       />
                     )}
                   </Suspense>
@@ -300,9 +301,9 @@ export default function FootballStandingsPage() {
                       />
                     }
                   >
-                    {standingsResponse?.data && (
+                    {standingsData && (
                       <FootballStandingsTableNoTies
-                        standings={standingsResponse.data}
+                        standings={standingsData}
                       />
                     )}
                   </Suspense>
@@ -351,7 +352,7 @@ export default function FootballStandingsPage() {
                     <div className="standings-history-chart">
                       <FootballStandingsHistoryChart
                         timelineData={filteredHistoryData.timeline_data}
-                        conferenceSize={standingsResponse?.data?.length || 12}
+                        conferenceSize={standingsData?.length || 12}
                         season={currentSeason}
                       />
                     </div>

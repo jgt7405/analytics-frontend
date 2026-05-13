@@ -82,7 +82,7 @@ export default function FootballCFPPage() {
   }
 
   // No data state
-  if (!cfpLoading && !cfpResponse?.data) {
+  if (!cfpLoading && !(cfpResponse && typeof cfpResponse === 'object' && 'data' in cfpResponse && (cfpResponse as any).data)) {
     return (
       <PageLayoutWrapper
         title="College Football Playoff Projections"
@@ -137,9 +137,9 @@ export default function FootballCFPPage() {
               <div className="mb-8">
                 <div className="cfp-table">
                   <Suspense fallback={<BasketballTableSkeleton />}>
-                    {cfpResponse?.data && (
+                    {cfpResponse && typeof cfpResponse === 'object' && 'data' in cfpResponse && (cfpResponse as any).data && (
                       <FootballCFPTable
-                        cfpData={cfpResponse.data}
+                        cfpData={(cfpResponse as any).data}
                         showAllTeams={selectedConference === "All Teams"}
                       />
                     )}
