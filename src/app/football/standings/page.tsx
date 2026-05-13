@@ -36,6 +36,9 @@ export default function FootballStandingsPage() {
 
   const { data: historyData } = useFootballStandingsHistory(selectedConference);
 
+  // Extract standings data with type safety
+  const standingsData = standingsResponse && typeof standingsResponse === 'object' && 'data' in standingsResponse ? (standingsResponse as any).data : null;
+
   // Dynamic season calculation based on data availability
   const currentSeason = useMemo(() => {
     const today = new Date();
@@ -43,7 +46,6 @@ export default function FootballStandingsPage() {
     const year = today.getFullYear();
 
     // Check standings data first for most recent timestamp
-    const standingsData = standingsResponse && typeof standingsResponse === 'object' && 'data' in standingsResponse ? (standingsResponse as any).data : null;
     if (standingsData && Array.isArray(standingsData) && standingsData.length > 0) {
       // Try to get the latest timestamp from standings
       const firstTeam = standingsData[0];
@@ -79,7 +81,7 @@ export default function FootballStandingsPage() {
 
     // Fallback: Before March: use previous year season, After March: use current year season
     return month < 3 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
-  }, [standingsResponse, historyData]);
+  }, [standingsData, historyData]);
 
   // Filter history data to only include current season
   const filteredHistoryData = useMemo(() => {
