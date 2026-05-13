@@ -105,8 +105,11 @@ export default function FootballStandingsPage() {
 
   // Update available conferences when data loads
   useEffect(() => {
-    if (standingsResponse?.conferences) {
-      setAvailableConferences(standingsResponse.conferences);
+    if (standingsResponse && typeof standingsResponse === 'object' && 'conferences' in standingsResponse) {
+      const confs = (standingsResponse as any).conferences;
+      if (Array.isArray(confs)) {
+        setAvailableConferences(confs);
+      }
     }
   }, [standingsResponse]);
 

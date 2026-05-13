@@ -41,8 +41,11 @@ export default function FootballCFPPage() {
 
   // Update available conferences
   useEffect(() => {
-    if (cfpResponse?.conferences) {
-      setAvailableConferences(["All Teams", ...cfpResponse.conferences]);
+    if (cfpResponse && typeof cfpResponse === 'object' && 'conferences' in cfpResponse) {
+      const confs = (cfpResponse as any).conferences;
+      if (Array.isArray(confs)) {
+        setAvailableConferences(["All Teams", ...confs]);
+      }
     }
   }, [cfpResponse]);
 
