@@ -52,7 +52,7 @@
   display: block;
   width: calc(25px - 4px);
   height: 3px;
-  background-color: var(--text-primary);
+  background-color: var(--color-primary);
   margin: 5px 2px;
   transition: var(--transition-fast);
 }
