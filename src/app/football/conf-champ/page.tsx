@@ -39,8 +39,11 @@ export default function FootballConfChampPage() {
 
   // Set available conferences
   useEffect(() => {
-    if (confChampResponse?.conferences) {
-      setAvailableConferences(confChampResponse.conferences);
+    if (confChampResponse && typeof confChampResponse === 'object' && 'conferences' in confChampResponse) {
+      const confs = (confChampResponse as any).conferences;
+      if (Array.isArray(confs)) {
+        setAvailableConferences(confs);
+      }
     }
   }, [confChampResponse]);
 
