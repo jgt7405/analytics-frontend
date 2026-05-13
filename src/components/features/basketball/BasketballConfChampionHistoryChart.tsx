@@ -8,7 +8,6 @@ import type { Chart } from "chart.js";
 import {
   ChartArea,
   Chart as ChartJS,
-  Title,
   TooltipModel,
 } from "chart.js";
 import { useEffect, useRef, useState } from "react";
