@@ -62,8 +62,8 @@ export default function FootballStandingsPage({ params }: FootballStandingsPageP
         (team: any) => team.is_current === true
       );
 
-      if (currentSeasonData?.updated_at || currentSeasonData?.version_date) {
-        const dateString = currentSeasonData.updated_at || currentSeasonData.version_date;
+      const dateString = currentSeasonData?.updated_at || currentSeasonData?.version_date;
+      if (dateString) {
         const dataDate = new Date(dateString);
         const month = dataDate.getMonth() + 1;
         const year = dataDate.getFullYear();
