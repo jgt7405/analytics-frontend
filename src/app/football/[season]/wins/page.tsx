@@ -1,27 +1,14 @@
 "use client";
-import FootballWinsPage from "@/app/football/wins/page";
+import FootballWinsContent from "@/app/football/wins/FootballWinsContent";
 
-// Generate static params for recent seasons to improve SEO and performance
-export async function generateStaticParams() {
-  try {
-    return [
-      { season: '2025-26' },
-      { season: '2024-25' },
-      { season: '2023-24' },
-    ];
-  } catch (error) {
-    console.error('Error generating static params:', error);
-    return [
-      { season: '2025-26' },
-      { season: '2024-25' },
-    ];
-  }
+interface ArchiveFootballWinsPageProps {
+  params: {
+    season: string;
+  };
 }
 
 export default function ArchivedFootballWinsPage({
   params,
-}: {
-  params: { season: string };
-}) {
-  return <FootballWinsPage season={params.season} />;
+}: ArchiveFootballWinsPageProps) {
+  return <FootballWinsContent season={params.season} />;
 }

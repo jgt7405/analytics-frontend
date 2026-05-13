@@ -8,10 +8,6 @@ import { useResponsive } from "@/hooks/useResponsive";
 import dynamic from "next/dynamic";
 import { useMemo, useRef } from "react";
 
-const ChartSkeleton = () => (
-  <div className="h-64 bg-gray-100 dark:bg-slate-700 animate-pulse rounded-lg" />
-);
-
 const NCAABracketTable = dynamic(
   () => import("@/components/features/basketball/NCAABracketTable"),
   {
@@ -34,7 +30,7 @@ export default function BasketballHome() {
   const { isMobile } = useResponsive();
   const ncaaTableRef = useRef<HTMLDivElement>(null);
   const multiBidRef = useRef<HTMLDivElement>(null);
-  const { data, isLoading } = useNCAAProjections();
+  const { data, loading } = useNCAAProjections();
 
   // Format the last updated timestamp
   const lastUpdated = useMemo(() => {
@@ -62,7 +58,7 @@ export default function BasketballHome() {
     <ErrorBoundary level="page">
       <PageLayoutWrapper
         title="Basketball Tournament Projections"
-        isLoading={isLoading}
+        isLoading={loading}
         rightElement={`Updated: ${lastUpdated}`}
       >
         <div className="-mt-2 md:-mt-6">

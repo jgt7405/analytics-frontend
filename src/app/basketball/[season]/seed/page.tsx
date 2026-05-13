@@ -51,7 +51,6 @@ export default function ArchiveSeedPage({ params }: ArchiveSeedPageProps) {
     data: seedResponse,
     isLoading: seedLoading,
     error: seedError,
-    refetch,
   } = useSeed(hasInitialized ? selectedConference : "Big 12", season);
 
   // Update available conferences when data loads

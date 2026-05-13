@@ -693,8 +693,7 @@ export default function BasketballTeamPage({
                 <div className="space-y-3">
                   <div
                     className="bg-white dark:bg-slate-800 rounded-lg relative basketball-team-schedule"
-                    style={{ border: "1px solid #d1d5db" }}
-                    style={{ minWidth: "350px" }}
+                    style={{ border: "1px solid #d1d5db", minWidth: "350px" }}
                   >
                     <div className="pt-0 px-3 pb-3 border-b border-gray-200 -mt-2 relative">
                       <h2 className="text-lg font-semibold">Team Schedule</h2>

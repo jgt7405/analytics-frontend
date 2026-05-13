@@ -71,8 +71,11 @@ export default function FootballConfChampArchivePage({
 
   // Set available conferences
   useEffect(() => {
-    if (confChampResponse?.conferences) {
-      setAvailableConferences(confChampResponse.conferences);
+    if (confChampResponse && typeof confChampResponse === 'object' && 'conferences' in confChampResponse) {
+      const confs = (confChampResponse as any).conferences;
+      if (Array.isArray(confs)) {
+        setAvailableConferences(confs);
+      }
     }
   }, [confChampResponse]);
 
@@ -188,9 +191,9 @@ export default function FootballConfChampArchivePage({
                         />
                       }
                     >
-                      {confChampResponse?.data && (
+                      {confChampResponse && typeof confChampResponse === 'object' && 'data' in confChampResponse && (confChampResponse as any).data && (
                         <FootballConfChampTable
-                          confChampData={confChampResponse.data}
+                          confChampData={(confChampResponse as any).data}
                           className="conf-champ-table"
                           season={params.season}
                         />
