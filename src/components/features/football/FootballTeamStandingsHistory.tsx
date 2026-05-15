@@ -8,9 +8,6 @@ import {
   getFootballDateRange,
 } from "@/lib/chartDateRange";
 import type { Chart } from "chart.js";
-import {
-  Chart as ChartJS,
-} from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
