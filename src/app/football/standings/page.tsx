@@ -257,7 +257,7 @@ export default function FootballStandingsPage() {
 
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           Projected conference standings from 1,000 season
@@ -288,7 +288,7 @@ export default function FootballStandingsPage() {
 
             <ErrorBoundary level="component" onRetry={() => refetch()}>
               <div className="mb-8">
-                <h1 className="text-xl font-normal text-gray-500 mb-4">
+                <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                   Projected Conference Championship Seeding{" "}
                   <span className="text-base">(Breaking All Ties)</span>
                 </h1>
@@ -313,7 +313,7 @@ export default function FootballStandingsPage() {
 
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           Projected conference standings from 1,000 season
@@ -347,7 +347,7 @@ export default function FootballStandingsPage() {
               <div className="space-y-6 mb-8">
                 <ErrorBoundary level="component">
                   <div className="mb-8">
-                    <h1 className="text-xl font-normal text-gray-500 mb-4">
+                    <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                       Conference Rankings History{" "}
                       <span className="text-base">(Over Time)</span>
                     </h1>
@@ -361,7 +361,7 @@ export default function FootballStandingsPage() {
 
                     <div className="mt-6">
                       <div className="flex flex-row items-start gap-4">
-                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                        <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                           <div style={{ lineHeight: "1.3" }}>
                             <div>
                               Progression of projected conference standings
@@ -389,7 +389,7 @@ export default function FootballStandingsPage() {
 
                 <ErrorBoundary level="component">
                   <div className="mb-8">
-                    <h1 className="text-xl font-normal text-gray-500 mb-4">
+                    <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                       First Place Probability History{" "}
                       <span className="text-base">(Over Time)</span>
                     </h1>
@@ -402,7 +402,7 @@ export default function FootballStandingsPage() {
 
                     <div className="mt-6">
                       <div className="flex flex-row items-start gap-4">
-                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                        <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                           <div style={{ lineHeight: "1.3" }}>
                             <div>
                               Progression of projected probability of first

@@ -134,7 +134,7 @@ export default function FootballConfDataArchivePage({
 
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div
                       className="conf-data-explainer"
                       style={{ lineHeight: "1.3" }}
@@ -162,7 +162,7 @@ export default function FootballConfDataArchivePage({
             </div>
 
             <div className="mb-8">
-              <h3 className="text-xl font-normal text-gray-600 mb-4">
+              <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
                 Conference Win Probability vs Average Team
               </h3>
               <div className="sagarin-box-whisker-container">
@@ -176,7 +176,7 @@ export default function FootballConfDataArchivePage({
               </div>
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
                         Win probability distribution by conference based on
@@ -205,7 +205,7 @@ export default function FootballConfDataArchivePage({
 
             {filteredHistoryData && (
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 mb-4">
+                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
                   Conference CFP Bid Trends Over Time
                 </h3>
                 <div className="conf-bids-history-container">
@@ -217,7 +217,7 @@ export default function FootballConfDataArchivePage({
                 </div>
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           Progression of projected CFP bids by conference over

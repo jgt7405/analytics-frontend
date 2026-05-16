@@ -41,7 +41,7 @@ function ConferenceLogo({
   if (!logoUrl || imageError) {
     return (
       <div
-        className="flex items-center justify-center bg-gray-200 dark:bg-white rounded text-xs font-bold text-gray-600 dark:text-gray-400"
+        className="flex items-center justify-center bg-gray-200 dark:bg-white rounded text-xs font-bold text-gray-600 dark:text-gray-300"
         style={{ width: size, height: size }}
       >
         {conferenceName.substring(0, 3).toUpperCase()}
@@ -202,7 +202,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
   if (!conferenceData || conferenceData.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500 dark:text-gray-400">No conference data available</p>
+        <p className="text-gray-500 dark:text-gray-300">No conference data available</p>
       </div>
     );
   }
@@ -210,7 +210,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
   if (validConferences.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500 dark:text-gray-400">No valid Sagarin rating data available</p>
+        <p className="text-gray-500 dark:text-gray-300">No valid Sagarin rating data available</p>
       </div>
     );
   }
@@ -268,7 +268,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
             {yAxisTicks.map((tick) => (
               <div
                 key={tick}
-                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-400 font-medium flex items-center justify-end"
+                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-300 font-medium flex items-center justify-end"
                 style={{
                   top: `${scale(tick)}px`,
                   height: "1px",

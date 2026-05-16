@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -328,7 +328,7 @@ export default function BasketballTeamTournamentBidHistory({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-pulse text-gray-500 dark:text-gray-400">
+        <div className="animate-pulse text-gray-500 dark:text-gray-300">
           Loading NCAA bid history...
         </div>
       </div>
@@ -349,7 +349,7 @@ export default function BasketballTeamTournamentBidHistory({
   if (data.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">
+        <div className="text-gray-500 dark:text-gray-300 text-sm">
           No NCAA bid history available
         </div>
         <div className="text-gray-400 text-xs mt-1">

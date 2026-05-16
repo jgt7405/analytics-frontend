@@ -41,7 +41,7 @@ function TeamCard({ team, onClick, className }: TeamCardProps) {
   return (
     <div
       className={cn(
-        "bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-gray-300 dark:border-gray-600",
+        "bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-gray-300 dark:border-gray-600",
         className
       )}
       onClick={onClick}
@@ -83,7 +83,7 @@ function TeamCard({ team, onClick, className }: TeamCardProps) {
               isMobile ? "text-xs" : "text-sm"
             )}
           >
-            <span className="text-gray-600 dark:text-gray-400">Record:</span>
+            <span className="text-gray-600 dark:text-gray-300">Record:</span>
             <span className="font-medium">{team.record}</span>
           </div>
         )}
@@ -95,7 +95,7 @@ function TeamCard({ team, onClick, className }: TeamCardProps) {
               isMobile ? "text-xs" : "text-sm"
             )}
           >
-            <span className="text-gray-600 dark:text-gray-400">KenPom:</span>
+            <span className="text-gray-600 dark:text-gray-300">KenPom:</span>
             <span className="font-medium">#{team.kenpom_rank}</span>
           </div>
         )}
@@ -107,7 +107,7 @@ function TeamCard({ team, onClick, className }: TeamCardProps) {
               isMobile ? "text-xs" : "text-sm"
             )}
           >
-            <span className="text-gray-600 dark:text-gray-400">Tourney %:</span>
+            <span className="text-gray-600 dark:text-gray-300">Tourney %:</span>
             <span className="font-medium">
               {formatTournamentPct(team.tournament_bid_pct)}
             </span>
@@ -121,7 +121,7 @@ function TeamCard({ team, onClick, className }: TeamCardProps) {
               isMobile ? "text-xs" : "text-sm"
             )}
           >
-            <span className="text-gray-600 dark:text-gray-400">Avg Seed:</span>
+            <span className="text-gray-600 dark:text-gray-300">Avg Seed:</span>
             <span className="font-medium">{formatSeed(team.average_seed)}</span>
           </div>
         )}

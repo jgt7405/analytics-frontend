@@ -231,14 +231,14 @@ export default function BballStandingsProgressionTable({
 
   if (!timelineData || timelineData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         No standings progression data available
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-600">
       {/* Chart */}
       <div className="overflow-x-auto p-4 w-full">
         <div
@@ -259,7 +259,7 @@ export default function BballStandingsProgressionTable({
             {Array.from({ length: conferenceSize }).map((_, idx) => (
               <div
                 key={`axis-${idx + 1}`}
-                className="text-xs text-gray-600 dark:text-gray-400 flex items-center justify-end pr-3"
+                className="text-xs text-gray-600 dark:text-gray-300 flex items-center justify-end pr-3"
                 style={{
                   width: `${axisLabelWidth}px`,
                   height: `${cellHeight}px`,
@@ -356,7 +356,7 @@ export default function BballStandingsProgressionTable({
       </div>
 
       {/* Info text */}
-      <div className="p-4 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 text-xs text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600">
         <p>
           Team logos show projected standing for that date, ordered from best
           (1) to worst ({conferenceSize}).
@@ -364,7 +364,7 @@ export default function BballStandingsProgressionTable({
       </div>
 
       {/* Team logo selector - bottom */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-600">
         <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-3">
           Filter Teams:
         </div>
@@ -376,7 +376,7 @@ export default function BballStandingsProgressionTable({
               <button
                 key={team.team_name}
                 onClick={() => handleTeamClick(team.team_name)}
-                className="flex items-center justify-center p-1.5 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:bg-slate-800 transition-colors cursor-pointer"
+                className="flex items-center justify-center p-1.5 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800 transition-colors cursor-pointer"
                 style={{
                   opacity: isSelected ? 1 : 0.3,
                   filter: isSelected ? "none" : "grayscale(100%)",

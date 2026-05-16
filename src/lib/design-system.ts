@@ -14,7 +14,7 @@ export const components = {
     },
   },
   table: {
-    container: "overflow-x-auto border border-gray-200 rounded-md dark:border-gray-700",
+    container: "overflow-x-auto border border-gray-200 rounded-md dark:border-gray-600",
   },
   states: {
     error: "rounded-md bg-red-50 p-4 border border-red-200 dark:bg-red-900 dark:border-red-800",
@@ -24,7 +24,7 @@ export const components = {
 
 export const layout = {
   pageContainer: "container mx-auto px-4 py-8",
-  card: "rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-slate-800 dark:border-gray-700",
+  card: "rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-slate-800 dark:border-gray-600",
   flexColCenter: "flex flex-col items-center justify-center",
 };
 
@@ -32,5 +32,5 @@ export const typography = {
   pageTitle: "text-2xl font-semibold text-gray-800 dark:text-gray-100",
   body: "text-base text-gray-900 dark:text-gray-300",
   label: "text-sm font-medium text-gray-700 dark:text-gray-300",
-  caption: "text-sm text-gray-500 dark:text-gray-400",
+  caption: "text-sm text-gray-500 dark:text-gray-300",
 };

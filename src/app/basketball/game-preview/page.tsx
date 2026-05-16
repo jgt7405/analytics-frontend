@@ -1424,7 +1424,7 @@ function NextGameImpactInline({
           teamName={teamInfo.team_name}
           size={16}
         />
-        <span className="text-xs font-medium text-gray-700">
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
           {teamInfo.team_name}
         </span>
       </div>
@@ -1464,7 +1464,7 @@ function NextGameImpactInline({
 
       <table className="w-full text-xs">
         <thead>
-          <tr className="border-b border-gray-200 text-gray-500">
+          <tr className="border-b border-gray-200 text-gray-500 dark:text-gray-300">
             <th className="text-left py-1 px-1 font-normal" style={COL_METRIC}>
               Metric
             </th>
@@ -1533,7 +1533,7 @@ function NextGameImpactInline({
         <h4 className="text-xs font-medium mb-1.5">Seed Probabilities</h4>
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-gray-200 text-gray-500">
+            <tr className="border-b border-gray-200 text-gray-500 dark:text-gray-300">
               <th
                 className="text-left py-1 px-1 font-normal"
                 style={COL_METRIC}
@@ -1603,7 +1603,7 @@ function NextGameImpactInline({
       </h4>
       <table className="w-full text-xs">
         <thead>
-          <tr className="border-b border-gray-200 text-gray-500">
+          <tr className="border-b border-gray-200 text-gray-500 dark:text-gray-300">
             <th className="text-left py-1 px-1 font-normal" style={COL_METRIC}>
               Metric
             </th>
@@ -1728,7 +1728,7 @@ function NextGameImpactInline({
           <div className="mt-2">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-gray-200 text-gray-500">
+                <tr className="border-b border-gray-200 text-gray-500 dark:text-gray-300">
                   <th
                     className="text-left py-1 px-1 font-normal"
                     style={COL_METRIC}
@@ -1786,7 +1786,7 @@ function NextGameImpactInline({
                   );
                 })}
                 <tr className="border-b border-gray-100">
-                  <td className="py-1 px-1 text-gray-500 italic text-[10px]">
+                  <td className="py-1 px-1 text-gray-500 dark:text-gray-300 italic text-[10px]">
                     Out
                   </td>
                   <td
@@ -2563,7 +2563,7 @@ export default function GamePreviewPage() {
     <PageLayoutWrapper title="Game Preview" isLoading={isLoading}>
       <ErrorBoundary>
         <div style={{ maxWidth: 960 }}>
-          <p className="text-sm text-gray-500 mb-5">
+          <p className="text-sm text-gray-500 dark:text-gray-300 mb-5">
             Select an upcoming game to view a head-to-head comparison, win/loss
             impact, and schedule analysis.
           </p>

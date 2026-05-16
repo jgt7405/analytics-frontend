@@ -292,7 +292,7 @@ export default function NextGameImpact({
                 }
                 setCapturing(false);
               }}
-              className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
+              className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
               title="Download screenshot"
             >
               {capturing ? (
@@ -385,7 +385,7 @@ export default function NextGameImpact({
           </h4>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+              <tr className="border-b border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300">
                 <th
                   className="text-left py-1.5 px-2 font-normal"
                   style={COL_METRIC}
@@ -460,7 +460,7 @@ export default function NextGameImpact({
           <div className="mt-3">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                <tr className="border-b border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300">
                   <th
                     className="text-left py-1.5 px-2 font-normal"
                     style={COL_METRIC}
@@ -545,7 +545,7 @@ export default function NextGameImpact({
           </h4>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+              <tr className="border-b border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300">
                 <th
                   className="text-left py-1.5 px-2 font-normal"
                   style={COL_METRIC}
@@ -672,7 +672,7 @@ export default function NextGameImpact({
               <div className="mt-3">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                    <tr className="border-b border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300">
                       <th
                         className="text-left py-1.5 px-2 font-normal"
                         style={COL_METRIC}
@@ -731,7 +731,7 @@ export default function NextGameImpact({
                     })}
                     {/* Out of Tournament row */}
                     <tr className="border-b border-gray-100">
-                      <td className="py-1.5 px-2 text-gray-500 dark:text-gray-400 italic text-xs">
+                      <td className="py-1.5 px-2 text-gray-500 dark:text-gray-300 italic text-xs">
                         Out
                       </td>
                       <td

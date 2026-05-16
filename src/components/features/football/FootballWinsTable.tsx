@@ -55,7 +55,7 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         No wins data available
       </div>
     );

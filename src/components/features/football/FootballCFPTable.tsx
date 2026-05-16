@@ -154,7 +154,7 @@ function FootballCFPTable({
 
   if (!cfpData || cfpData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No CFP data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">No CFP data available</div>
     );
   }
 
@@ -179,7 +179,7 @@ function FootballCFPTable({
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             placeholder={cfpData.length.toString()}
           />
-          <span className={`text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
             teams (of {cfpData.length})
           </span>
         </div>

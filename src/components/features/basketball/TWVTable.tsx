@@ -129,7 +129,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
   if (!rankedTwvData || rankedTwvData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No TWV data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">No TWV data available</div>
     );
   }
 
@@ -164,7 +164,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             placeholder={twvData.length.toString()}
           />
-          <span className={`text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
             teams (of {twvData.length})
           </span>
         </div>
@@ -246,7 +246,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                 {/* Tooltip */}
                 {isHydrated && showTWVTooltip && (
                   <div
-                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
                       width: "300px",
                       minWidth: "300px",
@@ -296,7 +296,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                 {/* Tooltip */}
                 {isHydrated && showActualRecordTooltip && (
                   <div
-                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
                       width: "300px",
                       minWidth: "300px",
@@ -343,7 +343,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                 {/* Tooltip */}
                 {isHydrated && showExpectedRecordTooltip && (
                   <div
-                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 pointer-events-none z-50"
+                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 pointer-events-none z-50"
                     style={{
                       width: "320px",
                       minWidth: "320px",

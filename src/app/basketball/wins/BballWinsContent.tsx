@@ -230,7 +230,7 @@ export default function BballWinsContent({
         isLoading={false}
       >
         <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-4">
+          <div className="text-gray-500 dark:text-gray-300 text-lg mb-4">
             No basketball wins data available
           </div>
           <p className="text-gray-400 text-sm mb-6">
@@ -282,7 +282,7 @@ export default function BballWinsContent({
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       {/* Explainer text on the left */}
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 box-whisker-explainer">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4 box-whisker-explainer">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Projected conference wins from 1,000 season
@@ -324,7 +324,7 @@ export default function BballWinsContent({
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       {/* Explainer text on the left */}
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 wins-explainer">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4 wins-explainer">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Probabilities from 1,000 season simulations using
@@ -357,7 +357,7 @@ export default function BballWinsContent({
 
                 {/* Regular Season Box Whisker Chart Section */}
                 <div className="mb-8">
-                  <h1 className="text-2xl font-normal text-gray-600 mb-4">
+                  <h1 className="text-2xl font-normal text-gray-600 dark:text-gray-200 mb-4">
                     Projected Regular Season Wins
                   </h1>
                   <div className="regular-season-box-whisker-container">
@@ -370,7 +370,7 @@ export default function BballWinsContent({
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       {/* Explainer text on the left */}
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 regular-season-box-whisker-explainer">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4 regular-season-box-whisker-explainer">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Projected regular season wins from 1,000 season
@@ -417,7 +417,7 @@ export default function BballWinsContent({
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       {/* Explainer text on the left */}
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 regular-season-explainer">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4 regular-season-explainer">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Probabilities from 1,000 season simulations using

@@ -138,7 +138,7 @@ export default function ArchiveSeedPage({ params }: ArchiveSeedPageProps) {
 
             <div className="mt-6">
               <div className="flex flex-row items-start gap-4">
-                <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                   <div style={{ lineHeight: "1.3" }}>
                     <div>
                       NCAA tournament seed probabilities based on 1,000

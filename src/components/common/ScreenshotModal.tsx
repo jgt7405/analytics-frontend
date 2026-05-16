@@ -396,7 +396,7 @@ export default function ScreenshotModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:text-gray-400"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-300"
             disabled={isCapturing}
           >
             <X size={24} />
@@ -420,7 +420,7 @@ export default function ScreenshotModal({
           ))}
         </div>
         {isCapturing && (
-          <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-300">
             Capturing...
           </div>
         )}

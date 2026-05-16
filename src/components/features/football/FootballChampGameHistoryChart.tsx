@@ -497,7 +497,7 @@ export default function FootballChampGameHistoryChart({
   if (filteredChampGameData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500 dark:text-gray-400">
+        <div className="text-gray-500 dark:text-gray-300">
           No championship game probability data available
         </div>
       </div>

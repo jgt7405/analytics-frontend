@@ -233,7 +233,7 @@ export default function ArchiveSchedulePage({
         isLoading={false}
       >
         <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-4">
+          <div className="text-gray-500 dark:text-gray-300 text-lg mb-4">
             No schedule data available
           </div>
           <p className="text-gray-400 text-sm mb-6">
@@ -326,7 +326,7 @@ export default function ArchiveSchedulePage({
                       </div>
 
                       {/* Legend */}
-                      <div className="mt-4 mb-6 text-sm text-gray-600">
+                      <div className="mt-4 mb-6 text-sm text-gray-600 dark:text-gray-300">
                         <p>
                           <strong>Legend:</strong>{" "}
                           <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
@@ -343,7 +343,7 @@ export default function ArchiveSchedulePage({
                       {/* Action buttons */}
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
                                 Location and Opponent are sorted by difficulty,
@@ -381,7 +381,7 @@ export default function ArchiveSchedulePage({
                 Object.keys(scheduleResponse.summary).length > 0 && (
                   <ErrorBoundary level="component" onRetry={() => refetch()}>
                     <div className="mb-8">
-                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                         Schedule Difficulty Summary{" "}
                         <span className="text-base">(By Quartile)</span>
                       </h1>
@@ -411,7 +411,7 @@ export default function ArchiveSchedulePage({
                       {/* Action buttons */}
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
                                 Team schedule difficulty breakdown by quartile.

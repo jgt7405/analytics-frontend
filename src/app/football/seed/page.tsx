@@ -123,7 +123,7 @@ export default function FootballSeedPage() {
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
                   {/* Explainer text on the left - takes remaining space */}
-                  <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div
                       className="seed-explainer"
                       style={{ lineHeight: "1.3" }}

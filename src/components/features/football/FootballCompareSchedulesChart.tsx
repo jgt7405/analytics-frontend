@@ -687,14 +687,14 @@ export default function FootballCompareSchedulesChart({
 
   if (teams.length === 0 || teams.every((t) => t.games.length === 0)) {
     return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+      <div className="text-center py-8 text-gray-500 dark:text-gray-300">
         Select teams to view schedule comparison
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
       <h3 className="text-lg font-semibold mb-4">Compare Schedules</h3>
 
       {/* Filter Controls */}
@@ -747,7 +747,7 @@ export default function FootballCompareSchedulesChart({
         <svg
           width={CHART_WIDTH}
           height={CHART_HEIGHT + 120}
-          className="border border-gray-200 dark:border-gray-700 rounded"
+          className="border border-gray-200 dark:border-gray-600 rounded"
         >
           <rect width={CHART_WIDTH} height={CHART_HEIGHT + 120} fill={isDark ? "#1a1f2e" : "white"} />
 
@@ -812,7 +812,7 @@ export default function FootballCompareSchedulesChart({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 text-center">
+      <div className="mt-4 text-xs text-gray-600 dark:text-gray-300 text-center">
         <div className="flex justify-center gap-4">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-green-500"></div>

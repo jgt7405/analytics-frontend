@@ -257,7 +257,7 @@ export default function FootballCompareArchivePage({
                       className="flex flex-col items-center"
                     >
                       {/* Conference Label */}
-                      <div className="text-sm font-semibold text-gray-700 mb-3 text-center h-10 flex items-center">
+                      <div className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3 text-center h-10 flex items-center">
                         {conference}
                       </div>
 

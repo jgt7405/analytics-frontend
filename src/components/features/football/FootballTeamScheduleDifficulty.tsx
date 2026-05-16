@@ -350,7 +350,7 @@ export default function FootballTeamScheduleDifficulty({
             e.stopPropagation();
             handleGameClick(game);
           }}
-          className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 dark:text-gray-400 w-6 h-6 flex items-center justify-center text-lg font-bold border-none bg-transparent cursor-pointer"
+          className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 dark:text-gray-300 w-6 h-6 flex items-center justify-center text-lg font-bold border-none bg-transparent cursor-pointer"
           style={{
             lineHeight: "1",
             userSelect: "none",
@@ -450,7 +450,7 @@ export default function FootballTeamScheduleDifficulty({
         <svg
           width={CHART_WIDTH}
           height={CHART_HEIGHT}
-          className="border border-gray-200 dark:border-gray-700 rounded"
+          className="border border-gray-200 dark:border-gray-600 rounded"
         >
           <rect width={CHART_WIDTH} height={CHART_HEIGHT} fill="white" />
 
@@ -682,7 +682,7 @@ export default function FootballTeamScheduleDifficulty({
         )}
       </div>
 
-      <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 text-center">
+      <div className="mt-4 text-xs text-gray-600 dark:text-gray-300 text-center">
         <div className="mb-2">
           <span className="font-medium">
             {teamGames.length.toLocaleString()}
@@ -694,7 +694,7 @@ export default function FootballTeamScheduleDifficulty({
           {comparisonDataset.length === 1 ? "game" : "games"} in{" "}
           {getFilterDescription()}
         </div>
-        <div className="text-gray-500 dark:text-gray-400">
+        <div className="text-gray-500 dark:text-gray-300">
           Win probabilities based on Sagarin ratings for #12 ranked team
         </div>
       </div>

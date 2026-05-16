@@ -200,7 +200,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
   // ✅ NOW check for missing data AFTER all hooks
   if (!cwvData || !cwvData.teams || !cwvData.games) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No CWV data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">No CWV data available</div>
     );
   }
 

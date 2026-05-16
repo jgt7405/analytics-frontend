@@ -35,10 +35,10 @@ export default function PageLayout({
     return (
       <div className="container mx-auto px-4 py-4">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-700 mb-4">
+          <h1 className="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">
             {title}
             {subtitle && (
-              <span className="text-lg ml-2 text-gray-500">{subtitle}</span>
+              <span className="text-lg ml-2 text-gray-500 dark:text-gray-300">{subtitle}</span>
             )}
           </h1>
         </div>
@@ -51,10 +51,10 @@ export default function PageLayout({
     return (
       <div className="container mx-auto px-4 py-4">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-700 mb-4">
+          <h1 className="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">
             {title}
             {subtitle && (
-              <span className="text-lg ml-2 text-gray-500">{subtitle}</span>
+              <span className="text-lg ml-2 text-gray-500 dark:text-gray-300">{subtitle}</span>
             )}
           </h1>
         </div>
@@ -66,10 +66,10 @@ export default function PageLayout({
   return (
     <div className={`container mx-auto px-4 py-4 ${className}`}>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-700 mb-4">
+        <h1 className="text-2xl font-bold text-gray-700 dark:text-gray-200 mb-4">
           {title}
           {subtitle && (
-            <span className="text-lg ml-2 text-gray-500">{subtitle}</span>
+            <span className="text-lg ml-2 text-gray-500 dark:text-gray-300">{subtitle}</span>
           )}
         </h1>
 

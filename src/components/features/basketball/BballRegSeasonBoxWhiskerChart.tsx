@@ -77,7 +77,7 @@ export default function BballRegSeasonBoxWhiskerChart({
   if (!standings || standings.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500 dark:text-gray-400">No regular season wins data available</p>
+        <p className="text-gray-500 dark:text-gray-300">No regular season wins data available</p>
       </div>
     );
   }
@@ -153,7 +153,7 @@ export default function BballRegSeasonBoxWhiskerChart({
             {yAxisTicks.map((tick) => (
               <div
                 key={tick}
-                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-400 font-medium flex items-center justify-end"
+                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-300 font-medium flex items-center justify-end"
                 style={{
                   top: `${scale(tick)}px`,
                   height: "1px",

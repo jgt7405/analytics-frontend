@@ -129,7 +129,7 @@ function FootballTWVTable({
 
   if (!rankedTwvData || rankedTwvData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No TWV data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">No TWV data available</div>
     );
   }
 
@@ -164,7 +164,7 @@ function FootballTWVTable({
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             placeholder={twvData.length.toString()}
           />
-          <span className={`text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
             teams (of {twvData.length})
           </span>
         </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
 import {
@@ -360,7 +360,7 @@ export default function FootballTeamCFPBidHistory({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-pulse text-gray-500 dark:text-gray-400">
+        <div className="animate-pulse text-gray-500 dark:text-gray-300">
           Loading CFP bid history...
         </div>
       </div>
@@ -381,7 +381,7 @@ export default function FootballTeamCFPBidHistory({
   if (data.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">
+        <div className="text-gray-500 dark:text-gray-300 text-sm">
           No CFP bid history available
         </div>
         <div className="text-gray-400 text-xs mt-1">

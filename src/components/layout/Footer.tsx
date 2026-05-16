@@ -17,7 +17,7 @@ function MethodologyModal({ isOpen, onClose }: MethodologyModalProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full">
         <div
-          className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700"
+          className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600"
           style={{ padding: "6px 12px" }}
         >
           <h2
@@ -31,7 +31,7 @@ function MethodologyModal({ isOpen, onClose }: MethodologyModalProps) {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors bg-transparent border-none"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-transparent border-none"
             style={{ padding: 0, cursor: "pointer" }}
           >
             <X size={20} />
@@ -96,7 +96,7 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full">
         <div
-          className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700"
+          className="flex items-center justify-between border-b border-gray-200 dark:border-gray-600"
           style={{ padding: "6px 12px" }}
         >
           <h2
@@ -110,7 +110,7 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors bg-transparent border-none"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-transparent border-none"
             style={{ padding: 0, cursor: "pointer" }}
           >
             <X size={20} />
@@ -125,7 +125,7 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
               className="flex items-center gap-3 p-3 rounded-lg border border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-colors"
             >
               <svg
-                className="w-6 h-6 text-gray-700"
+                className="w-6 h-6 text-gray-700 dark:text-gray-200"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -147,7 +147,7 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
               className="flex items-center gap-3 p-3 rounded-lg border border-gray-300 hover:border-pink-400 hover:bg-pink-50 transition-colors"
             >
               <svg
-                className="w-6 h-6 text-gray-700"
+                className="w-6 h-6 text-gray-700 dark:text-gray-200"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -164,7 +164,7 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
             </a>
           </div>
           <p
-            className="text-sm text-gray-600"
+            className="text-sm text-gray-600 dark:text-gray-300"
             style={{
               fontFamily: "Roboto Condensed, system-ui, sans-serif",
               margin: "8px 0 0 0",
@@ -203,7 +203,7 @@ export default function Footer() {
                 fontWeight: "400",
                 lineHeight: "1.3",
               }}
-              className="text-gray-600 hover:text-gray-900 bg-transparent border-none p-0 cursor-pointer"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white bg-transparent border-none p-0 cursor-pointer"
             >
               Methodology
             </button>
@@ -215,7 +215,7 @@ export default function Footer() {
                 fontWeight: "400",
                 lineHeight: "1.3",
               }}
-              className="text-gray-600 hover:text-gray-900 bg-transparent border-none p-0 cursor-pointer"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white bg-transparent border-none p-0 cursor-pointer"
             >
               Contact
             </button>
@@ -227,7 +227,7 @@ export default function Footer() {
                 fontWeight: "400",
                 lineHeight: "1.3",
               }}
-              className="text-gray-600 hover:text-gray-900 bg-transparent border-none p-0 cursor-pointer"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white bg-transparent border-none p-0 cursor-pointer"
             >
               Social Media
             </button>

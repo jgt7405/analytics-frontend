@@ -294,11 +294,11 @@ export default function WhatIfCalculator() {
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
       <div className="mb-4 page-header">
-        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-400">
+        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300">
           What If Calculator
         </h1>
       </div>
-      <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
+      <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
         See how game outcomes impact team's probabilities to make conference
         championship game.
       </p>
@@ -312,7 +312,7 @@ export default function WhatIfCalculator() {
               <select
                 value={selectedConference}
                 onChange={handleConferenceChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                 style={{ "--tw-ring-color": TEAL_COLOR } as React.CSSProperties}
                 disabled={isLoadingConferences}
               >
@@ -327,14 +327,14 @@ export default function WhatIfCalculator() {
 
             <div className="mb-3 flex items-baseline gap-2">
               <h2 className="text-xl font-semibold">Select Games</h2>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-gray-600 dark:text-gray-300">
                 {gameSelections.size}{" "}
                 {gameSelections.size === 1 ? "game" : "games"} selected
               </p>
             </div>
 
             {/* Explainer text */}
-            <p className="text-xs text-gray-600 mb-4">
+            <p className="text-xs text-gray-600 dark:text-gray-300 mb-4">
               Percentage represents probability team will win based on composite
               of multiple college football rating models.
             </p>
@@ -342,18 +342,18 @@ export default function WhatIfCalculator() {
             {/* Future Games List - Scrollable */}
             <div className="flex-1 overflow-y-auto mb-4 pr-2">
               {!selectedConference && (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-8 text-sm">
+                <p className="text-gray-500 dark:text-gray-300 text-center py-8 text-sm">
                   Select a conference to view games
                 </p>
               )}
               {selectedConference && isLoadingData && (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-8 text-sm">
+                <p className="text-gray-500 dark:text-gray-300 text-center py-8 text-sm">
                   Loading games...
                 </p>
               )}
               {selectedConference && !isLoadingData && games.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+                  <p className="text-gray-500 dark:text-gray-300 mb-2 text-sm">
                     No future games available
                   </p>
                   <p className="text-xs text-gray-400">
@@ -369,7 +369,7 @@ export default function WhatIfCalculator() {
                     .sort()
                     .map((date) => (
                       <div key={date}>
-                        <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 px-1">
+                        <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1 px-1">
                           {date}
                         </div>
 
@@ -629,13 +629,13 @@ export default function WhatIfCalculator() {
               data-screenshot={isScreenshotMode ? "true" : "false"}
             >
               {!selectedConference ? (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-12">
+                <p className="text-gray-500 dark:text-gray-300 text-center py-12">
                   Select a conference to view results
                 </p>
               ) : isLoadingData ? (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-12">Loading...</p>
+                <p className="text-gray-500 dark:text-gray-300 text-center py-12">Loading...</p>
               ) : currentTableData.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-12">Loading...</p>
+                <p className="text-gray-500 dark:text-gray-300 text-center py-12">Loading...</p>
               ) : (
                 <FootballConfChampProb
                   currentData={currentTableData}
@@ -653,7 +653,7 @@ export default function WhatIfCalculator() {
                     CFP Probability
                   </h3>
                   {isLoadingData ? (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-12">
+                    <p className="text-gray-500 dark:text-gray-300 text-center py-12">
                       Loading...
                     </p>
                   ) : (
@@ -671,7 +671,7 @@ export default function WhatIfCalculator() {
               {/* Game Selection Summary */}
               {selectedGamesWithDetails.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-700 mb-3 font-semibold">
+                  <p className="text-sm text-gray-700 dark:text-gray-200 mb-3 font-semibold">
                     {selectedGamesWithDetails.length}{" "}
                     {selectedGamesWithDetails.length === 1
                       ? "outcome"
@@ -784,8 +784,8 @@ export default function WhatIfCalculator() {
             </div>
 
             {/* Explainer text below results */}
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 mb-4">
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+              <p className="text-xs text-gray-600 dark:text-gray-300 mb-4">
                 Probability that teams will finish season as top 2 rating after
                 applying tiebreak scenarios. For selected games, assumes 100%
                 probability for outcome selected.

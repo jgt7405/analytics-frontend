@@ -68,7 +68,7 @@ export default function FootballPlayoffRankingsPage() {
             />
 
             {/* Explainer */}
-            <div className="mt-6 text-xs text-gray-600 max-w-4xl">
+            <div className="mt-6 text-xs text-gray-600 dark:text-gray-300 max-w-4xl">
               <div style={{ lineHeight: "1.3" }}>
                 <div>
                   Rankings based on True Win Value (TWV). The top 5 conference

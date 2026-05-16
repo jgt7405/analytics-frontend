@@ -418,7 +418,7 @@ export default function BasketballComparePage() {
         <div className="space-y-0 px-4 pt-0 pb-0 -mt-10">
           {/* Scrollable Conference Cards with Team Logos */}
           <div
-            className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 overflow-hidden"
+            className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-600 p-3 overflow-hidden"
             data-debug="Conference Cards Section"
           >
             <div ref={scrollContainerRef} className="overflow-x-auto pb-1">
@@ -438,7 +438,7 @@ export default function BasketballComparePage() {
                         <div className="w-px bg-gray-300 flex-shrink-0 self-stretch"></div>
                       )}
                       <div>
-                        <h3 className="text-xs text-gray-700 dark:text-gray-200 mb-2 px-1 font-normal border-b border-gray-200 dark:border-gray-700 pb-2 text-center min-w-20">
+                        <h3 className="text-xs text-gray-700 dark:text-gray-200 mb-2 px-1 font-normal border-b border-gray-200 dark:border-gray-600 pb-2 text-center min-w-20">
                           {conference}
                         </h3>
                         <div
@@ -476,7 +476,7 @@ export default function BasketballComparePage() {
                                       ? "border-[rgb(0,151,178)] shadow-lg scale-110"
                                       : isDisabled
                                         ? "bg-gray-100 dark:bg-slate-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-50"
-                                        : "bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700 hover:border-[rgb(0,151,178)] hover:shadow-md"
+                                        : "bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-600 hover:border-[rgb(0,151,178)] hover:shadow-md"
                                 }`}
                               >
                                 <Image
@@ -565,7 +565,7 @@ export default function BasketballComparePage() {
             )}
 
             {showSearchResults && searchResults.length === 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3 text-center text-xs text-gray-500 dark:text-gray-400 z-40">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3 text-center text-xs text-gray-500 dark:text-gray-300 z-40">
                 No teams found
               </div>
             )}
@@ -574,7 +574,7 @@ export default function BasketballComparePage() {
           {/* Selected Teams Summary */}
           {selectedTeams.length > 0 && (
             <div
-              className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 -mt-10"
+              className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-600 p-3 -mt-10"
               data-debug="Selected Teams Section"
             >
               <div className="flex items-center justify-between mb-2">
@@ -603,10 +603,10 @@ export default function BasketballComparePage() {
                         unoptimized
                       />
                     </div>
-                    <span className="text-gray-700">{team.teamName}</span>
+                    <span className="text-gray-700 dark:text-gray-200">{team.teamName}</span>
                     <button
                       onClick={() => removeTeam(team.teamName)}
-                      className="ml-1 text-gray-500 hover:text-red-600 font-bold"
+                      className="ml-1 text-gray-500 dark:text-gray-300 hover:text-red-600 font-bold"
                     >
                       ×
                     </button>
@@ -644,10 +644,10 @@ export default function BasketballComparePage() {
 
           {selectedTeams.length === 0 && (
             <div
-              className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center text-sm"
+              className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded-lg p-8 text-center text-sm"
               data-debug="Empty State Section"
             >
-              <p className="text-gray-500">
+              <p className="text-gray-500 dark:text-gray-300">
                 Select teams above or use search to compare their schedules
               </p>
             </div>

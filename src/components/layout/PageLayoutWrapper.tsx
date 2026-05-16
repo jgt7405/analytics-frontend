@@ -35,16 +35,16 @@ export default function PageLayoutWrapper({
           ) : (
             <>
               <div className="flex justify-between items-baseline mb-4">
-                <h1 className="text-xl font-normal text-gray-500">
+                <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200">
                   {title}
                   {subtitle && (
-                    <span className="text-base ml-2 text-gray-500">
+                    <span className="text-base ml-2 text-gray-500 dark:text-gray-300">
                       {subtitle}
                     </span>
                   )}
                 </h1>
                 {rightElement && (
-                  <div className="text-sm text-gray-600">{rightElement}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">{rightElement}</div>
                 )}
               </div>
               {conferenceSelector && (

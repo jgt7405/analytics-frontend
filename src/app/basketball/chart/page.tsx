@@ -471,10 +471,10 @@ export default function BasketballChartPage() {
 
                 {/* Info Section */}
                 <div className="space-y-4 mb-6">
-                  <p className="text-sm text-gray-700 font-medium">
+                  <p className="text-sm text-gray-700 dark:text-gray-200 font-medium">
                     Your screenshot will include:
                   </p>
-                  <ul className="text-sm text-gray-600 space-y-2 ml-4">
+                  <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-2 ml-4">
                     <li className="flex items-start gap-2">
                       <span className="text-gray-400 mt-0.5">•</span>
                       <span>JThom Analytics logo</span>
@@ -523,7 +523,7 @@ export default function BasketballChartPage() {
                 </div>
 
                 {/* Helper Text */}
-                <p className="text-xs text-gray-500 mt-4 text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
                   The screenshot will be saved as PNG with high quality (2x
                   scale)
                 </p>

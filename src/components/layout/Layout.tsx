@@ -34,7 +34,7 @@ export default function Layout({
                 <h1 className="text-2xl font-normal text-gray-600 dark:text-gray-300">
                   {title}
                   {subtitle && (
-                    <span className="text-lg ml-2 text-gray-500 dark:text-gray-400">
+                    <span className="text-lg ml-2 text-gray-500 dark:text-gray-300">
                       {subtitle}
                     </span>
                   )}

@@ -236,7 +236,7 @@ export default function BasketballTeamWinsBreakdown({
         <svg
           width={chartWidth - 15}
           height={chartHeight + 155}
-          className="border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-slate-900"
+          className="border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-slate-900"
           viewBox={`-90 0 ${chartWidth - 25} ${chartHeight + 155}`}
         >
           <defs>
@@ -1556,7 +1556,7 @@ export default function BasketballTeamWinsBreakdown({
       </div>
 
       {loading && (
-        <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <div className="text-xs text-gray-500 dark:text-gray-300 mt-2">
           Loading tournament data...
         </div>
       )}

@@ -439,7 +439,7 @@ export default function BballFirstPlaceHistoryChart({
   if (filteredFirstPlaceData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500 dark:text-gray-400">
+        <div className="text-gray-500 dark:text-gray-300">
           No first place probability data available
         </div>
       </div>

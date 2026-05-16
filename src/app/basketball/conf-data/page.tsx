@@ -231,7 +231,7 @@ export default function BasketballConfDataPage() {
 
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div
                         className="conf-data-explainer"
                         style={{ lineHeight: "1.3" }}
@@ -260,7 +260,7 @@ export default function BasketballConfDataPage() {
 
               {/* Conference Net Rating Distribution Section */}
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 mb-4">
+                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
                   Conference Net Rating Distribution
                 </h3>
                 <div className="netrtg-box-whisker-container">
@@ -274,7 +274,7 @@ export default function BasketballConfDataPage() {
                 </div>
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           Rating distribution by conference showing the strength
@@ -302,7 +302,7 @@ export default function BasketballConfDataPage() {
 
               {/* Conference Tournament Bid Trends Section */}
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 mb-4">
+                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
                   Conference Tournament Bid Trends Over Time
                 </h3>
                 <div className="conf-bids-history-container">
@@ -318,7 +318,7 @@ export default function BasketballConfDataPage() {
                         <p className="text-red-600 mb-2">
                           Error loading history:
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
                           {historyError.message}
                         </p>
                       </div>
@@ -329,7 +329,7 @@ export default function BasketballConfDataPage() {
                       />
                     ) : (
                       <div className="p-8 text-center">
-                        <p className="text-gray-500 mb-4">
+                        <p className="text-gray-500 dark:text-gray-300 mb-4">
                           No history data available
                         </p>
                         <details className="text-left max-w-2xl mx-auto">
@@ -359,7 +359,7 @@ export default function BasketballConfDataPage() {
                 </div>
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           Progression of projected NCAA tournament bids by
@@ -385,7 +385,7 @@ export default function BasketballConfDataPage() {
 
               {/* Non-Conference Opponent Analysis Section */}
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 mb-4">
+                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
                   Non-Conference Opponent Analysis
                 </h3>
                 <div className="nonconf-analysis-table">
@@ -408,14 +408,14 @@ export default function BasketballConfDataPage() {
                     ) : confError ? (
                       <div className="p-8 text-center">
                         <p className="text-red-600 mb-2">Error loading data:</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
                           {String(confError)}
                         </p>
                       </div>
                     ) : nonconfData?.data && nonconfData.data.length > 0 ? (
                       <BballNonConfAnalysisTable className="nonconf-analysis-table" />
                     ) : (
-                      <div className="p-8 text-center text-gray-500">
+                      <div className="p-8 text-center text-gray-500 dark:text-gray-300">
                         No non-conference data available
                       </div>
                     )}
@@ -424,7 +424,7 @@ export default function BasketballConfDataPage() {
 
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div
                         className="nonconf-analysis-explainer"
                         style={{ lineHeight: "1.3" }}

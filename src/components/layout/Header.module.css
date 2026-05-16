@@ -4,5 +4,8 @@
   .headerLogo {
     /* Invert and adjust colors to make teal appear in dark mode */
     filter: invert(1) hue-rotate(180deg) saturate(1.2);
+    /* Drop the inverted-black background that the PNG's white bg becomes */
+    mix-blend-mode: screen;
+    background-color: transparent;
   }
 }

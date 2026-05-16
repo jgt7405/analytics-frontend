@@ -500,7 +500,7 @@ export default function BballScatterplotChart({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Upload CSV File
             </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            <p className="text-xs text-gray-500 dark:text-gray-300 mb-2">
               Format: Row 1 = Chart Title, X-axis label, Y-axis label | Rows 2+
               = Team name, X value, Y value
             </p>
@@ -522,7 +522,7 @@ export default function BballScatterplotChart({
       )}
 
       {state.data.length === 0 && !state.isLoading && !state.error && (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400 p-6">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-300 p-6">
           <p>Upload a CSV file to create a scatterplot</p>
           <p className="text-xs mt-2">
             CSV format: Row 1 = Chart Title, X-axis name, Y-axis name | Rows 2+
@@ -546,7 +546,7 @@ export default function BballScatterplotChart({
       {state.data.length > 0 && (
         <div className="mb-6 p-6 pt-0">
           <div
-            className="p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700"
+            className="p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-600"
             data-exclude-screenshot="true"
           >
             <div className="flex items-center justify-between mb-4">
@@ -564,7 +564,7 @@ export default function BballScatterplotChart({
             {showSettings && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Chart Title
                   </label>
                   <input
@@ -581,7 +581,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     X-Axis Label
                   </label>
                   <input
@@ -598,7 +598,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Y-Axis Label
                   </label>
                   <input
@@ -615,7 +615,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     X-Axis Interval
                   </label>
                   <input
@@ -634,7 +634,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Y-Axis Interval
                   </label>
                   <input
@@ -653,7 +653,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Logo Size (pixels)
                   </label>
                   <input
@@ -673,7 +673,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Show Grid Lines
                   </label>
                   <select
@@ -692,7 +692,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Show X-Axis Labels
                   </label>
                   <select
@@ -711,7 +711,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Show Y-Axis Labels
                   </label>
                   <select
@@ -730,7 +730,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Collision Detection
                   </label>
                   <select
@@ -753,7 +753,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     X-Axis Min
                   </label>
                   <input
@@ -771,7 +771,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     X-Axis Max
                   </label>
                   <input
@@ -789,7 +789,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Y-Axis Min
                   </label>
                   <input
@@ -807,7 +807,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Y-Axis Max
                   </label>
                   <input
@@ -825,7 +825,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     X-Axis Format
                   </label>
                   <select
@@ -844,7 +844,7 @@ export default function BballScatterplotChart({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                     Y-Axis Format
                   </label>
                   <select
@@ -872,7 +872,7 @@ export default function BballScatterplotChart({
           <svg
             width={chartWidth}
             height={CHART_HEIGHT}
-            className="border border-gray-200 dark:border-gray-700 rounded"
+            className="border border-gray-200 dark:border-gray-600 rounded"
             onMouseLeave={() => setHoveredTeam(null)}
             style={{ display: "block", position: "relative", flexShrink: 0 }}
           >

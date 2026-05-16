@@ -294,7 +294,7 @@ export default function ArchiveBasketballTeamPage({
                           ? `#${team_info.kenpom_rank}`
                           : ""}
                       </h1>
-                      <p className="text-gray-600 text-sm leading-tight -mt-0">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-tight -mt-0">
                         Team Page
                       </p>
                     </div>
@@ -326,18 +326,18 @@ export default function ArchiveBasketballTeamPage({
                   >
                     <div className="flex gap-3">
                       <div className="text-center flex-1">
-                        <div className="text-base font-semibold text-gray-700">
+                        <div className="text-base font-semibold text-gray-700 dark:text-gray-200">
                           {team_info.overall_record}
                         </div>
-                        <div className="text-xs text-gray-600 italic">
+                        <div className="text-xs text-gray-600 dark:text-gray-300 italic">
                           Overall
                         </div>
                       </div>
                       <div className="text-center flex-1">
-                        <div className="text-base font-semibold text-gray-700">
+                        <div className="text-base font-semibold text-gray-700 dark:text-gray-200">
                           {team_info.conference_record}
                         </div>
-                        <div className="text-xs text-gray-600 italic">
+                        <div className="text-xs text-gray-600 dark:text-gray-300 italic">
                           Conference
                         </div>
                       </div>
@@ -350,20 +350,20 @@ export default function ArchiveBasketballTeamPage({
                   >
                     <div className="flex gap-3">
                       <div className="text-center flex-1">
-                        <div className="text-base font-semibold text-gray-700">
+                        <div className="text-base font-semibold text-gray-700 dark:text-gray-200">
                           {formatTournamentPct(team_info.tournament_bid_pct)}
                         </div>
-                        <div className="text-xs text-gray-600 italic">
+                        <div className="text-xs text-gray-600 dark:text-gray-300 italic">
                           NCAA Bid
                         </div>
                       </div>
                       <div className="text-center flex-1">
-                        <div className="text-base font-semibold text-gray-700">
+                        <div className="text-base font-semibold text-gray-700 dark:text-gray-200">
                           {team_info.average_seed
                             ? team_info.average_seed.toFixed(1)
                             : "-"}
                         </div>
-                        <div className="text-xs text-gray-600 italic">
+                        <div className="text-xs text-gray-600 dark:text-gray-300 italic">
                           Avg Seed
                         </div>
                       </div>
@@ -665,7 +665,7 @@ export default function ArchiveBasketballTeamPage({
                           ? `#${team_info.kenpom_rank}`
                           : ""}
                       </h1>
-                      <p className="text-gray-600 leading-tight -mt-0">
+                      <p className="text-gray-600 dark:text-gray-300 leading-tight -mt-0">
                         Team Page
                       </p>
                     </div>
@@ -678,18 +678,18 @@ export default function ArchiveBasketballTeamPage({
                     >
                       <div className="flex gap-4">
                         <div className="text-center">
-                          <div className="text-lg font-semibold text-gray-700">
+                          <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">
                             {team_info.overall_record}
                           </div>
-                          <div className="text-sm text-gray-600 italic">
+                          <div className="text-sm text-gray-600 dark:text-gray-300 italic">
                             Overall
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-lg font-semibold text-gray-700">
+                          <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">
                             {team_info.conference_record}
                           </div>
-                          <div className="text-sm text-gray-600 italic">
+                          <div className="text-sm text-gray-600 dark:text-gray-300 italic">
                             Conference
                           </div>
                         </div>
@@ -702,20 +702,20 @@ export default function ArchiveBasketballTeamPage({
                     >
                       <div className="flex gap-4">
                         <div className="text-center">
-                          <div className="text-lg font-semibold text-gray-700">
+                          <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">
                             {formatTournamentPct(team_info.tournament_bid_pct)}
                           </div>
-                          <div className="text-sm text-gray-600 italic">
+                          <div className="text-sm text-gray-600 dark:text-gray-300 italic">
                             NCAA Bid
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-lg font-semibold text-gray-700">
+                          <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">
                             {team_info.average_seed
                               ? team_info.average_seed.toFixed(1)
                               : "-"}
                           </div>
-                          <div className="text-sm text-gray-600 italic">
+                          <div className="text-sm text-gray-600 dark:text-gray-300 italic">
                             Avg Seed
                           </div>
                         </div>

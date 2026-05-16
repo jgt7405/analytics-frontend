@@ -98,7 +98,7 @@ export default function SeedPage() {
         isLoading={false}
       >
         <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-4">
+          <div className="text-gray-500 dark:text-gray-300 text-lg mb-4">
             No seed data available
           </div>
           <p className="text-gray-400 text-sm mb-6">
@@ -163,7 +163,7 @@ export default function SeedPage() {
 
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           NCAA tournament seed probabilities based on 1,000
@@ -216,7 +216,7 @@ export default function SeedPage() {
                 {/* Tournament Ceiling Chart - SECOND */}
                 {seedResponse?.data && seedResponse.data.length > 0 && (
                   <div className="mb-8 mt-12">
-                    <h1 className="text-xl font-normal text-gray-500 mb-4">
+                    <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                       Tournament Seeding Ceiling/Floor
                     </h1>
                     <div className="bball-ceiling-chart">
@@ -234,7 +234,7 @@ export default function SeedPage() {
 
                     <div className="mt-6">
                       <div className="flex flex-row items-start gap-4">
-                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                        <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                           <div style={{ lineHeight: "1.3" }}></div>
                         </div>
                         <div
@@ -258,7 +258,7 @@ export default function SeedPage() {
                 {/* Wins Required and Probability Chart - UNIFIED */}
                 {seedResponse?.data && seedResponse.data.length > 0 && (
                   <div className="mb-8 mt-12">
-                    <h1 className="text-xl font-normal text-gray-500 mb-4">
+                    <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                       Wins to Seed Ladder
                     </h1>
                     <div className="bball-seed-wins-and-probability-chart">
@@ -276,7 +276,7 @@ export default function SeedPage() {
 
                     <div className="mt-6">
                       <div className="flex flex-row items-start gap-4">
-                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                        <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                           <div style={{ lineHeight: "1.3" }}></div>
                         </div>
                         <div
@@ -300,7 +300,7 @@ export default function SeedPage() {
                 {/* Box Whisker Chart - FOURTH */}
                 {seedResponse?.data && seedResponse.data.length > 0 && (
                   <div className="mb-8 mt-12">
-                    <h1 className="text-xl font-normal text-gray-500 mb-2">
+                    <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-2">
                       Seed Ceiling & Floor
                     </h1>
                     <div className="seed-ceiling-floor-chart">
@@ -318,7 +318,7 @@ export default function SeedPage() {
 
                     <div className="mt-10">
                       <div className="flex flex-row items-start gap-4">
-                        <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                        <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                           <div style={{ lineHeight: "1.3" }}>
                             <div>
                               Seed ceiling and floor based on 1,000 season

@@ -228,7 +228,7 @@ function FootballSeedTable({
 
   if (!seedData || seedData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         No seed data available
       </div>
     );
@@ -255,7 +255,7 @@ function FootballSeedTable({
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             placeholder={seedData.length.toString()}
           />
-          <span className={`text-gray-600 dark:text-gray-400 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
             teams (of {seedData.length})
           </span>
         </div>

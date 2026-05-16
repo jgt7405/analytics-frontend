@@ -13,7 +13,7 @@ export default function ExplainerText({
   className,
 }: ExplainerTextProps) {
   return (
-    <div className={cn("explainer-text text-gray-600 dark:text-gray-400 max-w-2xl", className)}>
+    <div className={cn("explainer-text text-gray-600 dark:text-gray-300 max-w-2xl", className)}>
       {children}
     </div>
   );

@@ -18,10 +18,10 @@ export default function PageHeader({
     <>
       {/* Mobile Layout */}
       <div className="md:hidden">
-        <h1 className="text-xl font-normal text-gray-500 mb-4">
+        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
           {title}
           {subtitle && (
-            <span className="text-base ml-2 text-gray-500">{subtitle}</span>
+            <span className="text-base ml-2 text-gray-500 dark:text-gray-300">{subtitle}</span>
           )}
         </h1>
         {controls}
@@ -29,10 +29,10 @@ export default function PageHeader({
 
       {/* Desktop Layout */}
       <div className="hidden md:block page-header">
-        <h1 className="text-xl font-normal text-gray-500">
+        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200">
           {title}
           {subtitle && (
-            <span className="text-base ml-2 text-gray-500">{subtitle}</span>
+            <span className="text-base ml-2 text-gray-500 dark:text-gray-300">{subtitle}</span>
           )}
         </h1>
         {controls && <div className="conference-selector">{controls}</div>}

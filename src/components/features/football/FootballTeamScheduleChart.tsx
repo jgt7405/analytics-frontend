@@ -163,7 +163,7 @@ export default function FootballTeamScheduleChart({
                       ? "text-green-600"
                       : game.status === "L"
                         ? "text-red-600"
-                        : "text-gray-600 dark:text-gray-400"
+                        : "text-gray-600 dark:text-gray-300"
                   }`}
                 >
                   {formatScore(game.team_points, game.opp_points, game.status)}

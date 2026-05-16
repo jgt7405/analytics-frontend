@@ -72,7 +72,7 @@ function ConferenceBidsTable({
 
   if (!confData || confData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         No conference data available
       </div>
     );

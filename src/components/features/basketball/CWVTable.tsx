@@ -226,7 +226,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
   if (!cwvData || !cwvData.teams || !cwvData.games) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No CWV data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">No CWV data available</div>
     );
   }
 
@@ -503,7 +503,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           if (game.status === "W" || game.status === "L") {
             tooltipContent = (
               <div className="text-xs space-y-0.5">
-                <div className="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-600">
                   {game.opponent_logo && (
                     <Image
                       src={game.opponent_logo}
@@ -517,7 +517,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 </div>
                 {game.location && <div>{game.location}</div>}
                 {game.date && (
-                  <div className="text-gray-600 dark:text-gray-400">
+                  <div className="text-gray-600 dark:text-gray-300">
                     {new Date(game.date + "T00:00:00").toLocaleDateString(
                       "en-US",
                       {
@@ -534,7 +534,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           } else if (game.date) {
             tooltipContent = (
               <div className="text-xs space-y-0.5">
-                <div className="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-600">
                   {game.opponent_logo && (
                     <Image
                       src={game.opponent_logo}
@@ -548,7 +548,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 </div>
                 {game.location && <div>{game.location}</div>}
                 {game.date && (
-                  <div className="text-gray-600 dark:text-gray-400">
+                  <div className="text-gray-600 dark:text-gray-300">
                     {new Date(game.date + "T00:00:00").toLocaleDateString(
                       "en-US",
                       {

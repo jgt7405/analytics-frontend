@@ -166,7 +166,7 @@ export default function FootballConfChampPage() {
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
                       {/* Explainer text on the left */}
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Conference Championship Projections based on 1,000
@@ -199,7 +199,7 @@ export default function FootballConfChampPage() {
                   {/* Championship Game Probability History */}
                   <ErrorBoundary level="component">
                     <div className="mb-8">
-                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                         Championship Game Probability History{" "}
                         <span className="text-base">(Over Time)</span>
                       </h1>
@@ -211,7 +211,7 @@ export default function FootballConfChampPage() {
 
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
                                 Progression of projected probability of
@@ -240,7 +240,7 @@ export default function FootballConfChampPage() {
                   {/* Conference Champion Probability History */}
                   <ErrorBoundary level="component">
                     <div className="mb-8">
-                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                         Conference Champion Probability History{" "}
                         <span className="text-base">(Over Time)</span>
                       </h1>
@@ -252,7 +252,7 @@ export default function FootballConfChampPage() {
 
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
                                 Progression of projected probability of

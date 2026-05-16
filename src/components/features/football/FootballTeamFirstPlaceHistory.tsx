@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -393,7 +393,7 @@ export default function FootballTeamFirstPlaceHistory({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-pulse text-gray-500 dark:text-gray-400">
+        <div className="animate-pulse text-gray-500 dark:text-gray-300">
           Loading historical data...
         </div>
       </div>
@@ -414,7 +414,7 @@ export default function FootballTeamFirstPlaceHistory({
   if (data.length === 0) {
     return (
       <div className="text-center py-8">
-        <div className="text-gray-500 dark:text-gray-400 text-sm">Historical data coming soon</div>
+        <div className="text-gray-500 dark:text-gray-300 text-sm">Historical data coming soon</div>
         <div className="text-gray-400 text-xs mt-1">
           Chart will show first place probability over time once data is
           collected

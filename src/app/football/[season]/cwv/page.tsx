@@ -121,7 +121,7 @@ export default function FootballCWVArchivePage({
                   </div>
 
                   {/* Legend */}
-                  <div className="mt-4 mb-6 text-sm text-gray-600">
+                  <div className="mt-4 mb-6 text-sm text-gray-600 dark:text-gray-300">
                     <p>
                       <strong>Legend:</strong>{" "}
                       <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
@@ -138,7 +138,7 @@ export default function FootballCWVArchivePage({
                   {/* Buttons and Explainer */}
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4 cwv-explainer">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4 cwv-explainer">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Win Prob is an allocation of probabilities that a

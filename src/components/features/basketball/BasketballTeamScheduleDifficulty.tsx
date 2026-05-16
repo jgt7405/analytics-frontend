@@ -556,7 +556,7 @@ export default function BasketballTeamScheduleDifficulty({
         <svg
           width={CHART_WIDTH}
           height={TOTAL_CHART_HEIGHT}
-          className="border border-gray-200 dark:border-gray-700 rounded"
+          className="border border-gray-200 dark:border-gray-600 rounded"
         >
           <rect width={CHART_WIDTH} height={TOTAL_CHART_HEIGHT} fill="white" />
 
@@ -882,7 +882,7 @@ export default function BasketballTeamScheduleDifficulty({
       </div>
 
       {/* Legend and stats */}
-      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+      <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
         {/* Team Stats Summary - MOVED TO TOP */}
         <div className="text-center mt-0 -pt-1 border-b border-gray-300 dark:border-gray-600 text-xs">
           <div className="grid grid-cols-5 gap-4 justify-center px-2">

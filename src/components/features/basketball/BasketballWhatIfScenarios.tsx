@@ -244,7 +244,7 @@ function TeamTile({
             }}
           />
         ) : (
-          <span className="text-[8px] font-bold text-gray-500 dark:text-gray-400">
+          <span className="text-[8px] font-bold text-gray-500 dark:text-gray-300">
             {teamName.substring(0, 3)}
           </span>
         )}
@@ -327,7 +327,7 @@ function SelectionLegend({
 
   return (
     <div className="mb-3">
-      <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">
+      <p className="text-[11px] text-gray-500 dark:text-gray-300 mb-1">
         Selections: {selections.size} game
         {selections.size !== 1 ? "s" : ""}
       </p>
@@ -412,7 +412,7 @@ function ScreenshotBtn({
         }
         setCapturing(false);
       }}
-      className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
+      className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
       title="Download screenshot"
     >
       {capturing ? (
@@ -535,7 +535,7 @@ function ProbabilityTable({
       <div ref={screenshotRef}>
         <table className="text-sm" style={{ width: "auto", minWidth: "320px" }}>
           <thead>
-            <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+            <tr className="border-b border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300">
               <th
                 className="text-left py-2 px-2 font-normal"
                 style={{ minWidth: "40px" }}
@@ -742,10 +742,10 @@ function FullStandingsTable({
         </div>
       </div>
       <div ref={screenshotRef}>
-        <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div className="overflow-x-auto border border-gray-200 dark:border-gray-600 rounded-lg">
           <table className="text-xs" style={{ width: "auto" }}>
             <thead>
-              <tr className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+              <tr className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300">
                 <th className="text-left py-2 px-2 font-normal sticky left-0 bg-gray-50 dark:bg-slate-800 z-10">
                   Team
                 </th>
@@ -1284,7 +1284,7 @@ export default function BasketballWhatIfScenarios() {
   if (conferencesLoading || !selectedConference) {
     return (
       <div className="container mx-auto px-4 py-4">
-        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-400">
+        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300">
           What If Calculator
         </h1>
         <div className="flex justify-center py-20">
@@ -1297,7 +1297,7 @@ export default function BasketballWhatIfScenarios() {
   if (conferencesError) {
     return (
       <div className="container mx-auto px-4 py-4">
-        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-400">
+        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300">
           What If Calculator
         </h1>
         <ErrorMessage message={conferencesError.message} />
@@ -1307,7 +1307,7 @@ export default function BasketballWhatIfScenarios() {
 
   return (
     <div className="container mx-auto px-4 py-4">
-      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-400 mb-6">
+      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300 mb-6">
         What If Calculator
       </h1>
 
@@ -1358,7 +1358,7 @@ export default function BasketballWhatIfScenarios() {
               <div className="max-h-[30vh] lg:max-h-[50vh] overflow-y-auto pr-1 mb-4">
                 {sortedDates.map((date) => (
                   <div key={date} className="mb-3">
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1.5 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">
+                    <p className="text-[11px] text-gray-500 dark:text-gray-300 mb-1.5 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">
                       {date}
                     </p>
                     <div className="flex flex-wrap gap-1">
@@ -1376,14 +1376,14 @@ export default function BasketballWhatIfScenarios() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400 italic py-4">
+              <p className="text-sm text-gray-500 dark:text-gray-300 italic py-4">
                 {isCalculating || isLoadingBaseline
                   ? "Loading games..."
                   : "No upcoming conference games found."}
               </p>
             )}
 
-            <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-600">
               <button
                 onClick={handleCalculate}
                 disabled={gameSelections.size === 0 || isCalculating}
@@ -1397,7 +1397,7 @@ export default function BasketballWhatIfScenarios() {
               {gameSelections.size > 0 && (
                 <button
                   onClick={handleReset}
-                  className="py-2 px-3 text-sm text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
+                  className="py-2 px-3 text-sm text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
                 >
                   Reset
                 </button>
@@ -1545,7 +1545,7 @@ export default function BasketballWhatIfScenarios() {
             {!isCalculating &&
               !isLoadingBaseline &&
               !displayBaseline.length && (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                <p className="text-gray-500 dark:text-gray-300 text-center py-8">
                   No team data available
                 </p>
               )}
@@ -1594,7 +1594,7 @@ export default function BasketballWhatIfScenarios() {
               <button
                 onClick={handleDownloadCSV}
                 disabled={isDownloadingCSV}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:bg-slate-800 transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition disabled:opacity-50"
               >
                 <Download size={13} />
                 {isDownloadingCSV

@@ -59,7 +59,7 @@ function BballRegSeasonWinsTable({
 
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         No regular season wins data available
       </div>
     );

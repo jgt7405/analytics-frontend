@@ -153,7 +153,7 @@ export default function ConfTourneyPage() {
 
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             Probabilities from 1,000 season simulations using
@@ -186,7 +186,7 @@ export default function ConfTourneyPage() {
                 <div className="space-y-6 mb-8">
                   <ErrorBoundary level="component">
                     <div className="mb-8">
-                      <h1 className="text-xl font-normal text-gray-500 mb-4">
+                      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
                         Conference Champion Probability History{" "}
                         <span className="text-base">(Over Time)</span>
                       </h1>
@@ -202,7 +202,7 @@ export default function ConfTourneyPage() {
 
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
                                 Progression of projected probability of

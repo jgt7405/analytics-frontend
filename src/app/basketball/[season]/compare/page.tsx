@@ -125,7 +125,7 @@ function SpacingDebugger() {
             </h3>
             <button
               onClick={() => setDebugVisible(false)}
-              className="text-sm text-gray-500 hover:text-red-500 font-bold"
+              className="text-sm text-gray-500 dark:text-gray-300 hover:text-red-500 font-bold"
             >
               ×
             </button>
@@ -141,7 +141,7 @@ function SpacingDebugger() {
                   <div className="font-semibold text-[rgb(0,151,178)] mb-1">
                     {item.elementName}
                   </div>
-                  <div className="grid grid-cols-2 gap-1 text-gray-700">
+                  <div className="grid grid-cols-2 gap-1 text-gray-700 dark:text-gray-200">
                     <div>Height: {item.height}px</div>
                     <div>MT: {item.marginTop}</div>
                     <div>MB: {item.marginBottom}</div>
@@ -155,12 +155,12 @@ function SpacingDebugger() {
               ))}
             </div>
           ) : (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               No elements with data-debug attribute found
             </p>
           )}
 
-          <div className="mt-3 pt-3 border-t text-xs text-gray-600">
+          <div className="mt-3 pt-3 border-t text-xs text-gray-600 dark:text-gray-300">
             <p className="font-semibold mb-1">Instructions:</p>
             <ul className="space-y-1">
               <li>• Press Ctrl+Shift+D to toggle this panel</li>
@@ -616,7 +616,7 @@ export default function ArchiveBasketballComparePage({
                         <div className="w-px bg-gray-300 flex-shrink-0 self-stretch"></div>
                       )}
                       <div>
-                        <h3 className="text-xs text-gray-700 mb-2 px-1 font-normal border-b border-gray-200 pb-2 text-center min-w-20">
+                        <h3 className="text-xs text-gray-700 dark:text-gray-200 mb-2 px-1 font-normal border-b border-gray-200 pb-2 text-center min-w-20">
                           {conference}
                         </h3>
                         <div
@@ -743,7 +743,7 @@ export default function ArchiveBasketballComparePage({
             )}
 
             {showSearchResults && searchResults.length === 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-center text-xs text-gray-500 z-40">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 text-center text-xs text-gray-500 dark:text-gray-300 z-40">
                 No teams found
               </div>
             )}
@@ -781,10 +781,10 @@ export default function ArchiveBasketballComparePage({
                         unoptimized
                       />
                     </div>
-                    <span className="text-gray-700">{team.teamName}</span>
+                    <span className="text-gray-700 dark:text-gray-200">{team.teamName}</span>
                     <button
                       onClick={() => removeTeam(team.teamName)}
-                      className="ml-1 text-gray-500 hover:text-red-600 font-bold"
+                      className="ml-1 text-gray-500 dark:text-gray-300 hover:text-red-600 font-bold"
                     >
                       ×
                     </button>
@@ -825,7 +825,7 @@ export default function ArchiveBasketballComparePage({
               className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center text-sm"
               data-debug="Empty State Section"
             >
-              <p className="text-gray-500">
+              <p className="text-gray-500 dark:text-gray-300">
                 Select teams above or use search to compare their schedules
               </p>
             </div>

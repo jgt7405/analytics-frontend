@@ -84,7 +84,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
           style={{ padding: "6px 12px" }}
         >
           <h2
-            className="text-xl font-bold text-gray-500"
+            className="text-xl font-bold text-gray-500 dark:text-gray-200"
             style={{
               fontFamily: "Roboto Condensed, system-ui, sans-serif",
               margin: 0,
@@ -97,7 +97,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
               onClose();
               setFormMessage("");
             }}
-            className="text-gray-400 hover:text-gray-600 transition-colors bg-transparent border-none"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-transparent border-none"
             style={{ padding: 0, cursor: "pointer" }}
           >
             <X size={20} />
@@ -112,7 +112,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
           }}
         >
           <p
-            className="text-sm text-gray-600"
+            className="text-sm text-gray-600 dark:text-gray-300"
             style={{
               fontFamily: "Roboto Condensed, system-ui, sans-serif",
               margin: 0,
@@ -128,7 +128,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 style={{
                   fontFamily: "Roboto Condensed, system-ui, sans-serif",
                 }}
@@ -152,7 +152,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 style={{
                   fontFamily: "Roboto Condensed, system-ui, sans-serif",
                 }}
@@ -176,7 +176,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
             <div>
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 style={{
                   fontFamily: "Roboto Condensed, system-ui, sans-serif",
                 }}
@@ -200,7 +200,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
             <div>
               <label
                 htmlFor="message"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 style={{
                   fontFamily: "Roboto Condensed, system-ui, sans-serif",
                 }}

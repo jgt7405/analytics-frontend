@@ -77,7 +77,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
   if (loading) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         Loading tournament data...
       </div>
     );
@@ -94,7 +94,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
   if (!data) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">No data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">No data available</div>
     );
   }
 
@@ -247,7 +247,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
               className="flex-shrink-0"
             />
           ) : (
-            <span className="text-xs text-gray-500 dark:text-gray-400">-</span>
+            <span className="text-xs text-gray-500 dark:text-gray-300">-</span>
           )}
         </td>
 

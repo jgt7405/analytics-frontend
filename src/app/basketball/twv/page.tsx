@@ -155,7 +155,7 @@ export default function TWVPage() {
         isLoading={false}
       >
         <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-4">
+          <div className="text-gray-500 dark:text-gray-300 text-lg mb-4">
             No TWV data available
           </div>
           <button
@@ -218,7 +218,7 @@ export default function TWVPage() {
 
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                         <div style={{ lineHeight: "1.3" }}>
                           <div>
                             TWV (True Win Value) shows actual wins compared to

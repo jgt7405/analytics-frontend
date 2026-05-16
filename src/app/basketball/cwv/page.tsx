@@ -174,7 +174,7 @@ export default function CWVPage() {
         isLoading={false}
       >
         <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-4">
+          <div className="text-gray-500 dark:text-gray-300 text-lg mb-4">
             No CWV data available
           </div>
           <button
@@ -235,7 +235,7 @@ export default function CWVPage() {
                   </div>
 
                   {/* Legend - with correct colors matching the chart */}
-                  <div className="mt-4 mb-6 text-sm text-gray-600">
+                  <div className="mt-4 mb-6 text-sm text-gray-600 dark:text-gray-300">
                     <p>
                       <strong>Legend:</strong>{" "}
                       <span className="inline-block w-4 h-4 bg-[#18627b] mr-1 align-middle"></span>{" "}
@@ -251,7 +251,7 @@ export default function CWVPage() {
 
                   <div className="mt-6">
                     <div className="flex flex-row items-start gap-4">
-                      <div className="flex-1 text-xs text-gray-600 max-w-none pr-4">
+                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                         <div
                           className="cwv-explainer"
                           style={{ lineHeight: "1.3" }}
