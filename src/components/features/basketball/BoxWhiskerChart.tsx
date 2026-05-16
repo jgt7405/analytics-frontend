@@ -40,22 +40,32 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
   };
 
   const adjustColorIfWhite = (color: string) => {
-    if (!color) return isDark ? "#e2e8f0" : "#000000";
+    if (!color) return isDark ? "#ffffff" : "#000000";
+
     const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
+    const black = ["#000000", "#000", "black", "rgb(0,0,0)"];
+
     if (white.includes(color.toLowerCase())) {
-      return isDark ? "#e2e8f0" : "#000000";
+      return isDark ? "#ffffff" : "#000000";
     }
-    // Check for very dark colors in dark mode
-    if (isDark && color.startsWith("#")) {
-      const hex = color.substring(1);
-      if (hex.length === 6) {
+
+    if (black.includes(color.toLowerCase())) {
+      return isDark ? "#ffffff" : "#000000";
+    }
+
+    if (color.startsWith("#")) {
+      const hex = color.replace("#", "");
+      if (hex.length === 6 || hex.length === 3) {
         const r = parseInt(hex.substring(0, 2), 16);
         const g = parseInt(hex.substring(2, 4), 16);
         const b = parseInt(hex.substring(4, 6), 16);
         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-        if (brightness < 50) return "#e2e8f0";
+        if (brightness < 100) {
+          return isDark ? "#ffffff" : color;
+        }
       }
     }
+
     return color;
   };
 
