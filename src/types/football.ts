@@ -1,6 +1,5 @@
 // src/types/football.ts
 
-import type { GameSelection } from "@/hooks/useFootballWhatIf";
 export interface FootballStanding {
   team_name: string;
   team_id: string;

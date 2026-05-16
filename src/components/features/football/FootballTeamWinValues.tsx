@@ -2,7 +2,7 @@
 
 import { useResponsive } from "@/hooks/useResponsive";
 import { getFootballDateRange } from "@/lib/chartDateRange";
-import type { Chart } from "chart.js";
+import type { Chart, TooltipModel } from "chart.js";
 import {
   Chart as ChartJS,
 } from "chart.js";

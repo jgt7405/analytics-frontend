@@ -1,4 +1,3 @@
-import { api } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 
 interface WinSeedCountEntry {

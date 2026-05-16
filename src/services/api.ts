@@ -15,6 +15,7 @@ import {
 import { ApiError, BasketballApiError } from "@/types/errors";
 import {
   FootballCFPApiResponse,
+  FootballConfChampApiResponse,
   FootballConferenceApiResponse,
   FootballCWVApiResponse,
   FootballPlayoffApiResponse,
@@ -663,7 +664,7 @@ class ApiClient {
   async getFootballConfChamp(
     conference: string,
     season?: string,
-  ): Promise<FootballCFPApiResponse> {
+  ): Promise<FootballConfChampApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
@@ -676,7 +677,7 @@ class ApiClient {
       `/football/conf_champ/${formattedConf}${seasonQuery}`,
       (data) => ({
         success: true,
-        data: data as FootballCFPApiResponse,
+        data: data as FootballConfChampApiResponse,
         error: null,
       }),
     );
