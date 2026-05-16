@@ -41,8 +41,8 @@ function ConferenceLogo({
   if (!logoUrl || imageError) {
     return (
       <div
-        className="flex items-center justify-center bg-gray-200 dark:bg-white rounded text-xs font-bold text-gray-600 dark:text-gray-300"
-        style={{ width: size, height: size }}
+        className="flex items-center justify-center bg-gray-200 dark:bg-white rounded-full text-xs font-bold text-gray-600 dark:text-gray-700"
+        style={{ width: size + 4, height: size + 4 }}
       >
         {conferenceName.substring(0, 3).toUpperCase()}
       </div>
@@ -50,14 +50,19 @@ function ConferenceLogo({
   }
 
   return (
-    <Image
-      src={logoUrl}
-      alt={conferenceName}
-      width={size}
-      height={size}
-      className="object-contain rounded"
-      onError={() => setImageError(true)}
-    />
+    <div
+      className="inline-flex items-center justify-center rounded-full bg-transparent dark:bg-white p-0.5"
+      style={{ width: size + 4, height: size + 4, flexShrink: 0 }}
+    >
+      <Image
+        src={logoUrl}
+        alt={conferenceName}
+        width={size}
+        height={size}
+        className="object-contain"
+        onError={() => setImageError(true)}
+      />
+    </div>
   );
 }
 
