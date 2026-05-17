@@ -78,6 +78,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.75,
       lastModified: new Date(),
     },
+    {
+      url: `${baseUrl}/football/home/`,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+      lastModified: new Date(),
+    },
+    {
+      url: `${baseUrl}/football/twv/`,
+      changeFrequency: 'weekly',
+      priority: 0.65,
+      lastModified: new Date(),
+    },
     // Basketball pages
     {
       url: `${baseUrl}/basketball/wins/`,
@@ -143,6 +155,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/basketball/whatif/`,
       changeFrequency: 'weekly',
       priority: 0.75,
+      lastModified: new Date(),
+    },
+    {
+      url: `${baseUrl}/basketball/home/`,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+      lastModified: new Date(),
+    },
+    {
+      url: `${baseUrl}/basketball/twv/`,
+      changeFrequency: 'weekly',
+      priority: 0.65,
+      lastModified: new Date(),
+    },
+    {
+      url: `${baseUrl}/basketball/game-preview/`,
+      changeFrequency: 'weekly',
+      priority: 0.65,
       lastModified: new Date(),
     },
   ];
