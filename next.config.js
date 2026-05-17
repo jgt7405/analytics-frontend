@@ -111,7 +111,6 @@ const nextConfig = {
 
   // Middleware options (moved out of experimental in Next.js 14.2)
   skipMiddlewareUrlNormalize: true,
-  skipTrailingSlashRedirect: true,
 
   images: {
     formats: ["image/avif", "image/webp"],
@@ -170,12 +169,6 @@ const nextConfig = {
       {
         source: "/",
         destination: "/football/wins/",
-        permanent: true,
-      },
-      {
-        source: "/sitemap.xml",
-        destination:
-          "https://jthomprodbackend-production.up.railway.app/api/sitemap.xml",
         permanent: true,
       },
     ];

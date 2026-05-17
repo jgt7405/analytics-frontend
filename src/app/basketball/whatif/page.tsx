@@ -1,23 +1,12 @@
-"use client";
+import { generatePageMetadata } from "@/app/metadata";
+import BasketballWhatIfContent from "./BasketballWhatIfContent";
 
-import BasketballWhatIfScenarios from "@/components/features/basketball/BasketballWhatIfScenarios";
-import Footer from "@/components/layout/Footer";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Suspense } from "react";
+export const metadata = generatePageMetadata({
+  title: "Basketball What-If Scenarios",
+  description: "Simulate game outcomes and instantly see impact on conference standings and tournament seeding.",
+  path: "/basketball/whatif/",
+});
 
 export default function BasketballWhatIfPage() {
-  return (
-    <>
-      <Suspense
-        fallback={
-          <div className="flex justify-center items-center min-h-[400px]">
-            <LoadingSpinner />
-          </div>
-        }
-      >
-        <BasketballWhatIfScenarios />
-      </Suspense>
-      <Footer />
-    </>
-  );
+  return <BasketballWhatIfContent />;
 }
