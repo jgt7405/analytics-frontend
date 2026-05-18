@@ -96,7 +96,7 @@ const CWVTeamSchema = z.object({
 const CWVGameSchema = z.object({
   rank: z.number().int().min(1),
   team: z.string(),
-  win_prob: z.number().min(0).max(1),
+  win_prob: z.number().transform((val) => (val > 1 ? val / 100 : val)).pipe(z.number().min(0).max(1)),
   date: z.string().optional(),
   status: z.enum(["W", "L", "scheduled"]).optional(),
 });
