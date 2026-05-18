@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         <p><strong>Message:</strong></p>
         <p>${escapedMessage}</p>
       `,
-      replyTo: email,
+      replyTo: email.replace(/[\r\n]/g, ""),
     });
 
     return NextResponse.json(

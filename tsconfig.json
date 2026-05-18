@@ -32,7 +32,6 @@
     "next-env.d.ts",
     "next.config.js",
     "src/components/common/SwipeableConferenceSelector.tsx",
-    "C:/temp/sports-analytics-next/types/**/*.ts",
     "src/sentry.client.config.js"
   ],
   "exclude": ["node_modules"]

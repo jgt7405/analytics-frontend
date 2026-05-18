@@ -13,8 +13,7 @@
     "type-check": "tsc --noEmit",
     "analyze": "ANALYZE=true npm run build",
     "clean": "rm -rf .next dist node_modules/.cache || true",
-    "clean:all": "rm -rf .next dist node_modules/.cache && npm cache clean --force",
-    "postinstall": "npm run clean"
+    "clean:all": "rm -rf .next dist node_modules/.cache && npm cache clean --force"
   },
   "dependencies": {
     "@sentry/nextjs": "^9.24.0",
