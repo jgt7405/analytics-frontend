@@ -31,16 +31,20 @@ function NavigationContent() {
   const archiveSport = archiveSeasonMatch ? archiveSeasonMatch[1] : null;
 
   // Helper function to add conference to URL following all rules
-  // Normalize pathname by stripping archive season for active state comparison
+  // Normalize pathname by stripping archive season and trailing slash for active state comparison
   const getBasePath = useCallback(() => {
+    let path = pathname;
+
     if (isArchiveMode && archiveSeason && archiveSport) {
-      // /basketball/2025-26/wins → /basketball/wins
-      return pathname.replace(
+      // /basketball/2025-26/wins/ → /basketball/wins
+      path = path.replace(
         new RegExp(`^/${archiveSport}/${archiveSeason}`),
         `/${archiveSport}`
       );
     }
-    return pathname;
+
+    // Remove trailing slash for consistent comparison
+    return path.replace(/\/$/, '');
   }, [pathname, isArchiveMode, archiveSeason, archiveSport]);
 
   const addConferenceToUrl = useCallback(
