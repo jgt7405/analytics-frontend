@@ -25,7 +25,7 @@ function isValidEmail(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const clientIp = getClientIp(request.headers as Record<string, string | string[]>);
+    const clientIp = getClientIp(request.headers as unknown as Record<string, string | string[]>);
     if (!rateLimit(clientIp, 5, 3600000)) {
       return NextResponse.json(
         { error: "Too many contact form submissions. Please try again later." },
