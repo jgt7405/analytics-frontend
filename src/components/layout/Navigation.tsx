@@ -31,6 +31,18 @@ function NavigationContent() {
   const archiveSport = archiveSeasonMatch ? archiveSeasonMatch[1] : null;
 
   // Helper function to add conference to URL following all rules
+  // Normalize pathname by stripping archive season for active state comparison
+  const getBasePath = useCallback(() => {
+    if (isArchiveMode && archiveSeason && archiveSport) {
+      // /basketball/2025-26/wins → /basketball/wins
+      return pathname.replace(
+        new RegExp(`^/${archiveSport}/${archiveSeason}`),
+        `/${archiveSport}`
+      );
+    }
+    return pathname;
+  }, [pathname, isArchiveMode, archiveSeason, archiveSport]);
+
   const addConferenceToUrl = useCallback(
     (basePath: string) => {
       // Rule 4: If on team page, use team's conference
@@ -73,67 +85,67 @@ function NavigationContent() {
   const basketballNavItems = [
     {
       name: "Home",
-      path: addConferenceToUrl("/basketball/home"),
+      basePath: "/basketball/home",
       description: "Basketball home",
     },
     {
       name: "Wins",
-      path: addConferenceToUrl("/basketball/wins"),
+      basePath: "/basketball/wins",
       description: "Conference wins distribution",
     },
     {
       name: "Standings",
-      path: addConferenceToUrl("/basketball/standings"),
+      basePath: "/basketball/standings",
       description: "Projected standings",
     },
     {
       name: "CWV",
-      path: addConferenceToUrl("/basketball/cwv"),
+      basePath: "/basketball/cwv",
       description: "Conference win value analysis",
     },
     {
       name: "Schedule",
-      path: addConferenceToUrl("/basketball/schedule"),
+      basePath: "/basketball/schedule",
       description: "Team schedules and results",
     },
     {
       name: "TWV",
-      path: addConferenceToUrl("/basketball/twv"),
+      basePath: "/basketball/twv",
       description: "True win value analysis",
     },
     {
       name: "Conf Tourney",
-      path: addConferenceToUrl("/basketball/conf-tourney"),
+      basePath: "/basketball/conf-tourney",
       description: "Conference tournament projections",
     },
     {
       name: "Seed",
-      path: addConferenceToUrl("/basketball/seed"),
+      basePath: "/basketball/seed",
       description: "NCAA tournament seed projections",
     },
     {
       name: "NCAA Tourney",
-      path: addConferenceToUrl("/basketball/ncaa-tourney"),
+      basePath: "/basketball/ncaa-tourney",
       description: "NCAA tournament round projections",
     },
     {
       name: "Conf Data",
-      path: addConferenceToUrl("/basketball/conf-data"),
+      basePath: "/basketball/conf-data",
       description: "Conference bid projections",
     },
     {
       name: "Teams",
-      path: addConferenceToUrl("/basketball/teams"),
+      basePath: "/basketball/teams",
       description: "Teams directory",
     },
     {
       name: "Compare",
-      path: addConferenceToUrl("/basketball/compare"),
+      basePath: "/basketball/compare",
       description: "Compare teams side by side",
     },
     {
       name: "What If",
-      path: addConferenceToUrl("/basketball/whatif"),
+      basePath: "/basketball/whatif",
       description: "What If Conference Scenarios",
     },
   ];
@@ -141,62 +153,62 @@ function NavigationContent() {
   const footballNavItems = [
     {
       name: "Wins",
-      path: addConferenceToUrl("/football/wins"),
+      basePath: "/football/wins",
       description: "Conference wins distribution",
     },
     {
       name: "Standings",
-      path: addConferenceToUrl("/football/standings"),
+      basePath: "/football/standings",
       description: "Projected standings",
     },
     {
       name: "CWV",
-      path: addConferenceToUrl("/football/cwv"),
+      basePath: "/football/cwv",
       description: "Conference win value analysis",
     },
     {
       name: "Schedule",
-      path: addConferenceToUrl("/football/schedule"),
+      basePath: "/football/schedule",
       description: "Team schedules and results",
     },
     {
       name: "TWV",
-      path: addConferenceToUrl("/football/twv"),
+      basePath: "/football/twv",
       description: "True win value analysis",
     },
     {
       name: "Conf Champ",
-      path: addConferenceToUrl("/football/conf-champ"),
+      basePath: "/football/conf-champ",
       description: "Conference championship projections",
     },
     {
       name: "What If",
-      path: addConferenceToUrl("/football/whatif"),
+      basePath: "/football/whatif",
       description: "What If Conference Championship Scenarios",
     },
     {
       name: "Seed",
-      path: addConferenceToUrl("/football/seed"),
+      basePath: "/football/seed",
       description: "CFP seed projections",
     },
     {
       name: "CFP",
-      path: addConferenceToUrl("/football/cfp"),
+      basePath: "/football/cfp",
       description: "College Football Playoff projections",
     },
     {
       name: "Conf Data",
-      path: addConferenceToUrl("/football/conf-data"),
+      basePath: "/football/conf-data",
       description: "Conference CFP bid projections",
     },
     {
       name: "Teams",
-      path: addConferenceToUrl("/football/teams"),
+      basePath: "/football/teams",
       description: "Football teams directory",
     },
     {
       name: "Compare",
-      path: addConferenceToUrl("/football/compare"),
+      basePath: "/football/compare",
       description: "Compare teams side by side",
     },
   ];
@@ -289,13 +301,15 @@ function NavigationContent() {
         aria-label="Main navigation"
       >
         {navItems.map((item) => {
-          const isActive = pathname === item.path.split("?")[0];
+          const basePath = getBasePath();
+          const isActive = basePath === item.basePath;
           const words = item.name.split(" ");
           const isMultiWord = words.length > 1;
+          const href = addConferenceToUrl(item.basePath);
           return (
             <Link
-              key={item.path}
-              href={item.path}
+              key={item.basePath}
+              href={href}
               className={cn(
                 navStyles.tabButton,
                 isActive && navStyles.tabButtonActive,
@@ -365,13 +379,15 @@ function NavigationContent() {
         >
           <nav role="navigation" aria-label="Mobile navigation">
             {navItems.map((item, index) => {
-              const isActive = pathname === item.path.split("?")[0];
+              const basePath = getBasePath();
+              const isActive = basePath === item.basePath;
               const isFirst = index === 0;
+              const href = addConferenceToUrl(item.basePath);
 
               return (
                 <Link
-                  key={item.path}
-                  href={item.path}
+                  key={item.basePath}
+                  href={href}
                   ref={isFirst ? firstItemRef : undefined}
                   className={cn(
                     navStyles.tabButton,
