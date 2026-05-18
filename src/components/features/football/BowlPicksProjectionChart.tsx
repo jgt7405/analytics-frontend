@@ -3,16 +3,27 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { memo, useMemo } from "react";
+import { Line } from "react-chartjs-2";
 import {
-  CartesianGrid,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip as ChartTooltip,
   Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  ChartTooltip,
+  Legend
+);
 
 interface ChartDataPoint {
   gameNumber: number;
@@ -243,101 +254,6 @@ function BowlPicksProjectionChart() {
       return res.json();
     },
   });
-
-  // Custom tooltip component
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: Array<{
-      name: string;
-      value: number;
-      color: string;
-      payload: { gameNumber: number };
-    }>;
-  }) => {
-    if (active && payload && payload.length) {
-      // Sort by value descending
-      const sorted = [...payload].sort((a, b) => b.value - a.value);
-
-      return (
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid var(--border-color)",
-            borderRadius: "4px",
-            padding: "8px",
-          }}
-        >
-          <p style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>
-            Game {payload[0].payload.gameNumber}
-          </p>
-          {sorted.map((entry, index: number) => (
-            <p
-              key={index}
-              style={{
-                margin: "2px 0",
-                fontSize: "12px",
-                color: entry.color,
-              }}
-            >
-              {entry.name}: {entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Custom tooltip component for above/below average
-  const CustomTooltipAboveAverage = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: Array<{
-      name: string;
-      value: number;
-      color: string;
-      payload: { gameNumber: number };
-    }>;
-  }) => {
-    if (active && payload && payload.length) {
-      // Sort by value descending
-      const sorted = [...payload].sort((a, b) => b.value - a.value);
-
-      return (
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid var(--border-color)",
-            borderRadius: "4px",
-            padding: "8px",
-          }}
-        >
-          <p style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>
-            Game {payload[0].payload.gameNumber}
-          </p>
-          {sorted.map((entry, index: number) => (
-            <p
-              key={index}
-              style={{
-                margin: "2px 0",
-                fontSize: "12px",
-                color: entry.color,
-              }}
-            >
-              {entry.name}: {entry.value > 0 ? "+" : ""}
-              {entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   // Color palette for different people
   const colors = [
@@ -588,6 +504,108 @@ function BowlPicksProjectionChart() {
     return <div style={{ padding: "20px", textAlign: "center" }}>No data</div>;
   }
 
+  // Chart.js datasets for cumulative projections
+  const datasetsPointsProjection = useMemo(() => {
+    return people.map((person, index) => ({
+      label: person,
+      data: chartData.map((d) => d[person]),
+      borderColor: colors[index % colors.length],
+      backgroundColor: colors[index % colors.length] + "20",
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.4,
+    }));
+  }, [chartData, people, colors]);
+
+  const dataPointsProjection = useMemo(() => {
+    return {
+      labels: chartData.map((d) => `Game ${d.gameNumber}`),
+      datasets: datasetsPointsProjection,
+    };
+  }, [chartData, datasetsPointsProjection]);
+
+  const optionsPointsProjection = useMemo(() => {
+    return {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: "top" as const,
+        },
+        title: {
+          display: true,
+          text: "Points Projection",
+        },
+      },
+      scales: {
+        y: {
+          min: yAxisDomain[0],
+          max: yAxisDomain[1],
+          title: {
+            display: true,
+            text: "Points",
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: "Game #",
+          },
+        },
+      },
+    };
+  }, [yAxisDomain]);
+
+  // Chart.js datasets for above/below average
+  const datasetsAboveAverage = useMemo(() => {
+    return people.map((person, index) => ({
+      label: person,
+      data: chartDataAboveAverage.map((d) => d[person]),
+      borderColor: colors[index % colors.length],
+      backgroundColor: colors[index % colors.length] + "20",
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.4,
+    }));
+  }, [chartDataAboveAverage, people, colors]);
+
+  const dataAboveAverage = useMemo(() => {
+    return {
+      labels: chartDataAboveAverage.map((d) => `Game ${d.gameNumber}`),
+      datasets: datasetsAboveAverage,
+    };
+  }, [chartDataAboveAverage, datasetsAboveAverage]);
+
+  const optionsAboveAverage = useMemo(() => {
+    return {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: "top" as const,
+        },
+        title: {
+          display: true,
+          text: "Above/Below Average",
+        },
+      },
+      scales: {
+        y: {
+          title: {
+            display: true,
+            text: "Difference from Average",
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: "Game #",
+          },
+        },
+      },
+    };
+  }, []);
+
   return (
     <div
       style={{
@@ -611,36 +629,9 @@ function BowlPicksProjectionChart() {
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="gameNumber"
-            label={{
-              value: "Game #",
-              position: "insideBottomRight",
-              offset: -5,
-            }}
-          />
-          <YAxis
-            domain={yAxisDomain}
-            label={{ value: "Points", angle: -90, position: "insideLeft" }}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend />
-          {people.map((person, index) => (
-            <Line
-              key={person}
-              type="monotone"
-              dataKey={person}
-              stroke={colors[index % colors.length]}
-              dot={false}
-              strokeWidth={2}
-              isAnimationActive={false}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+      <div style={{ height: "400px", position: "relative" }}>
+        <Line data={dataPointsProjection} options={optionsPointsProjection} />
+      </div>
 
       {/* Above/Below Average Chart */}
       <div style={{ marginTop: "32px" }}>
@@ -649,39 +640,9 @@ function BowlPicksProjectionChart() {
         >
           Above/Below Average
         </h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartDataAboveAverage}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="gameNumber"
-              label={{
-                value: "Game #",
-                position: "insideBottomRight",
-                offset: -5,
-              }}
-            />
-            <YAxis
-              label={{
-                value: "Difference from Average",
-                angle: -90,
-                position: "insideLeft",
-              }}
-            />
-            <Tooltip content={<CustomTooltipAboveAverage />} />
-            <Legend />
-            {people.map((person, index) => (
-              <Line
-                key={person}
-                type="monotone"
-                dataKey={person}
-                stroke={colors[index % colors.length]}
-                dot={false}
-                strokeWidth={2}
-                isAnimationActive={false}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+        <div style={{ height: "400px", position: "relative" }}>
+          <Line data={dataAboveAverage} options={optionsAboveAverage} />
+        </div>
       </div>
     </div>
   );
