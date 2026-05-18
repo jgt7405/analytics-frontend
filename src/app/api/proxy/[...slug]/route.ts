@@ -5,6 +5,16 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
+ * Helper: Validate path segment to prevent injection attacks.
+ * Allows: alphanumeric, underscores, hyphens, spaces, periods.
+ * Rejects: special chars, path traversal, null bytes.
+ */
+function validatePathSegment(segment: string): boolean {
+  if (!segment || typeof segment !== "string") return false;
+  return /^[A-Za-z0-9_\-\s.]+$/.test(segment);
+}
+
+/**
  * Helper: Forward the ?season= query parameter from the incoming request
  * to the backend URL. If no season param exists, returns empty string.
  */
@@ -67,6 +77,13 @@ export async function GET(
     ) {
       const [, , teamName, , historyType] = slug;
 
+      if (!validatePathSegment(teamName) || !validatePathSegment(historyType)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
+
       switch (historyType) {
         case "conf_wins":
           backendPath = `/football/team/${teamName}/history/conf_wins`;
@@ -90,6 +107,13 @@ export async function GET(
     ) {
       const [, , teamName, , historyType] = slug;
 
+      if (!validatePathSegment(teamName) || !validatePathSegment(historyType)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
+
       switch (historyType) {
         case "conf_wins":
           backendPath = `/basketball/team/${teamName}/history/conf_wins`;
@@ -109,6 +133,12 @@ export async function GET(
       slug[3] === "history"
     ) {
       const [, , teamName] = slug;
+      if (!validatePathSegment(teamName)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       backendPath = `/basketball/ncaa/${teamName}/history`;
     }
     // Handle 4-part CFP team history routes: football/cfp/BYU/history
@@ -119,6 +149,12 @@ export async function GET(
       slug[3] === "history"
     ) {
       const [, , teamName] = slug;
+      if (!validatePathSegment(teamName)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       backendPath = `/cfp/${teamName}/history`;
     }
     // Handle 4-part routes with history: football/standings/Big_12/history
@@ -128,6 +164,12 @@ export async function GET(
       slug[3] === "history"
     ) {
       const [, footballEndpoint, footballConference] = slug;
+      if (!validatePathSegment(footballConference)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       const formattedConference = footballConference.replace(/\s+/g, "_");
 
       switch (footballEndpoint) {
@@ -144,6 +186,12 @@ export async function GET(
     // Handle 3-part CFP history routes: cfp/Big_12/history
     else if (slug.length === 3 && slug[0] === "cfp" && slug[2] === "history") {
       const [, conference] = slug;
+      if (!validatePathSegment(conference)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       backendPath = `/cfp/${conference}/history`;
     }
     // Handle 3-part basketball history routes: standings/Big_12/history
@@ -153,6 +201,12 @@ export async function GET(
       slug[2] === "history"
     ) {
       const [, conference] = slug; // Get the conference from position 1
+      if (!validatePathSegment(conference)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       const formattedConference = conference.replace(/\s+/g, "_");
       backendPath = `/standings/${formattedConference}/history`;
     } else if (
@@ -161,6 +215,12 @@ export async function GET(
       slug[2] === "history"
     ) {
       const [, conference] = slug;
+      if (!validatePathSegment(conference)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       const formattedConference = conference.replace(/\s+/g, "_");
       backendPath = `/conf_tourney/${formattedConference}/history`;
     }
@@ -171,6 +231,12 @@ export async function GET(
       slug[1] === "json"
     ) {
       const [, , conference] = slug;
+      if (!validatePathSegment(conference)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       const formattedConference = conference.replace(/\s+/g, "_");
       backendPath = `/standings/json/${formattedConference}`;
     }
@@ -181,6 +247,12 @@ export async function GET(
       slug[1] === "nonconf_analysis"
     ) {
       const [, , conference] = slug;
+      if (!validatePathSegment(conference)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       backendPath = `/basketball/nonconf_analysis/${conference}`;
     }
     // Handle 3-part basketball conference championship analysis routes: basketball/conf_champ_analysis/ACC
@@ -190,11 +262,29 @@ export async function GET(
       slug[1] === "conf_champ_analysis"
     ) {
       const [, , conference] = slug;
+      if (!validatePathSegment(conference)) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
       backendPath = `/basketball/conf_champ_analysis/${conference}`;
     }
     // Handle 3-part football routes: football/standings/Big_12
     else if (slug.length === 3 && slug[0] === "football") {
       const [, footballEndpoint, footballConference] = slug;
+
+      // Validate conference param for all endpoints that use it
+      if (
+        footballEndpoint !== "playoff_rankings" &&
+        footballEndpoint !== "debug" &&
+        !validatePathSegment(footballConference)
+      ) {
+        return NextResponse.json(
+          { error: "Invalid path segment" },
+          { status: 400 },
+        );
+      }
 
       switch (footballEndpoint) {
         case "standings":
@@ -228,6 +318,12 @@ export async function GET(
         case "debug":
           // Handle debug sub-routes: football/debug/probability_check
           if (slug.length === 3 && slug[2]) {
+            if (!validatePathSegment(slug[2])) {
+              return NextResponse.json(
+                { error: "Invalid path segment" },
+                { status: 400 },
+              );
+            }
             backendPath = `/football/debug/${slug[2]}`;
           } else {
             return NextResponse.json(
@@ -311,6 +407,13 @@ export async function GET(
       // Handle other 2-part routes
       else {
         const [endpoint, conference] = slug;
+
+        if (!validatePathSegment(conference)) {
+          return NextResponse.json(
+            { error: "Invalid path segment" },
+            { status: 400 },
+          );
+        }
 
         switch (endpoint) {
           case "standings":
