@@ -5,7 +5,10 @@ import type {
 } from "@/types/basketball";
 import { z } from "zod";
 
-// Basic validation schemas
+// ============================================================================
+// Basic Input Validation Schemas
+// ============================================================================
+
 export const ConferenceSchema = z
   .string()
   .min(1, "Conference is required")
@@ -18,14 +21,142 @@ export const TeamNameSchema = z
   .max(100, "Team name too long")
   .regex(/^[a-zA-Z0-9\s\-&'().]+$/, "Invalid characters in team name");
 
-// Sanitization helpers
+// ============================================================================
+// API Response Schemas (Zod Validation)
+// ============================================================================
+
+// Standing schema with flexible optional fields
+const StandingSchema = z.object({
+  team_name: z.string(),
+  logo_url: z.string().url().or(z.string()),
+  conference: z.string(),
+  primary_color: z.string().optional(),
+  secondary_color: z.string().optional(),
+  total_scenarios: z.number().min(0),
+  conference_record: z.string(),
+  overall_record: z.string().optional(),
+  conference_wins: z.number().min(0),
+  conference_losses: z.number().min(0),
+  record: z.string().optional(),
+  avg_standing: z.number(),
+  standings_distribution: z.record(z.number(), z.number()),
+  Conf_Standing_No_Ties_Avg: z.number().optional(),
+  Standing_Dist_No_Ties: z.record(z.number(), z.number()).optional(),
+  avg_projected_conf_wins: z.number(),
+  conf_wins_distribution: z.record(z.number(), z.number()),
+  wins_conf_percentiles: z.object({
+    p5: z.number(),
+    p25: z.number(),
+    p50: z.number(),
+    p75: z.number(),
+    p95: z.number(),
+  }),
+  wins_conf_05: z.number().optional(),
+  wins_conf_25: z.number().optional(),
+  wins_conf_50: z.number().optional(),
+  wins_conf_75: z.number().optional(),
+  wins_conf_95: z.number().optional(),
+  tournament_bid_pct: z.number().optional(),
+  avg_seed: z.number().optional(),
+  seed_distribution: z.record(z.number(), z.number()).optional(),
+  total_wins_distribution: z.record(z.number(), z.number()).optional(),
+  avg_projected_total_wins: z.number().optional(),
+  wins_total_05: z.number().optional(),
+  wins_total_25: z.number().optional(),
+  wins_total_50: z.number().optional(),
+  wins_total_75: z.number().optional(),
+  wins_total_95: z.number().optional(),
+  reg_wins_distribution: z.record(z.string(), z.number()).optional(),
+  avg_reg_season_wins: z.number().optional(),
+  avg_kp40_reg_season_wins: z.number().optional(),
+  reg_season_twv: z.number().optional(),
+  wins_reg_05: z.number().optional(),
+  wins_reg_25: z.number().optional(),
+  wins_reg_50: z.number().optional(),
+  wins_reg_75: z.number().optional(),
+  wins_reg_95: z.number().optional(),
+});
+
+export const StandingsApiResponseSchema = z.object({
+  data: z.array(StandingSchema),
+  conferences: z.array(z.string()),
+});
+
+// CWV schemas
+const CWVTeamSchema = z.object({
+  team_name: z.string(),
+  logo_url: z.string().url().or(z.string()),
+  cwv: z.number(),
+  current_record: z.string(),
+  est_avg_record: z.string(),
+  primary_color: z.string().optional(),
+  secondary_color: z.string().optional(),
+});
+
+const CWVGameSchema = z.object({
+  rank: z.number().int().min(1),
+  team: z.string(),
+  win_prob: z.number().min(0).max(1),
+  date: z.string().optional(),
+  status: z.enum(["W", "L", "scheduled"]).optional(),
+});
+
+const CWVDataSchema = z.object({
+  teams: z.array(CWVTeamSchema),
+  games: z.array(CWVGameSchema),
+});
+
+export const CWVApiResponseSchema = z.object({
+  data: CWVDataSchema,
+  conferences: z.array(z.string()),
+});
+
+// Schedule schemas
+const ScheduleDataSchema = z.object({
+  Loc: z.string(),
+  Team: z.string(),
+  Win_Pct: z.string().optional(),
+  Win_Pct_Raw: z.number().optional(),
+  games: z.union([z.record(z.string(), z.string()), z.string()]),
+});
+
+const ScheduleSummarySchema = z.object({
+  total_games: z.number().int().min(0),
+  expected_wins: z.number().min(0),
+  top_quartile: z.number().int().min(0),
+  second_quartile: z.number().int().min(0),
+  third_quartile: z.number().int().min(0),
+  bottom_quartile: z.number().int().min(0),
+});
+
+export const ScheduleApiResponseSchema = z.object({
+  data: z.array(ScheduleDataSchema),
+  teams: z.array(z.string()),
+  team_logos: z.record(z.string(), z.string()),
+  summary: z.record(z.string(), ScheduleSummarySchema),
+  conferences: z.array(z.string()),
+});
+
+// ============================================================================
+// Validation Result Type
+// ============================================================================
+
+interface ValidationResult<T> {
+  success: boolean;
+  data: T | null;
+  error: string | null;
+}
+
+// ============================================================================
+// Sanitization Helpers
+// ============================================================================
+
 export function sanitizeInput(input: string): string {
   return input.trim().replace(/[<>"']/g, "");
 }
 
 export function validateConference(conference: string): boolean {
   try {
-    // Allow special filter values
     if (conference === "All Teams" || conference === "All Tourney Teams") {
       return true;
     }
@@ -36,31 +167,36 @@ export function validateConference(conference: string): boolean {
   }
 }
 
-// Validation result type
-interface ValidationResult<T> {
-  success: boolean;
-  data: T | null;
-  error: string | null;
-}
+// ============================================================================
+// API Response Validators (Using Real Zod Schemas)
+// ============================================================================
 
-// Simple validation functions for API responses
 export function validateStandings(
   data: unknown,
 ): ValidationResult<StandingsApiResponse> {
   try {
-    if (
-      typeof data === "object" &&
-      data !== null &&
-      "data" in data &&
-      "conferences" in data
-    ) {
+    const parsed = StandingsApiResponseSchema.safeParse(data);
+
+    if (parsed.success) {
       return {
         success: true,
-        data: data as StandingsApiResponse,
+        data: parsed.data as StandingsApiResponse,
         error: null,
       };
     }
-    throw new Error("Invalid standings data structure");
+
+    const errorMessage = parsed.error.issues
+      .map(
+        (issue) =>
+          `${issue.path.join(".")}: ${issue.message}`,
+      )
+      .join("; ");
+
+    return {
+      success: false,
+      data: null,
+      error: `Invalid standings data: ${errorMessage}`,
+    };
   } catch (error) {
     return {
       success: false,
@@ -72,19 +208,28 @@ export function validateStandings(
 
 export function validateCWV(data: unknown): ValidationResult<CWVApiResponse> {
   try {
-    if (
-      typeof data === "object" &&
-      data !== null &&
-      "data" in data &&
-      "conferences" in data
-    ) {
+    const parsed = CWVApiResponseSchema.safeParse(data);
+
+    if (parsed.success) {
       return {
         success: true,
-        data: data as CWVApiResponse,
+        data: parsed.data as CWVApiResponse,
         error: null,
       };
     }
-    throw new Error("Invalid CWV data structure");
+
+    const errorMessage = parsed.error.issues
+      .map(
+        (issue) =>
+          `${issue.path.join(".")}: ${issue.message}`,
+      )
+      .join("; ");
+
+    return {
+      success: false,
+      data: null,
+      error: `Invalid CWV data: ${errorMessage}`,
+    };
   } catch (error) {
     return {
       success: false,
@@ -98,23 +243,28 @@ export function validateSchedule(
   data: unknown,
 ): ValidationResult<ScheduleApiResponse> {
   try {
-    // Basketball API returns: { conferences: [], data: [] }
-    // We'll transform it in api.ts to add teams, team_logos, summary
-    if (
-      typeof data === "object" &&
-      data !== null &&
-      "data" in data &&
-      "conferences" in data &&
-      Array.isArray((data as Record<string, unknown>).data)
-    ) {
+    const parsed = ScheduleApiResponseSchema.safeParse(data);
+
+    if (parsed.success) {
       return {
         success: true,
-        data: data as ScheduleApiResponse,
+        data: parsed.data as ScheduleApiResponse,
         error: null,
       };
     }
 
-    throw new Error("Invalid schedule data structure");
+    const errorMessage = parsed.error.issues
+      .map(
+        (issue) =>
+          `${issue.path.join(".")}: ${issue.message}`,
+      )
+      .join("; ");
+
+    return {
+      success: false,
+      data: null,
+      error: `Invalid schedule data: ${errorMessage}`,
+    };
   } catch (error) {
     return {
       success: false,
