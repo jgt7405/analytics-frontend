@@ -347,7 +347,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                       className="absolute"
                       style={{
                         top: scale(top),
-                        height: scale(bottom) - scale(top),
+                        height: Math.max(0, scale(bottom) - scale(top)),
                         width: lineThickness,
                         backgroundColor: adjustColorIfWhite(secondaryColor),
                         left: (boxWidth - lineThickness) / 2,
@@ -380,7 +380,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                       className="absolute"
                       style={{
                         top: scale(q3),
-                        height: scale(q1) - scale(q3),
+                        height: Math.max(0, scale(q1) - scale(q3)),
                         width: boxWidth,
                         backgroundColor: primaryColor,
                         border: `${lineThickness}px solid ${adjustColorIfWhite(secondaryColor)}`,

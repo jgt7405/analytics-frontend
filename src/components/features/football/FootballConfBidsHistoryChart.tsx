@@ -79,6 +79,10 @@ export default function FootballConfBidsHistoryChart({
     return () => observer.disconnect();
   }, [timelineData]);
 
+  if (!timelineData || timelineData.length === 0) {
+    return <div className="text-center text-gray-500 p-8">No history data available.</div>;
+  }
+
   const range = getFootballDateRange(season, timelineData);
   const filteredByRange = filterDataToRange(timelineData, range);
 

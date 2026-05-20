@@ -103,7 +103,7 @@ const nextConfig = {
 
   // Experimental features
   experimental: {
-    optimizePackageImports: ["lucide-react", "recharts", "chart.js", "react-chartjs-2"],
+    optimizePackageImports: ["lucide-react", "chart.js", "react-chartjs-2"],
     optimizeCss: process.env.NODE_ENV === "production",
     webpackBuildWorker: true,
     missingSuspenseWithCSRBailout: false,
