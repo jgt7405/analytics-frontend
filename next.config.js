@@ -183,6 +183,25 @@ const nextConfig = {
     ];
   },
 
+  // TEMPORARY: Show 2025-26 season content on base basketball pages.
+  // To revert, delete this rewrites() block.
+  async rewrites() {
+    const seasonPages = [
+      "home", "wins", "standings", "schedule", "cwv", "twv",
+      "teams", "compare", "conf-data", "conf-tourney", "ncaa-tourney", "seed",
+    ];
+    return [
+      ...seasonPages.map((page) => ({
+        source: `/basketball/${page}/`,
+        destination: `/basketball/2025-26/${page}/`,
+      })),
+      {
+        source: "/basketball/team/:teamname/",
+        destination: "/basketball/2025-26/team/:teamname/",
+      },
+    ];
+  },
+
   trailingSlash: true,
 };
 
