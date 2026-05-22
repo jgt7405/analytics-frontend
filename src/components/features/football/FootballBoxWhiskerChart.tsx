@@ -204,7 +204,7 @@ export default function FootballBoxWhiskerChart({
 
               // Team colors
               const primaryColor = team.primary_color || "#1e40af";
-              const secondaryColor = team.secondary_color || "#64748b";
+              const rawSecondaryColor = team.secondary_color || "#64748b";
 
               return (
                 <div
@@ -223,7 +223,7 @@ export default function FootballBoxWhiskerChart({
                       top: scale(top),
                       height: scale(bottom) - scale(top),
                       width: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                       left: (boxWidth - lineThickness) / 2,
                     }}
                   />
@@ -235,7 +235,7 @@ export default function FootballBoxWhiskerChart({
                       top: scale(top),
                       width: whiskerWidth,
                       height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                       left: (boxWidth - whiskerWidth) / 2,
                     }}
                   />
@@ -247,7 +247,7 @@ export default function FootballBoxWhiskerChart({
                       top: scale(bottom),
                       width: whiskerWidth,
                       height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                       left: (boxWidth - whiskerWidth) / 2,
                     }}
                   />
@@ -260,7 +260,7 @@ export default function FootballBoxWhiskerChart({
                       height: scale(q1) - scale(q3),
                       width: boxWidth,
                       backgroundColor: primaryColor,
-                      border: `${lineThickness}px solid ${adjustColorIfWhite(secondaryColor)}`,
+                      border: `${lineThickness}px solid ${adjustColorIfWhite(rawSecondaryColor)}`,
                     }}
                   />
 
@@ -271,7 +271,7 @@ export default function FootballBoxWhiskerChart({
                       top: scale(median),
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: secondaryColor,
+                      backgroundColor: rawSecondaryColor,
                     }}
                   />
 

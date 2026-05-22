@@ -321,7 +321,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                   conf.primary_color && conf.primary_color !== "null"
                     ? conf.primary_color
                     : "#1e40af";
-                const secondaryColor =
+                const rawSecondaryColor =
                   conf.secondary_color && conf.secondary_color !== "null"
                     ? conf.secondary_color
                     : "#64748b";
@@ -349,7 +349,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         top: scale(top),
                         height: Math.max(0, scale(bottom) - scale(top)),
                         width: lineThickness,
-                        backgroundColor: adjustColorIfWhite(secondaryColor),
+                        backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - lineThickness) / 2,
                       }}
                     />
@@ -360,7 +360,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         top: scale(top),
                         width: whiskerWidth,
                         height: lineThickness,
-                        backgroundColor: adjustColorIfWhite(secondaryColor),
+                        backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - whiskerWidth) / 2,
                       }}
                     />
@@ -371,7 +371,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         top: scale(bottom),
                         width: whiskerWidth,
                         height: lineThickness,
-                        backgroundColor: adjustColorIfWhite(secondaryColor),
+                        backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - whiskerWidth) / 2,
                       }}
                     />
@@ -383,7 +383,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         height: Math.max(0, scale(q1) - scale(q3)),
                         width: boxWidth,
                         backgroundColor: primaryColor,
-                        border: `${lineThickness}px solid ${adjustColorIfWhite(secondaryColor)}`,
+                        border: `${lineThickness}px solid ${adjustColorIfWhite(rawSecondaryColor)}`,
                       }}
                     />
                     {/* Median line */}
@@ -393,7 +393,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         top: scale(median),
                         width: boxWidth,
                         height: lineThickness,
-                        backgroundColor: secondaryColor,
+                        backgroundColor: rawSecondaryColor,
                       }}
                     />
                     {/* Conference logo */}

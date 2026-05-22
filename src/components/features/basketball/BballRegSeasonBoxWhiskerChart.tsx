@@ -206,7 +206,7 @@ export default function BballRegSeasonBoxWhiskerChart({
               const kp40Point = team.avg_kp40_reg_season_wins || 0;
 
               const primaryColor = team.primary_color || "#1e40af";
-              const secondaryColor = team.secondary_color || "#64748b";
+              const rawSecondaryColor = team.secondary_color || "#64748b";
 
               // Calculate positions
               const topPos = scale(top);
@@ -233,7 +233,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                       top: topPos,
                       height: Math.max(bottomPos - topPos, 1),
                       width: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                       left: (boxWidth - lineThickness) / 2,
                     }}
                   />
@@ -245,7 +245,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                       top: topPos,
                       width: whiskerWidth,
                       height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                       left: (boxWidth - whiskerWidth) / 2,
                     }}
                   />
@@ -257,7 +257,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                       top: bottomPos,
                       width: whiskerWidth,
                       height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                       left: (boxWidth - whiskerWidth) / 2,
                     }}
                   />
@@ -270,7 +270,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                       height: Math.max(q1Pos - q3Pos, 1),
                       width: boxWidth,
                       backgroundColor: primaryColor,
-                      border: `${lineThickness}px solid ${adjustColorIfWhite(secondaryColor)}`,
+                      border: `${lineThickness}px solid ${adjustColorIfWhite(rawSecondaryColor)}`,
                     }}
                   />
 
@@ -281,7 +281,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                       top: medianPos,
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: secondaryColor,
+                      backgroundColor: rawSecondaryColor,
                     }}
                   />
 

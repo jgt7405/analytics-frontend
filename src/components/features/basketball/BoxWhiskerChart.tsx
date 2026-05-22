@@ -225,9 +225,8 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
               const topPos = scale(top);
 
               const primaryColor = team.primary_color || "#1e40af";
-              const secondaryColor = adjustColorIfWhite(
-                team.secondary_color || "#64748b"
-              );
+              const rawSecondaryColor = team.secondary_color || "#64748b";
+              const secondaryColor = adjustColorIfWhite(rawSecondaryColor);
 
               return (
                 <div
@@ -294,7 +293,7 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
                       top: medianPos - lineThickness / 2,
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: secondaryColor,
+                      backgroundColor: rawSecondaryColor,
                     }}
                   />
 
