@@ -44,11 +44,22 @@ interface PositionedGame extends GameWithPosition {
   adjustedY: number;
 }
 
+interface TeamStats {
+  wins: number;
+  losses: number;
+  expectedWins: number;
+  expectedLosses: number;
+  forecastWinPct: number;
+  actualWinPct: number;
+  twv: number;
+}
+
 interface FootballTeamScheduleDifficultyProps {
   schedule: FootballTeamGame[];
   allScheduleData: AllScheduleGame[];
   teamConference?: string;
   logoUrl?: string;
+  teamColor?: string;
 }
 
 type ComparisonFilter = "all_fbs" | "power_4" | "non_power_4" | "conference";
@@ -74,6 +85,7 @@ export default function FootballTeamScheduleDifficulty({
   allScheduleData,
   teamConference,
   logoUrl: _logoUrl,
+  teamColor,
 }: FootballTeamScheduleDifficultyProps) {
   const [comparisonFilter, setComparisonFilter] =
     useState<ComparisonFilter>("all_fbs");
@@ -266,6 +278,57 @@ export default function FootballTeamScheduleDifficulty({
     return positioned;
   }, [teamGamePositions, PLOT_HEIGHT]);
 
+  const teamStats = useMemo((): TeamStats => {
+    const completedGames = teamGames.filter((g) => g.status === "W" || g.status === "L");
+    const isRemainingOnly =
+      teamGames.length > 0 &&
+      teamGames.every((g) => g.status !== "W" && g.status !== "L");
+
+    if (isRemainingOnly) {
+      const expectedWins = teamGames.reduce(
+        (sum, g) => sum + (g.sag12_win_prob || 0),
+        0
+      );
+      const expectedLosses = teamGames.length - expectedWins;
+      const forecastWinPct =
+        teamGames.length > 0 ? (expectedWins / teamGames.length) * 100 : 0;
+      return {
+        wins: 0,
+        losses: 0,
+        expectedWins,
+        expectedLosses,
+        forecastWinPct,
+        actualWinPct: 0,
+        twv: 0,
+      };
+    }
+
+    const wins = completedGames.filter((g) => g.status === "W").length;
+    const losses = completedGames.filter((g) => g.status === "L").length;
+    const expectedWins = completedGames.reduce(
+      (sum, g) => sum + (g.sag12_win_prob || 0),
+      0
+    );
+    const expectedLosses = completedGames.length - expectedWins;
+    const forecastWinPct =
+      completedGames.length > 0
+        ? (expectedWins / completedGames.length) * 100
+        : 0;
+    const actualWinPct =
+      completedGames.length > 0 ? (wins / completedGames.length) * 100 : 0;
+    const twv = wins - expectedWins;
+
+    return {
+      wins,
+      losses,
+      expectedWins,
+      expectedLosses,
+      forecastWinPct,
+      actualWinPct,
+      twv,
+    };
+  }, [teamGames]);
+
   const getGameRank = (game: PositionedGame) => {
     const gameProb = game.sag12_win_prob || 0;
     const gameOppRating = game.opp_rating;
@@ -368,6 +431,10 @@ export default function FootballTeamScheduleDifficulty({
             #{rank} Most Difficult Game Out of{" "}
             {comparisonDataset.length.toLocaleString()} Games in{" "}
             {getFilterDescription()} ({percentile} Percentile)
+          </div>
+          <div style={{ marginTop: "6px", fontWeight: "500" }}>
+            Result:{" "}
+            {game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}
           </div>
         </div>
       </div>
@@ -682,8 +749,55 @@ export default function FootballTeamScheduleDifficulty({
         )}
       </div>
 
-      <div className="mt-4 text-xs text-gray-600 dark:text-gray-300 text-center">
-        <div className="mb-2">
+      <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
+        {/* Stats summary grid */}
+        <div className="text-center mt-0 border-b border-gray-300 dark:border-gray-600 text-xs">
+          <div className="grid grid-cols-5 gap-4 justify-center px-2">
+            <div>
+              <div className="font-medium text-gray-600 dark:text-gray-400">Record:</div>
+              <div style={{ color: teamColor }}>
+                {teamStats.wins}-{teamStats.losses}
+              </div>
+            </div>
+            <div>
+              <div className="font-medium text-gray-600 dark:text-gray-400">#12 Fcst:</div>
+              <div className="text-gray-600 dark:text-gray-300">
+                {teamStats.expectedWins.toFixed(1)}-
+                {teamStats.expectedLosses.toFixed(1)}
+              </div>
+            </div>
+            <div>
+              <div className="font-medium text-gray-600 dark:text-gray-400">Act Win %:</div>
+              <div style={{ color: teamColor }}>
+                {teamStats.actualWinPct.toFixed(0)}%
+              </div>
+            </div>
+            <div>
+              <div className="font-medium text-gray-600 dark:text-gray-400">#12 Fcst %:</div>
+              <div className="text-gray-600 dark:text-gray-300">
+                {teamStats.forecastWinPct.toFixed(0)}%
+              </div>
+            </div>
+            <div>
+              <div className="font-medium text-gray-600 dark:text-gray-400">TWV:</div>
+              <div
+                style={{
+                  color:
+                    teamStats.twv > 0
+                      ? "#10b981"
+                      : teamStats.twv < 0
+                        ? "#ef4444"
+                        : "#6b7280",
+                }}
+              >
+                {teamStats.twv > 0 ? "+" : ""}
+                {teamStats.twv.toFixed(1)}
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Existing footnote */}
+        <div className="mb-2 mt-2">
           <span className="font-medium">
             {teamGames.length.toLocaleString()}
           </span>{" "}

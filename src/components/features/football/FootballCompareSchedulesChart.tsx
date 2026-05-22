@@ -40,6 +40,7 @@ interface TeamSchedule {
     opponentColor: string;
     winProb: number;
     status: string;
+    location: string;
   }[];
   allScheduleData: {
     team: string;
@@ -64,6 +65,7 @@ interface GameWithPosition {
   opponentColor: string;
   winProb: number;
   status: string;
+  location?: string;
   percentilePosition: number;
   teamConference: string;
   teamConfCategory?: string;
@@ -87,6 +89,9 @@ interface TeamStats {
   wins: number;
   losses: number;
   expectedWins: number;
+  expectedLosses: number;
+  forecastWinPct: number;
+  actualWinPct: number;
   twv: number;
 }
 
@@ -138,6 +143,7 @@ export default function FootballCompareSchedulesChart({
           opponentColor: game.opponentColor,
           winProb: game.winProb,
           status: game.status,
+          location: game.location,
           teamConference: team.teamConference,
           teamConfCategory: team.teamConfCategory,
         }))
@@ -263,7 +269,6 @@ export default function FootballCompareSchedulesChart({
   );
 
   // Calculate stats per team
-  // Calculate stats per team
   const teamStats = useMemo(() => {
     const stats: { [teamIndex: number]: TeamStats } = {};
 
@@ -281,11 +286,16 @@ export default function FootballCompareSchedulesChart({
           (sum, g) => sum + g.winProb,
           0
         );
+        const expectedLosses = teamGamesList.length - expectedWins;
+        const forecastWinPct = teamGamesList.length > 0 ? (expectedWins / teamGamesList.length) * 100 : 0;
 
         stats[teamIndex] = {
           wins: 0,
           losses: 0,
           expectedWins,
+          expectedLosses,
+          forecastWinPct,
+          actualWinPct: 0,
           twv: 0,
         };
       } else {
@@ -300,12 +310,18 @@ export default function FootballCompareSchedulesChart({
           (sum, g) => sum + g.winProb,
           0
         );
+        const expectedLosses = completedGames.length - expectedWins;
+        const forecastWinPct = completedGames.length > 0 ? (expectedWins / completedGames.length) * 100 : 0;
+        const actualWinPct = completedGames.length > 0 ? (wins / completedGames.length) * 100 : 0;
         const twv = wins - expectedWins;
 
         stats[teamIndex] = {
           wins,
           losses,
           expectedWins,
+          expectedLosses,
+          forecastWinPct,
+          actualWinPct,
           twv,
         };
       }
@@ -571,49 +587,6 @@ export default function FootballCompareSchedulesChart({
                 style={{ transition: "all 0.2s" }}
               />
 
-              {/* Tooltip on hover */}
-              {isHovered && (
-                <g>
-                  <rect
-                    x={columnX - 50}
-                    y={game.adjustedY - 55}
-                    width="100"
-                    height="45"
-                    fill={isDark ? "#374151" : "white"}
-                    stroke={isDark ? "#6b7280" : "#e5e7eb"}
-                    strokeWidth="1"
-                    rx="4"
-                  />
-                  <text
-                    x={columnX}
-                    y={game.adjustedY - 40}
-                    textAnchor="middle"
-                    className={isDark ? "text-xs fill-gray-100 font-semibold" : "text-xs fill-gray-700 font-semibold"}
-                  >
-                    {game.opponent}
-                  </text>
-                  <text
-                    x={columnX}
-                    y={game.adjustedY - 28}
-                    textAnchor="middle"
-                    className={isDark ? "text-xs fill-gray-300" : "text-xs fill-gray-600"}
-                  >
-                    {(game.winProb * 100).toFixed(1)}%
-                  </text>
-                  <text
-                    x={columnX}
-                    y={game.adjustedY - 16}
-                    textAnchor="middle"
-                    className={isDark ? "text-xs fill-gray-300" : "text-xs fill-gray-600"}
-                  >
-                    {game.status === "W"
-                      ? "Win"
-                      : game.status === "L"
-                        ? "Loss"
-                        : "Scheduled"}
-                  </text>
-                </g>
-              )}
             </g>
           );
         })}
@@ -634,11 +607,27 @@ export default function FootballCompareSchedulesChart({
           className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
         >
           {stats.expectedWins.toFixed(1)}-
-          {(columnGames.length - stats.expectedWins).toFixed(1)}
+          {stats.expectedLosses.toFixed(1)}
         </text>
         <text
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 65}
+          textAnchor="middle"
+          className={isDark ? "text-xs font-semibold fill-gray-300" : "text-xs font-semibold fill-gray-700"}
+        >
+          {stats.actualWinPct.toFixed(0)}%
+        </text>
+        <text
+          x={columnX}
+          y={MARGIN.top + PLOT_HEIGHT + 80}
+          textAnchor="middle"
+          className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
+        >
+          {stats.forecastWinPct.toFixed(0)}%
+        </text>
+        <text
+          x={columnX}
+          y={MARGIN.top + PLOT_HEIGHT + 95}
           textAnchor="middle"
           className={`text-xs font-medium ${
             stats.twv > 0
@@ -674,6 +663,22 @@ export default function FootballCompareSchedulesChart({
             <text
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 65}
+              textAnchor="end"
+              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
+            >
+              Act Win %:
+            </text>
+            <text
+              x={MARGIN.left - 50}
+              y={MARGIN.top + PLOT_HEIGHT + 80}
+              textAnchor="end"
+              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
+            >
+              #12 Fcst %:
+            </text>
+            <text
+              x={MARGIN.left - 50}
+              y={MARGIN.top + PLOT_HEIGHT + 95}
               textAnchor="end"
               className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
             >
@@ -744,71 +749,123 @@ export default function FootballCompareSchedulesChart({
 
       {/* Chart */}
       <div className="overflow-x-auto">
-        <svg
-          width={CHART_WIDTH}
-          height={CHART_HEIGHT + 120}
-          className="border border-gray-200 dark:border-gray-600 rounded"
-        >
-          <rect width={CHART_WIDTH} height={CHART_HEIGHT + 120} fill={isDark ? "#1a1f2e" : "white"} />
+        <div style={{ position: "relative" }}>
+          <svg
+            width={CHART_WIDTH}
+            height={CHART_HEIGHT + 120}
+            className="border border-gray-200 dark:border-gray-600 rounded"
+          >
+            <rect width={CHART_WIDTH} height={CHART_HEIGHT + 120} fill={isDark ? "#1a1f2e" : "white"} />
 
-          {/* Grid Lines */}
-          {percentiles.map((percentile) => {
-            const y = MARGIN.top + (percentile.percentile / 100) * PLOT_HEIGHT;
+            {/* Grid Lines */}
+            {percentiles.map((percentile) => {
+              const y = MARGIN.top + (percentile.percentile / 100) * PLOT_HEIGHT;
+              return (
+                <g key={`grid-${percentile.percentile}`}>
+                  <line
+                    x1={MARGIN.left}
+                    x2={MARGIN.left + PLOT_WIDTH}
+                    y1={y}
+                    y2={y}
+                    stroke={isDark ? "#4b5563" : "#e5e7eb"}
+                    strokeWidth={1}
+                  />
+                  <text
+                    x={MARGIN.left - 10}
+                    y={y + 4}
+                    textAnchor="end"
+                    className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
+                  >
+                    {percentile.percentile}%
+                  </text>
+                  <text
+                    x={MARGIN.left + PLOT_WIDTH + 10}
+                    y={y + 4}
+                    textAnchor="start"
+                    className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
+                  >
+                    {(percentile.value * 100).toFixed(0)}%
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Y-Axis Label */}
+            <text
+              x={MARGIN.left - 60}
+              y={MARGIN.top + PLOT_HEIGHT / 2}
+              textAnchor="middle"
+              transform={`rotate(-90, ${MARGIN.left - 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
+              className={isDark ? "text-sm fill-gray-300 font-medium" : "text-sm fill-gray-700 font-medium"}
+            >
+              Difficulty Percentile
+            </text>
+
+            {/* Right Y-Axis Label */}
+            <text
+              x={MARGIN.left + PLOT_WIDTH + 60}
+              y={MARGIN.top + PLOT_HEIGHT / 2}
+              textAnchor="middle"
+              transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
+              className={isDark ? "text-sm fill-gray-300 font-medium" : "text-sm fill-gray-700 font-medium"}
+            >
+              Win Probability for #12 Rated Team
+            </text>
+
+            {/* Team Columns */}
+            {teams.map((_team, index) => renderTeamColumn(index))}
+          </svg>
+
+          {/* HTML Tooltip */}
+          {hoveredGame && (() => {
+            const gameRank = opponentComparisonDataset.filter(
+              (g: AllScheduleGame) => g.winProb <= hoveredGame.winProb
+            ).length;
+            const columnX = MARGIN.left + hoveredGame.teamIndex * columnWidth + columnWidth / 2;
+            const isTopRange = hoveredGame.percentilePosition < 20;
+            const tooltipTop = isTopRange ? hoveredGame.adjustedY + 30 : hoveredGame.adjustedY - 150;
+
             return (
-              <g key={`grid-${percentile.percentile}`}>
-                <line
-                  x1={MARGIN.left}
-                  x2={MARGIN.left + PLOT_WIDTH}
-                  y1={y}
-                  y2={y}
-                  stroke={isDark ? "#4b5563" : "#e5e7eb"}
-                  strokeWidth={1}
-                />
-                <text
-                  x={MARGIN.left - 10}
-                  y={y + 4}
-                  textAnchor="end"
-                  className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
+              <div
+                style={{
+                  position: "absolute",
+                  left: `${columnX - 120}px`,
+                  top: `${tooltipTop}px`,
+                  width: "240px",
+                  backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                  border: `1px solid ${isDark ? "#4b5563" : "#d1d5db"}`,
+                  borderRadius: "6px",
+                  padding: "12px",
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                  color: hoveredGame.opponentColor,
+                  fontSize: "12px",
+                  zIndex: 50,
+                  pointerEvents: "none",
+                  whiteSpace: "normal",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: "8px",
+                    fontSize: "13px",
+                    color: hoveredGame.opponentColor,
+                  }}
                 >
-                  {percentile.percentile}%
-                </text>
-                <text
-                  x={MARGIN.left + PLOT_WIDTH + 10}
-                  y={y + 4}
-                  textAnchor="start"
-                  className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
-                >
-                  {(percentile.value * 100).toFixed(0)}%
-                </text>
-              </g>
+                  {hoveredGame.opponent}
+                </div>
+                <div style={{ lineHeight: "1.6", textAlign: "left", color: isDark ? "#d1d5db" : "#4b5563" }}>
+                  <div>Location: {hoveredGame.location}</div>
+                  <div>{(hoveredGame.winProb * 100).toFixed(0)}% Win Probability for #12 Rated Team</div>
+                  <div>#{gameRank.toLocaleString()} Most Difficult Game ({Math.round(hoveredGame.percentilePosition)} Percentile)</div>
+                  <div style={{ marginTop: "6px", fontWeight: "500", color: hoveredGame.opponentColor }}>
+                    Result: {hoveredGame.status === "W" ? "Win" : hoveredGame.status === "L" ? "Loss" : "Scheduled"}
+                  </div>
+                </div>
+              </div>
             );
-          })}
-
-          {/* Y-Axis Label */}
-          <text
-            x={MARGIN.left - 60}
-            y={MARGIN.top + PLOT_HEIGHT / 2}
-            textAnchor="middle"
-            transform={`rotate(-90, ${MARGIN.left - 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-            className={isDark ? "text-sm fill-gray-300 font-medium" : "text-sm fill-gray-700 font-medium"}
-          >
-            Difficulty Percentile
-          </text>
-
-          {/* Right Y-Axis Label */}
-          <text
-            x={MARGIN.left + PLOT_WIDTH + 60}
-            y={MARGIN.top + PLOT_HEIGHT / 2}
-            textAnchor="middle"
-            transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-            className={isDark ? "text-sm fill-gray-300 font-medium" : "text-sm fill-gray-700 font-medium"}
-          >
-            Win Probability for #12 Rated Team
-          </text>
-
-          {/* Team Columns */}
-          {teams.map((_team, index) => renderTeamColumn(index))}
-        </svg>
+          })()}
+        </div>
       </div>
 
       {/* Legend */}

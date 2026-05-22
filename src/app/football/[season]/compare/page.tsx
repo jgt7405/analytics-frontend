@@ -73,6 +73,7 @@ interface SelectedTeam {
     opponentColor: string;
     winProb: number;
     status: string;
+    location: string;
   }[];
   allScheduleData: {
     team: string;
@@ -200,6 +201,7 @@ export default function FootballCompareArchivePage({
         opponentColor: game.opponent_primary_color || "#9ca3af",
         winProb: game.sag12_win_prob || 0.5,
         status: game.status,
+        location: game.location,
       })),
       allScheduleData: teamData.all_schedule_data.map((game) => ({
         team: game.team,

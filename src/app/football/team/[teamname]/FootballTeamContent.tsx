@@ -439,6 +439,7 @@ export default function FootballTeamContent({
                   allScheduleData={teamData.all_schedule_data || []}
                   teamConference={team_info.conference}
                   logoUrl={team_info.logo_url}
+                  teamColor={team_info.primary_color}
                 />
               </div>
 
@@ -752,6 +753,7 @@ export default function FootballTeamContent({
                       allScheduleData={teamData.all_schedule_data || []}
                       teamConference={team_info.conference}
                       logoUrl={team_info.logo_url}
+                      teamColor={team_info.primary_color}
                     />
                   </div>
                   {/* Screenshot Button - Desktop */}
