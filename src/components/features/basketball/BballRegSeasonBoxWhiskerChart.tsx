@@ -295,7 +295,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                       height: 12,
                       color: adjustColorIfWhite(
                         kp40Pos >= q3Pos && kp40Pos <= q1Pos
-                          ? secondaryColor
+                          ? rawSecondaryColor
                           : primaryColor
                       ),
                       fontSize: isMobile ? "12px" : "14px",
