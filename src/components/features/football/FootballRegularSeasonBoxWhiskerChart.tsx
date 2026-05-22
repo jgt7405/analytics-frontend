@@ -323,7 +323,7 @@ export default function FootballRegularSeasonBoxWhiskerChart({
                         // If X is within the box (between q1 and q3), use secondary color
                         // If X is outside the box, use primary color
                         sag12Pos >= q3Pos && sag12Pos <= q1Pos
-                          ? secondaryColor
+                          ? rawSecondaryColor
                           : primaryColor
                       ),
                       fontSize: "18px",
