@@ -6,7 +6,8 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Team {
   team_name: string;
@@ -98,11 +99,11 @@ export default function FootballCompareContent() {
   }>({});
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [loadingTeams, setLoadingTeams] = useState<Set<string>>(new Set());
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  }, []);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Team[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [highlightedTeam, setHighlightedTeam] = useState<string | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const loadTeamData = useCallback(
     async (teamName: string): Promise<TeamData | null> => {
@@ -161,6 +162,44 @@ export default function FootballCompareContent() {
     loadInitialData();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setShowSearchResults(false);
+        setSearchQuery("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const results = allTeams
+        .filter((team) => {
+          const matchesName = team.team_name.toLowerCase().includes(query);
+          return matchesName;
+        })
+        .sort((a, b) => {
+          const aNameMatch = a.team_name.toLowerCase().indexOf(query);
+          const bNameMatch = b.team_name.toLowerCase().indexOf(query);
+          if (aNameMatch !== bNameMatch) return aNameMatch - bNameMatch;
+          return a.team_name.localeCompare(b.team_name);
+        });
+      setSearchResults(results);
+      setShowSearchResults(true);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      setHighlightedTeam(null);
+    }
+  }, [searchQuery, allTeams]);
+
   const handleTeamClick = async (team: Team) => {
     const isSelected = selectedTeams.some((t) => t.teamName === team.team_name);
 
@@ -211,6 +250,8 @@ export default function FootballCompareContent() {
     };
 
     setSelectedTeams((prev) => [...prev, newTeam]);
+    setHighlightedTeam(team.team_name);
+    setTimeout(() => setHighlightedTeam(null), 2000);
   };
 
   const removeTeam = (teamName: string) => {
@@ -274,6 +315,7 @@ export default function FootballCompareContent() {
                             );
                             const isDisabled =
                               !isSelected && selectedTeams.length >= MAX_SELECTED_TEAMS;
+                            const isHighlighted = highlightedTeam === team.team_name;
 
                             return (
                               <button
@@ -281,31 +323,23 @@ export default function FootballCompareContent() {
                                 onClick={() => handleTeamClick(team)}
                                 disabled={isDisabled}
                                 title={team.team_name}
-                                className={`relative w-12 h-12 rounded border-2 transition-all flex-shrink-0 overflow-hidden ${
+                                className={`relative w-10 h-10 rounded border-2 transition-all flex-shrink-0 overflow-hidden ${
                                   isSelected
                                     ? "border-[rgb(0,151,178)] shadow-lg ring-2 ring-[rgb(0,151,178)] ring-offset-1"
-                                    : isDisabled
-                                      ? "bg-gray-100 dark:bg-slate-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-50"
-                                      : "bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-600 hover:border-[rgb(0,151,178)] hover:shadow-md"
+                                    : isHighlighted
+                                      ? "border-[rgb(0,151,178)] shadow-lg scale-110"
+                                      : isDisabled
+                                        ? "bg-gray-100 dark:bg-slate-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-50"
+                                        : "bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-600 hover:border-[rgb(0,151,178)] hover:shadow-md"
                                 }`}
                               >
-                                <div
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    borderRadius: "50%",
-                                    backgroundColor: isDark ? "white" : "transparent",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                  }}
-                                >
-                                  <img
-                                    src={team.logo_url}
-                                    alt={team.team_name}
-                                    className="w-full h-full object-contain"
-                                  />
-                                </div>
+                                <Image
+                                  src={team.logo_url}
+                                  alt={team.team_name}
+                                  fill
+                                  className="object-contain p-1"
+                                  unoptimized
+                                />
                                 {isSelected && (
                                   <div className="absolute top-0 right-0 w-3 h-3 bg-[rgb(0,151,178)] rounded-full flex items-center justify-center">
                                     <div className="text-white text-[8px] font-bold">
@@ -328,6 +362,72 @@ export default function FootballCompareContent() {
                 })}
               </div>
             </div>
+          </div>
+
+          {/* Search Bar */}
+          <div
+            className="relative w-72 mb-0"
+            ref={searchRef}
+            data-debug="Search Bar Container"
+          >
+            <input
+              type="text"
+              placeholder="Search teams..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(0,151,178)] m-0"
+            />
+
+            {/* Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-40 max-h-96 overflow-y-auto [&>button]:border-0">
+                {searchResults.map((team) => {
+                  const isSelected = selectedTeamNames.has(team.team_name);
+                  const isDisabled =
+                    !isSelected && selectedTeams.length >= MAX_SELECTED_TEAMS;
+
+                  return (
+                    <button
+                      key={team.team_name}
+                      onClick={() => {
+                        handleTeamClick(team);
+                        setSearchQuery("");
+                      }}
+                      disabled={isDisabled}
+                      className={`w-full flex items-center gap-3 px-3 py-2 transition-colors text-sm outline-none focus:outline-none border-0 ${
+                        isSelected
+                          ? "bg-[rgb(0,151,178)] text-white"
+                          : isDisabled
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      <div className="relative w-6 h-6 flex-shrink-0">
+                        <Image
+                          src={team.logo_url}
+                          alt={team.team_name}
+                          fill
+                          className="object-contain"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="text-sm font-medium">
+                          {team.team_name}
+                        </div>
+                      </div>
+                      {isSelected && <span className="text-lg">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {showSearchResults && searchResults.length === 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3 text-center text-xs text-gray-500 dark:text-gray-300 z-40">
+                No teams found
+              </div>
+            )}
           </div>
 
           {/* Selected Teams Summary */}
@@ -354,10 +454,12 @@ export default function FootballCompareContent() {
                     className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded border border-gray-300 text-xs"
                   >
                     <div className="relative w-4 h-4">
-                      <img
+                      <Image
                         src={team.teamLogo}
                         alt={team.teamName}
-                        className="w-full h-full object-contain"
+                        fill
+                        className="object-contain"
+                        unoptimized
                       />
                     </div>
                     <span className="text-gray-700 dark:text-gray-200">{team.teamName}</span>
@@ -404,7 +506,7 @@ export default function FootballCompareContent() {
               data-debug="Empty State Section"
             >
               <p className="text-gray-500 dark:text-gray-300">
-                Select teams above to compare their schedules
+                Select teams above or use search to compare their schedules
               </p>
             </div>
           )}
