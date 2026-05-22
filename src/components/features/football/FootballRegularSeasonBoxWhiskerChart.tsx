@@ -307,7 +307,7 @@ export default function FootballRegularSeasonBoxWhiskerChart({
                       top: medianPos,
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: secondaryColor,
                     }}
                   />
 

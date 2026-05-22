@@ -354,13 +354,15 @@ export default function BballSeedCeilingFloor({
               const yPos = getYPosition(teamIndex);
               const primaryColor = team.primary_color || "#1a1a1a";
               const boxFillColor = primaryColor;
-              let whiskerStrokeColor = team.secondary_color || primaryColor;
+              const secondaryColor = team.secondary_color || primaryColor;
+              let whiskerStrokeColor = secondaryColor;
               if (
                 whiskerStrokeColor.toLowerCase() === "#ffffff" ||
                 whiskerStrokeColor.toLowerCase() === "white"
               ) {
                 whiskerStrokeColor = "#000000";
               }
+              const medianLineColor = secondaryColor;
 
               const boxHeight = isMobile ? 10 : 14;
 
@@ -441,7 +443,7 @@ export default function BballSeedCeilingFloor({
                     y1={yPos - boxHeight / 2}
                     x2={adjustedMedianPos}
                     y2={yPos + boxHeight / 2}
-                    stroke={whiskerStrokeColor}
+                    stroke={medianLineColor}
                     strokeWidth={isMobile ? 2 : 2.5}
                   />
                 </g>

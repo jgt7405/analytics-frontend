@@ -393,7 +393,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         top: scale(median),
                         width: boxWidth,
                         height: lineThickness,
-                        backgroundColor: adjustColorIfWhite(secondaryColor),
+                        backgroundColor: secondaryColor,
                       }}
                     />
                     {/* Conference logo */}

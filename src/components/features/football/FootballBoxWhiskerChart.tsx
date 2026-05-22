@@ -271,7 +271,7 @@ export default function FootballBoxWhiskerChart({
                       top: scale(median),
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: secondaryColor,
                     }}
                   />
 

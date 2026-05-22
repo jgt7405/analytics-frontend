@@ -281,7 +281,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                       top: medianPos,
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(secondaryColor),
+                      backgroundColor: secondaryColor,
                     }}
                   />
 

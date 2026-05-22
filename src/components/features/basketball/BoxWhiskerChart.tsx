@@ -294,7 +294,7 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
                       top: medianPos - lineThickness / 2,
                       width: boxWidth,
                       height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(team.secondary_color || "#64748b"),
+                      backgroundColor: secondaryColor,
                     }}
                   />
 
