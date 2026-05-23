@@ -116,14 +116,13 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
   const formatDate = useCallback((dateStr: string | undefined): string => {
     if (!dateStr) return "";
-    try {
-      const date = new Date(dateStr);
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const day = date.getDate().toString().padStart(2, "0");
-      return `${month}/${day}`;
-    } catch {
-      return "";
+    // Parse YYYY-MM-DD directly without Date constructor to avoid UTC midnight shift
+    // (new Date('YYYY-MM-DD') treats string as UTC, causing date to shift back 1 day in US timezones)
+    const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      return `${isoMatch[2]}/${isoMatch[3]}`;
     }
+    return dateStr;
   }, []);
 
   const formatTeamRecord = useCallback((record: string) => {
