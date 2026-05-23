@@ -164,7 +164,7 @@ export default function FootballWhatIfContent() {
         })
       );
 
-      const response = await fetch("/api/proxy/football/whatif/structured-csv", {
+      const response = await fetch("/api/proxy/football/whatif/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
