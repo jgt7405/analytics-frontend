@@ -664,6 +664,14 @@ export async function POST(
     ) {
       backendPath = `/football/whatif/structured-csv`;
       console.log("📥 FOOTBALL WHAT-IF STRUCTURED CSV detected");
+    } else if (
+      slug.length === 3 &&
+      slug[0] === "football" &&
+      slug[1] === "whatif" &&
+      slug[2] === "download"
+    ) {
+      backendPath = `/football/whatif/download`;
+      console.log("📥 FOOTBALL WHAT-IF DOWNLOAD detected");
     }
 
     // ===== HANDLE BASKETBALL WHAT-IF BASELINE =====
