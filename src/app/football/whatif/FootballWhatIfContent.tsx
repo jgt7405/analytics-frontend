@@ -9,6 +9,7 @@ import FootballConfChampProb from "@/components/features/football/FootballConfCh
 import FootballCFPProb from "@/components/features/football/FootballCFPProb";
 import { useFootballCFP } from "@/hooks/useFootballCFP";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
+import { useFootballFutureGames } from "@/hooks/useFootballFutureGames";
 import {
   GameSelection,
   useFootballWhatIf,
@@ -27,6 +28,8 @@ export default function FootballWhatIfContent() {
   const searchParams = useSearchParams();
   const [selectedConference, setSelectedConference] = useState<string>("Big 12");
   const [showAllCFPTeams, setShowAllCFPTeams] = useState(false);
+  const [gameFilter, setGameFilter] = useState<"conference" | "all">("conference");
+  const [teamSearch, setTeamSearch] = useState("");
   const [gameSelections, setGameSelections] = useState<Map<number, string>>(
     new Map()
   );
@@ -37,6 +40,7 @@ export default function FootballWhatIfContent() {
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
   const [allTeamsWhatIfCFP, setAllTeamsWhatIfCFP] = useState<AllTeamCFPEntry[]>([]);
   const { data: allCFPResponse } = useFootballCFP("All Teams");
+  const { data: allFutureGamesData } = useFootballFutureGames();
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
@@ -63,10 +67,7 @@ export default function FootballWhatIfContent() {
   const conferences =
     conferenceData?.data
       ?.map((conf) => conf.conference_name)
-      .filter(
-        (name) =>
-          name !== "All_Teams" && name !== "FCS" && name !== "Independent"
-      )
+      .filter((name) => name !== "All_Teams" && name !== "FCS")
       .sort() || [];
 
   useEffect(() => {
@@ -107,7 +108,6 @@ export default function FootballWhatIfContent() {
   const handleConferenceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const conference = e.target.value;
     setSelectedConference(conference);
-    setGameSelections(new Map());
     setWhatIfResults([]);
     setGames([]);
     setCurrentProjections([]);
@@ -283,20 +283,44 @@ export default function FootballWhatIfContent() {
     }));
   }, [whatIfResults, allTeamsWhatIfCFP, showAllCFPTeams]);
 
+  // Determine the game pool based on filter + team search
+  const allFutureGames: WhatIfGame[] = allFutureGamesData?.games || [];
+
+  const filteredGames = useMemo(() => {
+    const search = teamSearch.trim().toLowerCase();
+    if (search) {
+      // Team search overrides toggle: search all FBS games
+      const pool = allFutureGames.length > 0 ? allFutureGames : games;
+      return pool.filter(
+        (g) =>
+          g.home_team.toLowerCase().includes(search) ||
+          g.away_team.toLowerCase().includes(search)
+      );
+    }
+    if (gameFilter === "all") return allFutureGames;
+    return games; // "conference" = games involving at least one conference team
+  }, [games, allFutureGames, gameFilter, teamSearch]);
+
   // Group games by date
   const gamesByDate: { [key: string]: WhatIfGame[] } = {};
-  games.forEach((game) => {
+  filteredGames.forEach((game) => {
     if (!gamesByDate[game.date]) {
       gamesByDate[game.date] = [];
     }
     gamesByDate[game.date].push(game);
   });
 
-  // Get selected games with full game details
+  // Get selected games with full game details (search across all available pools)
+  const allKnownGames = useMemo(() => {
+    const map = new Map<number, WhatIfGame>();
+    [...games, ...allFutureGames].forEach((g) => map.set(g.game_id, g));
+    return map;
+  }, [games, allFutureGames]);
+
   const selectedGamesWithDetails = useMemo(() => {
     const result = [];
     for (const [gameId, winnerId] of gameSelections.entries()) {
-      const game = games.find((g) => g.game_id === gameId);
+      const game = allKnownGames.get(gameId);
       if (game) {
         result.push({
           gameId,
@@ -350,7 +374,7 @@ export default function FootballWhatIfContent() {
               </select>
             </div>
 
-            <div className="mb-3 flex items-center gap-2">
+            <div className="mb-2 flex items-center gap-2">
               <h2 className="text-xl font-semibold">Select Games</h2>
               <p className="text-xs text-gray-600 dark:text-gray-300">
                 {gameSelections.size}{" "}
@@ -369,6 +393,42 @@ export default function FootballWhatIfContent() {
               )}
             </div>
 
+            {/* Games filter toggle + team search */}
+            <div className="mb-3 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex rounded overflow-hidden border border-gray-300 dark:border-gray-600 text-xs">
+                  <button
+                    onClick={() => setGameFilter("conference")}
+                    className={`px-2 py-1 transition-colors ${
+                      gameFilter === "conference"
+                        ? "bg-teal-600 text-white"
+                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    Conference
+                  </button>
+                  <button
+                    onClick={() => setGameFilter("all")}
+                    className={`px-2 py-1 transition-colors ${
+                      gameFilter === "all"
+                        ? "bg-teal-600 text-white"
+                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    All Games
+                  </button>
+                </div>
+              </div>
+              <input
+                type="text"
+                placeholder="Search by team..."
+                value={teamSearch}
+                onChange={(e) => setTeamSearch(e.target.value)}
+                className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1"
+                style={{ "--tw-ring-color": TEAL_COLOR } as React.CSSProperties}
+              />
+            </div>
+
             {/* Explainer text */}
             <p className="text-xs text-gray-600 dark:text-gray-300 mb-4">
               Percentage represents probability team will win based on composite
@@ -377,23 +437,23 @@ export default function FootballWhatIfContent() {
 
             {/* Future Games List - Scrollable */}
             <div className="flex-1 overflow-y-auto mb-4 pr-2">
-              {!selectedConference && (
+              {!selectedConference && gameFilter === "conference" && !teamSearch && (
                 <p className="text-gray-500 dark:text-gray-300 text-center py-8 text-sm">
                   Select a conference to view games
                 </p>
               )}
-              {selectedConference && isLoadingData && (
+              {selectedConference && isLoadingData && gameFilter === "conference" && !teamSearch && (
                 <p className="text-gray-500 dark:text-gray-300 text-center py-8 text-sm">
                   Loading games...
                 </p>
               )}
-              {selectedConference && !isLoadingData && games.length === 0 && (
+              {filteredGames.length === 0 && !isLoadingData && (gameFilter === "all" || !!teamSearch || selectedConference) && (
                 <div className="text-center py-8">
                   <p className="text-gray-500 dark:text-gray-300 mb-2 text-sm">
-                    No future games available
+                    No games found
                   </p>
                   <p className="text-xs text-gray-400">
-                    Season may be complete.
+                    {teamSearch ? "Try a different team name." : "Season may be complete."}
                   </p>
                 </div>
               )}
