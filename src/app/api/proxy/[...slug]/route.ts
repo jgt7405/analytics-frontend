@@ -391,6 +391,9 @@ export async function GET(
           case "future_games":
             backendPath = `/football/future_games`;
             break;
+          case "all_future_games":
+            backendPath = `/football/all_future_games`;
+            break;
           case "bowl-picks":
             backendPath = `/football/bowl-picks`;
             break;
