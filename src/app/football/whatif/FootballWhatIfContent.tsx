@@ -7,6 +7,7 @@ import {
 import ScreenshotModal from "@/components/common/ScreenshotModal";
 import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
 import FootballCFPProb from "@/components/features/football/FootballCFPProb";
+import { useFootballCFP } from "@/hooks/useFootballCFP";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import {
   GameSelection,
@@ -24,7 +25,8 @@ const TEAL_COLOR = "rgb(0, 151, 178)";
 
 export default function FootballWhatIfContent() {
   const searchParams = useSearchParams();
-  const [selectedConference, setSelectedConference] = useState<string>("");
+  const [selectedConference, setSelectedConference] = useState<string>("Big 12");
+  const [showAllCFPTeams, setShowAllCFPTeams] = useState(false);
   const [gameSelections, setGameSelections] = useState<Map<number, string>>(
     new Map()
   );
@@ -33,6 +35,7 @@ export default function FootballWhatIfContent() {
     WhatIfTeamResult[]
   >([]);
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
+  const { data: allCFPResponse } = useFootballCFP("All Teams");
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
@@ -235,6 +238,16 @@ export default function FootballWhatIfContent() {
 
   // Prepare data for CFP table
   const currentCFPTableData = useMemo(() => {
+    if (showAllCFPTeams && allCFPResponse?.data?.length) {
+      return allCFPResponse.data.map((team) => ({
+        team_id: team.team_name,
+        team_name: team.team_name,
+        logo_url: team.logo_url,
+        currentProb: team.CFP_First_Round,
+        whatIfProb: 0,
+        change: 0,
+      }));
+    }
     return currentProjections.map((team) => ({
       team_id: team.team_id,
       team_name: team.team_name,
@@ -243,11 +256,25 @@ export default function FootballWhatIfContent() {
       whatIfProb: 0,
       change: 0,
     }));
-  }, [currentProjections]);
+  }, [currentProjections, allCFPResponse, showAllCFPTeams]);
 
   const whatIfCFPTableData = useMemo(() => {
     if (whatIfResults.length === 0) return undefined;
-
+    if (showAllCFPTeams && allCFPResponse?.data?.length) {
+      const whatIfMap = new Map(
+        whatIfResults.map((t) => [t.team_name, calculateCFPProbability(t)])
+      );
+      return allCFPResponse.data.map((team) => ({
+        team_id: team.team_name,
+        team_name: team.team_name,
+        logo_url: team.logo_url,
+        currentProb: 0,
+        whatIfProb: whatIfMap.has(team.team_name)
+          ? (whatIfMap.get(team.team_name) as number)
+          : team.CFP_First_Round,
+        change: 0,
+      }));
+    }
     return whatIfResults.map((team) => ({
       team_id: team.team_id,
       team_name: team.team_name,
@@ -256,7 +283,7 @@ export default function FootballWhatIfContent() {
       whatIfProb: calculateCFPProbability(team),
       change: 0,
     }));
-  }, [whatIfResults]);
+  }, [whatIfResults, allCFPResponse, showAllCFPTeams]);
 
   // Group games by date
   const gamesByDate: { [key: string]: WhatIfGame[] } = {};
@@ -325,12 +352,23 @@ export default function FootballWhatIfContent() {
               </select>
             </div>
 
-            <div className="mb-3 flex items-baseline gap-2">
+            <div className="mb-3 flex items-center gap-2">
               <h2 className="text-xl font-semibold">Select Games</h2>
               <p className="text-xs text-gray-600 dark:text-gray-300">
                 {gameSelections.size}{" "}
                 {gameSelections.size === 1 ? "game" : "games"} selected
               </p>
+              {gameSelections.size > 0 && (
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-1 bg-transparent border-0 p-0 text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                  title="Clear all selections"
+                  aria-label="Clear all selections"
+                >
+                  <span className="leading-none">✕</span>
+                  <span className="text-xs">Clear Selections</span>
+                </button>
+              )}
             </div>
 
             {/* Explainer text */}
@@ -649,9 +687,15 @@ export default function FootballWhatIfContent() {
               {/* CFP Probability Table */}
               {currentCFPTableData.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                    CFP Probability
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">CFP Probability</h3>
+                    <button
+                      onClick={() => setShowAllCFPTeams(!showAllCFPTeams)}
+                      className="px-3 py-2 border rounded transition-colors text-sm bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
+                    >
+                      {showAllCFPTeams ? "Show Conference Teams Only" : "Show All Teams"}
+                    </button>
+                  </div>
                   {isLoadingData ? (
                     <p className="text-gray-500 dark:text-gray-300 text-center py-12">
                       Loading...

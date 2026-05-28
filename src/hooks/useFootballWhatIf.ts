@@ -1,6 +1,6 @@
 // frontend/src/hooks/useFootballWhatIf.ts
 
-import { WhatIfGame, WhatIfTeamResult } from "@/types/football";
+import { AllTeamCFPEntry, WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import { useMutation } from "@tanstack/react-query";
 
 export interface GameSelection {
@@ -19,6 +19,7 @@ export interface WhatIfResponse {
   data: WhatIfTeamResult[];
   current_projections: WhatIfTeamResult[];
   games: WhatIfGame[];
+  all_teams_cfp?: AllTeamCFPEntry[];
   metadata: {
     conference: string;
     num_scenarios: number;
@@ -53,6 +54,7 @@ interface BackendWhatIfResponse {
   data: BackendTeamResult[];
   current_projections: BackendTeamResult[];
   games: WhatIfGame[];
+  all_teams_cfp?: AllTeamCFPEntry[];
   metadata: {
     conference: string;
     num_scenarios: number;
@@ -122,6 +124,7 @@ const calculateWhatIf = async (
     data: (data.data || []).map(mapTeamResult),
     current_projections: (data.current_projections || []).map(mapTeamResult),
     games: data.games || [],
+    all_teams_cfp: data.all_teams_cfp || [],
     metadata: data.metadata || {
       conference: request.conference,
       num_scenarios: 1000,

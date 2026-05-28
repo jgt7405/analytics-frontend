@@ -407,11 +407,20 @@ export interface WhatIfTeamResult {
   avg_conf_standing?: number;
 }
 
+export interface AllTeamCFPEntry {
+  team_id: number;
+  team_name: string;
+  conference: string;
+  logo_url: string;
+  cfp_probability: number;
+}
+
 export interface WhatIfResponse {
   success: boolean;
   data: WhatIfTeamResult[];
   current_projections: WhatIfTeamResult[];
   games: WhatIfGame[];
+  all_teams_cfp?: AllTeamCFPEntry[];
   metadata: {
     conference: string;
     num_scenarios: number;
