@@ -20,6 +20,7 @@ export interface WhatIfResponse {
   current_projections: WhatIfTeamResult[];
   games: WhatIfGame[];
   all_teams_cfp?: AllTeamCFPEntry[];
+  all_teams_whatif_cfp?: AllTeamCFPEntry[];
   metadata: {
     conference: string;
     num_scenarios: number;
@@ -55,6 +56,7 @@ interface BackendWhatIfResponse {
   current_projections: BackendTeamResult[];
   games: WhatIfGame[];
   all_teams_cfp?: AllTeamCFPEntry[];
+  all_teams_whatif_cfp?: AllTeamCFPEntry[];
   metadata: {
     conference: string;
     num_scenarios: number;
@@ -125,6 +127,7 @@ const calculateWhatIf = async (
     current_projections: (data.current_projections || []).map(mapTeamResult),
     games: data.games || [],
     all_teams_cfp: data.all_teams_cfp || [],
+    all_teams_whatif_cfp: data.all_teams_whatif_cfp || [],
     metadata: data.metadata || {
       conference: request.conference,
       num_scenarios: 1000,

@@ -14,7 +14,7 @@ import {
   useFootballWhatIf,
   WhatIfResponse,
 } from "@/hooks/useFootballWhatIf";
-import { WhatIfGame, WhatIfTeamResult } from "@/types/football";
+import { AllTeamCFPEntry, WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import { Download } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -35,6 +35,7 @@ export default function FootballWhatIfContent() {
     WhatIfTeamResult[]
   >([]);
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
+  const [allTeamsWhatIfCFP, setAllTeamsWhatIfCFP] = useState<AllTeamCFPEntry[]>([]);
   const { data: allCFPResponse } = useFootballCFP("All Teams");
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
@@ -137,6 +138,7 @@ export default function FootballWhatIfContent() {
       {
         onSuccess: (response: WhatIfResponse) => {
           setWhatIfResults(response.data);
+          setAllTeamsWhatIfCFP(response.all_teams_whatif_cfp || []);
         },
       }
     );
@@ -145,6 +147,7 @@ export default function FootballWhatIfContent() {
   const handleReset = () => {
     setGameSelections(new Map());
     setWhatIfResults([]);
+    setAllTeamsWhatIfCFP([]);
   };
 
   const handleCloseScreenshotModal = () => {
@@ -260,18 +263,13 @@ export default function FootballWhatIfContent() {
 
   const whatIfCFPTableData = useMemo(() => {
     if (whatIfResults.length === 0) return undefined;
-    if (showAllCFPTeams && allCFPResponse?.data?.length) {
-      const whatIfMap = new Map(
-        whatIfResults.map((t) => [t.team_name, calculateCFPProbability(t)])
-      );
-      return allCFPResponse.data.map((team) => ({
+    if (showAllCFPTeams && allTeamsWhatIfCFP.length > 0) {
+      return allTeamsWhatIfCFP.map((team) => ({
         team_id: team.team_name,
         team_name: team.team_name,
         logo_url: team.logo_url,
         currentProb: 0,
-        whatIfProb: whatIfMap.has(team.team_name)
-          ? (whatIfMap.get(team.team_name) as number)
-          : team.CFP_First_Round,
+        whatIfProb: team.cfp_probability,
         change: 0,
       }));
     }
@@ -283,7 +281,7 @@ export default function FootballWhatIfContent() {
       whatIfProb: calculateCFPProbability(team),
       change: 0,
     }));
-  }, [whatIfResults, allCFPResponse, showAllCFPTeams]);
+  }, [whatIfResults, allTeamsWhatIfCFP, showAllCFPTeams]);
 
   // Group games by date
   const gamesByDate: { [key: string]: WhatIfGame[] } = {};
