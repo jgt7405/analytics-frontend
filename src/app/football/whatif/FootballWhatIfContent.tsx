@@ -40,7 +40,7 @@ export default function FootballWhatIfContent() {
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
   const [allTeamsWhatIfCFP, setAllTeamsWhatIfCFP] = useState<AllTeamCFPEntry[]>([]);
   const { data: allCFPResponse } = useFootballCFP("All Teams");
-  const { data: allFutureGamesData } = useFootballFutureGames();
+  const { data: allFutureGamesData, isLoading: isLoadingAllGames } = useFootballFutureGames();
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
@@ -447,7 +447,12 @@ export default function FootballWhatIfContent() {
                   Loading games...
                 </p>
               )}
-              {filteredGames.length === 0 && !isLoadingData && (gameFilter === "all" || !!teamSearch || selectedConference) && (
+              {(gameFilter === "all" || (!!teamSearch && allFutureGames.length === 0)) && isLoadingAllGames && (
+                <p className="text-gray-500 dark:text-gray-300 text-center py-8 text-sm">
+                  Loading all games...
+                </p>
+              )}
+              {filteredGames.length === 0 && !isLoadingData && !isLoadingAllGames && (gameFilter === "all" || !!teamSearch || selectedConference) && (
                 <div className="text-center py-8">
                   <p className="text-gray-500 dark:text-gray-300 mb-2 text-sm">
                     No games found
