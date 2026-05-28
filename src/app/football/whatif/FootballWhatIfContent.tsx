@@ -396,28 +396,12 @@ export default function FootballWhatIfContent() {
             {/* Games filter toggle + team search */}
             <div className="mb-3 flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                <div className="flex rounded overflow-hidden text-xs" style={{ border: `1px solid ${TEAL_COLOR}` }}>
-                  <button
-                    onClick={() => setGameFilter("conference")}
-                    className={`px-2 py-1 transition-colors ${
-                      gameFilter === "conference"
-                        ? "bg-teal-600 text-white"
-                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    Conference
-                  </button>
-                  <button
-                    onClick={() => setGameFilter("all")}
-                    className={`px-2 py-1 transition-colors ${
-                      gameFilter === "all"
-                        ? "bg-teal-600 text-white"
-                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    All Games
-                  </button>
-                </div>
+                <button
+                  onClick={() => setGameFilter(gameFilter === "all" ? "conference" : "all")}
+                  className="px-3 py-2 border rounded transition-colors text-sm bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
+                >
+                  {gameFilter === "all" ? "Show Conference Teams" : "Show All Teams"}
+                </button>
               </div>
               <input
                 type="text"
