@@ -402,6 +402,10 @@ export interface WhatIfTeamResult {
   // Computed fields for UI
   projected_total_wins: number;
   cfp_probability: number;
+  // CFP bid-type breakdown (what-if only)
+  auto_bid_pct?: number;
+  atlarge_pct?: number;
+  conf_champ_no_bid_pct?: number;
   // Aliases for compatibility
   projected_conf_wins?: number;
   avg_conf_standing?: number;
@@ -413,6 +417,9 @@ export interface AllTeamCFPEntry {
   conference: string;
   logo_url: string;
   cfp_probability: number;
+  auto_bid_pct?: number;
+  atlarge_pct?: number;
+  conf_champ_no_bid_pct?: number;
 }
 
 export interface WhatIfResponse {

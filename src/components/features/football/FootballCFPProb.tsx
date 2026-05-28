@@ -16,6 +16,9 @@ interface CFPTeam {
   currentProb: number;
   whatIfProb: number;
   change: number;
+  whatIfAutoPct?: number;
+  whatIfAtLargePct?: number;
+  whatIfConfNoBidPct?: number;
 }
 
 interface FootballCFPProbProps {
@@ -365,6 +368,66 @@ function FootballCFPProb({
                   </div>
                 )}
               </th>
+
+              {/* Auto Bid % Column */}
+              <th
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  width: probColWidth,
+                  minWidth: probColWidth,
+                  maxWidth: probColWidth,
+                  height: headerHeight,
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid var(--border-color)",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  lineHeight: "1.2",
+                }}
+                title="Of scenarios where team makes CFP: % as auto bid (top-5 conf champion)"
+              >
+                {isMobile ? "Auto\n%" : "Auto %"}
+              </th>
+
+              {/* At-Large % Column */}
+              <th
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  width: probColWidth,
+                  minWidth: probColWidth,
+                  maxWidth: probColWidth,
+                  height: headerHeight,
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid var(--border-color)",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  lineHeight: "1.2",
+                }}
+                title="Of scenarios where team makes CFP: % as at-large bid"
+              >
+                {isMobile ? "At-\nLarge %" : "At-Large %"}
+              </th>
+
+              {/* Won Conf, No Bid % Column */}
+              <th
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                style={{
+                  width: probColWidth,
+                  minWidth: probColWidth,
+                  maxWidth: probColWidth,
+                  height: headerHeight,
+                  position: "sticky",
+                  top: 0,
+                  border: "1px solid var(--border-color)",
+                  borderLeft: "none",
+                  whiteSpace: "pre-line",
+                  lineHeight: "1.2",
+                }}
+                title="% of scenarios where team wins conference but does not make CFP"
+              >
+                {isMobile ? "Conf\nNo Bid" : "Won Conf\nNo Bid %"}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -516,6 +579,69 @@ function FootballCFPProb({
                     {hasCalculated && team.change !== 0 && (
                       <span>{team.change > 0 ? "+" : ""}{team.change.toFixed(1)}%</span>
                     )}
+                  </div>
+                </td>
+
+                {/* Auto Bid % Cell */}
+                <td
+                  className="relative p-0"
+                  style={{
+                    height: cellHeight,
+                    width: probColWidth,
+                    minWidth: probColWidth,
+                    maxWidth: probColWidth,
+                    border: "1px solid var(--border-color)",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    backgroundColor: isDark ? "#1a1f2e" : "white",
+                  }}
+                >
+                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}>
+                    {hasCalculated && (team.whatIfAutoPct ?? 0) > 0
+                      ? `${(team.whatIfAutoPct ?? 0).toFixed(1)}%`
+                      : ""}
+                  </div>
+                </td>
+
+                {/* At-Large % Cell */}
+                <td
+                  className="relative p-0"
+                  style={{
+                    height: cellHeight,
+                    width: probColWidth,
+                    minWidth: probColWidth,
+                    maxWidth: probColWidth,
+                    border: "1px solid var(--border-color)",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    backgroundColor: isDark ? "#1a1f2e" : "white",
+                  }}
+                >
+                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}>
+                    {hasCalculated && (team.whatIfAtLargePct ?? 0) > 0
+                      ? `${(team.whatIfAtLargePct ?? 0).toFixed(1)}%`
+                      : ""}
+                  </div>
+                </td>
+
+                {/* Won Conf, No Bid % Cell */}
+                <td
+                  className="relative p-0"
+                  style={{
+                    height: cellHeight,
+                    width: probColWidth,
+                    minWidth: probColWidth,
+                    maxWidth: probColWidth,
+                    border: "1px solid var(--border-color)",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    backgroundColor: isDark ? "#1a1f2e" : "white",
+                  }}
+                >
+                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}>
+                    {hasCalculated && (team.whatIfConfNoBidPct ?? 0) > 0
+                      ? `${(team.whatIfConfNoBidPct ?? 0).toFixed(1)}%`
+                      : ""}
                   </div>
                 </td>
               </tr>

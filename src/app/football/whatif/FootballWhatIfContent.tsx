@@ -271,6 +271,9 @@ export default function FootballWhatIfContent() {
         currentProb: 0,
         whatIfProb: team.cfp_probability,
         change: 0,
+        whatIfAutoPct: team.auto_bid_pct ?? 0,
+        whatIfAtLargePct: team.atlarge_pct ?? 0,
+        whatIfConfNoBidPct: team.conf_champ_no_bid_pct ?? 0,
       }));
     }
     return whatIfResults.map((team) => ({
@@ -280,6 +283,9 @@ export default function FootballWhatIfContent() {
       currentProb: 0,
       whatIfProb: calculateCFPProbability(team),
       change: 0,
+      whatIfAutoPct: team.auto_bid_pct ?? 0,
+      whatIfAtLargePct: team.atlarge_pct ?? 0,
+      whatIfConfNoBidPct: team.conf_champ_no_bid_pct ?? 0,
     }));
   }, [whatIfResults, allTeamsWhatIfCFP, showAllCFPTeams]);
 

@@ -48,6 +48,9 @@ interface BackendTeamResult {
   cfp_bid_pct: number;
   cfp_probability?: number;
   totalscenarios: number;
+  auto_bid_pct?: number;
+  atlarge_pct?: number;
+  conf_champ_no_bid_pct?: number;
 }
 
 interface BackendWhatIfResponse {
@@ -86,6 +89,9 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => ({
   cfp_probability: team.cfp_probability || team.cfp_bid_pct || team.playoff_bid_pct || 0,
   projected_conf_wins: team.avg_projected_conf_wins || 0,
   avg_conf_standing: team.avg_conference_standing || 0,
+  auto_bid_pct: team.auto_bid_pct ?? 0,
+  atlarge_pct: team.atlarge_pct ?? 0,
+  conf_champ_no_bid_pct: team.conf_champ_no_bid_pct ?? 0,
 });
 
 const calculateWhatIf = async (
