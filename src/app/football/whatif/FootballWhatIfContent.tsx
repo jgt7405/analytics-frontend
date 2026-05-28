@@ -396,7 +396,7 @@ export default function FootballWhatIfContent() {
             {/* Games filter toggle + team search */}
             <div className="mb-3 flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                <div className="flex rounded overflow-hidden border border-gray-300 dark:border-gray-600 text-xs">
+                <div className="flex rounded overflow-hidden text-xs" style={{ border: `1px solid ${TEAL_COLOR}` }}>
                   <button
                     onClick={() => setGameFilter("conference")}
                     className={`px-2 py-1 transition-colors ${
