@@ -192,7 +192,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const basketballTeams = (await basketballTeamsRes.json())?.data;
       if (Array.isArray(basketballTeams)) {
         basketballTeams.forEach((team: { team_name: string }) => {
-          const slug = team.team_name.replace(/ /g, '_');
+          // Use the raw team name, URL-encoded (spaces -> %20, & -> %26).
+          // The backend team endpoint expects the name with spaces, NOT
+          // underscores (underscore slugs 404). This matches in-app links and
+          // also keeps the sitemap valid XML (no raw &).
+          const slug = encodeURIComponent(team.team_name);
           teamPages.push({
             url: `${baseUrl}/basketball/team/${slug}/`,
             changeFrequency: 'weekly',
@@ -217,7 +221,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const footballTeams = (await footballTeamsRes.json())?.data;
       if (Array.isArray(footballTeams)) {
         footballTeams.forEach((team: { team_name: string }) => {
-          const slug = team.team_name.replace(/ /g, '_');
+          // Use the raw team name, URL-encoded (spaces -> %20, & -> %26).
+          // The backend team endpoint expects the name with spaces, NOT
+          // underscores (underscore slugs 404). This matches in-app links and
+          // also keeps the sitemap valid XML (no raw &).
+          const slug = encodeURIComponent(team.team_name);
           teamPages.push({
             url: `${baseUrl}/football/team/${slug}/`,
             changeFrequency: 'weekly',
