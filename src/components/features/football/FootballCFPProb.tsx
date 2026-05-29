@@ -72,6 +72,9 @@ function FootballCFPProb({
         change: whatIf ? whatIf.whatIfProb - current.currentProb : 0,
         isZero:
           current.currentProb === 0 && (!whatIf || whatIf.whatIfProb === 0),
+        whatIfAutoPct: whatIf?.whatIfAutoPct ?? 0,
+        whatIfAtLargePct: whatIf?.whatIfAtLargePct ?? 0,
+        whatIfConfNoBidPct: whatIf?.whatIfConfNoBidPct ?? 0,
       };
     });
   }, [currentData, whatIfData]);
