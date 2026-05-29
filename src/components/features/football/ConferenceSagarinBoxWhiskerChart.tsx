@@ -134,7 +134,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
       return [];
     }
 
-    const excludedConferences = ["FCS", "Pac-12", "Independent"];
+    const excludedConferences = ["FCS", "Independent"];
 
     return conferenceData.filter((conf) => {
       if (!conf || excludedConferences.includes(conf.conference_name))
