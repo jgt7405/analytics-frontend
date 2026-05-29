@@ -8,7 +8,23 @@
 // Each returns `undefined` on failure so the client can still fetch on mount.
 
 import type { StandingsApiResponse } from "@/types/basketball";
-import type { FootballStandingsApiResponse } from "@/types/football";
+import type {
+  CWVApiResponse,
+  NCAATeamApiResponse,
+  ScheduleApiResponse,
+} from "@/types/basketball";
+import type {
+  SeedApiResponse,
+  ConfTourneyApiResponse,
+} from "@/services/basketball-api";
+import type {
+  FootballStandingsApiResponse,
+  FootballCFPApiResponse,
+  FootballConfChampApiResponse,
+  FootballSeedApiResponse,
+  FootballCWVApiResponse,
+  FootballScheduleResponse,
+} from "@/types/football";
 import type { TeamData } from "@/hooks/useBasketballTeamData";
 import type { FootballTeamData } from "@/hooks/useFootballTeam";
 
@@ -29,26 +45,47 @@ async function fetchJson<T>(path: string): Promise<T | undefined> {
   }
 }
 
-export function getStandingsServer(conference: string, season?: string) {
+// Build "/base/Conf_Name?season=" the same way the client API does.
+function confPath(base: string, conference: string, season?: string) {
   const conf = conference.replace(/ /g, "_");
   const q = season ? `?season=${encodeURIComponent(season)}` : "";
-  return fetchJson<StandingsApiResponse>(`/standings/${conf}${q}`);
+  return `${base}/${conf}${q}`;
 }
 
-export function getFootballStandingsServer(conference: string, season?: string) {
-  const conf = conference.replace(/ /g, "_");
-  const q = season ? `?season=${encodeURIComponent(season)}` : "";
-  return fetchJson<FootballStandingsApiResponse>(
-    `/football/standings/${conf}${q}`,
+// --- Basketball -------------------------------------------------------------
+export const getStandingsServer = (c: string, s?: string) =>
+  fetchJson<StandingsApiResponse>(confPath("/standings", c, s));
+export const getSeedServer = (c: string, s?: string) =>
+  fetchJson<SeedApiResponse>(confPath("/seed", c, s));
+export const getNCAATourneyServer = (c: string, s?: string) =>
+  fetchJson<NCAATeamApiResponse>(confPath("/ncaa_tourney", c, s));
+export const getConfTourneyServer = (c: string, s?: string) =>
+  fetchJson<ConfTourneyApiResponse>(confPath("/conf_tourney", c, s));
+export const getCWVServer = (c: string, s?: string) =>
+  fetchJson<CWVApiResponse>(confPath("/cwv", c, s));
+export const getScheduleServer = (c: string, s?: string) =>
+  fetchJson<ScheduleApiResponse>(confPath("/conf_schedule", c, s));
+export const getTeamDataServer = (teamName: string) =>
+  fetchJson<TeamData>(`/team/${encodeURIComponent(teamName)}`);
+
+// --- Football ---------------------------------------------------------------
+export const getFootballStandingsServer = (c: string, s?: string) =>
+  fetchJson<FootballStandingsApiResponse>(confPath("/football/standings", c, s));
+export const getFootballCFPServer = (c: string, s?: string) =>
+  fetchJson<FootballCFPApiResponse>(confPath("/cfp", c, s));
+export const getFootballConfChampServer = (c: string, s?: string) =>
+  fetchJson<FootballConfChampApiResponse>(
+    confPath("/football/conf_champ", c, s),
   );
-}
-
-export function getTeamDataServer(teamName: string) {
-  return fetchJson<TeamData>(`/team/${encodeURIComponent(teamName)}`);
-}
-
-export function getFootballTeamServer(teamName: string) {
-  return fetchJson<FootballTeamData>(
+export const getFootballSeedServer = (c: string, s?: string) =>
+  fetchJson<FootballSeedApiResponse>(confPath("/football_seed", c, s));
+export const getFootballCWVServer = (c: string, s?: string) =>
+  fetchJson<FootballCWVApiResponse>(confPath("/football/cwv", c, s));
+export const getFootballScheduleServer = (c: string, s?: string) =>
+  fetchJson<FootballScheduleResponse>(
+    confPath("/football/conf_schedule", c, s),
+  );
+export const getFootballTeamServer = (teamName: string) =>
+  fetchJson<FootballTeamData>(
     `/football_team/${encodeURIComponent(teamName)}`,
   );
-}

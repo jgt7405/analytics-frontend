@@ -21,7 +21,11 @@ const BasketballConfChampionHistoryChart = lazy(
     ),
 );
 
-export default function BasketballConfTourneyContent() {
+export default function BasketballConfTourneyContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useConferenceTourney>[2];
+} = {}) {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -37,7 +41,11 @@ export default function BasketballConfTourneyContent() {
     isLoading: tourneyLoading,
     error: tourneyError,
     refetch,
-  } = useConferenceTourney(selectedConference);
+  } = useConferenceTourney(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   const { data: historyData } =
     useBasketballConfTourneyHistory(selectedConference);

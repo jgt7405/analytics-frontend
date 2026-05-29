@@ -15,7 +15,11 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
-export default function FootballScheduleContent() {
+export default function FootballScheduleContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useFootballSchedule>[2];
+} = {}) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -51,7 +55,11 @@ export default function FootballScheduleContent() {
     isLoading: scheduleLoading,
     error: scheduleError,
     refetch,
-  } = useFootballSchedule(hasInitialized ? selectedConference : "Big 12");
+  } = useFootballSchedule(
+    hasInitialized ? selectedConference : "Big 12",
+    undefined,
+    !hasInitialized ? initialData : undefined,
+  );
 
   // Update available conferences and validate selected conference when API data loads
   useEffect(() => {

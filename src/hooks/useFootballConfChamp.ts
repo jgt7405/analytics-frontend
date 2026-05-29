@@ -6,9 +6,11 @@ import { useQuery } from "@tanstack/react-query";
 export const useFootballConfChamp = (
   conference: string,
   season?: string,
+  initialData?: FootballConfChampApiResponse,
 ) => {
   return useQuery<FootballConfChampApiResponse, Error>({
     queryKey: ["football-conf-champ", conference, season],
+    initialData,
     queryFn: () => api.getFootballConfChamp(conference, season),
     enabled: !!conference,
     staleTime: 5 * 60 * 1000, // 5 minutes

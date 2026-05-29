@@ -15,7 +15,11 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
-export default function BasketballScheduleContent() {
+export default function BasketballScheduleContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useSchedule>[2];
+} = {}) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -55,7 +59,9 @@ export default function BasketballScheduleContent() {
   } = useSchedule(
     hasInitialized
       ? selectedConference
-      : preferences.defaultConference || "Big 12"
+      : preferences.defaultConference || "Big 12",
+    undefined,
+    !hasInitialized ? initialData : undefined,
   );
 
   // Update available conferences when API loads

@@ -31,7 +31,7 @@ interface TWVApiResponse {
   conferences: string[];
 }
 
-interface ConfTourneyApiResponse {
+export interface ConfTourneyApiResponse {
   data: Array<{
     team_name: string;
     team_id: string;
@@ -42,7 +42,7 @@ interface ConfTourneyApiResponse {
   conferences: string[];
 }
 
-interface SeedApiResponse {
+export interface SeedApiResponse {
   data: Array<{
     team_name: string;
     team_id: string;

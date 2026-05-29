@@ -16,7 +16,11 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation"; // ✅ ADD THIS LINE
 import { Suspense, useEffect, useState } from "react";
 
-export default function BasketballCWVContent() {
+export default function BasketballCWVContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useCWV>[2];
+} = {}) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -35,7 +39,11 @@ export default function BasketballCWVContent() {
     isLoading: cwvLoading,
     error: cwvError,
     refetch,
-  } = useCWV(selectedConference);
+  } = useCWV(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   // URL state management - NO "All Teams"
   const { handleConferenceChange: handleUrlConferenceChange } =

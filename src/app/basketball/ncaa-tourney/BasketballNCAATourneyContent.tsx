@@ -15,7 +15,11 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
-export default function BasketballNCAATourneyContent() {
+export default function BasketballNCAATourneyContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useNCAATeam>[2];
+} = {}) {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -32,7 +36,11 @@ export default function BasketballNCAATourneyContent() {
     isLoading: ncaaLoading,
     error: ncaaError,
     refetch,
-  } = useNCAATeam(selectedConference);
+  } = useNCAATeam(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   // URL state management - HAS "All Teams"
   const { handleConferenceChange: handleUrlConferenceChange } =

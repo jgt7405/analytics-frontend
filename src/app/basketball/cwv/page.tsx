@@ -1,5 +1,9 @@
+import { Suspense } from "react";
 import { generatePageMetadata } from "@/app/metadata";
+import { getCWVServer } from "@/lib/server-api";
 import BasketballCWVContent from "./BasketballCWVContent";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = generatePageMetadata({
   title: "Basketball Conference Win Value",
@@ -7,6 +11,11 @@ export const metadata = generatePageMetadata({
   path: "/basketball/cwv/",
 });
 
-export default function BasketballCWVPage() {
-  return <BasketballCWVContent />;
+export default async function BasketballCWVPage() {
+  const initialData = await getCWVServer("Big 12");
+  return (
+    <Suspense fallback={null}>
+      <BasketballCWVContent initialData={initialData} />
+    </Suspense>
+  );
 }

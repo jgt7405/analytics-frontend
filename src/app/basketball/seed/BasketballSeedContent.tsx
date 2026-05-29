@@ -16,7 +16,11 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useState } from "react";
 
-export default function BasketballSeedContent() {
+export default function BasketballSeedContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useSeed>[2];
+} = {}) {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -33,7 +37,11 @@ export default function BasketballSeedContent() {
     isLoading: seedLoading,
     error: seedError,
     refetch,
-  } = useSeed(selectedConference);
+  } = useSeed(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   // Track page load
   useEffect(() => {

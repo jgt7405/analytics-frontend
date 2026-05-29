@@ -14,7 +14,11 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useState } from "react";
 
-export default function FootballCWVContent() {
+export default function FootballCWVContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useFootballCWV>[2];
+} = {}) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -28,7 +32,11 @@ export default function FootballCWVContent() {
     isLoading: cwvLoading,
     error: cwvError,
     refetch,
-  } = useFootballCWV(selectedConference);
+  } = useFootballCWV(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   // Add URL management but only after we have conferences
   const { handleConferenceChange: handleUrlChange } = useConferenceUrl(

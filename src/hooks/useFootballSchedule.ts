@@ -41,9 +41,14 @@ const fetchFootballSchedule = async (
   return data;
 };
 
-export const useFootballSchedule = (conference: string, season?: string) => {
+export const useFootballSchedule = (
+  conference: string,
+  season?: string,
+  initialData?: FootballScheduleResponse,
+) => {
   return useQuery({
     queryKey: ["football-schedule", conference, season],
+    initialData,
     queryFn: () => fetchFootballSchedule(conference, season),
     enabled: !!conference,
     staleTime: 5 * 60 * 1000, // 5 minutes

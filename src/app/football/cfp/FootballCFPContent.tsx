@@ -13,7 +13,11 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useState } from "react";
 
-export default function FootballCFPContent() {
+export default function FootballCFPContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useFootballCFP>[2];
+} = {}) {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -28,7 +32,11 @@ export default function FootballCFPContent() {
     isLoading: cfpLoading,
     error: cfpError,
     refetch,
-  } = useFootballCFP(selectedConference);
+  } = useFootballCFP(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   // Track page load
   useEffect(() => {

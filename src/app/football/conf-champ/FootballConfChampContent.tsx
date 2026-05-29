@@ -16,7 +16,11 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useState } from "react";
 
-export default function FootballConfChampContent() {
+export default function FootballConfChampContent({
+  initialData,
+}: {
+  initialData?: Parameters<typeof useFootballConfChamp>[2];
+} = {}) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -33,7 +37,11 @@ export default function FootballConfChampContent() {
     isLoading: confChampLoading,
     error: confChampError,
     refetch,
-  } = useFootballConfChamp(selectedConference);
+  } = useFootballConfChamp(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   const { data: historyData } = useFootballStandingsHistory(selectedConference);
 
