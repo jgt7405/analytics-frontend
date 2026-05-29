@@ -31,7 +31,7 @@ interface FootballCFPProbProps {
   season?: string;
 }
 
-type SortColumn = "team" | "current" | "whatif" | "change" | null;
+type SortColumn = "team" | "current" | "whatif" | "change" | "auto" | "atlarge" | "nobid" | null;
 type SortDirection = "asc" | "desc";
 
 function FootballCFPProb({
@@ -100,6 +100,15 @@ function FootballCFPProb({
             break;
           case "change":
             compareValue = a.change - b.change;
+            break;
+          case "auto":
+            compareValue = (a.whatIfAutoPct ?? 0) - (b.whatIfAutoPct ?? 0);
+            break;
+          case "atlarge":
+            compareValue = (a.whatIfAtLargePct ?? 0) - (b.whatIfAtLargePct ?? 0);
+            break;
+          case "nobid":
+            compareValue = (a.whatIfConfNoBidPct ?? 0) - (b.whatIfConfNoBidPct ?? 0);
             break;
         }
 
@@ -390,7 +399,10 @@ function FootballCFPProb({
 
               {/* Auto Bid % Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
+                  sortColumn === "auto" ? "bg-blue-100" : ""
+                } ${isMobile ? "text-xs" : "text-sm"}`}
+                onClick={() => handleColumnClick("auto")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
@@ -403,14 +415,22 @@ function FootballCFPProb({
                   whiteSpace: "pre-line",
                   lineHeight: "1.2",
                 }}
-                title="Of scenarios where team makes CFP: % as auto bid (top-5 conf champion)"
+                title="Click to sort — % of all scenarios team makes CFP as auto bid (top-5 conf champion)"
               >
                 {isMobile ? "Auto\n%" : "Auto %"}
+                {sortColumn === "auto" && (
+                  <div className="text-blue-600 text-xs mt-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </div>
+                )}
               </th>
 
               {/* At-Large % Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
+                  sortColumn === "atlarge" ? "bg-blue-100" : ""
+                } ${isMobile ? "text-xs" : "text-sm"}`}
+                onClick={() => handleColumnClick("atlarge")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
@@ -423,14 +443,22 @@ function FootballCFPProb({
                   whiteSpace: "pre-line",
                   lineHeight: "1.2",
                 }}
-                title="Of scenarios where team makes CFP: % as at-large bid"
+                title="Click to sort — % of all scenarios team makes CFP as at-large bid"
               >
                 {isMobile ? "At-\nLarge %" : "At-Large %"}
+                {sortColumn === "atlarge" && (
+                  <div className="text-blue-600 text-xs mt-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </div>
+                )}
               </th>
 
               {/* Won Conf, No Bid % Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
+                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
+                  sortColumn === "nobid" ? "bg-blue-100" : ""
+                } ${isMobile ? "text-xs" : "text-sm"}`}
+                onClick={() => handleColumnClick("nobid")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
@@ -443,9 +471,14 @@ function FootballCFPProb({
                   whiteSpace: "pre-line",
                   lineHeight: "1.2",
                 }}
-                title="% of scenarios where team wins conference but does not make CFP"
+                title="Click to sort — % of scenarios where team wins conference but does not make CFP"
               >
                 {isMobile ? "Conf\nNo Bid" : "Won Conf\nNo Bid %"}
+                {sortColumn === "nobid" && (
+                  <div className="text-blue-600 text-xs mt-1">
+                    {sortDirection === "asc" ? "↑" : "↓"}
+                  </div>
+                )}
               </th>
             </tr>
           </thead>
