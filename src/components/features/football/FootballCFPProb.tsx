@@ -178,6 +178,22 @@ function FootballCFPProb({
     };
   }, [sortedTeams]);
 
+  const maxNoBid = useMemo(() => {
+    return Math.max(...sortedTeams.map((t) => t.whatIfConfNoBidPct ?? 0), 1);
+  }, [sortedTeams]);
+
+  const getYellowCellColor = (value: number) => {
+    if (value === 0 || maxNoBid === 0) return { backgroundColor: isDark ? "#1a1f2e" : "white", color: isDark ? "#1a1f2e" : "black" };
+    const yellow = [255, 230, 113];
+    const white = [255, 255, 255];
+    const ratio = Math.min(value / maxNoBid, 1);
+    const r = Math.round(white[0] + (yellow[0] - white[0]) * ratio);
+    const g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
+    const b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: brightness > 140 ? "#000000" : "#ffffff" };
+  };
+
   // Get TWV-style color for change cells (matches TWV table exactly)
   const getChangeCellColor = (change: number) => {
     if (change === 0) return { backgroundColor: isDark ? "#1a1f2e" : "white", color: isDark ? "transparent" : "black" };
@@ -596,10 +612,12 @@ function FootballCFPProb({
                     border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
-                    backgroundColor: isDark ? "#1a1f2e" : "white",
+                    ...(hasCalculated
+                      ? getCellColor(team.whatIfAutoPct ?? 0)
+                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
                   }}
                 >
-                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}>
+                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}>
                     {hasCalculated && (team.whatIfAutoPct ?? 0) > 0
                       ? `${(team.whatIfAutoPct ?? 0).toFixed(1)}%`
                       : ""}
@@ -617,10 +635,12 @@ function FootballCFPProb({
                     border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
-                    backgroundColor: isDark ? "#1a1f2e" : "white",
+                    ...(hasCalculated
+                      ? getCellColor(team.whatIfAtLargePct ?? 0)
+                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
                   }}
                 >
-                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}>
+                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}>
                     {hasCalculated && (team.whatIfAtLargePct ?? 0) > 0
                       ? `${(team.whatIfAtLargePct ?? 0).toFixed(1)}%`
                       : ""}
@@ -638,10 +658,12 @@ function FootballCFPProb({
                     border: "1px solid var(--border-color)",
                     borderTop: "none",
                     borderLeft: "none",
-                    backgroundColor: isDark ? "#1a1f2e" : "white",
+                    ...(hasCalculated
+                      ? getYellowCellColor(team.whatIfConfNoBidPct ?? 0)
+                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
                   }}
                 >
-                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}>
+                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}>
                     {hasCalculated && (team.whatIfConfNoBidPct ?? 0) > 0
                       ? `${(team.whatIfConfNoBidPct ?? 0).toFixed(1)}%`
                       : ""}
