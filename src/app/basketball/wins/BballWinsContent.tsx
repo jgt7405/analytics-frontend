@@ -14,6 +14,7 @@ import {
 import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useStandings } from "@/hooks/useStandings";
+import { StandingsApiResponse } from "@/types/basketball";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
@@ -33,10 +34,12 @@ const BballRegSeasonWinsTable = lazy(
 
 interface BballWinsContentProps {
   season?: string;
+  initialData?: StandingsApiResponse;
 }
 
 export default function BballWinsContent({
   season,
+  initialData,
 }: BballWinsContentProps) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { updatePreference } = useUserPreferences();
@@ -94,7 +97,13 @@ export default function BballWinsContent({
     isLoading: standingsLoading,
     error: standingsError,
     refetch,
-  } = useStandings(selectedConference, season);
+  } = useStandings(
+    selectedConference,
+    season,
+    // initialData was fetched for the default conference only; apply it on the
+    // server / first render so the canonical URL ships real content.
+    selectedConference === "Big 12" && !season ? initialData : undefined,
+  );
 
   // Update available conferences when data loads
   useEffect(() => {

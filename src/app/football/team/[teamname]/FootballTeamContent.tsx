@@ -16,7 +16,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
-import { useFootballTeam } from "@/hooks/useFootballTeam";
+import { useFootballTeam, FootballTeamData } from "@/hooks/useFootballTeam";
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
@@ -47,8 +47,10 @@ interface FootballRecordSeedCount {
 
 export default function FootballTeamContent({
   params,
+  initialData,
 }: {
   params: { teamname: string };
+  initialData?: FootballTeamData;
 }) {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
@@ -64,7 +66,7 @@ export default function FootballTeamContent({
     isLoading: loading,
     error: queryError,
     refetch,
-  } = useFootballTeam(teamname);
+  } = useFootballTeam(teamname, undefined, initialData);
 
   // Fetch all history data to detect season from data timestamps
   const { data: historyData } = useFootballTeamAllHistory(teamname);

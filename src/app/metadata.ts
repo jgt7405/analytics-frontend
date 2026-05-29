@@ -2,7 +2,7 @@ import { Metadata } from "next";
 
 export const baseMetadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://jthomanalytics.com"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.jthomanalytics.com"
   ),
   title: {
     default: "JThom Analytics - Sports analytics your eyes will love",

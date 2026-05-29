@@ -195,10 +195,10 @@ const nextConfig = {
         source: `/basketball/${page}/`,
         destination: `/basketball/2025-26/${page}/`,
       })),
-      {
-        source: "/basketball/team/:teamname/",
-        destination: "/basketball/2025-26/team/:teamname/",
-      },
+      // NOTE: Do NOT rewrite /basketball/team/:teamname/ to the [season] route.
+      // The [season] layout sets robots:{index:false}, which would make every
+      // basketball team page noindex. The base /basketball/team/[teamname] route
+      // already renders current-season data (mirrors football), so let it serve.
     ];
   },
 

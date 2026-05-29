@@ -40,7 +40,7 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
-import { useBasketballTeamData } from "@/hooks/useBasketballTeamData";
+import { useBasketballTeamData, TeamData } from "@/hooks/useBasketballTeamData";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Download } from "lucide-react";
@@ -50,8 +50,10 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 
 export default function BasketballTeamContent({
   params,
+  initialData,
 }: {
   params: { teamname: string };
+  initialData?: TeamData;
 }) {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
@@ -61,7 +63,10 @@ export default function BasketballTeamContent({
 
   const teamname = decodeURIComponent(params.teamname);
 
-  const { data: teamData, isLoading, error } = useBasketballTeamData(teamname);
+  const { data: teamData, isLoading, error } = useBasketballTeamData(
+    teamname,
+    initialData,
+  );
   const { data: historyData } = useBasketballTeamAllHistory(teamname);
 
   const currentSeason = useMemo(() => {

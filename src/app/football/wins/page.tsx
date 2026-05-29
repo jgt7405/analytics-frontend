@@ -1,5 +1,11 @@
+import { Suspense } from "react";
 import { generatePageMetadata } from "@/app/metadata";
+import { getFootballStandingsServer } from "@/lib/server-api";
 import FootballWinsContent from "./FootballWinsContent";
+
+// See note in basketball/wins/page.tsx: dynamic render so useSearchParams resolves
+// server-side and the canonical URL ships real table content.
+export const dynamic = "force-dynamic";
 
 export const metadata = generatePageMetadata({
   title: "College Football Win Projections",
@@ -7,6 +13,11 @@ export const metadata = generatePageMetadata({
   path: "/football/wins/",
 });
 
-export default function FootballWinsPage() {
-  return <FootballWinsContent />;
+export default async function FootballWinsPage() {
+  const initialData = await getFootballStandingsServer("Big 12");
+  return (
+    <Suspense fallback={null}>
+      <FootballWinsContent initialData={initialData} />
+    </Suspense>
+  );
 }

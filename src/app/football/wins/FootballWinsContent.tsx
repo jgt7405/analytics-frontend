@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/LoadingSkeleton";
 import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useFootballStandings } from "@/hooks/useFootballStandings";
+import { FootballStandingsApiResponse } from "@/types/football";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
@@ -37,7 +38,13 @@ const FootballWinsTable = dynamic(
   { loading: () => <BasketballTableSkeleton /> }
 );
 
-export default function FootballWinsPage({ season }: { season?: string }) {
+export default function FootballWinsPage({
+  season,
+  initialData,
+}: {
+  season?: string;
+  initialData?: FootballStandingsApiResponse;
+}) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -59,7 +66,11 @@ export default function FootballWinsPage({ season }: { season?: string }) {
     isLoading: standingsLoading,
     error: standingsError,
     refetch,
-  } = useFootballStandings(selectedConference, season);
+  } = useFootballStandings(
+    selectedConference,
+    season,
+    selectedConference === "Big 12" && !season ? initialData : undefined,
+  );
 
   // Update available conferences when data loads
   useEffect(() => {

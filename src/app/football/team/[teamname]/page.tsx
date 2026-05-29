@@ -1,6 +1,11 @@
+import { Suspense } from "react";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { generatePageMetadata } from "@/app/metadata";
+import { getFootballTeamServer } from "@/lib/server-api";
 import FootballTeamContent from "./FootballTeamContent";
+
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
@@ -15,10 +20,20 @@ export async function generateMetadata({
   });
 }
 
-export default function FootballTeamPage({
+export default async function FootballTeamPage({
   params,
 }: {
   params: { teamname: string };
 }) {
-  return <FootballTeamContent params={params} />;
+  const initialData = await getFootballTeamServer(
+    decodeURIComponent(params.teamname),
+  );
+  if (!initialData?.team_info) {
+    notFound();
+  }
+  return (
+    <Suspense fallback={null}>
+      <FootballTeamContent params={params} initialData={initialData} />
+    </Suspense>
+  );
 }

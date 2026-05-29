@@ -13,12 +13,17 @@ import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useFootballStandings } from "@/hooks/useFootballStandings";
 import { useFootballStandingsHistory } from "@/hooks/useFootballStandingsHistory";
+import { FootballStandingsApiResponse } from "@/types/football";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useState, useMemo } from "react";
 
-export default function FootballStandingsContent() {
+export default function FootballStandingsContent({
+  initialData,
+}: {
+  initialData?: FootballStandingsApiResponse;
+} = {}) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -32,7 +37,11 @@ export default function FootballStandingsContent() {
     isLoading: standingsLoading,
     error: standingsError,
     refetch,
-  } = useFootballStandings(selectedConference);
+  } = useFootballStandings(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   const { data: historyData } = useFootballStandingsHistory(selectedConference);
 

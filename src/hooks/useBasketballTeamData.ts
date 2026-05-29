@@ -48,15 +48,19 @@ interface AllScheduleGame {
   status: string;
 }
 
-interface TeamData {
+export interface TeamData {
   team_info: TeamInfo;
   schedule: TeamGame[];
   all_schedule_data?: AllScheduleGame[];
 }
 
-export const useBasketballTeamData = (teamName: string) => {
+export const useBasketballTeamData = (
+  teamName: string,
+  initialData?: TeamData,
+) => {
   return useQuery<TeamData, Error>({
     queryKey: ["basketball-team-data", teamName],
+    initialData,
     queryFn: async () => {
       const response = await fetch(
         `/api/proxy/team/${encodeURIComponent(teamName)}`

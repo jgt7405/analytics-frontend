@@ -55,7 +55,7 @@ interface FootballTeamGame {
   team_conf_catg?: string;
 }
 
-interface FootballTeamData {
+export interface FootballTeamData {
   team_info: FootballTeamInfo;
   schedule: FootballTeamGame[];
   all_schedule_data: Array<{
@@ -69,9 +69,14 @@ interface FootballTeamData {
   }>;
 }
 
-export const useFootballTeam = (teamName: string, season?: string) => {
+export const useFootballTeam = (
+  teamName: string,
+  season?: string,
+  initialData?: FootballTeamData,
+) => {
   return useQuery<FootballTeamData, Error>({
     queryKey: ["football-team", teamName, season],
+    initialData,
     queryFn: () => api.getFootballTeam(teamName, season),
     enabled: !!teamName,
     staleTime: 5 * 60 * 1000,

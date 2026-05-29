@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://jthomanalytics.com';
+  const baseUrl = 'https://www.jthomanalytics.com';
 
   // Static main pages with priorities
   const staticPages: MetadataRoute.Sitemap = [
@@ -188,7 +188,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     );
 
     if (basketballTeamsRes.ok) {
-      const basketballTeams = await basketballTeamsRes.json();
+      // Backend returns { data: [{ team_name, ... }] }, not a bare array.
+      const basketballTeams = (await basketballTeamsRes.json())?.data;
       if (Array.isArray(basketballTeams)) {
         basketballTeams.forEach((team: { team_name: string }) => {
           const slug = team.team_name.replace(/ /g, '_');
@@ -206,22 +207,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   try {
-    // Fetch football teams - try multiple potential endpoints
-    let footballTeamsRes = await fetch(
+    const footballTeamsRes = await fetch(
       'https://jthomprodbackend-production.up.railway.app/api/football_teams',
       { next: { revalidate: 3600 } }
     );
 
-    // Fallback endpoint if the first fails
-    if (!footballTeamsRes.ok) {
-      footballTeamsRes = await fetch(
-        'https://jthomprodbackend-production.up.railway.app/api/football/teams',
-        { next: { revalidate: 3600 } }
-      );
-    }
-
     if (footballTeamsRes.ok) {
-      const footballTeams = await footballTeamsRes.json();
+      // Backend returns { data: [{ team_name, ... }] }, not a bare array.
+      const footballTeams = (await footballTeamsRes.json())?.data;
       if (Array.isArray(footballTeams)) {
         footballTeams.forEach((team: { team_name: string }) => {
           const slug = team.team_name.replace(/ /g, '_');

@@ -15,11 +15,16 @@ import { useBballStandingsHistory } from "@/hooks/useBballStandingsHistory";
 import { useConferenceUrl } from "@/hooks/useConferenceUrl";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useStandings } from "@/hooks/useStandings";
+import { StandingsApiResponse } from "@/types/basketball";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useCallback, useEffect, useState, useMemo } from "react";
 
-export default function BasketballStandingsContent() {
+export default function BasketballStandingsContent({
+  initialData,
+}: {
+  initialData?: StandingsApiResponse;
+} = {}) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -35,7 +40,11 @@ export default function BasketballStandingsContent() {
     isLoading: standingsLoading,
     error: standingsError,
     refetch,
-  } = useStandings(selectedConference);
+  } = useStandings(
+    selectedConference,
+    undefined,
+    selectedConference === "Big 12" ? initialData : undefined,
+  );
 
   const { data: historyData } = useBballStandingsHistory(selectedConference);
 

@@ -1,6 +1,11 @@
+import { Suspense } from "react";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { generatePageMetadata } from "@/app/metadata";
+import { getTeamDataServer } from "@/lib/server-api";
 import BasketballTeamContent from "./BasketballTeamContent";
+
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
@@ -15,10 +20,21 @@ export async function generateMetadata({
   });
 }
 
-export default function BasketballTeamPage({
+export default async function BasketballTeamPage({
   params,
 }: {
   params: { teamname: string };
 }) {
-  return <BasketballTeamContent params={params} />;
+  const initialData = await getTeamDataServer(
+    decodeURIComponent(params.teamname),
+  );
+  // Return a real 404 for unknown teams instead of a 200 soft-404.
+  if (!initialData?.team_info) {
+    notFound();
+  }
+  return (
+    <Suspense fallback={null}>
+      <BasketballTeamContent params={params} initialData={initialData} />
+    </Suspense>
+  );
 }

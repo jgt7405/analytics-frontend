@@ -3,9 +3,14 @@ import { api } from "@/services/api";
 import { FootballStandingsApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 
-export const useFootballStandings = (conference: string, season?: string) => {
+export const useFootballStandings = (
+  conference: string,
+  season?: string,
+  initialData?: FootballStandingsApiResponse,
+) => {
   return useQuery<FootballStandingsApiResponse, Error>({
     queryKey: ["football-standings", conference, season],
+    initialData,
     queryFn: async () => {
       console.log("Fetching football standings for:", conference, season);
       try {
