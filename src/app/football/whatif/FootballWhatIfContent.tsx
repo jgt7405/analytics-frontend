@@ -347,15 +347,15 @@ export default function FootballWhatIfContent() {
   }, [gameSelections, games]);
 
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8">
-      <div className="mb-4 page-header">
+    <div className="container mx-auto px-4 py-4 md:py-6">
+      <div className="mb-2 page-header">
         <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300">
           What If Calculator
         </h1>
       </div>
-      <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm">
+      <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">
         See how game outcomes impact team's probabilities to make conference
-        championship game.
+        championship game and CFP.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -739,9 +739,9 @@ export default function FootballWhatIfContent() {
 
               {/* CFP Probability Table */}
               {currentCFPTableData.length > 0 && (
-                <div className="mt-8">
+                <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">CFP Probability</h3>
+                    <h3 className="text-xl font-semibold">CFP Probability</h3>
                     <button
                       onClick={() => setShowAllCFPTeams(!showAllCFPTeams)}
                       className="px-3 py-2 border rounded transition-colors text-sm bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
