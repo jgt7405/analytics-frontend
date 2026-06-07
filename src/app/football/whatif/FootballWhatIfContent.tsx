@@ -708,7 +708,7 @@ export default function FootballWhatIfContent() {
         <div className="lg:col-span-2">
           <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 flex flex-col h-fit">
             <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-2">
+              <h2 className="text-xl font-normal text-gray-500 dark:text-gray-300 mb-2">
                 What If Results to Play in Conference Championship
               </h2>
             </div>
@@ -741,7 +741,9 @@ export default function FootballWhatIfContent() {
               {currentCFPTableData.length > 0 && (
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold">CFP Probability</h3>
+                    <h3 className="text-xl font-normal text-gray-500 dark:text-gray-300">
+                      What If Results to Make CFP
+                    </h3>
                     <button
                       onClick={() => setShowAllCFPTeams(!showAllCFPTeams)}
                       className="px-3 py-2 border rounded transition-colors text-sm bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
