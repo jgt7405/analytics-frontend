@@ -3,182 +3,152 @@ import { MetadataRoute } from 'next';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.jthomanalytics.com';
 
-  // Static main pages with priorities
+  // Static main pages with priorities.
+  // NOTE: "/" is intentionally omitted — it 308-redirects to /football/wins/
+  // (see next.config.js redirects), so listing it produced a "Page with
+  // redirect" in Search Console. The redirect target is listed below instead.
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}/`,
-      changeFrequency: 'weekly',
-      priority: 1.0,
-      lastModified: new Date(),
-    },
     // Football pages
     {
       url: `${baseUrl}/football/wins/`,
       changeFrequency: 'daily',
       priority: 0.95,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/standings/`,
       changeFrequency: 'daily',
       priority: 0.95,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/cfp/`,
       changeFrequency: 'daily',
       priority: 0.9,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/seed/`,
       changeFrequency: 'daily',
       priority: 0.85,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/schedule/`,
       changeFrequency: 'daily',
       priority: 0.85,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/teams/`,
       changeFrequency: 'weekly',
       priority: 0.8,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/compare/`,
       changeFrequency: 'weekly',
       priority: 0.75,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/cwv/`,
       changeFrequency: 'daily',
       priority: 0.75,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/conf-data/`,
       changeFrequency: 'weekly',
       priority: 0.7,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/conf-champ/`,
       changeFrequency: 'daily',
       priority: 0.8,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/whatif/`,
       changeFrequency: 'weekly',
       priority: 0.75,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/home/`,
       changeFrequency: 'weekly',
       priority: 0.7,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/football/twv/`,
       changeFrequency: 'weekly',
       priority: 0.65,
-      lastModified: new Date(),
     },
     // Basketball pages
     {
       url: `${baseUrl}/basketball/wins/`,
       changeFrequency: 'daily',
       priority: 0.95,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/standings/`,
       changeFrequency: 'daily',
       priority: 0.95,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/ncaa-tourney/`,
       changeFrequency: 'daily',
       priority: 0.9,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/seed/`,
       changeFrequency: 'daily',
       priority: 0.85,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/schedule/`,
       changeFrequency: 'daily',
       priority: 0.85,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/teams/`,
       changeFrequency: 'weekly',
       priority: 0.8,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/compare/`,
       changeFrequency: 'weekly',
       priority: 0.75,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/cwv/`,
       changeFrequency: 'daily',
       priority: 0.75,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/conf-data/`,
       changeFrequency: 'weekly',
       priority: 0.7,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/conf-tourney/`,
       changeFrequency: 'daily',
       priority: 0.8,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/whatif/`,
       changeFrequency: 'weekly',
       priority: 0.75,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/home/`,
       changeFrequency: 'weekly',
       priority: 0.7,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/twv/`,
       changeFrequency: 'weekly',
       priority: 0.65,
-      lastModified: new Date(),
     },
     {
       url: `${baseUrl}/basketball/game-preview/`,
       changeFrequency: 'weekly',
       priority: 0.65,
-      lastModified: new Date(),
     },
   ];
 
   // Fetch team pages from backend
-  let teamPages: MetadataRoute.Sitemap = [];
+  const teamPages: MetadataRoute.Sitemap = [];
 
   try {
     // Fetch basketball teams
@@ -201,7 +171,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             url: `${baseUrl}/basketball/team/${slug}/`,
             changeFrequency: 'weekly',
             priority: 0.7,
-            lastModified: new Date(),
           });
         });
       }
@@ -230,7 +199,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             url: `${baseUrl}/football/team/${slug}/`,
             changeFrequency: 'weekly',
             priority: 0.7,
-            lastModified: new Date(),
           });
         });
       }

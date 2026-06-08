@@ -89,3 +89,15 @@ export const getFootballTeamServer = (teamName: string) =>
   fetchJson<FootballTeamData>(
     `/football_team/${encodeURIComponent(teamName)}`,
   );
+
+// --- Team lists (for the SSR crawlable team index on /teams hubs) -----------
+// The backend returns { data: [{ team_name, conference, ... }] }. We only need
+// name + conference to render the link index, so the shape is kept minimal.
+export interface TeamListEntry {
+  team_name: string;
+  conference: string;
+}
+export const getBasketballTeamsServer = () =>
+  fetchJson<{ data: TeamListEntry[] }>("/basketball_teams");
+export const getFootballTeamsServer = () =>
+  fetchJson<{ data: TeamListEntry[] }>("/football_teams");

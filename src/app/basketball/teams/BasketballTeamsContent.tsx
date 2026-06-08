@@ -9,7 +9,6 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface Team {
@@ -44,7 +43,6 @@ export default function BasketballTeamsContent() {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
-  const router = useRouter();
   const [selectedConference, setSelectedConference] = useState(
     preferences.defaultConference
   );
@@ -149,18 +147,14 @@ export default function BasketballTeamsContent() {
     }
   };
 
-  const handleTeamClick = (teamName: string) => {
-    router.push(`/basketball/team/${encodeURIComponent(teamName)}`);
-  };
-
   const formatBidPct = (value?: number) => {
     if (value === null || value === undefined || isNaN(value)) return "-";
     return `${Math.round(value)}%`;
   };
 
   const TeamCard = ({ team }: { team: Team }) => (
-    <div
-      onClick={() => handleTeamClick(team.team_name)}
+    <a
+      href={`/basketball/team/${encodeURIComponent(team.team_name)}/`}
       className="bg-white dark:bg-slate-800 rounded-lg cursor-pointer transition duration-200 h-full"
       style={{
         display: "flex",
@@ -169,6 +163,8 @@ export default function BasketballTeamsContent() {
         padding: isMobile ? "8px" : "12px",
         boxShadow: isDark ? "0 2px 5px rgba(0,0,0,0.3)" : "0 2px 5px rgba(0,0,0,0.1)",
         transition: "transform 0.2s, box-shadow 0.2s",
+        textDecoration: "none",
+        color: "inherit",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-2px)";
@@ -267,7 +263,7 @@ export default function BasketballTeamsContent() {
           </div>
         </div>
       </div>
-    </div>
+    </a>
   );
 
   if (error) {
