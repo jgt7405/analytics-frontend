@@ -25,12 +25,16 @@ export default async function FootballTeamPage({
 }: {
   params: { teamname: string };
 }) {
-  const initialData = await getFootballTeamServer(
+  const fullData = await getFootballTeamServer(
     decodeURIComponent(params.teamname),
   );
-  if (!initialData?.team_info) {
+  if (!fullData?.team_info) {
     notFound();
   }
+  // Strip the league-wide all_schedule_data from the SSR payload — it's only
+  // used by client-side charts, which refetch the full dataset on mount (see
+  // initialDataUpdatedAt in useFootballTeam). Keeps the crawlable HTML light.
+  const initialData = { ...fullData, all_schedule_data: undefined };
   return (
     <Suspense fallback={null}>
       <FootballTeamContent params={params} initialData={initialData} />

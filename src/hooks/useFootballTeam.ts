@@ -58,7 +58,9 @@ interface FootballTeamGame {
 export interface FootballTeamData {
   team_info: FootballTeamInfo;
   schedule: FootballTeamGame[];
-  all_schedule_data: Array<{
+  // Optional: omitted from the SSR payload to keep the crawlable HTML light;
+  // the client refetches the full dataset (see initialDataUpdatedAt below).
+  all_schedule_data?: Array<{
     team: string;
     opponent: string;
     opponent_primary_color?: string;
@@ -77,6 +79,10 @@ export const useFootballTeam = (
   return useQuery<FootballTeamData, Error>({
     queryKey: ["football-team", teamName, season],
     initialData,
+    // SSR initialData omits the heavy league-wide all_schedule_data; mark it
+    // immediately stale so the client refetches the full dataset on mount to
+    // populate the charts that need it.
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => api.getFootballTeam(teamName, season),
     enabled: !!teamName,
     staleTime: 5 * 60 * 1000,

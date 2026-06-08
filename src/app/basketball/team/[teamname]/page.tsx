@@ -25,13 +25,18 @@ export default async function BasketballTeamPage({
 }: {
   params: { teamname: string };
 }) {
-  const initialData = await getTeamDataServer(
+  const fullData = await getTeamDataServer(
     decodeURIComponent(params.teamname),
   );
   // Return a real 404 for unknown teams instead of a 200 soft-404.
-  if (!initialData?.team_info) {
+  if (!fullData?.team_info) {
     notFound();
   }
+  // Strip the league-wide all_schedule_data (~2MB / ~12k rows) from the SSR
+  // payload — it's only used by client-side charts, which refetch the full
+  // dataset on mount (see initialDataUpdatedAt in useBasketballTeamData). This
+  // keeps the crawlable HTML small enough for Google's crawl budget.
+  const initialData = { ...fullData, all_schedule_data: undefined };
   return (
     <Suspense fallback={null}>
       <BasketballTeamContent params={params} initialData={initialData} />

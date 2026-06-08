@@ -61,6 +61,11 @@ export const useBasketballTeamData = (
   return useQuery<TeamData, Error>({
     queryKey: ["basketball-team-data", teamName],
     initialData,
+    // The SSR initialData is served WITHOUT the heavy league-wide
+    // all_schedule_data (~2MB) to keep the crawlable HTML light. Mark it
+    // immediately stale so the client refetches the full dataset on mount,
+    // which populates the charts that need all_schedule_data.
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {
       const response = await fetch(
         `/api/proxy/team/${encodeURIComponent(teamName)}`

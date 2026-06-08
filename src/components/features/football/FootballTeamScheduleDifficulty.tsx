@@ -184,6 +184,11 @@ export default function FootballTeamScheduleDifficulty({
   }, [comparisonDataset]);
 
   const teamGamePositions = useMemo((): GameWithPosition[] => {
+    // No comparison data yet (e.g. SSR before the client refetch of
+    // all_schedule_data) → percentiles is empty; bail out instead of reading
+    // percentiles[0].value on undefined.
+    if (percentiles.length === 0) return [];
+
     return teamGames.map((game, index) => {
       const sag12Prob = game.sag12_win_prob!;
 
