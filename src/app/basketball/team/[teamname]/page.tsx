@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { generatePageMetadata } from "@/app/metadata";
 import { getTeamDataServer } from "@/lib/server-api";
 import BasketballTeamContent from "./BasketballTeamContent";
@@ -25,9 +25,15 @@ export default async function BasketballTeamPage({
 }: {
   params: { teamname: string };
 }) {
-  const fullData = await getTeamDataServer(
-    decodeURIComponent(params.teamname),
-  );
+  const teamName = decodeURIComponent(params.teamname);
+  // Legacy underscore slugs (e.g. /team/Sam_Houston) 404 against the backend,
+  // which expects spaces. 301 them to the canonical encoded-space URL.
+  if (teamName.includes("_")) {
+    permanentRedirect(
+      `/basketball/team/${encodeURIComponent(teamName.replace(/_/g, " "))}/`,
+    );
+  }
+  const fullData = await getTeamDataServer(teamName);
   // Return a real 404 for unknown teams instead of a 200 soft-404.
   if (!fullData?.team_info) {
     notFound();

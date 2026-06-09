@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { generatePageMetadata } from "@/app/metadata";
 import { getFootballTeamServer } from "@/lib/server-api";
 import FootballTeamContent from "./FootballTeamContent";
@@ -25,9 +25,15 @@ export default async function FootballTeamPage({
 }: {
   params: { teamname: string };
 }) {
-  const fullData = await getFootballTeamServer(
-    decodeURIComponent(params.teamname),
-  );
+  const teamName = decodeURIComponent(params.teamname);
+  // Legacy underscore slugs 404 against the backend (it expects spaces);
+  // 301 them to the canonical encoded-space URL.
+  if (teamName.includes("_")) {
+    permanentRedirect(
+      `/football/team/${encodeURIComponent(teamName.replace(/_/g, " "))}/`,
+    );
+  }
+  const fullData = await getFootballTeamServer(teamName);
   if (!fullData?.team_info) {
     notFound();
   }
