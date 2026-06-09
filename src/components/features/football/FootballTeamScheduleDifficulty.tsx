@@ -484,7 +484,7 @@ export default function FootballTeamScheduleDifficulty({
                 className={`px-3 py-1 ${isMobile ? "text-xs" : "text-sm"} rounded-md border transition-colors ${
                   comparisonFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800"
                 }`}
               >
                 {option.label}
@@ -505,7 +505,7 @@ export default function FootballTeamScheduleDifficulty({
                 className={`px-3 py-1 ${isMobile ? "text-xs" : "text-sm"} rounded-md border transition-colors ${
                   gameFilter === option.value
                     ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800"
+                    : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800"
                 }`}
               >
                 {option.label}
