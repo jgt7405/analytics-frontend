@@ -19,7 +19,11 @@ export default async function BasketballTeamsPage() {
   return (
     <>
       <BasketballTeamsContent />
-      <TeamLinkIndex sport="basketball" teams={teams} />
+      {/* Crawlable team-link index kept in the DOM for SEO, but hidden from the
+          visible layout (sr-only) so it doesn't show under the team grid. */}
+      <div className="sr-only">
+        <TeamLinkIndex sport="basketball" teams={teams} />
+      </div>
     </>
   );
 }
