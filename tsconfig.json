@@ -30,9 +30,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    "next.config.js",
-    "src/components/common/SwipeableConferenceSelector.tsx",
-    "src/sentry.client.config.js"
+    "next.config.js"
   ],
   "exclude": ["node_modules"]
 }
