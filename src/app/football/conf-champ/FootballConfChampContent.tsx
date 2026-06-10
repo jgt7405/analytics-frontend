@@ -1,296 +1,103 @@
 "use client";
 
-import ConferenceSelector from "@/components/common/ConferenceSelector";
-import TableActionButtons from "@/components/common/TableActionButtons";
+// Football conf-champ page = shared ConfChampContent + football config.
+// Serves both the current page and the [season] archive page.
+
+import ConfChampContent, {
+  ConfChampContentConfig,
+} from "@/components/features/shared/ConfChampContent";
 import FootballChampGameHistoryChart from "@/components/features/football/FootballChampGameHistoryChart";
 import FootballConfChampionHistoryChart from "@/components/features/football/FootballConfChampionHistoryChart";
 import FootballConfChampTable from "@/components/features/football/FootballConfChampTable";
-import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import ErrorMessage from "@/components/ui/ErrorMessage";
-import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useFootballConfChamp } from "@/hooks/useFootballConfChamp";
 import { useFootballStandingsHistory } from "@/hooks/useFootballStandingsHistory";
-import { useResponsive } from "@/hooks/useResponsive";
-import { useUserPreferences } from "@/hooks/useUserPreferences";
-import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect, useState } from "react";
+import type { FootballConfChampApiResponse } from "@/types/football";
 
-export default function FootballConfChampContent({
-  initialData,
-}: {
-  initialData?: Parameters<typeof useFootballConfChamp>[2];
-} = {}) {
-  const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
-  const { preferences, updatePreference } = useUserPreferences();
-  const { isMobile } = useResponsive();
+type ChampData = FootballConfChampApiResponse["data"];
+type History = NonNullable<
+  ReturnType<typeof useFootballStandingsHistory>["data"]
+>;
 
-  const [selectedConference, setSelectedConference] = useState(
-    preferences.defaultConference || "Big 12"
-  );
-  const [availableConferences, setAvailableConferences] = useState<string[]>(
-    []
-  );
+const SIM_BLURB =
+  "1,000 season simulations using composite of multiple college football rating models.";
 
-  const {
-    data: confChampResponse,
-    isLoading: confChampLoading,
-    error: confChampError,
-    refetch,
-  } = useFootballConfChamp(
-    selectedConference,
-    undefined,
-    selectedConference === "Big 12" ? initialData : undefined,
-  );
-
-  const { data: historyData } = useFootballStandingsHistory(selectedConference);
-
-  // Set available conferences
-  useEffect(() => {
-    if (confChampResponse && typeof confChampResponse === 'object' && 'conferences' in confChampResponse) {
-      const confs = (confChampResponse as any).conferences;
-      if (Array.isArray(confs)) {
-        setAvailableConferences(confs);
-      }
-    }
-  }, [confChampResponse]);
-
-  // Handle conference changes
-  const handleConferenceChange = (conference: string) => {
-    setSelectedConference(conference);
-    updatePreference("defaultConference", conference);
-
-    trackEvent({
-      name: "conference_selected",
-      properties: {
-        page: "football-conf-champ",
-        conference: conference,
-      },
-    });
+// Archive pages trim history to the football season window (Aug-early Dec).
+const filterHistory = (history: History, season: string): History => {
+  const seasonYear = parseInt(season.split("-")[0]);
+  const seasonStart = new Date(`${seasonYear}-08-01T00:00:00Z`);
+  const seasonEnd = new Date(`${seasonYear}-12-08T23:59:59Z`);
+  const inWindow = (item: { date: string }) => {
+    const itemDate = new Date(item.date);
+    return itemDate >= seasonStart && itemDate <= seasonEnd;
   };
+  return {
+    ...history,
+    champ_game_data: history.champ_game_data?.filter(inWindow) || [],
+    champion_data: history.champion_data?.filter(inWindow) || [],
+  };
+};
 
-  // Track page load
-  useEffect(() => {
-    startMeasurement("football-conf-champ-page-load");
-    trackEvent({
-      name: "page_view",
-      properties: {
-        page: "football-conf-champ",
-        conference: selectedConference,
-      },
-    });
-    return () => {
-      endMeasurement("football-conf-champ-page-load");
-    };
-  }, [selectedConference, startMeasurement, endMeasurement, trackEvent]);
+const FOOTBALL_CONF_CHAMP: ConfChampContentConfig<ChampData, History> = {
+  pageId: "football-conf-champ",
+  title: "Conference Championship Projections",
+  tableClass: "conf-champ-table",
+  skeletonTeamCols: 3,
+  excludeConferences: ["Independent"],
+  useChampData: useFootballConfChamp,
+  useHistoryData: useFootballStandingsHistory,
+  filterHistory,
+  renderTable: (data, ctx) => (
+    <FootballConfChampTable
+      confChampData={data}
+      className="conf-champ-table"
+      season={ctx.season}
+    />
+  ),
+  tableExplainer: [
+    `Conference Championship Projections based on ${SIM_BLURB}`,
+  ],
+  tableShareTitle: "Football Conference Championship Analysis",
+  errorFallbackMessage: "Failed to load conference championship data",
+  errorRetryLabel: "Reload Data",
+  historySections: [
+    {
+      key: "champ-game",
+      heading: "Championship Game Probability History",
+      containerClass: "champ-game-chart",
+      pageName: "champ-game-history",
+      pageTitle: "Championship Game Probability History Over Time",
+      shareTitle: "Championship Game Probability History",
+      explainer: [
+        `Progression of projected probability of conference championship game appearance from ${SIM_BLURB}`,
+      ],
+      render: (history) => (
+        <FootballChampGameHistoryChart
+          champGameData={history.champ_game_data}
+        />
+      ),
+    },
+    {
+      key: "champion",
+      heading: "Conference Champion Probability History",
+      containerClass: "champion-chart",
+      pageName: "champion-history",
+      pageTitle: "Conference Champion Probability History Over Time",
+      shareTitle: "Conference Champion Probability History",
+      explainer: [
+        `Progression of projected probability of conference championship from ${SIM_BLURB}`,
+      ],
+      render: (history) => (
+        <FootballConfChampionHistoryChart
+          championData={history.champion_data}
+        />
+      ),
+    },
+  ],
+};
 
-  // Track errors
-  useEffect(() => {
-    if (confChampError) {
-      trackEvent({
-        name: "data_load_error",
-        properties: {
-          page: "football-conf-champ",
-          conference: selectedConference,
-          errorMessage: confChampError.message,
-        },
-      });
-    }
-  }, [confChampError, selectedConference, trackEvent]);
-
-  // Error state
-  if (confChampError) {
-    return (
-      <ErrorBoundary level="page" onRetry={() => refetch()}>
-        <PageLayoutWrapper
-          title="Conference Championship Projections"
-          isLoading={false}
-        >
-          <ErrorMessage
-            message={
-              confChampError.message ||
-              "Failed to load conference championship data"
-            }
-            onRetry={() => refetch()}
-            retryLabel="Reload Data"
-          />
-        </PageLayoutWrapper>
-      </ErrorBoundary>
-    );
-  }
-
-  return (
-    <ErrorBoundary level="page">
-      <PageLayoutWrapper
-        title="Conference Championship Projections"
-        isLoading={confChampLoading}
-        conferenceSelector={
-          !confChampLoading && (
-            <ConferenceSelector
-              selectedConference={selectedConference}
-              onChange={handleConferenceChange}
-              conferences={availableConferences}
-              excludeConferences={["Independent"]}
-            />
-          )
-        }
-      >
-        <div className="space-y-6">
-          {/* Conference Championship Table */}
-          {confChampLoading ? (
-            <div className="mb-8">
-              <BasketballTableSkeleton
-                tableType="standings"
-                rows={12}
-                teamCols={3}
-                showSummaryRows={false}
-              />
-            </div>
-          ) : (
-            <>
-              <ErrorBoundary level="component">
-                <div className="mb-8">
-                  <div className="conf-champ-table">
-                    <Suspense
-                      fallback={
-                        <BasketballTableSkeleton
-                          tableType="standings"
-                          rows={12}
-                          teamCols={3}
-                          showSummaryRows={false}
-                        />
-                      }
-                    >
-                      {confChampResponse && typeof confChampResponse === 'object' && 'data' in confChampResponse && (confChampResponse as any).data && (
-                        <FootballConfChampTable
-                          confChampData={(confChampResponse as any).data}
-                          className="conf-champ-table"
-                        />
-                      )}
-                    </Suspense>
-                  </div>
-
-                  {/* Buttons and Explainer */}
-                  <div className="mt-6">
-                    <div className="flex flex-row items-start gap-4">
-                      {/* Explainer text on the left */}
-                      <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
-                        <div style={{ lineHeight: "1.3" }}>
-                          <div>
-                            Conference Championship Projections based on 1,000
-                            season simulations using composite of multiple
-                            college football rating models.
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action buttons on the right */}
-                      <div
-                        className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                      >
-                        <TableActionButtons
-                          selectedConference={selectedConference}
-                          contentSelector=".conf-champ-table"
-                          pageName="football-conf-champ"
-                          pageTitle="Conference Championship Projections"
-                          shareTitle="Football Conference Championship Analysis"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </ErrorBoundary>
-
-              {/* Historical Charts */}
-              {historyData && (
-                <div className="space-y-6 mb-8">
-                  {/* Championship Game Probability History */}
-                  <ErrorBoundary level="component">
-                    <div className="mb-8">
-                      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
-                        Championship Game Probability History{" "}
-                        <span className="text-base">(Over Time)</span>
-                      </h1>
-                      <div className="champ-game-chart">
-                        <FootballChampGameHistoryChart
-                          champGameData={historyData.champ_game_data}
-                        />
-                      </div>
-
-                      <div className="mt-6">
-                        <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
-                            <div style={{ lineHeight: "1.3" }}>
-                              <div>
-                                Progression of projected probability of
-                                conference championship game appearance from
-                                1,000 season simulations using composite of
-                                multiple college football rating models.
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                          >
-                            <TableActionButtons
-                              selectedConference={selectedConference}
-                              contentSelector=".champ-game-chart"
-                              pageName="champ-game-history"
-                              pageTitle="Championship Game Probability History Over Time"
-                              shareTitle="Championship Game Probability History"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </ErrorBoundary>
-
-                  {/* Conference Champion Probability History */}
-                  <ErrorBoundary level="component">
-                    <div className="mb-8">
-                      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
-                        Conference Champion Probability History{" "}
-                        <span className="text-base">(Over Time)</span>
-                      </h1>
-                      <div className="champion-chart">
-                        <FootballConfChampionHistoryChart
-                          championData={historyData.champion_data}
-                        />
-                      </div>
-
-                      <div className="mt-6">
-                        <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
-                            <div style={{ lineHeight: "1.3" }}>
-                              <div>
-                                Progression of projected probability of
-                                conference championship from 1,000 season
-                                simulations using composite of multiple college
-                                football rating models.
-                              </div>
-                            </div>
-                          </div>
-                          <div
-                            className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
-                          >
-                            <TableActionButtons
-                              selectedConference={selectedConference}
-                              contentSelector=".champion-chart"
-                              pageName="champion-history"
-                              pageTitle="Conference Champion Probability History Over Time"
-                              shareTitle="Conference Champion Probability History"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </ErrorBoundary>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </PageLayoutWrapper>
-    </ErrorBoundary>
-  );
+export default function FootballConfChampContent(props: {
+  season?: string;
+  initialData?: FootballConfChampApiResponse;
+}) {
+  return <ConfChampContent config={FOOTBALL_CONF_CHAMP} {...props} />;
 }
