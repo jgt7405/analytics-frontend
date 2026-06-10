@@ -1,170 +1,42 @@
 "use client";
 
-import ConferenceSelector from "@/components/common/ConferenceSelector";
-import TableActionButtons from "@/components/common/TableActionButtons";
+// Football seed page = shared SeedContent + football config (table only).
+// Serves both the current page and the [season] archive page.
+
+import SeedContent, {
+  SeedContentConfig,
+} from "@/components/features/shared/SeedContent";
 import FootballSeedTable from "@/components/features/football/FootballSeedTable";
-import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import ErrorMessage from "@/components/ui/ErrorMessage";
-import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useFootballSeed } from "@/hooks/useFootballSeed";
-import { useResponsive } from "@/hooks/useResponsive";
-import { useUserPreferences } from "@/hooks/useUserPreferences";
-import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect, useState } from "react";
+import type { FootballSeedApiResponse } from "@/types/football";
 
-export default function FootballSeedContent({
-  initialData,
-}: {
-  initialData?: Parameters<typeof useFootballSeed>[2];
-} = {}) {
-  const { trackEvent } = useMonitoring();
-  const { preferences, updatePreference } = useUserPreferences();
-  const { isMobile } = useResponsive();
-  const [selectedConference, setSelectedConference] = useState("Big 12");
-  const [availableConferences, setAvailableConferences] = useState<string[]>([
-    "All Teams",
-    preferences.defaultConference,
-  ]);
+// Use the API response's row type (what the hook actually returns); the
+// table component's own prop type is assignable from it.
+type FootballSeedRow = FootballSeedApiResponse["data"][number];
 
-  const {
-    data: seedResponse,
-    isLoading: seedLoading,
-    error: seedError,
-    refetch,
-  } = useFootballSeed(
-    selectedConference,
-    undefined,
-    selectedConference === "Big 12" ? initialData : undefined,
-  );
+const FOOTBALL_SEED: SeedContentConfig<FootballSeedRow> = {
+  pageId: "football-seed",
+  title: "CFP Seed Projections",
+  skeletonTeamCols: 15,
+  useSeedData: useFootballSeed,
+  renderTable: (data, ctx) => (
+    <FootballSeedTable
+      seedData={data}
+      className="seed-table"
+      showAllTeams={ctx.showAllTeams}
+      season={ctx.season}
+    />
+  ),
+  tableExplainer: [
+    "CFP seed distribution probabilities based on 1,000 season simulations using composite of multiple college football rating models.",
+    "Darker colors indicate higher probabilities.",
+  ],
+  tableShareTitle: "Football CFP Seed Analysis",
+};
 
-  useEffect(() => {
-    trackEvent({
-      name: "page_view",
-      properties: { page: "football-seed", conference: selectedConference },
-    });
-  }, [selectedConference, trackEvent]);
-
-  useEffect(() => {
-    if (seedResponse?.conferences) {
-      setAvailableConferences(["All Teams", ...seedResponse.conferences]);
-    }
-  }, [seedResponse]);
-
-  const handleConferenceChange = (conference: string) => {
-    setSelectedConference(conference);
-    if (conference !== "All Teams") {
-      updatePreference("defaultConference", conference);
-    }
-  };
-
-  if (seedError) {
-    return (
-      <ErrorBoundary level="page" onRetry={() => refetch()}>
-        <PageLayoutWrapper
-          title="CFP Seed Projections"
-          conferenceSelector={
-            <ConferenceSelector
-              conferences={availableConferences}
-              selectedConference={selectedConference}
-              onChange={handleConferenceChange}
-            />
-          }
-          isLoading={false}
-        >
-          <ErrorMessage
-            message={seedError.message || "Failed to load seed data"}
-            onRetry={() => refetch()}
-            retryLabel="Reload Seed Data"
-          />
-        </PageLayoutWrapper>
-      </ErrorBoundary>
-    );
-  }
-
-  return (
-    <PageLayoutWrapper
-      title="CFP Seed Projections"
-      conferenceSelector={
-        <ConferenceSelector
-          conferences={availableConferences}
-          selectedConference={selectedConference}
-          onChange={handleConferenceChange}
-        />
-      }
-      isLoading={seedLoading}
-    >
-      <ErrorBoundary level="component" onRetry={() => refetch()}>
-        {seedLoading ? (
-          <BasketballTableSkeleton
-            tableType="standings"
-            rows={15}
-            teamCols={15}
-            showSummaryRows={false}
-          />
-        ) : (
-          <>
-            <div className="mb-8">
-              <div className="seed-table">
-                <Suspense
-                  fallback={
-                    <BasketballTableSkeleton
-                      tableType="standings"
-                      rows={15}
-                      teamCols={15}
-                      showSummaryRows={false}
-                    />
-                  }
-                >
-                  {seedResponse?.data && (
-                    <FootballSeedTable
-                      seedData={seedResponse.data}
-                      className="seed-table"
-                      showAllTeams={selectedConference === "All Teams"}
-                    />
-                  )}
-                </Suspense>
-              </div>
-
-              {/* Buttons and Explainer in side-by-side layout */}
-              <div className="mt-6">
-                <div className="flex flex-row items-start gap-4">
-                  {/* Explainer text on the left - takes remaining space */}
-                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
-                    <div
-                      className="seed-explainer"
-                      style={{ lineHeight: "1.3" }}
-                    >
-                      <div>
-                        CFP seed distribution probabilities based on 1,000
-                        season simulations using composite of multiple college
-                        football rating models.
-                      </div>
-                      <div style={{ marginTop: "6px" }}>
-                        Darker colors indicate higher probabilities.
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action buttons on the right */}
-                  <div
-                    className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
-                  >
-                    <TableActionButtons
-                      selectedConference={selectedConference}
-                      contentSelector=".seed-table"
-                      pageName="football-seed"
-                      pageTitle="CFP Seed Projections"
-                      shareTitle="Football CFP Seed Analysis"
-                      explainerSelector=".seed-explainer"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </ErrorBoundary>
-    </PageLayoutWrapper>
-  );
+export default function FootballSeedContent(props: {
+  season?: string;
+  initialData?: FootballSeedApiResponse;
+}) {
+  return <SeedContent config={FOOTBALL_SEED} {...props} />;
 }
