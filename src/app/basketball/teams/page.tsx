@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { generatePageMetadata } from "@/app/metadata";
 import { getBasketballTeamsServer } from "@/lib/server-api";
 import TeamLinkIndex from "@/components/seo/TeamLinkIndex";
@@ -18,7 +19,12 @@ export default async function BasketballTeamsPage() {
   const teams = teamsRes?.data ?? [];
   return (
     <>
-      <BasketballTeamsContent />
+      {/* Suspense keeps useSearchParams (in the shared TeamsContent) from
+          bailing the whole page into CSR, which would drop the SSR'd
+          TeamLinkIndex below. */}
+      <Suspense fallback={null}>
+        <BasketballTeamsContent />
+      </Suspense>
       {/* Crawlable team-link index kept in the DOM for SEO, but hidden from the
           visible layout (sr-only) so it doesn't show under the team grid. */}
       <div className="sr-only">
