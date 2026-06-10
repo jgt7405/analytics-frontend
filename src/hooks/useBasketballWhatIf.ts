@@ -228,8 +228,6 @@ const mapGame = (game: BackendGame): WhatIfGame => {
 const calculateBasketballWhatIf = async (
   request: WhatIfRequest,
 ): Promise<WhatIfResponse> => {
-  console.log("🎯 Sending basketball what-if request:", request);
-
   // Remove season from the request body sent to the API
   const { season, ...requestBody } = request;
   const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
@@ -239,7 +237,12 @@ const calculateBasketballWhatIf = async (
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(requestBody),
+    // lite mode skips scenario_results/debug_scenarios in the response.
+    // The calculation itself is identical (same stored scenarios with the
+    // selected games overridden); those fields are just never rendered, and
+    // in-season they dominate the payload. Lite responses have games: [] -
+    // the component keeps its already-loaded games list.
+    body: JSON.stringify({ ...requestBody, lite: true }),
   });
 
   if (!response.ok) {
@@ -247,70 +250,13 @@ const calculateBasketballWhatIf = async (
       error: string;
     }
     const errorData = (await response.json()) as ErrorResponse;
-    console.error("❌ Basketball what-if API error:", errorData);
+    console.error("Basketball what-if API error:", errorData);
     throw new Error(
       errorData.error || "Failed to calculate basketball what-if scenarios",
     );
   }
 
   const data = (await response.json()) as BackendWhatIfResponse;
-
-  console.log("========================================");
-  console.log("RAW API RESPONSE - DUAL SECTIONS");
-  console.log("========================================");
-
-  // Log data availability
-  console.log("Response fields available:");
-  console.log(
-    "  ➤ data_with_ties:",
-    data.data_with_ties?.length || 0,
-    "teams",
-  );
-  console.log(
-    "  ➤ data_no_ties:",
-    data.data_no_ties?.length || 0,
-    "teams",
-  );
-  console.log(
-    "  ➤ current_projections_with_ties:",
-    data.current_projections_with_ties?.length || 0,
-    "teams",
-  );
-  console.log(
-    "  ➤ current_projections_no_ties:",
-    data.current_projections_no_ties?.length || 0,
-    "teams",
-  );
-  console.log("  ➤ games:", data.games?.length || 0, "games");
-  console.log(
-    "  ➤ scenario_results:",
-    data.scenario_results?.length || 0,
-    "scenarios",
-  );
-
-  // Log sample data
-  if (data.data_with_ties && data.data_with_ties.length > 0) {
-    const first = data.data_with_ties[0];
-    console.log("\nFirst team (WITH TIES):", {
-      name: first.team_name,
-      standing_1_prob: first.standing_1_prob,
-      standing_2_prob: first.standing_2_prob,
-    });
-  }
-
-  if (data.games && data.games.length > 0) {
-    const first = data.games[0];
-    console.log("\nFirst game:", {
-      id: first.game_id,
-      matchup: `${first.away_team} @ ${first.home_team}`,
-      away_prob: first.away_probability,
-      home_prob: first.home_probability,
-      has_home_logo: !!(first.home_team_logo || first.home_logo_url),
-      has_away_logo: !!(first.away_team_logo || first.away_logo_url),
-    });
-  }
-
-  console.log("========================================");
 
   // Map the backend response to the frontend format
   const mappedData: WhatIfResponse = {
@@ -331,12 +277,6 @@ const calculateBasketballWhatIf = async (
     num_current_projections: data.num_current_projections,
     calculation_time: data.calculation_time,
   };
-
-  console.log("✔️ Mapped data ready:", {
-    with_ties_teams: mappedData.data_with_ties.length,
-    no_ties_teams: mappedData.data_no_ties.length,
-    games: mappedData.games.length,
-  });
 
   return mappedData;
 };

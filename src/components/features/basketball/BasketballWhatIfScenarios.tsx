@@ -1164,7 +1164,13 @@ export default function BasketballWhatIfScenarios() {
       { conference: selectedConference, selections: arr },
       {
         onSuccess: (d: WhatIfResponse) => {
-          setWhatIfData(d);
+          // Lite responses omit the games list; keep the one already loaded
+          // from the baseline so the game cards and legend stay rendered.
+          setWhatIfData((prev) =>
+            d.games.length === 0 && prev?.games?.length
+              ? { ...d, games: prev.games }
+              : d,
+          );
           setHasCalculated(true);
         },
       },
