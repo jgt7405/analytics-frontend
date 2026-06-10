@@ -56,10 +56,11 @@ export interface TeamData {
 
 export const useBasketballTeamData = (
   teamName: string,
+  season?: string,
   initialData?: TeamData,
 ) => {
   return useQuery<TeamData, Error>({
-    queryKey: ["basketball-team-data", teamName],
+    queryKey: ["basketball-team-data", teamName, season],
     initialData,
     // The SSR initialData is served WITHOUT the heavy league-wide
     // all_schedule_data (~2MB) to keep the crawlable HTML light. Mark it
@@ -67,8 +68,11 @@ export const useBasketballTeamData = (
     // which populates the charts that need all_schedule_data.
     initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {
+      const seasonQuery = season
+        ? `?season=${encodeURIComponent(season)}`
+        : "";
       const response = await fetch(
-        `/api/proxy/team/${encodeURIComponent(teamName)}`
+        `/api/proxy/team/${encodeURIComponent(teamName)}${seasonQuery}`
       );
       if (!response.ok) throw new Error("Failed to load team data");
       return response.json();
