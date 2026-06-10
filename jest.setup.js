@@ -1,6 +1,17 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 
+// jsdom doesn't implement AbortSignal.timeout (every real browser does).
+// shared-request.ts passes it to fetch on every request, so without this the
+// API tests throw before fetch is even called and burn the retry backoff.
+if (typeof AbortSignal !== 'undefined' && !AbortSignal.timeout) {
+  AbortSignal.timeout = (ms) => {
+    const controller = new AbortController()
+    setTimeout(() => controller.abort(new Error('TimeoutError')), ms)
+    return controller.signal
+  }
+}
+
 // Mock next/router
 jest.mock('next/router', () => ({
   useRouter() {

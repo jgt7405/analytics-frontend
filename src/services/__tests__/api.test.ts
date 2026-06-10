@@ -113,7 +113,6 @@ describe('API Service - Architecture', () => {
 
   it('ApiClient extends BasketballApiClient', () => {
     const { ApiClient } = require('../api')
-    const { BasketballApiClient } = require('../basketball-api')
     expect(ApiClient.prototype).toBeInstanceOf(Object)
     // Verify inheritance by checking prototype chain
     const instance = new ApiClient()

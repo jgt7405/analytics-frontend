@@ -11,15 +11,16 @@
 
 describe('useStandings Hook', () => {
   it('hook should be importable', () => {
-    const useStandings = require('../useStandings').default || require('../useStandings')
+    // useStandings is a named export, not a default export.
+    const { useStandings } = require('../useStandings')
     expect(useStandings).toBeDefined()
     expect(typeof useStandings).toBe('function')
   })
 
-  it('hook should call api.getStandings', async () => {
+  it('hook should accept conference and season parameters', () => {
     // This test validates the hook interface without actually calling it
     // Full testing would require React Query and providers
-    const useStandings = require('../useStandings').default || require('../useStandings')
-    expect(useStandings.length).toBeGreaterThanOrEqual(0)
+    const { useStandings } = require('../useStandings')
+    expect(useStandings.length).toBeGreaterThanOrEqual(1)
   })
 })
