@@ -1,5 +1,10 @@
 "use client";
 
+// Registers the Chart.js scales/elements this chart needs. Every chart
+// component must import this itself - lazy loading means no other module
+// is guaranteed to have registered them first.
+import "@/lib/chartjs-setup";
+
 import { buildChartLabels, filterDataToRange, getBasketballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
