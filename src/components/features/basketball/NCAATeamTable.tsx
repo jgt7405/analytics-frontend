@@ -270,7 +270,7 @@ function NCAATeamTable({
               {allRounds.map((round) => (
                 <th
                   key={round}
-                  className={`bg-gray-50 dark:bg-slate-800 text-center font-normal cursor-pointer hover:bg-gray-100 dark:bg-slate-700 transition-colors ${
+                  className={`bg-gray-50 dark:bg-slate-800 text-center font-normal cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
                     sortColumn === round ? "bg-blue-100" : ""
                   }`}
                   onClick={() => handleColumnClick(round as RoundKey)}
