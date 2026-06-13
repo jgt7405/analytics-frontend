@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface ScreenshotOption {
   id: string;
@@ -34,26 +34,22 @@ export default function ScreenshotModal({
   teamLogoUrl,
 }: ScreenshotModalProps) {
   const [isCapturing, setIsCapturing] = useState(false);
-  const [html2canvasLoaded, setHtml2canvasLoaded] = useState(false);
 
-  useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      typeof window.html2canvas !== "function"
-    ) {
+  const loadHtml2Canvas = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (typeof window.html2canvas === "function") {
+        resolve();
+        return;
+      }
+
       const script = document.createElement("script");
       script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
       script.async = true;
-      script.onload = () => setHtml2canvasLoaded(true);
-      script.onerror = () => alert("Failed to load screenshot library.");
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load screenshot library"));
       document.body.appendChild(script);
-      return () => {
-        if (document.body.contains(script)) document.body.removeChild(script);
-      };
-    } else if (typeof window.html2canvas === "function") {
-      setHtml2canvasLoaded(true);
-    }
-  }, []);
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -84,14 +80,25 @@ export default function ScreenshotModal({
   const handleScreenshot = async (selector: string, label: string) => {
     console.log("Screenshot started for selector:", selector);
 
-    if (!html2canvasLoaded || typeof window.html2canvas !== "function") {
+    setIsCapturing(true);
+
+    try {
+      await loadHtml2Canvas();
+    } catch (error) {
+      console.error("Failed to load html2canvas:", error);
+      alert("Failed to load screenshot library. Please try again.");
+      setIsCapturing(false);
+      return;
+    }
+
+    if (typeof window.html2canvas !== "function") {
       console.error("html2canvas not loaded");
       alert("Screenshot library not loaded.");
+      setIsCapturing(false);
       return;
     }
 
     console.log("html2canvas is loaded");
-    setIsCapturing(true);
 
     try {
       console.log("Looking for element:", selector);
@@ -402,17 +409,12 @@ export default function ScreenshotModal({
             <X size={24} />
           </button>
         </div>
-        {!html2canvasLoaded && (
-          <div className="mb-4 text-sm text-amber-600 bg-amber-50 p-3 rounded">
-            Loading...
-          </div>
-        )}
         <div className="space-y-2">
           {options.map((option) => (
             <button
               key={option.id}
               onClick={() => handleScreenshot(option.selector, option.label)}
-              disabled={isCapturing || !html2canvasLoaded}
+              disabled={isCapturing}
               className="w-full text-left px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="font-medium text-gray-900 dark:text-gray-100">{option.label}</div>

@@ -27,6 +27,9 @@ export default function ConferenceSelector({
 
   return (
     <div className="conference-selector">
+      <label htmlFor="conference-select" className="sr-only">
+        Select conference
+      </label>
       <div className="relative">
         <select
           id="conference-select"

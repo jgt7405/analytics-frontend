@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Download } from "@/components/ui/icons";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
 
 interface CompareScreenshotModalProps {
@@ -27,30 +27,22 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
   visibleTeams,
 }) => {
   const [downloading, setDownloading] = useState(false);
-  const [html2canvasLoaded, setHtml2canvasLoaded] = useState(false);
 
-  useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      typeof window.html2canvas !== "function"
-    ) {
+  const loadHtml2Canvas = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (typeof window.html2canvas === "function") {
+        resolve();
+        return;
+      }
+
       const script = document.createElement("script");
       script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
       script.async = true;
-      script.onload = () => setHtml2canvasLoaded(true);
-      script.onerror = (error) =>
-        console.error("Failed to load html2canvas:", error);
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load html2canvas"));
       document.body.appendChild(script);
-
-      return () => {
-        if (document.body.contains(script)) {
-          document.body.removeChild(script);
-        }
-      };
-    } else if (typeof window.html2canvas === "function") {
-      setHtml2canvasLoaded(true);
-    }
-  }, []);
+    });
+  };
 
   if (!isOpen) return null;
 
@@ -79,11 +71,13 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
   };
 
   const handleDownload = async (selector: string, label: string) => {
-    if (downloading || !html2canvasLoaded) return;
+    if (downloading) return;
 
     try {
       setDownloading(true);
       toast.loading("Generating screenshot...");
+
+      await loadHtml2Canvas();
 
       if (typeof window.html2canvas !== "function") {
         throw new Error("html2canvas not loaded");
@@ -538,13 +532,6 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
           </button>
         </div>
 
-        {/* Loading indicator */}
-        {!html2canvasLoaded && (
-          <div className="px-6 py-3 bg-amber-50 text-amber-700 text-sm">
-            Loading screenshot library...
-          </div>
-        )}
-
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-3">
@@ -563,7 +550,7 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
                 </div>
                 <Button
                   onClick={() => handleDownload(option.selector, option.label)}
-                  disabled={downloading || !html2canvasLoaded}
+                  disabled={downloading}
                   size="sm"
                   className="ml-4 flex-shrink-0"
                 >

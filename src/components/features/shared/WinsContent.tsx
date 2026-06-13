@@ -353,6 +353,8 @@ export default function WinsContent<TTeam>({
             <div className="space-y-6">
               <BoxWhiskerChartSkeleton />
               <BasketballTableSkeleton />
+              <BoxWhiskerChartSkeleton />
+              <BasketballTableSkeleton />
             </div>
           ) : (
             <div className="space-y-6">

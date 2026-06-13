@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Download, Loader2, Share2 } from "@/components/ui/icons";
 import { useResponsive } from "@/hooks/useResponsive";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 
 declare global {
@@ -45,40 +45,34 @@ export default function TableActionButtons({
   const { isMobile } = useResponsive();
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const [html2canvasLoaded, setHtml2canvasLoaded] = useState(false);
 
-  useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      typeof window.html2canvas !== "function"
-    ) {
+  const loadHtml2Canvas = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (typeof window.html2canvas === "function") {
+        resolve();
+        return;
+      }
+
       const script = document.createElement("script");
       script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
       script.async = true;
-      script.onload = () => setHtml2canvasLoaded(true);
-      script.onerror = (error) =>
-        console.error("Failed to load html2canvas:", error);
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load html2canvas"));
       document.body.appendChild(script);
-
-      return () => {
-        if (document.body.contains(script)) {
-          document.body.removeChild(script);
-        }
-      };
-    } else if (typeof window.html2canvas === "function") {
-      setHtml2canvasLoaded(true);
-    }
-  }, []);
+    });
+  };
 
   const handleDownload = async () => {
-    if (downloading || disabled || !html2canvasLoaded) return;
-    if (typeof window.html2canvas !== "function") {
-      toast.error("Screenshot library not loaded. Please try again.");
-      return;
-    }
+    if (downloading || disabled) return;
 
     try {
       setDownloading(true);
+      await loadHtml2Canvas();
+
+      if (typeof window.html2canvas !== "function") {
+        toast.error("Screenshot library not loaded. Please try again.");
+        return;
+      }
 
       console.log(`🔍 SCREENSHOT DEBUG: contentSelector="${contentSelector}"`);
       const targetElement = document.querySelector(contentSelector);
@@ -524,7 +518,7 @@ export default function TableActionButtons({
           bg-gray-700 text-white border-gray-700 hover:bg-gray-800 hover:border-gray-800 transition-colors duration-200 w-full
           ${isMobile ? "text-sm px-4 py-3" : "text-xs px-3 py-2"}
         `}
-        disabled={downloading || disabled || !html2canvasLoaded}
+        disabled={downloading || disabled}
         aria-label={
           downloading ? "Creating image..." : "Download table as image"
         }

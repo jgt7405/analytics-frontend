@@ -46,8 +46,22 @@ export function getCellColor(
     colors.light[2] + (colors.dark[2] - colors.light[2]) * intensity
   );
 
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  const textColor = brightness > 140 ? "#374151" : "#ffffff";
+  const getLuminance = (r: number, g: number, b: number): number => {
+    const [rs, gs, bs] = [r, g, b].map((c) => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+
+  const bgLuminance = getLuminance(r, g, b);
+  const darkTextLuminance = getLuminance(31, 41, 55);
+  const lightTextLuminance = getLuminance(255, 255, 255);
+
+  const darkContrast = (Math.max(bgLuminance, darkTextLuminance) + 0.05) / (Math.min(bgLuminance, darkTextLuminance) + 0.05);
+  const lightContrast = (Math.max(bgLuminance, lightTextLuminance) + 0.05) / (Math.min(bgLuminance, lightTextLuminance) + 0.05);
+
+  const textColor = darkContrast >= lightContrast ? "#1f2937" : "#ffffff";
 
   return {
     backgroundColor: `rgb(${r}, ${g}, ${b})`,

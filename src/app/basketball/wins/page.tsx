@@ -1,6 +1,11 @@
 import { Suspense } from "react";
 import { generatePageMetadata } from "@/app/metadata";
 import { getStandingsServer } from "@/lib/server-api";
+import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
+import {
+  BasketballTableSkeleton,
+  BoxWhiskerChartSkeleton,
+} from "@/components/ui/LoadingSkeleton";
 import BballWinsContent from "./BballWinsContent";
 
 // Render per-request: the content component reads useSearchParams (?conf=), which
@@ -14,11 +19,27 @@ export const metadata = generatePageMetadata({
   path: "/basketball/wins/",
 });
 
+function WinsPageSkeleton() {
+  return (
+    <PageLayoutWrapper
+      title="Projected Conference Wins"
+      isLoading={true}
+    >
+      <div className="-mt-2 md:-mt-6 space-y-6">
+        <BoxWhiskerChartSkeleton />
+        <BasketballTableSkeleton />
+        <BoxWhiskerChartSkeleton />
+        <BasketballTableSkeleton />
+      </div>
+    </PageLayoutWrapper>
+  );
+}
+
 export default async function BballWinsPage() {
   // Server-render the default conference so the canonical URL ships real content.
   const initialData = await getStandingsServer("Big 12");
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<WinsPageSkeleton />}>
       <BballWinsContent initialData={initialData} />
     </Suspense>
   );
