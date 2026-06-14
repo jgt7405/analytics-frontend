@@ -1,11 +1,6 @@
 "use client";
 
-import type { Metadata } from "next";
 import BballScatterplotChart from "@/components/features/basketball/BballScatterplotChart";
-
-export const metadata: Metadata = {
-  robots: { index: false, follow: true },
-};
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download, Share2, X } from "lucide-react";
