@@ -1,7 +1,12 @@
 // src/app/football/bowlpicks/page.tsx
 "use client";
 
+import type { Metadata } from "next";
 import BowlPicksTable from "@/components/features/football/BowlPicksTable";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+};
 import BowlScoreboard from "@/components/features/football/BowlScoreboard";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
