@@ -166,9 +166,9 @@ function FootballScheduleTable({
           nextGame && nextGame.date === value && nextGame.rowIndex === rowIndex;
 
         if (isNextGame) {
-          return { backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" };
+          return { backgroundColor: "#d6ebf2", color: "#4b5563" };
         } else {
-          return { backgroundColor: "var(--bg-secondary)", color: "var(--text-secondary)" };
+          return { backgroundColor: "#f0f0f0", color: "#4b5563" };
         }
       }
 
