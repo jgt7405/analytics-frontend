@@ -285,7 +285,7 @@ function FootballScheduleTable({
                       position: "sticky",
                       left: 0,
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderRight: "1px solid var(--border-color)",
                     }}
                   >
@@ -304,7 +304,7 @@ function FootballScheduleTable({
                       position: "sticky",
                       left: firstColWidth,
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                       borderRight: "1px solid var(--border-color)",
                     }}
@@ -332,7 +332,7 @@ function FootballScheduleTable({
                       position: "sticky",
                       left: firstColWidth + opponentColWidth,
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                       borderRight: "2px solid var(--border-color)",
                     }}
@@ -363,7 +363,7 @@ function FootballScheduleTable({
                         maxWidth: teamColWidth,
                         position: "sticky",
                         top: 0,
-                        border: "1px solid #d0d0d0",
+                        border: "1px solid #a8a8a8",
                         borderLeft: "none",
                       }}
                     >
@@ -397,7 +397,7 @@ function FootballScheduleTable({
                         height: cellHeight,
                         position: "sticky",
                         left: 0,
-                        border: "1px solid #d0d0d0",
+                        border: "1px solid #a8a8a8",
                         borderTop: "none",
                         borderRight: "1px solid var(--border-color)",
                         ...getLocationStyle(
@@ -421,7 +421,7 @@ function FootballScheduleTable({
                         height: cellHeight,
                         position: "sticky",
                         left: firstColWidth,
-                        border: "1px solid #d0d0d0",
+                        border: "1px solid #a8a8a8",
                         borderTop: "none",
                         borderLeft: "none",
                         borderRight: "1px solid var(--border-color)",
@@ -452,7 +452,7 @@ function FootballScheduleTable({
                         height: cellHeight,
                         position: "sticky",
                         left: firstColWidth + opponentColWidth,
-                        border: "1px solid #d0d0d0",
+                        border: "1px solid #a8a8a8",
                         borderTop: "none",
                         borderLeft: "none",
                         borderRight: "2px solid var(--border-color)",
@@ -475,11 +475,11 @@ function FootballScheduleTable({
                             width: teamColWidth,
                             minWidth: teamColWidth,
                             maxWidth: teamColWidth,
-                            border: "1px solid #d0d0d0",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             backgroundColor: isEmpty
-                              ? "var(--bg-secondary)"
+                              ? "var(--border-color)"
                               : "transparent",
                           }}
                         >
@@ -519,7 +519,7 @@ function FootballScheduleTable({
                           height: summaryRowHeight,
                           position: "sticky",
                           left: 0,
-                          border: "1px solid #d0d0d0",
+                          border: "1px solid #a8a8a8",
                           borderTop: "2px solid var(--border-color)",
                           borderRight: "2px solid var(--border-color)",
                         }}
@@ -537,7 +537,7 @@ function FootballScheduleTable({
                               width: teamColWidth,
                               minWidth: teamColWidth,
                               maxWidth: teamColWidth,
-                              border: "1px solid #d0d0d0",
+                              border: "1px solid #a8a8a8",
                               borderTop: "2px solid var(--border-color)",
                               borderLeft: "none",
                             }}
@@ -575,7 +575,7 @@ function FootballScheduleTable({
                           height: summaryRowHeight,
                           position: "sticky",
                           left: 0,
-                          border: "1px solid #d0d0d0",
+                          border: "1px solid #a8a8a8",
                           borderTop: "none",
                           borderRight: "2px solid var(--border-color)",
                         }}
@@ -593,7 +593,7 @@ function FootballScheduleTable({
                               width: teamColWidth,
                               minWidth: teamColWidth,
                               maxWidth: teamColWidth,
-                              border: "1px solid #d0d0d0",
+                              border: "1px solid #a8a8a8",
                               borderTop: "none",
                               borderLeft: "none",
                               fontSize: isMobile ? "12px" : "14px",
@@ -629,7 +629,7 @@ function FootballScheduleTable({
                               height: summaryRowHeight,
                               position: "sticky",
                               left: 0,
-                              border: "1px solid #d0d0d0",
+                              border: "1px solid #a8a8a8",
                               borderTop: "none",
                               borderRight: "2px solid var(--border-color)",
                             }}
@@ -675,7 +675,7 @@ function FootballScheduleTable({
                                   width: teamColWidth,
                                   minWidth: teamColWidth,
                                   maxWidth: teamColWidth,
-                                  border: "1px solid #d0d0d0",
+                                  border: "1px solid #a8a8a8",
                                   borderTop: "none",
                                   borderLeft: "none",
                                 }}
@@ -738,7 +738,7 @@ function FootballScheduleTable({
                       position: "sticky",
                       left: 0,
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                     }}
                   >
                     Team
@@ -754,7 +754,7 @@ function FootballScheduleTable({
                       maxWidth: teamColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -773,7 +773,7 @@ function FootballScheduleTable({
                       maxWidth: teamColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -792,7 +792,7 @@ function FootballScheduleTable({
                       maxWidth: quartileColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -813,7 +813,7 @@ function FootballScheduleTable({
                       maxWidth: quartileColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -832,7 +832,7 @@ function FootballScheduleTable({
                       maxWidth: quartileColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -851,7 +851,7 @@ function FootballScheduleTable({
                       maxWidth: quartileColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid #d0d0d0",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -889,7 +889,7 @@ function FootballScheduleTable({
                             height: summaryRowHeight,
                             position: "sticky",
                             left: 0,
-                            border: "1px solid #d0d0d0",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderRight: "1px solid var(--border-color)",
                           }}
@@ -917,7 +917,7 @@ function FootballScheduleTable({
                             minWidth: teamColWidth,
                             maxWidth: teamColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid #d0d0d0",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
@@ -938,7 +938,7 @@ function FootballScheduleTable({
                             minWidth: teamColWidth,
                             maxWidth: teamColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid #d0d0d0",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                           }}
@@ -955,7 +955,7 @@ function FootballScheduleTable({
                             minWidth: quartileColWidth,
                             maxWidth: quartileColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid #d0d0d0",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
@@ -976,7 +976,7 @@ function FootballScheduleTable({
                             minWidth: quartileColWidth,
                             maxWidth: quartileColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid #d0d0d0",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
@@ -997,7 +997,7 @@ function FootballScheduleTable({
                             minWidth: quartileColWidth,
                             maxWidth: quartileColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid #d0d0d0",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
@@ -1018,7 +1018,7 @@ function FootballScheduleTable({
                             minWidth: quartileColWidth,
                             maxWidth: quartileColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid #d0d0d0",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
