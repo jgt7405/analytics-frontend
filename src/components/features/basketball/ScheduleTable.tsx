@@ -491,7 +491,7 @@ function BasketballScheduleTable({
                             borderTop: "none",
                             borderLeft: "none",
                             backgroundColor: isEmpty
-                              ? "var(--border-color)"
+                              ? "#e0e0e0"
                               : "transparent",
                           }}
                         >

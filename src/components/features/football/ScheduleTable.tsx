@@ -334,7 +334,7 @@ function FootballScheduleTable({
                       top: 0,
                       border: "1px solid #a8a8a8",
                       borderLeft: "none",
-                      borderRight: "2px solid var(--border-color)",
+                      borderRight: "2px solid #a8a8a8",
                     }}
                   >
                     {isMobile ? (
@@ -455,7 +455,7 @@ function FootballScheduleTable({
                         border: "1px solid #a8a8a8",
                         borderTop: "none",
                         borderLeft: "none",
-                        borderRight: "2px solid var(--border-color)",
+                        borderRight: "2px solid #a8a8a8",
                       }}
                     >
                       {formatCellValue(row.Win_Pct)}
@@ -479,7 +479,7 @@ function FootballScheduleTable({
                             borderTop: "none",
                             borderLeft: "none",
                             backgroundColor: isEmpty
-                              ? "var(--border-color)"
+                              ? "#e0e0e0"
                               : "transparent",
                           }}
                         >
@@ -521,7 +521,7 @@ function FootballScheduleTable({
                           left: 0,
                           border: "1px solid #a8a8a8",
                           borderTop: "2px solid var(--border-color)",
-                          borderRight: "2px solid var(--border-color)",
+                          borderRight: "2px solid #a8a8a8",
                         }}
                       >
                         Expected Wins
@@ -577,7 +577,7 @@ function FootballScheduleTable({
                           left: 0,
                           border: "1px solid #a8a8a8",
                           borderTop: "none",
-                          borderRight: "2px solid var(--border-color)",
+                          borderRight: "2px solid #a8a8a8",
                         }}
                       >
                         Total Games
@@ -631,7 +631,7 @@ function FootballScheduleTable({
                               left: 0,
                               border: "1px solid #a8a8a8",
                               borderTop: "none",
-                              borderRight: "2px solid var(--border-color)",
+                              borderRight: "2px solid #a8a8a8",
                             }}
                           >
                             {quartile === "top"
