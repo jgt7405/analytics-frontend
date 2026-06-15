@@ -289,8 +289,8 @@ function BasketballScheduleTable({
                       position: "sticky",
                       left: 0,
                       top: 0,
-                      border: "1px solid var(--border-color)",
-                      borderRight: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
+                      borderRight: "1px solid #a8a8a8",
                     }}
                   >
                     Location
@@ -309,9 +309,9 @@ function BasketballScheduleTable({
                       position: "sticky",
                       left: firstColWidth,
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
-                      borderRight: "1px solid var(--border-color)",
+                      borderRight: "1px solid #a8a8a8",
                     }}
                   >
                     {isMobile ? (
@@ -338,9 +338,9 @@ function BasketballScheduleTable({
                       position: "sticky",
                       left: firstColWidth + opponentColWidth,
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
-                      borderRight: "2px solid var(--border-color)",
+                      borderRight: "2px solid #a8a8a8",
                     }}
                   >
                     {isMobile ? (
@@ -370,7 +370,7 @@ function BasketballScheduleTable({
                         maxWidth: teamColWidth,
                         position: "sticky",
                         top: 0,
-                        border: "1px solid var(--border-color)",
+                        border: "1px solid #a8a8a8",
                         borderLeft: "none",
                       }}
                     >
@@ -406,9 +406,9 @@ function BasketballScheduleTable({
                         height: cellHeight,
                         position: "sticky",
                         left: 0,
-                        border: "1px solid var(--border-color)",
+                        border: "1px solid #a8a8a8",
                         borderTop: "none",
-                        borderRight: "1px solid var(--border-color)",
+                        borderRight: "1px solid #a8a8a8",
                         ...getLocationStyle(
                           row.Loc.charAt(0).toUpperCase() +
                             row.Loc.slice(1).toLowerCase()
@@ -431,10 +431,10 @@ function BasketballScheduleTable({
                         height: cellHeight,
                         position: "sticky",
                         left: firstColWidth,
-                        border: "1px solid var(--border-color)",
+                        border: "1px solid #a8a8a8",
                         borderTop: "none",
                         borderLeft: "none",
-                        borderRight: "1px solid var(--border-color)",
+                        borderRight: "1px solid #a8a8a8",
                       }}
                     >
                       <div className="flex justify-center items-center h-full">
@@ -463,10 +463,10 @@ function BasketballScheduleTable({
                         height: cellHeight,
                         position: "sticky",
                         left: firstColWidth + opponentColWidth,
-                        border: "1px solid var(--border-color)",
+                        border: "1px solid #a8a8a8",
                         borderTop: "none",
                         borderLeft: "none",
-                        borderRight: "2px solid var(--border-color)",
+                        borderRight: "2px solid #a8a8a8",
                       }}
                     >
                       {formatCellValue(row.Win_Pct)}
@@ -487,7 +487,7 @@ function BasketballScheduleTable({
                             width: teamColWidth,
                             minWidth: teamColWidth,
                             maxWidth: teamColWidth,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             backgroundColor: isEmpty
@@ -529,9 +529,9 @@ function BasketballScheduleTable({
                           height: summaryRowHeight,
                           position: "sticky",
                           left: 0,
-                          border: "1px solid var(--border-color)",
-                          borderTop: "2px solid var(--border-color)",
-                          borderRight: "2px solid var(--border-color)",
+                          border: "1px solid #a8a8a8",
+                          borderTop: "2px solid #a8a8a8",
+                          borderRight: "2px solid #a8a8a8",
                         }}
                       >
                         Expected Wins
@@ -545,8 +545,8 @@ function BasketballScheduleTable({
                             width: teamColWidth,
                             minWidth: teamColWidth,
                             maxWidth: teamColWidth,
-                            border: "1px solid var(--border-color)",
-                            borderTop: "2px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
+                            borderTop: "2px solid #a8a8a8",
                             borderLeft: "none",
                           }}
                         >
@@ -579,9 +579,9 @@ function BasketballScheduleTable({
                           height: summaryRowHeight,
                           position: "sticky",
                           left: 0,
-                          border: "1px solid var(--border-color)",
+                          border: "1px solid #a8a8a8",
                           borderTop: "none",
-                          borderRight: "2px solid var(--border-color)",
+                          borderRight: "2px solid #a8a8a8",
                         }}
                       >
                         Total Games
@@ -595,7 +595,7 @@ function BasketballScheduleTable({
                             width: teamColWidth,
                             minWidth: teamColWidth,
                             maxWidth: teamColWidth,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             fontSize: isMobile ? "12px" : "14px",
@@ -623,9 +623,9 @@ function BasketballScheduleTable({
                               height: summaryRowHeight,
                               position: "sticky",
                               left: 0,
-                              border: "1px solid var(--border-color)",
+                              border: "1px solid #a8a8a8",
                               borderTop: "none",
-                              borderRight: "2px solid var(--border-color)",
+                              borderRight: "2px solid #a8a8a8",
                             }}
                           >
                             {quartile === "top"
@@ -645,7 +645,7 @@ function BasketballScheduleTable({
                                 width: teamColWidth,
                                 minWidth: teamColWidth,
                                 maxWidth: teamColWidth,
-                                border: "1px solid var(--border-color)",
+                                border: "1px solid #a8a8a8",
                                 borderTop: "none",
                                 borderLeft: "none",
                               }}
@@ -709,7 +709,7 @@ function BasketballScheduleTable({
                       position: "sticky",
                       left: 0,
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                     }}
                   >
                     Team
@@ -725,7 +725,7 @@ function BasketballScheduleTable({
                       maxWidth: teamColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -744,7 +744,7 @@ function BasketballScheduleTable({
                       maxWidth: teamColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -763,7 +763,7 @@ function BasketballScheduleTable({
                       maxWidth: quartileColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -784,7 +784,7 @@ function BasketballScheduleTable({
                       maxWidth: quartileColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -803,7 +803,7 @@ function BasketballScheduleTable({
                       maxWidth: quartileColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -822,7 +822,7 @@ function BasketballScheduleTable({
                       maxWidth: quartileColWidth,
                       position: "sticky",
                       top: 0,
-                      border: "1px solid var(--border-color)",
+                      border: "1px solid #a8a8a8",
                       borderLeft: "none",
                     }}
                   >
@@ -860,9 +860,9 @@ function BasketballScheduleTable({
                             height: summaryRowHeight,
                             position: "sticky",
                             left: 0,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
-                            borderRight: "1px solid var(--border-color)",
+                            borderRight: "1px solid #a8a8a8",
                           }}
                         >
                           <div className="flex justify-center items-center h-full">
@@ -888,7 +888,7 @@ function BasketballScheduleTable({
                             minWidth: teamColWidth,
                             maxWidth: teamColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
@@ -909,7 +909,7 @@ function BasketballScheduleTable({
                             minWidth: teamColWidth,
                             maxWidth: teamColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                           }}
@@ -926,7 +926,7 @@ function BasketballScheduleTable({
                             minWidth: quartileColWidth,
                             maxWidth: quartileColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
@@ -947,7 +947,7 @@ function BasketballScheduleTable({
                             minWidth: quartileColWidth,
                             maxWidth: quartileColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
@@ -968,7 +968,7 @@ function BasketballScheduleTable({
                             minWidth: quartileColWidth,
                             maxWidth: quartileColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
@@ -989,7 +989,7 @@ function BasketballScheduleTable({
                             minWidth: quartileColWidth,
                             maxWidth: quartileColWidth,
                             height: summaryRowHeight,
-                            border: "1px solid var(--border-color)",
+                            border: "1px solid #a8a8a8",
                             borderTop: "none",
                             borderLeft: "none",
                             ...getSummaryColor(
