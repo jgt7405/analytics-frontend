@@ -343,10 +343,12 @@ export interface PlayoffTeam {
   team_name: string;
   logo_url: string;
   conference: string;
+  conf_logo_url?: string;
   twv: number;
   record: string;
   bid_type: "Conference Champion" | "At-Large";
   cfp_bid_pct?: number;
+  full_season_cfp_rating_avg?: number;
   CFP_First_Round?: number;
   CFP_Quarterfinals?: number;
   CFP_Semifinals?: number;
