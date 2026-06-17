@@ -346,6 +346,12 @@ export interface PlayoffTeam {
   twv: number;
   record: string;
   bid_type: "Conference Champion" | "At-Large";
+  cfp_bid_pct?: number;
+  CFP_First_Round?: number;
+  CFP_Quarterfinals?: number;
+  CFP_Semifinals?: number;
+  CFP_Championship?: number;
+  CFP_Champion?: number;
 }
 
 export interface BubbleTeam {
@@ -355,6 +361,7 @@ export interface BubbleTeam {
   conference: string;
   twv: number;
   record: string;
+  cfp_bid_pct?: number;
 }
 
 export interface PlayoffRankingsResponse {
