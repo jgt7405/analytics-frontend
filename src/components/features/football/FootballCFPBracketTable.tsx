@@ -26,6 +26,15 @@ export default function FootballCFPBracketTable({
     return `${(value * 100).toFixed(1)}%`;
   };
 
+  // Flatten all teams with their seed assignment
+  const allTeamsWithSeeds = seedGroups.flatMap((group) =>
+    group.teams.map((team, idx) => ({
+      seed: group.seed,
+      isFirstInGroup: idx === 0,
+      team,
+    }))
+  );
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-lg shadow">
       <div className="overflow-x-auto">
@@ -50,86 +59,44 @@ export default function FootballCFPBracketTable({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200">
-            {seedGroups.map((group) => (
-              <tr key={`seed-${group.seed}`}>
-                <td
-                  rowSpan={group.teams.length}
-                  className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-gray-100 align-top"
-                >
-                  {group.seed}
+            {allTeamsWithSeeds.map((item, idx) => (
+              <tr key={`${item.seed}-${item.team.rank}-${idx}`} className="hover:bg-gray-50 dark:bg-slate-800">
+                <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-gray-100">
+                  {item.isFirstInGroup ? item.seed : ""}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <TeamLogo
-                      logoUrl={group.teams[0].logo_url}
-                      teamName={group.teams[0].team_name}
+                      logoUrl={item.team.logo_url}
+                      teamName={item.team.team_name}
                       size={32}
                     />
                     <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {group.teams[0].team_name}
+                      {item.team.team_name}
                     </span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                  {group.teams[0].conference}
+                  {item.team.conference}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      group.teams[0].bid_type === "Conference Champion"
+                      item.team.bid_type === "Conference Champion"
                         ? "bg-blue-100 text-blue-800"
                         : "bg-green-100 text-green-800"
                     }`}
                   >
-                    {group.teams[0].bid_type === "Conference Champion"
+                    {item.team.bid_type === "Conference Champion"
                       ? "Auto Bid"
                       : "At Large"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                  {formatCFPPct(group.teams[0].cfp_bid_pct)}
+                  {formatCFPPct(item.team.cfp_bid_pct)}
                 </td>
               </tr>
             ))}
-            {seedGroups.map((group) =>
-              group.teams.length > 1
-                ? group.teams.slice(1).map((team) => (
-                    <tr key={`${group.seed}-${team.rank}`}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <TeamLogo
-                            logoUrl={team.logo_url}
-                            teamName={team.team_name}
-                            size={32}
-                          />
-                          <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {team.team_name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                        {team.conference}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            team.bid_type === "Conference Champion"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {team.bid_type === "Conference Champion"
-                            ? "Auto Bid"
-                            : "At Large"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                        {formatCFPPct(team.cfp_bid_pct)}
-                      </td>
-                    </tr>
-                  ))
-                : null
-            )}
           </tbody>
         </table>
       </div>
