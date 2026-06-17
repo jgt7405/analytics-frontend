@@ -7,16 +7,16 @@ import { useFootballPlayoffRankings } from "@/hooks/useFootballPlayoffRankings";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
-const FootballPlayoffRankingsTable = dynamic(
+const FootballCFPBracketTable = dynamic(
   () =>
     import(
-      "@/components/features/football/FootballPlayoffRankingsTable"
+      "@/components/features/football/FootballCFPBracketTable"
     ),
   {
     loading: () => (
-      <div className="min-h-[500px] bg-gray-50 animate-pulse rounded-lg" />
+      <div className="min-h-[600px] bg-gray-50 animate-pulse rounded-lg" />
     ),
   }
 );
@@ -33,20 +33,12 @@ const FootballConferenceBidsTable = dynamic(
   }
 );
 
-const FootballBubbleTeams = dynamic(
-  () =>
-    import("@/components/features/football/FootballBubbleTeams"),
-  {
-    loading: () => (
-      <div className="min-h-[200px] bg-gray-50 animate-pulse rounded-lg" />
-    ),
-  }
-);
-
 export default function FootballHome() {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
-  const { data, isLoading, error, refetch } = useFootballPlayoffRankings();
+  const cfpTableRef = useRef<HTMLDivElement>(null);
+  const confBidsRef = useRef<HTMLDivElement>(null);
+  const { data, isLoading } = useFootballPlayoffRankings();
 
   // Track page view
   useEffect(() => {
@@ -56,7 +48,7 @@ export default function FootballHome() {
     });
   }, [trackEvent]);
 
-  // Format the last updated timestamp (fallback to current date)
+  // Format the last updated timestamp
   const lastUpdated = useMemo(() => {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -65,43 +57,19 @@ export default function FootballHome() {
     return `${month}/${day}/${year}`;
   }, []);
 
-  // Error state
-  if (error) {
-    return (
-      <ErrorBoundary level="page" onRetry={() => refetch()}>
-        <PageLayoutWrapper
-          title="College Football Playoff Projections"
-          isLoading={false}
-        >
-          <div className="-mt-2 md:-mt-6">
-            <div className="text-center py-12 text-gray-600 dark:text-gray-300">
-              Failed to load CFP projections.{" "}
-              <button
-                onClick={() => refetch()}
-                className="text-blue-600 dark:text-blue-400 underline"
-              >
-                Try again
-              </button>
-            </div>
-          </div>
-        </PageLayoutWrapper>
-      </ErrorBoundary>
-    );
-  }
-
   return (
-    <ErrorBoundary level="page" onRetry={() => refetch()}>
+    <ErrorBoundary level="page">
       <PageLayoutWrapper
         title="College Football Playoff Projections"
         isLoading={isLoading}
         rightElement={`Updated: ${lastUpdated}`}
       >
         <div className="-mt-2 md:-mt-6">
-          {/* Section 1 — CFP Field (no h2, primary content) */}
-          <ErrorBoundary level="component" onRetry={() => refetch()}>
+          {/* CFP Bracket Table Section */}
+          <ErrorBoundary level="component">
             <div className="mb-8">
-              <div className="cfp-field-table min-h-[500px]">
-                <FootballPlayoffRankingsTable
+              <div className="cfp-bracket-table min-h-[600px]" ref={cfpTableRef}>
+                <FootballCFPBracketTable
                   playoffTeams={data?.playoff_teams ?? []}
                 />
               </div>
@@ -111,8 +79,7 @@ export default function FootballHome() {
                   <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        CFP projections based on 1,000 season simulations using
-                        True Win Value (TWV) and playoff selection criteria.
+                        CFP projections based on 1,000 season simulations.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         <span
@@ -127,7 +94,7 @@ export default function FootballHome() {
                             verticalAlign: "middle",
                           }}
                         ></span>
-                        <span>Conference Champion auto bid</span>
+                        <span>Auto Bid (Conference Champion)</span>
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         <span
@@ -142,7 +109,7 @@ export default function FootballHome() {
                             verticalAlign: "middle",
                           }}
                         ></span>
-                        <span>At-Large bid</span>
+                        <span>At Large Bid</span>
                       </div>
                     </div>
                   </div>
@@ -152,8 +119,8 @@ export default function FootballHome() {
                     }`}
                   >
                     <TableActionButtons
-                      contentSelector=".cfp-field-table"
-                      pageName="cfp-field"
+                      contentSelector=".cfp-bracket-table"
+                      pageName="cfp-bracket"
                     />
                   </div>
                 </div>
@@ -161,14 +128,14 @@ export default function FootballHome() {
             </div>
           </ErrorBoundary>
 
-          {/* Section 2 — Conference CFP Bids (has h2) */}
-          <ErrorBoundary level="component" onRetry={() => refetch()}>
+          {/* Conference Multi-Bid Conferences Section */}
+          <ErrorBoundary level="component">
             <div className="mb-8">
               <h2 className="text-xl font-normal text-gray-500 dark:text-gray-200">
-                Conference CFP Projections
+                Potential Multi-Bid Conferences
               </h2>
 
-              <div className="conf-cfp-bids-table min-h-[300px]">
+              <div className="conf-multi-bid-table min-h-[300px]" ref={confBidsRef}>
                 <FootballConferenceBidsTable />
               </div>
 
@@ -177,9 +144,8 @@ export default function FootballHome() {
                   <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        Average projected number of CFP bids per conference
-                        across all simulated seasons, with distribution of likely
-                        bid counts.
+                        Conferences with multiple teams projected to be in the
+                        CFP or with bubble teams in first four out/next four out.
                       </div>
                     </div>
                   </div>
@@ -189,48 +155,8 @@ export default function FootballHome() {
                     }`}
                   >
                     <TableActionButtons
-                      contentSelector=".conf-cfp-bids-table"
-                      pageName="conf-cfp-bids"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ErrorBoundary>
-
-          {/* Section 3 — Bubble Teams (has h2) */}
-          <ErrorBoundary level="component" onRetry={() => refetch()}>
-            <div className="mb-8">
-              <h2 className="text-xl font-normal text-gray-500 dark:text-gray-200">
-                Bubble Teams
-              </h2>
-
-              <div className="cfp-bubble-teams min-h-[200px]">
-                <FootballBubbleTeams
-                  firstFourOut={data?.first_four_out ?? []}
-                  nextFourOut={data?.next_four_out ?? []}
-                />
-              </div>
-
-              <div className="mt-6">
-                <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
-                    <div style={{ lineHeight: "1.3" }}>
-                      <div>
-                        Teams closest to the CFP field, ranked by True Win
-                        Value. First Four Out and Next Four Out represent the
-                        teams just outside the playoff field.
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className={`flex-shrink-0 ${
-                      isMobile ? "w-1/3" : "w-auto mr-2"
-                    }`}
-                  >
-                    <TableActionButtons
-                      contentSelector=".cfp-bubble-teams"
-                      pageName="cfp-bubble-teams"
+                      contentSelector=".conf-multi-bid-table"
+                      pageName="conference-multi-bid"
                     />
                   </div>
                 </div>

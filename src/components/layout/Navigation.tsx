@@ -156,6 +156,11 @@ function NavigationContent() {
 
   const footballNavItems = [
     {
+      name: "Home",
+      basePath: "/football/home",
+      description: "College Football Playoff projections",
+    },
+    {
       name: "Wins",
       basePath: "/football/wins",
       description: "Conference wins distribution",
