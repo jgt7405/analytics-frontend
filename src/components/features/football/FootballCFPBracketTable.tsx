@@ -320,23 +320,23 @@ export default function FootballCFPBracketTable({
                     borderTop: "none",
                     borderLeft: "none",
                     borderBottom: rowBorder,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    verticalAlign: "middle",
                   }}
                 >
-                  {row.conf_logo_url ? (
-                    <TeamLogo
-                      logoUrl={row.conf_logo_url}
-                      teamName={row.conference}
-                      size={isMobile ? 20 : 24}
-                      className="flex-shrink-0"
-                    />
-                  ) : (
-                    <span className="text-xs text-gray-500 dark:text-gray-300">
-                      -
-                    </span>
-                  )}
+                  <div className="flex items-center justify-center">
+                    {row.conf_logo_url ? (
+                      <TeamLogo
+                        logoUrl={row.conf_logo_url}
+                        teamName={row.conference}
+                        size={isMobile ? 20 : 24}
+                        className="flex-shrink-0"
+                      />
+                    ) : (
+                      <span className="text-xs text-gray-500 dark:text-gray-300">
+                        -
+                      </span>
+                    )}
+                  </div>
                 </td>
 
                 {/* Category Cell */}

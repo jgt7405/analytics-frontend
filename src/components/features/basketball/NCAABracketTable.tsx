@@ -234,21 +234,21 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
             borderTop: "none",
             borderLeft: "none",
             borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            verticalAlign: "middle",
           }}
         >
-          {team.conf_logo_url ? (
-            <TeamLogo
-              logoUrl={team.conf_logo_url}
-              teamName={team.full_conference_name}
-              size={isMobile ? 20 : 24}
-              className="flex-shrink-0"
-            />
-          ) : (
-            <span className="text-xs text-gray-500 dark:text-gray-300">-</span>
-          )}
+          <div className="flex items-center justify-center">
+            {team.conf_logo_url ? (
+              <TeamLogo
+                logoUrl={team.conf_logo_url}
+                teamName={team.full_conference_name}
+                size={isMobile ? 20 : 24}
+                className="flex-shrink-0"
+              />
+            ) : (
+              <span className="text-xs text-gray-500 dark:text-gray-300">-</span>
+            )}
+          </div>
         </td>
 
         {/* Category Cell */}
