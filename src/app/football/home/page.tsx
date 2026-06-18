@@ -71,6 +71,8 @@ export default function FootballHome() {
               <div className="cfp-bracket-table min-h-[600px]" ref={cfpTableRef}>
                 <FootballCFPBracketTable
                   playoffTeams={data?.playoff_teams ?? []}
+                  firstFourOut={data?.first_four_out ?? []}
+                  nextFourOut={data?.next_four_out ?? []}
                 />
               </div>
 
@@ -111,6 +113,36 @@ export default function FootballHome() {
                         ></span>
                         <span>At Large Bid</span>
                       </div>
+                      <div style={{ marginTop: "6px" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            width: "12px",
+                            height: "12px",
+                            backgroundColor: "#ffedd5",
+                            border: "1px solid #b45309",
+                            borderRadius: "2px",
+                            marginRight: "6px",
+                            verticalAlign: "middle",
+                          }}
+                        ></span>
+                        <span>First 4 Out</span>
+                      </div>
+                      <div style={{ marginTop: "6px" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            width: "12px",
+                            height: "12px",
+                            backgroundColor: "#fee2e2",
+                            border: "1px solid #991b1b",
+                            borderRadius: "2px",
+                            marginRight: "6px",
+                            verticalAlign: "middle",
+                          }}
+                        ></span>
+                        <span>Next 4 Out</span>
+                      </div>
                     </div>
                   </div>
                   <div
@@ -132,7 +164,7 @@ export default function FootballHome() {
           <ErrorBoundary level="component">
             <div className="mb-8">
               <h2 className="text-xl font-normal text-gray-500 dark:text-gray-200">
-                Potential Multi-Bid Conferences
+                Projected Bids by Conference
               </h2>
 
               <div className="conf-multi-bid-table min-h-[300px]" ref={confBidsRef}>
@@ -144,8 +176,8 @@ export default function FootballHome() {
                   <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        Conferences with multiple teams projected to be in the
-                        CFP or with bubble teams in first four out/next four out.
+                        All conferences, showing projected playoff teams (with
+                        seeds) and first/next four out teams.
                       </div>
                     </div>
                   </div>
