@@ -361,9 +361,11 @@ export interface BubbleTeam {
   team_name: string;
   logo_url: string;
   conference: string;
+  conf_logo_url?: string;
   twv: number;
   record: string;
   cfp_bid_pct?: number;
+  full_season_cfp_rating_avg?: number;
 }
 
 export interface PlayoffRankingsResponse {

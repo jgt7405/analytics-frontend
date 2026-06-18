@@ -62,8 +62,9 @@ export default function FootballCFPBracketTable({
       team_name: team.team_name,
       logo_url: team.logo_url,
       conference: team.conference,
+      conf_logo_url: team.conf_logo_url,
       category: "First 4 Out",
-      rating: undefined,
+      rating: team.full_season_cfp_rating_avg,
       group: "f4o",
     }));
 
@@ -73,8 +74,9 @@ export default function FootballCFPBracketTable({
       team_name: team.team_name,
       logo_url: team.logo_url,
       conference: team.conference,
+      conf_logo_url: team.conf_logo_url,
       category: "Next 4 Out",
-      rating: undefined,
+      rating: team.full_season_cfp_rating_avg,
       group: "n4o",
     }));
 
