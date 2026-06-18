@@ -349,6 +349,7 @@ export interface PlayoffTeam {
   bid_type: "Conference Champion" | "At-Large";
   cfp_bid_pct?: number;
   full_season_cfp_rating_avg?: number;
+  cfp_score?: number;
   CFP_First_Round?: number;
   CFP_Quarterfinals?: number;
   CFP_Semifinals?: number;
@@ -366,6 +367,7 @@ export interface BubbleTeam {
   record: string;
   cfp_bid_pct?: number;
   full_season_cfp_rating_avg?: number;
+  cfp_score?: number;
 }
 
 export interface PlayoffRankingsResponse {

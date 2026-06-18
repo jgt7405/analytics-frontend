@@ -21,6 +21,7 @@ interface BracketRow {
   conf_logo_url?: string;
   category: string;
   rating?: number;
+  score?: number;
   // Group used for separator logic: "playoff" | "f4o" | "n4o"
   group: "playoff" | "f4o" | "n4o";
 }
@@ -38,6 +39,7 @@ export default function FootballCFPBracketTable({
   const confColWidth = isMobile ? 80 : 120;
   const categoryColWidth = isMobile ? 80 : 120;
   const ratingColWidth = isMobile ? 70 : 100;
+  const normColWidth = isMobile ? 80 : 120;
   const cellHeight = isMobile ? 32 : 36;
   const headerHeight = isMobile ? 40 : 48;
 
@@ -53,6 +55,7 @@ export default function FootballCFPBracketTable({
       category:
         team.bid_type === "Conference Champion" ? "Auto Bid" : "At Large",
       rating: team.full_season_cfp_rating_avg,
+      score: team.cfp_score,
       group: "playoff",
     }));
 
@@ -65,6 +68,7 @@ export default function FootballCFPBracketTable({
       conf_logo_url: team.conf_logo_url,
       category: "First 4 Out",
       rating: team.full_season_cfp_rating_avg,
+      score: team.cfp_score,
       group: "f4o",
     }));
 
@@ -77,6 +81,7 @@ export default function FootballCFPBracketTable({
       conf_logo_url: team.conf_logo_url,
       category: "Next 4 Out",
       rating: team.full_season_cfp_rating_avg,
+      score: team.cfp_score,
       group: "n4o",
     }));
 
@@ -246,6 +251,24 @@ export default function FootballCFPBracketTable({
             >
               Proj CFP Rtg
             </th>
+
+            {/* Normalized Rating Column Header */}
+            <th
+              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal uppercase tracking-wider ${
+                isMobile ? "text-xs" : "text-sm"
+              }`}
+              style={{
+                width: normColWidth,
+                minWidth: normColWidth,
+                maxWidth: normColWidth,
+                height: headerHeight,
+                border: "1px solid var(--border-color)",
+                borderLeft: "none",
+                color: "#6b7280",
+              }}
+            >
+              Proj CFP Rtg Normalized
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -379,6 +402,26 @@ export default function FootballCFPBracketTable({
                   }}
                 >
                   {row.rating != null ? row.rating.toFixed(2) : "—"}
+                </td>
+
+                {/* Normalized Rating Cell */}
+                <td
+                  className={`bg-white dark:bg-slate-900 text-center ${
+                    isMobile ? "text-xs" : "text-sm"
+                  }`}
+                  style={{
+                    width: normColWidth,
+                    minWidth: normColWidth,
+                    maxWidth: normColWidth,
+                    height: cellHeight,
+                    border: "1px solid var(--border-color)",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderBottom: rowBorder,
+                    fontWeight: "500",
+                  }}
+                >
+                  {row.score != null ? row.score.toFixed(1) : "—"}
                 </td>
               </tr>
             );
