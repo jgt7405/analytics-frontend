@@ -361,6 +361,7 @@ export interface PlayoffTeam {
 
 export interface BubbleTeam {
   position: number;
+  rank?: number;
   team_name: string;
   logo_url: string;
   conference: string;

@@ -206,7 +206,7 @@ export default function FootballHome() {
               </h2>
 
               <div className="conf-multi-bid-table min-h-[300px]" ref={confBidsRef}>
-                <FootballConferenceBidsTable showAll={showAllTeams} />
+                <FootballConferenceBidsTable />
               </div>
 
               <div className="mt-6">

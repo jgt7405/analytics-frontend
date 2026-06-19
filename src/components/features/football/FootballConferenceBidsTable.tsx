@@ -17,13 +17,7 @@ interface ConferenceColumn {
   otherTeams: OtherTeam[];
 }
 
-interface FootballConferenceBidsTableProps {
-  showAll?: boolean;
-}
-
-export default function FootballConferenceBidsTable({
-  showAll = false,
-}: FootballConferenceBidsTableProps) {
+export default function FootballConferenceBidsTable() {
   const { isMobile } = useResponsive();
   const {
     data: confData,
@@ -273,7 +267,7 @@ export default function FootballConferenceBidsTable({
                 borderRight: `1px solid ${borderColor}`,
               }}
             >
-              {col.outTeams.map(({ team, category }, idx) => (
+              {col.outTeams.map(({ team }, idx) => (
                 <div
                   key={`${col.name}-out-${team.position}-${idx}`}
                   style={{
@@ -301,7 +295,7 @@ export default function FootballConferenceBidsTable({
                       textAlign: "center",
                     }}
                   >
-                    {category}
+                    {team.rank}
                   </div>
                 </div>
               ))}
@@ -324,8 +318,8 @@ export default function FootballConferenceBidsTable({
           ))}
         </div>
 
-        {/* All-Teams Section (only when "All Teams" is selected) */}
-        {showAll && maxOtherRows > 0 && (
+        {/* All-Teams Section (always shown; independent of the top toggle) */}
+        {maxOtherRows > 0 && (
           <>
             {/* Global Black Separator Line */}
             <div
