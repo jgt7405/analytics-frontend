@@ -20,6 +20,7 @@ interface BracketRow {
   conference: string;
   conf_logo_url?: string;
   category: string;
+  twv?: number;
   rating?: number;
   score?: number;
   // Group used for separator logic: "playoff" | "f4o" | "n4o"
@@ -38,8 +39,8 @@ export default function FootballCFPBracketTable({
   const teamColWidth = isMobile ? 150 : 220;
   const confColWidth = isMobile ? 80 : 120;
   const categoryColWidth = isMobile ? 80 : 120;
+  const twvColWidth = isMobile ? 70 : 80;
   const ratingColWidth = isMobile ? 70 : 100;
-  const normColWidth = isMobile ? 80 : 120;
   const cellHeight = isMobile ? 32 : 36;
   const headerHeight = isMobile ? 40 : 48;
 
@@ -54,6 +55,7 @@ export default function FootballCFPBracketTable({
       conf_logo_url: team.conf_logo_url,
       category:
         team.bid_type === "Conference Champion" ? "Auto Bid" : "At Large",
+      twv: team.twv,
       rating: team.full_season_cfp_rating_avg,
       score: team.cfp_score,
       group: "playoff",
@@ -155,7 +157,7 @@ export default function FootballCFPBracketTable({
           <tr>
             {/* Seed Column Header */}
             <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal uppercase tracking-wider ${
+              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                 isMobile ? "text-xs" : "text-sm"
               }`}
               style={{
@@ -168,7 +170,6 @@ export default function FootballCFPBracketTable({
                 left: 0,
                 border: "1px solid var(--border-color)",
                 borderRight: "1px solid var(--border-color)",
-                color: "#6b7280",
               }}
             >
               Seed
@@ -176,7 +177,7 @@ export default function FootballCFPBracketTable({
 
             {/* Team Column Header */}
             <th
-              className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal uppercase tracking-wider px-2 ${
+              className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
                 isMobile ? "text-xs" : "text-sm"
               }`}
               style={{
@@ -190,7 +191,6 @@ export default function FootballCFPBracketTable({
                 border: "1px solid var(--border-color)",
                 borderLeft: "none",
                 borderRight: "2px solid var(--border-color)",
-                color: "#6b7280",
               }}
             >
               Team
@@ -198,7 +198,7 @@ export default function FootballCFPBracketTable({
 
             {/* Conference Column Header */}
             <th
-              className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal uppercase tracking-wider z-20 ${
+              className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
                 isMobile ? "text-xs" : "text-sm"
               }`}
               style={{
@@ -210,7 +210,6 @@ export default function FootballCFPBracketTable({
                 top: 0,
                 border: "1px solid var(--border-color)",
                 borderLeft: "none",
-                color: "#6b7280",
               }}
             >
               Conf
@@ -218,7 +217,7 @@ export default function FootballCFPBracketTable({
 
             {/* Category Column Header */}
             <th
-              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal uppercase tracking-wider ${
+              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                 isMobile ? "text-xs" : "text-sm"
               }`}
               style={{
@@ -228,15 +227,33 @@ export default function FootballCFPBracketTable({
                 height: headerHeight,
                 border: "1px solid var(--border-color)",
                 borderLeft: "none",
-                color: "#6b7280",
               }}
             >
               Category
             </th>
 
-            {/* Rating Column Header */}
+            {/* Proj TWV Column Header */}
             <th
-              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal uppercase tracking-wider ${
+              className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
+                isMobile ? "text-xs" : "text-sm"
+              }`}
+              style={{
+                width: twvColWidth,
+                minWidth: twvColWidth,
+                maxWidth: twvColWidth,
+                height: headerHeight,
+                position: "sticky",
+                top: 0,
+                border: "1px solid var(--border-color)",
+                borderLeft: "none",
+              }}
+            >
+              Proj TWV
+            </th>
+
+            {/* Proj Rtg Column Header */}
+            <th
+              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${
                 isMobile ? "text-xs" : "text-sm"
               }`}
               style={{
@@ -246,28 +263,9 @@ export default function FootballCFPBracketTable({
                 height: headerHeight,
                 border: "1px solid var(--border-color)",
                 borderLeft: "none",
-                color: "#6b7280",
               }}
             >
-              Proj CFP Rtg
-            </th>
-
-            {/* Normalized Rating Column Header */}
-            <th
-              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal uppercase tracking-wider ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: normColWidth,
-                minWidth: normColWidth,
-                maxWidth: normColWidth,
-                height: headerHeight,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-                color: "#6b7280",
-              }}
-            >
-              Proj CFP Rtg Normalized
+              Proj Rtg
             </th>
           </tr>
         </thead>
@@ -384,7 +382,27 @@ export default function FootballCFPBracketTable({
                   {row.category}
                 </td>
 
-                {/* Rating Cell */}
+                {/* Proj TWV Cell */}
+                <td
+                  className={`bg-white dark:bg-slate-900 text-center ${
+                    isMobile ? "text-xs" : "text-sm"
+                  }`}
+                  style={{
+                    width: twvColWidth,
+                    minWidth: twvColWidth,
+                    maxWidth: twvColWidth,
+                    height: cellHeight,
+                    border: "1px solid var(--border-color)",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderBottom: rowBorder,
+                    fontWeight: "500",
+                  }}
+                >
+                  {row.twv != null ? row.twv.toFixed(2) : "—"}
+                </td>
+
+                {/* Proj Rtg Cell */}
                 <td
                   className={`bg-white dark:bg-slate-900 text-center ${
                     isMobile ? "text-xs" : "text-sm"
@@ -402,26 +420,6 @@ export default function FootballCFPBracketTable({
                   }}
                 >
                   {row.rating != null ? row.rating.toFixed(2) : "—"}
-                </td>
-
-                {/* Normalized Rating Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: normColWidth,
-                    minWidth: normColWidth,
-                    maxWidth: normColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderBottom: rowBorder,
-                    fontWeight: "500",
-                  }}
-                >
-                  {row.score != null ? row.score.toFixed(1) : "—"}
                 </td>
               </tr>
             );
