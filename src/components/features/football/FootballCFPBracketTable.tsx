@@ -41,6 +41,7 @@ export default function FootballCFPBracketTable({
   const categoryColWidth = isMobile ? 80 : 120;
   const twvColWidth = isMobile ? 70 : 80;
   const ratingColWidth = isMobile ? 70 : 100;
+  const normColWidth = isMobile ? 80 : 120;
   const cellHeight = isMobile ? 32 : 36;
   const headerHeight = isMobile ? 40 : 48;
 
@@ -267,6 +268,23 @@ export default function FootballCFPBracketTable({
             >
               Proj Rtg
             </th>
+
+            {/* Normalized Rating Column Header */}
+            <th
+              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${
+                isMobile ? "text-xs" : "text-sm"
+              }`}
+              style={{
+                width: normColWidth,
+                minWidth: normColWidth,
+                maxWidth: normColWidth,
+                height: headerHeight,
+                border: "1px solid var(--border-color)",
+                borderLeft: "none",
+              }}
+            >
+              Proj Rtg Normalized
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -420,6 +438,26 @@ export default function FootballCFPBracketTable({
                   }}
                 >
                   {row.rating != null ? row.rating.toFixed(2) : "—"}
+                </td>
+
+                {/* Normalized Rating Cell */}
+                <td
+                  className={`bg-white dark:bg-slate-900 text-center ${
+                    isMobile ? "text-xs" : "text-sm"
+                  }`}
+                  style={{
+                    width: normColWidth,
+                    minWidth: normColWidth,
+                    maxWidth: normColWidth,
+                    height: cellHeight,
+                    border: "1px solid var(--border-color)",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderBottom: rowBorder,
+                    fontWeight: "500",
+                  }}
+                >
+                  {row.score != null ? row.score.toFixed(1) : "—"}
                 </td>
               </tr>
             );
