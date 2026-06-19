@@ -6,7 +6,7 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import { useFootballPlayoffRankings } from "@/hooks/useFootballPlayoffRankings";
 import { useResponsive } from "@/hooks/useResponsive";
-import { BubbleTeam, PlayoffTeam } from "@/types/football";
+import { BubbleTeam, OtherTeam, PlayoffTeam } from "@/types/football";
 import { useMemo } from "react";
 
 interface ConferenceColumn {
@@ -14,9 +14,16 @@ interface ConferenceColumn {
   logoUrl?: string;
   playoffTeams: PlayoffTeam[];
   outTeams: { team: BubbleTeam; category: "F4O" | "N4O" }[];
+  otherTeams: OtherTeam[];
 }
 
-export default function FootballConferenceBidsTable() {
+interface FootballConferenceBidsTableProps {
+  showAll?: boolean;
+}
+
+export default function FootballConferenceBidsTable({
+  showAll = false,
+}: FootballConferenceBidsTableProps) {
   const { isMobile } = useResponsive();
   const {
     data: confData,
@@ -35,6 +42,7 @@ export default function FootballConferenceBidsTable() {
     const playoffTeams = rankings?.playoff_teams ?? [];
     const firstFourOut = rankings?.first_four_out ?? [];
     const nextFourOut = rankings?.next_four_out ?? [];
+    const otherTeams = rankings?.other_teams ?? [];
 
     const cols = confData.data.map((conf): ConferenceColumn => {
       const name = conf.conference_name;
@@ -52,11 +60,16 @@ export default function FootballConferenceBidsTable() {
           .map((team) => ({ team, category: "N4O" as const })),
       ];
 
+      const confOther = otherTeams
+        .filter((t) => t.conference === name)
+        .sort((a, b) => a.rank - b.rank);
+
       return {
         name,
         logoUrl: conf.logo_url,
         playoffTeams: confPlayoff,
         outTeams: confOut,
+        otherTeams: confOther,
       };
     });
 
@@ -68,14 +81,20 @@ export default function FootballConferenceBidsTable() {
     });
   }, [confData, rankings]);
 
-  const { maxPlayoffRows, maxOutRows } = useMemo(() => {
+  const { maxPlayoffRows, maxOutRows, maxOtherRows } = useMemo(() => {
     let maxPlayoff = 0;
     let maxOut = 0;
+    let maxOther = 0;
     columns.forEach((col) => {
       maxPlayoff = Math.max(maxPlayoff, col.playoffTeams.length);
       maxOut = Math.max(maxOut, col.outTeams.length);
+      maxOther = Math.max(maxOther, col.otherTeams.length);
     });
-    return { maxPlayoffRows: maxPlayoff, maxOutRows: maxOut };
+    return {
+      maxPlayoffRows: maxPlayoff,
+      maxOutRows: maxOut,
+      maxOtherRows: maxOther,
+    };
   }, [columns]);
 
   if (confError) {
@@ -304,6 +323,90 @@ export default function FootballConferenceBidsTable() {
             </div>
           ))}
         </div>
+
+        {/* All-Teams Section (only when "All Teams" is selected) */}
+        {showAll && maxOtherRows > 0 && (
+          <>
+            {/* Global Black Separator Line */}
+            <div
+              style={{
+                height: "3px",
+                backgroundColor: "#000000",
+                width: `${numColumns * columnWidth}px`,
+              }}
+            />
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
+                gap: "0",
+                border: `1px solid ${borderColor}`,
+                borderTop: "none",
+                backgroundColor: "#ffffff",
+              }}
+            >
+              {columns.map((col) => (
+                <div
+                  key={`other-${col.name}`}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    borderRight: `1px solid ${borderColor}`,
+                  }}
+                >
+                  {col.otherTeams.map((team, idx) => (
+                    <div
+                      key={`${col.name}-other-${team.rank}-${idx}`}
+                      style={{
+                        height: teamRowHeight,
+                        borderBottom: `1px solid ${borderColor}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        gap: "4px",
+                        padding: "4px 4px 4px 12px",
+                        backgroundColor: "#ffffff",
+                      }}
+                    >
+                      <TeamLogo
+                        logoUrl={team.logo_url}
+                        teamName={team.team_name}
+                        size={teamLogoSize}
+                      />
+                      <div
+                        style={{
+                          fontSize: isMobile ? "12px" : "14px",
+                          fontWeight: "400",
+                          color: "#374151",
+                          minWidth: "20px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {team.rank}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Empty cells for alignment */}
+                  {col.otherTeams.length < maxOtherRows &&
+                    Array.from({
+                      length: maxOtherRows - col.otherTeams.length,
+                    }).map((_, idx) => (
+                      <div
+                        key={`${col.name}-empty-other-${idx}`}
+                        style={{
+                          height: teamRowHeight,
+                          borderBottom: `1px solid ${borderColor}`,
+                          backgroundColor: "#f3f4f6",
+                        }}
+                      />
+                    ))}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

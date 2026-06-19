@@ -374,10 +374,26 @@ export interface BubbleTeam {
   cfp_score?: number;
 }
 
+export interface OtherTeam {
+  rank: number;
+  team_name: string;
+  logo_url: string;
+  conference: string;
+  conf_logo_url?: string;
+  twv: number;
+  post_champ_twv?: number;
+  record: string;
+  cfp_bid_pct?: number;
+  full_season_cfp_rating_avg?: number;
+  blended_full_season_rating_avg?: number;
+  cfp_score?: number;
+}
+
 export interface PlayoffRankingsResponse {
   playoff_teams: PlayoffTeam[];
   first_four_out: BubbleTeam[];
   next_four_out: BubbleTeam[];
+  other_teams?: OtherTeam[];
 }
 
 export interface ConferenceApiResponse {

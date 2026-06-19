@@ -2,19 +2,22 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
-import { BubbleTeam, PlayoffTeam } from "@/types/football";
+import { BubbleTeam, OtherTeam, PlayoffTeam } from "@/types/football";
 import { useMemo } from "react";
 
 interface FootballCFPBracketTableProps {
   playoffTeams: PlayoffTeam[];
   firstFourOut?: BubbleTeam[];
   nextFourOut?: BubbleTeam[];
+  otherTeams?: OtherTeam[];
+  showAll?: boolean;
 }
 
 // Unified row shape combining playoff teams and bubble teams
 interface BracketRow {
   key: string;
   seedLabel: string;
+  seedNum?: number;
   team_name: string;
   logo_url: string;
   conference: string;
@@ -24,14 +27,16 @@ interface BracketRow {
   rating?: number;
   cfpRating?: number;
   score?: number;
-  // Group used for separator logic: "playoff" | "f4o" | "n4o"
-  group: "playoff" | "f4o" | "n4o";
+  // Group used for separator logic: "playoff" | "f4o" | "n4o" | "other"
+  group: "playoff" | "f4o" | "n4o" | "other";
 }
 
 export default function FootballCFPBracketTable({
   playoffTeams,
   firstFourOut = [],
   nextFourOut = [],
+  otherTeams = [],
+  showAll = false,
 }: FootballCFPBracketTableProps) {
   const { isMobile } = useResponsive();
 
@@ -95,8 +100,26 @@ export default function FootballCFPBracketTable({
       group: "n4o",
     }));
 
-    return [...playoffRows, ...f4oRows, ...n4oRows];
-  }, [playoffTeams, firstFourOut, nextFourOut]);
+    const otherRows: BracketRow[] = showAll
+      ? otherTeams.map((team) => ({
+          key: `other-${team.rank}-${team.team_name}`,
+          seedLabel: String(team.rank),
+          seedNum: team.rank,
+          team_name: team.team_name,
+          logo_url: team.logo_url,
+          conference: team.conference,
+          conf_logo_url: team.conf_logo_url,
+          category: "",
+          twv: team.post_champ_twv,
+          rating: team.blended_full_season_rating_avg,
+          cfpRating: team.full_season_cfp_rating_avg,
+          score: team.cfp_score,
+          group: "other",
+        }))
+      : [];
+
+    return [...playoffRows, ...f4oRows, ...n4oRows, ...otherRows];
+  }, [playoffTeams, firstFourOut, nextFourOut, otherTeams, showAll]);
 
   // Dark separator at group boundaries and every 4 playoff teams
   const getRowBorderStyle = (index: number) => {
@@ -118,6 +141,11 @@ export default function FootballCFPBracketTable({
       return "3px solid #1f2937";
     }
 
+    // Within all-teams section: dark line every 10 ranks (after 30, 40, ...)
+    if (row.group === "other" && row.seedNum != null && row.seedNum % 10 === 0) {
+      return "3px solid #1f2937";
+    }
+
     return "1px solid var(--border-color)";
   };
 
@@ -131,6 +159,8 @@ export default function FootballCFPBracketTable({
         return "#ffedd5"; // light orange
       case "Next 4 Out":
         return "#fee2e2"; // light red
+      case "":
+        return "#ffffff"; // all-teams rows: blank/uncolored
       default:
         return "#f3f4f6"; // light gray
     }

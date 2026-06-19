@@ -7,7 +7,7 @@ import { useFootballPlayoffRankings } from "@/hooks/useFootballPlayoffRankings";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const FootballCFPBracketTable = dynamic(
   () =>
@@ -38,6 +38,7 @@ export default function FootballHome() {
   const { isMobile } = useResponsive();
   const cfpTableRef = useRef<HTMLDivElement>(null);
   const confBidsRef = useRef<HTMLDivElement>(null);
+  const [showAllTeams, setShowAllTeams] = useState(false);
   const { data, isLoading } = useFootballPlayoffRankings();
 
   // Track page view
@@ -57,12 +58,27 @@ export default function FootballHome() {
     return `${month}/${day}/${year}`;
   }, []);
 
+  // Filter toggle button - matches basketball conf-data styling
+  const filterToggle = (
+    <div className="conference-selector">
+      <button
+        onClick={() => setShowAllTeams(!showAllTeams)}
+        className={`px-3 py-2 border rounded transition-colors ${
+          isMobile ? "text-xs px-2 py-1.5" : "text-sm px-4 py-2"
+        } bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100`}
+      >
+        {showAllTeams ? "Show Top 20 Only" : "Show All Teams"}
+      </button>
+    </div>
+  );
+
   return (
     <ErrorBoundary level="page">
       <PageLayoutWrapper
         title="College Football Playoff Projections"
         isLoading={isLoading}
         rightElement={`Updated: ${lastUpdated}`}
+        conferenceSelector={filterToggle}
       >
         <div className="-mt-2 md:-mt-6">
           {/* CFP Bracket Table Section */}
@@ -73,6 +89,8 @@ export default function FootballHome() {
                   playoffTeams={data?.playoff_teams ?? []}
                   firstFourOut={data?.first_four_out ?? []}
                   nextFourOut={data?.next_four_out ?? []}
+                  otherTeams={data?.other_teams ?? []}
+                  showAll={showAllTeams}
                 />
               </div>
 
@@ -168,7 +186,7 @@ export default function FootballHome() {
               </h2>
 
               <div className="conf-multi-bid-table min-h-[300px]" ref={confBidsRef}>
-                <FootballConferenceBidsTable />
+                <FootballConferenceBidsTable showAll={showAllTeams} />
               </div>
 
               <div className="mt-6">
