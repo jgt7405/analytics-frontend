@@ -119,67 +119,11 @@ export default function FootballHome() {
                   <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        CFP projections based on 1,000 season simulations.
-                      </div>
-                      <div style={{ marginTop: "6px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            width: "12px",
-                            height: "12px",
-                            backgroundColor: "#dbeafe",
-                            border: "1px solid #3b82f6",
-                            borderRadius: "2px",
-                            marginRight: "6px",
-                            verticalAlign: "middle",
-                          }}
-                        ></span>
-                        <span>Auto Bid (Conference Champion)</span>
-                      </div>
-                      <div style={{ marginTop: "6px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            width: "12px",
-                            height: "12px",
-                            backgroundColor: "#dcfce7",
-                            border: "1px solid #16a34a",
-                            borderRadius: "2px",
-                            marginRight: "6px",
-                            verticalAlign: "middle",
-                          }}
-                        ></span>
-                        <span>At Large Bid</span>
-                      </div>
-                      <div style={{ marginTop: "6px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            width: "12px",
-                            height: "12px",
-                            backgroundColor: "#ffedd5",
-                            border: "1px solid #b45309",
-                            borderRadius: "2px",
-                            marginRight: "6px",
-                            verticalAlign: "middle",
-                          }}
-                        ></span>
-                        <span>First 4 Out</span>
-                      </div>
-                      <div style={{ marginTop: "6px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            width: "12px",
-                            height: "12px",
-                            backgroundColor: "#fee2e2",
-                            border: "1px solid #991b1b",
-                            borderRadius: "2px",
-                            marginRight: "6px",
-                            verticalAlign: "middle",
-                          }}
-                        ></span>
-                        <span>Next 4 Out</span>
+                        CFP projections based on 1,000 season simulations. Seed
+                        and rank are based on 70% TWV (performance) and 30% team
+                        rating — the weighting that most closely matches prior
+                        CFP rankings. CFP Rtg % blends projected TWV and rating,
+                        scaled so the top team is 100% and the bottom is 0%.
                       </div>
                     </div>
                   </div>
@@ -214,8 +158,8 @@ export default function FootballHome() {
                   <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        All conferences, showing projected playoff teams (with
-                        seeds) and first/next four out teams.
+                        Projected CFP rank for all teams, based on 1,000 season
+                        simulations.
                       </div>
                     </div>
                   </div>
