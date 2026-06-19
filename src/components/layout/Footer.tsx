@@ -2,15 +2,17 @@
 "use client";
 
 import { X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import ContactModal from "./ContactModal";
 
 interface MethodologyModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isFootball: boolean;
 }
 
-function MethodologyModal({ isOpen, onClose }: MethodologyModalProps) {
+function MethodologyModal({ isOpen, onClose, isFootball }: MethodologyModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -49,34 +51,69 @@ function MethodologyModal({ isOpen, onClose }: MethodologyModalProps) {
               paddingLeft: "16px",
             }}
           >
-            <li style={{ marginBottom: "6px" }}>
-              Create composite team ratings using KenPom, Evan Miya, and Bart
-              Torvik
-            </li>
-            <li style={{ marginBottom: "6px" }}>
-              Calculate win probabilities for future games based on composite
-              ratings
-            </li>
-            <li style={{ marginBottom: "6px" }}>
-              Simulate regular season 1,000 times to project standings and seeds
-            </li>
-            <li style={{ marginBottom: "6px" }}>
-              Simulate conference championship tournament 1,000 times based on
-              seeded matchups
-            </li>
-            <li style={{ marginBottom: "6px" }}>
-              Seed teams in NCAA tournament using TWV from simulated seasons
-            </li>
-            <li style={{ marginBottom: "6px" }}>
-              Simulate NCAA tournament 1,000 times
-            </li>
-            <li style={{ marginBottom: "6px" }}>
-              Display aggregated results and trends from all simulations
-            </li>
-            <li>
-              Update daily by 5:00 AM ET with current ratings (no preseason
-              bias)
-            </li>
+            {isFootball ? (
+              <>
+                <li style={{ marginBottom: "6px" }}>
+                  Create composite team ratings using multiple ratings sources
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Calculate win probabilities for future games based on
+                  composite ratings
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Simulate regular season 1,000 times to project standings and
+                  seeds
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Simulate conference championship game 1,000 times based on
+                  simulated regular season outcomes
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Seed teams in CFP using blend of TWV from simulated seasons
+                  and projected team ratings
+                </li>
+                <li style={{ marginBottom: "6px" }}>Simulate CFP 1,000 times</li>
+                <li style={{ marginBottom: "6px" }}>
+                  Display aggregated results and trends from all simulations
+                </li>
+                <li>
+                  Update daily during the season, generally by 5:00 AM ET, with
+                  current ratings (no preseason bias)
+                </li>
+              </>
+            ) : (
+              <>
+                <li style={{ marginBottom: "6px" }}>
+                  Create composite team ratings using KenPom, Evan Miya, and Bart
+                  Torvik
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Calculate win probabilities for future games based on
+                  composite ratings
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Simulate regular season 1,000 times to project standings and
+                  seeds
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Simulate conference championship tournament 1,000 times based
+                  on seeded matchups
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Seed teams in NCAA tournament using TWV from simulated seasons
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Simulate NCAA tournament 1,000 times
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  Display aggregated results and trends from all simulations
+                </li>
+                <li>
+                  Update daily during the season, generally by 5:00 AM ET, with
+                  current ratings (no preseason bias)
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </div>
@@ -182,6 +219,8 @@ export default function Footer() {
   const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isSocialOpen, setIsSocialOpen] = useState(false);
+  const pathname = usePathname();
+  const isFootball = pathname?.startsWith("/football") ?? false;
 
   return (
     <>
@@ -239,6 +278,7 @@ export default function Footer() {
       <MethodologyModal
         isOpen={isMethodologyOpen}
         onClose={() => setIsMethodologyOpen(false)}
+        isFootball={isFootball}
       />
       <ContactModal
         isOpen={isContactOpen}
