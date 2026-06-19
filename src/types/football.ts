@@ -345,10 +345,12 @@ export interface PlayoffTeam {
   conference: string;
   conf_logo_url?: string;
   twv: number;
+  post_champ_twv?: number;
   record: string;
   bid_type: "Conference Champion" | "At-Large";
   cfp_bid_pct?: number;
   full_season_cfp_rating_avg?: number;
+  blended_full_season_rating_avg?: number;
   cfp_score?: number;
   CFP_First_Round?: number;
   CFP_Quarterfinals?: number;
@@ -364,9 +366,11 @@ export interface BubbleTeam {
   conference: string;
   conf_logo_url?: string;
   twv: number;
+  post_champ_twv?: number;
   record: string;
   cfp_bid_pct?: number;
   full_season_cfp_rating_avg?: number;
+  blended_full_season_rating_avg?: number;
   cfp_score?: number;
 }
 
