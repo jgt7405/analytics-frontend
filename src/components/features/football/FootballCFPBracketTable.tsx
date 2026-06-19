@@ -25,7 +25,6 @@ interface BracketRow {
   category: string;
   twv?: number;
   rating?: number;
-  cfpRating?: number;
   score?: number;
   // Group used for separator logic: "playoff" | "f4o" | "n4o" | "other"
   group: "playoff" | "f4o" | "n4o" | "other";
@@ -47,7 +46,6 @@ export default function FootballCFPBracketTable({
   const categoryColWidth = isMobile ? 80 : 120;
   const twvColWidth = isMobile ? 70 : 80;
   const ratingColWidth = isMobile ? 70 : 100;
-  const cfpRatingColWidth = isMobile ? 70 : 100;
   const normColWidth = isMobile ? 80 : 120;
   const cellHeight = isMobile ? 32 : 36;
   const headerHeight = isMobile ? 40 : 48;
@@ -65,7 +63,6 @@ export default function FootballCFPBracketTable({
         team.bid_type === "Conference Champion" ? "Auto Bid" : "At Large",
       twv: team.post_champ_twv,
       rating: team.blended_full_season_rating_avg,
-      cfpRating: team.full_season_cfp_rating_avg,
       score: team.cfp_score,
       group: "playoff",
     }));
@@ -80,7 +77,6 @@ export default function FootballCFPBracketTable({
       category: "First 4 Out",
       twv: team.post_champ_twv,
       rating: team.blended_full_season_rating_avg,
-      cfpRating: team.full_season_cfp_rating_avg,
       score: team.cfp_score,
       group: "f4o",
     }));
@@ -95,7 +91,6 @@ export default function FootballCFPBracketTable({
       category: "Next 4 Out",
       twv: team.post_champ_twv,
       rating: team.blended_full_season_rating_avg,
-      cfpRating: team.full_season_cfp_rating_avg,
       score: team.cfp_score,
       group: "n4o",
     }));
@@ -112,8 +107,7 @@ export default function FootballCFPBracketTable({
           category: "",
           twv: team.post_champ_twv,
           rating: team.blended_full_season_rating_avg,
-          cfpRating: team.full_season_cfp_rating_avg,
-          score: team.cfp_score,
+              score: team.cfp_score,
           group: "other",
         }))
       : [];
@@ -311,23 +305,6 @@ export default function FootballCFPBracketTable({
               Proj Rtg
             </th>
 
-            {/* CFP Rtg Column Header */}
-            <th
-              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: cfpRatingColWidth,
-                minWidth: cfpRatingColWidth,
-                maxWidth: cfpRatingColWidth,
-                height: headerHeight,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-              }}
-            >
-              CFP Rtg
-            </th>
-
             {/* CFP Rtg % Column Header */}
             <th
               className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${
@@ -497,26 +474,6 @@ export default function FootballCFPBracketTable({
                   }}
                 >
                   {row.rating != null ? row.rating.toFixed(2) : "—"}
-                </td>
-
-                {/* CFP Rtg Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: cfpRatingColWidth,
-                    minWidth: cfpRatingColWidth,
-                    maxWidth: cfpRatingColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderBottom: rowBorder,
-                    fontWeight: "500",
-                  }}
-                >
-                  {row.cfpRating != null ? row.cfpRating.toFixed(2) : "—"}
                 </td>
 
                 {/* CFP Rtg % Cell */}
