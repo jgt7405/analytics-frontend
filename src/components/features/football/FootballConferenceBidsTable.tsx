@@ -67,11 +67,21 @@ export default function FootballConferenceBidsTable() {
       };
     });
 
-    // Sort by playoff team count desc, then out team count desc
+    // Best (lowest) rank of any team in the conference; used as a tiebreaker.
+    const topRank = (col: ConferenceColumn) => {
+      const ranks = [
+        ...col.playoffTeams.map((t) => t.rank),
+        ...col.outTeams.map((o) => o.team.rank),
+        ...col.otherTeams.map((t) => t.rank),
+      ].filter((r): r is number => typeof r === "number");
+      return ranks.length ? Math.min(...ranks) : Infinity;
+    };
+
+    // Sort by playoff (CFP) team count desc, then by rank of top team asc
     return cols.sort((a, b) => {
       const playoffDiff = b.playoffTeams.length - a.playoffTeams.length;
       if (playoffDiff !== 0) return playoffDiff;
-      return b.outTeams.length - a.outTeams.length;
+      return topRank(a) - topRank(b);
     });
   }, [confData, rankings]);
 
