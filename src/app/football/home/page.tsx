@@ -87,9 +87,19 @@ export default function FootballHome() {
             <div className="mb-8">
               {/* Width shrinks to the chart so the toggle's right edge lines
                   up with the chart's right edge (desktop); capped at 100% so
-                  the chart still scrolls on mobile. */}
-              <div style={{ width: "max-content", maxWidth: "100%" }}>
-                <div className="flex justify-end mb-2">{filterToggle}</div>
+                  the chart still scrolls on mobile. The toggle is absolutely
+                  positioned in the whitespace above the chart so it doesn't
+                  push the chart down. */}
+              <div
+                className="relative"
+                style={{ width: "max-content", maxWidth: "100%" }}
+              >
+                <div
+                  className="absolute right-0 flex justify-end"
+                  style={{ bottom: "100%", marginBottom: "8px" }}
+                >
+                  {filterToggle}
+                </div>
                 <div
                   className="cfp-bracket-table min-h-[600px]"
                   ref={cfpTableRef}
