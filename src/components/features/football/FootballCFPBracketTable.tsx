@@ -182,7 +182,12 @@ export default function FootballCFPBracketTable({
   };
 
   return (
-    <div className="relative overflow-x-auto">
+    // Shrink-wrap the table (capped at 100% so it still scrolls on mobile) so
+    // the page can right-align the toggle to the chart's actual right edge.
+    <div
+      className="relative overflow-x-auto"
+      style={{ width: "max-content", maxWidth: "100%" }}
+    >
       <table
         className="border-collapse border-spacing-0"
         style={{

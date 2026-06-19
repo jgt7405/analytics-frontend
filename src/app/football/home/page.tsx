@@ -58,18 +58,20 @@ export default function FootballHome() {
     return `${month}/${day}/${year}`;
   }, []);
 
-  // Filter toggle button - matches basketball conf-data styling
+  // Filter toggle button - matches basketball conf-data styling.
+  // Not using the .conference-selector class here: on desktop that class is
+  // absolutely positioned to the top-right of the header, where it would
+  // overlap the "Updated" date. Instead it's placed in normal flow above the
+  // chart and right-aligned to the chart's width (see below).
   const filterToggle = (
-    <div className="conference-selector">
-      <button
-        onClick={() => setShowAllTeams(!showAllTeams)}
-        className={`px-3 py-2 border rounded transition-colors ${
-          isMobile ? "text-xs px-2 py-1.5" : "text-sm px-4 py-2"
-        } bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100`}
-      >
-        {showAllTeams ? "Show Top 20 Only" : "Show All Teams"}
-      </button>
-    </div>
+    <button
+      onClick={() => setShowAllTeams(!showAllTeams)}
+      className={`px-3 py-2 border rounded transition-colors ${
+        isMobile ? "text-xs px-2 py-1.5" : "text-sm px-4 py-2"
+      } bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100`}
+    >
+      {showAllTeams ? "Show Top 20 Only" : "Show All Teams"}
+    </button>
   );
 
   return (
@@ -78,20 +80,28 @@ export default function FootballHome() {
         title="College Football Playoff Projections"
         isLoading={isLoading}
         rightElement={`Updated: ${lastUpdated}`}
-        conferenceSelector={filterToggle}
       >
         <div className="-mt-2 md:-mt-6">
           {/* CFP Bracket Table Section */}
           <ErrorBoundary level="component">
             <div className="mb-8">
-              <div className="cfp-bracket-table min-h-[600px]" ref={cfpTableRef}>
-                <FootballCFPBracketTable
-                  playoffTeams={data?.playoff_teams ?? []}
-                  firstFourOut={data?.first_four_out ?? []}
-                  nextFourOut={data?.next_four_out ?? []}
-                  otherTeams={data?.other_teams ?? []}
-                  showAll={showAllTeams}
-                />
+              {/* Width shrinks to the chart so the toggle's right edge lines
+                  up with the chart's right edge (desktop); capped at 100% so
+                  the chart still scrolls on mobile. */}
+              <div style={{ width: "max-content", maxWidth: "100%" }}>
+                <div className="flex justify-end mb-2">{filterToggle}</div>
+                <div
+                  className="cfp-bracket-table min-h-[600px]"
+                  ref={cfpTableRef}
+                >
+                  <FootballCFPBracketTable
+                    playoffTeams={data?.playoff_teams ?? []}
+                    firstFourOut={data?.first_four_out ?? []}
+                    nextFourOut={data?.next_four_out ?? []}
+                    otherTeams={data?.other_teams ?? []}
+                    showAll={showAllTeams}
+                  />
+                </div>
               </div>
 
               <div className="mt-6">
