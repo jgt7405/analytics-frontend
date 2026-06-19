@@ -119,11 +119,16 @@ export default function FootballHome() {
                   <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        CFP projections based on 1,000 season simulations. Seed
-                        and rank are based on 70% TWV (performance) and 30% team
-                        rating — the weighting that most closely matches prior
-                        CFP rankings. CFP Rtg % blends projected TWV and rating,
-                        scaled so the top team is 100% and the bottom is 0%.
+                        CFP projections based on 1,000 season simulations.
+                      </div>
+                      <div style={{ marginTop: "6px" }}>
+                        Seed and rank are based on 70% TWV (performance) and 30%
+                        team rating — the weighting that most closely matches
+                        prior CFP rankings.
+                      </div>
+                      <div style={{ marginTop: "6px" }}>
+                        CFP Rtg % blends projected TWV and rating, scaled so the
+                        top team is 100% and the bottom is 0%.
                       </div>
                     </div>
                   </div>
