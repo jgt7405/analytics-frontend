@@ -10,8 +10,8 @@ const LOGO: Record<Sport, string> = {
   football: "/images/anim/logo_football.png",
 };
 const BALL: Record<Sport, string> = {
-  basketball: "/images/anim/ball_basketball.png",
-  football: "/images/anim/ball_football.png",
+  basketball: "/images/anim/ball_basketball.svg",
+  football: "/images/anim/ball_football.svg",
 };
 const NOBALL = "/images/anim/logo_noball.png";
 
@@ -26,7 +26,7 @@ const BOX: Record<Sport, { cx: number; cy: number; w: number; h: number }> = {
   },
 };
 
-const DURATION = 1300; // ms for the whole fly-out-and-back
+const DURATION = 700; // ms for the whole fly-out-and-back
 const SPIN = true;
 
 function ease(t: number) {
@@ -60,6 +60,7 @@ export default function AnimatedLogo() {
   const curBallRef = useRef<HTMLImageElement>(null);
   const tgtBallRef = useRef<HTMLImageElement>(null);
   const animatingRef = useRef(false);
+  const navigatedRef = useRef(false);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -114,22 +115,25 @@ export default function AnimatedLogo() {
 
       const b = BOX[from];
       const lr = box.getBoundingClientRect();
-      const w = b.w * lr.width;
-      const h = b.h * lr.height;
+      const w = b.w * lr.width; // ball size in the header logo
       const ocx = lr.left + b.cx * lr.width;
       const ocy = lr.top + b.cy * lr.height;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const scx = vw / 2;
       const scy = vh / 2;
-      const fullScale = (Math.max(vw, vh) * 1.55) / w;
+      // Lay the ball out at its full on-screen size and scale DOWN, so the SVG
+      // rasterises crisp once and the GPU just composites the scale (smooth, no
+      // per-frame re-raster). 0.82 of the short side keeps the whole ball visible.
+      const S = 0.82 * Math.min(vw, vh);
+      const scaleStart = w / S;
 
       fullImg.style.opacity = "0";
       noImg.style.opacity = "1";
-      fly.style.left = `${ocx - w / 2}px`;
-      fly.style.top = `${ocy - h / 2}px`;
-      fly.style.width = `${w}px`;
-      fly.style.height = `${h}px`;
+      fly.style.left = `${scx - S / 2}px`;
+      fly.style.top = `${scy - S / 2}px`;
+      fly.style.width = `${S}px`;
+      fly.style.height = `${S}px`;
       fly.style.opacity = "1";
       curImg.src = BALL[from];
       curImg.style.opacity = "1";
@@ -137,32 +141,43 @@ export default function AnimatedLogo() {
       tgtImg.style.opacity = "0";
 
       animatingRef.current = true;
+      navigatedRef.current = false;
       const t0 = performance.now();
       const tick = (now: number) => {
         let p = (now - t0) / DURATION;
         if (p > 1) p = 1;
         const g = p <= 0.5 ? ease(p / 0.5) : ease((1 - p) / 0.5);
-        const tx = (scx - ocx) * g;
-        const ty = (scy - ocy) * g;
+        // g: 0 at the header, 1 at full-screen centre. Translate moves the
+        // centred container back to the header; scale shrinks it to ball size.
+        const tx = (ocx - scx) * (1 - g);
+        const ty = (ocy - scy) * (1 - g);
         const win = Math.min(Math.max((p - 0.4) / 0.2, 0), 1);
         const pop = Math.sin(win * Math.PI);
-        const scale = (1 + g * (fullScale - 1)) * (1 + 0.1 * pop);
+        const scale = (scaleStart + g * (1 - scaleStart)) * (1 + 0.08 * pop);
         const rot = SPIN ? p * 360 : 0;
         fly.style.transform = `translate(${tx}px,${ty}px) scale(${scale}) rotate(${rot}deg)`;
         curImg.style.opacity = String(1 - win);
         tgtImg.style.opacity = String(win);
-        let vp = 1 - Math.abs(p - 0.5) / 0.26;
+        // Veil ramps to a full-opacity blank with a short plateau around the
+        // midpoint, masking the page swap.
+        let vp = (0.5 - Math.abs(p - 0.5)) / 0.18;
         if (vp < 0) vp = 0;
-        veil.style.opacity = String(0.94 * vp * vp);
-        if (p >= 1) {
+        if (vp > 1) vp = 1;
+        veil.style.opacity = String(vp);
+        // Navigate once while the screen is fully blank, so the new page renders
+        // hidden and is revealed as the ball lands and the veil fades.
+        if (!navigatedRef.current && p >= 0.5) {
+          navigatedRef.current = true;
           setDisplaySport(target);
+          router.push(url);
+        }
+        if (p >= 1) {
           fullImg.style.opacity = "1";
           noImg.style.opacity = "0";
           fly.style.opacity = "0";
           fly.style.transform = "none";
           veil.style.opacity = "0";
           animatingRef.current = false;
-          router.push(url);
           return;
         }
         requestAnimationFrame(tick);
@@ -246,10 +261,7 @@ export default function AnimatedLogo() {
                 ref={curBallRef}
                 alt=""
                 aria-hidden="true"
-                style={{
-                  ...imgFill,
-                  filter: "drop-shadow(0 16px 34px rgba(0,90,110,.28))",
-                }}
+                style={imgFill}
                 draggable={false}
               />
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -257,10 +269,7 @@ export default function AnimatedLogo() {
                 ref={tgtBallRef}
                 alt=""
                 aria-hidden="true"
-                style={{
-                  ...imgFill,
-                  filter: "drop-shadow(0 16px 34px rgba(0,90,110,.28))",
-                }}
+                style={imgFill}
                 draggable={false}
               />
             </div>
