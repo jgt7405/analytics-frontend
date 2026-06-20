@@ -109,7 +109,11 @@ export default function FootballHome() {
   return (
     <ErrorBoundary level="page">
       <PageLayoutWrapper
-        title="College Football Playoff Projections"
+        title={
+          mode === "current"
+            ? "College Football Playoff — Current Snapshot"
+            : "College Football Playoff Projections"
+        }
         isLoading={isLoading}
         rightElement={`Updated: ${lastUpdated}`}
       >
@@ -153,7 +157,9 @@ export default function FootballHome() {
                   <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
-                        CFP projections based on 1,000 season simulations.
+                        {mode === "current"
+                          ? "Current snapshot based on teams' results and ratings to date."
+                          : "CFP projections based on 1,000 season simulations."}
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         Seed and rank are based on 70% TWV (performance) and 30%
@@ -161,8 +167,9 @@ export default function FootballHome() {
                         prior CFP rankings.
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        CFP Rtg % blends projected TWV and rating, scaled so the
-                        top team is 100% and the bottom is 0%.
+                        CFP Rtg % blends {mode === "current" ? "current" : "projected"}{" "}
+                        TWV and rating, scaled so the top team is 100% and the
+                        bottom is 0%.
                       </div>
                     </div>
                   </div>
