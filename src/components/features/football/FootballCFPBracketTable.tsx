@@ -11,6 +11,9 @@ interface FootballCFPBracketTableProps {
   nextFourOut?: BubbleTeam[];
   otherTeams?: OtherTeam[];
   showAll?: boolean;
+  // Current Snapshot uses live TWV/rating, so the columns are labeled
+  // "TWV"/"Rtg" rather than the projected "Proj TWV"/"Proj Rtg".
+  isCurrent?: boolean;
 }
 
 // Unified row shape combining playoff teams and bubble teams
@@ -36,6 +39,7 @@ export default function FootballCFPBracketTable({
   nextFourOut = [],
   otherTeams = [],
   showAll = false,
+  isCurrent = false,
 }: FootballCFPBracketTableProps) {
   const { isMobile } = useResponsive();
 
@@ -285,7 +289,7 @@ export default function FootballCFPBracketTable({
                 borderLeft: "none",
               }}
             >
-              Proj TWV
+              {isCurrent ? "TWV" : "Proj TWV"}
             </th>
 
             {/* Proj Rtg Column Header */}
@@ -302,7 +306,7 @@ export default function FootballCFPBracketTable({
                 borderLeft: "none",
               }}
             >
-              Proj Rtg
+              {isCurrent ? "Rtg" : "Proj Rtg"}
             </th>
 
             {/* CFP Rtg % Column Header */}

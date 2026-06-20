@@ -15,15 +15,17 @@ function validatePathSegment(segment: string): boolean {
 }
 
 /**
- * Helper: Forward the ?season= query parameter from the incoming request
- * to the backend URL. If no season param exists, returns empty string.
+ * Helper: Forward whitelisted query parameters (season, mode) from the
+ * incoming request to the backend URL. Returns "" when none are present.
  */
-function getSeasonQueryString(request: NextRequest): string {
-  const season = request.nextUrl.searchParams.get("season");
-  if (season) {
-    return `?season=${encodeURIComponent(season)}`;
+function getForwardedQueryString(request: NextRequest): string {
+  const forwarded = new URLSearchParams();
+  for (const key of ["season", "mode"]) {
+    const value = request.nextUrl.searchParams.get(key);
+    if (value) forwarded.set(key, value);
   }
-  return "";
+  const qs = forwarded.toString();
+  return qs ? `?${qs}` : "";
 }
 
 export async function GET(
@@ -469,7 +471,7 @@ export async function GET(
     // =========================================================================
     // SEASON ARCHIVE: Forward ?season= query parameter to the backend
     // =========================================================================
-    const seasonQuery = getSeasonQueryString(_request);
+    const seasonQuery = getForwardedQueryString(_request);
     const backendUrl = `${BACKEND_BASE_URL}${backendPath}${seasonQuery}`;
     console.log("Backend URL:", backendUrl);
 
@@ -731,7 +733,7 @@ export async function POST(
     // =========================================================================
     // SEASON ARCHIVE: Forward ?season= query parameter to the backend for POSTs
     // =========================================================================
-    const seasonQuery = getSeasonQueryString(request);
+    const seasonQuery = getForwardedQueryString(request);
     const backendUrl = `${BACKEND_BASE_URL}${backendPath}${seasonQuery}`;
     console.log("🌐 Backend URL:", backendUrl);
 

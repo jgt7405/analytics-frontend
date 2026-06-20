@@ -4,7 +4,10 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
-import { useFootballPlayoffRankings } from "@/hooks/useFootballPlayoffRankings";
+import {
+  PlayoffRankingsMode,
+  useFootballPlayoffRankings,
+} from "@/hooks/useFootballPlayoffRankings";
 import { useResponsive } from "@/hooks/useResponsive";
 import { BubbleTeam, OtherTeam, PlayoffTeam } from "@/types/football";
 import { useMemo } from "react";
@@ -17,7 +20,11 @@ interface ConferenceColumn {
   otherTeams: OtherTeam[];
 }
 
-export default function FootballConferenceBidsTable() {
+export default function FootballConferenceBidsTable({
+  mode = "season",
+}: {
+  mode?: PlayoffRankingsMode;
+}) {
   const { isMobile } = useResponsive();
   const {
     data: confData,
@@ -26,7 +33,7 @@ export default function FootballConferenceBidsTable() {
     refetch,
   } = useFootballConfData();
   const { data: rankings, isLoading: rankingsLoading } =
-    useFootballPlayoffRankings();
+    useFootballPlayoffRankings(undefined, mode);
 
   // Build one column per conference (every FBS conference from conf data),
   // grouping playoff teams and bubble teams by matching conference name.

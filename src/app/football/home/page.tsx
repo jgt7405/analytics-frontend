@@ -3,7 +3,10 @@
 import TableActionButtons from "@/components/common/TableActionButtons";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { useFootballPlayoffRankings } from "@/hooks/useFootballPlayoffRankings";
+import {
+  PlayoffRankingsMode,
+  useFootballPlayoffRankings,
+} from "@/hooks/useFootballPlayoffRankings";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import dynamic from "next/dynamic";
@@ -39,7 +42,8 @@ export default function FootballHome() {
   const cfpTableRef = useRef<HTMLDivElement>(null);
   const confBidsRef = useRef<HTMLDivElement>(null);
   const [showAllTeams, setShowAllTeams] = useState(false);
-  const { data, isLoading } = useFootballPlayoffRankings();
+  const [mode, setMode] = useState<PlayoffRankingsMode>("season");
+  const { data, isLoading } = useFootballPlayoffRankings(undefined, mode);
 
   // Track page view
   useEffect(() => {
@@ -74,6 +78,34 @@ export default function FootballHome() {
     </button>
   );
 
+  // Segmented control switching the CFP field between the simulated season
+  // projection (default) and a snapshot built from current TWV/rating.
+  const sizeClasses = isMobile ? "text-xs px-2 py-1.5" : "text-sm px-4 py-2";
+  const modeToggle = (
+    <div className="flex rounded border border-gray-300 overflow-hidden">
+      {(
+        [
+          ["season", "Season Projection"],
+          ["current", "Current Snapshot"],
+        ] as [PlayoffRankingsMode, string][]
+      ).map(([value, label], idx) => (
+        <button
+          key={value}
+          onClick={() => setMode(value)}
+          className={`${sizeClasses} transition-colors ${
+            idx === 0 ? "border-r border-gray-300" : ""
+          } ${
+            mode === value
+              ? "bg-gray-700 text-white"
+              : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <ErrorBoundary level="page">
       <PageLayoutWrapper
@@ -95,9 +127,10 @@ export default function FootballHome() {
                 style={{ width: "max-content", maxWidth: "100%" }}
               >
                 <div
-                  className="absolute right-0 flex justify-end"
+                  className="absolute right-0 flex justify-end items-center gap-2"
                   style={{ bottom: "100%", marginBottom: "8px" }}
                 >
+                  {modeToggle}
                   {filterToggle}
                 </div>
                 <div
@@ -110,6 +143,7 @@ export default function FootballHome() {
                     nextFourOut={data?.next_four_out ?? []}
                     otherTeams={data?.other_teams ?? []}
                     showAll={showAllTeams}
+                    isCurrent={mode === "current"}
                   />
                 </div>
               </div>
@@ -155,7 +189,7 @@ export default function FootballHome() {
               </h2>
 
               <div className="conf-multi-bid-table min-h-[300px]" ref={confBidsRef}>
-                <FootballConferenceBidsTable />
+                <FootballConferenceBidsTable mode={mode} />
               </div>
 
               <div className="mt-6">
