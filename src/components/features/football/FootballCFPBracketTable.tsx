@@ -3,6 +3,7 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { BubbleTeam, OtherTeam, PlayoffTeam } from "@/types/football";
+import Link from "next/link";
 import { useMemo } from "react";
 
 interface FootballCFPBracketTableProps {
@@ -374,7 +375,10 @@ export default function FootballCFPBracketTable({
                     borderBottom: rowBorder,
                   }}
                 >
-                  <div className="flex items-center gap-2">
+                  <Link
+                    href={`/football/team/${encodeURIComponent(row.team_name)}`}
+                    className="flex items-center gap-2 hover:underline"
+                  >
                     <TeamLogo
                       logoUrl={row.logo_url}
                       teamName={row.team_name}
@@ -382,7 +386,7 @@ export default function FootballCFPBracketTable({
                       className="flex-shrink-0"
                     />
                     <span className="truncate">{row.team_name}</span>
-                  </div>
+                  </Link>
                 </td>
 
                 {/* Conference Cell */}

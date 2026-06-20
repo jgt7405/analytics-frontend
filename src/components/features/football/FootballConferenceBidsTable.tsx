@@ -10,6 +10,7 @@ import {
 } from "@/hooks/useFootballPlayoffRankings";
 import { useResponsive } from "@/hooks/useResponsive";
 import { BubbleTeam, OtherTeam, PlayoffTeam } from "@/types/football";
+import Link from "next/link";
 import { useMemo } from "react";
 
 interface ConferenceColumn {
@@ -218,11 +219,18 @@ export default function FootballConferenceBidsTable({
                     backgroundColor: "#ffffff",
                   }}
                 >
-                  <TeamLogo
-                    logoUrl={team.logo_url}
-                    teamName={team.team_name}
-                    size={teamLogoSize}
-                  />
+                  <Link
+                    href={`/football/team/${encodeURIComponent(
+                      team.team_name
+                    )}`}
+                    className="flex-shrink-0"
+                  >
+                    <TeamLogo
+                      logoUrl={team.logo_url}
+                      teamName={team.team_name}
+                      size={teamLogoSize}
+                    />
+                  </Link>
                   <div
                     style={{
                       fontSize: isMobile ? "12px" : "14px",
@@ -298,11 +306,18 @@ export default function FootballConferenceBidsTable({
                     backgroundColor: "#ffffff",
                   }}
                 >
-                  <TeamLogo
-                    logoUrl={team.logo_url}
-                    teamName={team.team_name}
-                    size={teamLogoSize}
-                  />
+                  <Link
+                    href={`/football/team/${encodeURIComponent(
+                      team.team_name
+                    )}`}
+                    className="flex-shrink-0"
+                  >
+                    <TeamLogo
+                      logoUrl={team.logo_url}
+                      teamName={team.team_name}
+                      size={teamLogoSize}
+                    />
+                  </Link>
                   <div
                     style={{
                       fontSize: isMobile ? "12px" : "14px",
