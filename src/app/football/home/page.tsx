@@ -96,7 +96,7 @@ export default function FootballHome() {
             idx === 0 ? "border-r border-gray-300" : ""
           } ${
             mode === value
-              ? "bg-gray-700 text-white"
+              ? "bg-[rgb(0,151,178)] text-white"
               : "bg-gray-50 text-gray-700 hover:bg-gray-100"
           }`}
         >
@@ -115,12 +115,26 @@ export default function FootballHome() {
             : "College Football Playoff Projections"
         }
         isLoading={isLoading}
-        rightElement={`Updated: ${lastUpdated}`}
+        rightElement={isMobile ? undefined : `Updated: ${lastUpdated}`}
       >
         <div className="-mt-2 md:-mt-6">
           {/* CFP Bracket Table Section */}
           <ErrorBoundary level="component">
             <div className="mb-8">
+              {/* Mobile: the header's "Updated" date and the absolutely
+                  positioned desktop toggles don't fit, so render the date and
+                  controls here in normal flow above the chart. */}
+              {isMobile && (
+                <div className="mb-3 flex flex-col gap-2">
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                    Updated: {lastUpdated}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {modeToggle}
+                    {filterToggle}
+                  </div>
+                </div>
+              )}
               {/* Width shrinks to the chart so the toggle's right edge lines
                   up with the chart's right edge (desktop); capped at 100% so
                   the chart still scrolls on mobile. The toggle is absolutely
@@ -130,13 +144,15 @@ export default function FootballHome() {
                 className="relative"
                 style={{ width: "max-content", maxWidth: "100%" }}
               >
-                <div
-                  className="absolute right-0 flex justify-end items-center gap-2"
-                  style={{ bottom: "100%", marginBottom: "8px" }}
-                >
-                  {modeToggle}
-                  {filterToggle}
-                </div>
+                {!isMobile && (
+                  <div
+                    className="absolute right-0 flex justify-end items-center gap-2"
+                    style={{ bottom: "100%", marginBottom: "8px" }}
+                  >
+                    {modeToggle}
+                    {filterToggle}
+                  </div>
+                )}
                 <div
                   className="cfp-bracket-table min-h-[600px]"
                   ref={cfpTableRef}
