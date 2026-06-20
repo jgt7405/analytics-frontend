@@ -375,18 +375,22 @@ export default function FootballCFPBracketTable({
                     borderBottom: rowBorder,
                   }}
                 >
-                  <Link
-                    href={`/football/team/${encodeURIComponent(row.team_name)}`}
-                    className="flex items-center gap-2 hover:underline"
-                  >
-                    <TeamLogo
-                      logoUrl={row.logo_url}
-                      teamName={row.team_name}
-                      size={isMobile ? 24 : 28}
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/football/team/${encodeURIComponent(
+                        row.team_name
+                      )}`}
                       className="flex-shrink-0"
-                    />
+                    >
+                      <TeamLogo
+                        logoUrl={row.logo_url}
+                        teamName={row.team_name}
+                        size={isMobile ? 24 : 28}
+                        className="flex-shrink-0"
+                      />
+                    </Link>
                     <span className="truncate">{row.team_name}</span>
-                  </Link>
+                  </div>
                 </td>
 
                 {/* Conference Cell */}
