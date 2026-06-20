@@ -10,8 +10,8 @@ const LOGO: Record<Sport, string> = {
   football: "/images/anim/logo_football.png",
 };
 const BALL: Record<Sport, string> = {
-  basketball: "/images/anim/ball_basketball.svg",
-  football: "/images/anim/ball_football.svg",
+  basketball: "/images/anim/ball_basketball.png",
+  football: "/images/anim/ball_football.png",
 };
 const NOBALL = "/images/anim/logo_noball.png";
 
@@ -116,24 +116,25 @@ export default function AnimatedLogo() {
       const b = BOX[from];
       const lr = box.getBoundingClientRect();
       const w = b.w * lr.width; // ball size in the header logo
+      const h = b.h * lr.height;
       const ocx = lr.left + b.cx * lr.width;
       const ocy = lr.top + b.cy * lr.height;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const scx = vw / 2;
       const scy = vh / 2;
-      // Lay the ball out at its full on-screen size and scale DOWN, so the SVG
-      // rasterises crisp once and the GPU just composites the scale (smooth, no
-      // per-frame re-raster). 0.82 of the short side keeps the whole ball visible.
-      const S = 0.82 * Math.min(vw, vh);
-      const scaleStart = w / S;
+      // Grow the real ball image to ~0.85 of the SHORT viewport side: big and
+      // fully on-screen, but a far gentler upscale than filling (the old code
+      // used 1.55x the long side, which is what pixelated it). The white veil
+      // blanks the rest of the screen.
+      const fullScale = (Math.min(vw, vh) * 0.85) / w;
 
       fullImg.style.opacity = "0";
       noImg.style.opacity = "1";
-      fly.style.left = `${scx - S / 2}px`;
-      fly.style.top = `${scy - S / 2}px`;
-      fly.style.width = `${S}px`;
-      fly.style.height = `${S}px`;
+      fly.style.left = `${ocx - w / 2}px`;
+      fly.style.top = `${ocy - h / 2}px`;
+      fly.style.width = `${w}px`;
+      fly.style.height = `${h}px`;
       fly.style.opacity = "1";
       curImg.src = BALL[from];
       curImg.style.opacity = "1";
@@ -147,13 +148,12 @@ export default function AnimatedLogo() {
         let p = (now - t0) / DURATION;
         if (p > 1) p = 1;
         const g = p <= 0.5 ? ease(p / 0.5) : ease((1 - p) / 0.5);
-        // g: 0 at the header, 1 at full-screen centre. Translate moves the
-        // centred container back to the header; scale shrinks it to ball size.
-        const tx = (ocx - scx) * (1 - g);
-        const ty = (ocy - scy) * (1 - g);
+        // Ball flies from the header (g=0) to centre (g=1) and back.
+        const tx = (scx - ocx) * g;
+        const ty = (scy - ocy) * g;
         const win = Math.min(Math.max((p - 0.4) / 0.2, 0), 1);
         const pop = Math.sin(win * Math.PI);
-        const scale = (scaleStart + g * (1 - scaleStart)) * (1 + 0.08 * pop);
+        const scale = (1 + g * (fullScale - 1)) * (1 + 0.08 * pop);
         const rot = SPIN ? p * 360 : 0;
         fly.style.transform = `translate(${tx}px,${ty}px) scale(${scale}) rotate(${rot}deg)`;
         curImg.style.opacity = String(1 - win);
