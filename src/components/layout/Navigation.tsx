@@ -5,8 +5,10 @@ import { cn } from "@/lib/utils";
 import navStyles from "@/styles/components/navigation.module.css";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import ContactModal from "./ContactModal";
+import { useLogoAnimation } from "./LogoAnimationContext";
 
 function NavigationContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -239,6 +241,22 @@ function NavigationContent() {
       : `/football/wins?conf=Big 12`;
   }, [isFootball, isArchiveMode, archiveSeason]);
 
+  // Trigger the logo fly-out animation, then navigate to the other sport.
+  // Falls back to the Link's default navigation when the animation is
+  // unavailable (e.g. before the logo has mounted).
+  const logoAnim = useLogoAnimation();
+  const handleSportSwitch = useCallback(
+    (e: ReactMouseEvent) => {
+      if (!logoAnim) return;
+      e.preventDefault();
+      logoAnim.switchSport(
+        isFootball ? "basketball" : "football",
+        getSportSwitchUrl(),
+      );
+    },
+    [logoAnim, isFootball, getSportSwitchUrl],
+  );
+
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
@@ -343,6 +361,7 @@ function NavigationContent() {
 
         <Link
           href={getSportSwitchUrl()}
+          onClick={handleSportSwitch}
           className={cn(
             navStyles.tabButton,
             "text-xs flex flex-col items-center justify-center leading-none py-1",
@@ -445,7 +464,10 @@ function NavigationContent() {
                 navStyles.tabButton,
                 "text-xs flex flex-col items-center justify-center leading-none py-1 gap-0",
               )}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => {
+                setMobileMenuOpen(false);
+                handleSportSwitch(e);
+              }}
               role="menuitem"
               tabIndex={mobileMenuOpen ? 0 : -1}
             >
