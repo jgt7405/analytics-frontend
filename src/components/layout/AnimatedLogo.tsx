@@ -62,6 +62,11 @@ export default function AnimatedLogo() {
   const animatingRef = useRef(false);
   const navigatedRef = useRef(false);
 
+  // Live pathname-derived sport, so the animation loop can tell when the new
+  // route has actually committed before it reveals the page.
+  const currentSportRef = useRef(currentSport);
+  currentSportRef.current = currentSport;
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -133,6 +138,7 @@ export default function AnimatedLogo() {
 
       fullImg.style.opacity = "0";
       noImg.style.opacity = "1";
+      veil.style.transition = ""; // clear any leftover reveal fade
       fly.style.left = `${scx - S / 2}px`;
       fly.style.top = `${scy - S / 2}px`;
       fly.style.width = `${S}px`;
@@ -162,30 +168,54 @@ export default function AnimatedLogo() {
         fly.style.transform = `translate(${tx}px,${ty}px) scale(${scale}) rotate(${rot}deg)`;
         curImg.style.opacity = String(1 - win);
         tgtImg.style.opacity = String(win);
-        // Veil ramps to a full-opacity blank with a short plateau around the
-        // midpoint, masking the page swap.
-        let vp = (0.5 - Math.abs(p - 0.5)) / 0.18;
-        if (vp < 0) vp = 0;
-        if (vp > 1) vp = 1;
-        veil.style.opacity = String(vp);
-        // Navigate once while the screen is fully blank, so the new page renders
-        // hidden and is revealed as the ball lands and the veil fades.
+        // Veil ramps to a fully-opaque blank as the ball grows, then HOLDS.
+        // It never fades back during the flight, so the old page can't peek
+        // through; it only fades once the new route has committed (below).
+        veil.style.opacity = String(Math.min(p / 0.42, 1));
+        // Navigate once while the screen is fully blank, so the new page
+        // renders hidden behind the veil.
         if (!navigatedRef.current && p >= 0.5) {
           navigatedRef.current = true;
           setDisplaySport(target);
           router.push(url);
         }
         if (p >= 1) {
+          // Header now shows the target logo; flying ball is parked. Keep the
+          // veil opaque and reveal only once the new route is actually live.
           fullImg.style.opacity = "1";
           noImg.style.opacity = "0";
           fly.style.opacity = "0";
           fly.style.transform = "none";
-          veil.style.opacity = "0";
-          animatingRef.current = false;
+          revealWhenReady();
           return;
         }
         requestAnimationFrame(tick);
       };
+
+      // Hold the blank until the new page has committed (pathname == target),
+      // then give it one frame to paint and fade the veil away. A timeout
+      // guards against a navigation that never lands.
+      const revealWhenReady = () => {
+        const revealStart = performance.now();
+        const waitTick = (now: number) => {
+          const arrived = currentSportRef.current === target;
+          const timedOut = now - revealStart > 1500;
+          if (arrived || timedOut) {
+            requestAnimationFrame(() => {
+              veil.style.transition = "opacity 240ms ease";
+              veil.style.opacity = "0";
+              window.setTimeout(() => {
+                veil.style.transition = "";
+                animatingRef.current = false;
+              }, 280);
+            });
+            return;
+          }
+          requestAnimationFrame(waitTick);
+        };
+        requestAnimationFrame(waitTick);
+      };
+
       requestAnimationFrame(tick);
     },
     [displaySport, router],
@@ -239,7 +269,8 @@ export default function AnimatedLogo() {
               style={{
                 position: "fixed",
                 inset: 0,
-                background: "#fff",
+                // Match the page background so the blank respects dark mode.
+                background: "var(--bg-primary, #fff)",
                 opacity: 0,
                 pointerEvents: "none",
                 zIndex: 2147483646,
