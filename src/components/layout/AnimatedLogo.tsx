@@ -26,7 +26,7 @@ const BOX: Record<Sport, { cx: number; cy: number; w: number; h: number }> = {
   },
 };
 
-const DURATION = 700; // ms for the whole fly-out-and-back
+const DURATION = 1300; // ms for the whole fly-out-and-back
 const SPIN = true;
 
 function ease(t: number) {
