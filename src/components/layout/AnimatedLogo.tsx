@@ -116,25 +116,27 @@ export default function AnimatedLogo() {
       const b = BOX[from];
       const lr = box.getBoundingClientRect();
       const w = b.w * lr.width; // ball size in the header logo
-      const h = b.h * lr.height;
       const ocx = lr.left + b.cx * lr.width;
       const ocy = lr.top + b.cy * lr.height;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const scx = vw / 2;
       const scy = vh / 2;
-      // Grow the real ball image to ~0.85 of the SHORT viewport side: big and
-      // fully on-screen, but a far gentler upscale than filling (the old code
-      // used 1.55x the long side, which is what pixelated it). The white veil
-      // blanks the rest of the screen.
-      const fullScale = (Math.min(vw, vh) * 0.85) / w;
+      // Lay the ball out at its FULL on-screen size (0.85 of the short side)
+      // and animate scale from small -> 1. Browsers rasterise a transformed
+      // layer once at its layout size x devicePixelRatio, so laying it out big
+      // means the artwork is rasterised crisp (especially on hi-DPR phones).
+      // The old scale-up-from-header-size approach rasterised a ~17px texture
+      // and GPU-stretched it, which is why it looked pixelated on mobile.
+      const S = 0.85 * Math.min(vw, vh);
+      const scaleStart = w / S;
 
       fullImg.style.opacity = "0";
       noImg.style.opacity = "1";
-      fly.style.left = `${ocx - w / 2}px`;
-      fly.style.top = `${ocy - h / 2}px`;
-      fly.style.width = `${w}px`;
-      fly.style.height = `${h}px`;
+      fly.style.left = `${scx - S / 2}px`;
+      fly.style.top = `${scy - S / 2}px`;
+      fly.style.width = `${S}px`;
+      fly.style.height = `${S}px`;
       fly.style.opacity = "1";
       curImg.src = BALL[from];
       curImg.style.opacity = "1";
@@ -148,12 +150,14 @@ export default function AnimatedLogo() {
         let p = (now - t0) / DURATION;
         if (p > 1) p = 1;
         const g = p <= 0.5 ? ease(p / 0.5) : ease((1 - p) / 0.5);
-        // Ball flies from the header (g=0) to centre (g=1) and back.
-        const tx = (scx - ocx) * g;
-        const ty = (scy - ocy) * g;
+        // g: 0 at the header, 1 at full-size centre. Scale grows from the
+        // header size to 1 (native layout); translate carries the centred
+        // container to the header and back.
+        const tx = (ocx - scx) * (1 - g);
+        const ty = (ocy - scy) * (1 - g);
         const win = Math.min(Math.max((p - 0.4) / 0.2, 0), 1);
         const pop = Math.sin(win * Math.PI);
-        const scale = (1 + g * (fullScale - 1)) * (1 + 0.08 * pop);
+        const scale = (scaleStart + g * (1 - scaleStart)) * (1 + 0.08 * pop);
         const rot = SPIN ? p * 360 : 0;
         fly.style.transform = `translate(${tx}px,${ty}px) scale(${scale}) rotate(${rot}deg)`;
         curImg.style.opacity = String(1 - win);
