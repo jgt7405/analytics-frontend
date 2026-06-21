@@ -5,14 +5,26 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { FootballCWVData } from "@/types/football";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 interface GameData {
   rank: number;
   team: string;
+  win_prob: number;
   date?: string;
   status?: string;
+  opponent?: string;
+  location?: string;
+  opponent_logo?: string;
+}
+
+interface HoverState {
+  rank: number;
+  teamName: string;
+  x: number;
+  y: number;
 }
 
 interface CWVTableProps {
@@ -24,6 +36,7 @@ interface CWVTableProps {
 function CWVTable({ cwvData, className, season }: CWVTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
+  const [hoveredGame, setHoveredGame] = useState<HoverState | null>(null);
 
   // ✅ ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const navigateToTeam = useCallback(
@@ -173,12 +186,19 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
         }
       }
 
+      const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+        setHoveredGame({ rank, teamName, x: e.clientX, y: e.clientY });
+      };
+      const handleMouseLeave = () => setHoveredGame(null);
+
       return (
         <div
           className={`absolute inset-0 flex items-center justify-center ${
             isMobile ? "text-xs" : "text-sm"
-          }`}
+          } cursor-default`}
           style={{ backgroundColor, color: textColor }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           {content}
         </div>
@@ -417,6 +437,80 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           </tr>
         </tbody>
       </table>
+      {/* Tooltip */}
+      {hoveredGame &&
+        (() => {
+          const game = gamesByRankAndTeam[hoveredGame.rank]?.[hoveredGame.teamName];
+          if (!game) return null;
+
+          let tooltipContent = null;
+          const isResult = game.status === "W" || game.status === "L";
+          const isFuture = !isResult && !!game.date;
+
+          if (isResult || isFuture) {
+            tooltipContent = (
+              <div className="text-xs space-y-0.5">
+                <div className="flex items-center gap-2 pb-1 border-b border-gray-200 dark:border-gray-600">
+                  {game.opponent_logo && (
+                    <Image
+                      src={game.opponent_logo}
+                      alt={game.opponent || "opponent"}
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  )}
+                  <span className="font-medium">{game.opponent}</span>
+                </div>
+                {game.location && <div>{game.location}</div>}
+                {game.date && (
+                  <div className="text-gray-600 dark:text-gray-300">
+                    {new Date(game.date + "T00:00:00").toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </div>
+                )}
+                <div>{isResult ? (game.status === "W" ? "Win" : "Loss") : "Upcoming"}</div>
+                {game.win_prob != null && (
+                  <div className="text-gray-600 dark:text-gray-300">
+                    .500 record win prob: {Math.round(game.win_prob)}%
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          if (!tooltipContent) return null;
+
+          const tooltipWidth = 200;
+          const tooltipHeight = 130;
+          const gap = 12;
+          const isTopGame = hoveredGame.rank <= 3;
+
+          let left = hoveredGame.x + gap;
+          let top = isTopGame
+            ? hoveredGame.y + 8
+            : hoveredGame.y - tooltipHeight - 5;
+
+          if (left + tooltipWidth > window.innerWidth - 10) {
+            left = hoveredGame.x - tooltipWidth - gap;
+          }
+          if (top < 10) top = 10;
+          else if (top + tooltipHeight > window.innerHeight - 10) {
+            top = window.innerHeight - tooltipHeight - 10;
+          }
+
+          return (
+            <div
+              className="fixed bg-white dark:bg-slate-900 border border-gray-300 dark:border-gray-600 rounded shadow-lg p-2 pointer-events-none z-50"
+              style={{ left: `${left}px`, top: `${top}px`, maxWidth: `${tooltipWidth}px` }}
+            >
+              {tooltipContent}
+            </div>
+          );
+        })()}
     </div>
   );
 }

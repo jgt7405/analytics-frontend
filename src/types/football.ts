@@ -126,8 +126,12 @@ export interface FootballCWVTeam {
 export interface FootballCWVGame {
   rank: number;
   team: string;
+  win_prob: number;
   date?: string;
-  status?: "W" | "L" | "scheduled";
+  status?: string;
+  opponent?: string;
+  location?: string;
+  opponent_logo?: string;
 }
 
 export interface FootballCWVData {
