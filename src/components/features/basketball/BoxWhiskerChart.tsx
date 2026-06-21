@@ -1,5 +1,6 @@
 "use client";
 
+import { BoxWhiskerChartSkeleton } from "@/components/ui/LoadingSkeleton";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { components, layout } from "@/lib/design-system";
@@ -85,11 +86,7 @@ export default function BoxWhiskerChart({ standings, season }: BoxWhiskerChartPr
   }
 
   if (!mounted) {
-    return (
-      <div className={cn(layout.card, "p-8 text-center")}>
-        <div className="animate-pulse">Loading chart...</div>
-      </div>
-    );
+    return <BoxWhiskerChartSkeleton />;
   }
 
   // Chart dimensions

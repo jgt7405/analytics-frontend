@@ -3,9 +3,11 @@ import { api } from "@/services/api";
 import { FootballConferenceApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 
-export const useFootballConfData = (season?: string) => {
+export const useFootballConfData = (season?: string, initialData?: FootballConferenceApiResponse) => {
   return useQuery<FootballConferenceApiResponse, Error>({
     queryKey: ["football-conf-data-proxy-fixed", season],
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => api.getFootballConfData(season),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

@@ -24,6 +24,7 @@ export interface TWVContentConfig<TTeam> {
   useTWVData: (
     conference: string,
     season?: string,
+    initialData?: any,
   ) => {
     data: { data: TTeam[]; conferences: string[] } | undefined;
     isLoading: boolean;
@@ -43,11 +44,13 @@ export interface TWVContentConfig<TTeam> {
 interface TWVContentProps<TTeam> {
   config: TWVContentConfig<TTeam>;
   season?: string;
+  initialData?: any;
 }
 
 export default function TWVContent<TTeam>({
   config,
   season,
+  initialData,
 }: TWVContentProps<TTeam>) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
@@ -77,7 +80,11 @@ export default function TWVContent<TTeam>({
     isLoading: twvLoading,
     error: twvError,
     refetch,
-  } = useTWVData(selectedConference, season);
+  } = useTWVData(
+    selectedConference,
+    season,
+    selectedConference === "Big 12" && !season ? initialData : undefined,
+  );
 
   // "All Teams" always leads the list; the API list never includes it twice.
   useEffect(() => {

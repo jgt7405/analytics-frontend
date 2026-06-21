@@ -1,17 +1,21 @@
+import { Suspense } from "react";
 import { generatePageMetadata } from "@/app/metadata";
-import dynamic from "next/dynamic";
+import { getFootballConfDataServer } from "@/lib/server-api";
+import FootballConfDataContent from "./FootballConfDataContent";
 
-const FootballConfDataContent = dynamic(
-  () => import("./FootballConfDataContent"),
-  { ssr: false }
-);
+export const dynamic = "force-dynamic";
 
 export const metadata = generatePageMetadata({
   title: "College Football Conference Data",
   description: "Comprehensive FBS conference data including records, trends, and analytics.",
-  path: "/football/conf-data",
+  path: "/football/conf-data/",
 });
 
-export default function FootballConfDataPage() {
-  return <FootballConfDataContent />;
+export default async function FootballConfDataPage() {
+  const initialData = await getFootballConfDataServer();
+  return (
+    <Suspense fallback={null}>
+      <FootballConfDataContent initialData={initialData} />
+    </Suspense>
+  );
 }

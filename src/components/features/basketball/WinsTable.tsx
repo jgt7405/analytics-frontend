@@ -84,12 +84,12 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
     );
   }
 
-  // CWV-style dimensions
+  // CWV-style dimensions — heights are fixed to prevent CLS on hydration
   const firstColWidth = isMobile ? 60 : 70;
   const teamColWidth = isMobile ? 40 : 64;
-  const cellHeight = isMobile ? 24 : 28;
-  const headerHeight = isMobile ? 40 : 48;
-  const summaryRowHeight = isMobile ? 24 : 28;
+  const cellHeight = 28;
+  const headerHeight = 48;
+  const summaryRowHeight = 28;
 
   const tableClassName = cn(
     tableStyles.tableContainer,

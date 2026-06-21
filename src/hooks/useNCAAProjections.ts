@@ -33,10 +33,12 @@ interface UseNCAAProjectionsReturn {
   refetch: () => void;
 }
 
-export function useNCAAProjections(season?: string): UseNCAAProjectionsReturn {
+export function useNCAAProjections(season?: string, initialData?: NCAAProjectionsResponse): UseNCAAProjectionsReturn {
   const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["ncaa-projections", season],
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {
       const response = await fetch(
         `/api/proxy/basketball/ncaa-projections${seasonQuery}`,

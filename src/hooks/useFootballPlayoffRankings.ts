@@ -6,9 +6,12 @@ export type PlayoffRankingsMode = "season" | "current";
 export function useFootballPlayoffRankings(
   season?: string,
   mode: PlayoffRankingsMode = "season",
+  initialData?: PlayoffRankingsResponse,
 ) {
   return useQuery<PlayoffRankingsResponse>({
     queryKey: ["football-playoff-rankings", season, mode],
+    initialData: mode === "season" && !season ? initialData : undefined,
+    initialDataUpdatedAt: initialData && mode === "season" && !season ? 0 : undefined,
     queryFn: async () => {
       // Use proxy pattern consistent with other football hooks
       const params = new URLSearchParams();

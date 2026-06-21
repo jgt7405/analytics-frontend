@@ -52,14 +52,16 @@ interface BasketballNonconfAnalysisResponse {
   conferences: string[];
 }
 
-interface CombinedBasketballConfResponse {
+export interface CombinedBasketballConfResponse {
   conferenceData: BasketballConfDataResponse;
   nonconfData: BasketballNonconfAnalysisResponse;
 }
 
-export function useBasketballConfData(season?: string) {
+export function useBasketballConfData(season?: string, initialData?: CombinedBasketballConfResponse) {
   return useQuery<CombinedBasketballConfResponse>({
     queryKey: ["basketball-conf-data", season],
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const [confResponse, nonconfResponse] = await Promise.all([

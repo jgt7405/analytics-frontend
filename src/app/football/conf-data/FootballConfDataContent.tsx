@@ -12,12 +12,13 @@ import {
   BoxWhiskerChartSkeleton,
 } from "@/components/ui/LoadingSkeleton";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
+import { FootballConferenceApiResponse } from "@/types/football";
 import { useFootballConfDataHistory } from "@/hooks/useFootballConfDataHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect } from "react";
 
-export default function FootballConfDataContent() {
+export default function FootballConfDataContent({ initialData }: { initialData?: FootballConferenceApiResponse }) {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
 
@@ -26,7 +27,7 @@ export default function FootballConfDataContent() {
     isLoading: confLoading,
     error: confError,
     refetch,
-  } = useFootballConfData();
+  } = useFootballConfData(undefined, initialData);
 
   const { data: historyData } = useFootballConfDataHistory();
 

@@ -22,6 +22,6 @@ const BASKETBALL_TWV: TWVContentConfig<TWVTeam> = {
   ],
 };
 
-export default function BasketballTWVContent(props: { season?: string }) {
+export default function BasketballTWVContent(props: { season?: string; initialData?: any }) {
   return <TWVContent config={BASKETBALL_TWV} {...props} />;
 }

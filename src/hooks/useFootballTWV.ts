@@ -17,9 +17,11 @@ const fetchFootballTWV = async (
   return response.json();
 };
 
-export const useFootballTWV = (conference: string, season?: string) => {
+export const useFootballTWV = (conference: string, season?: string, initialData?: FootballTWVApiResponse) => {
   return useQuery({
     queryKey: ["football-twv", conference, season],
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => fetchFootballTWV(conference, season),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

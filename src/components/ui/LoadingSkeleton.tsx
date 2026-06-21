@@ -161,36 +161,32 @@ export function ConferenceSelectorSkeleton() {
   );
 }
 
-// FIXED BoxWhiskerChartSkeleton with deterministic heights
+// BoxWhiskerChartSkeleton height matches real chart: 380px mobile / 480px desktop
+// (chartHeight 300/400 + logoHeight 50 + padding top 20 + bottom 10)
 export function BoxWhiskerChartSkeleton() {
-  // Predefined heights to avoid hydration mismatch
   const predefinedHeights = [
     120, 180, 90, 150, 200, 110, 160, 80, 140, 170, 100, 190,
   ];
 
   return (
-    <div className="relative w-full overflow-x-auto bg-white dark:bg-slate-900 rounded-md border border-gray-200 dark:border-gray-600 p-6">
-      <div className="flex items-end justify-center gap-4 h-80">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="flex flex-col items-center gap-2">
-            {/* Whisker skeleton with fixed height */}
-            <div
-              className="w-8 bg-gray-300 animate-pulse rounded"
-              style={{
-                height: `${predefinedHeights[i] || 120}px`,
-                animationDelay: `${i * 100}ms`,
-              }}
-            />
-            {/* Logo skeleton */}
-            <div className="w-8 h-8 bg-gray-300 animate-pulse rounded-full" />
-          </div>
+    <div className="relative w-full overflow-hidden bg-white dark:bg-slate-900 rounded-md border border-gray-200 dark:border-gray-600 h-[380px] md:h-[480px]">
+      {/* Y-axis skeleton */}
+      <div className="absolute left-2 top-6 flex flex-col gap-8">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-3 w-4 bg-gray-300 animate-pulse rounded" />
         ))}
       </div>
 
-      {/* Y-axis skeleton */}
-      <div className="absolute left-2 top-6 space-y-8">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-3 w-4 bg-gray-300 animate-pulse rounded" />
+      {/* Bar skeletons */}
+      <div className="absolute inset-x-10 top-6 bottom-12 flex items-end justify-center gap-4 overflow-x-auto">
+        {predefinedHeights.map((h, i) => (
+          <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
+            <div
+              className="w-8 bg-gray-300 animate-pulse rounded"
+              style={{ height: `${h}px`, animationDelay: `${i * 100}ms` }}
+            />
+            <div className="w-8 h-8 bg-gray-300 animate-pulse rounded-full" />
+          </div>
         ))}
       </div>
     </div>

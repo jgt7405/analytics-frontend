@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import { generatePageMetadata } from "@/app/metadata";
+import { getFootballTWVServer } from "@/lib/server-api";
 import FootballTWVContent from "./FootballTWVContent";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = generatePageMetadata({
   title: "College Football True Win Value (TWV)",
@@ -9,10 +12,11 @@ export const metadata = generatePageMetadata({
   path: "/football/twv/",
 });
 
-export default function FootballTWVPage() {
+export default async function FootballTWVPage() {
+  const initialData = await getFootballTWVServer("Big 12");
   return (
     <Suspense fallback={null}>
-      <FootballTWVContent />
+      <FootballTWVContent initialData={initialData} />
     </Suspense>
   );
 }

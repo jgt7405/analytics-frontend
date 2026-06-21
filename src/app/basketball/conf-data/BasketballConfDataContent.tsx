@@ -12,13 +12,13 @@ import {
   BasketballTableSkeleton,
   BoxWhiskerChartSkeleton,
 } from "@/components/ui/LoadingSkeleton";
-import { useBasketballConfData } from "@/hooks/useBasketballConfData";
+import { useBasketballConfData, type CombinedBasketballConfResponse } from "@/hooks/useBasketballConfData";
 import { useBasketballConfDataHistory } from "@/hooks/useBasketballConfDataHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
-export default function BasketballConfDataContent() {
+export default function BasketballConfDataContent({ initialData }: { initialData?: CombinedBasketballConfResponse }) {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
   const [showAll, setShowAll] = useState(false);
@@ -28,7 +28,7 @@ export default function BasketballConfDataContent() {
     isLoading: confLoading,
     error: confError,
     refetch,
-  } = useBasketballConfData();
+  } = useBasketballConfData(undefined, initialData);
 
   const {
     data: historyData,
