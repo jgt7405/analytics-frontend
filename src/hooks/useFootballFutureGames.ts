@@ -13,10 +13,11 @@ const fetchAllFutureGames = async (): Promise<AllFutureGamesResponse> => {
   return response.json();
 };
 
-export const useFootballFutureGames = () => {
+export const useFootballFutureGames = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ["football-all-future-games"],
     queryFn: fetchAllFutureGames,
+    enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,

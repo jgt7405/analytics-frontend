@@ -7,6 +7,7 @@ import {
 import ScreenshotModal from "@/components/common/ScreenshotModal";
 import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
 import FootballCFPProb from "@/components/features/football/FootballCFPProb";
+import { WhatIfTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useFootballCFP } from "@/hooks/useFootballCFP";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import { useFootballFutureGames } from "@/hooks/useFootballFutureGames";
@@ -39,8 +40,17 @@ export default function FootballWhatIfContent() {
   >([]);
   const [whatIfResults, setWhatIfResults] = useState<WhatIfTeamResult[]>([]);
   const [allTeamsWhatIfCFP, setAllTeamsWhatIfCFP] = useState<AllTeamCFPEntry[]>([]);
-  const { data: allCFPResponse } = useFootballCFP("All Teams");
-  const { data: allFutureGamesData, isLoading: isLoadingAllGames } = useFootballFutureGames();
+  // Lazy-load these heavy queries: only fetch when their feature is actually used.
+  // "All Teams" CFP is only needed when the "show all teams" toggle is on; the full
+  // FBS future-games list is only needed for the "all games" filter or team search.
+  const { data: allCFPResponse } = useFootballCFP(
+    "All Teams",
+    undefined,
+    undefined,
+    showAllCFPTeams
+  );
+  const { data: allFutureGamesData, isLoading: isLoadingAllGames } =
+    useFootballFutureGames(gameFilter === "all" || teamSearch.trim().length > 0);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
@@ -724,9 +734,9 @@ export default function FootballWhatIfContent() {
                   Select a conference to view results
                 </p>
               ) : isLoadingData ? (
-                <p className="text-gray-500 dark:text-gray-300 text-center py-12">Loading...</p>
+                <WhatIfTableSkeleton rows={8} />
               ) : currentTableData.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-300 text-center py-12">Loading...</p>
+                <WhatIfTableSkeleton rows={8} />
               ) : (
                 <FootballConfChampProb
                   currentData={currentTableData}
@@ -752,9 +762,7 @@ export default function FootballWhatIfContent() {
                     </button>
                   </div>
                   {isLoadingData ? (
-                    <p className="text-gray-500 dark:text-gray-300 text-center py-12">
-                      Loading...
-                    </p>
+                    <WhatIfTableSkeleton rows={10} />
                   ) : (
                     <FootballCFPProb
                       currentData={currentCFPTableData}

@@ -130,6 +130,55 @@ export function BasketballTableSkeleton({
   );
 }
 
+// Row-oriented skeleton for the football what-if results tables
+// (rank + team-name column, then a few probability value columns).
+// Fixed heights keep layout stable while the calculation loads.
+export function WhatIfTableSkeleton({
+  rows = 8,
+  valueCols = 4,
+}: {
+  rows?: number;
+  valueCols?: number;
+}) {
+  return (
+    <div className="overflow-hidden border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-slate-900">
+      {/* Header */}
+      <div className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-gray-600 p-3">
+        <div className="flex gap-4 items-center">
+          <div className="h-4 w-4 bg-gray-300 dark:bg-slate-600 animate-pulse rounded flex-shrink-0" />
+          <div className="h-4 w-28 bg-gray-300 dark:bg-slate-600 animate-pulse rounded flex-shrink-0" />
+          {Array.from({ length: valueCols }).map((_, i) => (
+            <div
+              key={i}
+              className="h-4 w-12 bg-gray-300 dark:bg-slate-600 animate-pulse rounded flex-shrink-0"
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Rows */}
+      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="p-3">
+            <div className="flex gap-4 items-center">
+              <div className="h-4 w-4 bg-gray-200 dark:bg-slate-700 animate-pulse rounded flex-shrink-0" />
+              <div className="h-5 w-5 bg-gray-200 dark:bg-slate-700 animate-pulse rounded-full flex-shrink-0" />
+              <div className="h-4 w-24 bg-gray-200 dark:bg-slate-700 animate-pulse rounded flex-shrink-0" />
+              {Array.from({ length: valueCols }).map((_, j) => (
+                <div
+                  key={j}
+                  className="h-4 w-12 bg-gray-200 dark:bg-slate-700 animate-pulse rounded flex-shrink-0"
+                  style={{ animationDelay: `${(i * valueCols + j) * 40}ms` }}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function PageSkeleton() {
   return (
     <div className="container mx-auto px-4 py-8 animate-pulse">

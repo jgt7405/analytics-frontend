@@ -7,12 +7,13 @@ export const useFootballCFP = (
   conference: string,
   season?: string,
   initialData?: FootballCFPApiResponse,
+  enabled: boolean = true,
 ) => {
   return useQuery<FootballCFPApiResponse, Error>({
     queryKey: ["football-cfp", conference, season],
     initialData,
     queryFn: () => api.getCFP(conference, season),
-    enabled: !!conference,
+    enabled: enabled && !!conference,
     staleTime: 5 * 60 * 1000,
     retry: 3,
   });
