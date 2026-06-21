@@ -222,7 +222,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
   const teamColWidth = isMobile ? 40 : 64;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
-  const summaryRowHeight = isMobile ? 36 : 40;
+  const cwvRowHeight = isMobile ? 28 : 32;
+  const recordRowHeight = isMobile ? 28 : 32;
+  const estAvgRowHeight = isMobile ? 36 : 40;
 
   const tableClassName = cn(tableStyles.tableContainer, "cwv-table", className);
 
@@ -326,7 +328,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
-                height: summaryRowHeight,
+                height: cwvRowHeight,
                 position: "sticky",
                 left: 0,
                 border: "1px solid var(--border-color)",
@@ -341,7 +343,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 key={`cwv-${team.team_name}`}
                 className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"} relative p-0`}
                 style={{
-                  height: summaryRowHeight,
+                  height: cwvRowHeight,
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
@@ -369,7 +371,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
-                height: summaryRowHeight,
+                height: recordRowHeight,
                 position: "sticky",
                 left: 0,
                 border: "1px solid var(--border-color)",
@@ -384,7 +386,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 key={`record-${team.team_name}`}
                 className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
-                  height: summaryRowHeight,
+                  height: recordRowHeight,
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
@@ -406,7 +408,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
-                height: summaryRowHeight,
+                height: estAvgRowHeight,
                 position: "sticky",
                 left: 0,
                 border: "1px solid var(--border-color)",
@@ -421,7 +423,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 key={`est-record-${team.team_name}`}
                 className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
                 style={{
-                  height: summaryRowHeight,
+                  height: estAvgRowHeight,
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
