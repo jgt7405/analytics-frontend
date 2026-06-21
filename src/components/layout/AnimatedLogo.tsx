@@ -119,22 +119,21 @@ export default function AnimatedLogo() {
       const tgtImg = tgtBallRef.current;
 
       const b = BOX[from];
+      const bt = BOX[target];
       const lr = box.getBoundingClientRect();
-      const w = b.w * lr.width; // ball size in the header logo
+      const w = b.w * lr.width; // ball size in the from logo (fly-out scale)
+      const wt = bt.w * lr.width; // ball size in the target logo (fly-in scale)
       const ocx = lr.left + b.cx * lr.width;
       const ocy = lr.top + b.cy * lr.height;
+      const tcx = lr.left + bt.cx * lr.width; // target ball landing x
+      const tcy = lr.top + bt.cy * lr.height; // target ball landing y
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const scx = vw / 2;
       const scy = vh / 2;
-      // Lay the ball out at its FULL on-screen size (0.85 of the short side)
-      // and animate scale from small -> 1. Browsers rasterise a transformed
-      // layer once at its layout size x devicePixelRatio, so laying it out big
-      // means the artwork is rasterised crisp (especially on hi-DPR phones).
-      // The old scale-up-from-header-size approach rasterised a ~17px texture
-      // and GPU-stretched it, which is why it looked pixelated on mobile.
       const S = 0.85 * Math.min(vw, vh);
       const scaleStart = w / S;
+      const scaleEnd = wt / S;
 
       fullImg.style.opacity = "0";
       noImg.style.opacity = "1";
@@ -155,17 +154,27 @@ export default function AnimatedLogo() {
       const tick = (now: number) => {
         let p = (now - t0) / DURATION;
         if (p > 1) p = 1;
-        const g = p <= 0.5 ? ease(p / 0.5) : ease((1 - p) / 0.5);
-        // g: 0 at the header, 1 at full-size centre. Scale grows from the
-        // header size to 1 (native layout); translate carries the centred
-        // container to the header and back.
-        const tx = (ocx - scx) * (1 - g);
-        const ty = (ocy - scy) * (1 - g);
+
+        // Fly-out (p 0→0.5): ball leaves FROM socket and grows to full size.
+        // Fly-in  (p 0.5→1): ball shrinks from full size and lands in TARGET socket.
+        // Using separate origin/destination lets the ball land in the right spot.
+        let tx: number, ty: number, scale: number;
+        if (p <= 0.5) {
+          const g = ease(p / 0.5); // 0→1
+          tx = (ocx - scx) * (1 - g);
+          ty = (ocy - scy) * (1 - g);
+          scale = scaleStart + g * (1 - scaleStart);
+        } else {
+          const g = ease((1 - p) / 0.5); // 1→0
+          tx = (tcx - scx) * (1 - g);
+          ty = (tcy - scy) * (1 - g);
+          scale = scaleEnd + g * (1 - scaleEnd);
+        }
+
         const win = Math.min(Math.max((p - 0.4) / 0.2, 0), 1);
         const pop = Math.sin(win * Math.PI);
-        const scale = (scaleStart + g * (1 - scaleStart)) * (1 + 0.08 * pop);
         const rot = SPIN ? p * 360 : 0;
-        fly.style.transform = `translate(${tx}px,${ty}px) scale(${scale}) rotate(${rot}deg)`;
+        fly.style.transform = `translate(${tx}px,${ty}px) scale(${scale * (1 + 0.08 * pop)}) rotate(${rot}deg)`;
         curImg.style.opacity = String(1 - win);
         tgtImg.style.opacity = String(win);
         // Veil ramps to a fully-opaque blank as the ball grows, then HOLDS.
