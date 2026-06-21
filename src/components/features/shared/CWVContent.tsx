@@ -24,6 +24,8 @@ export interface CWVContentConfig<TData extends { teams?: unknown[] }> {
   pageId: string;
   /** Conferences to hide in the selector (e.g. football hides Independent). */
   excludeConferences?: string[];
+  /** Override the default explainer lines shown below the table. */
+  explainerLines?: string[];
   useCWVData: (
     conference: string,
     season?: string,
@@ -236,7 +238,8 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
     );
   }
 
-  const { CWVTable } = config;
+  const { CWVTable, explainerLines: configExplainerLines } = config;
+  const activeExplainerLines = configExplainerLines ?? EXPLAINER_LINES;
 
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
@@ -281,7 +284,7 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
                   <div className="flex flex-row items-start gap-4">
                     <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4 cwv-explainer">
                       <div style={{ lineHeight: "1.3" }}>
-                        {EXPLAINER_LINES.map((line, i) => (
+                        {activeExplainerLines.map((line, i) => (
                           <div
                             key={i}
                             style={i > 0 ? { marginTop: "6px" } : undefined}

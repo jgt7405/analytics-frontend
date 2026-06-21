@@ -17,6 +17,11 @@ const FOOTBALL_CWV: CWVContentConfig<FootballCWVData> = {
   excludeConferences: ["Independent"],
   useCWVData: useFootballCWV,
   CWVTable,
+  explainerLines: [
+    "Conf Win Value (CWV) compares the actual wins to expected wins for a .500 team with that same schedule.",
+    "Games are ordered from lowest to highest win probability.",
+    "This only reflects past results, not future projections or predictions of final standings.",
+  ],
 };
 
 export default function FootballCWVContent(props: {

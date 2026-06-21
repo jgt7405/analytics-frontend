@@ -416,7 +416,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 borderRight: "1px solid var(--border-color)",
               }}
             >
-              Est Avg Team Record
+              Est .500 Team Record
             </td>
             {sortedTeams.map((team) => (
               <td
