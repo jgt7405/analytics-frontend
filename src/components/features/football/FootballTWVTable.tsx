@@ -58,8 +58,8 @@ function FootballTWVTable({
   const rankedTwvData = useMemo(() => {
     if (!twvData || twvData.length === 0) return [];
 
-    // Sort by TWV descending for display, but keep backend global ranks
-    return [...twvData].sort((a, b) => b.twv - a.twv);
+    // Sort by TWV descending; alphabetical by team name as tiebreaker
+    return [...twvData].sort((a, b) => b.twv - a.twv || a.team_name.localeCompare(b.team_name));
   }, [twvData]);
 
   // Apply row limit filter

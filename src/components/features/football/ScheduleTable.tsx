@@ -54,11 +54,11 @@ function FootballScheduleTable({
   const getLocationStyle = useCallback((location: string) => {
     switch (location) {
       case "Home":
-        return { backgroundColor: "rgba(173,216,230,0.3)" };
+        return { backgroundColor: "#e6f3f8" };
       case "Away":
-        return { backgroundColor: "rgba(255,255,224,0.3)" };
+        return { backgroundColor: "#fffff6" };
       case "Neutral":
-        return { backgroundColor: "rgba(230,230,250,0.3)" };
+        return { backgroundColor: "#f8f8fe" };
       default:
         return { backgroundColor: "var(--bg-secondary)" };
     }
@@ -387,7 +387,7 @@ function FootballScheduleTable({
                 {filteredScheduleData.map((row, index) => (
                   <tr key={index}>
                     <td
-                      className={`sticky left-0 z-20 text-center ${
+                      className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
                         isMobile ? "text-xs" : "text-sm"
                       }`}
                       style={{

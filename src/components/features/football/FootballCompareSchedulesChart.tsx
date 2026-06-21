@@ -554,7 +554,7 @@ export default function FootballCompareSchedulesChart({
                     fill="white"
                     stroke="white"
                     strokeWidth="1.5"
-                    opacity={isHovered ? 1 : 0.8}
+                    opacity={1}
                   />
                   <image
                     x={logoX}
@@ -564,7 +564,7 @@ export default function FootballCompareSchedulesChart({
                     href={game.opponentLogo}
                     style={{
                       borderRadius: "4px",
-                      opacity: isHovered ? 1 : 0.7,
+                      opacity: 1,
                     }}
                   />
                 </g>

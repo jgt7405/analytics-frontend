@@ -1,5 +1,6 @@
 "use client";
 
+import { BoxWhiskerChartSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useResponsive } from "@/hooks/useResponsive";
 import { components, layout } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -134,7 +135,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
       return [];
     }
 
-    const excludedConferences = ["FCS", "Independent"];
+    const excludedConferences = ["FCS"];
 
     return conferenceData.filter((conf) => {
       if (!conf || excludedConferences.includes(conf.conference_name))
@@ -221,11 +222,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
   }
 
   if (!mounted) {
-    return (
-      <div className={cn(layout.card, "p-8 text-center")}>
-        <div className="animate-pulse">Loading chart...</div>
-      </div>
-    );
+    return <BoxWhiskerChartSkeleton />;
   }
 
   const chartHeight = isMobile ? 300 : 400;
