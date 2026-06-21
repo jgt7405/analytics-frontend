@@ -218,11 +218,11 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
   const maxVisibleRows = shouldVirtualize ? 50 : ranks.length;
   const visibleRanks = ranks.slice(0, maxVisibleRows);
 
-  const firstColWidth = isMobile ? 32 : 40;
+  const firstColWidth = isMobile ? 64 : 88;
   const teamColWidth = isMobile ? 40 : 64;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
-  const summaryRowHeight = isMobile ? 24 : 28;
+  const summaryRowHeight = isMobile ? 36 : 40;
 
   const tableClassName = cn(tableStyles.tableContainer, "cwv-table", className);
 
@@ -322,7 +322,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           <tr className="bg-gray-50 dark:bg-slate-800">
             <td
               colSpan={1}
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+              className="sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 text-xs"
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -365,7 +365,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           <tr className="bg-gray-50 dark:bg-slate-800">
             <td
               colSpan={1}
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+              className="sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 text-xs"
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
@@ -402,7 +402,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           <tr className="bg-gray-50 dark:bg-slate-800">
             <td
               colSpan={1}
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
+              className="sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 text-xs"
               style={{
                 width: firstColWidth,
                 minWidth: firstColWidth,
