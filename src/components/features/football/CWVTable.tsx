@@ -11,7 +11,6 @@ import { memo, useCallback, useMemo } from "react";
 interface GameData {
   rank: number;
   team: string;
-  win_prob: number;
   date?: string;
   status?: string;
 }
@@ -85,9 +84,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
     [maxCWV, minCWV]
   );
 
-  const { ranks, gamesByRankAndTeam, winProbsByRank } = useMemo(() => {
+  const { ranks, gamesByRankAndTeam } = useMemo(() => {
     if (!cwvData?.games || cwvData.games.length === 0) {
-      return { ranks: [], gamesByRankAndTeam: {}, winProbsByRank: {} };
+      return { ranks: [], gamesByRankAndTeam: {} };
     }
 
     const { games } = cwvData;
@@ -95,23 +94,15 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
     const ranks = Array.from({ length: maxRank }, (_, i) => i + 1);
 
     const gamesByRankAndTeam: Record<number, Record<string, GameData>> = {};
-    const winProbsByRank: Record<number, number> = {};
 
     for (const game of games) {
       if (!gamesByRankAndTeam[game.rank]) {
         gamesByRankAndTeam[game.rank] = {};
       }
       gamesByRankAndTeam[game.rank][game.team] = game;
-
-      if (
-        !winProbsByRank[game.rank] ||
-        game.team === sortedTeams[0]?.team_name
-      ) {
-        winProbsByRank[game.rank] = game.win_prob;
-      }
     }
 
-    return { ranks, gamesByRankAndTeam, winProbsByRank };
+    return { ranks, gamesByRankAndTeam };
   }, [cwvData, sortedTeams]);
 
   const formatDate = useCallback((dateStr: string | undefined): string => {
@@ -208,7 +199,6 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
   const visibleRanks = ranks.slice(0, maxVisibleRows);
 
   const firstColWidth = isMobile ? 32 : 40;
-  const secondColWidth = isMobile ? 50 : 70;
   const teamColWidth = isMobile ? 40 : 64;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
@@ -242,22 +232,6 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
               }}
             >
               #
-            </th>
-            <th
-              className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: secondColWidth,
-                minWidth: secondColWidth,
-                maxWidth: secondColWidth,
-                height: headerHeight,
-                position: "sticky",
-                left: firstColWidth,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Win Prob
             </th>
             {sortedTeams.map((team) => (
               <th
@@ -304,25 +278,6 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
               >
                 {rank}
               </td>
-              <td
-                className={`sticky z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: secondColWidth,
-                  minWidth: secondColWidth,
-                  maxWidth: secondColWidth,
-                  height: cellHeight,
-                  position: "sticky",
-                  left: firstColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  borderRight: "1px solid var(--border-color)",
-                }}
-              >
-                {winProbsByRank[rank]
-                  ? `${Math.round(winProbsByRank[rank])}%`
-                  : ""}
-              </td>
               {sortedTeams.map((team) => (
                 <td
                   key={`${team.team_name}-${rank}`}
@@ -346,11 +301,11 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           {/* Summary rows */}
           <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              colSpan={2}
+              colSpan={1}
               className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
-                width: firstColWidth + secondColWidth,
-                minWidth: firstColWidth + secondColWidth,
+                width: firstColWidth,
+                minWidth: firstColWidth,
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
@@ -389,11 +344,11 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
           <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              colSpan={2}
+              colSpan={1}
               className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
-                width: firstColWidth + secondColWidth,
-                minWidth: firstColWidth + secondColWidth,
+                width: firstColWidth,
+                minWidth: firstColWidth,
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
@@ -426,11 +381,11 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
           <tr className="bg-gray-50 dark:bg-slate-800">
             <td
-              colSpan={2}
+              colSpan={1}
               className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
               style={{
-                width: firstColWidth + secondColWidth,
-                minWidth: firstColWidth + secondColWidth,
+                width: firstColWidth,
+                minWidth: firstColWidth,
                 height: summaryRowHeight,
                 position: "sticky",
                 left: 0,
