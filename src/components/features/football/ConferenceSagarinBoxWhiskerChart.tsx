@@ -329,6 +329,11 @@ export default function ConferenceSagarinBoxWhiskerChart({
                 const q3 = conf.prob_q75;
                 const top = conf.prob_max;
 
+                // Conferences with 2 or fewer teams have no meaningful
+                // quartile spread (q25/q75 are just linear interpolations
+                // between the two teams), so show whiskers + midpoint only.
+                const hasBox = (conf.teamcount ?? 0) > 2;
+
                 return (
                   <div
                     key={conf.conference_name}
@@ -372,25 +377,29 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         left: (boxWidth - whiskerWidth) / 2,
                       }}
                     />
-                    {/* Box (Q1 to Q3) */}
-                    <div
-                      className="absolute"
-                      style={{
-                        top: scale(q3),
-                        height: Math.max(0, scale(q1) - scale(q3)),
-                        width: boxWidth,
-                        backgroundColor: primaryColor,
-                        border: `${lineThickness}px solid ${adjustColorIfWhite(rawSecondaryColor)}`,
-                      }}
-                    />
-                    {/* Median line */}
+                    {/* Box (Q1 to Q3) — only when there are enough teams
+                        for the quartiles to be meaningful */}
+                    {hasBox && (
+                      <div
+                        className="absolute"
+                        style={{
+                          top: scale(q3),
+                          height: Math.max(0, scale(q1) - scale(q3)),
+                          width: boxWidth,
+                          backgroundColor: primaryColor,
+                          border: `${lineThickness}px solid ${adjustColorIfWhite(rawSecondaryColor)}`,
+                        }}
+                      />
+                    )}
+                    {/* Median line (midpoint for 2-team conferences) */}
                     <div
                       className="absolute"
                       style={{
                         top: scale(median),
-                        width: boxWidth,
+                        width: hasBox ? boxWidth : whiskerWidth,
                         height: lineThickness,
                         backgroundColor: rawSecondaryColor,
+                        left: hasBox ? 0 : (boxWidth - whiskerWidth) / 2,
                       }}
                     />
                     {/* Conference logo */}
