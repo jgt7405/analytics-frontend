@@ -6,14 +6,14 @@ import { createPortal } from "react-dom";
 import { Sport, useLogoAnimation } from "./LogoAnimationContext";
 
 const LOGO: Record<Sport, string> = {
-  basketball: "/images/anim/logo_basketball.png",
-  football: "/images/anim/logo_football.png",
+  basketball: "/images/anim/logo_basketball.webp",
+  football: "/images/anim/logo_football.webp",
 };
 const BALL: Record<Sport, string> = {
-  basketball: "/images/anim/ball_basketball.png",
-  football: "/images/anim/ball_football.png",
+  basketball: "/images/anim/ball_basketball.webp",
+  football: "/images/anim/ball_football.webp",
 };
-const NOBALL = "/images/anim/logo_noball.png";
+const NOBALL = "/images/anim/logo_noball.webp";
 
 // Ball centre/size as fractions of the 2.5-aspect logo box, per sport.
 const BOX: Record<Sport, { cx: number; cy: number; w: number; h: number }> = {
@@ -70,14 +70,30 @@ export default function AnimatedLogo() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Preload every asset so nothing flashes mid-animation.
+  // Preload every asset so nothing flashes mid-animation. Deferred to idle so
+  // these (the other sport's logo + both balls) don't compete with the initial
+  // page load and LCP — the current logo + noball already load via the rendered
+  // <img>s below.
   useEffect(() => {
-    [LOGO.basketball, LOGO.football, BALL.basketball, BALL.football, NOBALL].forEach(
-      (src) => {
-        const i = new window.Image();
-        i.src = src;
-      },
-    );
+    const preload = () => {
+      [LOGO.basketball, LOGO.football, BALL.basketball, BALL.football, NOBALL].forEach(
+        (src) => {
+          const i = new window.Image();
+          i.src = src;
+        },
+      );
+    };
+    const ric = (
+      window as Window & {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      }
+    ).requestIdleCallback;
+    if (ric) {
+      ric(preload, { timeout: 3000 });
+      return;
+    }
+    const t = window.setTimeout(preload, 2000);
+    return () => window.clearTimeout(t);
   }, []);
 
   // Keep the logo in sync when the sport changes via a plain navigation

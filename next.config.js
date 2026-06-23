@@ -70,31 +70,15 @@ const nextConfig = {
     },
   }),
 
-  // Production optimizations
+  // Production optimizations.
+  // NOTE: We intentionally do NOT override splitChunks here. The previous
+  // override forced all of node_modules into a single ~288 kB "vendors" chunk
+  // shared by every route (with chunks:"all", it even hoisted lazily-imported
+  // libs like Recharts into the eager bundle). Next 14's default chunking
+  // produces granular per-package chunks and keeps async-only deps in async
+  // chunks, so each route loads closer to what it actually uses.
   ...(process.env.NODE_ENV === "production" && {
     compress: true,
-    webpack: (config) => {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: "all",
-          cacheGroups: {
-            default: {
-              minChunks: 2,
-              priority: -20,
-              reuseExistingChunk: true,
-            },
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: "vendors",
-              priority: -10,
-              chunks: "all",
-            },
-          },
-        },
-      };
-      return config;
-    },
   }),
 
   // Universal settings

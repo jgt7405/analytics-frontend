@@ -36,10 +36,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={robotoCondensed.variable}>
       <head>
-        <link
-          rel="preconnect"
-          href="https://jthomprodbackend-production.up.railway.app"
-        />
+        {/* No preconnect to the Railway backend: the browser never talks to it
+            directly — all client data goes through the same-origin /api/proxy,
+            so a cross-origin preconnect here is an unused, dropped connection. */}
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
         <meta httpEquiv="Referrer-Policy" content="origin-when-cross-origin" />
         <meta name="theme-color" content="#ffffff" />

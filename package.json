@@ -72,7 +72,7 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
+      "last 2 years",
       "not dead",
       "not op_mini all"
     ],
