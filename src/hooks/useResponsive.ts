@@ -1,11 +1,17 @@
 // src/hooks/useResponsive.ts
 "use client";
 
-import { useEffect, useState } from "react";
+import { InitialResponsiveContext } from "@/components/providers/ResponsiveProvider";
+import { useContext, useEffect, useState } from "react";
 
 export function useResponsive() {
+  // When a ResponsiveProvider is present (set from the server-detected
+  // User-Agent), seed isMobile so the first paint matches the device and
+  // doesn't shift after hydration. Without a provider, this is `false` —
+  // identical to the previous default.
+  const initial = useContext(InitialResponsiveContext);
   const [dimensions, setDimensions] = useState({
-    isMobile: false,
+    isMobile: initial?.isMobile ?? false,
     isTablet: false,
     isDesktop: false,
     width: 0,

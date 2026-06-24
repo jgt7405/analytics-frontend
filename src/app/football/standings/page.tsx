@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { generatePageMetadata } from "@/app/metadata";
 import { getFootballStandingsServer } from "@/lib/server-api";
+import { ResponsiveProvider } from "@/components/providers/ResponsiveProvider";
+import { detectMobileFromHeaders } from "@/lib/server-device";
 import FootballStandingsContent from "./FootballStandingsContent";
 
 // See note in basketball/wins/page.tsx: dynamic render so useSearchParams resolves
@@ -15,9 +17,12 @@ export const metadata = generatePageMetadata({
 
 export default async function FootballStandingsPage() {
   const initialData = await getFootballStandingsServer("Big 12");
+  const initialIsMobile = detectMobileFromHeaders();
   return (
-    <Suspense fallback={null}>
-      <FootballStandingsContent initialData={initialData} />
-    </Suspense>
+    <ResponsiveProvider initialIsMobile={initialIsMobile}>
+      <Suspense fallback={null}>
+        <FootballStandingsContent initialData={initialData} />
+      </Suspense>
+    </ResponsiveProvider>
   );
 }
