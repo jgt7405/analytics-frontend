@@ -138,14 +138,84 @@ export default function FootballConferenceBidsTable({
 
   return (
     <div>
-      <div style={{ overflowX: "auto", overflowY: "hidden" }}>
-        {/* Playoff Section */}
+      <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "80vh" }}>
+        {/* Sticky conference-header row: stays pinned to the top of the scroll
+            area while the team rows below scroll, so you can always tell which
+            column is which conference. Extracted from the playoff grid so it
+            persists across the out/other sections too. */}
         <div
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
             gap: "0",
-            border: `1px solid ${borderColor}`,
+            position: "sticky",
+            top: 0,
+            zIndex: 30,
+            borderLeft: `1px solid ${borderColor}`,
+            borderTop: `1px solid ${borderColor}`,
+            borderRight: `1px solid ${borderColor}`,
+            backgroundColor: "#f9fafb",
+          }}
+        >
+          {columns.map((col) => (
+            <div
+              key={`hdr-${col.name}`}
+              style={{
+                height: confHeaderHeight,
+                borderRight: `1px solid ${borderColor}`,
+                borderBottom: `1px solid ${borderColor}`,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                gap: "4px",
+                padding: "12px 8px 8px 8px",
+                backgroundColor: "#f9fafb",
+              }}
+            >
+              {col.logoUrl ? (
+                <div style={{ marginTop: "-5px" }}>
+                  <TeamLogo
+                    logoUrl={col.logoUrl}
+                    teamName={col.name}
+                    size={confLogoSize}
+                  />
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width: confLogoSize,
+                    height: confLogoSize,
+                    backgroundColor: "#e5e7eb",
+                    borderRadius: "4px",
+                    marginTop: "-5px",
+                  }}
+                />
+              )}
+              <div
+                style={{
+                  fontSize: isMobile ? "12px" : "14px",
+                  fontWeight: "400",
+                  color: "#374151",
+                  marginTop: "-10px",
+                }}
+              >
+                {col.playoffTeams.length} team
+                {col.playoffTeams.length !== 1 ? "s" : ""}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Playoff Section (header is now the sticky row above) */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
+            gap: "0",
+            borderLeft: `1px solid ${borderColor}`,
+            borderRight: `1px solid ${borderColor}`,
+            borderBottom: `1px solid ${borderColor}`,
             backgroundColor: "#ffffff",
           }}
         >
@@ -158,52 +228,6 @@ export default function FootballConferenceBidsTable({
                 borderRight: `1px solid ${borderColor}`,
               }}
             >
-              {/* Conference Header */}
-              <div
-                style={{
-                  height: confHeaderHeight,
-                  borderBottom: `1px solid ${borderColor}`,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  gap: "4px",
-                  padding: "12px 8px 8px 8px",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                {col.logoUrl ? (
-                  <div style={{ marginTop: "-5px" }}>
-                    <TeamLogo
-                      logoUrl={col.logoUrl}
-                      teamName={col.name}
-                      size={confLogoSize}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      width: confLogoSize,
-                      height: confLogoSize,
-                      backgroundColor: "#e5e7eb",
-                      borderRadius: "4px",
-                      marginTop: "-5px",
-                    }}
-                  />
-                )}
-                <div
-                  style={{
-                    fontSize: isMobile ? "12px" : "14px",
-                    fontWeight: "400",
-                    color: "#374151",
-                    marginTop: "-10px",
-                  }}
-                >
-                  {col.playoffTeams.length} team
-                  {col.playoffTeams.length !== 1 ? "s" : ""}
-                </div>
-              </div>
-
               {/* Playoff Teams */}
               {col.playoffTeams.map((team, idx) => (
                 <div
