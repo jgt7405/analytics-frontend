@@ -64,8 +64,8 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
   const filterToggle = (
     <button
       onClick={() => setShowAllTeams(!showAllTeams)}
-      className={`px-3 py-2 border rounded transition-colors ${
-        isMobile ? "text-xs px-2 py-1.5" : "text-sm px-4 py-2"
+      className={`border rounded transition-colors ${
+        isMobile ? "text-xs px-1.5 py-1.5 whitespace-nowrap" : "text-sm px-4 py-2"
       } bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100`}
     >
       {showAllTeams ? "Show Top 20 Only" : "Show All Teams"}
@@ -74,9 +74,11 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
 
   // Segmented control switching the CFP field between the simulated season
   // projection (default) and a snapshot built from current TWV/rating.
-  const sizeClasses = isMobile ? "text-xs px-2 py-1.5" : "text-sm px-4 py-2";
+  const sizeClasses = isMobile
+    ? "text-xs px-1.5 py-1.5 whitespace-nowrap"
+    : "text-sm px-4 py-2";
   const modeToggle = (
-    <div className="flex gap-2">
+    <div className={`flex ${isMobile ? "gap-1.5" : "gap-2"}`}>
       {(
         [
           ["season", "Season Projection"],
@@ -121,7 +123,9 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                   <div className="text-sm text-gray-600 dark:text-gray-300">
                     Updated: {lastUpdated}
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  {/* One row on mobile: nowrap + tighter gap so all three
+                      controls (Season / Current / Show All Teams) fit. */}
+                  <div className="flex flex-nowrap items-center gap-1.5">
                     {modeToggle}
                     {filterToggle}
                   </div>
