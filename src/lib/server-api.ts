@@ -99,9 +99,13 @@ export const getNCAAProjectionsServer = (season?: string) =>
   );
 
 // --- Football playoff rankings (season mode, no conference param) -----------
+// Backend path is /football/playoff_rankings with NO trailing segment. The
+// client uses /All_Teams as a slug placeholder, but the proxy strips it (see
+// api/proxy/[...slug]/route.ts); hitting the backend with /All_Teams 404s, so
+// the SSR initialData was always empty and the page rendered a loading skeleton.
 export const getFootballPlayoffRankingsServer = (season?: string) =>
   fetchJson<PlayoffRankingsResponse>(
-    `/football/playoff_rankings/All_Teams${season ? `?season=${encodeURIComponent(season)}` : ""}`,
+    `/football/playoff_rankings${season ? `?season=${encodeURIComponent(season)}` : ""}`,
   );
 
 // --- Basketball TWV ---------------------------------------------------------

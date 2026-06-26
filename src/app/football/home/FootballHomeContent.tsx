@@ -1,6 +1,11 @@
 "use client";
 
 import TableActionButtons from "@/components/common/TableActionButtons";
+// CFP bracket is the primary above-the-fold content, so it's imported eagerly:
+// lazy-loading it made the absolutely-positioned toggle flash to the far left
+// while the table's loading placeholder had no width (the max-content container
+// collapsed). The component is lightweight (no charts/heavy deps).
+import FootballCFPBracketTable from "@/components/features/football/FootballCFPBracketTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import {
@@ -12,18 +17,6 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { PlayoffRankingsResponse } from "@/types/football";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
-
-const FootballCFPBracketTable = dynamic(
-  () =>
-    import(
-      "@/components/features/football/FootballCFPBracketTable"
-    ),
-  {
-    loading: () => (
-      <div className="min-h-[600px] bg-gray-50 animate-pulse rounded-lg" />
-    ),
-  }
-);
 
 const FootballConferenceBidsTable = dynamic(
   () =>
