@@ -120,7 +120,8 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
         return "#dcfce7"; // light green
       case "At Large":
         return "#dbeafe"; // light blue
-      case "Last 4 In":
+      case "Last 12 In": // 76-team format
+      case "Last 4 In": // historical seasons
         return "#e9d5ff"; // light purple
       case "First 4 Out":
         return "#ffedd5"; // light orange
@@ -137,7 +138,8 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
         return "#166534"; // green
       case "At Large":
         return "#1e40af"; // blue
-      case "Last 4 In":
+      case "Last 12 In": // 76-team format
+      case "Last 4 In": // historical seasons
         return "#6b21a8"; // purple
       case "First 4 Out":
         return "#b45309"; // orange
