@@ -304,7 +304,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   <TeamLogo
                     logoUrl={team.logo_url}
                     teamName={team.team_name}
-                    size={26}
+                    size={isMobile ? 30 : 36}
                     className="flex-shrink-0"
                   />
                 </div>

@@ -143,7 +143,7 @@ function StandingsTable({ standings, className, season }: StandingsTableProps) {
                   <TeamLogo
                     logoUrl={team.logo_url}
                     teamName={team.team_name}
-                    size={isMobile ? 24 : 28}
+                    size={isMobile ? 30 : 36}
                     className="flex-shrink-0"
                     onClick={() => navigateToTeam(team.team_name)}
                   />

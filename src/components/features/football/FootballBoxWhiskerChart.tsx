@@ -285,7 +285,7 @@ export default function FootballBoxWhiskerChart({
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
-                      size={26}
+                      size={39}
                       onClick={() => navigateToTeam(team.team_name)}
                     />
                   </div>
