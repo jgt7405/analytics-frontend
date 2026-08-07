@@ -56,7 +56,7 @@
   position: relative;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
-  padding: 0 0.65rem 0.7rem;
+  padding: 0 0.65rem 0.7rem 0;
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -326,7 +326,7 @@
   }
 
   .scrollViewport {
-    padding: 0 0.35rem 0.55rem;
+    padding: 0 0.35rem 0.55rem 0;
   }
 
   .table {
