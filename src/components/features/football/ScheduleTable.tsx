@@ -518,7 +518,7 @@ function FootballScheduleTable({
                             <TeamLogo
                               logoUrl={teamLogos[team] || "/images/team_logos/default.png"}
                               teamName={team}
-                              size={28}
+                              size={20}
                               showTooltip
                               className={styles.teamLogo}
                             />

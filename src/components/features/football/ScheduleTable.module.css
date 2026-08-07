@@ -4,7 +4,7 @@
   --opponent-col-width: 3rem;
   --winprob-col-width: 4rem;
   --team-column-width: 3.65rem;
-  --summary-team-col-width: 6.5rem;
+  --summary-team-col-width: 9rem;
   --summary-stat-col-width: 3.65rem;
   position: relative;
   overflow: hidden;
@@ -166,11 +166,14 @@
   height: 5.25rem;
   border: 0;
   background: #ffffff;
-  box-shadow: none;
+  /* Seals the border-spacing seam below the sticky header so a sliver of
+     the row scrolling underneath can't peek through as it passes behind. */
+  box-shadow: 0 1px 0 0 #ffffff;
+  isolation: isolate;
 }
 
 .rowHeader {
-  z-index: 55;
+  z-index: 65;
   color: #334155;
   font-size: 0.78rem;
   font-weight: 650;
@@ -180,7 +183,7 @@
 }
 
 .teamHeader {
-  z-index: 50;
+  z-index: 60;
   position: sticky;
   border: 0 !important;
 }
@@ -237,20 +240,22 @@
   position: sticky;
   top: 0;
   left: 0;
-  z-index: 55;
-  height: 3rem;
+  z-index: 65;
+  height: 2.25rem;
   border: 0 !important;
   background: #ffffff;
+  box-shadow: 0 1px 0 0 #ffffff;
+  isolation: isolate;
 }
 
 .summaryStatHeader {
   position: sticky;
   top: 0;
-  z-index: 50;
-  height: 3rem;
+  z-index: 60;
+  height: 2.25rem;
   border: 0;
   background: #ffffff;
-  box-shadow: none;
+  box-shadow: 0 1px 0 0 #ffffff;
   color: #334155;
   font-size: 0.62rem;
   font-weight: 650;
@@ -260,6 +265,7 @@
   width: var(--summary-stat-col-width) !important;
   min-width: var(--summary-stat-col-width) !important;
   max-width: var(--summary-stat-col-width) !important;
+  isolation: isolate;
 }
 
 .summaryTeamButton {
@@ -291,14 +297,15 @@
   display: block;
   min-width: 0;
   flex: 1;
+  overflow: hidden;
   color: #334155;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.15;
   text-align: left;
-  overflow-wrap: anywhere;
-  white-space: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rowLabel {
@@ -350,10 +357,10 @@
 
 .summaryLabel,
 .summaryValue {
-  min-height: 2rem;
+  min-height: 2.3rem;
   background: #f8fafc;
   color: #334155;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
 }
 
 .summaryLabel {
@@ -385,7 +392,7 @@
   width: var(--summary-stat-col-width) !important;
   min-width: var(--summary-stat-col-width) !important;
   max-width: var(--summary-stat-col-width) !important;
-  height: 2.35rem;
+  height: 1.75rem;
   padding: 0;
   text-align: center;
   font-size: 0.85rem;
@@ -420,6 +427,13 @@
   --sticky-column-background: #111827;
   background: #111827;
   color: #cbd5e1;
+}
+
+:global(.dark) .rowHeader,
+:global(.dark) .teamHeader,
+:global(.dark) .summaryTeamHeader,
+:global(.dark) .summaryStatHeader {
+  box-shadow: 0 1px 0 0 #111827;
 }
 
 :global(.dark) .summaryTeamName {
@@ -458,7 +472,7 @@
     --opponent-col-width: 2.4rem;
     --winprob-col-width: 3.1rem;
     --team-column-width: 2.95rem;
-    --summary-team-col-width: 5.5rem;
+    --summary-team-col-width: 7.5rem;
     --summary-stat-col-width: 2.4rem;
     border-radius: 1rem;
   }
@@ -498,7 +512,7 @@
 
   .summaryTeamHeader,
   .summaryStatHeader {
-    height: 2.6rem;
+    height: 2rem;
   }
 
   .summaryStatHeader {
