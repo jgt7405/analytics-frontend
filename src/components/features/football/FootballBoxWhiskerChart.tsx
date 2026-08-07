@@ -20,7 +20,10 @@ interface HoverState {
   y: number;
 }
 
-function hexToRgba(hex: string, alpha: number): string {
+// Softens the box fill by blending the team color toward white as an
+// opaque solid (not alpha transparency) - a translucent fill would let the
+// whisker line rendered behind it show through as a faint vertical seam.
+function softenColor(hex: string, whiteMix: number): string {
   const clean = hex.replace("#", "");
   const full =
     clean.length === 3
@@ -33,7 +36,8 @@ function hexToRgba(hex: string, alpha: number): string {
   const g = parseInt(full.substring(2, 4), 16);
   const b = parseInt(full.substring(4, 6), 16);
   if ([r, g, b].some(Number.isNaN)) return hex;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const mix = (channel: number) => Math.round(channel + (255 - channel) * whiteMix);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
 
 export default function FootballBoxWhiskerChart({
@@ -115,6 +119,10 @@ export default function FootballBoxWhiskerChart({
   const boxWidth = isMobile ? 28 : 30;
   const whiskerWidth = isMobile ? 12 : 18;
   const lineThickness = isMobile ? 2 : 2;
+  // Whisker caps and the median line need real thickness for their
+  // border-radius to read as rounded at all - CSS clamps a pill radius to
+  // half the element's height, so a 2px-tall bar barely rounds.
+  const capThickness = isMobile ? 4 : 5;
   const teamSpacing = isMobile ? 15 : 35;
   const padding = { top: 20, right: 10, bottom: 10, left: 40 };
 
@@ -165,7 +173,7 @@ export default function FootballBoxWhiskerChart({
         >
           {/* Y-axis container */}
           <div
-            className="absolute left-0 top-0 z-30"
+            className="absolute left-0 top-0 z-30 bg-white dark:bg-slate-900"
             style={{
               width: padding.left,
               height: "100%",
@@ -274,9 +282,9 @@ export default function FootballBoxWhiskerChart({
                     <div
                       className={cn(styles.whiskerCap, "absolute")}
                       style={{
-                        top: scale(top),
+                        top: scale(top) - (capThickness - lineThickness) / 2,
                         width: whiskerWidth,
-                        height: lineThickness,
+                        height: capThickness,
                         backgroundColor: secondaryColor,
                         left: (boxWidth - whiskerWidth) / 2,
                       }}
@@ -286,9 +294,9 @@ export default function FootballBoxWhiskerChart({
                     <div
                       className={cn(styles.whiskerCap, "absolute")}
                       style={{
-                        top: scale(bottom),
+                        top: scale(bottom) - (capThickness - lineThickness) / 2,
                         width: whiskerWidth,
-                        height: lineThickness,
+                        height: capThickness,
                         backgroundColor: secondaryColor,
                         left: (boxWidth - whiskerWidth) / 2,
                       }}
@@ -302,7 +310,7 @@ export default function FootballBoxWhiskerChart({
                         top: scale(q3),
                         height: scale(q1) - scale(q3),
                         width: boxWidth,
-                        backgroundColor: hexToRgba(primaryColor, 0.88),
+                        backgroundColor: softenColor(primaryColor, 0.12),
                         border: `2px solid ${secondaryColor}`,
                       }}
                     />
@@ -311,9 +319,10 @@ export default function FootballBoxWhiskerChart({
                     <div
                       className={cn(styles.medianLine, "absolute")}
                       style={{
-                        top: scale(median) - lineThickness / 2,
-                        width: boxWidth,
-                        height: lineThickness + 1,
+                        top: scale(median) - capThickness / 2,
+                        left: 2,
+                        width: boxWidth - 4,
+                        height: capThickness,
                         backgroundColor: secondaryColor,
                       }}
                     />
