@@ -108,6 +108,41 @@
   transform: translateY(-2px) scale(1.06);
 }
 
+.avgLabel {
+  color: #334155;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.teamNameWrap {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.teamName {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: #334155;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
+  word-break: normal;
+  hyphens: auto;
+}
+
+:global(.dark) .avgLabel,
+:global(.dark) .teamName {
+  color: #e2e8f0;
+}
+
 .tooltip {
   position: fixed;
   z-index: 60;

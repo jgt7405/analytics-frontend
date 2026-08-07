@@ -40,6 +40,15 @@ function softenColor(hex: string, whiteMix: number): string {
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
 
+// A soft hyphen only renders as a visible "-" when the browser itself
+// breaks the line there; html2canvas (used for the download/print export)
+// doesn't replicate that behavior and just drops it, so "Northwestern"
+// silently loses its hyphen in exports. Using a real hyphen + zero-width
+// space instead guarantees the same visible break on-screen and in exports.
+function formatTeamName(name: string) {
+  return name.replace(/\bNorthwestern\b/g, "North-" + String.fromCharCode(8203) + "western");
+}
+
 export default function FootballBoxWhiskerChart({
   standings,
   season,
@@ -115,7 +124,13 @@ export default function FootballBoxWhiskerChart({
   }
 
   const chartHeight = isMobile ? 300 : 400;
-  const logoHeight = 50;
+  // Footer below the plot: average value, then logo, then team name.
+  const avgRowHeight = isMobile ? 16 : 18;
+  const logoSize = isMobile ? 26 : 32;
+  const nameRowHeight = isMobile ? 24 : 28;
+  const footerGap = 4;
+  const footerHeight =
+    avgRowHeight + footerGap + logoSize + footerGap + nameRowHeight + footerGap;
   const boxWidth = isMobile ? 28 : 30;
   const whiskerWidth = isMobile ? 12 : 18;
   const lineThickness = isMobile ? 2 : 2;
@@ -167,7 +182,7 @@ export default function FootballBoxWhiskerChart({
         <div
           className="relative"
           style={{
-            height: chartHeight + logoHeight + padding.top + padding.bottom,
+            height: chartHeight + footerHeight + padding.top + padding.bottom,
             minWidth: chartWidth + padding.left + padding.right,
           }}
         >
@@ -217,7 +232,7 @@ export default function FootballBoxWhiskerChart({
               left: padding.left,
               top: padding.top,
               width: chartWidth,
-              height: chartHeight + logoHeight,
+              height: chartHeight + footerHeight,
             }}
           >
             {/* Grid lines */}
@@ -327,6 +342,19 @@ export default function FootballBoxWhiskerChart({
                       }}
                     />
 
+                    {/* Average projected wins */}
+                    <div
+                      className={cn(styles.avgLabel, "absolute flex justify-center items-center")}
+                      style={{
+                        top: chartHeight + footerGap,
+                        width: boxWidth,
+                        height: avgRowHeight,
+                        left: 0,
+                      }}
+                    >
+                      {(team.conf_wins_proj ?? 0).toFixed(1)}
+                    </div>
+
                     {/* Team logo */}
                     <div
                       className={cn(
@@ -334,18 +362,39 @@ export default function FootballBoxWhiskerChart({
                         "absolute flex justify-center items-center",
                       )}
                       style={{
-                        top: chartHeight + 10,
+                        top: chartHeight + footerGap + avgRowHeight + footerGap,
                         width: boxWidth,
-                        height: logoHeight - 10,
+                        height: logoSize,
                         left: 0,
                       }}
                     >
                       <TeamLogo
                         logoUrl={team.logo_url}
                         teamName={team.team_name}
-                        size={39}
+                        size={logoSize}
                         onClick={() => navigateToTeam(team.team_name)}
                       />
+                    </div>
+
+                    {/* Team name */}
+                    <div
+                      className={cn(styles.teamNameWrap, "absolute")}
+                      style={{
+                        top:
+                          chartHeight +
+                          footerGap +
+                          avgRowHeight +
+                          footerGap +
+                          logoSize +
+                          footerGap,
+                        width: boxWidth,
+                        height: nameRowHeight,
+                        left: 0,
+                      }}
+                    >
+                      <span className={styles.teamName}>
+                        {formatTeamName(team.team_name)}
+                      </span>
                     </div>
                   </div>
                 );
