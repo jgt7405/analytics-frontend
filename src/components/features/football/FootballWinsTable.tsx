@@ -1,13 +1,11 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { useResponsive } from "@/hooks/useResponsive";
-import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import styles from "./FootballWinsTable.module.css";
 
 interface FootballWinsTableProps {
   standings: FootballStanding[];
@@ -15,8 +13,73 @@ interface FootballWinsTableProps {
   season?: string;
 }
 
-function FootballWinsTable({ standings, className, season }: FootballWinsTableProps) {
-  const { isMobile } = useResponsive();
+// Same blue hues as the shared color scale, but win-distribution values
+// rarely exceed ~45-50%, so the ramp saturates to its darkest shade by 45%
+// rather than by 100%, and a sub-linear curve keeps low percentages (1-2%)
+// noticeably lighter than the old linear mapping.
+const WINS_CELL_MAX = 45;
+const WINS_LIGHT = [195, 224, 236];
+const WINS_DARK = [24, 98, 123];
+
+function getWinCellColor(value: number): { backgroundColor: string; color: string } {
+  const normalized = Math.min(Math.max(value, 0) / WINS_CELL_MAX, 1);
+  const intensity = Math.pow(normalized, 0.6);
+
+  const r = Math.round(WINS_LIGHT[0] + (WINS_DARK[0] - WINS_LIGHT[0]) * intensity);
+  const g = Math.round(WINS_LIGHT[1] + (WINS_DARK[1] - WINS_LIGHT[1]) * intensity);
+  const b = Math.round(WINS_LIGHT[2] + (WINS_DARK[2] - WINS_LIGHT[2]) * intensity);
+
+  return {
+    backgroundColor: `rgb(${r}, ${g}, ${b})`,
+    color: intensity >= 0.45 ? "#ffffff" : "var(--wins-cell-text)",
+  };
+}
+
+function formatConferenceName(conference?: string) {
+  return conference?.replace(/_/g, " ") || "Conference";
+}
+
+const TEAM_NAME_MAX_FONT_PX = 9.6; // matches the previous 0.6rem base
+const TEAM_NAME_MIN_FONT_PX = 4.5;
+const TEAM_NAME_MIN_LETTER_SPACING_EM = -0.09;
+
+function FitTeamName({ name }: { name: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let size = TEAM_NAME_MAX_FONT_PX;
+    el.style.letterSpacing = "-0.015em";
+    el.style.fontSize = `${size}px`;
+    while (el.scrollWidth > el.clientWidth && size > TEAM_NAME_MIN_FONT_PX) {
+      size -= 0.25;
+      el.style.fontSize = `${size}px`;
+    }
+
+    let spacing = -0.015;
+    while (
+      el.scrollWidth > el.clientWidth &&
+      spacing > TEAM_NAME_MIN_LETTER_SPACING_EM
+    ) {
+      spacing -= 0.01;
+      el.style.letterSpacing = `${spacing}em`;
+    }
+  }, [name]);
+
+  return (
+    <span ref={ref} className={styles.teamName}>
+      {name}
+    </span>
+  );
+}
+
+function FootballWinsTable({
+  standings,
+  className,
+  season,
+}: FootballWinsTableProps) {
   const router = useRouter();
 
   const navigateToTeam = useCallback(
@@ -26,34 +89,44 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
         : `/football/team/${encodeURIComponent(teamName)}`;
       router.push(path);
     },
-    [router, season]
+    [router, season],
   );
 
-  const sortedTeams = useMemo(() => {
-    return [...standings].sort(
-      (a, b) => (b.conf_wins_proj || 0) - (a.conf_wins_proj || 0)
-    );
-  }, [standings]);
+  const sortedTeams = useMemo(
+    () =>
+      [...standings].sort(
+        (a, b) => (b.conf_wins_proj ?? 0) - (a.conf_wins_proj ?? 0),
+      ),
+    [standings],
+  );
 
-  const maxWins = useMemo(() => {
-    let max = 0;
+  const winColumns = useMemo(() => {
+    let maxWins = 0;
+
     for (const team of standings) {
-      if (team.conf_wins_distribution) {
-        const teamMax = Math.max(
-          ...Object.keys(team.conf_wins_distribution).map(Number)
-        );
-        if (teamMax > max) max = teamMax;
+      const distributionWins = Object.keys(
+        team.conf_wins_distribution ?? {},
+      ).map(Number);
+      if (distributionWins.length > 0) {
+        maxWins = Math.max(maxWins, ...distributionWins);
       }
     }
-    return max;
+
+    return Array.from({ length: maxWins + 1 }, (_, index) => maxWins - index);
   }, [standings]);
 
-  const winColumns = useMemo(
-    () => Array.from({ length: maxWins + 1 }, (_, i) => maxWins - i),
-    [maxWins]
+  const peakProbabilityByTeam = useMemo(
+    () =>
+      new Map(
+        sortedTeams.map((team) => [
+          team.team_id,
+          Math.max(0, ...Object.values(team.conf_wins_distribution ?? {})),
+        ]),
+      ),
+    [sortedTeams],
   );
 
-  if (!standings || standings.length === 0) {
+  if (!standings.length) {
     return (
       <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         No wins data available
@@ -61,204 +134,157 @@ function FootballWinsTable({ standings, className, season }: FootballWinsTablePr
     );
   }
 
-  // Heights are fixed to prevent CLS on hydration
-  const firstColWidth = isMobile ? 60 : 70;
-  const teamColWidth = isMobile ? 40 : 64;
-  const cellHeight = 28;
-  const headerHeight = 48;
-  const summaryRowHeight = 28;
-
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "wins-table",
-    className
-  );
+  const conferenceName = formatConferenceName(sortedTeams[0]?.conference);
 
   return (
-    <div className={`${tableClassName} relative overflow-x-auto`}>
-      <table
-        className="border-collapse border-spacing-0"
-        style={{
-          width: "max-content",
-          borderCollapse: "separate",
-          borderSpacing: 0,
-        }}
+    <section
+      className={cn(styles.card, "wins-table", className)}
+      aria-labelledby="football-win-distribution-title"
+    >
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup}>
+          <h2
+            id="football-win-distribution-title"
+            className={styles.title}
+          >
+            Win Distribution
+          </h2>
+          <span className={styles.conferencePill}>{conferenceName}</span>
+        </div>
+      </div>
+
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label={`${conferenceName} projected conference win distribution. Scroll horizontally to see every team.`}
+        tabIndex={0}
       >
-        <thead>
-          <tr>
-            <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs px-1" : "text-sm px-2"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: headerHeight,
-                border: "1px solid var(--border-color)",
-                borderBottom: "2px solid var(--border-color)",
-              }}
-            >
-              Wins
-            </th>
-            {sortedTeams.map((team) => (
-              <th
-                key={`${team.team_id}-${team.team_name}`}
-                className={`text-center font-normal px-1 bg-gray-50 dark:bg-slate-800 ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  height: headerHeight,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  borderBottom: "2px solid var(--border-color)",
-                }}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <TeamLogo
-                    logoUrl={team.logo_url}
-                    teamName={team.team_name}
-                    size={isMobile ? 30 : 36}
-                    className="flex-shrink-0"
-                    onClick={() => navigateToTeam(team.team_name)}
-                  />
-                </div>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th className={cn(styles.stickyColumn, styles.winsHeader)} scope="col">
+                Wins
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {winColumns.map((wins) => (
-            <tr key={`wins-${wins}`}>
-              <td
-                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: firstColWidth,
-                  minWidth: firstColWidth,
-                  maxWidth: firstColWidth,
-                  height: cellHeight,
-                  position: "sticky",
-                  left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderRight: "1px solid var(--border-color)",
-                }}
-              >
-                {wins}
-              </td>
-              {sortedTeams.map((team) => {
-                const percentage =
-                  team.conf_wins_distribution?.[wins.toString()] || 0;
-                const colorStyle = getCellColor(percentage);
-
-                return (
-                  <td
-                    key={`${team.team_id}-${team.team_name}-wins-${wins}`}
-                    className="relative p-0"
-                    style={{
-                      height: cellHeight,
-                      width: teamColWidth,
-                      minWidth: teamColWidth,
-                      maxWidth: teamColWidth,
-                      border: "1px solid var(--border-color)",
-                      borderTop: "none",
-                      borderLeft: "none",
-                      backgroundColor: colorStyle.backgroundColor,
-                      color: colorStyle.color,
-                    }}
+              {sortedTeams.map((team) => (
+                  <th
+                    key={`${team.team_id}-${team.team_name}`}
+                    className={styles.teamHeader}
+                    scope="col"
+                    data-screenshot-team-header="true"
                   >
-                    <div
-                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
+                    <button
+                      type="button"
+                      className={styles.teamButton}
+                      onClick={() => navigateToTeam(team.team_name)}
+                      aria-label={`View ${team.team_name}`}
                     >
-                      {percentage > 0 ? `${Math.round(percentage)}%` : ""}
-                    </div>
-                  </td>
-                );
-              })}
+                      <TeamLogo
+                        logoUrl={team.logo_url}
+                        teamName={team.team_name}
+                        size={32}
+                        showTooltip
+                        className={styles.teamLogo}
+                      />
+                      <FitTeamName name={team.team_name} />
+                    </button>
+                  </th>
+              ))}
             </tr>
-          ))}
+          </thead>
 
-          {/* Average Wins Row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
-            <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: summaryRowHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderTop: "2px solid var(--border-color)",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Avg
-            </td>
-            {sortedTeams.map((team) => {
-              const avgWins = team.conf_wins_proj || 0;
-              return (
-                <td
-                  key={`${team.team_id}-${team.team_name}-avg`}
-                  className={`text-center font-medium bg-gray-50 dark:bg-slate-800 ${isMobile ? "text-xs" : "text-sm"}`}
-                  style={{
-                    height: summaryRowHeight,
-                    width: teamColWidth,
-                    minWidth: teamColWidth,
-                    maxWidth: teamColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderLeft: "none",
-                    borderTop: "2px solid var(--border-color)",
-                  }}
+          <tbody>
+            {winColumns.map((wins) => (
+              <tr key={`wins-${wins}`}>
+                <th
+                  className={cn(styles.stickyColumn, styles.winLabel)}
+                  scope="row"
                 >
-                  {avgWins.toFixed(1)}
-                </td>
-              );
-            })}
-          </tr>
+                  {wins}
+                </th>
+                {sortedTeams.map((team) => {
+                  const winsKey = wins.toString();
+                  const distribution = team.conf_wins_distribution ?? {};
+                  const hasData = Object.prototype.hasOwnProperty.call(
+                    distribution,
+                    winsKey,
+                  );
+                  const percentage = hasData ? distribution[winsKey] : 0;
+                  const rounded = Math.round(percentage);
+                  const cellStyle = hasData
+                    ? getWinCellColor(percentage)
+                    : { backgroundColor: "transparent", color: "transparent" };
+                  const isPeak =
+                    hasData &&
+                    percentage > 0 &&
+                    percentage === peakProbabilityByTeam.get(team.team_id);
 
-          {/* Current Conference Record Row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
-            <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: summaryRowHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderTop: "none",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Curr Conf Record
-            </td>
-            {sortedTeams.map((team) => {
-              const confWins = team.actual_conference_wins || 0;
-              const confLosses = team.actual_conference_losses || 0;
-              return (
+                  return (
+                    <td
+                      key={`${team.team_id}-${team.team_name}-wins-${wins}`}
+                      className={styles.probabilityCell}
+                    >
+                      <div
+                        data-screenshot-tile="true"
+                        className={cn(
+                          styles.heatTile,
+                          isPeak && styles.peakTile,
+                          !hasData && styles.emptyTile,
+                        )}
+                        style={cellStyle}
+                        title={
+                          hasData
+                            ? `${team.team_name}: ${rounded}% chance of ${wins} conference wins`
+                            : `${team.team_name}: no data for ${wins} conference wins`
+                        }
+                      >
+                        {hasData ? `${rounded}%` : ""}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+
+          <tfoot>
+            <tr className={styles.summaryFirstRow}>
+              <th
+                className={cn(styles.stickyColumn, styles.summaryLabel)}
+                scope="row"
+              >
+                Average
+              </th>
+              {sortedTeams.map((team) => (
                 <td
-                  key={`${team.team_id}-${team.team_name}-curr`}
-                  className={`text-center font-medium bg-gray-50 dark:bg-slate-800 ${isMobile ? "text-xs" : "text-sm"}`}
-                  style={{
-                    height: summaryRowHeight,
-                    width: teamColWidth,
-                    minWidth: teamColWidth,
-                    maxWidth: teamColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderLeft: "none",
-                  }}
+                  key={`${team.team_id}-${team.team_name}-average`}
+                  className={styles.summaryValue}
                 >
-                  {confWins}-{confLosses}
+                  {(team.conf_wins_proj ?? 0).toFixed(1)}
                 </td>
-              );
-            })}
-          </tr>
-        </tbody>
-      </table>
-    </div>
+              ))}
+            </tr>
+            <tr>
+              <th
+                className={cn(styles.stickyColumn, styles.summaryLabel)}
+                scope="row"
+              >
+                Curr Conf Record
+              </th>
+              {sortedTeams.map((team) => (
+                <td
+                  key={`${team.team_id}-${team.team_name}-record`}
+                  className={styles.summaryValue}
+                >
+                  {team.actual_conference_wins ?? 0}-
+                  {team.actual_conference_losses ?? 0}
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p className={styles.scrollHint}>Swipe to view every team</p>
+    </section>
   );
 }
 
