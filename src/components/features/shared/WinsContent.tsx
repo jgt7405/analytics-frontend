@@ -64,6 +64,13 @@ export interface WinsContentConfig<TTeam> {
   conferenceTableTitle?: string;
   RegSeasonChart: ComponentType<{ standings: TTeam[]; season?: string }>;
   RegSeasonTable: ComponentType<{ standings: TTeam[]; season?: string }>;
+  /**
+   * Overrides the screenshot/share title for the regular season
+   * win-distribution table. Defaults to "Projected Regular Season Wins"
+   * (used for both pageTitle and shareTitle) when omitted, matching the
+   * previous shared behavior.
+   */
+  regSeasonTableTitle?: string;
   noDataMessage: string;
   errorFallbackMessage: string;
   errorRetryLabel: string;
@@ -399,8 +406,9 @@ export default function WinsContent<TTeam>({
                 "regular-season-explainer",
                 explainers.regSeasonTable,
                 `${config.sport}-regular-season-wins`,
-                "Projected Regular Season Wins",
-                "Projected Regular Season Wins Analysis",
+                config.regSeasonTableTitle ?? "Projected Regular Season Wins",
+                config.regSeasonTableTitle ??
+                  "Projected Regular Season Wins Analysis",
                 null,
                 <RegSeasonTable standings={standings} season={season} />,
               )}
