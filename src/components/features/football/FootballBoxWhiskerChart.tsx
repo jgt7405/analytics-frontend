@@ -184,16 +184,20 @@ export default function FootballBoxWhiskerChart({
           style={{
             height: chartHeight + footerHeight + padding.top + padding.bottom,
             minWidth: chartWidth + padding.left + padding.right,
+            isolation: "isolate",
           }}
         >
           {/* Y-axis container */}
           <div
-            className="absolute left-0 top-0 z-30 bg-white dark:bg-slate-900"
+            className="bg-white dark:bg-slate-900"
             style={{
-              width: padding.left,
-              height: "100%",
               position: "sticky",
               left: 0,
+              width: padding.left,
+              height: "100%",
+              zIndex: 100,
+              isolation: "isolate",
+              willChange: "transform",
             }}
           >
             <div
@@ -233,6 +237,7 @@ export default function FootballBoxWhiskerChart({
               top: padding.top,
               width: chartWidth,
               height: chartHeight + footerHeight,
+              zIndex: 1,
             }}
           >
             {/* Grid lines */}
