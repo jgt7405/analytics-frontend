@@ -3,7 +3,7 @@
   --location-col-width: 3.5rem;
   --opponent-col-width: 3rem;
   --winprob-col-width: 4rem;
-  --team-column-width: 3.1rem;
+  --team-column-width: 3.65rem;
   --summary-team-col-width: 6.5rem;
   --summary-stat-col-width: 3.65rem;
   position: relative;
@@ -163,7 +163,7 @@
 .teamHeader {
   position: sticky;
   top: 0;
-  height: 4.5rem;
+  height: 5.25rem;
   border: 0;
   background: #ffffff;
   box-shadow: none;
@@ -218,10 +218,10 @@
   width: 100%;
   min-width: 0;
   color: #334155;
-  font-size: 0.52rem;
+  font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
   overflow-wrap: anywhere;
   text-align: center;
   text-wrap: balance;
@@ -314,7 +314,7 @@
 }
 
 .gameCell {
-  height: 2rem;
+  height: 2.35rem;
   padding: 0;
 }
 
@@ -326,8 +326,8 @@
   justify-content: center;
   border: 1px solid rgb(255 255 255 / 0.68);
   border-radius: 3px;
-  font-size: 0.72rem;
-  font-weight: 650;
+  font-size: 0.95rem;
+  font-weight: 450;
   cursor: default;
   transition: border-color 150ms ease;
 }
@@ -378,7 +378,6 @@
   align-items: center;
   justify-content: center;
   border-radius: 3px;
-  font-weight: 650;
 }
 
 /* Summary table body cells (Expected Wins / Total Games / quartiles). */
@@ -458,7 +457,7 @@
     --location-col-width: 2.6rem;
     --opponent-col-width: 2.4rem;
     --winprob-col-width: 3.1rem;
-    --team-column-width: 2.6rem;
+    --team-column-width: 2.95rem;
     --summary-team-col-width: 5.5rem;
     --summary-stat-col-width: 2.4rem;
     border-radius: 1rem;
@@ -494,7 +493,7 @@
 
   .rowHeader,
   .teamHeader {
-    height: 4rem;
+    height: 4.65rem;
   }
 
   .summaryTeamHeader,
@@ -511,16 +510,15 @@
   }
 
   .teamLogo {
-    transform: scale(0.85);
+    transform: scale(0.9);
   }
 
-  .teamName {
-    font-size: 0.46rem;
-  }
-
-  .rowLabel,
-  .gameCell {
+  .rowLabel {
     height: 1.75rem;
+  }
+
+  .gameCell {
+    height: 2rem;
   }
 
   .rowLabel,
@@ -531,7 +529,7 @@
   }
 
   .gameTile {
-    font-size: 0.62rem;
+    font-size: 0.82rem;
   }
 }
 
