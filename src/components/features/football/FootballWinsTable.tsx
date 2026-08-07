@@ -4,7 +4,7 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { cn } from "@/lib/utils";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo } from "react";
 import styles from "./FootballWinsTable.module.css";
 
 interface FootballWinsTableProps {
@@ -37,42 +37,6 @@ function getWinCellColor(value: number): { backgroundColor: string; color: strin
 
 function formatConferenceName(conference?: string) {
   return conference?.replace(/_/g, " ") || "Conference";
-}
-
-const TEAM_NAME_MAX_FONT_PX = 9.6; // matches the previous 0.6rem base
-const TEAM_NAME_MIN_FONT_PX = 4.5;
-const TEAM_NAME_MIN_LETTER_SPACING_EM = -0.09;
-
-function FitTeamName({ name }: { name: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    let size = TEAM_NAME_MAX_FONT_PX;
-    el.style.letterSpacing = "-0.015em";
-    el.style.fontSize = `${size}px`;
-    while (el.scrollWidth > el.clientWidth && size > TEAM_NAME_MIN_FONT_PX) {
-      size -= 0.25;
-      el.style.fontSize = `${size}px`;
-    }
-
-    let spacing = -0.015;
-    while (
-      el.scrollWidth > el.clientWidth &&
-      spacing > TEAM_NAME_MIN_LETTER_SPACING_EM
-    ) {
-      spacing -= 0.01;
-      el.style.letterSpacing = `${spacing}em`;
-    }
-  }, [name]);
-
-  return (
-    <span ref={ref} className={styles.teamName}>
-      {name}
-    </span>
-  );
 }
 
 function FootballWinsTable({
@@ -185,7 +149,7 @@ function FootballWinsTable({
                         showTooltip
                         className={styles.teamLogo}
                       />
-                      <FitTeamName name={team.team_name} />
+                      <span className={styles.teamName}>{team.team_name}</span>
                     </button>
                   </th>
               ))}
@@ -193,6 +157,22 @@ function FootballWinsTable({
           </thead>
 
           <tbody>
+            <tr className={styles.averageRow}>
+              <th
+                className={cn(styles.stickyColumn, styles.summaryLabel)}
+                scope="row"
+              >
+                Average
+              </th>
+              {sortedTeams.map((team) => (
+                <td
+                  key={`${team.team_id}-${team.team_name}-average`}
+                  className={styles.summaryValue}
+                >
+                  {(team.conf_wins_proj ?? 0).toFixed(1)}
+                </td>
+              ))}
+            </tr>
             {winColumns.map((wins) => (
               <tr key={`wins-${wins}`}>
                 <th
@@ -247,22 +227,6 @@ function FootballWinsTable({
           </tbody>
 
           <tfoot>
-            <tr className={styles.summaryFirstRow}>
-              <th
-                className={cn(styles.stickyColumn, styles.summaryLabel)}
-                scope="row"
-              >
-                Average
-              </th>
-              {sortedTeams.map((team) => (
-                <td
-                  key={`${team.team_id}-${team.team_name}-average`}
-                  className={styles.summaryValue}
-                >
-                  {(team.conf_wins_proj ?? 0).toFixed(1)}
-                </td>
-              ))}
-            </tr>
             <tr>
               <th
                 className={cn(styles.stickyColumn, styles.summaryLabel)}
@@ -283,7 +247,6 @@ function FootballWinsTable({
           </tfoot>
         </table>
       </div>
-      <p className={styles.scrollHint}>Swipe to view every team</p>
     </section>
   );
 }

@@ -100,14 +100,20 @@
 }
 
 .stickyColumn {
+  --sticky-column-background: #ffffff;
   position: sticky;
   left: 0;
   z-index: 20;
   width: var(--label-column-width) !important;
   min-width: var(--label-column-width) !important;
   max-width: var(--label-column-width) !important;
-  background: #ffffff;
-  box-shadow: 0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  background: var(--sticky-column-background);
+  box-shadow:
+    -1px 0 0 var(--sticky-column-background),
+    1px 0 0 var(--sticky-column-background),
+    0 -1px 0 var(--sticky-column-background),
+    0 1px 0 var(--sticky-column-background),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
 }
 
 .winsHeader,
@@ -129,7 +135,6 @@
 
 .teamHeader {
   position: relative;
-  overflow: hidden;
   border: 0 !important;
 }
 
@@ -163,22 +168,23 @@
 
 .teamName {
   display: block;
-  width: calc(100% - 0.25rem);
+  width: 100%;
   min-width: 0;
-  overflow: hidden;
   color: #334155;
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: -0.015em;
-  line-height: 1.08;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-wrap: balance;
+  white-space: normal;
+  word-break: normal;
+  hyphens: auto;
 }
 
 .winLabel {
   height: 2.35rem;
-  border-radius: 0.55rem;
   color: #475569;
   font-size: 0.98rem;
   font-weight: 700;
@@ -219,9 +225,10 @@
   box-shadow: none;
 }
 
-.summaryFirstRow .summaryLabel,
-.summaryFirstRow .summaryValue {
+.averageRow .summaryLabel,
+.averageRow .summaryValue {
   border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .summaryLabel,
@@ -233,7 +240,9 @@
 }
 
 .summaryLabel {
+  --sticky-column-background: #f8fafc;
   padding: 0 0.75rem;
+  background: var(--sticky-column-background);
   font-weight: 650;
   text-align: left;
   white-space: normal;
@@ -242,23 +251,6 @@
 .summaryValue {
   text-align: center;
   font-weight: 700;
-}
-
-.summaryFirstRow .summaryLabel {
-  border-radius: 0.65rem 0 0 0;
-}
-
-.table tfoot tr:last-child .summaryLabel {
-  border-radius: 0 0 0 0.65rem;
-}
-
-.scrollHint {
-  display: none;
-  margin: -0.15rem 1rem 0.85rem;
-  color: #64748b;
-  font-size: 0.68rem;
-  font-weight: 550;
-  text-align: right;
 }
 
 :global(.dark) .card {
@@ -284,21 +276,17 @@
   color: #e2e8f0;
 }
 
-:global(.dark) .scrollHint {
-  color: #94a3b8;
-}
-
 :global(.dark) .stickyColumn,
 :global(.dark) .winsHeader,
 :global(.dark) .teamHeader {
+  --sticky-column-background: #111827;
   background: #111827;
   color: #cbd5e1;
-  box-shadow: none;
 }
 
 :global(.dark) .winLabel {
-  background: #0f172a;
-  box-shadow: 0.65rem 0 0.85rem -0.9rem rgb(0 0 0 / 0.9);
+  --sticky-column-background: #0f172a;
+  background: var(--sticky-column-background);
 }
 
 :global(.dark) .summaryLabel,
@@ -306,6 +294,11 @@
   border-color: #334155;
   background: #1e293b;
   color: #e2e8f0;
+}
+
+:global(.dark) .summaryLabel {
+  --sticky-column-background: #1e293b;
+  background: var(--sticky-column-background);
 }
 
 @media (max-width: 767px) {
@@ -371,9 +364,6 @@
     line-height: 1.15;
   }
 
-  .scrollHint {
-    display: block;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
