@@ -56,6 +56,12 @@ export interface WinsContentConfig<TTeam> {
   };
   ConferenceChart: ComponentType<{ standings: TTeam[]; season?: string }>;
   ConferenceTable: ComponentType<{ standings: TTeam[]; season?: string }>;
+  /**
+   * Overrides the screenshot/share title for the conference win-distribution
+   * table. Defaults to "Projected Conference Wins" (used for both pageTitle
+   * and shareTitle) when omitted, matching the previous shared behavior.
+   */
+  conferenceTableTitle?: string;
   RegSeasonChart: ComponentType<{ standings: TTeam[]; season?: string }>;
   RegSeasonTable: ComponentType<{ standings: TTeam[]; season?: string }>;
   noDataMessage: string;
@@ -373,8 +379,8 @@ export default function WinsContent<TTeam>({
                 "wins-explainer",
                 explainers.conferenceTable,
                 `${config.sport}-wins`,
-                "Projected Conference Wins",
-                "Projected Conference Wins Analysis",
+                config.conferenceTableTitle ?? "Projected Conference Wins",
+                config.conferenceTableTitle ?? "Projected Conference Wins Analysis",
                 null,
                 <ConferenceTable standings={standings} season={season} />,
               )}

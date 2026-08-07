@@ -226,6 +226,46 @@ export default function TableActionButtons({
       // Clone element first
       const clone = targetElement.cloneNode(true) as HTMLElement;
 
+      // html2canvas can turn translucent/inset cell effects into large dark
+      // blocks. Freeze the live heat-tile colors and typography as explicit
+      // solid styles on the export clone so the PNG matches the screen.
+      const originalScreenshotTiles = targetElement.querySelectorAll<HTMLElement>(
+        '[data-screenshot-tile="true"]',
+      );
+      const clonedScreenshotTiles = clone.querySelectorAll<HTMLElement>(
+        '[data-screenshot-tile="true"]',
+      );
+
+      originalScreenshotTiles.forEach((originalTile, index) => {
+        const clonedTile = clonedScreenshotTiles[index];
+        if (!clonedTile) return;
+
+        const computed = window.getComputedStyle(originalTile);
+        clonedTile.style.setProperty(
+          "background-color",
+          computed.backgroundColor,
+          "important",
+        );
+        clonedTile.style.setProperty("background-image", "none", "important");
+        clonedTile.style.setProperty("color", computed.color, "important");
+        clonedTile.style.setProperty("font-size", computed.fontSize, "important");
+        clonedTile.style.setProperty(
+          "font-weight",
+          computed.fontWeight,
+          "important",
+        );
+        clonedTile.style.setProperty(
+          "border-radius",
+          computed.borderRadius,
+          "important",
+        );
+        clonedTile.style.setProperty("box-shadow", "none", "important");
+        clonedTile.style.setProperty("filter", "none", "important");
+        clonedTile.style.setProperty("transform", "none", "important");
+        clonedTile.style.setProperty("transition", "none", "important");
+        clonedTile.style.setProperty("opacity", "1", "important");
+      });
+
       // Handle canvas replacement
       const originalCanvas = targetElement.querySelector(
         "canvas",
@@ -260,6 +300,23 @@ export default function TableActionButtons({
         [data-component-type="bball-seed-wins-and-probability"] { height: auto !important; }
         [data-component-type="bball-seed-wins-and-probability"] > div { height: auto !important; }
         .seed-target-display { display: flex !important; }
+        [data-screenshot-tile="true"] {
+          background-image: none !important;
+          box-shadow: none !important;
+          filter: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+          transition: none !important;
+        }
+        [data-screenshot-team-header="true"] img {
+          width: 36px !important;
+          height: 36px !important;
+        }
+        [data-screenshot-team-header="true"] button > div {
+          width: 40px !important;
+          height: 40px !important;
+        }
+        [data-screenshot-hide="true"] { display: none !important; }
         select { display: none !important; }
         label:has(+ select) { display: none !important; }
       `;
@@ -399,44 +456,42 @@ export default function TableActionButtons({
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `${selectedConference}_${pageName}_${timestamp}.png`;
 
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((result) => {
+          if (result) resolve(result);
+          else reject(new Error("Failed to create image"));
+        }, "image/png");
+      });
+
       if (isMobile) {
-        canvas.toBlob(async (blob: Blob | null) => {
-          if (!blob) throw new Error("Failed to create image");
+        const file = new File([blob], filename, { type: "image/png" });
 
-          const file = new File([blob], filename, { type: "image/png" });
-
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-              await navigator.share({
-                files: [file],
-                title: pageTitle || "Analytics",
-              });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: pageTitle || "Analytics",
+            });
+            return;
+          } catch (shareError: unknown) {
+            if (
+              shareError &&
+              typeof shareError === "object" &&
+              "name" in shareError &&
+              shareError.name === "AbortError"
+            ) {
               return;
-            } catch (shareError: unknown) {
-              if (
-                shareError &&
-                typeof shareError === "object" &&
-                "name" in shareError &&
-                shareError.name === "AbortError"
-              ) {
-                return;
-              }
             }
           }
-
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = filename;
-          link.click();
-          URL.revokeObjectURL(url);
-        }, "image/png");
-      } else {
-        const link = document.createElement("a");
-        link.download = filename;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
+        }
       }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) {
       console.error("Download failed:", error);
       toast.error(

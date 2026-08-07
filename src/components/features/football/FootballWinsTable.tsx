@@ -39,8 +39,13 @@ function formatConferenceName(conference?: string) {
   return conference?.replace(/_/g, " ") || "Conference";
 }
 
+// A soft hyphen (\u00AD) only renders as a visible "-" when the browser
+// itself breaks the line there; html2canvas (used for the download/print
+// export) doesn't replicate that behavior and just drops it, so "Northwestern"
+// silently loses its hyphen in exports. Using a real hyphen + zero-width
+// space instead guarantees the same visible break on-screen and in exports.
 function formatTeamName(name: string) {
-  return name.replace(/\bNorthwestern\b/g, "North\u00ADwestern");
+  return name.replace(/\bNorthwestern\b/g, "North-\u200Bwestern");
 }
 
 function FootballWinsTable({
@@ -109,13 +114,13 @@ function FootballWinsTable({
       className={cn(styles.card, "wins-table", className)}
       aria-labelledby="football-win-distribution-title"
     >
-      <div className={styles.cardHeader}>
+      <div className={styles.cardHeader} data-screenshot-hide="true">
         <div className={styles.titleGroup}>
           <h2
             id="football-win-distribution-title"
             className={styles.title}
           >
-            Win Distribution
+            Projected Conference Win Distribution
           </h2>
           <span className={styles.conferencePill}>{conferenceName}</span>
         </div>
@@ -131,7 +136,7 @@ function FootballWinsTable({
           <thead>
             <tr>
               <th className={cn(styles.stickyColumn, styles.winsHeader)} scope="col">
-                Wins
+                Conference Wins
               </th>
               {sortedTeams.map((team) => (
                   <th

@@ -44,6 +44,7 @@ const FOOTBALL_WINS: WinsContentConfig<FootballStanding> = {
   useStandingsData: useFootballStandings,
   ConferenceChart: FootballBoxWhiskerChart,
   ConferenceTable: FootballWinsTable,
+  conferenceTableTitle: "Projected Conference Win Distribution",
   RegSeasonChart: FootballRegularSeasonBoxWhiskerChart,
   RegSeasonTable: FootballRegularSeasonWinsTable,
   noDataMessage: "No football wins data available",
