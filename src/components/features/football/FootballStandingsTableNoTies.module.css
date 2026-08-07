@@ -1,0 +1,354 @@
+.card {
+  --wins-cell-text: #1f2937;
+  --label-column-width: 4.75rem;
+  --team-column-width: 3.65rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.35rem 1rem;
+}
+
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.scrollViewport {
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 1.1rem 0.65rem 0.7rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport:focus-visible {
+  outline: 3px solid rgb(14 116 144 / 0.35);
+  outline-offset: -3px;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 1px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  width: var(--team-column-width);
+  min-width: var(--team-column-width);
+  max-width: var(--team-column-width);
+}
+
+.stickyColumn {
+  --sticky-column-background: #ffffff;
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  width: var(--label-column-width) !important;
+  min-width: var(--label-column-width) !important;
+  max-width: var(--label-column-width) !important;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
+  box-shadow:
+    0 0 0 3px var(--sticky-column-background),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  isolation: isolate;
+}
+
+.winsHeader,
+.teamHeader {
+  height: 5.25rem;
+  border: 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.winsHeader {
+  z-index: 50;
+  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.teamHeader {
+  position: relative;
+  border: 0 !important;
+}
+
+.teamButton {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.28rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.teamButton:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.teamButton:focus-visible {
+  border-radius: 0.65rem;
+  outline: 3px solid rgb(14 116 144 / 0.38);
+  outline-offset: -3px;
+}
+
+.teamLogo {
+  filter: drop-shadow(0 5px 5px rgb(15 23 42 / 0.12));
+}
+
+.teamName {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: #334155;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
+  word-break: normal;
+  hyphens: auto;
+}
+
+.winLabel {
+  height: 2.35rem;
+  color: #475569;
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.probabilityCell {
+  height: 2.35rem;
+  padding: 0;
+}
+
+.heatTile {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  font-size: 0.95rem;
+  font-weight: 450;
+  transition: border-color 150ms ease;
+}
+
+.heatTile:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+.peakTile {
+  border-color: rgb(255 255 255 / 0.72);
+  font-weight: 800;
+}
+
+.emptyTile {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.averageRow .summaryLabel,
+.averageRow .summaryValue {
+  background: #f1f5f9;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.summaryLabel,
+.summaryValue {
+  min-height: 2.15rem;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.94rem;
+}
+
+.summaryLabel {
+  --sticky-column-background: #f8fafc;
+  padding: 0 0.75rem;
+  background: var(--sticky-column-background);
+  font-weight: 650;
+  text-align: left;
+  white-space: normal;
+}
+
+.summaryValue {
+  text-align: center;
+  font-weight: 700;
+}
+
+:global(.dark) .card {
+  --wins-cell-text: #e2e8f0;
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .title {
+  color: #cbd5e1;
+}
+
+:global(.dark) .teamName {
+  color: #e2e8f0;
+}
+
+:global(.dark) .stickyColumn,
+:global(.dark) .winsHeader,
+:global(.dark) .teamHeader {
+  --sticky-column-background: #111827;
+  background: #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .winLabel {
+  --sticky-column-background: #0f172a;
+  background: var(--sticky-column-background);
+}
+
+:global(.dark) .summaryLabel,
+:global(.dark) .summaryValue {
+  border-color: #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+:global(.dark) .summaryLabel {
+  --sticky-column-background: #1e293b;
+  background: var(--sticky-column-background);
+}
+
+:global(.dark) .averageRow .summaryLabel,
+:global(.dark) .averageRow .summaryValue {
+  background: #263449;
+  border-bottom: 2px solid rgb(71 85 105 / 0.8);
+}
+
+@media (max-width: 767px) {
+  .card {
+    --label-column-width: 3.75rem;
+    --team-column-width: 2.95rem;
+    border-radius: 1rem;
+  }
+
+  .cardHeader {
+    align-items: flex-start;
+    padding: 1rem 0.9rem 0.7rem;
+  }
+
+  .titleGroup {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .scrollViewport {
+    padding: 0.9rem 0.35rem 0.55rem 0;
+  }
+
+  .table {
+    border-spacing: 1px;
+  }
+
+  .winsHeader,
+  .teamHeader {
+    height: 4.65rem;
+  }
+
+  .teamLogo {
+    transform: scale(0.9);
+  }
+
+  .winLabel,
+  .probabilityCell {
+    height: 2rem;
+  }
+
+  .winLabel,
+  .summaryLabel,
+  .summaryValue {
+    font-size: 0.85rem;
+  }
+
+  .heatTile {
+    font-size: 0.82rem;
+  }
+
+  .summaryLabel {
+    padding: 0 0.45rem;
+    line-height: 1.15;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teamButton,
+  .heatTile {
+    transition: none;
+  }
+}
