@@ -363,8 +363,8 @@ export default function TableActionButtons({
       titleElement.style.cssText = `
         font-family: "Roboto Condensed", system-ui, sans-serif;
         font-size: 1.25rem;
-        font-weight: 500;
-        color: #6b7280;
+        font-weight: 700;
+        color: #334155;
         margin: 0;
         text-align: center;
         flex: 1;

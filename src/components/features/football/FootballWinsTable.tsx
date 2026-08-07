@@ -122,7 +122,6 @@ function FootballWinsTable({
           >
             Projected Conference Win Distribution
           </h2>
-          <span className={styles.conferencePill}>{conferenceName}</span>
         </div>
       </div>
 
@@ -136,7 +135,7 @@ function FootballWinsTable({
           <thead>
             <tr>
               <th className={cn(styles.stickyColumn, styles.winsHeader)} scope="col">
-                Conference Wins
+                Conf Wins
               </th>
               {sortedTeams.map((team) => (
                   <th

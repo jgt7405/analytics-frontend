@@ -1,6 +1,6 @@
 .card {
   --wins-cell-text: #1f2937;
-  --label-column-width: 6.75rem;
+  --label-column-width: 4.75rem;
   --team-column-width: 3.65rem;
   position: relative;
   overflow: hidden;
@@ -34,21 +34,6 @@
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.1;
-  white-space: nowrap;
-}
-
-.conferencePill {
-  max-width: 10rem;
-  overflow: hidden;
-  border: 1px solid rgb(203 213 225 / 0.75);
-  border-radius: 999px;
-  background: #f1f5f9;
-  padding: 0.3rem 0.7rem;
-  color: #475569;
-  font-size: 0.75rem;
-  font-weight: 650;
-  line-height: 1;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -232,7 +217,7 @@
 
 .summaryLabel,
 .summaryValue {
-  height: 2.15rem;
+  min-height: 2.15rem;
   background: #f8fafc;
   color: #334155;
   font-size: 0.94rem;
@@ -262,12 +247,6 @@
 }
 
 :global(.dark) .title {
-  color: #cbd5e1;
-}
-
-:global(.dark) .conferencePill {
-  border-color: rgb(71 85 105 / 0.8);
-  background: #1e293b;
   color: #cbd5e1;
 }
 
@@ -308,7 +287,7 @@
 
 @media (max-width: 767px) {
   .card {
-    --label-column-width: 5.35rem;
+    --label-column-width: 3.75rem;
     --team-column-width: 2.95rem;
     border-radius: 1rem;
   }
@@ -326,10 +305,6 @@
 
   .title {
     font-size: 1.25rem;
-  }
-
-  .conferencePill {
-    font-size: 0.68rem;
   }
 
   .scrollViewport {
