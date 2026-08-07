@@ -39,6 +39,10 @@ function formatConferenceName(conference?: string) {
   return conference?.replace(/_/g, " ") || "Conference";
 }
 
+function formatTeamName(name: string) {
+  return name.replace(/\bNorthwestern\b/g, "North\u00ADwestern");
+}
+
 function FootballWinsTable({
   standings,
   className,
@@ -149,7 +153,9 @@ function FootballWinsTable({
                         showTooltip
                         className={styles.teamLogo}
                       />
-                      <span className={styles.teamName}>{team.team_name}</span>
+                      <span className={styles.teamName}>
+                        {formatTeamName(team.team_name)}
+                      </span>
                     </button>
                   </th>
               ))}

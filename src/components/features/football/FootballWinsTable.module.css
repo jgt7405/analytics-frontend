@@ -103,17 +103,16 @@
   --sticky-column-background: #ffffff;
   position: sticky;
   left: 0;
-  z-index: 20;
+  z-index: 40;
   width: var(--label-column-width) !important;
   min-width: var(--label-column-width) !important;
   max-width: var(--label-column-width) !important;
   background: var(--sticky-column-background);
+  background-clip: border-box;
   box-shadow:
-    -1px 0 0 var(--sticky-column-background),
-    1px 0 0 var(--sticky-column-background),
-    0 -1px 0 var(--sticky-column-background),
-    0 1px 0 var(--sticky-column-background),
+    0 0 0 3px var(--sticky-column-background),
     0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  isolation: isolate;
 }
 
 .winsHeader,
@@ -125,7 +124,7 @@
 }
 
 .winsHeader {
-  z-index: 30;
+  z-index: 50;
   color: #334155;
   font-size: 0.95rem;
   font-weight: 650;
@@ -227,7 +226,6 @@
 
 .averageRow .summaryLabel,
 .averageRow .summaryValue {
-  border-top: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
 }
 
