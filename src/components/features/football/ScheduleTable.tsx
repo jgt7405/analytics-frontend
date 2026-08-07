@@ -454,37 +454,37 @@ function FootballScheduleTable({
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={cn(styles.stickyColumn, styles.rowHeader)} scope="col">
+                  <th className={cn(styles.stickyColumn, styles.summaryTeamHeader)} scope="col">
                     Team
                   </th>
-                  <th className={styles.rowHeader} scope="col">
+                  <th className={styles.summaryStatHeader} scope="col">
                     Expected
                     <br />
                     Wins
                   </th>
-                  <th className={styles.rowHeader} scope="col">
+                  <th className={styles.summaryStatHeader} scope="col">
                     Total
                     <br />
                     Games
                   </th>
-                  <th className={styles.rowHeader} scope="col">
+                  <th className={styles.summaryStatHeader} scope="col">
                     Top
                     <br />
                     Quartile
                     <br />
                     (Hardest)
                   </th>
-                  <th className={styles.rowHeader} scope="col">
+                  <th className={styles.summaryStatHeader} scope="col">
                     2nd
                     <br />
                     Quartile
                   </th>
-                  <th className={styles.rowHeader} scope="col">
+                  <th className={styles.summaryStatHeader} scope="col">
                     3rd
                     <br />
                     Quartile
                   </th>
-                  <th className={styles.rowHeader} scope="col">
+                  <th className={styles.summaryStatHeader} scope="col">
                     Bottom
                     <br />
                     Quartile
@@ -508,21 +508,21 @@ function FootballScheduleTable({
 
                     return (
                       <tr key={team}>
-                        <th className={cn(styles.stickyColumn, styles.teamHeader)} scope="row">
+                        <th className={cn(styles.stickyColumn, styles.summaryTeamHeader)} scope="row">
                           <button
                             type="button"
-                            className={styles.teamButton}
+                            className={styles.summaryTeamButton}
                             onClick={() => navigateToTeam(team)}
                             aria-label={`View ${team}`}
                           >
                             <TeamLogo
                               logoUrl={teamLogos[team] || "/images/team_logos/default.png"}
                               teamName={team}
-                              size={32}
+                              size={28}
                               showTooltip
                               className={styles.teamLogo}
                             />
-                            <span className={styles.teamName}>{formatTeamName(team)}</span>
+                            <span className={styles.summaryTeamName}>{formatTeamName(team)}</span>
                           </button>
                         </th>
 
