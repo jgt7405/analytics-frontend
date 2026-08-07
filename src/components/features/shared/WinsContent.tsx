@@ -55,6 +55,12 @@ export interface WinsContentConfig<TTeam> {
     refetch: () => unknown;
   };
   ConferenceChart: ComponentType<{ standings: TTeam[]; season?: string }>;
+  /**
+   * Overrides the screenshot/share title for the conference win-distribution
+   * chart. Defaults to "Projected Conference Wins" (used for both pageTitle
+   * and shareTitle) when omitted, matching the previous shared behavior.
+   */
+  conferenceChartTitle?: string;
   ConferenceTable: ComponentType<{ standings: TTeam[]; season?: string }>;
   /**
    * Overrides the screenshot/share title for the conference win-distribution
@@ -376,7 +382,7 @@ export default function WinsContent<TTeam>({
                 "box-whisker-explainer",
                 explainers.conferenceChart,
                 `${config.sport}-wins-chart`,
-                "Projected Conference Wins",
+                config.conferenceChartTitle ?? "Projected Conference Wins",
                 "Projected Conference Wins Distribution",
                 null,
                 <ConferenceChart standings={standings} season={season} />,

@@ -43,6 +43,7 @@ const FOOTBALL_WINS: WinsContentConfig<FootballStanding> = {
   sport: "football",
   useStandingsData: useFootballStandings,
   ConferenceChart: FootballBoxWhiskerChart,
+  conferenceChartTitle: "Projected Conference Wins Distribution",
   ConferenceTable: FootballWinsTable,
   conferenceTableTitle: "Projected Conference Win Distribution",
   RegSeasonChart: FootballRegularSeasonBoxWhiskerChart,

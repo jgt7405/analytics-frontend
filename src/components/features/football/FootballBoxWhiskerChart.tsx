@@ -3,15 +3,37 @@
 import { BoxWhiskerChartSkeleton } from "@/components/ui/LoadingSkeleton";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
-import { components, layout } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import styles from "./FootballBoxWhiskerChart.module.css";
 
 interface FootballBoxWhiskerChartProps {
   standings: FootballStanding[];
   season?: string;
+}
+
+interface HoverState {
+  index: number;
+  x: number;
+  y: number;
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const clean = hex.replace("#", "");
+  const full =
+    clean.length === 3
+      ? clean
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : clean;
+  const r = parseInt(full.substring(0, 2), 16);
+  const g = parseInt(full.substring(2, 4), 16);
+  const b = parseInt(full.substring(4, 6), 16);
+  if ([r, g, b].some(Number.isNaN)) return hex;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export default function FootballBoxWhiskerChart({
@@ -22,18 +44,19 @@ export default function FootballBoxWhiskerChart({
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [hovered, setHovered] = useState<HoverState | null>(null);
 
   const sortedTeams = useMemo(
     () =>
       [...standings].sort(
-        (a, b) => (b.conf_wins_proj || 0) - (a.conf_wins_proj || 0)
+        (a, b) => (b.conf_wins_proj || 0) - (a.conf_wins_proj || 0),
       ),
-    [standings]
+    [standings],
   );
 
   useEffect(() => {
     setMounted(true);
-    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
   const adjustColorIfWhite = (color: string) => {
@@ -50,7 +73,6 @@ export default function FootballBoxWhiskerChart({
       return isDark ? "#ffffff" : "#000000";
     }
 
-    // Check if color is a dark hex color
     if (color.startsWith("#")) {
       const hex = color.replace("#", "");
       if (hex.length === 6 || hex.length === 3) {
@@ -76,8 +98,10 @@ export default function FootballBoxWhiskerChart({
 
   if (!standings || standings.length === 0) {
     return (
-      <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500 dark:text-gray-300">No win distribution data available</p>
+      <div className={cn(styles.card, "p-8 text-center")}>
+        <p className="text-gray-500 dark:text-gray-300">
+          No win distribution data available
+        </p>
       </div>
     );
   }
@@ -86,215 +110,273 @@ export default function FootballBoxWhiskerChart({
     return <BoxWhiskerChartSkeleton />;
   }
 
-  // Chart dimensions - exact same as basketball
   const chartHeight = isMobile ? 300 : 400;
   const logoHeight = 50;
   const boxWidth = isMobile ? 28 : 30;
   const whiskerWidth = isMobile ? 12 : 18;
-  const lineThickness = isMobile ? 3 : 4;
+  const lineThickness = isMobile ? 2 : 2;
   const teamSpacing = isMobile ? 15 : 35;
   const padding = { top: 20, right: 10, bottom: 10, left: 40 };
 
-  // Calculate max wins for scale
   const maxWins = Math.ceil(
-    Math.max(...standings.map((team) => team.wins_conf_95 || 0), 0)
+    Math.max(...standings.map((team) => team.wins_conf_95 || 0), 0),
   );
-
   const adjustedMaxWins = maxWins % 2 === 0 ? maxWins : maxWins + 1;
 
-  // Scale function
   const scale = (value: number) => {
     return chartHeight - (value / adjustedMaxWins) * chartHeight;
   };
 
-  // Y-axis ticks (increment by 2)
   const yAxisTicks = [];
   for (let i = 0; i <= adjustedMaxWins; i += 2) {
     yAxisTicks.push(i);
   }
 
-  // Calculate chart width
   const chartWidth =
     sortedTeams.length * boxWidth + (sortedTeams.length - 1) * teamSpacing + 40;
 
+  const hoveredTeam = hovered ? sortedTeams[hovered.index] : null;
+
   return (
-    <div className={cn(components.table.container, "bg-white dark:bg-slate-900")}>
+    <section
+      className={cn(styles.card, "box-whisker-container")}
+      aria-labelledby="football-box-whisker-title"
+    >
+      <div className={styles.cardHeader} data-screenshot-hide="true">
+        <div className={styles.titleGroup}>
+          <h2 id="football-box-whisker-title" className={styles.title}>
+            Projected Conference Wins Distribution
+          </h2>
+        </div>
+      </div>
+
       <div
-        className="relative"
-        style={{
-          height: chartHeight + logoHeight + padding.top + padding.bottom,
-          minWidth: chartWidth + padding.left + padding.right,
-        }}
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="Projected conference wins distribution by team. Scroll horizontally to see every team."
+        tabIndex={0}
       >
-        {/* Y-axis container */}
         <div
-          className="absolute left-0 top-0 bg-white dark:bg-slate-900 z-30"
+          className="relative"
           style={{
-            width: padding.left,
-            height: "100%",
-            position: "sticky",
-            left: 0,
+            height: chartHeight + logoHeight + padding.top + padding.bottom,
+            minWidth: chartWidth + padding.left + padding.right,
           }}
         >
-          {/* Y-axis labels */}
+          {/* Y-axis container */}
+          <div
+            className="absolute left-0 top-0 z-30"
+            style={{
+              width: padding.left,
+              height: "100%",
+              position: "sticky",
+              left: 0,
+            }}
+          >
+            <div
+              className="absolute"
+              style={{
+                left: 0,
+                top: padding.top,
+                height: chartHeight,
+                width: padding.left - 5,
+              }}
+            >
+              {yAxisTicks.map((tick) => (
+                <div
+                  key={tick}
+                  className={cn(
+                    styles.yAxisLabel,
+                    "absolute w-full text-right pr-1 flex items-center justify-end",
+                  )}
+                  style={{
+                    top: `${scale(tick)}px`,
+                    height: "1px",
+                    transform: "translateY(-50%)",
+                    fontSize: isMobile ? "13px" : "15px",
+                  }}
+                >
+                  {tick}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Chart content area */}
           <div
             className="absolute"
             style={{
-              left: 0,
+              left: padding.left,
               top: padding.top,
-              height: chartHeight,
-              width: padding.left - 5,
+              width: chartWidth,
+              height: chartHeight + logoHeight,
             }}
           >
-            {yAxisTicks.map((tick) => (
-              <div
-                key={tick}
-                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-300 font-medium flex items-center justify-end"
-                style={{
-                  top: `${scale(tick)}px`,
-                  height: "1px",
-                  transform: "translateY(-50%)",
-                  fontSize: isMobile ? "14px" : "16px",
-                }}
-              >
-                {tick}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Chart content area */}
-        <div
-          className="absolute"
-          style={{
-            left: padding.left,
-            top: padding.top,
-            width: chartWidth,
-            height: chartHeight + logoHeight,
-          }}
-        >
-          {/* Grid lines */}
-          <div className="absolute inset-0">
-            {yAxisTicks.map((tick) => (
-              <div
-                key={tick}
-                className="absolute w-full border-b border-gray-200 dark:border-gray-600"
-                style={{
-                  top: `${scale(tick)}px`,
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Team box plots */}
-          <div
-            className="relative flex items-start justify-start"
-            style={{ paddingLeft: "10px" }}
-          >
-            {sortedTeams.map((team, index) => {
-              // Box and whisker data points
-              const bottom = team.wins_conf_05 || 0;
-              const q1 = team.wins_conf_25 || 0;
-              const median = team.wins_conf_50 || 0;
-              const q3 = team.wins_conf_75 || 0;
-              const top = team.wins_conf_95 || 0;
-
-              // Team colors
-              const primaryColor = team.primary_color || "#1e40af";
-              const rawSecondaryColor = team.secondary_color || "#64748b";
-
-              return (
+            {/* Grid lines */}
+            <div className="absolute inset-0">
+              {yAxisTicks.map((tick) => (
                 <div
-                  key={team.team_name}
-                  className="relative"
-                  style={{
-                    height: chartHeight,
-                    width: boxWidth,
-                    marginLeft: index === 0 ? 0 : teamSpacing,
-                  }}
-                >
-                  {/* Vertical whisker line */}
-                  <div
-                    className="absolute"
-                    style={{
-                      top: scale(top),
-                      height: scale(bottom) - scale(top),
-                      width: lineThickness,
-                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
-                      left: (boxWidth - lineThickness) / 2,
-                    }}
-                  />
+                  key={tick}
+                  className={cn(styles.gridLine, "absolute w-full")}
+                  style={{ top: `${scale(tick)}px` }}
+                />
+              ))}
+            </div>
 
-                  {/* Top whisker cap */}
-                  <div
-                    className="absolute"
-                    style={{
-                      top: scale(top),
-                      width: whiskerWidth,
-                      height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
-                      left: (boxWidth - whiskerWidth) / 2,
-                    }}
-                  />
+            {/* Team box plots */}
+            <div
+              className="relative flex items-start justify-start"
+              style={{ paddingLeft: "10px" }}
+            >
+              {sortedTeams.map((team, index) => {
+                const bottom = team.wins_conf_05 || 0;
+                const q1 = team.wins_conf_25 || 0;
+                const median = team.wins_conf_50 || 0;
+                const q3 = team.wins_conf_75 || 0;
+                const top = team.wins_conf_95 || 0;
 
-                  {/* Bottom whisker cap */}
-                  <div
-                    className="absolute"
-                    style={{
-                      top: scale(bottom),
-                      width: whiskerWidth,
-                      height: lineThickness,
-                      backgroundColor: adjustColorIfWhite(rawSecondaryColor),
-                      left: (boxWidth - whiskerWidth) / 2,
-                    }}
-                  />
+                const primaryColor = team.primary_color || "#1e40af";
+                const rawSecondaryColor = team.secondary_color || "#64748b";
+                const secondaryColor = adjustColorIfWhite(rawSecondaryColor);
+                const isHovered = hovered?.index === index;
 
-                  {/* Box */}
+                return (
                   <div
-                    className="absolute"
+                    key={team.team_name}
+                    className={styles.teamColumn}
                     style={{
-                      top: scale(q3),
-                      height: scale(q1) - scale(q3),
+                      position: "relative",
+                      height: chartHeight,
                       width: boxWidth,
-                      backgroundColor: primaryColor,
-                      border: `${lineThickness}px solid ${adjustColorIfWhite(rawSecondaryColor)}`,
+                      marginLeft: index === 0 ? 0 : teamSpacing,
                     }}
-                  />
-
-                  {/* Median line */}
-                  <div
-                    className="absolute"
-                    style={{
-                      top: scale(median),
-                      width: boxWidth,
-                      height: lineThickness,
-                      backgroundColor: rawSecondaryColor,
-                    }}
-                  />
-
-                  {/* Team logo */}
-                  <div
-                    className="absolute flex justify-center items-center"
-                    style={{
-                      top: chartHeight + 10,
-                      width: boxWidth,
-                      height: logoHeight - 10,
-                      left: 0,
-                    }}
+                    onMouseEnter={(e) =>
+                      setHovered({ index, x: e.clientX, y: e.clientY })
+                    }
+                    onMouseMove={(e) =>
+                      setHovered({ index, x: e.clientX, y: e.clientY })
+                    }
+                    onMouseLeave={() => setHovered(null)}
                   >
-                    <TeamLogo
-                      logoUrl={team.logo_url}
-                      teamName={team.team_name}
-                      size={39}
-                      onClick={() => navigateToTeam(team.team_name)}
+                    {/* Vertical whisker line */}
+                    <div
+                      className={cn(styles.whiskerLine, "absolute")}
+                      style={{
+                        top: scale(top),
+                        height: scale(bottom) - scale(top),
+                        width: lineThickness,
+                        backgroundColor: secondaryColor,
+                        left: (boxWidth - lineThickness) / 2,
+                      }}
                     />
+
+                    {/* Top whisker cap */}
+                    <div
+                      className={cn(styles.whiskerCap, "absolute")}
+                      style={{
+                        top: scale(top),
+                        width: whiskerWidth,
+                        height: lineThickness,
+                        backgroundColor: secondaryColor,
+                        left: (boxWidth - whiskerWidth) / 2,
+                      }}
+                    />
+
+                    {/* Bottom whisker cap */}
+                    <div
+                      className={cn(styles.whiskerCap, "absolute")}
+                      style={{
+                        top: scale(bottom),
+                        width: whiskerWidth,
+                        height: lineThickness,
+                        backgroundColor: secondaryColor,
+                        left: (boxWidth - whiskerWidth) / 2,
+                      }}
+                    />
+
+                    {/* Box */}
+                    <div
+                      className={cn(styles.box, isHovered && styles.boxHovered)}
+                      style={{
+                        position: "absolute",
+                        top: scale(q3),
+                        height: scale(q1) - scale(q3),
+                        width: boxWidth,
+                        backgroundColor: hexToRgba(primaryColor, 0.88),
+                        border: `2px solid ${secondaryColor}`,
+                      }}
+                    />
+
+                    {/* Median line */}
+                    <div
+                      className={cn(styles.medianLine, "absolute")}
+                      style={{
+                        top: scale(median) - lineThickness / 2,
+                        width: boxWidth,
+                        height: lineThickness + 1,
+                        backgroundColor: secondaryColor,
+                      }}
+                    />
+
+                    {/* Team logo */}
+                    <div
+                      className={cn(
+                        styles.teamLogoWrap,
+                        "absolute flex justify-center items-center",
+                      )}
+                      style={{
+                        top: chartHeight + 10,
+                        width: boxWidth,
+                        height: logoHeight - 10,
+                        left: 0,
+                      }}
+                    >
+                      <TeamLogo
+                        logoUrl={team.logo_url}
+                        teamName={team.team_name}
+                        size={39}
+                        onClick={() => navigateToTeam(team.team_name)}
+                      />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {hoveredTeam && hovered && (
+        <div
+          className={styles.tooltip}
+          style={{
+            left: Math.min(hovered.x + 14, window.innerWidth - 170),
+            top: Math.max(hovered.y - 110, 10),
+          }}
+        >
+          <div className={styles.tooltipTeam}>{hoveredTeam.team_name}</div>
+          <div className={styles.tooltipRow}>
+            <span>95th pct</span>
+            <strong>{(hoveredTeam.wins_conf_95 ?? 0).toFixed(1)}</strong>
+          </div>
+          <div className={styles.tooltipRow}>
+            <span>75th pct</span>
+            <strong>{(hoveredTeam.wins_conf_75 ?? 0).toFixed(1)}</strong>
+          </div>
+          <div className={styles.tooltipRow}>
+            <span>Median</span>
+            <strong>{(hoveredTeam.wins_conf_50 ?? 0).toFixed(1)}</strong>
+          </div>
+          <div className={styles.tooltipRow}>
+            <span>25th pct</span>
+            <strong>{(hoveredTeam.wins_conf_25 ?? 0).toFixed(1)}</strong>
+          </div>
+          <div className={styles.tooltipRow}>
+            <span>5th pct</span>
+            <strong>{(hoveredTeam.wins_conf_05 ?? 0).toFixed(1)}</strong>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
