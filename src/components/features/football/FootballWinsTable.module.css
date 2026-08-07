@@ -226,7 +226,8 @@
 
 .averageRow .summaryLabel,
 .averageRow .summaryValue {
-  border-bottom: 1px solid #e2e8f0;
+  background: #f1f5f9;
+  border-bottom: 2px solid #cbd5e1;
 }
 
 .summaryLabel,
@@ -297,6 +298,12 @@
 :global(.dark) .summaryLabel {
   --sticky-column-background: #1e293b;
   background: var(--sticky-column-background);
+}
+
+:global(.dark) .averageRow .summaryLabel,
+:global(.dark) .averageRow .summaryValue {
+  background: #263449;
+  border-bottom: 2px solid rgb(71 85 105 / 0.8);
 }
 
 @media (max-width: 767px) {

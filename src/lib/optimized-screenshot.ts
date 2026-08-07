@@ -43,13 +43,33 @@ export async function createOptimizedScreenshot(
 
     document.body.removeChild(wrapper);
 
-    return canvas;
+    return flattenOntoWhite(canvas);
   } catch (error) {
     console.error("Screenshot creation failed:", error);
     throw new Error(
       `Screenshot failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
+}
+
+// html2canvas's foreignObjectRendering path can leave rgba()/rgb(.../.x) colors
+// (borders, box-shadows) as real alpha in the exported canvas instead of
+// compositing them onto backgroundColor, which downstream PNG viewers then
+// render as a transparency checkerboard. Flattening onto an opaque white
+// canvas guarantees the output matches what the browser actually painted.
+function flattenOntoWhite(canvas: HTMLCanvasElement): HTMLCanvasElement {
+  const flattened = document.createElement("canvas");
+  flattened.width = canvas.width;
+  flattened.height = canvas.height;
+
+  const ctx = flattened.getContext("2d");
+  if (!ctx) return canvas;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, flattened.width, flattened.height);
+  ctx.drawImage(canvas, 0, 0);
+
+  return flattened;
 }
 
 async function waitForAssetsToLoad(element: HTMLElement): Promise<void> {
@@ -355,7 +375,7 @@ function cleanElementForScreenshot(element: HTMLElement): HTMLElement {
       height: 100% !important;
       margin: 0 !important;
     }
-    table th img {
+    table th[class*="bg-gray"] img {
       width: 24px !important;
       height: 24px !important;
       margin: 0 auto !important;
