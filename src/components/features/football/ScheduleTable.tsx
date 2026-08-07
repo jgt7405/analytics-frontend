@@ -451,7 +451,7 @@ function FootballScheduleTable({
             aria-label="Schedule difficulty summary by quartile. Scroll to see every team."
             tabIndex={0}
           >
-            <table className={styles.table}>
+            <table className={cn(styles.table, styles.compactTable)}>
               <thead>
                 <tr>
                   <th className={cn(styles.stickyColumn, styles.summaryTeamHeader)} scope="col">

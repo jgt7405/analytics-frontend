@@ -5,7 +5,7 @@
   --winprob-col-width: 4rem;
   --team-column-width: 3.1rem;
   --summary-team-col-width: 6.5rem;
-  --summary-stat-col-width: 2.75rem;
+  --summary-stat-col-width: 3.65rem;
   position: relative;
   overflow: hidden;
   border: 1px solid rgb(226 232 240 / 0.9);
@@ -88,6 +88,14 @@
   border-spacing: 1px;
   color: #0f172a;
   font-variant-numeric: tabular-nums;
+}
+
+/* The summary table only has 7 narrow columns; without this it stretches
+   to fill the card's full width (min-width: 100% above), inflating every
+   cell far past its intended size. This lets it size to its own content
+   instead, like a normal compact table. */
+.compactTable {
+  min-width: 0;
 }
 
 .table th,
@@ -378,10 +386,10 @@
   width: var(--summary-stat-col-width) !important;
   min-width: var(--summary-stat-col-width) !important;
   max-width: var(--summary-stat-col-width) !important;
-  height: 1.75rem;
+  height: 2.35rem;
   padding: 0;
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 

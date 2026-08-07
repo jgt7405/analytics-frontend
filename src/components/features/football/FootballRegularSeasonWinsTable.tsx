@@ -171,7 +171,9 @@ function FootballRegularSeasonWinsTable({
                   key={`${team.team_id}-${team.team_name}-average`}
                   className={styles.summaryValue}
                 >
-                  {(team.avg_reg_season_wins ?? 0).toFixed(1)}
+                  <div className={styles.summaryChip}>
+                    {(team.avg_reg_season_wins ?? 0).toFixed(1)}
+                  </div>
                 </td>
               ))}
             </tr>
@@ -241,7 +243,9 @@ function FootballRegularSeasonWinsTable({
                   key={`${team.team_id}-${team.team_name}-sag12`}
                   className={styles.summaryValue}
                 >
-                  {(team.avg_sag12_reg_season_wins ?? 0).toFixed(1)}
+                  <div className={styles.summaryChip}>
+                    {(team.avg_sag12_reg_season_wins ?? 0).toFixed(1)}
+                  </div>
                 </td>
               ))}
             </tr>
@@ -257,7 +261,9 @@ function FootballRegularSeasonWinsTable({
                   key={`${team.team_id}-${team.team_name}-twv`}
                   className={styles.summaryValue}
                 >
-                  {(team.reg_season_twv ?? 0).toFixed(1)}
+                  <div className={styles.summaryChip}>
+                    {(team.reg_season_twv ?? 0).toFixed(1)}
+                  </div>
                 </td>
               ))}
             </tr>
@@ -273,7 +279,9 @@ function FootballRegularSeasonWinsTable({
                   key={`${team.team_id}-${team.team_name}-record`}
                   className={styles.summaryValue}
                 >
-                  {team.actual_total_wins ?? 0}-{team.actual_total_losses ?? 0}
+                  <div className={styles.summaryChip}>
+                    {team.actual_total_wins ?? 0}-{team.actual_total_losses ?? 0}
+                  </div>
                 </td>
               ))}
             </tr>

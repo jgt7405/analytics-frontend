@@ -179,7 +179,9 @@ function FootballWinsTable({
                   key={`${team.team_id}-${team.team_name}-average`}
                   className={styles.summaryValue}
                 >
-                  {(team.conf_wins_proj ?? 0).toFixed(1)}
+                  <div className={styles.summaryChip}>
+                    {(team.conf_wins_proj ?? 0).toFixed(1)}
+                  </div>
                 </td>
               ))}
             </tr>
@@ -249,8 +251,10 @@ function FootballWinsTable({
                   key={`${team.team_id}-${team.team_name}-record`}
                   className={styles.summaryValue}
                 >
-                  {team.actual_conference_wins ?? 0}-
-                  {team.actual_conference_losses ?? 0}
+                  <div className={styles.summaryChip}>
+                    {team.actual_conference_wins ?? 0}-
+                    {team.actual_conference_losses ?? 0}
+                  </div>
                 </td>
               ))}
             </tr>
