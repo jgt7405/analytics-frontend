@@ -59,6 +59,16 @@
   background-clip: padding-box;
 }
 
+.yAxisLabel {
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+:global(.dark) .yAxisLabel {
+  color: #94a3b8;
+}
+
 :global(.dark) .card {
   border-color: rgb(51 65 85 / 0.88);
   background: linear-gradient(145deg, #111827 0%, #0f172a 100%);

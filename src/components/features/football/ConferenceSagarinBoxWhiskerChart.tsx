@@ -235,7 +235,10 @@ export default function ConferenceSagarinBoxWhiskerChart({
   const whiskerWidth = isMobile ? 12 : 18;
   const lineThickness = isMobile ? 3 : 4;
   const teamSpacing = isMobile ? 15 : 35;
-  const padding = { top: 20, right: 10, bottom: 10, left: 40 };
+  // left is wider than the Wins-page chart's (40) - percentage labels up
+  // to "100%" are wider than the win-count labels there and were
+  // overflowing past the card's left edge at that width.
+  const padding = { top: 20, right: 10, bottom: 10, left: 48 };
   const logoSize = isMobile ? 26 : 36;
 
   const scale = (value: number) => {
@@ -280,12 +283,15 @@ export default function ConferenceSagarinBoxWhiskerChart({
             {yAxisTicks.map((tick) => (
               <div
                 key={tick}
-                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-300 font-medium flex items-center justify-end"
+                className={cn(
+                  styles.yAxisLabel,
+                  "absolute w-full text-right pr-1 flex items-center justify-end",
+                )}
                 style={{
                   top: `${scale(tick)}px`,
                   height: "1px",
                   transform: "translateY(-50%)",
-                  fontSize: isMobile ? "14px" : "16px",
+                  fontSize: isMobile ? "13px" : "15px",
                 }}
               >
                 {tick}%
