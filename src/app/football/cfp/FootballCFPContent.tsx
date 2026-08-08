@@ -16,6 +16,7 @@ const FOOTBALL_CFP: PostseasonContentConfig<CFPRow> = {
   pageId: "football-cfp",
   actionPageName: "cfp",
   title: "College Football Playoff Projections",
+  hidePageTitle: true,
   tableClass: "cfp-table",
   skeletonTableType: "standings",
   skeletonTeamCols: 6,
@@ -26,6 +27,7 @@ const FOOTBALL_CFP: PostseasonContentConfig<CFPRow> = {
       cfpData={data}
       showAllTeams={ctx.showAllTeams}
       season={ctx.season}
+      headerRight={ctx.headerRight}
     />
   ),
   explainer: [

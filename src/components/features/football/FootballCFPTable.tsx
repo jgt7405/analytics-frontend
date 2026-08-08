@@ -5,16 +5,18 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { FootballCFPTeam } from "@/types/football";
 import { useRouter } from "next/navigation";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, ReactNode, useEffect, useMemo, useState } from "react";
+import styles from "./FootballCFPTable.module.css";
 
 interface FootballCFPTableProps {
   cfpData: FootballCFPTeam[];
   className?: string;
   showAllTeams?: boolean;
   season?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the title row. */
+  headerRight?: ReactNode;
 }
 
 type RoundKey =
@@ -29,6 +31,7 @@ function FootballCFPTable({
   className,
   showAllTeams = false,
   season,
+  headerRight,
 }: FootballCFPTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -143,8 +146,6 @@ function FootballCFPTable({
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 50 : 60;
 
-  const tableClassName = cn(tableStyles.tableContainer, "cfp-table", className);
-
   // Format percentage without decimal if it's a whole number
   const formatPercentage = (value: number): string => {
     if (value === 0) return "";
@@ -158,11 +159,21 @@ function FootballCFPTable({
     );
   }
 
+  const headerCellClass = (round: RoundKey) =>
+    cn(styles.headerCell, sortColumn === round && styles.headerCellActive);
+
   return (
-    <div className="space-y-3">
+    <div className={cn(styles.card, "cfp-table", className)}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
+          <h2 className={styles.title}>College Football Playoff Projections</h2>
+        </div>
+        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+      </div>
+
       {/* Row filter - only show when All Teams is selected */}
       {showAllTeams && (
-        <div className="flex items-center gap-3 px-2">
+        <div className={styles.filterRow}>
           <label
             className={`text-gray-700 dark:text-gray-300 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
           >
@@ -174,9 +185,7 @@ function FootballCFPTable({
             max={cfpData.length}
             value={inputValue}
             onChange={handleRowsInputChange}
-            className={`border border-gray-300 dark:border-gray-600 rounded px-3 py-1 w-24 ${
-              isMobile ? "text-xs" : "text-sm"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={cn(styles.filterInput, isMobile ? "text-xs" : "text-sm")}
             placeholder={cfpData.length.toString()}
           />
           <span className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
@@ -185,52 +194,38 @@ function FootballCFPTable({
         </div>
       )}
 
-      <div className={`${tableClassName} relative overflow-x-auto`}>
-        <table
-          className="border-collapse border-spacing-0"
-          style={{
-            width: "max-content",
-            borderCollapse: "separate",
-            borderSpacing: 0,
-          }}
-        >
+      <div className={styles.scrollViewport}>
+        <table className={styles.table}>
           <thead>
             <tr>
               {/* Rank column */}
               <th
-                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
+                className={cn(styles.headerCell, styles.stickyCell, isMobile ? "text-xs" : "text-sm")}
                 style={{
                   width: rankColWidth,
                   minWidth: rankColWidth,
                   maxWidth: rankColWidth,
                   height: headerHeight,
-                  position: "sticky",
                   left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderRight: "1px solid var(--border-color)",
-                  verticalAlign: "middle",
                 }}
               >
                 #
               </th>
               {/* Team column */}
               <th
-                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
+                className={cn(
+                  styles.headerCell,
+                  styles.stickyCell,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
                   maxWidth: firstColWidth,
                   height: headerHeight,
-                  position: "sticky",
+                  textAlign: "left",
+                  paddingLeft: "0.5rem",
                   left: rankColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  borderRight: "1px solid var(--border-color)",
-                  verticalAlign: "middle",
                 }}
               >
                 Team
@@ -239,27 +234,20 @@ function FootballCFPTable({
               {allRounds.map((round) => (
                 <th
                   key={round}
-                  className={`bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-center font-normal cursor-pointer transition-colors ${
-                    sortColumn === round ? "bg-blue-100" : ""
-                  }`}
+                  className={cn(headerCellClass(round as RoundKey), isMobile ? "text-xs" : "text-sm")}
                   onClick={() => handleColumnClick(round as RoundKey)}
                   style={{
                     height: headerHeight,
                     width: roundColWidth,
                     minWidth: roundColWidth,
                     maxWidth: roundColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderLeft: "none",
                     fontSize: isMobile ? "10px" : "12px",
-                    whiteSpace: "pre-line",
-                    verticalAlign: "middle",
-                    lineHeight: "1.2",
                   }}
                   title="Click to sort by this column"
                 >
                   {fieldToLabel[round]}
                   {sortColumn === round && (
-                    <div className="text-blue-600 text-xs mt-1">▼</div>
+                    <div className={styles.sortArrow}>▼</div>
                   )}
                 </th>
               ))}
@@ -270,41 +258,35 @@ function FootballCFPTable({
               <tr key={`${team.team_name}-${index}`}>
                 {/* Rank cell */}
                 <td
-                  className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  } font-medium`}
+                  className={cn(
+                    styles.rankCell,
+                    styles.stickyBodyCell,
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
                   style={{
                     width: rankColWidth,
                     minWidth: rankColWidth,
                     maxWidth: rankColWidth,
                     height: cellHeight,
-                    position: "sticky",
                     left: 0,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderRight: "1px solid var(--border-color)",
-                    verticalAlign: "middle",
                   }}
                 >
                   {index + 1}
                 </td>
                 {/* Team cell */}
                 <td
-                  className={`sticky z-20 bg-white dark:bg-slate-900 text-left px-2 ${
-                    isMobile ? "text-xs" : "text-sm"
-                  } cursor-pointer hover:bg-gray-50 dark:bg-slate-800 transition-colors`}
+                  className={cn(
+                    styles.teamCell,
+                    styles.stickyBodyCell,
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
                   style={{
                     width: firstColWidth,
                     minWidth: firstColWidth,
                     maxWidth: firstColWidth,
                     height: cellHeight,
-                    position: "sticky",
+                    paddingLeft: "0.5rem",
                     left: rankColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderRight: "1px solid var(--border-color)",
-                    verticalAlign: "middle",
                   }}
                   onClick={() => navigateToTeam(team.team_name)}
                 >
@@ -321,27 +303,27 @@ function FootballCFPTable({
                 {allRounds.map((round) => {
                   const value =
                     (team[round as keyof FootballCFPTeam] as number) || 0;
-                  const cellStyle = getCellColor(value, "blue");
                   return (
                     <td
                       key={round}
-                      className="text-center"
                       style={{
-                        fontFamily: "var(--font-roboto-condensed)",
                         width: roundColWidth,
                         minWidth: roundColWidth,
                         maxWidth: roundColWidth,
                         height: cellHeight,
-                        backgroundColor: cellStyle.backgroundColor,
-                        color: cellStyle.color,
-                        border: "1px solid var(--border-color)",
-                        borderTop: "none",
-                        borderLeft: "none",
-                        fontSize: isMobile ? "10px" : "12px",
-                        verticalAlign: "middle",
+                        padding: 0,
                       }}
                     >
-                      {formatPercentage(value)}
+                      <div
+                        className={styles.heatTile}
+                        style={{
+                          ...getCellColor(value, "blue"),
+                          fontFamily: "var(--font-roboto-condensed)",
+                          fontSize: isMobile ? "10px" : "12px",
+                        }}
+                      >
+                        {formatPercentage(value)}
+                      </div>
                     </td>
                   );
                 })}

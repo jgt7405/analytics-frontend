@@ -1,0 +1,267 @@
+.card {
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.35rem 1rem;
+}
+
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.35rem 0.9rem;
+}
+
+.filterInput {
+  width: 5.5rem;
+  border: 1px solid rgb(203 213 225 / 0.9);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.6rem;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: rgb(14 116 144 / 0.6);
+  box-shadow: 0 0 0 3px rgb(14 116 144 / 0.15);
+}
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-height: 78vh;
+  /* No left padding: the sticky rank column sits at left: 0 of this
+     container's content box, so any left padding here would leave an
+     unsticky gap that scrolled rows could show through as they pass
+     underneath. */
+  padding: 0 0.9rem 1rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.table {
+  width: max-content;
+  border-collapse: separate;
+  border-spacing: 1px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankCell {
+  color: #475569;
+  font-weight: 600;
+  text-align: center;
+}
+
+.teamCell {
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Sortable round-probability column headers. */
+.headerCell {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  border: 0;
+  background: #ffffff;
+  box-shadow: 0 1px 0 0 #ffffff;
+  color: #334155;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-align: center;
+  white-space: pre-line;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+  isolation: isolate;
+}
+
+.headerCell:hover {
+  background: #f1f5f9;
+}
+
+.headerCellActive {
+  background: #e0f2fe;
+}
+
+.headerCellActive:hover {
+  background: #cffafe;
+}
+
+.sortArrow {
+  color: #0e7490;
+  font-size: 0.7rem;
+  margin-top: 0.15rem;
+}
+
+.heatTile {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  font-weight: 650;
+  transition: border-color 150ms ease;
+}
+
+.heatTile:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+/* Rank/team header cells (thead) - z-index 40 beats both .headerCell (25)
+   and .stickyBodyCell (15) so the header stays on top of scrolled rows in
+   every direction. Declared after .headerCell so it wins the z-index
+   cascade on cells that carry both classes. */
+.stickyCell {
+  --sticky-bg: #ffffff;
+  position: sticky;
+  z-index: 40;
+  background: var(--sticky-bg);
+  background-clip: border-box;
+  box-shadow:
+    0 0 0 3px var(--sticky-bg),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  isolation: isolate;
+}
+
+/* Same treatment for tbody rank/team cells, but a lower z-index (15,
+   below .headerCell's 25) so the sticky header row still paints over
+   these as the body scrolls up underneath it. */
+.stickyBodyCell {
+  --sticky-bg: #ffffff;
+  position: sticky;
+  z-index: 15;
+  background: var(--sticky-bg);
+  background-clip: border-box;
+  box-shadow:
+    0 0 0 3px var(--sticky-bg),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  isolation: isolate;
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .title {
+  color: #cbd5e1;
+}
+
+:global(.dark) .filterInput {
+  border-color: rgb(71 85 105 / 0.9);
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+:global(.dark) .headerCell {
+  background: #111827;
+  box-shadow: 0 1px 0 0 #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .headerCell:hover {
+  background: #1e293b;
+}
+
+:global(.dark) .headerCellActive {
+  background: #1e3a4a;
+}
+
+:global(.dark) .stickyCell,
+:global(.dark) .stickyBodyCell {
+  --sticky-bg: #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .rankCell,
+:global(.dark) .teamCell {
+  color: #e2e8f0;
+}
+
+@media (max-width: 767px) {
+  .card {
+    border-radius: 1rem;
+  }
+
+  .cardHeader {
+    align-items: flex-start;
+    padding: 1rem 0.9rem 0.7rem;
+  }
+
+  .titleGroup {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .filterRow {
+    padding: 0 0.9rem 0.7rem;
+  }
+
+  .scrollViewport {
+    padding: 0 0.5rem 0.8rem 0;
+    max-height: 72vh;
+  }
+
+  .heatTile {
+    border-radius: 2px;
+  }
+}

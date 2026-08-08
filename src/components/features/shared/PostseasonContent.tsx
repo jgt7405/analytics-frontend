@@ -33,6 +33,11 @@ export interface PostseasonRenderContext {
   season?: string;
   showAllTeams: boolean;
   hasActualBracket: boolean;
+  /**
+   * Conference selector to render inside the table's own title row, when the
+   * page-level title is hidden (config.hidePageTitle). Undefined otherwise.
+   */
+  headerRight?: ReactNode;
 }
 
 export interface PostseasonContentConfig<TTeam> {
@@ -41,6 +46,12 @@ export interface PostseasonContentConfig<TTeam> {
   /** TableActionButtons pageName (football historically used "cfp"). */
   actionPageName: string;
   title: string;
+  /**
+   * Hides the page-level gray title. Set when the table below already
+   * renders its own bold card title, so the page doesn't show two stacked
+   * titles for the same content.
+   */
+  hidePageTitle?: boolean;
   tableClass: string;
   skeletonTableType: "ncaa" | "standings";
   skeletonTeamCols: number;
@@ -224,6 +235,7 @@ export default function PostseasonContent<TTeam>({
       onChange={handleConferenceChange}
       error={error?.message}
       loading={isLoading}
+      inline={config.hidePageTitle}
     />
   );
 
@@ -243,6 +255,7 @@ export default function PostseasonContent<TTeam>({
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title={config.title}
+          hideTitle={config.hidePageTitle}
           conferenceSelector={conferenceSelector}
           isLoading={false}
         >
@@ -260,6 +273,7 @@ export default function PostseasonContent<TTeam>({
     return (
       <PageLayoutWrapper
         title={config.title}
+        hideTitle={config.hidePageTitle}
         conferenceSelector={conferenceSelector}
         isLoading={false}
       >
@@ -283,13 +297,15 @@ export default function PostseasonContent<TTeam>({
     season,
     showAllTeams,
     hasActualBracket,
+    headerRight: config.hidePageTitle ? conferenceSelector : undefined,
   };
 
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title={config.title}
-        conferenceSelector={conferenceSelector}
+        hideTitle={config.hidePageTitle}
+        conferenceSelector={config.hidePageTitle ? undefined : conferenceSelector}
         isLoading={isLoading}
       >
         <div className="-mt-2 md:-mt-6">
