@@ -9,6 +9,13 @@ interface ConferenceSelectorProps {
   disabled?: boolean;
   error?: string;
   excludeConferences?: string[]; // ← NEW: Allow excluding specific conferences
+  /**
+   * Render in normal document flow instead of the default absolute
+   * top-right positioning. Use when placing the selector inline next to a
+   * card's own title (e.g. a bold section heading) rather than in
+   * PageLayoutWrapper's page-header.
+   */
+  inline?: boolean;
 }
 
 export default function ConferenceSelector({
@@ -19,6 +26,7 @@ export default function ConferenceSelector({
   disabled = false,
   error,
   excludeConferences = [], // ← NEW: Default to empty array
+  inline = false,
 }: ConferenceSelectorProps) {
   // Filter out FCS and any specified conferences to exclude
   const filteredConferences = conferences.filter(
@@ -26,7 +34,7 @@ export default function ConferenceSelector({
   );
 
   return (
-    <div className="conference-selector">
+    <div className={inline ? "conference-selector-inline" : "conference-selector"}>
       <label htmlFor="conference-select" className="sr-only">
         Select conference
       </label>

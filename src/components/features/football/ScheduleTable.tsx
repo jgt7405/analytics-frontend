@@ -4,7 +4,7 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { cn } from "@/lib/utils";
 import { FootballScheduleData } from "@/types/football";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useMemo } from "react";
+import { memo, ReactNode, useCallback, useMemo } from "react";
 import styles from "./ScheduleTable.module.css";
 
 interface FootballScheduleSummary {
@@ -25,6 +25,8 @@ interface FootballScheduleTableProps {
   renderMainTable?: boolean;
   renderSummaryTable?: boolean;
   season?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the main table's title row. */
+  headerRight?: ReactNode;
 }
 
 // A soft hyphen only renders as a visible "-" when the browser itself
@@ -45,6 +47,7 @@ function FootballScheduleTable({
   renderMainTable = true,
   renderSummaryTable = true,
   season,
+  headerRight,
 }: FootballScheduleTableProps) {
   const router = useRouter();
 
@@ -242,12 +245,15 @@ function FootballScheduleTable({
           className={cn(styles.card, "football-schedule-table", className)}
           aria-labelledby="football-schedule-title"
         >
-          <div className={styles.cardHeader} data-screenshot-hide="true">
-            <div className={styles.titleGroup}>
+          <div className={styles.cardHeader}>
+            <div className={styles.titleGroup} data-screenshot-hide="true">
               <h2 id="football-schedule-title" className={styles.title}>
                 Full Schedule
               </h2>
             </div>
+            {headerRight && (
+              <div data-screenshot-hide="true">{headerRight}</div>
+            )}
           </div>
 
           <div

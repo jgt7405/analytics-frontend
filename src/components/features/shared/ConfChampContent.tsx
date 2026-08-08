@@ -26,6 +26,11 @@ export interface ChampRenderContext {
   season?: string;
   /** Season label for charts: the archive season, or computed from data. */
   displaySeason: string;
+  /**
+   * Conference selector to render inside the table's own title row, when the
+   * page-level title is hidden (config.hidePageTitle). Undefined otherwise.
+   */
+  headerRight?: ReactNode;
 }
 
 export interface ChampHistorySection<THistory> {
@@ -240,6 +245,7 @@ export default function ConfChampContent<TData, THistory>({
       onChange={handleConferenceChange}
       excludeConferences={config.excludeConferences}
       error={champError?.message}
+      inline={config.hidePageTitle}
     />
   );
 
@@ -256,6 +262,7 @@ export default function ConfChampContent<TData, THistory>({
     selectedConference,
     season,
     displaySeason,
+    headerRight: config.hidePageTitle ? conferenceSelector : undefined,
   };
 
   const sectionFrame = (
@@ -320,7 +327,9 @@ export default function ConfChampContent<TData, THistory>({
         title={config.title}
         hideTitle={config.hidePageTitle}
         isLoading={champLoading}
-        conferenceSelector={conferenceSelector}
+        conferenceSelector={
+          config.hidePageTitle ? undefined : conferenceSelector
+        }
       >
         <div className="space-y-6">
           {champLoading ? (

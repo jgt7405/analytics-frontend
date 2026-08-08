@@ -192,6 +192,7 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
       onChange={handleConferenceChange}
       excludeConferences={config.excludeConferences}
       error={cwvError?.message}
+      inline={!!config.tableTitle}
     />
   );
 
@@ -254,7 +255,7 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
       <PageLayoutWrapper
         title="Conference Win Value (CWV)"
         hideTitle={!!config.tableTitle}
-        conferenceSelector={conferenceSelector}
+        conferenceSelector={config.tableTitle ? undefined : conferenceSelector}
         isLoading={cwvLoading}
       >
         <div className="-mt-2 md:-mt-6">
@@ -264,9 +265,12 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
             <ErrorBoundary level="component">
               <div className="mb-8">
                 {config.tableTitle && (
-                  <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
-                    {config.tableTitle}
-                  </h1>
+                  <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+                      {config.tableTitle}
+                    </h1>
+                    {conferenceSelector}
+                  </div>
                 )}
                 <div className="cwv-table">
                   <Suspense fallback={tableSkeleton}>

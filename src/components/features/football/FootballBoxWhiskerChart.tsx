@@ -6,12 +6,14 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import styles from "./FootballBoxWhiskerChart.module.css";
 
 interface FootballBoxWhiskerChartProps {
   standings: FootballStanding[];
   season?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the title row. */
+  headerRight?: ReactNode;
 }
 
 interface HoverState {
@@ -52,6 +54,7 @@ function formatTeamName(name: string) {
 export default function FootballBoxWhiskerChart({
   standings,
   season,
+  headerRight,
 }: FootballBoxWhiskerChartProps) {
   const router = useRouter();
   const { isMobile } = useResponsive();
@@ -172,12 +175,15 @@ export default function FootballBoxWhiskerChart({
       className={cn(styles.card, "box-whisker-container")}
       aria-labelledby="football-box-whisker-title"
     >
-      <div className={styles.cardHeader} data-screenshot-hide="true">
-        <div className={styles.titleGroup}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
           <h2 id="football-box-whisker-title" className={styles.title}>
             Projected Conference Wins Distribution
           </h2>
         </div>
+        {headerRight && (
+          <div data-screenshot-hide="true">{headerRight}</div>
+        )}
       </div>
 
       <div

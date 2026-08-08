@@ -60,7 +60,11 @@ export interface WinsContentConfig<TTeam> {
     error: Error | null;
     refetch: () => unknown;
   };
-  ConferenceChart: ComponentType<{ standings: TTeam[]; season?: string }>;
+  ConferenceChart: ComponentType<{
+    standings: TTeam[];
+    season?: string;
+    headerRight?: ReactNode;
+  }>;
   /**
    * Overrides the screenshot/share title for the conference win-distribution
    * chart. Defaults to "Projected Conference Wins" (used for both pageTitle
@@ -314,6 +318,7 @@ export default function WinsContent<TTeam>({
               selectedConference={selectedConference}
               onChange={handleConferenceChange}
               error={standingsError.message}
+              inline={config.hidePageTitle}
             />
           }
           isLoading={false}
@@ -338,6 +343,7 @@ export default function WinsContent<TTeam>({
             conferences={availableConferences}
             selectedConference={selectedConference}
             onChange={handleConferenceChange}
+            inline={config.hidePageTitle}
           />
         }
         isLoading={false}
@@ -362,17 +368,22 @@ export default function WinsContent<TTeam>({
     explainers,
   } = config;
 
+  const conferenceSelectorNode = (
+    <ConferenceSelector
+      conferences={availableConferences}
+      selectedConference={selectedConference}
+      onChange={handleConferenceChange}
+      inline={config.hidePageTitle}
+    />
+  );
+
   return (
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title="Projected Conference Wins"
         hideTitle={config.hidePageTitle}
         conferenceSelector={
-          <ConferenceSelector
-            conferences={availableConferences}
-            selectedConference={selectedConference}
-            onChange={handleConferenceChange}
-          />
+          config.hidePageTitle ? undefined : conferenceSelectorNode
         }
         isLoading={standingsLoading}
       >
@@ -394,7 +405,13 @@ export default function WinsContent<TTeam>({
                 config.conferenceChartTitle ?? "Projected Conference Wins",
                 "Projected Conference Wins Distribution",
                 null,
-                <ConferenceChart standings={standings} season={season} />,
+                <ConferenceChart
+                  standings={standings}
+                  season={season}
+                  headerRight={
+                    config.hidePageTitle ? conferenceSelectorNode : undefined
+                  }
+                />,
               )}
               {section(
                 "wins-table",

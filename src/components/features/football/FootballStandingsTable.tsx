@@ -4,13 +4,15 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { cn } from "@/lib/utils";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useMemo } from "react";
+import { memo, ReactNode, useCallback, useMemo } from "react";
 import styles from "./FootballStandingsTable.module.css";
 
 interface FootballStandingsTableProps {
   standings: FootballStanding[];
   className?: string;
   season?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the title row. */
+  headerRight?: ReactNode;
 }
 
 // Same blue hues and dispersion curve as the win-distribution tables, so
@@ -63,6 +65,7 @@ function FootballStandingsTable({
   standings,
   className,
   season,
+  headerRight,
 }: FootballStandingsTableProps) {
   const router = useRouter();
 
@@ -119,12 +122,15 @@ function FootballStandingsTable({
       className={cn(styles.card, "standings-table", className)}
       aria-labelledby="football-standings-title"
     >
-      <div className={styles.cardHeader} data-screenshot-hide="true">
-        <div className={styles.titleGroup}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
           <h2 id="football-standings-title" className={styles.title}>
             Projected Conference Standings (Including Ties)
           </h2>
         </div>
+        {headerRight && (
+          <div data-screenshot-hide="true">{headerRight}</div>
+        )}
       </div>
 
       <div

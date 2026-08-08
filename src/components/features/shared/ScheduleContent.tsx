@@ -19,6 +19,7 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
 import {
   ComponentType,
+  ReactNode,
   Suspense,
   useCallback,
   useEffect,
@@ -64,6 +65,7 @@ export interface ScheduleContentConfig<TGame, TSummary> {
     renderMainTable?: boolean;
     renderSummaryTable?: boolean;
     season?: string;
+    headerRight?: ReactNode;
   }>;
 }
 
@@ -207,6 +209,7 @@ export default function ScheduleContent<TGame, TSummary>({
       excludeConferences={config.excludeConferences}
       error={scheduleError?.message}
       loading={scheduleLoading}
+      inline={config.hidePageTitle}
     />
   );
 
@@ -285,7 +288,9 @@ export default function ScheduleContent<TGame, TSummary>({
       <PageLayoutWrapper
         title="Team Schedules"
         hideTitle={config.hidePageTitle}
-        conferenceSelector={conferenceSelector}
+        conferenceSelector={
+          config.hidePageTitle ? undefined : conferenceSelector
+        }
         isLoading={scheduleLoading}
       >
         <div className="-mt-2 md:-mt-6">
@@ -325,6 +330,11 @@ export default function ScheduleContent<TGame, TSummary>({
                             summary={scheduleResponse.summary}
                             renderSummaryTable={false}
                             season={season}
+                            headerRight={
+                              config.hidePageTitle
+                                ? conferenceSelector
+                                : undefined
+                            }
                           />
                         </Suspense>
                       </div>

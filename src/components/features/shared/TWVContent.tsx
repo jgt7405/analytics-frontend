@@ -187,6 +187,7 @@ export default function TWVContent<TTeam>({
       onChange={handleConferenceChange}
       error={twvError?.message}
       loading={twvLoading}
+      inline={!!config.tableTitle}
     />
   );
 
@@ -251,7 +252,7 @@ export default function TWVContent<TTeam>({
       <PageLayoutWrapper
         title="True Win Value (TWV)"
         hideTitle={!!config.tableTitle}
-        conferenceSelector={conferenceSelector}
+        conferenceSelector={config.tableTitle ? undefined : conferenceSelector}
         isLoading={twvLoading}
       >
         <div className="-mt-2 md:-mt-6">
@@ -261,9 +262,12 @@ export default function TWVContent<TTeam>({
             <ErrorBoundary level="component">
               <div className="mb-8">
                 {config.tableTitle && (
-                  <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
-                    {config.tableTitle}
-                  </h1>
+                  <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+                      {config.tableTitle}
+                    </h1>
+                    {conferenceSelector}
+                  </div>
                 )}
                 <div className="twv-table">
                   <Suspense fallback={tableSkeleton}>

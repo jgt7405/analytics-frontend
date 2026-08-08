@@ -52,6 +52,7 @@ const FOOTBALL_CONF_CHAMP: ConfChampContentConfig<ChampData, History> = {
       confChampData={data}
       className="conf-champ-table"
       season={ctx.season}
+      headerRight={ctx.headerRight}
     />
   ),
   tableExplainer: [

@@ -3,7 +3,7 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { memo, useMemo } from "react";
+import { memo, ReactNode, useMemo } from "react";
 import styles from "./FootballConfChampTable.module.css";
 
 interface FootballConfChampTeam {
@@ -18,6 +18,8 @@ interface FootballConfChampTableProps {
   confChampData: FootballConfChampTeam[];
   className?: string;
   season?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the title row. */
+  headerRight?: ReactNode;
 }
 
 const FIELD_TO_LABEL: Record<string, string> = {
@@ -50,6 +52,7 @@ function FootballConfChampTable({
   confChampData,
   className,
   season,
+  headerRight,
 }: FootballConfChampTableProps) {
   const router = useRouter();
 
@@ -92,12 +95,15 @@ function FootballConfChampTable({
       className={cn(styles.card, "conf-champ-card", className)}
       aria-labelledby="football-conf-champ-title"
     >
-      <div className={styles.cardHeader} data-screenshot-hide="true">
-        <div className={styles.titleGroup}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
           <h2 id="football-conf-champ-title" className={styles.title}>
             Conference Championship Projections
           </h2>
         </div>
+        {headerRight && (
+          <div data-screenshot-hide="true">{headerRight}</div>
+        )}
       </div>
 
       <div

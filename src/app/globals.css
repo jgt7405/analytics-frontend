@@ -49,13 +49,15 @@ body {
 }
 
 /* Select styling for all devices */
-.conference-selector select {
+.conference-selector select,
+.conference-selector-inline select {
   font-family: var(--font-roboto-mono) !important;
   outline: none !important;
   border-color: #d1d5db !important;
 }
 
-.conference-selector select:focus {
+.conference-selector select:focus,
+.conference-selector-inline select:focus {
   outline: none !important;
   border-color: #d1d5db !important;
   box-shadow: none !important;
@@ -69,7 +71,8 @@ body {
     -webkit-text-fill-color: #666 !important;
   }
 
-  .conference-selector select {
+  .conference-selector select,
+  .conference-selector-inline select {
     color: #666 !important;
     appearance: none;
     -webkit-appearance: none;

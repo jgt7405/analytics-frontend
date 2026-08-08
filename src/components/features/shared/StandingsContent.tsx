@@ -82,7 +82,11 @@ export interface StandingsContentConfig<
   ) => string;
   /** Date window of a season, for filtering history rows. */
   seasonWindow: (seasonYear: number) => { start: string; end: string };
-  StandingsTable: ComponentType<{ standings: TTeam[]; season?: string }>;
+  StandingsTable: ComponentType<{
+    standings: TTeam[];
+    season?: string;
+    headerRight?: ReactNode;
+  }>;
   NoTiesTable: ComponentType<{ standings: TTeam[]; season?: string }>;
   HistoryChart: ComponentType<{
     timelineData: TTimeline[];
@@ -315,6 +319,7 @@ export default function StandingsContent<
       onChange={handleConferenceChange}
       excludeConferences={config.excludeConferences}
       error={standingsError?.message}
+      inline={config.hidePageTitle}
     />
   );
 
@@ -428,7 +433,9 @@ export default function StandingsContent<
         title="Projected Conference Standings"
         subtitle="(Including Ties)"
         hideTitle={config.hidePageTitle}
-        conferenceSelector={conferenceSelector}
+        conferenceSelector={
+          config.hidePageTitle ? undefined : conferenceSelector
+        }
         isLoading={standingsLoading}
       >
         <div className="-mt-2 md:-mt-6">
@@ -480,7 +487,13 @@ export default function StandingsContent<
                 null,
                 <Suspense fallback={tableSkeleton}>
                   {standings && (
-                    <StandingsTable standings={standings} season={season} />
+                    <StandingsTable
+                      standings={standings}
+                      season={season}
+                      headerRight={
+                        config.hidePageTitle ? conferenceSelector : undefined
+                      }
+                    />
                   )}
                 </Suspense>,
               )}
