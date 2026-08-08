@@ -160,6 +160,13 @@ export default function FootballRegularSeasonBoxWhiskerChart({
   const capThickness = isMobile ? 4 : 4;
   const boxBorderWidth = isMobile ? 2 : 3;
   const teamSpacing = isMobile ? 15 : 35;
+  // The name label is wider than the box itself, borrowing from the gap
+  // between columns - at boxWidth alone (28-30px) there's rarely enough
+  // room for the browser to find a valid hyphenation point, so long single
+  // words (e.g. "Cincinnati") just got cut mid-word with no dash.
+  const nameWrapExtra = Math.max(teamSpacing - 6, 0);
+  const nameWrapWidth = boxWidth + nameWrapExtra;
+  const nameWrapLeft = -(nameWrapExtra / 2);
   const padding = { top: 20, right: 10, bottom: 10, left: 40 };
 
   const scale = (value: number) => {
@@ -452,9 +459,9 @@ export default function FootballRegularSeasonBoxWhiskerChart({
                           footerGap +
                           logoSize +
                           footerGap,
-                        width: boxWidth,
+                        width: nameWrapWidth,
                         height: nameRowHeight,
-                        left: 0,
+                        left: nameWrapLeft,
                       }}
                     >
                       <span className={styles.teamName}>
