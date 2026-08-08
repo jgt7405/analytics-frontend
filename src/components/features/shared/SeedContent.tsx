@@ -24,6 +24,11 @@ export interface SeedRenderContext {
   selectedConference: string;
   season?: string;
   showAllTeams: boolean;
+  /**
+   * Conference selector to render inside the table's own title row, when the
+   * page-level title is hidden (config.hidePageTitle). Undefined otherwise.
+   */
+  headerRight?: ReactNode;
 }
 
 export interface SeedExtraSection<TTeam> {
@@ -42,6 +47,12 @@ export interface SeedContentConfig<TTeam> {
   /** Tracking page id ("seed" | "football-seed"). */
   pageId: string;
   title: string;
+  /**
+   * Hides the page-level gray title. Set when the table below already
+   * renders its own bold card title, so the page doesn't show two stacked
+   * titles for the same content.
+   */
+  hidePageTitle?: boolean;
   skeletonTeamCols: number;
   useSeedData: (
     conference: string,
@@ -211,6 +222,7 @@ export default function SeedContent<TTeam>({
       onChange={handleConferenceChange}
       error={seedError?.message}
       loading={seedLoading}
+      inline={config.hidePageTitle}
     />
   );
 
@@ -227,6 +239,7 @@ export default function SeedContent<TTeam>({
     selectedConference,
     season,
     showAllTeams: selectedConference === "All Teams",
+    headerRight: config.hidePageTitle ? conferenceSelector : undefined,
   };
 
   const actionButtons = (
@@ -253,6 +266,7 @@ export default function SeedContent<TTeam>({
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title={config.title}
+          hideTitle={config.hidePageTitle}
           conferenceSelector={conferenceSelector}
           isLoading={false}
         >
@@ -270,6 +284,7 @@ export default function SeedContent<TTeam>({
     return (
       <PageLayoutWrapper
         title={config.title}
+        hideTitle={config.hidePageTitle}
         conferenceSelector={conferenceSelector}
         isLoading={false}
       >
@@ -300,7 +315,8 @@ export default function SeedContent<TTeam>({
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title={config.title}
-        conferenceSelector={conferenceSelector}
+        hideTitle={config.hidePageTitle}
+        conferenceSelector={config.hidePageTitle ? undefined : conferenceSelector}
         isLoading={seedLoading}
       >
         <div className="-mt-2 md:-mt-6">
@@ -331,7 +347,7 @@ export default function SeedContent<TTeam>({
                   seedData.length > 0 &&
                   extraSections.map((s) => (
                     <div className="mb-8 mt-12" key={s.key}>
-                      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
+                      <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
                         {s.heading}
                       </h1>
                       <div className={s.containerClass}>

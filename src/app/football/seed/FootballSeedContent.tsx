@@ -17,6 +17,7 @@ type FootballSeedRow = FootballSeedApiResponse["data"][number];
 const FOOTBALL_SEED: SeedContentConfig<FootballSeedRow> = {
   pageId: "football-seed",
   title: "CFP Seed Projections",
+  hidePageTitle: true,
   skeletonTeamCols: 15,
   useSeedData: useFootballSeed,
   renderTable: (data, ctx) => (
@@ -25,6 +26,7 @@ const FOOTBALL_SEED: SeedContentConfig<FootballSeedRow> = {
       className="seed-table"
       showAllTeams={ctx.showAllTeams}
       season={ctx.season}
+      headerRight={ctx.headerRight}
     />
   ),
   tableExplainer: [
