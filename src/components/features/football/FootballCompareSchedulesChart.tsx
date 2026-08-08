@@ -700,8 +700,6 @@ export default function FootballCompareSchedulesChart({
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
-      <h3 className="text-lg font-semibold mb-4">Compare Schedules</h3>
-
       {/* Filter Controls */}
       <div className="mb-4 space-y-3">
         <div>

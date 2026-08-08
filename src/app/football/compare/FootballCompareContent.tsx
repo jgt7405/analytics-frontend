@@ -6,8 +6,17 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+// Matches the gradient/border/shadow "card" look used across the
+// modernized Wins/Standings/CWV/etc. pages.
+const CARD_CLASS =
+  "relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+
+const TITLE_CLASS =
+  "text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300";
 
 interface Team {
   team_name: string;
@@ -268,7 +277,7 @@ export default function FootballCompareContent() {
 
   if (isLoadingInitial) {
     return (
-      <PageLayoutWrapper title="Compare Schedules" isLoading={true}>
+      <PageLayoutWrapper title="Compare Schedules" hideTitle isLoading={true}>
         <div className="flex justify-center py-12">
           <LoadingSpinner />
         </div>
@@ -277,9 +286,13 @@ export default function FootballCompareContent() {
   }
 
   return (
-    <PageLayoutWrapper title="Compare Schedules" isLoading={false}>
+    <PageLayoutWrapper title="Compare Schedules" hideTitle isLoading={false}>
       <ErrorBoundary level="page">
-        <div className="space-y-0 px-4 pt-0 pb-0 -mt-10">
+        <div className={cn(CARD_CLASS, "p-4 md:p-6")}>
+        <h1 className={cn(TITLE_CLASS, "mb-4")} data-screenshot-hide="true">
+          Compare Schedules
+        </h1>
+        <div className="space-y-0">
           {/* Scrollable Conference Cards with Team Logos */}
           <div
             className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-600 p-3 overflow-hidden"
@@ -512,6 +525,7 @@ export default function FootballCompareContent() {
               </p>
             </div>
           )}
+        </div>
         </div>
 
         {/* Screenshot Modal */}
