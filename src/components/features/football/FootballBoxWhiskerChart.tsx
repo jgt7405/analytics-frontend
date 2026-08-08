@@ -102,6 +102,12 @@ export default function FootballBoxWhiskerChart({
     return color;
   };
 
+  const isWhiteColor = (color: string) => {
+    if (!color) return false;
+    const white = ["#ffffff", "#fff", "white", "rgb(255,255,255)"];
+    return white.includes(color.toLowerCase());
+  };
+
   const navigateToTeam = (teamName: string) => {
     const path = season
       ? `/football/${season}/team/${encodeURIComponent(teamName)}`
@@ -137,7 +143,8 @@ export default function FootballBoxWhiskerChart({
   // Whisker caps and the median line need real thickness for their
   // border-radius to read as rounded at all - CSS clamps a pill radius to
   // half the element's height, so a 2px-tall bar barely rounds.
-  const capThickness = isMobile ? 4 : 5;
+  const capThickness = isMobile ? 4 : 4;
+  const boxBorderWidth = isMobile ? 2 : 3;
   const teamSpacing = isMobile ? 15 : 35;
   const padding = { top: 20, right: 10, bottom: 10, left: 40 };
 
@@ -268,6 +275,18 @@ export default function FootballBoxWhiskerChart({
                 const secondaryColor = adjustColorIfWhite(rawSecondaryColor);
                 const isHovered = hovered?.index === index;
 
+                // A white secondary color reads fine sitting on the tinted
+                // fill in the middle of the box, but disappears (or looks
+                // like a rendering glitch) if the median lands exactly on
+                // the box's own edge, where it'd sit on the white-ish
+                // border/background instead. Only use true white when the
+                // median is strictly interior to the box.
+                const medianAtBoxEdge = median <= q1 + 0.02 || median >= q3 - 0.02;
+                const medianColor =
+                  isWhiteColor(rawSecondaryColor) && !medianAtBoxEdge
+                    ? rawSecondaryColor
+                    : secondaryColor;
+
                 return (
                   <div
                     key={team.team_name}
@@ -331,7 +350,7 @@ export default function FootballBoxWhiskerChart({
                         height: scale(q1) - scale(q3),
                         width: boxWidth,
                         backgroundColor: softenColor(primaryColor, 0.12),
-                        border: `2px solid ${secondaryColor}`,
+                        border: `${boxBorderWidth}px solid ${secondaryColor}`,
                       }}
                     />
 
@@ -343,7 +362,7 @@ export default function FootballBoxWhiskerChart({
                         left: 2,
                         width: boxWidth - 4,
                         height: capThickness,
-                        backgroundColor: secondaryColor,
+                        backgroundColor: medianColor,
                       }}
                     />
 

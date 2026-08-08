@@ -37,7 +37,11 @@
   position: relative;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
-  padding: 0.5rem 0.9rem 1rem;
+  /* No left padding: the sticky y-axis sits at left: 0 of this container's
+     content box, so any left padding here would leave an unsticky gap
+     between the card edge and the axis that scrolled content can show
+     through as it passes underneath. */
+  padding: 0.5rem 0.9rem 1rem 0;
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -230,7 +234,7 @@
   }
 
   .scrollViewport {
-    padding: 0.4rem 0.5rem 0.8rem;
+    padding: 0.4rem 0.5rem 0.8rem 0;
   }
 }
 
