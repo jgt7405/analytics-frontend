@@ -133,7 +133,11 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.12;
-  overflow-wrap: anywhere;
+  /* break-word (unlike anywhere) is a last-resort break, applied only when
+     there's no other valid break point - anywhere lets the browser break
+     at any character regardless, which preempts hyphenation entirely and
+     was why words wrapped with no dash. */
+  overflow-wrap: break-word;
   text-align: center;
   text-wrap: balance;
   white-space: normal;
