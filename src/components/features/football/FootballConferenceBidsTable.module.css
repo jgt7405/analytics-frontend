@@ -20,7 +20,11 @@
   overflow: auto;
   max-height: 75vh;
   overscroll-behavior: contain;
-  padding: 1rem 0.9rem 1rem 0.9rem;
+  /* No top padding: the sticky conf-header row sits at top: 0 of this
+     container's content box, so any top padding here would leave an
+     unsticky gap that scrolled rows could show through as they pass
+     behind it. */
+  padding: 0 0.9rem 1rem 0.9rem;
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -49,6 +53,12 @@
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 0.65rem 0.65rem 0 0;
   background: #f8fafc;
+  /* Matches .sectionGrid's horizontal padding so each conference's column
+     lines up pixel-for-pixel between the header and the rows below it -
+     without this the header's columns start further left than the
+     section's. No top padding: this row needs to sit flush at the top of
+     the scroll container for the sticky seal above to work. */
+  padding: 0 0.35rem;
   /* Seals the seam below the sticky header so a sliver of the row
      scrolling underneath can't peek through as it passes behind. */
   box-shadow: 0 1px 0 0 #f8fafc;
@@ -79,10 +89,12 @@
 
 /* Rounded chip per row, separated by the grid's own gap, instead of a
    continuous bordered grid - matches the win-distribution table's
-   heat-tile look. */
+   heat-tile look. The whole chip is the team link (not just the logo). */
 .teamRow {
   border-radius: 4px;
   background: #eef4f8;
+  text-decoration: none;
+  cursor: pointer;
   transition:
     background-color 150ms ease,
     transform 150ms ease;
@@ -93,14 +105,14 @@
   transform: translateY(-1px);
 }
 
-.teamLogoLink {
+.teamLogoInner {
   flex-shrink: 0;
+  display: flex;
   transition: transform 160ms ease;
-  text-decoration: none;
 }
 
-.teamLogoLink:hover {
-  transform: translateY(-1px) scale(1.06);
+.teamRow:hover .teamLogoInner {
+  transform: scale(1.06);
 }
 
 .teamRank {

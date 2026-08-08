@@ -203,7 +203,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
           {/* Conference Multi-Bid Conferences Section */}
           <ErrorBoundary level="component">
             <div className="mb-8">
-              <h2 className="text-xl font-normal text-gray-500 dark:text-gray-200">
+              <h2 className="mb-3 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
                 Projected Bids by Conference
               </h2>
 

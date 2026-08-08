@@ -212,8 +212,9 @@ export default function FootballConferenceBidsTable({
             <div key={col.name} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
               {/* Playoff Teams */}
               {col.playoffTeams.map((team, idx) => (
-                <div
+                <Link
                   key={`${col.name}-playoff-${team.rank}-${idx}`}
+                  href={`/football/team/${encodeURIComponent(team.team_name)}`}
                   className={styles.teamRow}
                   style={{
                     height: teamRowHeight,
@@ -224,17 +225,14 @@ export default function FootballConferenceBidsTable({
                     padding: "4px 4px 4px 12px",
                   }}
                 >
-                  <Link
-                    href={`/football/team/${encodeURIComponent(team.team_name)}`}
-                    className={styles.teamLogoLink}
-                  >
+                  <span className={styles.teamLogoInner}>
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
                       size={teamLogoSize}
                       showTooltip
                     />
-                  </Link>
+                  </span>
                   <div
                     className={styles.teamRank}
                     style={{
@@ -245,7 +243,7 @@ export default function FootballConferenceBidsTable({
                   >
                     {team.rank}
                   </div>
-                </div>
+                </Link>
               ))}
 
               {/* Empty cells for alignment */}
@@ -281,8 +279,9 @@ export default function FootballConferenceBidsTable({
           {columns.map((col) => (
             <div key={`out-${col.name}`} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
               {col.outTeams.map(({ team }, idx) => (
-                <div
+                <Link
                   key={`${col.name}-out-${team.position}-${idx}`}
+                  href={`/football/team/${encodeURIComponent(team.team_name)}`}
                   className={styles.teamRow}
                   style={{
                     height: teamRowHeight,
@@ -293,17 +292,14 @@ export default function FootballConferenceBidsTable({
                     padding: "4px 4px 4px 12px",
                   }}
                 >
-                  <Link
-                    href={`/football/team/${encodeURIComponent(team.team_name)}`}
-                    className={styles.teamLogoLink}
-                  >
+                  <span className={styles.teamLogoInner}>
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
                       size={teamLogoSize}
                       showTooltip
                     />
-                  </Link>
+                  </span>
                   <div
                     className={styles.teamRank}
                     style={{
@@ -314,7 +310,7 @@ export default function FootballConferenceBidsTable({
                   >
                     {team.rank}
                   </div>
-                </div>
+                </Link>
               ))}
 
               {/* Empty cells for alignment */}
@@ -351,8 +347,9 @@ export default function FootballConferenceBidsTable({
               {columns.map((col) => (
                 <div key={`other-${col.name}`} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
                   {col.otherTeams.map((team, idx) => (
-                    <div
+                    <Link
                       key={`${col.name}-other-${team.rank}-${idx}`}
+                      href={`/football/team/${encodeURIComponent(team.team_name)}`}
                       className={styles.teamRow}
                       style={{
                         height: teamRowHeight,
@@ -363,12 +360,14 @@ export default function FootballConferenceBidsTable({
                         padding: "4px 4px 4px 12px",
                       }}
                     >
-                      <TeamLogo
-                        logoUrl={team.logo_url}
-                        teamName={team.team_name}
-                        size={teamLogoSize}
-                        showTooltip
-                      />
+                      <span className={styles.teamLogoInner}>
+                        <TeamLogo
+                          logoUrl={team.logo_url}
+                          teamName={team.team_name}
+                          size={teamLogoSize}
+                          showTooltip
+                        />
+                      </span>
                       <div
                         className={styles.teamRank}
                         style={{
@@ -379,7 +378,7 @@ export default function FootballConferenceBidsTable({
                       >
                         {team.rank}
                       </div>
-                    </div>
+                    </Link>
                   ))}
 
                   {/* Empty cells for alignment */}
