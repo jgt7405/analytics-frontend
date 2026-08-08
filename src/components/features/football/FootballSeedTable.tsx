@@ -332,7 +332,9 @@ function FootballSeedTable({
               {/* Rank column placeholder - rowSpan on a sticky <th> doesn't
                   reliably stick across browsers, so the rank/team headers
                   are two real per-row cells instead; this one just extends
-                  the sticky white background under row 1's "#" header. */}
+                  the sticky white background under row 1's "#" header and
+                  is itself sticky (top: headerHeight) so it stays pinned
+                  alongside the rest of row 2. */}
               <th
                 className={styles.stickyCell}
                 style={{
@@ -340,6 +342,7 @@ function FootballSeedTable({
                   minWidth: rankColWidth,
                   maxWidth: rankColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                   left: 0,
                 }}
               />
@@ -352,6 +355,7 @@ function FootballSeedTable({
                   minWidth: firstColWidth,
                   maxWidth: firstColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                   left: rankColWidth,
                 }}
               />
@@ -369,6 +373,7 @@ function FootballSeedTable({
                   minWidth: avgSeedColWidth,
                   maxWidth: avgSeedColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                 }}
                 title="Click to sort by average seed"
               >
@@ -393,6 +398,7 @@ function FootballSeedTable({
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
                     height: headerHeight,
+                    top: headerHeight,
                   }}
                   title={`Click to sort by seed ${seed}`}
                 >
@@ -416,6 +422,7 @@ function FootballSeedTable({
                   minWidth: statusColWidth,
                   maxWidth: statusColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
                 }}
                 title="Click to sort by In Playoffs %"
@@ -437,6 +444,7 @@ function FootballSeedTable({
                   minWidth: statusColWidth,
                   maxWidth: statusColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
                 }}
                 title="Click to sort by First Four Out"
@@ -460,6 +468,7 @@ function FootballSeedTable({
                   minWidth: statusColWidth,
                   maxWidth: statusColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
                 }}
                 title="Click to sort by Next Four Out"
@@ -483,6 +492,7 @@ function FootballSeedTable({
                   minWidth: statusColWidth,
                   maxWidth: statusColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
                 }}
                 title="Click to sort by Out of Playoffs"
@@ -506,6 +516,7 @@ function FootballSeedTable({
                   minWidth: bidColWidth,
                   maxWidth: bidColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
                 }}
                 title="Click to sort by Conference Champion"
@@ -529,6 +540,7 @@ function FootballSeedTable({
                   minWidth: bidColWidth,
                   maxWidth: bidColWidth,
                   height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
                 }}
                 title="Click to sort by At Large"
