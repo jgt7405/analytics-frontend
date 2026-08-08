@@ -1,12 +1,10 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { useResponsive } from "@/hooks/useResponsive";
-import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
 import { memo, useMemo } from "react";
+import styles from "./FootballConfChampTable.module.css";
 
 interface FootballConfChampTeam {
   team_name: string;
@@ -22,12 +20,37 @@ interface FootballConfChampTableProps {
   season?: string;
 }
 
+const FIELD_TO_LABEL: Record<string, string> = {
+  Champ_Game: "Champ\nGame",
+  Champion: "Champion",
+};
+
+// Same blue hues and dispersion curve as the win-distribution tables, but
+// without their low saturation cap: championship probabilities are true
+// 0-100% values (a heavy favorite can approach 100%), unlike a single
+// conference-win count which rarely exceeds ~45%.
+const CELL_LIGHT = [195, 224, 236];
+const CELL_DARK = [24, 98, 123];
+
+function getCellColor(value: number): { backgroundColor: string; color: string } {
+  const normalized = Math.min(Math.max(value, 0) / 100, 1);
+  const intensity = Math.pow(normalized, 0.6);
+
+  const r = Math.round(CELL_LIGHT[0] + (CELL_DARK[0] - CELL_LIGHT[0]) * intensity);
+  const g = Math.round(CELL_LIGHT[1] + (CELL_DARK[1] - CELL_LIGHT[1]) * intensity);
+  const b = Math.round(CELL_LIGHT[2] + (CELL_DARK[2] - CELL_LIGHT[2]) * intensity);
+
+  return {
+    backgroundColor: `rgb(${r}, ${g}, ${b})`,
+    color: intensity >= 0.45 ? "#ffffff" : "var(--wins-cell-text)",
+  };
+}
+
 function FootballConfChampTable({
   confChampData,
   className,
   season,
 }: FootballConfChampTableProps) {
-  const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = (teamName: string) => {
@@ -37,22 +60,15 @@ function FootballConfChampTable({
     router.push(path);
   };
 
-  // Only show columns that have data (mirroring basketball logic)
-  const fieldToLabel: Record<string, string> = {
-    Champ_Game: "Champ\nGame",
-    Champion: "Champion",
-  };
-
   const activeColumns = useMemo(() => {
     const columns = ["Champ_Game", "Champion"] as const;
     return columns.filter((column) =>
-      confChampData.some((team) => team[column] && team[column]! > 0)
+      confChampData.some((team) => team[column] && team[column]! > 0),
     );
   }, [confChampData]);
 
   const sortedTeams = useMemo(() => {
     return [...confChampData].sort((a, b) => {
-      // Sort by Champion first, then Champ_Game
       const aChamp = a.Champion || 0;
       const bChamp = b.Champion || 0;
       if (aChamp !== bChamp) return bChamp - aChamp;
@@ -63,18 +79,6 @@ function FootballConfChampTable({
     });
   }, [confChampData]);
 
-  // Use same dimensions as basketball conf-tourney
-  const firstColWidth = isMobile ? 120 : 180;
-  const roundColWidth = isMobile ? 55 : 70;
-  const cellHeight = isMobile ? 24 : 28;
-  const headerHeight = isMobile ? 50 : 60;
-
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "conf-champ-table",
-    className
-  );
-
   if (!confChampData || confChampData.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500 dark:text-gray-300">
@@ -84,115 +88,87 @@ function FootballConfChampTable({
   }
 
   return (
-    <div className={`${tableClassName} relative overflow-x-auto`}>
-      <table
-        className="border-collapse border-spacing-0"
-        style={{
-          width: "max-content",
-          borderCollapse: "separate",
-          borderSpacing: 0,
-        }}
-      >
-        <thead>
-          <tr>
-            <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: headerHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderRight: "1px solid var(--border-color)",
-                verticalAlign: "middle",
-              }}
-            >
-              Team
-            </th>
-            {activeColumns.map((column) => (
-              <th
-                key={column}
-                className="bg-gray-50 dark:bg-slate-800 text-center font-normal"
-                style={{
-                  height: headerHeight,
-                  width: roundColWidth,
-                  minWidth: roundColWidth,
-                  maxWidth: roundColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  fontSize: isMobile ? "10px" : "12px",
-                  whiteSpace: "pre-line",
-                  verticalAlign: "middle",
-                  lineHeight: "1.2",
-                }}
-              >
-                {fieldToLabel[column]}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedTeams.map((team, index) => (
-            <tr key={`${team.team_name}-${index}`}>
-              <td
-                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: firstColWidth,
-                  minWidth: firstColWidth,
-                  maxWidth: firstColWidth,
-                  height: cellHeight,
-                  position: "sticky",
-                  left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderRight: "1px solid var(--border-color)",
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <TeamLogo
-                    logoUrl={team.logo_url}
-                    teamName={team.team_name}
-                    size={isMobile ? 20 : 24}
-                    onClick={() => navigateToTeam(team.team_name)}
-                  />
-                  <span className="truncate">{team.team_name}</span>
-                </div>
-              </td>
-              {activeColumns.map((column) => {
-                const value = team[column] || 0;
-                const colorStyle = getCellColor(value);
+    <section
+      className={cn(styles.card, "conf-champ-card", className)}
+      aria-labelledby="football-conf-champ-title"
+    >
+      <div className={styles.cardHeader} data-screenshot-hide="true">
+        <div className={styles.titleGroup}>
+          <h2 id="football-conf-champ-title" className={styles.title}>
+            Conference Championship Projections
+          </h2>
+        </div>
+      </div>
 
-                return (
-                  <td
-                    key={`${team.team_name}-${column}`}
-                    className="relative p-0"
-                    style={{
-                      height: cellHeight,
-                      width: roundColWidth,
-                      minWidth: roundColWidth,
-                      maxWidth: roundColWidth,
-                      border: "1px solid var(--border-color)",
-                      borderTop: "none",
-                      borderLeft: "none",
-                      backgroundColor: colorStyle.backgroundColor,
-                      color: colorStyle.color,
-                    }}
-                  >
-                    <div
-                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
-                    >
-                      {value > 0 ? `${Math.round(value)}%` : ""}
-                    </div>
-                  </td>
-                );
-              })}
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="Conference championship projections by team. Scroll to see every team."
+        tabIndex={0}
+      >
+        <table className={styles.table}>
+          <thead>
+            <tr className={styles.headerRow}>
+              <th className={styles.stickyTeam} scope="col">
+                Team
+              </th>
+              {activeColumns.map((column) => (
+                <th key={column} scope="col">
+                  {FIELD_TO_LABEL[column]}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {sortedTeams.map((team, index) => (
+              <tr key={`${team.team_name}-${index}`} className={styles.bodyRow}>
+                <td className={cn(styles.stickyTeam, styles.teamCell)}>
+                  <button
+                    type="button"
+                    className={styles.teamButton}
+                    onClick={() => navigateToTeam(team.team_name)}
+                    aria-label={`View ${team.team_name}`}
+                  >
+                    <TeamLogo
+                      logoUrl={team.logo_url}
+                      teamName={team.team_name}
+                      size={24}
+                      showTooltip
+                      className={styles.teamLogo}
+                    />
+                    <span className={styles.teamName}>{team.team_name}</span>
+                  </button>
+                </td>
+                {activeColumns.map((column) => {
+                  const value = team[column] || 0;
+                  const rounded = Math.round(value);
+
+                  return (
+                    <td
+                      key={`${team.team_name}-${column}`}
+                      className={styles.probabilityCell}
+                      data-screenshot-tile="true"
+                    >
+                      <div
+                        className={styles.heatTile}
+                        style={value > 0 ? getCellColor(value) : {}}
+                        title={
+                          value > 0
+                            ? `${team.team_name}: ${rounded}% chance of ${FIELD_TO_LABEL[column].replace("\n", " ")}`
+                            : undefined
+                        }
+                      >
+                        {value > 0 ? `${rounded}%` : ""}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 

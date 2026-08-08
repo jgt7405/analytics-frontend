@@ -1,8 +1,7 @@
 .card {
-  --rank-col-width: 3.25rem;
-  --team-col-width: 12.5rem;
-  --twv-col-width: 4.5rem;
-  --record-col-width: 6.5rem;
+  --wins-cell-text: #1f2937;
+  --team-col-width: 11rem;
+  --stat-col-width: 5rem;
   position: relative;
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 1.25rem;
@@ -12,31 +11,29 @@
     0 8px 22px -18px rgb(15 23 42 / 0.24);
 }
 
-.controls {
+.cardHeader {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 1.1rem 1.1rem 0.6rem;
-  color: #475569;
-  font-size: 0.85rem;
-  font-weight: 600;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.35rem 1rem;
 }
 
-.rowsInput {
-  width: 4.5rem;
-  border: 1px solid rgb(203 213 225 / 0.9);
-  border-radius: 0.5rem;
-  background: #ffffff;
-  padding: 0.3rem 0.6rem;
-  color: #0f172a;
-  font-size: 0.85rem;
-  font-weight: 600;
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.rowsInput:focus {
-  outline: none;
-  border-color: rgb(14 116 144 / 0.6);
-  box-shadow: 0 0 0 3px rgb(14 116 144 / 0.15);
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .scrollViewport {
@@ -44,21 +41,14 @@
   overflow: auto;
   max-height: 75vh;
   overscroll-behavior: contain;
-  /* No left padding: the sticky rank/team columns sit at left: 0 of this
+  /* No left padding: the sticky team column sits at left: 0 of this
      container's content box, so any left padding here would leave an
      unsticky gap that scrolled rows could show through as they pass
      underneath. */
-  padding: 0.6rem 0.9rem 1rem 0;
+  padding: 0 0.9rem 1rem 0;
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
-}
-
-/* No card title on this table - the page's own "True Win Value (TWV)"
-   heading already covers it - so this stands in for the missing header's
-   top padding. */
-.scrollViewportNoHeader {
-  padding-top: 1.1rem;
 }
 
 .scrollViewport::-webkit-scrollbar {
@@ -78,8 +68,9 @@
 }
 
 .table {
-  /* Only 5 narrow columns - min-width: 100% would stretch every column to
-     fill the card's full width instead of sizing to its own content. */
+  /* Only a team column plus 1-2 stat columns - min-width: 100% would
+     stretch every column to fill the card's full width instead of sizing
+     to its own content. */
   width: max-content;
   min-width: 0;
   table-layout: fixed;
@@ -91,45 +82,32 @@
 
 .table th,
 .table td {
-  width: var(--twv-col-width);
-  min-width: var(--twv-col-width);
-  max-width: var(--twv-col-width);
+  width: var(--stat-col-width);
+  min-width: var(--stat-col-width);
+  max-width: var(--stat-col-width);
 }
 
-.stickyRank,
 .stickyTeam {
   --sticky-column-background: #ffffff;
   position: sticky;
-  z-index: 40;
-  background: var(--sticky-column-background);
-  background-clip: border-box;
-  isolation: isolate;
-}
-
-.stickyRank {
   left: 0;
-  width: var(--rank-col-width) !important;
-  min-width: var(--rank-col-width) !important;
-  max-width: var(--rank-col-width) !important;
-  text-align: center;
-}
-
-.stickyTeam {
-  left: var(--rank-col-width);
+  z-index: 40;
   width: var(--team-col-width) !important;
   min-width: var(--team-col-width) !important;
   max-width: var(--team-col-width) !important;
-  text-align: left;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
   box-shadow:
     0 0 0 3px var(--sticky-column-background),
     0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  isolation: isolate;
 }
 
 .headerRow th {
   position: sticky;
   top: 0;
   z-index: 55;
-  height: 2.5rem;
+  height: 2.75rem;
   border: 0;
   background: #ffffff;
   box-shadow: 0 1px 0 0 #ffffff;
@@ -139,23 +117,17 @@
   letter-spacing: 0.01em;
   line-height: 1.15;
   text-align: center;
+  white-space: pre-line;
   isolation: isolate;
 }
 
-.headerRow .stickyRank,
 .headerRow .stickyTeam {
   z-index: 65;
+  text-align: left;
 }
 
 .bodyRow td {
   height: 2rem;
-}
-
-.rankValue {
-  color: #475569;
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-align: center;
 }
 
 .teamCell {
@@ -192,11 +164,11 @@
   white-space: nowrap;
 }
 
-.twvCell {
+.probabilityCell {
   padding: 0;
 }
 
-.twvChip {
+.heatTile {
   display: flex;
   width: 100%;
   height: 100%;
@@ -204,24 +176,11 @@
   justify-content: center;
   border-radius: 3px;
   font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.recordCell,
-.recordHeader {
-  width: var(--record-col-width) !important;
-  min-width: var(--record-col-width) !important;
-  max-width: var(--record-col-width) !important;
-}
-
-.recordCell {
-  color: #334155;
-  font-size: 0.85rem;
-  font-weight: 500;
-  text-align: center;
+  font-weight: 650;
 }
 
 :global(.dark) .card {
+  --wins-cell-text: #e2e8f0;
   border-color: rgb(51 65 85 / 0.88);
   background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
   box-shadow:
@@ -229,17 +188,10 @@
     inset 0 1px 0 rgb(255 255 255 / 0.025);
 }
 
-:global(.dark) .controls {
-  color: #94a3b8;
+:global(.dark) .title {
+  color: #cbd5e1;
 }
 
-:global(.dark) .rowsInput {
-  border-color: rgb(71 85 105 / 0.8);
-  background: #1e293b;
-  color: #f1f5f9;
-}
-
-:global(.dark) .stickyRank,
 :global(.dark) .stickyTeam,
 :global(.dark) .headerRow th {
   --sticky-column-background: #111827;
@@ -251,43 +203,39 @@
   box-shadow: 0 1px 0 0 #111827;
 }
 
-:global(.dark) .rankValue {
-  color: #94a3b8;
-}
-
 :global(.dark) .teamName {
   color: #f1f5f9;
 }
 
-:global(.dark) .recordCell {
-  color: #cbd5e1;
-}
-
 @media (max-width: 767px) {
   .card {
-    --rank-col-width: 2.75rem;
-    --team-col-width: 8.5rem;
-    --twv-col-width: 3.6rem;
-    --record-col-width: 4.75rem;
+    --team-col-width: 8rem;
+    --stat-col-width: 3.75rem;
     border-radius: 1rem;
   }
 
-  .controls {
-    padding: 0.9rem 0.9rem 0.5rem;
-    font-size: 0.78rem;
+  .cardHeader {
+    align-items: flex-start;
+    padding: 1rem 0.9rem 0.7rem;
+  }
+
+  .titleGroup {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
   }
 
   .scrollViewport {
-    padding: 0.4rem 0.5rem 0.8rem 0;
+    padding: 0 0.5rem 0.8rem 0;
     max-height: 70vh;
   }
 
-  .scrollViewportNoHeader {
-    padding-top: 0.9rem;
-  }
-
   .headerRow th {
-    height: 2.25rem;
+    height: 2.4rem;
     font-size: 0.66rem;
   }
 
@@ -303,12 +251,7 @@
     font-size: 0.76rem;
   }
 
-  .twvChip {
+  .heatTile {
     font-size: 0.76rem;
-  }
-
-  .recordCell,
-  .rankValue {
-    font-size: 0.74rem;
   }
 }
