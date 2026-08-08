@@ -148,7 +148,7 @@ export default function FootballConferenceBidsTable({
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
-            gap: "0",
+            gap: "4px",
           }}
         >
           {columns.map((col) => (
@@ -205,11 +205,11 @@ export default function FootballConferenceBidsTable({
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
-            gap: "0",
+            gap: "4px",
           }}
         >
           {columns.map((col) => (
-            <div key={col.name} className={styles.sectionColumn} style={{ display: "flex", flexDirection: "column" }}>
+            <div key={col.name} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
               {/* Playoff Teams */}
               {col.playoffTeams.map((team, idx) => (
                 <div
@@ -275,11 +275,11 @@ export default function FootballConferenceBidsTable({
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
-            gap: "0",
+            gap: "4px",
           }}
         >
           {columns.map((col) => (
-            <div key={`out-${col.name}`} className={styles.sectionColumn} style={{ display: "flex", flexDirection: "column" }}>
+            <div key={`out-${col.name}`} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
               {col.outTeams.map(({ team }, idx) => (
                 <div
                   key={`${col.name}-out-${team.position}-${idx}`}
@@ -345,11 +345,11 @@ export default function FootballConferenceBidsTable({
               style={{
                 display: "grid",
                 gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
-                gap: "0",
+                gap: "4px",
               }}
             >
               {columns.map((col) => (
-                <div key={`other-${col.name}`} className={styles.sectionColumn} style={{ display: "flex", flexDirection: "column" }}>
+                <div key={`other-${col.name}`} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
                   {col.otherTeams.map((team, idx) => (
                     <div
                       key={`${col.name}-other-${team.rank}-${idx}`}

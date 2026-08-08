@@ -1,4 +1,11 @@
 .card {
+  /* Shrink-wraps to the grid's actual content width (numColumns *
+     columnWidth) instead of stretching to fill its container, so the
+     card's rounded right edge sits right where the data ends - capped at
+     100% so it still scrolls instead of overflowing on narrow screens. */
+  display: inline-block;
+  width: max-content;
+  max-width: 100%;
   position: relative;
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 1.25rem;
@@ -38,20 +45,19 @@
 .confHeaderRow {
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 55;
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 0.65rem 0.65rem 0 0;
   background: #f8fafc;
+  /* Seals the seam below the sticky header so a sliver of the row
+     scrolling underneath can't peek through as it passes behind. */
+  box-shadow: 0 1px 0 0 #f8fafc;
+  isolation: isolate;
 }
 
 .confHeaderCell {
-  border-right: 1px solid rgb(226 232 240 / 0.9);
-  border-bottom: 1px solid rgb(226 232 240 / 0.9);
-  background: #f8fafc;
-}
-
-.confHeaderCell:last-child {
-  border-right: none;
+  border-radius: 0.5rem;
+  background: #f1f5f9;
 }
 
 .confLogoWrap {
@@ -66,30 +72,31 @@
 .sectionGrid {
   border: 1px solid rgb(226 232 240 / 0.9);
   border-top: none;
-  background: #ffffff;
+  border-radius: 0 0 0.65rem 0.65rem;
+  background: #fbfdff;
+  padding: 0.35rem;
 }
 
-.sectionColumn {
-  border-right: 1px solid rgb(226 232 240 / 0.9);
-}
-
-.sectionColumn:last-child {
-  border-right: none;
-}
-
+/* Rounded chip per row, separated by the grid's own gap, instead of a
+   continuous bordered grid - matches the win-distribution table's
+   heat-tile look. */
 .teamRow {
-  border-bottom: 1px solid rgb(226 232 240 / 0.9);
-  background: #ffffff;
-  transition: background-color 150ms ease;
+  border-radius: 4px;
+  background: #eef4f8;
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
 }
 
 .teamRow:hover {
-  background: rgb(15 23 42 / 0.035);
+  background: #e0edf4;
+  transform: translateY(-1px);
 }
 
 .teamLogoLink {
   flex-shrink: 0;
   transition: transform 160ms ease;
+  text-decoration: none;
 }
 
 .teamLogoLink:hover {
@@ -103,12 +110,13 @@
 }
 
 .emptyCell {
-  border-bottom: 1px solid rgb(226 232 240 / 0.9);
-  background: #f8fafc;
+  border-radius: 4px;
+  background: rgb(226 232 240 / 0.5);
 }
 
 .groupSeparator {
-  background: #334155;
+  border-radius: 999px;
+  background: #1e293b;
 }
 
 :global(.dark) .card {
@@ -119,10 +127,14 @@
     inset 0 1px 0 rgb(255 255 255 / 0.025);
 }
 
-:global(.dark) .confHeaderRow,
-:global(.dark) .confHeaderCell {
+:global(.dark) .confHeaderRow {
   border-color: rgb(51 65 85 / 0.8);
   background: #111827;
+  box-shadow: 0 1px 0 0 #111827;
+}
+
+:global(.dark) .confHeaderCell {
+  background: #1e293b;
 }
 
 :global(.dark) .confTeamCount {
@@ -134,17 +146,12 @@
   background: #0f172a;
 }
 
-:global(.dark) .sectionColumn {
-  border-color: rgb(51 65 85 / 0.8);
-}
-
 :global(.dark) .teamRow {
-  border-color: rgb(51 65 85 / 0.8);
-  background: #0f172a;
+  background: #1e293b;
 }
 
 :global(.dark) .teamRow:hover {
-  background: rgb(255 255 255 / 0.04);
+  background: #263449;
 }
 
 :global(.dark) .teamRank {
@@ -152,8 +159,7 @@
 }
 
 :global(.dark) .emptyCell {
-  border-color: rgb(51 65 85 / 0.8);
-  background: #1e293b;
+  background: rgb(51 65 85 / 0.5);
 }
 
 :global(.dark) .groupSeparator {
