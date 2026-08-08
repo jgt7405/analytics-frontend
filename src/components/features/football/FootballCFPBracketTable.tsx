@@ -1,10 +1,11 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { useResponsive } from "@/hooks/useResponsive";
+import { cn } from "@/lib/utils";
 import { BubbleTeam, OtherTeam, PlayoffTeam } from "@/types/football";
 import Link from "next/link";
 import { useMemo } from "react";
+import styles from "./FootballCFPBracketTable.module.css";
 
 interface FootballCFPBracketTableProps {
   playoffTeams: PlayoffTeam[];
@@ -34,6 +35,13 @@ interface BracketRow {
   group: "playoff" | "f4o" | "n4o" | "other";
 }
 
+const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+  "Auto Bid": { bg: "#dbeafe", text: "#1e40af" },
+  "At Large": { bg: "#dcfce7", text: "#166534" },
+  "First 4 Out": { bg: "#ffedd5", text: "#b45309" },
+  "Next 4 Out": { bg: "#fee2e2", text: "#991b1b" },
+};
+
 export default function FootballCFPBracketTable({
   playoffTeams,
   firstFourOut = [],
@@ -42,20 +50,6 @@ export default function FootballCFPBracketTable({
   showAll = false,
   isCurrent = false,
 }: FootballCFPBracketTableProps) {
-  const { isMobile } = useResponsive();
-
-  // Responsive dimensions - matches basketball NCAA bracket table
-  const seedColWidth = isMobile ? 50 : 60;
-  const teamColWidth = isMobile ? 150 : 220;
-  const confColWidth = isMobile ? 80 : 120;
-  const categoryColWidth = isMobile ? 80 : 120;
-  const twvColWidth = isMobile ? 70 : 80;
-  const ratingColWidth = isMobile ? 70 : 100;
-  const normColWidth = isMobile ? 80 : 120;
-  const cellHeight = isMobile ? 32 : 36;
-  const headerHeight = isMobile ? 40 : 48;
-
-  // Combine playoff teams, First Four Out, and Next Four Out into one list
   const rows = useMemo<BracketRow[]>(() => {
     const playoffRows: BracketRow[] = playoffTeams.map((team) => ({
       key: `playoff-${team.rank}-${team.team_name}`,
@@ -112,7 +106,7 @@ export default function FootballCFPBracketTable({
           category: "",
           twv: team.post_champ_twv,
           rating: team.blended_full_season_rating_avg,
-              score: team.cfp_score,
+          score: team.cfp_score,
           group: "other",
         }))
       : [];
@@ -120,398 +114,137 @@ export default function FootballCFPBracketTable({
     return [...playoffRows, ...f4oRows, ...n4oRows, ...otherRows];
   }, [playoffTeams, firstFourOut, nextFourOut, otherTeams, showAll]);
 
-  // Dark separator at group boundaries and every 4 playoff teams
-  const getRowBorderStyle = (index: number) => {
+  // Dark separator at group boundaries, every 4 playoff teams, and every 10
+  // ranks in the all-teams section.
+  const isGroupBoundary = (index: number) => {
     const row = rows[index];
     const next = rows[index + 1];
 
-    // Last row overall
-    if (!next) {
-      return "1px solid var(--border-color)";
-    }
-
-    // Boundary between groups (playoff -> f4o, f4o -> n4o)
-    if (row.group !== next.group) {
-      return "3px solid #1f2937";
-    }
-
-    // Within playoff teams: dark line every 4 seeds (1-4, 5-8, 9-12)
-    if (row.group === "playoff" && (index + 1) % 4 === 0) {
-      return "3px solid #1f2937";
-    }
-
-    // Within all-teams section: dark line every 10 ranks (after 30, 40, ...)
+    if (!next) return false;
+    if (row.group !== next.group) return true;
+    if (row.group === "playoff" && (index + 1) % 4 === 0) return true;
     if (row.group === "other" && row.seedNum != null && row.seedNum % 10 === 0) {
-      return "3px solid #1f2937";
+      return true;
     }
-
-    return "1px solid var(--border-color)";
-  };
-
-  const getCategoryBgColor = (category: string) => {
-    switch (category) {
-      case "Auto Bid":
-        return "#dbeafe"; // light blue
-      case "At Large":
-        return "#dcfce7"; // light green
-      case "First 4 Out":
-        return "#ffedd5"; // light orange
-      case "Next 4 Out":
-        return "#fee2e2"; // light red
-      case "":
-        return "#ffffff"; // all-teams rows: blank/uncolored
-      default:
-        return "#f3f4f6"; // light gray
-    }
-  };
-
-  const getCategoryTextColor = (category: string) => {
-    switch (category) {
-      case "Auto Bid":
-        return "#1e40af"; // blue
-      case "At Large":
-        return "#166534"; // green
-      case "First 4 Out":
-        return "#b45309"; // orange
-      case "Next 4 Out":
-        return "#991b1b"; // red
-      default:
-        return "#374151"; // gray
-    }
+    return false;
   };
 
   return (
-    // Shrink-wrap the table (capped at 100% so it still scrolls on mobile) so
-    // the page can right-align the toggle to the chart's actual right edge.
-    <div
-      className="relative overflow-x-auto"
-      style={{ width: "max-content", maxWidth: "100%" }}
-    >
-      <table
-        className="border-collapse border-spacing-0"
-        style={{
-          width: "max-content",
-          borderCollapse: "separate",
-          borderSpacing: 0,
-        }}
-      >
-        <thead>
-          <tr>
-            {/* Seed Column Header */}
-            <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: seedColWidth,
-                minWidth: seedColWidth,
-                maxWidth: seedColWidth,
-                height: headerHeight,
-                position: "sticky",
-                top: 0,
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Seed
-            </th>
-
-            {/* Team Column Header */}
-            <th
-              className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: teamColWidth,
-                minWidth: teamColWidth,
-                maxWidth: teamColWidth,
-                height: headerHeight,
-                position: "sticky",
-                top: 0,
-                left: seedColWidth,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-                borderRight: "2px solid var(--border-color)",
-              }}
-            >
-              Team
-            </th>
-
-            {/* Conference Column Header */}
-            <th
-              className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: confColWidth,
-                minWidth: confColWidth,
-                maxWidth: confColWidth,
-                height: headerHeight,
-                position: "sticky",
-                top: 0,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-              }}
-            >
-              Conf
-            </th>
-
-            {/* Category Column Header */}
-            <th
-              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: categoryColWidth,
-                minWidth: categoryColWidth,
-                maxWidth: categoryColWidth,
-                height: headerHeight,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-              }}
-            >
-              Category
-            </th>
-
-            {/* Proj TWV Column Header */}
-            <th
-              className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: twvColWidth,
-                minWidth: twvColWidth,
-                maxWidth: twvColWidth,
-                height: headerHeight,
-                position: "sticky",
-                top: 0,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-              }}
-            >
-              {isCurrent ? "TWV" : "Proj TWV"}
-            </th>
-
-            {/* Proj Rtg Column Header */}
-            <th
-              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: ratingColWidth,
-                minWidth: ratingColWidth,
-                maxWidth: ratingColWidth,
-                height: headerHeight,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-              }}
-            >
-              {isCurrent ? "Rtg" : "Proj Rtg"}
-            </th>
-
-            {/* CFP Rtg % Column Header */}
-            <th
-              className={`bg-gray-50 dark:bg-slate-800 text-center font-normal ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: normColWidth,
-                minWidth: normColWidth,
-                maxWidth: normColWidth,
-                height: headerHeight,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-              }}
-            >
-              CFP Rtg %
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => {
-            const rowBorder = getRowBorderStyle(index);
-            return (
-              <tr key={row.key}>
-                {/* Seed Cell */}
-                <td
-                  className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: seedColWidth,
-                    minWidth: seedColWidth,
-                    maxWidth: seedColWidth,
-                    height: cellHeight,
-                    position: "sticky",
-                    left: 0,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderRight: "1px solid var(--border-color)",
-                    borderBottom: rowBorder,
-                    fontWeight: "500",
-                  }}
-                >
-                  {row.seedLabel}
-                </td>
-
-                {/* Team Cell */}
-                <td
-                  className={`sticky z-20 text-left px-2 ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: teamColWidth,
-                    minWidth: teamColWidth,
-                    maxWidth: teamColWidth,
-                    height: cellHeight,
-                    position: "sticky",
-                    left: seedColWidth,
-                    backgroundColor: "white",
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderRight: "2px solid var(--border-color)",
-                    borderBottom: rowBorder,
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/football/team/${encodeURIComponent(
-                        row.team_name
-                      )}`}
-                      className="flex-shrink-0"
-                    >
-                      <TeamLogo
-                        logoUrl={row.logo_url}
-                        teamName={row.team_name}
-                        size={isMobile ? 24 : 28}
-                        className="flex-shrink-0"
-                      />
-                    </Link>
-                    <span className="truncate">{row.team_name}</span>
-                  </div>
-                </td>
-
-                {/* Conference Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: confColWidth,
-                    minWidth: confColWidth,
-                    maxWidth: confColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderBottom: rowBorder,
-                    verticalAlign: "middle",
-                  }}
-                >
-                  <div className="flex items-center justify-center">
-                    {row.conf_logo_url ? (
-                      <TeamLogo
-                        logoUrl={row.conf_logo_url}
-                        teamName={row.conference}
-                        size={isMobile ? 20 : 24}
-                        className="flex-shrink-0"
-                      />
-                    ) : (
-                      <span className="text-xs text-gray-500 dark:text-gray-300">
-                        -
-                      </span>
-                    )}
-                  </div>
-                </td>
-
-                {/* Category Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: categoryColWidth,
-                    minWidth: categoryColWidth,
-                    maxWidth: categoryColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderBottom: rowBorder,
-                    backgroundColor: getCategoryBgColor(row.category),
-                    color: getCategoryTextColor(row.category),
-                    fontWeight: "500",
-                  }}
-                >
-                  {row.category}
-                </td>
-
-                {/* Proj TWV Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: twvColWidth,
-                    minWidth: twvColWidth,
-                    maxWidth: twvColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderBottom: rowBorder,
-                    fontWeight: "500",
-                  }}
-                >
-                  {row.twv != null ? row.twv.toFixed(2) : "—"}
-                </td>
-
-                {/* Proj Rtg Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: ratingColWidth,
-                    minWidth: ratingColWidth,
-                    maxWidth: ratingColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderBottom: rowBorder,
-                    fontWeight: "500",
-                  }}
-                >
-                  {row.rating != null ? row.rating.toFixed(2) : "—"}
-                </td>
-
-                {/* CFP Rtg % Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
-                  style={{
-                    width: normColWidth,
-                    minWidth: normColWidth,
-                    maxWidth: normColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderBottom: rowBorder,
-                    fontWeight: "500",
-                  }}
-                >
-                  {row.score != null ? row.score.toFixed(1) : "—"}
-                </td>
+    <section className="relative" aria-label="College Football Playoff bracket">
+      <div className={styles.card}>
+        <div
+          className={styles.scrollViewport}
+          role="region"
+          aria-label="College Football Playoff bracket. Scroll to see every team."
+          tabIndex={0}
+        >
+          <table className={styles.table}>
+            <thead>
+              <tr className={styles.headerRow}>
+                <th className={styles.stickySeed} scope="col">
+                  Seed
+                </th>
+                <th className={styles.stickyTeam} scope="col">
+                  Team
+                </th>
+                <th className={styles.confHeader} scope="col">
+                  Conf
+                </th>
+                <th className={styles.categoryHeader} scope="col">
+                  Category
+                </th>
+                <th scope="col">{isCurrent ? "TWV" : "Proj TWV"}</th>
+                <th scope="col">{isCurrent ? "Rtg" : "Proj Rtg"}</th>
+                <th className={styles.scoreHeader} scope="col">
+                  CFP Rtg %
+                </th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => {
+                const category = CATEGORY_COLORS[row.category];
+
+                return (
+                  <tr
+                    key={row.key}
+                    className={cn(
+                      styles.bodyRow,
+                      isGroupBoundary(index) && styles.groupBoundary,
+                    )}
+                  >
+                    <td className={styles.stickySeed}>
+                      <span className={styles.seedValue}>{row.seedLabel}</span>
+                    </td>
+
+                    <td className={cn(styles.stickyTeam, styles.teamCell)}>
+                      <Link
+                        href={`/football/team/${encodeURIComponent(row.team_name)}`}
+                        className={styles.teamLink}
+                      >
+                        <TeamLogo
+                          logoUrl={row.logo_url}
+                          teamName={row.team_name}
+                          size={28}
+                          showTooltip
+                          className={styles.teamLogo}
+                        />
+                        <span className={styles.teamName}>{row.team_name}</span>
+                      </Link>
+                    </td>
+
+                    <td className={styles.confCell}>
+                      <div className={styles.confLogoWrap}>
+                        {row.conf_logo_url ? (
+                          <TeamLogo
+                            logoUrl={row.conf_logo_url}
+                            teamName={row.conference}
+                            size={22}
+                            showTooltip
+                          />
+                        ) : (
+                          <span className={styles.confPlaceholder}>—</span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className={styles.categoryCell}>
+                      {row.category && (
+                        <span
+                          className={styles.categoryBadge}
+                          style={{
+                            backgroundColor: category?.bg ?? "#f3f4f6",
+                            color: category?.text ?? "#374151",
+                          }}
+                        >
+                          {row.category}
+                        </span>
+                      )}
+                    </td>
+
+                    <td>
+                      <span className={styles.statValue}>
+                        {row.twv != null ? row.twv.toFixed(2) : "—"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className={styles.statValue}>
+                        {row.rating != null ? row.rating.toFixed(2) : "—"}
+                      </span>
+                    </td>
+
+                    <td className={styles.scoreCell}>
+                      <span className={styles.statValue}>
+                        {row.score != null ? row.score.toFixed(1) : "—"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   );
 }

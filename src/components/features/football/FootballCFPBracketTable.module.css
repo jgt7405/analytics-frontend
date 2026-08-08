@@ -1,0 +1,304 @@
+.card {
+  --seed-col-width: 3rem;
+  --team-col-width: 11rem;
+  --conf-col-width: 4.5rem;
+  --category-col-width: 6rem;
+  --stat-col-width: 4.5rem;
+  --score-col-width: 5.5rem;
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-height: 75vh;
+  overscroll-behavior: contain;
+  /* No left padding: the sticky seed/team columns sit at left: 0 of this
+     container's content box, so any left padding here would leave an
+     unsticky gap that scrolled rows could show through as they pass
+     underneath. */
+  padding: 1.1rem 0.9rem 1rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.table {
+  /* A handful of columns - min-width: 100% would stretch every column to
+     fill the card's full width instead of sizing to its own content. */
+  width: max-content;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0 1px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  width: var(--stat-col-width);
+  min-width: var(--stat-col-width);
+  max-width: var(--stat-col-width);
+}
+
+.stickySeed,
+.stickyTeam {
+  --sticky-column-background: #ffffff;
+  position: sticky;
+  z-index: 40;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
+  isolation: isolate;
+}
+
+.stickySeed {
+  left: 0;
+  width: var(--seed-col-width) !important;
+  min-width: var(--seed-col-width) !important;
+  max-width: var(--seed-col-width) !important;
+  text-align: center;
+}
+
+.stickyTeam {
+  left: var(--seed-col-width);
+  width: var(--team-col-width) !important;
+  min-width: var(--team-col-width) !important;
+  max-width: var(--team-col-width) !important;
+  text-align: left;
+  box-shadow:
+    0 0 0 3px var(--sticky-column-background),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+}
+
+.headerRow th {
+  position: sticky;
+  top: 0;
+  z-index: 55;
+  height: 2.75rem;
+  border: 0;
+  background: #ffffff;
+  box-shadow: 0 1px 0 0 #ffffff;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-align: center;
+  isolation: isolate;
+}
+
+.headerRow .stickySeed,
+.headerRow .stickyTeam {
+  z-index: 65;
+}
+
+.headerRow .stickyTeam {
+  text-align: left;
+}
+
+.confHeader,
+.confCell {
+  width: var(--conf-col-width) !important;
+  min-width: var(--conf-col-width) !important;
+  max-width: var(--conf-col-width) !important;
+}
+
+.categoryHeader,
+.categoryCell {
+  width: var(--category-col-width) !important;
+  min-width: var(--category-col-width) !important;
+  max-width: var(--category-col-width) !important;
+}
+
+.scoreHeader,
+.scoreCell {
+  width: var(--score-col-width) !important;
+  min-width: var(--score-col-width) !important;
+  max-width: var(--score-col-width) !important;
+}
+
+.bodyRow td {
+  height: 2.35rem;
+  border-bottom: 1px solid rgb(226 232 240 / 0.9);
+}
+
+.groupBoundary td {
+  border-bottom: 2px solid #334155;
+}
+
+.seedValue {
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.teamCell {
+  padding: 0 0.6rem;
+}
+
+.teamLink {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.teamLogo {
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 3px rgb(15 23 42 / 0.14));
+  transition: transform 160ms ease;
+}
+
+.teamLink:hover .teamLogo {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.teamName {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.confLogoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confPlaceholder {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.statValue {
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .stickySeed,
+:global(.dark) .stickyTeam,
+:global(.dark) .headerRow th {
+  --sticky-column-background: #111827;
+  background: #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .headerRow th {
+  box-shadow: 0 1px 0 0 #111827;
+}
+
+:global(.dark) .seedValue {
+  color: #94a3b8;
+}
+
+:global(.dark) .teamName {
+  color: #f1f5f9;
+}
+
+:global(.dark) .statValue {
+  color: #cbd5e1;
+}
+
+:global(.dark) .bodyRow td {
+  border-bottom-color: rgb(51 65 85 / 0.8);
+}
+
+:global(.dark) .groupBoundary td {
+  border-bottom-color: #94a3b8;
+}
+
+:global(.dark) .confPlaceholder {
+  color: #64748b;
+}
+
+@media (max-width: 767px) {
+  .card {
+    --seed-col-width: 2.5rem;
+    --team-col-width: 8rem;
+    --conf-col-width: 3.5rem;
+    --category-col-width: 4.5rem;
+    --stat-col-width: 3.4rem;
+    --score-col-width: 4rem;
+    border-radius: 1rem;
+  }
+
+  .scrollViewport {
+    padding: 0.9rem 0.5rem 0.8rem 0;
+    max-height: 70vh;
+  }
+
+  .headerRow th {
+    height: 2.3rem;
+    font-size: 0.64rem;
+  }
+
+  .bodyRow td {
+    height: 2rem;
+  }
+
+  .teamLogo {
+    transform: scale(0.9);
+  }
+
+  .teamName {
+    font-size: 0.74rem;
+  }
+
+  .categoryBadge {
+    font-size: 0.62rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .statValue,
+  .seedValue {
+    font-size: 0.72rem;
+  }
+}

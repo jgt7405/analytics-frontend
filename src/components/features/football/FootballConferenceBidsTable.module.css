@@ -1,0 +1,161 @@
+.card {
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-height: 75vh;
+  overscroll-behavior: contain;
+  padding: 1rem 0.9rem 1rem 0.9rem;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.confHeaderRow {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 0.65rem 0.65rem 0 0;
+  background: #f8fafc;
+}
+
+.confHeaderCell {
+  border-right: 1px solid rgb(226 232 240 / 0.9);
+  border-bottom: 1px solid rgb(226 232 240 / 0.9);
+  background: #f8fafc;
+}
+
+.confHeaderCell:last-child {
+  border-right: none;
+}
+
+.confLogoWrap {
+  filter: drop-shadow(0 3px 3px rgb(15 23 42 / 0.14));
+}
+
+.confTeamCount {
+  color: #475569;
+  font-weight: 600;
+}
+
+.sectionGrid {
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-top: none;
+  background: #ffffff;
+}
+
+.sectionColumn {
+  border-right: 1px solid rgb(226 232 240 / 0.9);
+}
+
+.sectionColumn:last-child {
+  border-right: none;
+}
+
+.teamRow {
+  border-bottom: 1px solid rgb(226 232 240 / 0.9);
+  background: #ffffff;
+  transition: background-color 150ms ease;
+}
+
+.teamRow:hover {
+  background: rgb(15 23 42 / 0.035);
+}
+
+.teamLogoLink {
+  flex-shrink: 0;
+  transition: transform 160ms ease;
+}
+
+.teamLogoLink:hover {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.teamRank {
+  color: #334155;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.emptyCell {
+  border-bottom: 1px solid rgb(226 232 240 / 0.9);
+  background: #f8fafc;
+}
+
+.groupSeparator {
+  background: #334155;
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .confHeaderRow,
+:global(.dark) .confHeaderCell {
+  border-color: rgb(51 65 85 / 0.8);
+  background: #111827;
+}
+
+:global(.dark) .confTeamCount {
+  color: #94a3b8;
+}
+
+:global(.dark) .sectionGrid {
+  border-color: rgb(51 65 85 / 0.8);
+  background: #0f172a;
+}
+
+:global(.dark) .sectionColumn {
+  border-color: rgb(51 65 85 / 0.8);
+}
+
+:global(.dark) .teamRow {
+  border-color: rgb(51 65 85 / 0.8);
+  background: #0f172a;
+}
+
+:global(.dark) .teamRow:hover {
+  background: rgb(255 255 255 / 0.04);
+}
+
+:global(.dark) .teamRank {
+  color: #cbd5e1;
+}
+
+:global(.dark) .emptyCell {
+  border-color: rgb(51 65 85 / 0.8);
+  background: #1e293b;
+}
+
+:global(.dark) .groupSeparator {
+  background: #94a3b8;
+}

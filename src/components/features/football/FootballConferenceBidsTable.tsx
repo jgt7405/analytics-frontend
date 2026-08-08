@@ -12,6 +12,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { BubbleTeam, OtherTeam, PlayoffTeam } from "@/types/football";
 import Link from "next/link";
 import { useMemo } from "react";
+import styles from "./FootballConferenceBidsTable.module.css";
 
 interface ConferenceColumn {
   name: string;
@@ -133,52 +134,44 @@ export default function FootballConferenceBidsTable({
   const confLogoSize = isMobile ? 28 : 36;
   const teamLogoSize = isMobile ? 24 : 28;
   const columnWidth = isMobile ? 70 : 90;
-  const borderColor = "#e5e7eb";
   const numColumns = columns.length;
 
   return (
-    <div>
-      <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "80vh" }}>
+    <div className={styles.card}>
+      <div className={styles.scrollViewport}>
         {/* Sticky conference-header row: stays pinned to the top of the scroll
             area while the team rows below scroll, so you can always tell which
             column is which conference. Extracted from the playoff grid so it
             persists across the out/other sections too. */}
         <div
+          className={styles.confHeaderRow}
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
             gap: "0",
-            position: "sticky",
-            top: 0,
-            zIndex: 30,
-            borderLeft: `1px solid ${borderColor}`,
-            borderTop: `1px solid ${borderColor}`,
-            borderRight: `1px solid ${borderColor}`,
-            backgroundColor: "#f9fafb",
           }}
         >
           {columns.map((col) => (
             <div
               key={`hdr-${col.name}`}
+              className={styles.confHeaderCell}
               style={{
                 height: confHeaderHeight,
-                borderRight: `1px solid ${borderColor}`,
-                borderBottom: `1px solid ${borderColor}`,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "flex-start",
                 gap: "4px",
                 padding: "12px 8px 8px 8px",
-                backgroundColor: "#f9fafb",
               }}
             >
               {col.logoUrl ? (
-                <div style={{ marginTop: "-5px" }}>
+                <div className={styles.confLogoWrap} style={{ marginTop: "-5px" }}>
                   <TeamLogo
                     logoUrl={col.logoUrl}
                     teamName={col.name}
                     size={confLogoSize}
+                    showTooltip
                   />
                 </div>
               ) : (
@@ -186,17 +179,16 @@ export default function FootballConferenceBidsTable({
                   style={{
                     width: confLogoSize,
                     height: confLogoSize,
-                    backgroundColor: "#e5e7eb",
-                    borderRadius: "4px",
+                    backgroundColor: "#e2e8f0",
+                    borderRadius: "6px",
                     marginTop: "-5px",
                   }}
                 />
               )}
               <div
+                className={styles.confTeamCount}
                 style={{
                   fontSize: isMobile ? "12px" : "14px",
-                  fontWeight: "400",
-                  color: "#374151",
                   marginTop: "-10px",
                 }}
               >
@@ -209,57 +201,44 @@ export default function FootballConferenceBidsTable({
 
         {/* Playoff Section (header is now the sticky row above) */}
         <div
+          className={styles.sectionGrid}
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
             gap: "0",
-            borderLeft: `1px solid ${borderColor}`,
-            borderRight: `1px solid ${borderColor}`,
-            borderBottom: `1px solid ${borderColor}`,
-            backgroundColor: "#ffffff",
           }}
         >
           {columns.map((col) => (
-            <div
-              key={col.name}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                borderRight: `1px solid ${borderColor}`,
-              }}
-            >
+            <div key={col.name} className={styles.sectionColumn} style={{ display: "flex", flexDirection: "column" }}>
               {/* Playoff Teams */}
               {col.playoffTeams.map((team, idx) => (
                 <div
                   key={`${col.name}-playoff-${team.rank}-${idx}`}
+                  className={styles.teamRow}
                   style={{
                     height: teamRowHeight,
-                    borderBottom: `1px solid ${borderColor}`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "flex-start",
                     gap: "4px",
                     padding: "4px 4px 4px 12px",
-                    backgroundColor: "#ffffff",
                   }}
                 >
                   <Link
-                    href={`/football/team/${encodeURIComponent(
-                      team.team_name
-                    )}`}
-                    className="flex-shrink-0"
+                    href={`/football/team/${encodeURIComponent(team.team_name)}`}
+                    className={styles.teamLogoLink}
                   >
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
                       size={teamLogoSize}
+                      showTooltip
                     />
                   </Link>
                   <div
+                    className={styles.teamRank}
                     style={{
                       fontSize: isMobile ? "12px" : "14px",
-                      fontWeight: "400",
-                      color: "#374151",
                       minWidth: "20px",
                       textAlign: "center",
                     }}
@@ -276,77 +255,59 @@ export default function FootballConferenceBidsTable({
                 }).map((_, idx) => (
                   <div
                     key={`${col.name}-empty-playoff-${idx}`}
-                    style={{
-                      height: teamRowHeight,
-                      borderBottom: `1px solid ${borderColor}`,
-                      backgroundColor: "#f3f4f6",
-                    }}
+                    className={styles.emptyCell}
+                    style={{ height: teamRowHeight }}
                   />
                 ))}
             </div>
           ))}
         </div>
 
-        {/* Global Black Separator Line */}
+        {/* Group separator */}
         <div
-          style={{
-            height: "3px",
-            backgroundColor: "#000000",
-            width: `${numColumns * columnWidth}px`,
-          }}
+          className={styles.groupSeparator}
+          style={{ height: "3px", width: `${numColumns * columnWidth}px` }}
         />
 
         {/* Out-of-Playoff Section (First/Next Four Out) */}
         <div
+          className={styles.sectionGrid}
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
             gap: "0",
-            border: `1px solid ${borderColor}`,
-            borderTop: "none",
-            backgroundColor: "#ffffff",
           }}
         >
           {columns.map((col) => (
-            <div
-              key={`out-${col.name}`}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                borderRight: `1px solid ${borderColor}`,
-              }}
-            >
+            <div key={`out-${col.name}`} className={styles.sectionColumn} style={{ display: "flex", flexDirection: "column" }}>
               {col.outTeams.map(({ team }, idx) => (
                 <div
                   key={`${col.name}-out-${team.position}-${idx}`}
+                  className={styles.teamRow}
                   style={{
                     height: teamRowHeight,
-                    borderBottom: `1px solid ${borderColor}`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "flex-start",
                     gap: "4px",
                     padding: "4px 4px 4px 12px",
-                    backgroundColor: "#ffffff",
                   }}
                 >
                   <Link
-                    href={`/football/team/${encodeURIComponent(
-                      team.team_name
-                    )}`}
-                    className="flex-shrink-0"
+                    href={`/football/team/${encodeURIComponent(team.team_name)}`}
+                    className={styles.teamLogoLink}
                   >
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
                       size={teamLogoSize}
+                      showTooltip
                     />
                   </Link>
                   <div
+                    className={styles.teamRank}
                     style={{
                       fontSize: isMobile ? "12px" : "14px",
-                      fontWeight: "400",
-                      color: "#374151",
                       minWidth: "20px",
                       textAlign: "center",
                     }}
@@ -363,11 +324,8 @@ export default function FootballConferenceBidsTable({
                 }).map((_, idx) => (
                   <div
                     key={`${col.name}-empty-out-${idx}`}
-                    style={{
-                      height: teamRowHeight,
-                      borderBottom: `1px solid ${borderColor}`,
-                      backgroundColor: "#f3f4f6",
-                    }}
+                    className={styles.emptyCell}
+                    style={{ height: teamRowHeight }}
                   />
                 ))}
             </div>
@@ -377,58 +335,44 @@ export default function FootballConferenceBidsTable({
         {/* All-Teams Section (always shown; independent of the top toggle) */}
         {maxOtherRows > 0 && (
           <>
-            {/* Global Black Separator Line */}
             <div
-              style={{
-                height: "3px",
-                backgroundColor: "#000000",
-                width: `${numColumns * columnWidth}px`,
-              }}
+              className={styles.groupSeparator}
+              style={{ height: "3px", width: `${numColumns * columnWidth}px` }}
             />
 
             <div
+              className={styles.sectionGrid}
               style={{
                 display: "grid",
                 gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
                 gap: "0",
-                border: `1px solid ${borderColor}`,
-                borderTop: "none",
-                backgroundColor: "#ffffff",
               }}
             >
               {columns.map((col) => (
-                <div
-                  key={`other-${col.name}`}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    borderRight: `1px solid ${borderColor}`,
-                  }}
-                >
+                <div key={`other-${col.name}`} className={styles.sectionColumn} style={{ display: "flex", flexDirection: "column" }}>
                   {col.otherTeams.map((team, idx) => (
                     <div
                       key={`${col.name}-other-${team.rank}-${idx}`}
+                      className={styles.teamRow}
                       style={{
                         height: teamRowHeight,
-                        borderBottom: `1px solid ${borderColor}`,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "flex-start",
                         gap: "4px",
                         padding: "4px 4px 4px 12px",
-                        backgroundColor: "#ffffff",
                       }}
                     >
                       <TeamLogo
                         logoUrl={team.logo_url}
                         teamName={team.team_name}
                         size={teamLogoSize}
+                        showTooltip
                       />
                       <div
+                        className={styles.teamRank}
                         style={{
                           fontSize: isMobile ? "12px" : "14px",
-                          fontWeight: "400",
-                          color: "#374151",
                           minWidth: "20px",
                           textAlign: "center",
                         }}
@@ -445,11 +389,8 @@ export default function FootballConferenceBidsTable({
                     }).map((_, idx) => (
                       <div
                         key={`${col.name}-empty-other-${idx}`}
-                        style={{
-                          height: teamRowHeight,
-                          borderBottom: `1px solid ${borderColor}`,
-                          backgroundColor: "#f3f4f6",
-                        }}
+                        className={styles.emptyCell}
+                        style={{ height: teamRowHeight }}
                       />
                     ))}
                 </div>
