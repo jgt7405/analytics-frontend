@@ -3,6 +3,8 @@
 import "@/lib/chartjs-setup";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
+import { cn } from "@/lib/utils";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import {
@@ -12,6 +14,11 @@ import {
 } from "chart.js";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+
+// Matches the gradient/border/shadow "card" look used across the
+// modernized Wins/Standings/CWV/etc. pages.
+const CARD_CLASS =
+  "relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
 
 interface TimelineData {
   team_name: string;
@@ -62,6 +69,11 @@ export default function FootballStandingsHistoryChart({
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }, []);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -204,200 +216,58 @@ export default function FootballStandingsHistoryChart({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-standings");
-          if (!tooltipEl) {
-            tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-standings";
-
-            Object.assign(tooltipEl.style, {
-              background: "#ffffff",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              color: "#1f2937",
-              fontFamily: "Inter, system-ui, sans-serif",
-              fontSize: "12px",
-              opacity: "0",
-              padding: "16px",
-              paddingTop: "8px",
-              pointerEvents: "auto",
-              position: "absolute",
-              transition: "all .1s ease",
-              zIndex: "1000",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              minWidth: "200px",
-              maxWidth: "300px",
-            });
-
-            const handleClickOutside = (e: Event) => {
-              if (!tooltipEl?.contains(e.target as Node)) {
-                tooltipEl!.style.opacity = "0";
-                setTimeout(() => {
-                  if (tooltipEl && tooltipEl.parentNode) {
-                    document.removeEventListener("click", handleClickOutside);
-                    document.removeEventListener(
-                      "touchstart",
-                      handleClickOutside
-                    );
-                    document.body.removeChild(tooltipEl);
-                  }
-                }, 100);
-              }
-            };
-
-            document.addEventListener("click", handleClickOutside);
-            document.addEventListener("touchstart", handleClickOutside);
-            document.body.appendChild(tooltipEl);
-          }
-
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
+          let heading = "";
+          let rows: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const displayDate = chartLabels[dataIndex]?.displayLabel;
             const isoDate = chartLabels[dataIndex]?.isoDate;
-
-            const teamsAtDate = filteredTimelineData
+            heading = chartLabels[dataIndex]?.displayLabel ?? "";
+            rows = filteredTimelineData
               .filter((item) => item.date === isoDate)
+              .sort((a, b) => a.avg_standing - b.avg_standing)
               .map((item) => ({
-                name: item.team_name,
-                standing: item.avg_standing,
+                label: item.team_name,
+                value: item.avg_standing.toFixed(1),
                 color: item.team_info.primary_color || "#000000",
-              }))
-              .sort((a, b) => a.standing - b.standing);
-
-            let innerHtml = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div style="font-weight: 600; color: #1f2937;">${displayDate}</div>
-              <button id="tooltip-close" style="
-                background: none;
-                border: none;
-                font-size: 16px;
-                cursor: pointer;
-                color: #6b7280;
-                padding: 0;
-                margin: 0;
-                line-height: 1;
-                width: 20px;
-                height: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              ">&times;</button>
-            </div>
-          `;
-
-            teamsAtDate.forEach((team) => {
-              innerHtml += `<div style="color: ${team.color}; margin: 2px 0; font-weight: 400;">${team.name}: ${team.standing.toFixed(1)}</div>`;
-            });
-
-            tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
-            }
+              }));
           }
 
-          // Smart positioning logic
-          const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
-          const tooltipWidth = tooltipEl.offsetWidth || 200;
-          const caretX = tooltipModel.caretX;
-          const caretY = tooltipModel.caretY;
-
-          const isLeftSide = caretX < chartWidth / 2;
-          let leftPosition: number;
-          let arrowPosition: string;
-
-          if (isLeftSide) {
-            leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
-          } else {
-            leftPosition =
-              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
-          }
-
-          // Add/update arrow
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          } else {
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
-          }
-
-          const maxLeft = window.innerWidth - tooltipWidth - 10;
-          const minLeft = 10;
-          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
-
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.left = leftPosition + "px";
-          tooltipEl.style.top =
-            position.top +
-            window.pageYOffset +
-            caretY -
-            tooltipEl.offsetHeight / 2 +
-            40 +
-            "px";
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "chartjs-tooltip-standings",
+            isDark,
+            heading,
+            rows,
+            verticalOffset: 40,
+          });
         },
       },
     },
     scales: {
       x: {
         title: { display: false },
-        ticks: { maxTicksLimit: isMobile ? 5 : 10 },
+        ticks: {
+          maxTicksLimit: isMobile ? 5 : 10,
+          color: isDark ? "#94a3b8" : "#64748b",
+        },
         grid: { display: false },
       },
       y: {
-        title: { display: true, text: "Average Standing" },
+        title: {
+          display: true,
+          text: "Average Standing",
+          color: isDark ? "#cbd5e1" : "#334155",
+        },
         reverse: true,
         min: 1,
         max: conferenceSize,
         ticks: {
           stepSize: 1,
+          color: isDark ? "#94a3b8" : "#64748b",
           callback: function (value: string | number) {
             return Number(value);
           },
         },
+        grid: { color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)" },
       },
     },
     layout: {
@@ -470,7 +340,7 @@ export default function FootballStandingsHistoryChart({
 
   return (
     <div
-      className="bg-white dark:bg-slate-900 rounded-lg p-4 border relative"
+      className={cn(CARD_CLASS, "p-4")}
       style={{ zIndex: 10, isolation: "isolate" }}
     >
       <div
