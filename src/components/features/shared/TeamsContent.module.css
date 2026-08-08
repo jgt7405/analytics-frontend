@@ -1,0 +1,146 @@
+.card {
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.35rem 1rem;
+}
+
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+:global(.dark) .title {
+  color: #cbd5e1;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  padding: 0 1.35rem 1.35rem;
+}
+
+.grid.mobile {
+  gap: 12px;
+  padding: 0 0.9rem 1.1rem;
+}
+
+.teamCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+}
+
+.teamCard.mobile {
+  padding: 8px;
+}
+
+:global(.dark) .teamCard {
+  background: #1e293b;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 0.3);
+}
+
+.teamCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+
+.teamName {
+  margin: 10px 0 5px 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.teamName.mobile {
+  margin: 8px 0 4px 0;
+  font-size: 12px;
+}
+
+:global(.dark) .teamName {
+  color: #f1f5f9;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.statRow.mobile {
+  margin-top: 4px;
+}
+
+.statCell {
+  text-align: center;
+  margin: 0 2px 2px 2px;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.statLabel.mobile {
+  font-size: 10px;
+}
+
+.statValue {
+  font-size: 12px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.statValue.mobile {
+  font-size: 11px;
+}
+
+:global(.dark) .statValue {
+  color: #f1f5f9;
+}

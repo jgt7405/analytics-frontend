@@ -16,6 +16,10 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import styles from "./TeamsContent.module.css";
+
+const cx = (...classes: Array<string | false | undefined>) =>
+  classes.filter(Boolean).join(" ");
 
 export interface TeamsApiRow {
   team_name: string;
@@ -38,6 +42,13 @@ export interface TeamsContentConfig {
   /** Extract the bid percentage (0-100) from an API row. */
   getBidPct: (row: TeamsApiRow) => number | undefined;
   title: string;
+  /**
+   * Hide PageLayoutWrapper's gray page-level title in favor of the bold
+   * title rendered in this component's own card header. Only set this on
+   * the football config (see PAGE_MODERNIZATION_GUIDE.md) - basketball is
+   * left on the old page-level title until it gets the same treatment.
+   */
+  hidePageTitle?: boolean;
 }
 
 interface Team {
@@ -74,11 +85,6 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
   const [teamsData, setTeamsData] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-  }, []);
 
   useEffect(() => {
     trackEvent({
@@ -180,22 +186,11 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
   };
 
   const statCell = (label: string, value: string) => (
-    <div style={{ textAlign: "center", margin: "0 2px 2px 2px" }}>
-      <div
-        style={{
-          fontSize: isMobile ? "10px" : "11px",
-          color: "#9ca3af",
-        }}
-      >
+    <div className={styles.statCell}>
+      <div className={cx(styles.statLabel, isMobile && styles.mobile)}>
         {label}
       </div>
-      <div
-        style={{
-          fontSize: isMobile ? "11px" : "12px",
-          fontWeight: "bold",
-          color: isDark ? "#f1f5f9" : "#1f2937",
-        }}
-      >
+      <div className={cx(styles.statValue, isMobile && styles.mobile)}>
         {value}
       </div>
     </div>
@@ -204,27 +199,7 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
   const TeamCard = ({ team }: { team: Team }) => (
     <a
       href={teamHref(team.team_name)}
-      className="bg-white dark:bg-slate-800 rounded-lg cursor-pointer transition duration-200 h-full"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: isMobile ? "8px" : "12px",
-        boxShadow: isDark
-          ? "0 2px 5px rgba(0,0,0,0.3)"
-          : "0 2px 5px rgba(0,0,0,0.1)",
-        transition: "transform 0.2s, box-shadow 0.2s",
-        textDecoration: "none",
-        color: "inherit",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "0 2px 5px rgba(0,0,0,0.1)";
-      }}
+      className={cx(styles.teamCard, isMobile && styles.mobile)}
     >
       <TeamLogo
         logoUrl={team.logo_url}
@@ -232,28 +207,11 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
         size={isMobile ? 36 : 48}
       />
 
-      <h3
-        style={{
-          margin: isMobile ? "8px 0 4px 0" : "10px 0 5px 0",
-          textAlign: "center",
-          fontSize: isMobile ? "12px" : "14px",
-          fontWeight: "600",
-          color: isDark ? "#f1f5f9" : "#1f2937",
-          lineHeight: "1.2",
-        }}
-      >
+      <h3 className={cx(styles.teamName, isMobile && styles.mobile)}>
         {team.team_name}
       </h3>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-around",
-          width: "100%",
-          marginTop: isMobile ? "4px" : "6px",
-          flexWrap: "wrap",
-        }}
-      >
+      <div className={cx(styles.statRow, isMobile && styles.mobile)}>
         {statCell(
           "Overall",
           `${team.actual_total_wins}-${team.actual_total_losses}`,
@@ -267,21 +225,76 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
     </a>
   );
 
+  const conferenceSelectorNode = (
+    <ConferenceSelector
+      conferences={availableConferences}
+      selectedConference={selectedConference}
+      onChange={handleConferenceChange}
+      inline={config.hidePageTitle}
+    />
+  );
+
+  const grid = (
+    <div
+      className={cx(styles.grid, isMobile && styles.mobile)}
+      style={{
+        gridTemplateColumns: isMobile
+          ? "repeat(auto-fill, minmax(140px, 1fr))"
+          : "repeat(auto-fill, minmax(180px, 1fr))",
+      }}
+    >
+      {teamsData.map((team) => (
+        <TeamCard key={team.team_name} team={team} />
+      ))}
+    </div>
+  );
+
+  // Football's config hides PageLayoutWrapper's gray title in favor of a
+  // bold title in the card header, matching the modernized football pages.
+  // Basketball is left on the old undecorated layout until it gets the
+  // same treatment deliberately - see PAGE_MODERNIZATION_GUIDE.md.
+  const body = config.hidePageTitle ? (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
+          <h2 className={styles.title}>{config.title}</h2>
+        </div>
+        <div data-screenshot-hide="true">{conferenceSelectorNode}</div>
+      </div>
+      {loading ? <LoadingSpinner /> : grid}
+    </div>
+  ) : (
+    <div className="w-full">{loading ? <LoadingSpinner /> : grid}</div>
+  );
+
   if (error) {
+    const errorBody = config.hidePageTitle ? (
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div className={styles.titleGroup} data-screenshot-hide="true">
+            <h2 className={styles.title}>{config.title}</h2>
+          </div>
+          <div data-screenshot-hide="true">{conferenceSelectorNode}</div>
+        </div>
+        <div style={{ padding: "0 1.35rem 1.35rem" }}>
+          <ErrorMessage message={error} />
+        </div>
+      </div>
+    ) : (
+      <ErrorMessage message={error} />
+    );
+
     return (
       <ErrorBoundary level="page">
         <PageLayoutWrapper
           title={config.title}
           conferenceSelector={
-            <ConferenceSelector
-              conferences={availableConferences}
-              selectedConference={selectedConference}
-              onChange={handleConferenceChange}
-            />
+            config.hidePageTitle ? undefined : conferenceSelectorNode
           }
+          hideTitle={config.hidePageTitle}
           isLoading={false}
         >
-          <ErrorMessage message={error} />
+          {errorBody}
         </PageLayoutWrapper>
       </ErrorBoundary>
     );
@@ -292,34 +305,12 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
       <PageLayoutWrapper
         title={config.title}
         conferenceSelector={
-          <ConferenceSelector
-            conferences={availableConferences}
-            selectedConference={selectedConference}
-            onChange={handleConferenceChange}
-          />
+          config.hidePageTitle ? undefined : conferenceSelectorNode
         }
+        hideTitle={config.hidePageTitle}
         isLoading={loading}
       >
-        <div className="w-full">
-          {loading ? (
-            <LoadingSpinner />
-          ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile
-                  ? "repeat(auto-fill, minmax(140px, 1fr))"
-                  : "repeat(auto-fill, minmax(180px, 1fr))",
-                gap: isMobile ? "12px" : "16px",
-                padding: isMobile ? "8px" : "12px",
-              }}
-            >
-              {teamsData.map((team) => (
-                <TeamCard key={team.team_name} team={team} />
-              ))}
-            </div>
-          )}
-        </div>
+        {body}
       </PageLayoutWrapper>
     </ErrorBoundary>
   );

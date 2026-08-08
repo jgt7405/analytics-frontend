@@ -16,6 +16,7 @@ const FOOTBALL_TEAMS: TeamsContentConfig = {
   getBidPct: (row) =>
     typeof row.cfp_bid_pct === "number" ? row.cfp_bid_pct : undefined,
   title: "Football Teams",
+  hidePageTitle: true,
 };
 
 export default function FootballTeamsContent(props: { season?: string }) {
