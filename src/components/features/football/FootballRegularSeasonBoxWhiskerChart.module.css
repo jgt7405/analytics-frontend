@@ -8,31 +8,6 @@
     0 8px 22px -18px rgb(15 23 42 / 0.24);
 }
 
-.cardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1.25rem 1.35rem 1rem;
-}
-
-.titleGroup {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.title {
-  margin: 0;
-  color: #334155;
-  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
-  white-space: nowrap;
-}
-
 .scrollViewport {
   position: relative;
   overflow-x: auto;
@@ -45,6 +20,13 @@
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
+}
+
+/* This chart has no card title of its own - the page already shows an
+   external heading above it - so this stands in for the missing header's
+   top padding to keep the same breathing room before the chart starts. */
+.scrollViewportNoHeader {
+  padding-top: 1.1rem;
 }
 
 .scrollViewport::-webkit-scrollbar {
@@ -118,6 +100,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.sag12Marker {
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+}
+
 .teamNameWrap {
   display: flex;
   align-items: flex-start;
@@ -189,10 +177,6 @@
     inset 0 1px 0 rgb(255 255 255 / 0.025);
 }
 
-:global(.dark) .title {
-  color: #cbd5e1;
-}
-
 :global(.dark) .yAxisLabel {
   color: #94a3b8;
 }
@@ -220,23 +204,12 @@
 }
 
 @media (max-width: 767px) {
-  .cardHeader {
-    align-items: flex-start;
-    padding: 1rem 0.9rem 0.7rem;
-  }
-
-  .titleGroup {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.45rem;
-  }
-
-  .title {
-    font-size: 1.25rem;
-  }
-
   .scrollViewport {
     padding: 0.4rem 0.5rem 0.8rem 0;
+  }
+
+  .scrollViewportNoHeader {
+    padding-top: 0.9rem;
   }
 }
 
