@@ -423,7 +423,7 @@ function FootballCFPProb({
                 <td
                   className={cn(
                     styles.rankCell,
-                    !isScreenshotMode && styles.stickyCell,
+                    !isScreenshotMode && styles.stickyBodyCell,
                     isMobile ? "text-xs" : "text-sm",
                   )}
                   style={{
@@ -441,7 +441,7 @@ function FootballCFPProb({
                 <td
                   className={cn(
                     styles.teamCell,
-                    !isScreenshotMode && styles.stickyCell,
+                    !isScreenshotMode && styles.stickyBodyCell,
                     isMobile ? "text-xs" : "text-sm",
                   )}
                   style={{

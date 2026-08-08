@@ -1,6 +1,5 @@
 .card {
   position: relative;
-  overflow: hidden;
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 1.25rem;
   background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
@@ -59,7 +58,11 @@
   position: relative;
   overflow: auto;
   max-height: 78vh;
-  padding: 0 0.9rem 1rem;
+  /* No left padding: the sticky rank column sits at left: 0 of this
+     container's content box, so any left padding here would leave an
+     unsticky gap that scrolled rows could show through as they pass
+     underneath. */
+  padding: 0 0.9rem 1rem 0;
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -175,13 +178,34 @@
 }
 
 /* Rank/team columns share the white background + shadow-seam treatment
-   as the other tables. Declared after .headerCell/.colHeaderCell so its
-   z-index wins on the sticky top-left corner cells, which carry both
+   as the other tables. Used in <thead> only (row 1's "#"/"Team" cells and
+   row 2's placeholder cells beneath them) - z-index 40 beats both
+   .headerCell (25) and .stickyBodyCell (15) so the header stays on top
+   of scrolled rows in every direction. Declared after .headerCell/
+   .colHeaderCell so it wins the z-index cascade on cells that carry both
    classes. */
 .stickyCell {
   --sticky-bg: #ffffff;
   position: sticky;
   z-index: 40;
+  background: var(--sticky-bg);
+  background-clip: border-box;
+  box-shadow:
+    0 0 0 3px var(--sticky-bg),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  isolation: isolate;
+}
+
+/* Same treatment for <tbody> rank/team cells, but a lower z-index (15,
+   below .headerCell's 25) so the sticky header row still paints over
+   these as the body scrolls up underneath it - otherwise the left-sticky
+   column (also position: sticky) wins the numeric z-index comparison
+   regardless of which axis each is stuck on, and rows bleed above the
+   header. */
+.stickyBodyCell {
+  --sticky-bg: #ffffff;
+  position: sticky;
+  z-index: 15;
   background: var(--sticky-bg);
   background-clip: border-box;
   box-shadow:
@@ -223,7 +247,8 @@
   background: #1e3a4a;
 }
 
-:global(.dark) .stickyCell {
+:global(.dark) .stickyCell,
+:global(.dark) .stickyBodyCell {
   --sticky-bg: #111827;
   color: #cbd5e1;
 }
@@ -258,7 +283,7 @@
   }
 
   .scrollViewport {
-    padding: 0 0.5rem 0.8rem;
+    padding: 0 0.5rem 0.8rem 0;
     max-height: 72vh;
   }
 

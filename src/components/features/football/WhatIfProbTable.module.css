@@ -92,15 +92,35 @@
   margin-top: 0.15rem;
 }
 
-/* Rank/team columns and the header row share the same white background +
-   shadow-seam treatment as the other tables, instead of the flat 1px
-   grid-line borders this table used to draw manually. Declared after
-   .headerCell so its z-index wins on the sticky top-left corner cells,
-   which carry both classes. */
+/* Rank/team header cells share the same white background + shadow-seam
+   treatment as the other tables, instead of the flat 1px grid-line
+   borders this table used to draw manually. z-index 40 beats both
+   .headerCell (25) and .stickyBodyCell (15) so the header stays on top
+   of scrolled rows in every direction. Declared after .headerCell so it
+   wins the z-index cascade on the sticky top-left corner cell, which
+   carries both classes. */
 .stickyCell {
   --sticky-bg: #ffffff;
   position: sticky;
   z-index: 40;
+  background: var(--sticky-bg);
+  background-clip: border-box;
+  box-shadow:
+    0 0 0 3px var(--sticky-bg),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  isolation: isolate;
+}
+
+/* Same treatment for the rank/team <td> cells, but a lower z-index (15,
+   below .headerCell's 25) so the sticky header row still paints over
+   these as the body scrolls up underneath it - otherwise the left-sticky
+   column (also position: sticky) wins the numeric z-index comparison
+   regardless of which axis each is stuck on, and rows bleed above the
+   header. */
+.stickyBodyCell {
+  --sticky-bg: #ffffff;
+  position: sticky;
+  z-index: 15;
   background: var(--sticky-bg);
   background-clip: border-box;
   box-shadow:
@@ -139,7 +159,8 @@
     inset 0 1px 0 rgb(255 255 255 / 0.025);
 }
 
-:global(.dark) .stickyCell {
+:global(.dark) .stickyCell,
+:global(.dark) .stickyBodyCell {
   --sticky-bg: #111827;
   color: #cbd5e1;
 }

@@ -270,7 +270,6 @@ function FootballSeedTable({
             <tr>
               {/* Rank Column */}
               <th
-                rowSpan={2}
                 className={cn(styles.headerCell, styles.stickyCell, isMobile ? "text-xs" : "text-sm")}
                 style={{
                   width: rankColWidth,
@@ -285,7 +284,6 @@ function FootballSeedTable({
 
               {/* Team Column */}
               <th
-                rowSpan={2}
                 className={cn(
                   styles.headerCell,
                   styles.stickyCell,
@@ -331,6 +329,33 @@ function FootballSeedTable({
 
             {/* Second header row - individual column headers */}
             <tr>
+              {/* Rank column placeholder - rowSpan on a sticky <th> doesn't
+                  reliably stick across browsers, so the rank/team headers
+                  are two real per-row cells instead; this one just extends
+                  the sticky white background under row 1's "#" header. */}
+              <th
+                className={styles.stickyCell}
+                style={{
+                  width: rankColWidth,
+                  minWidth: rankColWidth,
+                  maxWidth: rankColWidth,
+                  height: headerHeight,
+                  left: 0,
+                }}
+              />
+
+              {/* Team column placeholder - see rank column note above. */}
+              <th
+                className={styles.stickyCell}
+                style={{
+                  width: firstColWidth,
+                  minWidth: firstColWidth,
+                  maxWidth: firstColWidth,
+                  height: headerHeight,
+                  left: rankColWidth,
+                }}
+              />
+
               {/* Average Seed Column - Clickable */}
               <th
                 className={cn(
@@ -523,7 +548,7 @@ function FootballSeedTable({
                   <td
                     className={cn(
                       styles.rankCell,
-                      styles.stickyCell,
+                      styles.stickyBodyCell,
                       isMobile ? "text-xs" : "text-sm",
                     )}
                     style={{
@@ -541,7 +566,7 @@ function FootballSeedTable({
                   <td
                     className={cn(
                       styles.teamCell,
-                      styles.stickyCell,
+                      styles.stickyBodyCell,
                       isMobile ? "text-xs" : "text-sm",
                     )}
                     style={{
