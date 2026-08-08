@@ -363,6 +363,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         width: lineThickness,
                         backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - lineThickness) / 2,
+                        borderRadius: 999,
                       }}
                     />
                     {/* Top whisker */}
@@ -374,6 +375,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         height: lineThickness,
                         backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - whiskerWidth) / 2,
+                        borderRadius: 999,
                       }}
                     />
                     {/* Bottom whisker */}
@@ -385,6 +387,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         height: lineThickness,
                         backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - whiskerWidth) / 2,
+                        borderRadius: 999,
                       }}
                     />
                     {/* Box (Q1 to Q3) — only when there are enough teams
@@ -398,6 +401,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                           width: boxWidth,
                           backgroundColor: primaryColor,
                           border: `${lineThickness}px solid ${adjustColorIfWhite(rawSecondaryColor)}`,
+                          borderRadius: 5,
                         }}
                       />
                     )}
@@ -410,6 +414,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
                         height: lineThickness,
                         backgroundColor: rawSecondaryColor,
                         left: hasBox ? 0 : (boxWidth - whiskerWidth) / 2,
+                        borderRadius: 999,
                       }}
                     />
                     {/* Conference logo */}
