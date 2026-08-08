@@ -76,7 +76,7 @@
   min-width: 0;
   table-layout: fixed;
   border-collapse: separate;
-  border-spacing: 0 1px;
+  border-spacing: 1px;
   color: #0f172a;
   font-variant-numeric: tabular-nums;
 }
@@ -175,9 +175,17 @@
   height: 100%;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
   border-radius: 3px;
   font-size: 0.9rem;
   font-weight: 650;
+  transition: border-color 150ms ease;
+}
+
+.heatTile:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
 }
 
 :global(.dark) .card {
