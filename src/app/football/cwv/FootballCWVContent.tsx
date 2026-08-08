@@ -14,6 +14,7 @@ type FootballCWVData = FootballCWVApiResponse["data"];
 
 const FOOTBALL_CWV: CWVContentConfig<FootballCWVData> = {
   pageId: "football-cwv",
+  tableTitle: "Conference Win Value (CWV)",
   excludeConferences: ["Independent"],
   useCWVData: useFootballCWV,
   CWVTable,

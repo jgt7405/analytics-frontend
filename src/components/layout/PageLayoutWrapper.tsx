@@ -11,6 +11,13 @@ interface PageLayoutWrapperProps {
   rightElement?: ReactNode;
   isLoading: boolean;
   children: ReactNode;
+  /**
+   * Hides the page-level gray title. Use when the page's own content
+   * already has an equivalent bold title, so the two don't stack (the
+   * title is still passed for the screenshot/share header text - this
+   * only suppresses the on-page heading).
+   */
+  hideTitle?: boolean;
 }
 
 export default function PageLayoutWrapper({
@@ -20,6 +27,7 @@ export default function PageLayoutWrapper({
   rightElement,
   isLoading,
   children,
+  hideTitle = false,
 }: PageLayoutWrapperProps) {
   return (
     <>
@@ -34,19 +42,27 @@ export default function PageLayoutWrapper({
             </>
           ) : (
             <>
-              <div className="flex justify-between items-baseline mb-4">
-                <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200">
-                  {title}
-                  {subtitle && (
-                    <span className="text-base ml-2 text-gray-500 dark:text-gray-300">
-                      {subtitle}
-                    </span>
+              {hideTitle ? (
+                rightElement && (
+                  <div className="flex justify-end items-baseline mb-4">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{rightElement}</div>
+                  </div>
+                )
+              ) : (
+                <div className="flex justify-between items-baseline mb-4">
+                  <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200">
+                    {title}
+                    {subtitle && (
+                      <span className="text-base ml-2 text-gray-500 dark:text-gray-300">
+                        {subtitle}
+                      </span>
+                    )}
+                  </h1>
+                  {rightElement && (
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{rightElement}</div>
                   )}
-                </h1>
-                {rightElement && (
-                  <div className="text-sm text-gray-600 dark:text-gray-300">{rightElement}</div>
-                )}
-              </div>
+                </div>
+              )}
               {conferenceSelector && (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
                   {conferenceSelector}

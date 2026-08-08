@@ -38,6 +38,12 @@ export interface ScheduleContentConfig<TGame, TSummary> {
   sport: string;
   /** Tracking page id (e.g. "basketball-schedule"). */
   pageId: string;
+  /**
+   * Hides the page-level gray title. Set when the schedule table below
+   * already renders its own bold card title, so the page doesn't show two
+   * stacked titles for the same content.
+   */
+  hidePageTitle?: boolean;
   /** Conferences to hide in the selector (e.g. football hides Independent). */
   excludeConferences?: string[];
   useScheduleData: (
@@ -230,6 +236,7 @@ export default function ScheduleContent<TGame, TSummary>({
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="Team Schedules"
+          hideTitle={config.hidePageTitle}
           conferenceSelector={conferenceSelector}
           isLoading={false}
         >
@@ -247,6 +254,7 @@ export default function ScheduleContent<TGame, TSummary>({
     return (
       <PageLayoutWrapper
         title="Team Schedules"
+        hideTitle={config.hidePageTitle}
         conferenceSelector={conferenceSelector}
         isLoading={false}
       >
@@ -276,6 +284,7 @@ export default function ScheduleContent<TGame, TSummary>({
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title="Team Schedules"
+        hideTitle={config.hidePageTitle}
         conferenceSelector={conferenceSelector}
         isLoading={scheduleLoading}
       >
@@ -372,7 +381,7 @@ export default function ScheduleContent<TGame, TSummary>({
                 Object.keys(scheduleResponse.summary).length > 0 && (
                   <ErrorBoundary level="component" onRetry={() => refetch()}>
                     <div className="mb-8">
-                      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
+                      <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
                         Schedule Difficulty Summary{" "}
                         <span className="text-base">(By Quartile)</span>
                       </h1>

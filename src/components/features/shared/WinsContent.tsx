@@ -38,6 +38,12 @@ export interface WinsContentConfig<TTeam> {
   /** "basketball" | "football" — drives tracking names and season pathnames. */
   sport: string;
   /**
+   * Hides the page-level gray title. Set when the chart/table below already
+   * render their own bold card titles, so the page doesn't show two stacked
+   * titles for the same content.
+   */
+  hidePageTitle?: boolean;
+  /**
    * Normalize the initial ?conf= URL value on first render (e.g. validate it
    * against a known-conference list). Omit to accept the URL value as-is.
    * useConferenceUrl still re-validates against live data after mount.
@@ -270,7 +276,7 @@ export default function WinsContent<TTeam>({
   ) => (
     <div className="mb-8">
       {heading && (
-        <h1 className="text-2xl font-normal text-gray-600 dark:text-gray-200 mb-4">
+        <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
           {heading}
         </h1>
       )}
@@ -301,6 +307,7 @@ export default function WinsContent<TTeam>({
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="Projected Conference Wins"
+          hideTitle={config.hidePageTitle}
           conferenceSelector={
             <ConferenceSelector
               conferences={availableConferences}
@@ -325,6 +332,7 @@ export default function WinsContent<TTeam>({
     return (
       <PageLayoutWrapper
         title="Projected Conference Wins"
+        hideTitle={config.hidePageTitle}
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}
@@ -358,6 +366,7 @@ export default function WinsContent<TTeam>({
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title="Projected Conference Wins"
+        hideTitle={config.hidePageTitle}
         conferenceSelector={
           <ConferenceSelector
             conferences={availableConferences}

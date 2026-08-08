@@ -15,6 +15,7 @@ type Summary = FootballScheduleResponse["summary"][string];
 
 const FOOTBALL_SCHEDULE: ScheduleContentConfig<Game, Summary> = {
   sport: "football",
+  hidePageTitle: true,
   pageId: "football-schedule",
   excludeConferences: ["Independent"],
   useScheduleData: useFootballSchedule,

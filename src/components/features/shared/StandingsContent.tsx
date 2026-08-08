@@ -47,6 +47,12 @@ export interface StandingsContentConfig<
 > {
   /** "basketball" | "football" — used in copy only; tracking uses pageId. */
   sport: string;
+  /**
+   * Hides the page-level gray title. Set when the tables below already
+   * render their own bold card titles, so the page doesn't show two stacked
+   * titles for the same content.
+   */
+  hidePageTitle?: boolean;
   /** Tracking page id (kept per-sport for analytics continuity). */
   pageId: string;
   /** Validate the initial ?conf= URL value; omit to accept it as-is. */
@@ -333,7 +339,7 @@ export default function StandingsContent<
     <ErrorBoundary level="component" onRetry={() => refetch()}>
       <div className="mb-8">
         {heading && (
-          <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
+          <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
             {heading}
           </h1>
         )}
@@ -364,6 +370,7 @@ export default function StandingsContent<
         <PageLayoutWrapper
           title="Projected Conference Standings"
           subtitle="(Including Ties)"
+          hideTitle={config.hidePageTitle}
           conferenceSelector={conferenceSelector}
           isLoading={false}
         >
@@ -382,6 +389,7 @@ export default function StandingsContent<
       <PageLayoutWrapper
         title="Projected Conference Standings"
         subtitle="(Including Ties)"
+        hideTitle={config.hidePageTitle}
         conferenceSelector={conferenceSelector}
         isLoading={false}
       >
@@ -419,6 +427,7 @@ export default function StandingsContent<
       <PageLayoutWrapper
         title="Projected Conference Standings"
         subtitle="(Including Ties)"
+        hideTitle={config.hidePageTitle}
         conferenceSelector={conferenceSelector}
         isLoading={standingsLoading}
       >

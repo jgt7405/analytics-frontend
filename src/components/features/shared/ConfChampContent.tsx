@@ -43,6 +43,12 @@ export interface ConfChampContentConfig<TData, THistory> {
   /** Tracking page id ("conf-tourney" | "football-conf-champ"). */
   pageId: string;
   title: string;
+  /**
+   * Hides the page-level gray title. Set when the table below already
+   * renders its own bold card title, so the page doesn't show two stacked
+   * titles for the same content.
+   */
+  hidePageTitle?: boolean;
   tableClass: string;
   skeletonTeamCols: number;
   excludeConferences?: string[];
@@ -264,7 +270,7 @@ export default function ConfChampContent<TData, THistory>({
     <ErrorBoundary level="component" key={containerClass}>
       <div className="mb-8">
         {heading && (
-          <h1 className="text-xl font-normal text-gray-500 dark:text-gray-200 mb-4">
+          <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
             {heading}
           </h1>
         )}
@@ -294,6 +300,7 @@ export default function ConfChampContent<TData, THistory>({
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title={config.title}
+          hideTitle={config.hidePageTitle}
           isLoading={false}
           conferenceSelector={conferenceSelector}
         >
@@ -311,6 +318,7 @@ export default function ConfChampContent<TData, THistory>({
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title={config.title}
+        hideTitle={config.hidePageTitle}
         isLoading={champLoading}
         conferenceSelector={conferenceSelector}
       >

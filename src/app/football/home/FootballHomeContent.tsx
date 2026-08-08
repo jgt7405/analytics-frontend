@@ -108,6 +108,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
             ? "College Football Playoff — Current Snapshot"
             : "College Football Playoff Projections"
         }
+        hideTitle
         isLoading={isLoading}
         rightElement={isMobile ? undefined : `Updated: ${lastUpdated}`}
       >
@@ -115,6 +116,11 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
           {/* CFP Bracket Table Section */}
           <ErrorBoundary level="component">
             <div className="mb-8">
+              <h2 className="mb-3 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+                {mode === "current"
+                  ? "College Football Playoff — Current Snapshot"
+                  : "College Football Playoff Projections"}
+              </h2>
               {/* Mobile: the header's "Updated" date and the absolutely
                   positioned desktop toggles don't fit, so render the date and
                   controls here in normal flow above the chart. */}

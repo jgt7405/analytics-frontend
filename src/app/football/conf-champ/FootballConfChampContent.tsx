@@ -40,6 +40,7 @@ const filterHistory = (history: History, season: string): History => {
 const FOOTBALL_CONF_CHAMP: ConfChampContentConfig<ChampData, History> = {
   pageId: "football-conf-champ",
   title: "Conference Championship Projections",
+  hidePageTitle: true,
   tableClass: "conf-champ-table",
   skeletonTeamCols: 3,
   excludeConferences: ["Independent"],

@@ -74,6 +74,7 @@ const FOOTBALL_STANDINGS: StandingsContentConfig<
   FirstPlaceItem
 > = {
   sport: "football",
+  hidePageTitle: true,
   pageId: "football-standings",
   excludeConferences: ["Independent"],
   useStandingsData: useFootballStandings,

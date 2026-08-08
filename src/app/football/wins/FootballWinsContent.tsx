@@ -41,6 +41,7 @@ const SIM_BLURB =
 
 const FOOTBALL_WINS: WinsContentConfig<FootballStanding> = {
   sport: "football",
+  hidePageTitle: true,
   useStandingsData: useFootballStandings,
   ConferenceChart: FootballBoxWhiskerChart,
   conferenceChartTitle: "Projected Conference Wins Distribution",

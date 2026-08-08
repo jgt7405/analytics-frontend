@@ -26,6 +26,12 @@ export interface CWVContentConfig<TData extends { teams?: unknown[] }> {
   excludeConferences?: string[];
   /** Override the default explainer lines shown below the table. */
   explainerLines?: string[];
+  /**
+   * Bold card title rendered above the table. When set, the page-level gray
+   * title is hidden so only this one shows (avoids stacked duplicate titles).
+   * Omit to keep the previous page-level-title-only behavior.
+   */
+  tableTitle?: string;
   useCWVData: (
     conference: string,
     season?: string,
@@ -203,6 +209,7 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="Conference Win Value (CWV)"
+          hideTitle={!!config.tableTitle}
           conferenceSelector={conferenceSelector}
           isLoading={false}
         >
@@ -220,6 +227,7 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
     return (
       <PageLayoutWrapper
         title="Conference Win Value (CWV)"
+        hideTitle={!!config.tableTitle}
         conferenceSelector={conferenceSelector}
         isLoading={false}
       >
@@ -245,6 +253,7 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title="Conference Win Value (CWV)"
+        hideTitle={!!config.tableTitle}
         conferenceSelector={conferenceSelector}
         isLoading={cwvLoading}
       >
@@ -254,6 +263,11 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
           ) : (
             <ErrorBoundary level="component">
               <div className="mb-8">
+                {config.tableTitle && (
+                  <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
+                    {config.tableTitle}
+                  </h1>
+                )}
                 <div className="cwv-table">
                   <Suspense fallback={tableSkeleton}>
                     {cwvResponse?.data && (

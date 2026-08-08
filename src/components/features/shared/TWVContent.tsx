@@ -39,6 +39,12 @@ export interface TWVContentConfig<TTeam> {
   }>;
   /** Explainer paragraphs (the TWV benchmark team differs per sport). */
   explainerLines: string[];
+  /**
+   * Bold card title rendered above the table. When set, the page-level gray
+   * title is hidden so only this one shows (avoids stacked duplicate titles).
+   * Omit to keep the previous page-level-title-only behavior.
+   */
+  tableTitle?: string;
 }
 
 interface TWVContentProps<TTeam> {
@@ -198,6 +204,7 @@ export default function TWVContent<TTeam>({
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="True Win Value (TWV)"
+          hideTitle={!!config.tableTitle}
           conferenceSelector={conferenceSelector}
           isLoading={false}
         >
@@ -215,6 +222,7 @@ export default function TWVContent<TTeam>({
     return (
       <PageLayoutWrapper
         title="True Win Value (TWV)"
+        hideTitle={!!config.tableTitle}
         conferenceSelector={conferenceSelector}
         isLoading={false}
       >
@@ -242,6 +250,7 @@ export default function TWVContent<TTeam>({
     <ErrorBoundary level="page" onRetry={() => refetch()}>
       <PageLayoutWrapper
         title="True Win Value (TWV)"
+        hideTitle={!!config.tableTitle}
         conferenceSelector={conferenceSelector}
         isLoading={twvLoading}
       >
@@ -251,6 +260,11 @@ export default function TWVContent<TTeam>({
           ) : (
             <ErrorBoundary level="component">
               <div className="mb-8">
+                {config.tableTitle && (
+                  <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
+                    {config.tableTitle}
+                  </h1>
+                )}
                 <div className="twv-table">
                   <Suspense fallback={tableSkeleton}>
                     {twvResponse?.data && (
