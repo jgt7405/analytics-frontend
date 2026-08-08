@@ -239,9 +239,20 @@ Found on the Seed table's two-row header (`rowSpan={2}` on the "#"/"Team"
 cells) — the plain `colSpan` group headers on the same row stayed pinned
 correctly, but the `rowSpan` cells scrolled away. Fix: don't rowSpan a
 sticky cell. Split it into two real per-row cells instead — row 1 gets the
-label, row 2 gets a blank cell with the same sticky-left styling (no
-sticky-top needed if row 2 isn't itself a sticky row) just to keep the
-white background/shadow-seam continuous underneath row 1.
+label, row 2 gets a blank cell with the same sticky-left styling underneath
+it.
+
+If **both** header rows need to stay pinned (not just row 1 — the Seed
+table's row 2 sortable column headers were initially left non-sticky to
+match old pre-modernization behavior, then made sticky too on request), give
+row 2's cells `position: sticky` with `top` set **inline per-instance** to
+row 1's actual rendered height (`top: headerHeight`, a JS variable — it
+can't be a fixed CSS value since header height differs mobile vs desktop).
+The row-2 blank rank/team placeholder cells need the same inline `top` so
+they stay part of the pinned block instead of scrolling away independently.
+z-index for row 2 only needs to beat the scrolled body's `.stickyBodyCell`
+(see §6c) — it doesn't need to beat row 1's z-index, since the two rows are
+vertically adjacent, not overlapping.
 
 **c. A left-sticky body cell can out-z-index a top-sticky header cell.**
 `z-index` comparisons for `position: sticky` elements are purely numeric —
