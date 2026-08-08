@@ -2,10 +2,11 @@
 
 import { BoxWhiskerChartSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useResponsive } from "@/hooks/useResponsive";
-import { components, layout } from "@/lib/design-system";
+import { layout } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import styles from "./ConferenceSagarinBoxWhiskerChart.module.css";
 
 interface ConferenceData {
   conference_name: string;
@@ -26,6 +27,8 @@ interface ConferenceData {
 interface ConferenceSagarinBoxWhiskerChartProps {
   conferenceData: ConferenceData[];
   className?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the title row. */
+  headerRight?: ReactNode;
 }
 
 function ConferenceLogo({
@@ -89,6 +92,7 @@ function calculateWinProbability(
 export default function ConferenceSagarinBoxWhiskerChart({
   conferenceData,
   className = "",
+  headerRight,
 }: ConferenceSagarinBoxWhiskerChartProps) {
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
@@ -248,7 +252,13 @@ export default function ConferenceSagarinBoxWhiskerChart({
     10;
 
   return (
-    <div className={cn(components.table.container, "bg-white dark:bg-slate-900", className)}>
+    <div className={cn(styles.card, className)}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
+          <h2 className={styles.title}>Conference Win Probability vs Average Team</h2>
+        </div>
+        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+      </div>
       <div className="relative">
         {/* Fixed Y-axis outside scroll container */}
         <div
@@ -285,7 +295,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
         </div>
 
         {/* Scrollable chart area */}
-        <div className="overflow-x-auto">
+        <div className={styles.scrollViewport}>
           <div
             className="relative"
             style={{

@@ -43,6 +43,7 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="Conference CFP Bid Projections"
+          hideTitle
           isLoading={false}
         >
           <ErrorMessage
@@ -58,6 +59,7 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
   return (
     <PageLayoutWrapper
       title="Conference CFP Bid Projections"
+      hideTitle
       isLoading={confLoading}
     >
       <ErrorBoundary level="component" onRetry={() => refetch()}>
@@ -131,9 +133,6 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
             </div>
 
             <div className="mb-8">
-              <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
-                Conference Win Probability vs Average Team
-              </h3>
               <div className="sagarin-box-whisker-container">
                 <Suspense fallback={<BoxWhiskerChartSkeleton />}>
                   {confResponse?.data && (
@@ -174,7 +173,7 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
 
             {historyData && (
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
+                <h3 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
                   Conference CFP Bid Trends Over Time
                 </h3>
                 <div className="conf-bids-history-container">

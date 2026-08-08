@@ -4,9 +4,9 @@
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import Image from "next/image";
-import { memo, useMemo } from "react";
+import { memo, ReactNode, useMemo } from "react";
+import styles from "./FootballConfDataTable.module.css";
 
 interface FootballConferenceData {
   conference_name: string;
@@ -18,11 +18,14 @@ interface FootballConferenceData {
 interface FootballConfDataTableProps {
   confData: FootballConferenceData[];
   className?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the title row. */
+  headerRight?: ReactNode;
 }
 
 function FootballConfDataTable({
   confData,
   className,
+  headerRight,
 }: FootballConfDataTableProps) {
   const { isMobile } = useResponsive();
 
@@ -71,12 +74,6 @@ function FootballConfDataTable({
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
 
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "conf-data-table",
-    className
-  );
-
   if (!confData || confData.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500 dark:text-gray-300">
@@ -86,173 +83,148 @@ function FootballConfDataTable({
   }
 
   return (
-    <div
-      className={`${tableClassName} relative overflow-x-auto max-h-[80vh] overflow-y-auto`}
-    >
-      <table
-        className="border-collapse border-spacing-0"
-        style={{
-          width: "max-content",
-          borderCollapse: "separate",
-          borderSpacing: 0,
-        }}
-      >
-        <thead>
-          <tr>
-            {/* Conference Column */}
-            <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: confColWidth,
-                minWidth: confColWidth,
-                maxWidth: confColWidth,
-                height: headerHeight,
-                position: "sticky",
-                top: 0,
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Conference
-            </th>
+    <div className={cn(styles.card, "conf-data-table", className)}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
+          <h2 className={styles.title}>Conference CFP Bid Projections</h2>
+        </div>
+        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+      </div>
 
-            {/* Bid Number Columns */}
-            {bidColumns.map((bid) => (
+      <div className={styles.scrollViewport}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              {/* Conference Column */}
               <th
-                key={`bid-${bid}`}
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
-                style={{
-                  width: bidColWidth,
-                  minWidth: bidColWidth,
-                  maxWidth: bidColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
-              >
-                {bid}
-              </th>
-            ))}
-
-            {/* Average Column */}
-            <th
-              className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
-                isMobile ? "text-xs" : "text-sm"
-              }`}
-              style={{
-                width: avgColWidth,
-                minWidth: avgColWidth,
-                maxWidth: avgColWidth,
-                height: headerHeight,
-                position: "sticky",
-                top: 0,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-              }}
-            >
-              Avg
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {displayData.map((conf, index) => (
-            <tr key={`${conf.conference_name}-${index}`}>
-              {/* Conference Cell */}
-              <td
-                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-left px-2 ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
+                className={cn(
+                  styles.headerCell,
+                  styles.stickyCell,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 style={{
                   width: confColWidth,
                   minWidth: confColWidth,
                   maxWidth: confColWidth,
-                  height: cellHeight,
-                  position: "sticky",
+                  height: headerHeight,
+                  textAlign: "left",
+                  paddingLeft: "0.5rem",
                   left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderRight: "1px solid var(--border-color)",
                 }}
               >
-                <div className="flex items-center gap-2">
-                  {conf.logo_url && (
-                    <div className="flex items-center justify-center bg-white rounded-full border-2 border-white flex-shrink-0" style={{ width: isMobile ? 26 : 32, height: isMobile ? 26 : 32 }}>
-                      <Image
-                        src={conf.logo_url}
-                        alt={`${conf.conference_name} logo`}
-                        width={isMobile ? 20 : 24}
-                        height={isMobile ? 20 : 24}
-                        className="object-contain"
-                      />
-                    </div>
-                  )}
-                  <span className="truncate">{conf.conference_name}</span>
-                </div>
-              </td>
+                Conference
+              </th>
 
-              {/* Bid Cells */}
-              {bidColumns.map((bid) => {
-                const percentage = calculatePercentage(
-                  conf.bid_distribution,
-                  bid
-                );
-                const colorStyle = getCellColor(percentage);
+              {/* Bid Number Columns */}
+              {bidColumns.map((bid) => (
+                <th
+                  key={`bid-${bid}`}
+                  className={cn(styles.headerCell, isMobile ? "text-xs" : "text-sm")}
+                  style={{
+                    width: bidColWidth,
+                    minWidth: bidColWidth,
+                    maxWidth: bidColWidth,
+                    height: headerHeight,
+                  }}
+                >
+                  {bid}
+                </th>
+              ))}
 
-                return (
-                  <td
-                    key={`${conf.conference_name}-bid-${bid}`}
-                    className="relative p-0"
-                    style={{
-                      height: cellHeight,
-                      width: bidColWidth,
-                      minWidth: bidColWidth,
-                      maxWidth: bidColWidth,
-                      border: "1px solid var(--border-color)",
-                      borderTop: "none",
-                      borderLeft: "none",
-                      backgroundColor: colorStyle.backgroundColor,
-                      color: colorStyle.color,
-                    }}
-                  >
-                    <div
-                      className={`absolute inset-0 flex items-center justify-center ${
-                        isMobile ? "text-xs" : "text-sm"
-                      }`}
-                    >
-                      {percentage > 0 ? `${Math.round(percentage)}%` : ""}
-                    </div>
-                  </td>
-                );
-              })}
-
-              {/* Average Cell */}
-              <td
-                className={`bg-white dark:bg-slate-900 text-center ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
+              {/* Average Column */}
+              <th
+                className={cn(styles.headerCell, isMobile ? "text-xs" : "text-sm")}
                 style={{
-                  height: cellHeight,
                   width: avgColWidth,
                   minWidth: avgColWidth,
                   maxWidth: avgColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
+                  height: headerHeight,
                 }}
               >
-                {conf.average_bids.toFixed(1)}
-              </td>
+                Avg
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {displayData.map((conf, index) => (
+              <tr key={`${conf.conference_name}-${index}`}>
+                {/* Conference Cell */}
+                <td
+                  className={cn(
+                    styles.confCell,
+                    styles.stickyBodyCell,
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
+                  style={{
+                    width: confColWidth,
+                    minWidth: confColWidth,
+                    maxWidth: confColWidth,
+                    height: cellHeight,
+                    paddingLeft: "0.5rem",
+                    left: 0,
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    {conf.logo_url && (
+                      <div className="flex items-center justify-center bg-white rounded-full border-2 border-white flex-shrink-0" style={{ width: isMobile ? 26 : 32, height: isMobile ? 26 : 32 }}>
+                        <Image
+                          src={conf.logo_url}
+                          alt={`${conf.conference_name} logo`}
+                          width={isMobile ? 20 : 24}
+                          height={isMobile ? 20 : 24}
+                          className="object-contain"
+                        />
+                      </div>
+                    )}
+                    <span className="truncate">{conf.conference_name}</span>
+                  </div>
+                </td>
+
+                {/* Bid Cells */}
+                {bidColumns.map((bid) => {
+                  const percentage = calculatePercentage(
+                    conf.bid_distribution,
+                    bid
+                  );
+
+                  return (
+                    <td
+                      key={`${conf.conference_name}-bid-${bid}`}
+                      style={{
+                        height: cellHeight,
+                        width: bidColWidth,
+                        minWidth: bidColWidth,
+                        maxWidth: bidColWidth,
+                        padding: 0,
+                      }}
+                    >
+                      <div
+                        className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                        style={getCellColor(percentage)}
+                      >
+                        {percentage > 0 ? `${Math.round(percentage)}%` : ""}
+                      </div>
+                    </td>
+                  );
+                })}
+
+                {/* Average Cell */}
+                <td
+                  className={cn(styles.avgCell, isMobile ? "text-xs" : "text-sm")}
+                  style={{
+                    height: cellHeight,
+                    width: avgColWidth,
+                    minWidth: avgColWidth,
+                    maxWidth: avgColWidth,
+                  }}
+                >
+                  {conf.average_bids.toFixed(1)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
