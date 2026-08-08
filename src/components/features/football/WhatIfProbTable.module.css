@@ -1,0 +1,179 @@
+/* Shared card/table styling for the What-If results tables
+   (FootballConfChampProb, FootballCFPProb), matching the heat-tile grid
+   look established across Wins/Standings/Conf Champ tables. */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-height: 70vh;
+  padding: 0.9rem 0.9rem 1rem;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 1px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankCell {
+  color: #475569;
+  font-weight: 600;
+  text-align: center;
+}
+
+.teamCell {
+  text-align: left;
+}
+
+.headerCell {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  border: 0;
+  background: #ffffff;
+  box-shadow: 0 1px 0 0 #ffffff;
+  color: #334155;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-align: center;
+  white-space: pre-line;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+  isolation: isolate;
+}
+
+.headerCell:hover {
+  background: #f1f5f9;
+}
+
+.headerCellActive {
+  background: #e0f2fe;
+}
+
+.headerCellActive:hover {
+  background: #cffafe;
+}
+
+.sortArrow {
+  color: #0e7490;
+  font-size: 0.7rem;
+  margin-top: 0.15rem;
+}
+
+/* Rank/team columns and the header row share the same white background +
+   shadow-seam treatment as the other tables, instead of the flat 1px
+   grid-line borders this table used to draw manually. Declared after
+   .headerCell so its z-index wins on the sticky top-left corner cells,
+   which carry both classes. */
+.stickyCell {
+  --sticky-bg: #ffffff;
+  position: sticky;
+  z-index: 40;
+  background: var(--sticky-bg);
+  background-clip: border-box;
+  box-shadow:
+    0 0 0 3px var(--sticky-bg),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+  isolation: isolate;
+}
+
+.heatTile {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  font-weight: 650;
+  transition: border-color 150ms ease;
+}
+
+.heatTile:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+.zeroRow {
+  opacity: 0.4;
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .stickyCell {
+  --sticky-bg: #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .headerCell {
+  background: #111827;
+  box-shadow: 0 1px 0 0 #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .headerCell:hover {
+  background: #1e293b;
+}
+
+:global(.dark) .headerCellActive {
+  background: #1e3a4a;
+}
+
+:global(.dark) .rankCell,
+:global(.dark) .teamCell {
+  color: #e2e8f0;
+}
+
+@media (max-width: 767px) {
+  .card {
+    border-radius: 1rem;
+  }
+
+  .scrollViewport {
+    padding: 0.6rem 0.6rem 0.8rem;
+    max-height: 65vh;
+  }
+
+  .heatTile {
+    border-radius: 2px;
+  }
+}

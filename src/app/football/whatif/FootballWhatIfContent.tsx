@@ -1,5 +1,6 @@
 "use client";
 
+import ConferenceSelector from "@/components/common/ConferenceSelector";
 import {
   ExportOptionsModal,
   useExportModal,
@@ -16,6 +17,7 @@ import {
   useFootballWhatIf,
   WhatIfResponse,
 } from "@/hooks/useFootballWhatIf";
+import { cn } from "@/lib/utils";
 import { AllTeamCFPEntry, WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import { Download } from "lucide-react";
 import Image from "next/image";
@@ -24,6 +26,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 // Color from schedule difficulty component
 const TEAL_COLOR = "rgb(0, 151, 178)";
+
+// Matches the gradient/border/shadow "card" look used across the
+// modernized Wins/Standings/CWV/etc. pages.
+const CARD_CLASS =
+  "relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
 
 export default function FootballWhatIfContent() {
   const searchParams = useSearchParams();
@@ -115,8 +122,7 @@ export default function FootballWhatIfContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConference]);
 
-  const handleConferenceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const conference = e.target.value;
+  const handleConferenceChange = (conference: string) => {
     setSelectedConference(conference);
     setWhatIfResults([]);
     setGames([]);
@@ -359,7 +365,7 @@ export default function FootballWhatIfContent() {
   return (
     <div className="container mx-auto px-4 py-4 md:py-6">
       <div className="mb-2 page-header">
-        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300">
+        <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
           What If Calculator
         </h1>
       </div>
@@ -371,27 +377,21 @@ export default function FootballWhatIfContent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Conference & Game Selection */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 sticky top-6 flex flex-col h-fit max-h-[calc(100vh-120px)]">
+          <div className={cn(CARD_CLASS, "p-6 sticky top-6 flex flex-col h-fit max-h-[calc(100vh-120px)]")}>
             {/* Top Section: Conference Dropdown */}
             <div className="mb-4">
-              <select
-                value={selectedConference}
+              <ConferenceSelector
+                conferences={conferences}
+                selectedConference={selectedConference}
                 onChange={handleConferenceChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                style={{ "--tw-ring-color": TEAL_COLOR } as React.CSSProperties}
+                loading={isLoadingConferences}
                 disabled={isLoadingConferences}
-              >
-                <option value="">Select a conference...</option>
-                {conferences.map((conference) => (
-                  <option key={conference} value={conference}>
-                    {conference}
-                  </option>
-                ))}
-              </select>
+                inline
+              />
             </div>
 
             <div className="mb-2 flex items-center gap-2">
-              <h2 className="text-xl font-semibold">Select Games</h2>
+              <h2 className="text-lg font-bold text-slate-700 dark:text-slate-300">Select Games</h2>
               <p className="text-xs text-gray-600 dark:text-gray-300">
                 {gameSelections.size}{" "}
                 {gameSelections.size === 1 ? "game" : "games"} selected
@@ -716,9 +716,9 @@ export default function FootballWhatIfContent() {
 
         {/* Right Column: Results Table */}
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 flex flex-col h-fit">
+          <div className={cn(CARD_CLASS, "p-6 flex flex-col h-fit")}>
             <div className="mb-4">
-              <h2 className="text-xl font-normal text-gray-500 dark:text-gray-300 mb-2">
+              <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-2">
                 What If Results to Play in Conference Championship
               </h2>
             </div>
@@ -751,7 +751,7 @@ export default function FootballWhatIfContent() {
               {currentCFPTableData.length > 0 && (
                 <div className="mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-normal text-gray-500 dark:text-gray-300">
+                    <h3 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
                       What If Results to Make CFP
                     </h3>
                     <button

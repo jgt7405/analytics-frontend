@@ -5,9 +5,9 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
 import { memo, useMemo, useState, useEffect } from "react";
+import styles from "./WhatIfProbTable.module.css";
 
 interface CFPTeam {
   team_name: string;
@@ -172,12 +172,6 @@ function FootballCFPProb({
   const cellHeight = isMobile ? 32 : 36;
   const headerHeight = isMobile ? 48 : 56;
 
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "cfp-prob-table",
-    className
-  );
-
   // Calculate min/max for change color scaling
   const { minChange, maxChange } = useMemo(() => {
     const changes = sortedTeams.map((team) => team.change);
@@ -246,38 +240,29 @@ function FootballCFPProb({
     );
   }
 
+  const headerCellClass = (col: SortColumn) =>
+    cn(styles.headerCell, col && sortColumn === col && styles.headerCellActive);
+
   return (
-    <div className="space-y-3">
-      <div
-        className={`${tableClassName} relative overflow-x-auto overflow-y-auto max-h-[70vh]`}
-      >
-        <table
-          className="border-collapse border-spacing-0"
-          style={{
-            width: "100%",
-            borderCollapse: "separate",
-            borderSpacing: 0,
-          }}
-        >
+    <div className={cn(styles.card, "cfp-prob-table", className)}>
+      <div className={styles.scrollViewport}>
+        <table className={styles.table} style={{ width: "100%" }}>
           <thead>
             <tr>
               {/* Rank Column */}
               <th
-                className={`${isScreenshotMode ? "" : "sticky left-0 z-30"} bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
+                className={cn(
+                  styles.headerCell,
+                  !isScreenshotMode && styles.stickyCell,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 style={{
                   width: rankColWidth,
                   minWidth: rankColWidth,
                   maxWidth: rankColWidth,
                   height: headerHeight,
-                  ...(isScreenshotMode
-                    ? {}
-                    : {
-                        position: "sticky" as const,
-                        top: 0,
-                        left: 0,
-                      }),
-                  border: "1px solid var(--border-color)",
-                  borderRight: "1px solid var(--border-color)",
+                  cursor: "default",
+                  ...(isScreenshotMode ? {} : { left: 0 }),
                 }}
               >
                 #
@@ -285,31 +270,26 @@ function FootballCFPProb({
 
               {/* Team Column */}
               <th
-                className={`${isScreenshotMode ? "" : "sticky z-30"} bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  sortColumn === "team" ? "bg-blue-100" : ""
-                } ${isMobile ? "text-xs" : "text-sm"}`}
+                className={cn(
+                  headerCellClass("team"),
+                  !isScreenshotMode && styles.stickyCell,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 onClick={() => handleColumnClick("team")}
                 style={{
                   width: teamColWidth,
                   minWidth: teamColWidth,
                   maxWidth: teamColWidth,
                   height: headerHeight,
-                  ...(isScreenshotMode
-                    ? {}
-                    : {
-                        position: "sticky" as const,
-                        top: 0,
-                        left: rankColWidth,
-                      }),
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  borderRight: "1px solid var(--border-color)",
+                  textAlign: "left",
+                  paddingLeft: "0.5rem",
+                  ...(isScreenshotMode ? {} : { left: rankColWidth }),
                 }}
                 title="Click to sort by team name"
               >
                 Team
                 {sortColumn === "team" && (
-                  <div className="text-blue-600 text-xs mt-1">
+                  <div className={styles.sortArrow}>
                     {sortDirection === "asc" ? "↑" : "↓"}
                   </div>
                 )}
@@ -317,27 +297,19 @@ function FootballCFPProb({
 
               {/* Current Probability Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  sortColumn === "current" ? "bg-blue-100" : ""
-                } ${isMobile ? "text-xs" : "text-sm"}`}
+                className={cn(headerCellClass("current"), isMobile ? "text-xs" : "text-sm")}
                 onClick={() => handleColumnClick("current")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
                   maxWidth: probColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
-                  lineHeight: "1.2",
                 }}
                 title="Click to sort by current probability"
               >
                 {isMobile ? "Current\n%" : "Current %"}
                 {sortColumn === "current" && (
-                  <div className="text-blue-600 text-xs mt-1">
+                  <div className={styles.sortArrow}>
                     {sortDirection === "asc" ? "↑" : "↓"}
                   </div>
                 )}
@@ -345,27 +317,19 @@ function FootballCFPProb({
 
               {/* What-If Probability Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  sortColumn === "whatif" ? "bg-blue-100" : ""
-                } ${isMobile ? "text-xs" : "text-sm"}`}
+                className={cn(headerCellClass("whatif"), isMobile ? "text-xs" : "text-sm")}
                 onClick={() => handleColumnClick("whatif")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
                   maxWidth: probColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
-                  lineHeight: "1.2",
                 }}
                 title="Click to sort by what-if probability"
               >
                 {isMobile ? "What-If\n%" : "What-If %"}
                 {sortColumn === "whatif" && (
-                  <div className="text-blue-600 text-xs mt-1">
+                  <div className={styles.sortArrow}>
                     {sortDirection === "asc" ? "↑" : "↓"}
                   </div>
                 )}
@@ -373,25 +337,19 @@ function FootballCFPProb({
 
               {/* Change Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  sortColumn === "change" ? "bg-blue-100" : ""
-                } ${isMobile ? "text-xs" : "text-sm"}`}
+                className={cn(headerCellClass("change"), isMobile ? "text-xs" : "text-sm")}
                 onClick={() => handleColumnClick("change")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
                   maxWidth: probColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
                 }}
                 title="Click to sort by change"
               >
                 Change
                 {sortColumn === "change" && (
-                  <div className="text-blue-600 text-xs mt-1">
+                  <div className={styles.sortArrow}>
                     {sortDirection === "asc" ? "↑" : "↓"}
                   </div>
                 )}
@@ -399,27 +357,19 @@ function FootballCFPProb({
 
               {/* Auto Bid % Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  sortColumn === "auto" ? "bg-blue-100" : ""
-                } ${isMobile ? "text-xs" : "text-sm"}`}
+                className={cn(headerCellClass("auto"), isMobile ? "text-xs" : "text-sm")}
                 onClick={() => handleColumnClick("auto")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
                   maxWidth: probColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
-                  lineHeight: "1.2",
                 }}
                 title="Click to sort — % of all scenarios team makes CFP as auto bid (top-5 conf champion)"
               >
                 {isMobile ? "Auto\n%" : "Auto %"}
                 {sortColumn === "auto" && (
-                  <div className="text-blue-600 text-xs mt-1">
+                  <div className={styles.sortArrow}>
                     {sortDirection === "asc" ? "↑" : "↓"}
                   </div>
                 )}
@@ -427,27 +377,19 @@ function FootballCFPProb({
 
               {/* At-Large % Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  sortColumn === "atlarge" ? "bg-blue-100" : ""
-                } ${isMobile ? "text-xs" : "text-sm"}`}
+                className={cn(headerCellClass("atlarge"), isMobile ? "text-xs" : "text-sm")}
                 onClick={() => handleColumnClick("atlarge")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
                   maxWidth: probColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
-                  lineHeight: "1.2",
                 }}
                 title="Click to sort — % of all scenarios team makes CFP as at-large bid"
               >
                 {isMobile ? "At-\nLarge %" : "At-Large %"}
                 {sortColumn === "atlarge" && (
-                  <div className="text-blue-600 text-xs mt-1">
+                  <div className={styles.sortArrow}>
                     {sortDirection === "asc" ? "↑" : "↓"}
                   </div>
                 )}
@@ -455,27 +397,19 @@ function FootballCFPProb({
 
               {/* Won Conf, No Bid % Column */}
               <th
-                className={`bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  sortColumn === "nobid" ? "bg-blue-100" : ""
-                } ${isMobile ? "text-xs" : "text-sm"}`}
+                className={cn(headerCellClass("nobid"), isMobile ? "text-xs" : "text-sm")}
                 onClick={() => handleColumnClick("nobid")}
                 style={{
                   width: probColWidth,
                   minWidth: probColWidth,
                   maxWidth: probColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
-                  lineHeight: "1.2",
                 }}
                 title="Click to sort — % of scenarios where team wins conference but does not make CFP"
               >
                 {isMobile ? "Conf\nNo Bid" : "Won Conf\nNo Bid %"}
                 {sortColumn === "nobid" && (
-                  <div className="text-blue-600 text-xs mt-1">
+                  <div className={styles.sortArrow}>
                     {sortDirection === "asc" ? "↑" : "↓"}
                   </div>
                 )}
@@ -484,30 +418,20 @@ function FootballCFPProb({
           </thead>
           <tbody>
             {sortedTeams.map((team, index) => (
-              <tr
-                key={`${team.team_name}-${index}`}
-                className={team.isZero ? "opacity-40" : ""}
-              >
+              <tr key={`${team.team_name}-${index}`} className={team.isZero ? styles.zeroRow : undefined}>
                 {/* Rank Cell */}
                 <td
-                  className={`${isScreenshotMode ? "" : "sticky left-0 z-20"} bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  } font-medium`}
+                  className={cn(
+                    styles.rankCell,
+                    !isScreenshotMode && styles.stickyCell,
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
                   style={{
                     width: rankColWidth,
                     minWidth: rankColWidth,
                     maxWidth: rankColWidth,
                     height: cellHeight,
-                    ...(isScreenshotMode
-                      ? {}
-                      : {
-                          position: "sticky" as const,
-                          left: 0,
-                          zIndex: 20,
-                        }),
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderRight: "1px solid var(--border-color)",
+                    ...(isScreenshotMode ? {} : { left: 0 }),
                   }}
                 >
                   {index + 1}
@@ -515,23 +439,18 @@ function FootballCFPProb({
 
                 {/* Team Cell */}
                 <td
-                  className={`${isScreenshotMode ? "" : "sticky z-20"} bg-white dark:bg-slate-900 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={cn(
+                    styles.teamCell,
+                    !isScreenshotMode && styles.stickyCell,
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
                   style={{
                     width: teamColWidth,
                     minWidth: teamColWidth,
                     maxWidth: teamColWidth,
                     height: cellHeight,
-                    ...(isScreenshotMode
-                      ? {}
-                      : {
-                          position: "sticky" as const,
-                          left: rankColWidth,
-                          zIndex: 20,
-                        }),
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderRight: "1px solid var(--border-color)",
+                    paddingLeft: "0.5rem",
+                    ...(isScreenshotMode ? {} : { left: rankColWidth }),
                   }}
                 >
                   <div
@@ -562,21 +481,10 @@ function FootballCFPProb({
                 </td>
 
                 {/* Current Probability Cell */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: probColWidth,
-                    minWidth: probColWidth,
-                    maxWidth: probColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getCellColor(team.currentProb),
-                  }}
-                >
+                <td style={{ height: cellHeight, width: probColWidth, minWidth: probColWidth, maxWidth: probColWidth, padding: 0 }}>
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={getCellColor(team.currentProb)}
                   >
                     {team.currentProb > 0
                       ? `${team.currentProb.toFixed(1)}%`
@@ -585,23 +493,14 @@ function FootballCFPProb({
                 </td>
 
                 {/* What-If Probability Cell */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: probColWidth,
-                    minWidth: probColWidth,
-                    maxWidth: probColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...(hasCalculated
-                      ? getCellColor(team.whatIfProb)
-                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
-                  }}
-                >
+                <td style={{ height: cellHeight, width: probColWidth, minWidth: probColWidth, maxWidth: probColWidth, padding: 0 }}>
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={
+                      hasCalculated
+                        ? getCellColor(team.whatIfProb)
+                        : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }
+                    }
                   >
                     {hasCalculated && team.whatIfProb > 0
                       ? `${team.whatIfProb.toFixed(1)}%`
@@ -610,23 +509,14 @@ function FootballCFPProb({
                 </td>
 
                 {/* Change Cell */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: probColWidth,
-                    minWidth: probColWidth,
-                    maxWidth: probColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...(hasCalculated
-                      ? getChangeCellColor(team.change)
-                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
-                  }}
-                >
+                <td style={{ height: cellHeight, width: probColWidth, minWidth: probColWidth, maxWidth: probColWidth, padding: 0 }}>
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={
+                      hasCalculated
+                        ? getChangeCellColor(team.change)
+                        : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }
+                    }
                   >
                     {hasCalculated && team.change !== 0 && (
                       <span>{team.change > 0 ? "+" : ""}{team.change.toFixed(1)}%</span>
@@ -635,22 +525,15 @@ function FootballCFPProb({
                 </td>
 
                 {/* Auto Bid % Cell */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: probColWidth,
-                    minWidth: probColWidth,
-                    maxWidth: probColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...(hasCalculated
-                      ? getCellColor(team.whatIfAutoPct ?? 0)
-                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
-                  }}
-                >
-                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}>
+                <td style={{ height: cellHeight, width: probColWidth, minWidth: probColWidth, maxWidth: probColWidth, padding: 0 }}>
+                  <div
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={
+                      hasCalculated
+                        ? getCellColor(team.whatIfAutoPct ?? 0)
+                        : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }
+                    }
+                  >
                     {hasCalculated && (team.whatIfAutoPct ?? 0) > 0
                       ? `${(team.whatIfAutoPct ?? 0).toFixed(1)}%`
                       : ""}
@@ -658,22 +541,15 @@ function FootballCFPProb({
                 </td>
 
                 {/* At-Large % Cell */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: probColWidth,
-                    minWidth: probColWidth,
-                    maxWidth: probColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...(hasCalculated
-                      ? getCellColor(team.whatIfAtLargePct ?? 0)
-                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
-                  }}
-                >
-                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}>
+                <td style={{ height: cellHeight, width: probColWidth, minWidth: probColWidth, maxWidth: probColWidth, padding: 0 }}>
+                  <div
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={
+                      hasCalculated
+                        ? getCellColor(team.whatIfAtLargePct ?? 0)
+                        : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }
+                    }
+                  >
                     {hasCalculated && (team.whatIfAtLargePct ?? 0) > 0
                       ? `${(team.whatIfAtLargePct ?? 0).toFixed(1)}%`
                       : ""}
@@ -681,22 +557,15 @@ function FootballCFPProb({
                 </td>
 
                 {/* Won Conf, No Bid % Cell */}
-                <td
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: probColWidth,
-                    minWidth: probColWidth,
-                    maxWidth: probColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...(hasCalculated
-                      ? getYellowCellColor(team.whatIfConfNoBidPct ?? 0)
-                      : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }),
-                  }}
-                >
-                  <div className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}>
+                <td style={{ height: cellHeight, width: probColWidth, minWidth: probColWidth, maxWidth: probColWidth, padding: 0 }}>
+                  <div
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={
+                      hasCalculated
+                        ? getYellowCellColor(team.whatIfConfNoBidPct ?? 0)
+                        : { backgroundColor: isDark ? "#1a1f2e" : "white", color: "transparent" }
+                    }
+                  >
                     {hasCalculated && (team.whatIfConfNoBidPct ?? 0) > 0
                       ? `${(team.whatIfConfNoBidPct ?? 0).toFixed(1)}%`
                       : ""}
