@@ -173,9 +173,6 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
 
             {historyData && (
               <div className="mb-8">
-                <h3 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
-                  Conference CFP Bid Trends Over Time
-                </h3>
                 <div className="conf-bids-history-container">
                   <ErrorBoundary level="component">
                     <FootballConfBidsHistoryChart

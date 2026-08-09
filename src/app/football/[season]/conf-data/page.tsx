@@ -74,6 +74,7 @@ export default function FootballConfDataArchivePage({
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="Conference CFP Bid Projections"
+          hideTitle
           isLoading={false}
         >
           <ErrorMessage
@@ -89,6 +90,7 @@ export default function FootballConfDataArchivePage({
   return (
     <PageLayoutWrapper
       title="Conference CFP Bid Projections"
+      hideTitle
       isLoading={confLoading}
     >
       <ErrorBoundary level="component" onRetry={() => refetch()}>
@@ -205,9 +207,6 @@ export default function FootballConfDataArchivePage({
 
             {filteredHistoryData && (
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
-                  Conference CFP Bid Trends Over Time
-                </h3>
                 <div className="conf-bids-history-container">
                   <ErrorBoundary level="component">
                     <FootballConfBidsHistoryChart
