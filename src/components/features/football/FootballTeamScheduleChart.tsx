@@ -119,10 +119,10 @@ export default function FootballTeamScheduleChart({
                     : "border-b"
               }`}
             >
-              <td className="p-2">{formatDate(game.date)}</td>
+              <td className="p-2 font-semibold">{formatDate(game.date)}</td>
               <td className="p-2">
                 <span
-                  className={`px-1 py-0.5 rounded text-xs ${
+                  className={`px-1 py-0.5 rounded text-xs font-semibold ${
                     game.location === "Home"
                       ? "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-300"
                       : game.location === "Away"

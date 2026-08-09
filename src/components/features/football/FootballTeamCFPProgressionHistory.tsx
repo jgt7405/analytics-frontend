@@ -458,7 +458,7 @@ export default function FootballTeamCFPProgressionHistory({
       },
     },
     layout: {
-      padding: { top: 14 },
+      padding: { top: 14, right: 12 },
     },
   };
 
@@ -529,7 +529,7 @@ export default function FootballTeamCFPProgressionHistory({
       {chartArea && (
         <svg
           className="pointer-events-none absolute left-0 top-0"
-          style={{ width: "100%", height: "100%" }}
+          style={{ width: "100%", height: "100%", overflow: "visible" }}
         >
           {[
             { value: lastQuarterfinals, color: finalSecondaryColor, solid: false },

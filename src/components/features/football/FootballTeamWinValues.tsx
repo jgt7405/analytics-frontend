@@ -354,7 +354,7 @@ export default function FootballTeamWinValues({
       },
     },
     layout: {
-      padding: { top: 14 },
+      padding: { top: 14, right: 12 },
     },
     elements: {
       point: {
@@ -432,7 +432,7 @@ export default function FootballTeamWinValues({
       {chartArea && (lastTwv !== null || lastCwv !== null) && (
         <svg
           className="pointer-events-none absolute left-0 top-0"
-          style={{ width: "100%", height: "100%" }}
+          style={{ width: "100%", height: "100%", overflow: "visible" }}
         >
           {[
             { value: lastTwv, color: "rgb(0, 151, 178)" },

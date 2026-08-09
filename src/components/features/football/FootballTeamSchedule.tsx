@@ -108,7 +108,7 @@ export default function FootballTeamSchedule({
             <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 -mb-1">
               {location}
             </h3>
-            <div className="text-xs text-gray-500 dark:text-gray-300">
+            <div className="text-xs font-semibold text-gray-500 dark:text-gray-300">
               {groupedGames.records[location].wins}-
               {groupedGames.records[location].losses}
             </div>
@@ -142,7 +142,7 @@ export default function FootballTeamSchedule({
                       teamName={game.opponent}
                       size={logoSize}
                     />
-                    <span className="text-xs text-gray-600 dark:text-gray-300 font-medium">
+                    <span className="text-xs text-gray-600 dark:text-gray-300 font-bold">
                       {formatRanking(game.sagarin_rank)}
                     </span>
                   </div>

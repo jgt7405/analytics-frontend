@@ -323,7 +323,7 @@ export default function FootballTeamWinHistory({
       },
     },
     layout: {
-      padding: { top: 14 },
+      padding: { top: 14, right: 12 },
     },
   };
 
@@ -392,7 +392,7 @@ export default function FootballTeamWinHistory({
       {chartArea && (lastTotalWins !== null || lastConfWins !== null) && (
         <svg
           className="pointer-events-none absolute left-0 top-0"
-          style={{ width: "100%", height: "100%" }}
+          style={{ width: "100%", height: "100%", overflow: "visible" }}
         >
           {[
             { value: lastTotalWins, color: primaryColor },

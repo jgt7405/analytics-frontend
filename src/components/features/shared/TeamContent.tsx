@@ -31,10 +31,11 @@ const MODERN_CARD_CLASS =
 // Stat tiles nest INSIDE the header's MODERN_CARD_CLASS card, so the
 // gradient/shadow card's near-white-on-white border reads as invisible
 // there (visible fine on the page background, not against another card).
-// Use a flatter, more opaque border + tinted bg so the tile still reads as
-// a distinct box against its parent card.
+// Use a darker, fully-opaque border + solid tinted bg (not translucent -
+// a translucent bg over the parent's near-white gradient washes out the
+// same way the border did) so the tile reads as a clearly distinct box.
 const MODERN_NESTED_CARD_CLASS =
-  "relative rounded-2xl border-2 border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-900/50";
+  "relative rounded-2xl border-2 border-slate-300 dark:border-slate-500 bg-slate-100 dark:bg-slate-800 shadow-sm";
 const LEGACY_CARD_CLASS = "bg-white dark:bg-slate-800 rounded-lg relative";
 const LEGACY_CARD_STYLE: React.CSSProperties = { border: "1px solid #d1d5db" };
 

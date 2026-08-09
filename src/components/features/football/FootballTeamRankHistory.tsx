@@ -231,7 +231,7 @@ export default function FootballTeamRankHistory({
       },
     },
     layout: {
-      padding: { top: 14 },
+      padding: { top: 14, right: 12 },
     },
   } as const;
 
@@ -361,7 +361,7 @@ export default function FootballTeamRankHistory({
       {chartArea && lastRank !== null && (
         <svg
           className="pointer-events-none absolute left-0 top-0"
-          style={{ width: "100%", height: "100%" }}
+          style={{ width: "100%", height: "100%", overflow: "visible" }}
         >
           {(() => {
             const y = chartRef.current?.scales?.y?.getPixelForValue(lastRank);
