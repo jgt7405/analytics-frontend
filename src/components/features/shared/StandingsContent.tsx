@@ -55,6 +55,8 @@ export interface StandingsContentConfig<
   hidePageTitle?: boolean;
   /** Lets a sport-specific history chart own the modern card title/header. */
   historyTitleInCard?: boolean;
+  /** Same as historyTitleInCard, for the first-place-probability chart. */
+  firstPlaceTitleInCard?: boolean;
   /** Tracking page id (kept per-sport for analytics continuity). */
   pageId: string;
   /** Validate the initial ?conf= URL value; omit to accept it as-is. */
@@ -99,6 +101,7 @@ export interface StandingsContentConfig<
   FirstPlaceChart: ComponentType<{
     firstPlaceData: TFirstPlace[];
     season: string;
+    headerRight?: ReactNode;
   }>;
   /** Basketball-only standings progression table; omit to skip the section. */
   ProgressionTable?: ComponentType<{
@@ -547,13 +550,20 @@ export default function StandingsContent<
                     "first-place-history",
                     "First Place Probability History Over Time",
                     "First Place Probability History",
-                    <>
-                      First Place Probability History{" "}
-                      <span className="text-base">(Over Time)</span>
-                    </>,
+                    config.firstPlaceTitleInCard ? null : (
+                      <>
+                        First Place Probability History{" "}
+                        <span className="text-base">(Over Time)</span>
+                      </>
+                    ),
                     <FirstPlaceChart
                       firstPlaceData={filteredHistoryData.first_place_data}
                       season={displaySeason}
+                      headerRight={
+                        config.firstPlaceTitleInCard && config.hidePageTitle
+                          ? conferenceSelector
+                          : undefined
+                      }
                     />,
                   )}
                   {ProgressionTable &&

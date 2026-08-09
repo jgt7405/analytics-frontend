@@ -76,6 +76,7 @@ const FOOTBALL_STANDINGS: StandingsContentConfig<
   sport: "football",
   hidePageTitle: true,
   historyTitleInCard: true,
+  firstPlaceTitleInCard: true,
   pageId: "football-standings",
   excludeConferences: ["Independent"],
   useStandingsData: useFootballStandings,
