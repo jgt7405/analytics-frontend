@@ -53,6 +53,8 @@ export interface StandingsContentConfig<
    * titles for the same content.
    */
   hidePageTitle?: boolean;
+  /** Lets a sport-specific history chart own the modern card title/header. */
+  historyTitleInCard?: boolean;
   /** Tracking page id (kept per-sport for analytics continuity). */
   pageId: string;
   /** Validate the initial ?conf= URL value; omit to accept it as-is. */
@@ -92,6 +94,7 @@ export interface StandingsContentConfig<
     timelineData: TTimeline[];
     conferenceSize: number;
     season: string;
+    headerRight?: ReactNode;
   }>;
   FirstPlaceChart: ComponentType<{
     firstPlaceData: TFirstPlace[];
@@ -521,14 +524,21 @@ export default function StandingsContent<
                     "standings-history",
                     "Conference Rankings History Over Time",
                     "Conference Rankings History",
-                    <>
-                      Conference Rankings History{" "}
-                      <span className="text-base">(Over Time)</span>
-                    </>,
+                    config.historyTitleInCard ? null : (
+                      <>
+                        Conference Rankings History{" "}
+                        <span className="text-base">(Over Time)</span>
+                      </>
+                    ),
                     <HistoryChart
                       timelineData={filteredHistoryData.timeline_data}
                       conferenceSize={conferenceSize}
                       season={displaySeason}
+                      headerRight={
+                        config.historyTitleInCard && config.hidePageTitle
+                          ? conferenceSelector
+                          : undefined
+                      }
                     />,
                   )}
                   {section(

@@ -147,7 +147,8 @@ export function renderExternalTooltip(
   if (isLeftSide) {
     leftPosition = position.left + window.pageXOffset + caretX + 20;
   } else {
-    leftPosition = position.left + window.pageXOffset + caretX - tooltipWidth - 20;
+    leftPosition =
+      position.left + window.pageXOffset + caretX - tooltipWidth - 20;
   }
 
   let arrow = tooltipEl.querySelector(".tooltip-arrow") as HTMLElement | null;
@@ -166,20 +167,28 @@ export function renderExternalTooltip(
   arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
   arrow.style.borderTop = "8px solid transparent";
   arrow.style.borderBottom = "8px solid transparent";
-  arrow.style.borderRight = arrowPosition === "left" ? `8px solid ${theme.background}` : "none";
-  arrow.style.borderLeft = arrowPosition === "right" ? `8px solid ${theme.background}` : "none";
+  arrow.style.borderRight =
+    arrowPosition === "left" ? `8px solid ${theme.background}` : "none";
+  arrow.style.borderLeft =
+    arrowPosition === "right" ? `8px solid ${theme.background}` : "none";
 
   const maxLeft = window.innerWidth - tooltipWidth - 10;
   const minLeft = 10;
   leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
 
-  tooltipEl.style.opacity = "1";
-  tooltipEl.style.left = leftPosition + "px";
-  tooltipEl.style.top =
+  const desiredTop =
     position.top +
     window.pageYOffset +
     caretY -
     tooltipEl.offsetHeight / 2 +
-    (config.verticalOffset ?? 0) +
-    "px";
+    (config.verticalOffset ?? 0);
+  const minTop = window.pageYOffset + 10;
+  const maxTop = Math.max(
+    minTop,
+    window.pageYOffset + window.innerHeight - tooltipEl.offsetHeight - 10,
+  );
+
+  tooltipEl.style.opacity = "1";
+  tooltipEl.style.left = leftPosition + "px";
+  tooltipEl.style.top = Math.max(minTop, Math.min(maxTop, desiredTop)) + "px";
 }

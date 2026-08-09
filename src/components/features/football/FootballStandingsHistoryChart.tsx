@@ -2,17 +2,17 @@
 
 import "@/lib/chartjs-setup";
 import TeamLogo from "@/components/ui/TeamLogo";
-import { buildChartLabels, filterDataToRange, getFootballDateRange } from "@/lib/chartDateRange";
+import {
+  buildChartLabels,
+  filterDataToRange,
+  getFootballDateRange,
+} from "@/lib/chartDateRange";
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
 import { cn } from "@/lib/utils";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
-import {
-  ChartArea,
-  Chart as ChartJS,
-  TooltipModel,
-} from "chart.js";
-import { useEffect, useRef, useState } from "react";
+import { ChartArea, Chart as ChartJS, Plugin, TooltipModel } from "chart.js";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
 // Matches the gradient/border/shadow "card" look used across the
@@ -36,6 +36,7 @@ interface FootballStandingsHistoryChartProps {
   timelineData: TimelineData[];
   conferenceSize: number;
   season?: string;
+  headerRight?: ReactNode;
 }
 
 interface TeamDataPoint {
@@ -57,14 +58,79 @@ interface ChartDimensions {
   canvas: HTMLCanvasElement;
 }
 
+// Option 5-style focus lens: a transient guide and a marker for every team at
+// the hovered date. Permanent x-axis grid lines remain disabled below.
+const HOVER_LENS_PLUGIN: Plugin<"line"> = {
+  id: "football-standings-hover-lens",
+  beforeDatasetsDraw(chart) {
+    const active = chart.getActiveElements();
+    if (active.length === 0) return;
+
+    const point = chart.getDatasetMeta(active[0].datasetIndex).data[
+      active[0].index
+    ];
+    if (!point) return;
+
+    const { x } = point.getProps(["x"], true);
+    const { ctx, chartArea } = chart;
+    const isDarkMode = document.documentElement.classList.contains("dark");
+
+    ctx.save();
+    ctx.fillStyle = isDarkMode
+      ? "rgb(56 189 248 / 0.08)"
+      : "rgb(14 165 233 / 0.07)";
+    ctx.fillRect(x - 18, chartArea.top, 36, chartArea.bottom - chartArea.top);
+    ctx.strokeStyle = isDarkMode
+      ? "rgb(125 211 252 / 0.75)"
+      : "rgb(2 132 199 / 0.65)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+  afterDatasetsDraw(chart) {
+    const active = chart.getActiveElements();
+    if (active.length === 0) return;
+
+    const dataIndex = active[0].index;
+    const isDarkMode = document.documentElement.classList.contains("dark");
+    const { ctx } = chart;
+
+    ctx.save();
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      const point = meta.data[dataIndex];
+      if (!point || meta.hidden) return;
+
+      const { x, y } = point.getProps(["x", "y"], true);
+      const datasetColor = Array.isArray(dataset.borderColor)
+        ? dataset.borderColor[dataIndex]
+        : dataset.borderColor;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = isDarkMode ? "#0f172a" : "#ffffff";
+      ctx.fill();
+      ctx.strokeStyle =
+        typeof datasetColor === "string" ? datasetColor : "#64748b";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+    ctx.restore();
+  },
+};
+
 export default function FootballStandingsHistoryChart({
   timelineData,
   conferenceSize,
   season,
+  headerRight,
 }: FootballStandingsHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", TeamDataPoint[], string> | null>(
-    null
+    null,
   );
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
@@ -72,14 +138,38 @@ export default function FootballStandingsHistoryChart({
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
+    };
+    const observer = new MutationObserver(updateTheme);
+
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    setSelectedTeams(new Set());
+  }, [timelineData]);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("chartjs-tooltip-standings")?.remove();
+    };
   }, []);
 
   useEffect(() => {
     const updateDimensions = () => {
       if (chartRef.current?.chartArea && chartRef.current?.canvas) {
         const area = chartRef.current.chartArea;
-        setChartDimensions(prev => {
+        setChartDimensions((prev) => {
           if (
             prev &&
             prev.chartArea.top === area.top &&
@@ -101,7 +191,6 @@ export default function FootballStandingsHistoryChart({
   const range = getFootballDateRange(season, timelineData);
   const filteredTimelineData = filterDataToRange(timelineData, range);
 
-
   // Deduplicate by team and date, keeping earliest version_id
   const dataByTeamAndDate = new Map<string, TimelineData>();
   filteredTimelineData.forEach((item: TimelineData) => {
@@ -116,7 +205,9 @@ export default function FootballStandingsHistoryChart({
     }
   });
 
-  const allDatesFromData = [...new Set(filteredTimelineData.map((d) => d.date))].sort();
+  const allDatesFromData = [
+    ...new Set(filteredTimelineData.map((d) => d.date)),
+  ].sort();
   const chartLabels = buildChartLabels(allDatesFromData, range, "football");
   const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
 
@@ -147,11 +238,15 @@ export default function FootballStandingsHistoryChart({
     .sort((a, b) => a.avg_standing - b.avg_standing);
 
   // All teams sorted by final standing for bottom logos
-  const allTeamsSorted = finalStandings.map((item) => ({
-    team_name: item.team_name,
-    avg_standing: item.avg_standing,
-    team_info: item.team_info,
-  }));
+  const allTeamsSorted = finalStandings.map((item) => {
+    const points = teamData[item.team_name]?.data || [];
+    const lastPoint = points[points.length - 1];
+    return {
+      team_name: item.team_name,
+      avg_standing: lastPoint?.y ?? item.avg_standing,
+      team_info: item.team_info,
+    };
+  });
 
   const handleTeamClick = (teamName: string) => {
     setSelectedTeams((prev) => {
@@ -189,9 +284,10 @@ export default function FootballStandingsHistoryChart({
       data: team.data,
       borderColor: color,
       backgroundColor: color,
-      borderWidth: isSelected ? 2 : 1,
+      borderWidth: isSelected ? 2.25 : 1.1,
+      order: isSelected ? 0 : 1,
       pointRadius: 0,
-      pointHoverRadius: 4,
+      pointHoverRadius: 0,
       tension: 0.1,
     };
   });
@@ -225,8 +321,8 @@ export default function FootballStandingsHistoryChart({
             rows = filteredTimelineData
               .filter((item) => item.date === isoDate)
               .sort((a, b) => a.avg_standing - b.avg_standing)
-              .map((item) => ({
-                label: item.team_name,
+              .map((item, index) => ({
+                label: `${index + 1}. ${item.team_name}`,
                 value: item.avg_standing.toFixed(1),
                 color: item.team_info.primary_color || "#000000",
               }));
@@ -237,7 +333,7 @@ export default function FootballStandingsHistoryChart({
             isDark,
             heading,
             rows,
-            verticalOffset: 40,
+            verticalOffset: 0,
           });
         },
       },
@@ -249,7 +345,8 @@ export default function FootballStandingsHistoryChart({
           maxTicksLimit: isMobile ? 5 : 10,
           color: isDark ? "#94a3b8" : "#64748b",
         },
-        grid: { display: false },
+        grid: { display: false, drawOnChartArea: false, drawTicks: false },
+        border: { display: false },
       },
       y: {
         title: {
@@ -267,11 +364,14 @@ export default function FootballStandingsHistoryChart({
             return Number(value);
           },
         },
-        grid: { color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)" },
+        grid: {
+          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
+        },
+        border: { display: false },
       },
     },
     layout: {
-      padding: { left: 10, right: 100 },
+      padding: { left: 10, right: isMobile ? 76 : 112 },
     },
     animation: {
       duration: 750,
@@ -289,7 +389,7 @@ export default function FootballStandingsHistoryChart({
   const getAdjustedLogoPositions = () => {
     if (!chartDimensions) return [];
 
-    const minSpacing = 25;
+    const minSpacing = isMobile ? 21 : 25;
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom - 15;
 
@@ -339,141 +439,168 @@ export default function FootballStandingsHistoryChart({
   };
 
   return (
-    <div
-      className={cn(CARD_CLASS, "p-4")}
-      style={{ zIndex: 10, isolation: "isolate" }}
-    >
-      <div
-        className="relative"
-        style={{ height: `${chartHeight}px`, overflow: "visible" }}
-      >
-        <Line ref={chartRef} data={chartData} options={options} />
+    <div className={CARD_CLASS} style={{ zIndex: 10, isolation: "isolate" }}>
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 px-[1.35rem] pb-4 pt-5">
+        <div
+          className="flex min-w-0 items-center gap-3"
+          data-screenshot-hide="true"
+        >
+          <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+            Conference Rankings History (Over Time)
+          </h2>
+        </div>
+        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+      </div>
 
-        {chartDimensions && (
-          <div
-            className="absolute left-0 top-0 pointer-events-none"
-            style={{ width: "100%", height: "100%" }}
-          >
-            {getAdjustedLogoPositions().map(({ team, idealY, adjustedY }) => {
-              const isSelected =
-                selectedTeams.size === 0 || selectedTeams.has(team.team_name);
-              const teamColor = isSelected
-                ? team.team_info.primary_color || "#94a3b8"
-                : "#d1d5db";
+      <div className="px-3 pb-2 sm:px-4">
+        <div
+          className="relative"
+          style={{ height: `${chartHeight}px`, overflow: "visible" }}
+        >
+          <Line
+            ref={chartRef}
+            data={chartData}
+            options={options}
+            plugins={[HOVER_LENS_PLUGIN]}
+            role="img"
+            aria-label="Conference rankings history showing every team's average standing over time. Hover a date to see all teams ranked for that date."
+          />
 
-              return (
-                <div key={`end-${team.team_name}`}>
-                  <svg
-                    className="absolute top-0 left-0"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <line
-                      x1={chartDimensions.chartArea.right}
-                      y1={idealY}
-                      x2={chartDimensions.chartArea.right + 12}
-                      y2={adjustedY}
-                      stroke={teamColor}
-                      strokeWidth="1"
-                      strokeDasharray="2,2"
-                      opacity="0.7"
-                    />
-                  </svg>
-                </div>
-              );
-            })}
-
-            <div className="absolute right-0 top-0">
-              {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
+          {chartDimensions && (
+            <div
+              className="pointer-events-none absolute left-0 top-0"
+              style={{ width: "100%", height: "100%" }}
+            >
+              {getAdjustedLogoPositions().map(({ team, idealY, adjustedY }) => {
                 const isSelected =
                   selectedTeams.size === 0 || selectedTeams.has(team.team_name);
-                const teamDataPoint = teamData[team.team_name];
-                const lastPoint =
-                  teamDataPoint?.data[teamDataPoint.data.length - 1];
+                const teamColor = isSelected
+                  ? team.team_info.primary_color || "#94a3b8"
+                  : "#d1d5db";
 
                 return (
-                  <div
-                    key={`logo-${team.team_name}`}
-                    className="absolute flex items-center"
-                    style={{
-                      right: "25px",
-                      top: `${adjustedY - 10}px`,
-                      zIndex: 10,
-                      opacity: isSelected ? 1 : 0.3,
-                    }}
-                  >
-                    <div
+                  <div key={`end-${team.team_name}`}>
+                    <svg
+                      className="absolute left-0 top-0"
                       style={{
-                        filter: isSelected ? "none" : "grayscale(100%)",
+                        width: "100%",
+                        height: "100%",
+                        pointerEvents: "none",
                       }}
                     >
-                      <TeamLogo
-                        logoUrl={
-                          team.team_info.logo_url ||
-                          "/images/team_logos/default.png"
-                        }
-                        teamName={team.team_name}
-                        size={20}
+                      <line
+                        x1={chartDimensions.chartArea.right}
+                        y1={idealY}
+                        x2={chartDimensions.chartArea.right + 12}
+                        y2={adjustedY}
+                        stroke={teamColor}
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                        opacity="0.7"
                       />
-                    </div>
-                    <span
-                      className="text-xs font-medium ml-2"
-                      style={{
-                        color: isSelected
-                          ? team.team_info.primary_color || "#000000"
-                          : "#d1d5db",
-                        minWidth: "35px",
-                        textAlign: "left",
-                      }}
-                    >
-                      {lastPoint?.y.toFixed(1) || team.avg_standing.toFixed(1)}
-                    </span>
+                    </svg>
                   </div>
                 );
               })}
+
+              <div className="absolute right-0 top-0">
+                {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
+                  const isSelected =
+                    selectedTeams.size === 0 ||
+                    selectedTeams.has(team.team_name);
+                  const teamDataPoint = teamData[team.team_name];
+                  const lastPoint =
+                    teamDataPoint?.data[teamDataPoint.data.length - 1];
+
+                  return (
+                    <div
+                      key={`logo-${team.team_name}`}
+                      className="absolute flex items-center"
+                      style={{
+                        right: isMobile ? "6px" : "20px",
+                        top: `${adjustedY - 10}px`,
+                        zIndex: 10,
+                        opacity: isSelected ? 1 : 0.3,
+                      }}
+                    >
+                      <div
+                        style={{
+                          filter: isSelected ? "none" : "grayscale(100%)",
+                        }}
+                      >
+                        <TeamLogo
+                          logoUrl={
+                            team.team_info.logo_url ||
+                            "/images/team_logos/default.png"
+                          }
+                          teamName={team.team_name}
+                          size={isMobile ? 18 : 20}
+                        />
+                      </div>
+                      <span
+                        className="ml-1.5 min-w-[30px] text-left text-xs font-medium tabular-nums"
+                        style={{
+                          color: isSelected
+                            ? team.team_info.primary_color || "#000000"
+                            : "#d1d5db",
+                        }}
+                      >
+                        {lastPoint?.y.toFixed(1) ||
+                          team.avg_standing.toFixed(1)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Bottom logo selector */}
-      <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
-        {allTeamsSorted.map((team) => {
-          const isSelected =
-            selectedTeams.size === 0 || selectedTeams.has(team.team_name);
-          return (
-            <button
-              key={team.team_name}
-              onClick={() => handleTeamClick(team.team_name)}
-              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 dark:bg-slate-700 transition-colors cursor-pointer"
-              style={{
-                opacity: isSelected ? 1 : 0.3,
-                filter: isSelected ? "none" : "grayscale(100%)",
-              }}
-            >
-              <TeamLogo
-                logoUrl={
-                  team.team_info.logo_url || "/images/team_logos/default.png"
-                }
-                teamName={team.team_name}
-                size={isMobile ? 24 : 28}
-              />
-              <span
-                className="text-[10px] font-medium"
-                style={{
-                  color: isSelected
-                    ? team.team_info.primary_color || "#000000"
-                    : "#9ca3af",
-                }}
+      <div className="border-t border-slate-200/80 px-4 pb-5 pt-4 dark:border-slate-700/80 sm:px-[1.35rem]">
+        <p className="mb-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+          Select teams to emphasize
+        </p>
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-8 lg:grid-cols-[repeat(16,minmax(0,1fr))]">
+          {allTeamsSorted.map((team) => {
+            const isSelected =
+              selectedTeams.size === 0 || selectedTeams.has(team.team_name);
+            const isExplicitlySelected = selectedTeams.has(team.team_name);
+            return (
+              <button
+                key={team.team_name}
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={`${team.team_name}, final standing ${team.avg_standing.toFixed(1)}. Select to emphasize this team.`}
+                onClick={() => handleTeamClick(team.team_name)}
+                className={cn(
+                  "flex min-w-0 cursor-pointer flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white/80 px-1 py-2 transition-[border-color,box-shadow,opacity,filter,background-color] hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-slate-600 dark:hover:bg-slate-800",
+                  isExplicitlySelected &&
+                    "border-sky-500 ring-2 ring-sky-500/20 dark:border-sky-400",
+                  !isSelected && "opacity-30 grayscale",
+                )}
               >
-                {team.avg_standing.toFixed(1)}
-              </span>
-            </button>
-          );
-        })}
+                <TeamLogo
+                  logoUrl={
+                    team.team_info.logo_url || "/images/team_logos/default.png"
+                  }
+                  teamName={team.team_name}
+                  size={isMobile ? 24 : 28}
+                />
+                <span
+                  className="text-xs font-semibold tabular-nums"
+                  style={{
+                    color: isSelected
+                      ? team.team_info.primary_color || "#000000"
+                      : "#9ca3af",
+                  }}
+                >
+                  {team.avg_standing.toFixed(1)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
