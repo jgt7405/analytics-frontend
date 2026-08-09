@@ -26,6 +26,7 @@ export interface TeamsApiRow {
   team_id?: string;
   conference: string;
   logo_url: string;
+  primary_color?: string;
   overall_record?: string;
   conference_record?: string;
   [key: string]: unknown;
@@ -54,6 +55,7 @@ export interface TeamsContentConfig {
 interface Team {
   team_name: string;
   logo_url: string;
+  primary_color?: string;
   conference: string;
   actual_conference_wins: number;
   actual_conference_losses: number;
@@ -141,6 +143,7 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
           return {
             team_name: team.team_name,
             logo_url: team.logo_url,
+            primary_color: team.primary_color,
             conference: team.conference,
             actual_conference_wins: confWins || 0,
             actual_conference_losses: confLosses || 0,
@@ -199,7 +202,16 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
   const TeamCard = ({ team }: { team: Team }) => (
     <a
       href={teamHref(team.team_name)}
-      className={cx(styles.teamCard, isMobile && styles.mobile)}
+      className={cx(
+        styles.teamCard,
+        isMobile && styles.mobile,
+        config.hidePageTitle && styles.teamCardModern,
+      )}
+      style={
+        config.hidePageTitle
+          ? { borderColor: team.primary_color || "rgb(148 163 184 / 0.5)" }
+          : undefined
+      }
     >
       <TeamLogo
         logoUrl={team.logo_url}

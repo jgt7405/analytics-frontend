@@ -73,6 +73,26 @@
   height: 100%;
 }
 
+/* Football only (see PAGE_MODERNIZATION_GUIDE.md §8e) - matches the
+   chip-button treatment used everywhere else: a 2px border in the
+   team's own color, radius aligned with the other chip elements
+   (rounded-xl) instead of the older, smaller 0.5rem. Border color
+   itself is set inline per-team; this only supplies the width/style
+   and the background hover tint. */
+.teamCardModern {
+  border-radius: 0.75rem;
+  border-width: 2px;
+  border-style: solid;
+}
+
+.teamCardModern:hover {
+  background: rgb(248 250 252);
+}
+
+:global(.dark) .teamCardModern:hover {
+  background: rgb(30 41 59 / 0.6);
+}
+
 .teamCard.mobile {
   padding: 8px;
 }
