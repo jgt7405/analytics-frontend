@@ -510,8 +510,10 @@ export default function StandingsContent<
                 config.noTiesPageTitle,
                 config.noTiesShareTitle,
                 <>
-                  {config.noTiesHeading}{" "}
-                  <span className="text-base">(Breaking All Ties)</span>
+                  {config.noTiesHeading}
+                  <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+                    (Breaking All Ties)
+                  </span>
                 </>,
                 <Suspense fallback={tableSkeleton}>
                   {standings && (
@@ -529,8 +531,10 @@ export default function StandingsContent<
                     "Conference Rankings History",
                     config.historyTitleInCard ? null : (
                       <>
-                        Conference Rankings History{" "}
-                        <span className="text-base">(Over Time)</span>
+                        Conference Rankings History
+                        <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+                          (Over Time)
+                        </span>
                       </>
                     ),
                     <HistoryChart
@@ -552,8 +556,10 @@ export default function StandingsContent<
                     "First Place Probability History",
                     config.firstPlaceTitleInCard ? null : (
                       <>
-                        First Place Probability History{" "}
-                        <span className="text-base">(Over Time)</span>
+                        First Place Probability History
+                        <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+                          (Over Time)
+                        </span>
                       </>
                     ),
                     <FirstPlaceChart

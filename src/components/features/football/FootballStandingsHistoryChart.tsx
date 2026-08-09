@@ -477,7 +477,10 @@ export default function FootballStandingsHistoryChart({
           data-screenshot-hide="true"
         >
           <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
-            Conference Rankings History (Over Time)
+            Conference Rankings History
+            <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+              (Over Time)
+            </span>
           </h2>
         </div>
         {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}

@@ -359,8 +359,10 @@ export default function ConfChampContent<TData, THistory>({
                       s.pageTitle,
                       s.shareTitle,
                       <>
-                        {s.heading}{" "}
-                        <span className="text-base">(Over Time)</span>
+                        {s.heading}
+                        <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+                          (Over Time)
+                        </span>
                       </>,
                       s.render(visibleHistory, ctx),
                     ),

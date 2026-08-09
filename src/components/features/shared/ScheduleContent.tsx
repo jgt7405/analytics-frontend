@@ -392,8 +392,10 @@ export default function ScheduleContent<TGame, TSummary>({
                   <ErrorBoundary level="component" onRetry={() => refetch()}>
                     <div className="mb-8">
                       <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
-                        Schedule Difficulty Summary{" "}
-                        <span className="text-base">(By Quartile)</span>
+                        Schedule Difficulty Summary
+                        <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+                          (By Quartile)
+                        </span>
                       </h1>
 
                       <div className={summaryClass}>

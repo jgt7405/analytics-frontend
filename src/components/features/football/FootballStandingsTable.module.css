@@ -38,6 +38,20 @@
   white-space: nowrap;
 }
 
+/* Smaller, lighter annotation on the title - drops to its own line on
+   mobile (a block child always starts a new line regardless of the
+   title's own white-space: nowrap) instead of getting clipped by the
+   card's overflow: hidden when the full phrase doesn't fit. */
+.titleParenthetical {
+  display: inline;
+  margin-left: 0.4rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  white-space: normal;
+}
+
 .scrollViewport {
   position: relative;
   overflow-x: auto;
@@ -251,6 +265,10 @@
   color: #cbd5e1;
 }
 
+:global(.dark) .titleParenthetical {
+  color: #94a3b8;
+}
+
 :global(.dark) .teamName {
   color: #e2e8f0;
 }
@@ -306,6 +324,13 @@
 
   .title {
     font-size: 1.25rem;
+  }
+
+  .titleParenthetical {
+    display: block;
+    margin-left: 0;
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
   }
 
   .scrollViewport {

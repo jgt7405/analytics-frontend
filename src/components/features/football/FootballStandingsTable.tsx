@@ -125,7 +125,10 @@ function FootballStandingsTable({
       <div className={styles.cardHeader}>
         <div className={styles.titleGroup} data-screenshot-hide="true">
           <h2 id="football-standings-title" className={styles.title}>
-            Projected Conference Standings (Including Ties)
+            Projected Conference Standings
+            <span className={styles.titleParenthetical}>
+              (Including Ties)
+            </span>
           </h2>
         </div>
         {headerRight && (
