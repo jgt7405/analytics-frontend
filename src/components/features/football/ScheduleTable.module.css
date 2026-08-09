@@ -183,6 +183,13 @@
   text-align: center;
 }
 
+/* Full "Location"/"Opponent" text on desktop; swaps to "Loc"/"Opp" on
+   narrow screens (see mobile media query) where those sticky columns
+   are too narrow for the full word. */
+.rowHeaderShort {
+  display: none;
+}
+
 .teamHeader {
   z-index: 60;
   position: sticky;
@@ -352,6 +359,7 @@
 
 .summaryRow .summaryLabel,
 .summaryRow .summaryValue {
+  --sticky-column-background: #f1f5f9;
   background: #f1f5f9;
   border-top: 2px solid #cbd5e1;
 }
@@ -366,11 +374,19 @@
 
 .summaryLabel {
   --sticky-column-background: #f8fafc;
+  position: sticky;
+  left: 0;
+  z-index: 40;
   padding: 0 0.5rem;
   background: var(--sticky-column-background);
+  background-clip: border-box;
   font-weight: 650;
   text-align: left;
   white-space: normal;
+  isolation: isolate;
+  box-shadow:
+    0 0 0 3px var(--sticky-column-background),
+    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
 }
 
 .summaryValue {
@@ -463,6 +479,7 @@
 
 :global(.dark) .summaryRow .summaryLabel,
 :global(.dark) .summaryRow .summaryValue {
+  --sticky-column-background: #263449;
   background: #263449;
   border-top: 2px solid rgb(71 85 105 / 0.8);
 }
@@ -509,6 +526,14 @@
   .rowHeader,
   .teamHeader {
     height: 4.65rem;
+  }
+
+  .rowHeaderFull {
+    display: none;
+  }
+
+  .rowHeaderShort {
+    display: inline;
   }
 
   .summaryTeamHeader,

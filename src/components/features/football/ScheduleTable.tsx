@@ -266,10 +266,12 @@ function FootballScheduleTable({
               <thead>
                 <tr>
                   <th className={cn(styles.stickyLocation, styles.rowHeader)} scope="col">
-                    Location
+                    <span className={styles.rowHeaderFull}>Location</span>
+                    <span className={styles.rowHeaderShort}>Loc</span>
                   </th>
                   <th className={cn(styles.stickyOpponent, styles.rowHeader)} scope="col">
-                    Opponent
+                    <span className={styles.rowHeaderFull}>Opponent</span>
+                    <span className={styles.rowHeaderShort}>Opp</span>
                   </th>
                   <th className={cn(styles.stickyWinProb, styles.rowHeader)} scope="col">
                     Avg Conf Win Prob
