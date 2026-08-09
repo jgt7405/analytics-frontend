@@ -360,6 +360,9 @@ export default function FootballStandingsHistoryChart({
         ticks: {
           stepSize: 1,
           color: isDark ? "#94a3b8" : "#64748b",
+          font: {
+            weight: 600,
+          },
           callback: function (value: string | number) {
             return Number(value);
           },
@@ -371,7 +374,7 @@ export default function FootballStandingsHistoryChart({
       },
     },
     layout: {
-      padding: { left: 10, right: isMobile ? 76 : 112 },
+      padding: { left: 10, right: 76 },
     },
     animation: {
       duration: 750,
@@ -491,19 +494,27 @@ export default function FootballStandingsHistoryChart({
                       <line
                         x1={chartDimensions.chartArea.right}
                         y1={idealY}
-                        x2={chartDimensions.chartArea.right + 12}
+                        x2={chartDimensions.chartArea.right + 6}
                         y2={adjustedY}
                         stroke={teamColor}
                         strokeWidth="1"
                         strokeDasharray="2,2"
                         opacity="0.7"
                       />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="4"
+                        fill={teamColor}
+                        stroke={isDark ? "#0f172a" : "#ffffff"}
+                        strokeWidth="2"
+                      />
                     </svg>
                   </div>
                 );
               })}
 
-              <div className="absolute right-0 top-0">
+              <div className="absolute inset-0">
                 {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
                   const isSelected =
                     selectedTeams.size === 0 ||
@@ -517,7 +528,7 @@ export default function FootballStandingsHistoryChart({
                       key={`logo-${team.team_name}`}
                       className="absolute flex items-center"
                       style={{
-                        right: isMobile ? "6px" : "20px",
+                        left: `${chartDimensions.chartArea.right + 8}px`,
                         top: `${adjustedY - 10}px`,
                         zIndex: 10,
                         opacity: isSelected ? 1 : 0.3,
