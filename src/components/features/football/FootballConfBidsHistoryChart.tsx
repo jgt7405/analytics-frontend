@@ -555,13 +555,8 @@ export default function FootballConfBidsHistoryChart({
 
           {chartDimensions && (
             <div
-              className="absolute right-0 top-0"
-              style={{
-                zIndex: 20,
-                pointerEvents: "none",
-                width: "100px",
-                height: `${chartHeight}px`,
-              }}
+              className="pointer-events-none absolute left-0 top-0"
+              style={{ width: "100%", height: "100%" }}
             >
               {logoPositions.map(({ conf, idealY, adjustedY }) => {
                 const isSelected =
@@ -570,24 +565,21 @@ export default function FootballConfBidsHistoryChart({
                 const confColor = isSelected
                   ? conf.conf_info.primary_color || "#94a3b8"
                   : "#d1d5db";
-                const logoUrl = conf.conf_info.logo_url;
 
                 return (
                   <div key={`end-${conf.conference_name}`}>
                     <svg
-                      className="absolute"
+                      className="absolute left-0 top-0"
                       style={{
-                        top: 0,
-                        right: 0,
-                        width: "100px",
-                        height: `${chartHeight}px`,
+                        width: "100%",
+                        height: "100%",
                         pointerEvents: "none",
                       }}
                     >
                       <line
-                        x1={0}
+                        x1={chartDimensions.chartArea.right}
                         y1={idealY}
-                        x2={6}
+                        x2={chartDimensions.chartArea.right + 6}
                         y2={adjustedY}
                         stroke={confColor}
                         strokeWidth="1"
@@ -595,14 +587,14 @@ export default function FootballConfBidsHistoryChart({
                         opacity="0.7"
                       />
                       <circle
-                        cx={0}
+                        cx={chartDimensions.chartArea.right}
                         cy={idealY}
                         r="8"
                         fill={confColor}
                         opacity={isDark ? "0.24" : "0.18"}
                       />
                       <circle
-                        cx={0}
+                        cx={chartDimensions.chartArea.right}
                         cy={idealY}
                         r="4.25"
                         fill={isDark ? "#0f172a" : "#ffffff"}
@@ -612,14 +604,35 @@ export default function FootballConfBidsHistoryChart({
                           filter: `drop-shadow(0 0 3px ${confColor})`,
                         }}
                       />
-                      <circle cx={0} cy={idealY} r="1.75" fill={confColor} />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="1.75"
+                        fill={confColor}
+                      />
                     </svg>
+                  </div>
+                );
+              })}
 
+              <div className="absolute inset-0">
+                {logoPositions.map(({ conf, adjustedY }) => {
+                  const isSelected =
+                    selectedConferences.size === 0 ||
+                    selectedConferences.has(conf.conference_name);
+                  const confColor = isSelected
+                    ? conf.conf_info.primary_color || "#94a3b8"
+                    : "#d1d5db";
+                  const logoUrl = conf.conf_info.logo_url;
+
+                  return (
                     <div
+                      key={`logo-${conf.conference_name}`}
                       className="absolute flex items-center"
                       style={{
-                        top: `${adjustedY - 12}px`,
-                        left: "8px",
+                        left: `${chartDimensions.chartArea.right + 8}px`,
+                        top: `${adjustedY - 10}px`,
+                        zIndex: 10,
                         opacity: isSelected ? 1 : 0.3,
                       }}
                     >
@@ -666,9 +679,9 @@ export default function FootballConfBidsHistoryChart({
                         {conf.final_bids.toFixed(1)}
                       </span>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
