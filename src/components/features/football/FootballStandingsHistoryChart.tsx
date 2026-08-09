@@ -325,6 +325,8 @@ export default function FootballStandingsHistoryChart({
                 label: `${index + 1}. ${item.team_name}`,
                 value: item.avg_standing.toFixed(1),
                 color: item.team_info.primary_color || "#000000",
+                logoUrl:
+                  item.team_info.logo_url || "/images/team_logos/default.png",
               }));
           }
 
@@ -344,6 +346,9 @@ export default function FootballStandingsHistoryChart({
         ticks: {
           maxTicksLimit: isMobile ? 5 : 10,
           color: isDark ? "#94a3b8" : "#64748b",
+          font: {
+            weight: 600,
+          },
         },
         grid: { display: false, drawOnChartArea: false, drawTicks: false },
         border: { display: false },
@@ -504,10 +509,26 @@ export default function FootballStandingsHistoryChart({
                       <circle
                         cx={chartDimensions.chartArea.right}
                         cy={idealY}
-                        r="4"
+                        r="8"
                         fill={teamColor}
-                        stroke={isDark ? "#0f172a" : "#ffffff"}
-                        strokeWidth="2"
+                        opacity={isDark ? "0.24" : "0.18"}
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="4.25"
+                        fill={isDark ? "#0f172a" : "#ffffff"}
+                        stroke={teamColor}
+                        strokeWidth="2.5"
+                        style={{
+                          filter: `drop-shadow(0 0 3px ${teamColor})`,
+                        }}
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="1.75"
+                        fill={teamColor}
                       />
                     </svg>
                   </div>

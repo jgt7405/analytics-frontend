@@ -10,6 +10,7 @@ export interface TooltipRow {
   label: string;
   value: string;
   color: string;
+  logoUrl?: string;
 }
 
 export interface ExternalTooltipConfig {
@@ -118,7 +119,17 @@ export function renderExternalTooltip(
     `;
 
     config.rows.forEach((row) => {
-      innerHtml += `<div style="color: ${row.color}; margin: 2px 0; font-weight: 400;">${row.label}: ${row.value}</div>`;
+      const logo = row.logoUrl
+        ? `<img src="${row.logoUrl}" alt="" style="width: 18px; height: 18px; object-fit: contain; flex: 0 0 18px;" />`
+        : `<span style="width: 7px; height: 7px; border-radius: 999px; background: ${row.color}; flex: 0 0 7px; margin: 0 5.5px;"></span>`;
+
+      innerHtml += `
+        <div style="display: flex; align-items: center; gap: 7px; min-height: 20px; margin: 1px 0; color: ${row.color}; font-weight: 500;">
+          ${logo}
+          <span style="min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.label}</span>
+          <span style="font-weight: 700; font-variant-numeric: tabular-nums;">${row.value}</span>
+        </div>
+      `;
     });
 
     tooltipEl.innerHTML = innerHtml;
