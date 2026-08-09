@@ -11,9 +11,8 @@ import {
   filterDataToRange,
   getFootballDateRange,
 } from "@/lib/chartDateRange";
-import {
-  type TooltipItem,
-} from "chart.js";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
+import type { Chart, TooltipModel } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
@@ -60,6 +59,32 @@ export default function FootballTeamCFPBidHistory({
   const [data, setData] = useState<CFPHistoricalDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
+    };
+    const observer = new MutationObserver(updateTheme);
+
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("chartjs-tooltip-cfpbid")?.remove();
+    };
+  }, []);
 
   const parseDateCentralTime = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
@@ -226,67 +251,48 @@ export default function FootballTeamCFPBidHistory({
         labels: {
           font: {
             size: isMobile ? 10 : 12,
+            weight: 600,
           },
-          color: "#6b7280",
+          color: isDark ? "#cbd5e1" : "#334155",
           usePointStyle: true,
           padding: isMobile ? 15 : 20,
         },
       },
       tooltip: {
-        enabled: true,
-        backgroundColor: "#ffffff",
-        titleColor: "#1f2937",
-        bodyColor: "#1f2937",
-        borderColor: "#e5e7eb",
-        borderWidth: 1,
-        cornerRadius: 8,
-        displayColors: false,
-        padding: 12,
-        titleFont: {
-          size: 14,
-          weight: "bold" as const,
-        },
-        bodyFont: {
-          size: 12,
-        },
-        callbacks: {
-          title: function (context: TooltipItem<"line">[]) {
-            if (context.length > 0) {
-              const dataIndex = context[0].dataIndex;
-              return chartLabels[dataIndex].displayLabel;
-            }
-            return "";
-          },
-          labelTextColor: function (context: TooltipItem<"line">) {
-            const datasetIndex = context.datasetIndex;
+        enabled: false,
+        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+          const { tooltip: tooltipModel, chart } = args;
 
-            if (datasetIndex === 0) {
-              // CFP Bid Probability - use primary color
-              return primaryColor;
-            } else if (datasetIndex === 1) {
-              // Average Seed - use final secondary color (handles white fallback)
-              return finalSecondaryColor;
-            }
-            return "#1f2937"; // fallback color
-          },
-          label: function (context: TooltipItem<"line">) {
-            const dataIndex = context.dataIndex;
-            const datasetIndex = context.datasetIndex;
+          let heading = "";
+          let rows: TooltipRow[] = [];
+          if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
+            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const label = chartLabels[dataIndex];
             const dataPoint = dataByDate.get(label.isoDate);
-            if (!dataPoint) return "";
-
-            if (datasetIndex === 0) {
-              // CFP Bid Probability
-              const cfpBidPct = dataPoint.cfp_bid_pct || 0;
-              return `CFP Bid Probability: ${cfpBidPct.toFixed(1)}%`;
-            } else if (datasetIndex === 1) {
-              // Average Seed
+            if (dataPoint) {
+              heading = label.displayLabel;
               const avgSeed = dataPoint.average_seed || 0;
-              return `Average Seed: ${avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A"}`;
+              rows = [
+                {
+                  label: "CFP Bid Probability",
+                  value: `${(dataPoint.cfp_bid_pct || 0).toFixed(1)}%`,
+                  color: primaryColor,
+                },
+                {
+                  label: "Average Seed",
+                  value: avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A",
+                  color: finalSecondaryColor,
+                },
+              ];
             }
-            return "";
-          },
+          }
+
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "chartjs-tooltip-cfpbid",
+            isDark,
+            heading,
+            rows,
+          });
         },
       },
     },
@@ -294,9 +300,10 @@ export default function FootballTeamCFPBidHistory({
       x: {
         display: true,
         ticks: {
-          color: "#6b7280",
+          color: isDark ? "#94a3b8" : "#64748b",
           font: {
             size: isMobile ? 9 : 10,
+            weight: 600,
           },
           maxTicksLimit: isMobile ? 8 : 12,
         },
@@ -311,9 +318,10 @@ export default function FootballTeamCFPBidHistory({
         min: 0,
         max: 100,
         ticks: {
-          color: primaryColor, // Changed from finalSecondaryColor to primaryColor
+          color: primaryColor,
           font: {
             size: isMobile ? 9 : 10,
+            weight: 600,
           },
           stepSize: 20,
           callback: function (value: string | number) {
@@ -323,10 +331,11 @@ export default function FootballTeamCFPBidHistory({
         title: {
           display: true,
           text: "CFP Bid %",
-          color: primaryColor, // Changed from finalSecondaryColor to primaryColor
+          color: primaryColor,
+          font: { weight: 600 },
         },
         grid: {
-          color: "#f3f4f6",
+          color: isDark ? "rgb(148 163 184 / 0.15)" : "#f3f4f6",
           lineWidth: 1,
         },
       },
@@ -339,6 +348,7 @@ export default function FootballTeamCFPBidHistory({
         ticks: {
           font: {
             size: isMobile ? 9 : 10,
+            weight: 600,
           },
           color: finalSecondaryColor,
           stepSize: 1,
@@ -351,6 +361,7 @@ export default function FootballTeamCFPBidHistory({
           display: true,
           text: "Avg Seed",
           color: finalSecondaryColor,
+          font: { weight: 600 },
         },
         grid: {
           display: false, // Remove grid lines from right axis

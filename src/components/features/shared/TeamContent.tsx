@@ -22,6 +22,20 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 
+// Matches the gradient/border/shadow "card" look used across the
+// modernized Wins/Standings/CWV/etc. pages (PAGE_MODERNIZATION_GUIDE.md
+// §1). Only applied when config.modernCards is set (football) - see the
+// flag's doc comment below for why basketball keeps the old chrome.
+const MODERN_CARD_CLASS =
+  "relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+const LEGACY_CARD_CLASS = "bg-white dark:bg-slate-800 rounded-lg relative";
+const LEGACY_CARD_STYLE: React.CSSProperties = { border: "1px solid #d1d5db" };
+
+const modernHeadingClass = (mobile: boolean) =>
+  `${mobile ? "text-base" : "text-lg"} font-bold tracking-[-0.01em] text-slate-700 dark:text-slate-300`;
+const legacyHeadingClass = (mobile: boolean) =>
+  mobile ? "text-base font-semibold" : "text-lg font-semibold";
+
 export interface TeamInfoLike {
   team_name: string;
   conference: string;
@@ -61,6 +75,14 @@ export interface TeamSection<TData> {
 export interface TeamContentConfig<TData, THistory> {
   /** "basketball" | "football" — used for team routes. */
   sport: string;
+  /**
+   * Use the modernized card shell (gradient/border/shadow, bold section
+   * headings) instead of the old flat `border: 1px solid #d1d5db` chrome.
+   * Only set on the football config - see PAGE_MODERNIZATION_GUIDE.md.
+   * Basketball is left on the old chrome until it gets the same treatment
+   * deliberately.
+   */
+  modernCards?: boolean;
   /** Tracking page id ("basketball-team" | "football-team"). */
   pageId: string;
   useTeamData: (
@@ -235,27 +257,27 @@ export default function TeamContent<TData, THistory>({
     if (!s) return null;
     if (s.visible && !s.visible(teamData)) return null;
 
-    const headingClass = mobile
-      ? "text-base font-semibold"
-      : "text-lg font-semibold";
+    const modern = !!config.modernCards;
+    const headingClass = modern
+      ? modernHeadingClass(mobile)
+      : legacyHeadingClass(mobile);
     const logoSize = mobile ? 24 : 32;
+    const borderDividerClass = modern
+      ? "border-slate-200/80 dark:border-slate-700/80"
+      : "border-gray-200";
 
     if (s.scheduleFrame) {
       return (
         <div
           key={s.key}
-          className={`bg-white dark:bg-slate-800 rounded-lg relative ${mobile ? "mx-2" : ""} ${s.containerClass}`}
+          className={`${modern ? MODERN_CARD_CLASS : LEGACY_CARD_CLASS} ${mobile ? "mx-2" : ""} ${s.containerClass}`}
           style={{
-            border: "1px solid #d1d5db",
+            ...(modern ? {} : LEGACY_CARD_STYLE),
             ...(mobile ? {} : { minWidth: "350px" }),
           }}
         >
           <div
-            className={
-              mobile
-                ? "px-2 py-1 border-b border-gray-200 -mt-4 relative"
-                : "pt-0 px-3 pb-3 border-b border-gray-200 -mt-2 relative"
-            }
+            className={`border-b ${borderDividerClass} relative ${mobile ? "px-2 py-1 -mt-4" : "pt-0 px-3 pb-3 -mt-2"}`}
           >
             <h2 className={headingClass}>{s.heading}</h2>
             {s.watermark &&
@@ -264,7 +286,7 @@ export default function TeamContent<TData, THistory>({
                 right: "5px",
               })}
           </div>
-          <div className="border-b border-gray-200"></div>
+          <div className={`border-b ${borderDividerClass}`}></div>
           <div
             className={
               mobile
@@ -281,8 +303,8 @@ export default function TeamContent<TData, THistory>({
     return (
       <div
         key={s.key}
-        className={`bg-white dark:bg-slate-800 rounded-lg p-3 relative ${s.containerClass}`}
-        style={{ border: "1px solid #d1d5db" }}
+        className={`${modern ? MODERN_CARD_CLASS : LEGACY_CARD_CLASS} p-3 ${s.containerClass}`}
+        style={modern ? undefined : LEGACY_CARD_STYLE}
       >
         <div className="relative">
           <h2 className={`${headingClass} mb-1 -mt-2`}>{s.heading}</h2>
@@ -318,12 +340,8 @@ export default function TeamContent<TData, THistory>({
     mobile: boolean,
   ) => (
     <div
-      className={
-        mobile
-          ? "bg-white dark:bg-slate-800 p-3 rounded-lg flex-1"
-          : "bg-white dark:bg-slate-800 p-4 rounded-lg"
-      }
-      style={{ border: "1px solid #d1d5db" }}
+      className={`${config.modernCards ? MODERN_CARD_CLASS : LEGACY_CARD_CLASS} ${mobile ? "p-3 flex-1" : "p-4"}`}
+      style={config.modernCards ? undefined : LEGACY_CARD_STYLE}
     >
       <div className={mobile ? "flex gap-3" : "flex gap-4"}>
         {[a, b].map((stat) => (
@@ -410,7 +428,9 @@ export default function TeamContent<TData, THistory>({
           {isMobile ? (
             <div className="space-y-2">
               {/* Mobile Header */}
-              <div className="bg-white dark:bg-slate-800 rounded-lg px-2 py-4">
+              <div
+                className={`${config.modernCards ? MODERN_CARD_CLASS : "bg-white dark:bg-slate-800 rounded-lg"} px-2 py-4`}
+              >
                 <div className="flex items-center justify-between mb-4">
                   {teamTitle(true)}
                   {confLogo(32)}
@@ -430,7 +450,9 @@ export default function TeamContent<TData, THistory>({
           ) : (
             <div className="w-full">
               {/* Desktop Header */}
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-4 mb-3">
+              <div
+                className={`${config.modernCards ? MODERN_CARD_CLASS : "bg-white dark:bg-slate-800 rounded-lg"} p-4 mb-3`}
+              >
                 <div className="flex items-center justify-between">
                   {teamTitle(false)}
                   <div className="flex gap-4">

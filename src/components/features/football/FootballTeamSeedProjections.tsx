@@ -82,7 +82,7 @@ export default function FootballTeamSeedProjections({
       container: {
         overflowX: "auto",
         position: "relative",
-        border: "1px solid #dee2e6",
+        border: "1px solid var(--border-color)",
         width: isMobile ? "100%" : "fit-content",
         maxWidth: "100%",
       },
@@ -100,8 +100,8 @@ export default function FootballTeamSeedProjections({
       headerCell: {
         padding: isMobile ? "4px 2px" : "6px 4px",
         textAlign: "center",
-        border: "1px solid #dee2e6",
-        backgroundColor: "white",
+        border: "1px solid var(--border-color)",
+        backgroundColor: "var(--bg-primary)",
         position: "sticky",
         top: 0,
         zIndex: 2,
@@ -112,24 +112,25 @@ export default function FootballTeamSeedProjections({
         top: 0,
         left: 0,
         zIndex: 3,
-        backgroundColor: "white",
+        backgroundColor: "var(--bg-primary)",
       },
       dataCell: {
         padding: isMobile ? "3px 2px" : "4px 3px",
         textAlign: "center",
-        border: "1px solid #dee2e6",
+        border: "1px solid var(--border-color)",
       },
       stickyCell: {
         position: "sticky",
         left: 0,
         zIndex: 1,
-        backgroundColor: "white",
+        backgroundColor: "var(--bg-primary)",
       },
     });
   }, [isMobile]);
 
   const getStatusColor = (value: number, isOutCategory: boolean) => {
-    if (value === 0) return { backgroundColor: "white", color: "transparent" };
+    if (value === 0)
+      return { backgroundColor: "var(--bg-primary)", color: "transparent" };
 
     if (isOutCategory) {
       const white = [255, 255, 255];

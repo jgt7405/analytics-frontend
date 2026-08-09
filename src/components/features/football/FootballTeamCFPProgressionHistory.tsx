@@ -12,6 +12,7 @@ import {
   filterDataToRange,
   getFootballDateRange,
 } from "@/lib/chartDateRange";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
 import type { Chart, PointStyle, TooltipModel } from "chart.js";
 import {
   Chart as ChartJS,
@@ -65,6 +66,32 @@ export default function FootballTeamCFPProgressionHistory({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
   const [data, setData] = useState<CFPProgressionDataPoint[]>([]);
+
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
+    };
+    const observer = new MutationObserver(updateTheme);
+
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("cfp-progression-tooltip")?.remove();
+    };
+  }, []);
 
   // Use the master history hook
   const {
@@ -251,8 +278,9 @@ export default function FootballTeamCFPProgressionHistory({
         labels: {
           font: {
             size: isMobile ? 10 : 12,
+            weight: 600,
           },
-          color: "#6b7280",
+          color: isDark ? "#cbd5e1" : "#334155",
           usePointStyle: true,
           padding: isMobile ? 15 : 20,
           generateLabels: function (chart: Chart) {
@@ -300,156 +328,45 @@ export default function FootballTeamCFPProgressionHistory({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("cfp-progression-tooltip");
-          if (!tooltipEl) {
-            tooltipEl = document.createElement("div");
-            tooltipEl.id = "cfp-progression-tooltip";
-
-            Object.assign(tooltipEl.style, {
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              color: "#1f2937",
-              fontFamily: "Inter, system-ui, sans-serif",
-              fontSize: "12px",
-              opacity: "0",
-              padding: "16px",
-              paddingTop: "8px",
-              pointerEvents: "auto",
-              position: "absolute",
-              transition: "all .1s ease",
-              zIndex: "1000",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              minWidth: "200px",
-              maxWidth: "300px",
-            });
-
-            const handleClickOutside = (e: Event) => {
-              if (!tooltipEl?.contains(e.target as Node)) {
-                tooltipEl!.style.opacity = "0";
-                setTimeout(() => {
-                  if (tooltipEl && tooltipEl.parentNode) {
-                    document.removeEventListener("click", handleClickOutside);
-                    document.removeEventListener(
-                      "touchstart",
-                      handleClickOutside
-                    );
-                    document.body.removeChild(tooltipEl);
-                  }
-                }, 100);
-              }
-            };
-
-            document.addEventListener("click", handleClickOutside);
-            document.addEventListener("touchstart", handleClickOutside);
-            document.body.appendChild(tooltipEl);
-          }
-
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
+          let heading = "";
+          let rows: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const label = chartLabels[dataIndex];
             const point = dataByDate.get(label.isoDate);
-            if (!point) return;
-
-            let innerHtml = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${label.displayLabel}</div>
-                <button id="tooltip-close" style="
-                  background: none; 
-                  border: none; 
-                  font-size: 16px; 
-                  cursor: pointer; 
-                  color: #6b7280;
-                  padding: 0;
-                  margin: 0;
-                  line-height: 1;
-                  width: 20px;
-                  height: 20px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">&times;</button>
-              </div>
-            `;
-
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Champion: ${point.cfp_champion_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Championship: ${point.cfp_championship_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Semifinals: ${point.cfp_semifinals_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Quarterfinals: ${point.cfp_quarterfinals_pct.toFixed(1)}%</div>`;
-
-            tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
+            if (point) {
+              heading = label.displayLabel;
+              rows = [
+                {
+                  label: "Champion",
+                  value: `${point.cfp_champion_pct.toFixed(1)}%`,
+                  color: primaryColor,
+                },
+                {
+                  label: "Championship",
+                  value: `${point.cfp_championship_pct.toFixed(1)}%`,
+                  color: primaryColor,
+                },
+                {
+                  label: "Semifinals",
+                  value: `${point.cfp_semifinals_pct.toFixed(1)}%`,
+                  color: finalSecondaryColor,
+                },
+                {
+                  label: "Quarterfinals",
+                  value: `${point.cfp_quarterfinals_pct.toFixed(1)}%`,
+                  color: finalSecondaryColor,
+                },
+              ];
             }
           }
 
-          // Smart positioning logic
-          const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
-          const tooltipWidth = tooltipEl.offsetWidth || 200;
-          const caretX = tooltipModel.caretX;
-          const caretY = tooltipModel.caretY;
-
-          const isLeftSide = caretX < chartWidth / 2;
-          let leftPosition: number;
-          let arrowPosition: string;
-
-          if (isLeftSide) {
-            leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
-          } else {
-            leftPosition =
-              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
-          }
-
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          }
-
-          const maxLeft = window.innerWidth - tooltipWidth - 10;
-          const minLeft = 10;
-          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
-
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.left = leftPosition + "px";
-          tooltipEl.style.top =
-            position.top +
-            window.pageYOffset +
-            caretY -
-            tooltipEl.offsetHeight / 2 -
-            20 +
-            "px";
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "cfp-progression-tooltip",
+            isDark,
+            heading,
+            rows,
+          });
         },
       },
     },
@@ -457,9 +374,10 @@ export default function FootballTeamCFPProgressionHistory({
       x: {
         display: true,
         ticks: {
-          color: "#6b7280",
+          color: isDark ? "#94a3b8" : "#64748b",
           font: {
             size: isMobile ? 9 : 10,
+            weight: 600,
           },
           maxTicksLimit: isMobile ? 8 : 12,
         },
@@ -472,9 +390,10 @@ export default function FootballTeamCFPProgressionHistory({
         min: 0,
         max: 100,
         ticks: {
-          color: "#6b7280",
+          color: isDark ? "#94a3b8" : "#64748b",
           font: {
             size: isMobile ? 9 : 10,
+            weight: 600,
           },
           stepSize: 20,
           callback: function (value: string | number) {
@@ -484,7 +403,11 @@ export default function FootballTeamCFPProgressionHistory({
         title: {
           display: true,
           text: "CFP Progression %",
-          color: "#6b7280",
+          color: isDark ? "#cbd5e1" : "#374151",
+          font: { weight: 600 },
+        },
+        grid: {
+          color: isDark ? "rgb(148 163 184 / 0.15)" : "rgba(0, 0, 0, 0.1)",
         },
       },
     },

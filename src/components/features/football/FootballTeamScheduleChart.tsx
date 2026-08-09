@@ -95,9 +95,9 @@ export default function FootballTeamScheduleChart({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-xs">
+      <table className="w-full text-xs text-gray-700 dark:text-gray-200">
         <thead>
-          <tr className="border-b">
+          <tr className="border-b dark:border-slate-700">
             <th className="text-left p-2 font-bold">Date</th>
             <th className="text-left p-2 font-bold">Loc</th>
             <th className="text-left p-2 font-bold">Opp</th>
@@ -111,11 +111,11 @@ export default function FootballTeamScheduleChart({
           {schedule.map((game, index) => (
             <tr
               key={index}
-              className={`border-b hover:bg-gray-50 dark:bg-slate-800 transition-colors ${
+              className={`border-b dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors ${
                 game.status === "W"
-                  ? "border-2 border-green-500 bg-green-50"
+                  ? "border-2 border-green-500 bg-green-50 dark:bg-green-950/40"
                   : game.status === "L"
-                    ? "border-2 border-red-500 bg-red-50"
+                    ? "border-2 border-red-500 bg-red-50 dark:bg-red-950/40"
                     : "border-b"
               }`}
             >
@@ -124,10 +124,10 @@ export default function FootballTeamScheduleChart({
                 <span
                   className={`px-1 py-0.5 rounded text-xs ${
                     game.location === "Home"
-                      ? "bg-green-100 text-green-800"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-300"
                       : game.location === "Away"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-yellow-100 text-yellow-800"
+                        ? "bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-300"
+                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-300"
                   }`}
                 >
                   {game.location}
@@ -160,9 +160,9 @@ export default function FootballTeamScheduleChart({
                 <span
                   className={`font-medium ${
                     game.status === "W"
-                      ? "text-green-600"
+                      ? "text-green-600 dark:text-green-400"
                       : game.status === "L"
-                        ? "text-red-600"
+                        ? "text-red-600 dark:text-red-400"
                         : "text-gray-600 dark:text-gray-300"
                   }`}
                 >

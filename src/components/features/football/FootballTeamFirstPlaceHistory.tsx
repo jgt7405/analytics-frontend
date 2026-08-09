@@ -12,6 +12,7 @@ import {
   filterDataToRange,
   getFootballDateRange,
 } from "@/lib/chartDateRange";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
 import type { Chart, TooltipModel } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -49,6 +50,32 @@ export default function FootballTeamFirstPlaceHistory({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
+
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
+    };
+    const observer = new MutationObserver(updateTheme);
+
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("chartjs-tooltip-firstplace")?.remove();
+    };
+  }, []);
 
   // Use the master history hook
   const {
@@ -190,8 +217,10 @@ export default function FootballTeamFirstPlaceHistory({
         display: true,
         position: "top" as const,
         labels: {
+          color: isDark ? "#cbd5e1" : "#334155",
           font: {
             size: isMobile ? 10 : 12,
+            weight: 600,
           },
           usePointStyle: true,
           padding: isMobile ? 15 : 20,
@@ -202,157 +231,35 @@ export default function FootballTeamFirstPlaceHistory({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-firstplace");
-          if (!tooltipEl) {
-            tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-firstplace";
-
-            Object.assign(tooltipEl.style, {
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              color: "#1f2937",
-              fontFamily: "Inter, system-ui, sans-serif",
-              fontSize: "12px",
-              opacity: "0",
-              padding: "16px",
-              paddingTop: "8px",
-              pointerEvents: "auto",
-              position: "absolute",
-              transition: "all .1s ease",
-              zIndex: "1000",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              minWidth: "200px",
-              maxWidth: "300px",
-            });
-
-            const handleClickOutside = (e: Event) => {
-              if (!tooltipEl?.contains(e.target as Node)) {
-                tooltipEl!.style.opacity = "0";
-                setTimeout(() => {
-                  if (tooltipEl && tooltipEl.parentNode) {
-                    document.removeEventListener("click", handleClickOutside);
-                    document.removeEventListener(
-                      "touchstart",
-                      handleClickOutside
-                    );
-                    document.body.removeChild(tooltipEl);
-                  }
-                }, 100);
-              }
-            };
-
-            document.addEventListener("click", handleClickOutside);
-            document.addEventListener("touchstart", handleClickOutside);
-            document.body.appendChild(tooltipEl);
-          }
-
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
+          let heading = "";
+          let rows: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const label = chartLabels[dataIndex];
             const dataPoint = dataByDate.get(label.isoDate);
-            if (!dataPoint) return;
-
-            const firstPlaceWithTies = dataPoint.first_place_with_ties;
-            const firstPlaceNoTies = dataPoint.first_place_no_ties;
-
-            let innerHtml = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${label.displayLabel}</div>
-                <button id="tooltip-close" style="
-                  background: none; 
-                  border: none; 
-                  font-size: 16px; 
-                  cursor: pointer; 
-                  color: #6b7280;
-                  padding: 0;
-                  margin: 0;
-                  line-height: 1;
-                  width: 20px;
-                  height: 20px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">&times;</button>
-              </div>
-            `;
-
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">First Place (with ties): ${firstPlaceWithTies.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">First Place (no ties): ${firstPlaceNoTies.toFixed(1)}%</div>`;
-
-            tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
+            if (dataPoint) {
+              heading = label.displayLabel;
+              rows = [
+                {
+                  label: "First Place (with ties)",
+                  value: `${dataPoint.first_place_with_ties.toFixed(1)}%`,
+                  color: primaryColor,
+                },
+                {
+                  label: "First Place (no ties)",
+                  value: `${dataPoint.first_place_no_ties.toFixed(1)}%`,
+                  color: finalSecondaryColor,
+                },
+              ];
             }
           }
 
-          // Smart positioning logic
-          const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
-          const tooltipWidth = tooltipEl.offsetWidth || 200;
-          const caretX = tooltipModel.caretX;
-          const caretY = tooltipModel.caretY;
-
-          const isLeftSide = caretX < chartWidth / 2;
-          let leftPosition: number;
-          let arrowPosition: string;
-
-          if (isLeftSide) {
-            leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
-          } else {
-            leftPosition =
-              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
-          }
-
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          }
-
-          const maxLeft = window.innerWidth - tooltipWidth - 10;
-          const minLeft = 10;
-          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
-
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.left = leftPosition + "px";
-          tooltipEl.style.top =
-            position.top +
-            window.pageYOffset +
-            caretY -
-            tooltipEl.offsetHeight / 2 +
-            40 +
-            "px";
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "chartjs-tooltip-firstplace",
+            isDark,
+            heading,
+            rows,
+          });
         },
       },
     },
@@ -360,8 +267,10 @@ export default function FootballTeamFirstPlaceHistory({
       x: {
         title: { display: false },
         ticks: {
+          color: isDark ? "#94a3b8" : "#64748b",
           font: {
             size: isMobile ? 9 : 11,
+            weight: 600,
           },
         },
         grid: { display: false },
@@ -370,11 +279,13 @@ export default function FootballTeamFirstPlaceHistory({
         min: 0,
         max: 100,
         grid: {
-          color: "rgba(0, 0, 0, 0.1)",
+          color: isDark ? "rgb(148 163 184 / 0.15)" : "rgba(0, 0, 0, 0.1)",
         },
         ticks: {
+          color: isDark ? "#94a3b8" : "#64748b",
           font: {
             size: isMobile ? 10 : 12,
+            weight: 600,
           },
           stepSize: 20,
           callback: function (value: string | number) {
@@ -384,9 +295,10 @@ export default function FootballTeamFirstPlaceHistory({
         title: {
           display: true,
           text: "First Place Probability",
+          color: isDark ? "#cbd5e1" : "#374151",
           font: {
             size: isMobile ? 11 : 12,
-            weight: 500,
+            weight: 600,
           },
         },
       },
