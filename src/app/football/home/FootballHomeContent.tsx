@@ -104,9 +104,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
     <ErrorBoundary level="page">
       <PageLayoutWrapper
         title={
-          mode === "current"
-            ? "College Football Playoff — Current Snapshot"
-            : "College Football Playoff Projections"
+          mode === "current" ? "CFP — Current Snapshot" : "CFP Projections"
         }
         hideTitle
         isLoading={isLoading}
@@ -116,14 +114,26 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
           {/* CFP Bracket Table Section */}
           <ErrorBoundary level="component">
             <div className="mb-8">
-              <h2 className="mb-3 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
-                {mode === "current"
-                  ? "College Football Playoff — Current Snapshot"
-                  : "College Football Playoff Projections"}
-              </h2>
-              {/* Mobile: the header's "Updated" date and the absolutely
-                  positioned desktop toggles don't fit, so render the date and
-                  controls here in normal flow above the chart. */}
+              {/* Title and toggles share a row in normal flow (wrapping
+                  below the title if the row is too narrow) instead of
+                  absolutely positioning the toggles above the chart - that
+                  previously overlapped the title whenever it wrapped to two
+                  lines or the toggle row's rendered height exceeded the
+                  fixed clearance budgeted for it. */}
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+                <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+                  {mode === "current" ? "CFP — Current Snapshot" : "CFP Projections"}
+                </h2>
+                {!isMobile && (
+                  <div className="flex items-center gap-2">
+                    {modeToggle}
+                    {filterToggle}
+                  </div>
+                )}
+              </div>
+              {/* Mobile: the header's "Updated" date and the toggles don't
+                  fit next to the title, so render them here in normal flow
+                  above the chart. */}
               {isMobile && (
                 <div className="mb-3 flex flex-col gap-2">
                   <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -137,37 +147,18 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                   </div>
                 </div>
               )}
-              {/* Width shrinks to the chart so the toggle's right edge lines
-                  up with the chart's right edge (desktop); capped at 100% so
-                  the chart still scrolls on mobile. The toggle is absolutely
-                  positioned in the whitespace above the chart so it doesn't
-                  push the chart down. */}
               <div
-                className="relative"
-                style={{ width: "max-content", maxWidth: "100%" }}
+                className="cfp-bracket-table min-h-[600px]"
+                ref={cfpTableRef}
               >
-                {!isMobile && (
-                  <div
-                    className="absolute right-0 flex justify-end items-center gap-2"
-                    style={{ bottom: "100%", marginBottom: "8px" }}
-                  >
-                    {modeToggle}
-                    {filterToggle}
-                  </div>
-                )}
-                <div
-                  className="cfp-bracket-table min-h-[600px]"
-                  ref={cfpTableRef}
-                >
-                  <FootballCFPBracketTable
-                    playoffTeams={data?.playoff_teams ?? []}
-                    firstFourOut={data?.first_four_out ?? []}
-                    nextFourOut={data?.next_four_out ?? []}
-                    otherTeams={data?.other_teams ?? []}
-                    showAll={showAllTeams}
-                    isCurrent={mode === "current"}
-                  />
-                </div>
+                <FootballCFPBracketTable
+                  playoffTeams={data?.playoff_teams ?? []}
+                  firstFourOut={data?.first_four_out ?? []}
+                  nextFourOut={data?.next_four_out ?? []}
+                  otherTeams={data?.other_teams ?? []}
+                  showAll={showAllTeams}
+                  isCurrent={mode === "current"}
+                />
               </div>
 
               <div className="mt-6">
