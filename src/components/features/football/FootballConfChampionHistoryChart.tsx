@@ -459,18 +459,19 @@ export default function FootballConfChampionHistoryChart({
       }
     }
 
+    // Teams tied (or nearly tied) at the top get pushed into a stack right
+    // at chartTop by the loop above. Fan just that bunched subset out by a
+    // fixed minSpacing each - NOT `availableSpace / (positions.length - 1)`,
+    // which spaces relative to the *total* team count and, with only two or
+    // three teams bunched, stretches the second one almost to chartBottom
+    // even though its value is nearly identical to the first.
     const topBunchedLogos = positions.filter(
       (pos) => pos.adjustedY <= chartTop + minSpacing,
     );
     if (topBunchedLogos.length > 1) {
-      const availableSpace = chartBottom - chartTop;
-      const evenSpacing = availableSpace / (positions.length - 1);
-      for (let i = 0; i < positions.length; i++) {
-        if (positions[i].adjustedY <= chartTop + minSpacing) {
-          positions[i].adjustedY =
-            chartTop + i * Math.max(evenSpacing, minSpacing);
-        }
-      }
+      topBunchedLogos.forEach((pos, i) => {
+        pos.adjustedY = chartTop + i * minSpacing;
+      });
     }
 
     return positions;
