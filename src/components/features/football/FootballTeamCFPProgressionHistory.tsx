@@ -13,7 +13,7 @@ import {
   getFootballDateRange,
 } from "@/lib/chartDateRange";
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
-import type { Chart, PointStyle, TooltipModel } from "chart.js";
+import type { Chart, ChartArea, PointStyle, TooltipModel } from "chart.js";
 import {
   Chart as ChartJS,
 } from "chart.js";
@@ -92,6 +92,8 @@ export default function FootballTeamCFPProgressionHistory({
       document.getElementById("cfp-progression-tooltip")?.remove();
     };
   }, []);
+
+  const [chartArea, setChartArea] = useState<ChartArea | null>(null);
 
   // Use the master history hook
   const {
@@ -188,15 +190,65 @@ export default function FootballTeamCFPProgressionHistory({
   // Get team logo from the first available data point
   const teamLogo = data.length > 0 ? data[0].team_info.logo_url : null;
 
+  const quarterfinalsData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.cfp_quarterfinals_pct : null;
+  });
+  const semifinalsData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.cfp_semifinals_pct : null;
+  });
+  const championshipData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.cfp_championship_pct : null;
+  });
+  const championData = chartLabels.map((label) => {
+    const point = dataByDate.get(label.isoDate);
+    return point ? point.cfp_champion_pct : null;
+  });
+
+  const lastQuarterfinals =
+    [...quarterfinalsData].reverse().find((v) => v !== null) ?? null;
+  const lastSemifinals =
+    [...semifinalsData].reverse().find((v) => v !== null) ?? null;
+  const lastChampionship =
+    [...championshipData].reverse().find((v) => v !== null) ?? null;
+  const lastChampion =
+    [...championData].reverse().find((v) => v !== null) ?? null;
+
+  // Tracks the end-of-line markers with a ResizeObserver (not a one-shot
+  // timeout) so they stay aligned with the chart's actual current layout
+  // (PAGE_MODERNIZATION_GUIDE.md §8g).
+  useEffect(() => {
+    const canvas = chartRef.current?.canvas;
+    if (!canvas) return;
+
+    const updateChartArea = () => {
+      const area = chartRef.current?.chartArea;
+      if (!area) return;
+      setChartArea((prev: ChartArea | null) =>
+        prev &&
+        prev.top === area.top &&
+        prev.right === area.right &&
+        prev.bottom === area.bottom
+          ? prev
+          : { ...area },
+      );
+    };
+
+    const observer = new ResizeObserver(updateChartArea);
+    observer.observe(canvas);
+    updateChartArea();
+
+    return () => observer.disconnect();
+  }, [data]);
+
   const chartData = {
     labels: chartLabels.map((l) => l.displayLabel),
     datasets: [
       {
         label: "Quarterfinals",
-        data: chartLabels.map((label) => {
-          const point = dataByDate.get(label.isoDate);
-          return point ? point.cfp_quarterfinals_pct : null;
-        }),
+        data: quarterfinalsData,
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
         borderWidth: 2,
@@ -208,10 +260,7 @@ export default function FootballTeamCFPProgressionHistory({
       },
       {
         label: "Semifinals",
-        data: chartLabels.map((label) => {
-          const point = dataByDate.get(label.isoDate);
-          return point ? point.cfp_semifinals_pct : null;
-        }),
+        data: semifinalsData,
         borderColor: finalSecondaryColor,
         backgroundColor: finalSecondaryColor,
         borderWidth: 2,
@@ -222,10 +271,7 @@ export default function FootballTeamCFPProgressionHistory({
       },
       {
         label: "Championship Game",
-        data: chartLabels.map((label) => {
-          const point = dataByDate.get(label.isoDate);
-          return point ? point.cfp_championship_pct : null;
-        }),
+        data: championshipData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 2,
@@ -237,10 +283,7 @@ export default function FootballTeamCFPProgressionHistory({
       },
       {
         label: "Champion",
-        data: chartLabels.map((label) => {
-          const point = dataByDate.get(label.isoDate);
-          return point ? point.cfp_champion_pct : null;
-        }),
+        data: championData,
         borderColor: primaryColor,
         backgroundColor: primaryColor,
         borderWidth: 3,
@@ -483,6 +526,35 @@ export default function FootballTeamCFPProgressionHistory({
         </div>
       )}
       <Line ref={chartRef} data={chartData} options={options} />
+      {chartArea && (
+        <svg
+          className="pointer-events-none absolute left-0 top-0"
+          style={{ width: "100%", height: "100%" }}
+        >
+          {[
+            { value: lastQuarterfinals, color: finalSecondaryColor, solid: false },
+            { value: lastSemifinals, color: finalSecondaryColor, solid: true },
+            { value: lastChampionship, color: primaryColor, solid: false },
+            { value: lastChampion, color: primaryColor, solid: true },
+          ].map(({ value, color, solid }, i) => {
+            if (value === null) return null;
+            const y = chartRef.current?.scales?.y?.getPixelForValue(value);
+            if (y === undefined) return null;
+            return (
+              <circle
+                key={i}
+                cx={chartArea.right}
+                cy={y}
+                r="4.25"
+                fill={solid ? color : isDark ? "#0f172a" : "#ffffff"}
+                stroke={color}
+                strokeWidth="2.5"
+                style={{ filter: `drop-shadow(0 0 3px ${color})` }}
+              />
+            );
+          })}
+        </svg>
+      )}
     </div>
   );
 }

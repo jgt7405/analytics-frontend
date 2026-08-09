@@ -28,6 +28,13 @@ import { ReactNode, useCallback, useEffect, useState } from "react";
 // flag's doc comment below for why basketball keeps the old chrome.
 const MODERN_CARD_CLASS =
   "relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+// Stat tiles nest INSIDE the header's MODERN_CARD_CLASS card, so the
+// gradient/shadow card's near-white-on-white border reads as invisible
+// there (visible fine on the page background, not against another card).
+// Use a flatter, more opaque border + tinted bg so the tile still reads as
+// a distinct box against its parent card.
+const MODERN_NESTED_CARD_CLASS =
+  "relative rounded-2xl border-2 border-slate-200 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-900/50";
 const LEGACY_CARD_CLASS = "bg-white dark:bg-slate-800 rounded-lg relative";
 const LEGACY_CARD_STYLE: React.CSSProperties = { border: "1px solid #d1d5db" };
 
@@ -340,7 +347,7 @@ export default function TeamContent<TData, THistory>({
     mobile: boolean,
   ) => (
     <div
-      className={`${config.modernCards ? MODERN_CARD_CLASS : LEGACY_CARD_CLASS} ${mobile ? "p-3 flex-1" : "p-4"}`}
+      className={`${config.modernCards ? MODERN_NESTED_CARD_CLASS : LEGACY_CARD_CLASS} ${mobile ? "p-3 flex-1" : "p-4"}`}
       style={config.modernCards ? undefined : LEGACY_CARD_STYLE}
     >
       <div className={mobile ? "flex gap-3" : "flex gap-4"}>

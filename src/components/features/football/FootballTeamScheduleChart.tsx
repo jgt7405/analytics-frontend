@@ -147,18 +147,18 @@ export default function FootballTeamScheduleChart({
                   />
                 </div>
               </td>
-              <td className="text-center p-2">
+              <td className="text-center p-2 font-semibold tabular-nums">
                 {formatRank(game.opp_rnk || game.sagarin_rank)}
               </td>
-              <td className="text-center p-2">
+              <td className="text-center p-2 font-semibold tabular-nums">
                 {formatProbability(game.team_win_prob)}
               </td>
-              <td className="text-center p-2">
+              <td className="text-center p-2 font-semibold tabular-nums">
                 {formatProbability(game.sag12_win_prob)}
               </td>
               <td className="text-center p-2">
                 <span
-                  className={`font-medium ${
+                  className={`font-semibold tabular-nums ${
                     game.status === "W"
                       ? "text-green-600 dark:text-green-400"
                       : game.status === "L"

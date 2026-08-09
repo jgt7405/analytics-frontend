@@ -2,8 +2,9 @@
 
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import styles from "./FootballTeamSeedProjections.module.css";
 
 // TypeScript interfaces
 interface FootballRecordSeedCount {
@@ -55,16 +56,6 @@ interface FootballTotalRow {
   total: number;
 }
 
-interface FootballStyles {
-  container: React.CSSProperties;
-  table: React.CSSProperties;
-  thead: React.CSSProperties;
-  headerCell: React.CSSProperties;
-  stickyHeaderCell: React.CSSProperties;
-  dataCell: React.CSSProperties;
-  stickyCell: React.CSSProperties;
-}
-
 interface FootballTeamSeedProjectionsProps {
   recordSeedCounts: FootballRecordSeedCount[];
   logoUrl?: string;
@@ -75,58 +66,6 @@ export default function FootballTeamSeedProjections({
   logoUrl,
 }: FootballTeamSeedProjectionsProps) {
   const { isMobile } = useResponsive();
-  const [styles, setStyles] = useState<FootballStyles>({} as FootballStyles);
-
-  useEffect(() => {
-    setStyles({
-      container: {
-        overflowX: "auto",
-        position: "relative",
-        border: "1px solid var(--border-color)",
-        width: isMobile ? "100%" : "fit-content",
-        maxWidth: "100%",
-      },
-      table: {
-        borderCollapse: "separate",
-        borderSpacing: 0,
-        width: "auto",
-        fontSize: isMobile ? "12px" : "14px",
-      },
-      thead: {
-        position: "sticky",
-        top: 0,
-        zIndex: 2,
-      },
-      headerCell: {
-        padding: isMobile ? "4px 2px" : "6px 4px",
-        textAlign: "center",
-        border: "1px solid var(--border-color)",
-        backgroundColor: "var(--bg-primary)",
-        position: "sticky",
-        top: 0,
-        zIndex: 2,
-        fontWeight: "normal",
-      },
-      stickyHeaderCell: {
-        position: "sticky",
-        top: 0,
-        left: 0,
-        zIndex: 3,
-        backgroundColor: "var(--bg-primary)",
-      },
-      dataCell: {
-        padding: isMobile ? "3px 2px" : "4px 3px",
-        textAlign: "center",
-        border: "1px solid var(--border-color)",
-      },
-      stickyCell: {
-        position: "sticky",
-        left: 0,
-        zIndex: 1,
-        backgroundColor: "var(--bg-primary)",
-      },
-    });
-  }, [isMobile]);
 
   const getStatusColor = (value: number, isOutCategory: boolean) => {
     if (value === 0)
@@ -448,11 +387,15 @@ export default function FootballTeamSeedProjections({
     return label;
   };
 
-  const winsColWidth = "60px";
-  const seedColWidth = isMobile ? "33px" : "38px";
-  const statusColWidth = isMobile ? "45px" : "60px";
-  const bidColWidth = isMobile ? "40px" : "50px";
-  const totalColWidth = isMobile ? "35px" : "45px";
+  const winsColWidth = isMobile ? 52 : 60;
+  const seedColWidth = isMobile ? 33 : 38;
+  const statusColWidth = isMobile ? 45 : 60;
+  const bidColWidth = isMobile ? 40 : 50;
+  const totalColWidth = isMobile ? 35 : 45;
+  const row1Height = isMobile ? 24 : 28;
+  const row2Height = isMobile ? 34 : 38;
+  const cellHeight = isMobile ? 24 : 28;
+  const textSize = isMobile ? "text-xs" : "text-sm";
 
   return (
     <div style={{ position: "relative" }}>
@@ -475,41 +418,56 @@ export default function FootballTeamSeedProjections({
           />
         </div>
       )}
-      <div style={styles.container}>
-        <table style={styles.table}>
-          <thead style={styles.thead}>
+      <div className={styles.scrollViewport}>
+        <table className={styles.table}>
+          <thead>
             <tr>
+              {/* Record header - placeholder split from row 2 below since a
+                  rowSpan on a sticky-left <th> doesn't reliably stick
+                  (PAGE_MODERNIZATION_GUIDE.md §6b). */}
               <th
-                rowSpan={2}
+                className={cn(styles.headerCell, styles.stickyCell, textSize)}
                 style={{
-                  ...styles.headerCell,
-                  ...styles.stickyHeaderCell,
                   width: winsColWidth,
                   minWidth: winsColWidth,
                   maxWidth: winsColWidth,
+                  height: row1Height,
+                  left: 0,
                 }}
               >
                 Record
               </th>
 
               {seedColumns.length > 0 && (
-                <th colSpan={seedColumns.length} style={styles.headerCell}>
+                <th
+                  colSpan={seedColumns.length}
+                  className={cn(styles.headerCell, textSize)}
+                  style={{ height: row1Height }}
+                >
                   Seed
                 </th>
               )}
 
-              <th colSpan={statusColumns.length} style={styles.headerCell}>
+              <th
+                colSpan={statusColumns.length}
+                className={cn(styles.headerCell, textSize)}
+                style={{ height: row1Height }}
+              >
                 CFP Status
               </th>
 
-              <th colSpan={bidCategoryColumns.length} style={styles.headerCell}>
+              <th
+                colSpan={bidCategoryColumns.length}
+                className={cn(styles.headerCell, textSize)}
+                style={{ height: row1Height }}
+              >
                 Bid Category
               </th>
 
               <th
                 rowSpan={2}
+                className={cn(styles.headerCell, textSize)}
                 style={{
-                  ...styles.headerCell,
                   width: totalColWidth,
                   minWidth: totalColWidth,
                   maxWidth: totalColWidth,
@@ -520,14 +478,30 @@ export default function FootballTeamSeedProjections({
             </tr>
 
             <tr>
+              {/* Record placeholder - see note above. Sticky, pinned right
+                  below row 1 (top: row1Height). */}
+              <th
+                className={styles.stickyCell}
+                style={{
+                  width: winsColWidth,
+                  minWidth: winsColWidth,
+                  maxWidth: winsColWidth,
+                  height: row2Height,
+                  top: row1Height,
+                  left: 0,
+                }}
+              />
+
               {seedColumns.map((seed) => (
                 <th
                   key={`seed-${seed}`}
+                  className={cn(styles.colHeaderCell, textSize)}
                   style={{
-                    ...styles.headerCell,
                     width: seedColWidth,
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
+                    height: row2Height,
+                    top: row1Height,
                   }}
                 >
                   {seed}
@@ -537,14 +511,14 @@ export default function FootballTeamSeedProjections({
               {statusColumns.map((status) => (
                 <th
                   key={`status-${status}`}
+                  className={styles.colHeaderCell}
                   style={{
-                    ...styles.headerCell,
                     width: statusColWidth,
                     minWidth: statusColWidth,
                     maxWidth: statusColWidth,
-                    whiteSpace: "normal",
+                    height: row2Height,
+                    top: row1Height,
                     fontSize: isMobile ? "10px" : "11px",
-                    lineHeight: "1.1",
                   }}
                 >
                   {getCompactHeader(status)}
@@ -554,14 +528,14 @@ export default function FootballTeamSeedProjections({
               {bidCategoryColumns.map((category) => (
                 <th
                   key={`bid-${category}`}
+                  className={styles.colHeaderCell}
                   style={{
-                    ...styles.headerCell,
                     width: bidColWidth,
                     minWidth: bidColWidth,
                     maxWidth: bidColWidth,
-                    whiteSpace: "normal",
+                    height: row2Height,
+                    top: row1Height,
                     fontSize: isMobile ? "10px" : "11px",
-                    lineHeight: "1.1",
                   }}
                 >
                   {getCompactHeader(category)}
@@ -573,17 +547,21 @@ export default function FootballTeamSeedProjections({
             {data.records.map((recordValue: string) => {
               const rowData = data.recordData[recordValue];
               const percentOfTotal = rowData.percentOfTotal;
-              const totalColorStyle = getCellColor(percentOfTotal);
 
               return (
                 <tr key={`record-${recordValue}`}>
                   <td
+                    className={cn(
+                      styles.recordCell,
+                      styles.stickyBodyCell,
+                      textSize,
+                    )}
                     style={{
-                      ...styles.dataCell,
-                      ...styles.stickyCell,
                       width: winsColWidth,
                       minWidth: winsColWidth,
                       maxWidth: winsColWidth,
+                      height: cellHeight,
+                      left: 0,
                     }}
                   >
                     {recordValue}
@@ -595,14 +573,19 @@ export default function FootballTeamSeedProjections({
                       <td
                         key={`record-${recordValue}-seed-${seed}`}
                         style={{
-                          ...styles.dataCell,
-                          ...getCellColor(pct),
+                          height: cellHeight,
                           width: seedColWidth,
                           minWidth: seedColWidth,
                           maxWidth: seedColWidth,
+                          padding: 0,
                         }}
                       >
-                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        <div
+                          className={cn(styles.heatTile, textSize)}
+                          style={getCellColor(pct)}
+                        >
+                          {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        </div>
                       </td>
                     );
                   })}
@@ -617,14 +600,19 @@ export default function FootballTeamSeedProjections({
                       <td
                         key={`record-${recordValue}-status-${status}`}
                         style={{
-                          ...styles.dataCell,
-                          ...getStatusColor(pct, isOutCategory),
+                          height: cellHeight,
                           width: statusColWidth,
                           minWidth: statusColWidth,
                           maxWidth: statusColWidth,
+                          padding: 0,
                         }}
                       >
-                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        <div
+                          className={cn(styles.heatTile, textSize)}
+                          style={getStatusColor(pct, isOutCategory)}
+                        >
+                          {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        </div>
                       </td>
                     );
                   })}
@@ -635,28 +623,38 @@ export default function FootballTeamSeedProjections({
                       <td
                         key={`record-${recordValue}-bid-${category}`}
                         style={{
-                          ...styles.dataCell,
-                          ...getCellColor(pct),
+                          height: cellHeight,
                           width: bidColWidth,
                           minWidth: bidColWidth,
                           maxWidth: bidColWidth,
+                          padding: 0,
                         }}
                       >
-                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        <div
+                          className={cn(styles.heatTile, textSize)}
+                          style={getCellColor(pct)}
+                        >
+                          {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        </div>
                       </td>
                     );
                   })}
 
                   <td
                     style={{
-                      ...styles.dataCell,
-                      ...totalColorStyle,
+                      height: cellHeight,
                       width: totalColWidth,
                       minWidth: totalColWidth,
                       maxWidth: totalColWidth,
+                      padding: 0,
                     }}
                   >
-                    {`${Math.round(percentOfTotal)}%`}
+                    <div
+                      className={cn(styles.heatTile, textSize)}
+                      style={getCellColor(percentOfTotal)}
+                    >
+                      {`${Math.round(percentOfTotal)}%`}
+                    </div>
                   </td>
                 </tr>
               );
@@ -665,12 +663,17 @@ export default function FootballTeamSeedProjections({
             {/* Totals Row */}
             <tr>
               <td
+                className={cn(
+                  styles.recordCell,
+                  styles.stickyBodyCell,
+                  textSize,
+                )}
                 style={{
-                  ...styles.dataCell,
-                  ...styles.stickyCell,
                   width: winsColWidth,
                   minWidth: winsColWidth,
                   maxWidth: winsColWidth,
+                  height: cellHeight,
+                  left: 0,
                 }}
               >
                 Total
@@ -682,14 +685,19 @@ export default function FootballTeamSeedProjections({
                   <td
                     key={`total-seed-${seed}`}
                     style={{
-                      ...styles.dataCell,
-                      ...getCellColor(pct),
+                      height: cellHeight,
                       width: seedColWidth,
                       minWidth: seedColWidth,
                       maxWidth: seedColWidth,
+                      padding: 0,
                     }}
                   >
-                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    <div
+                      className={cn(styles.heatTile, textSize)}
+                      style={getCellColor(pct)}
+                    >
+                      {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    </div>
                   </td>
                 );
               })}
@@ -704,14 +712,19 @@ export default function FootballTeamSeedProjections({
                   <td
                     key={`total-status-${status}`}
                     style={{
-                      ...styles.dataCell,
-                      ...getStatusColor(pct, isOutCategory),
+                      height: cellHeight,
                       width: statusColWidth,
                       minWidth: statusColWidth,
                       maxWidth: statusColWidth,
+                      padding: 0,
                     }}
                   >
-                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    <div
+                      className={cn(styles.heatTile, textSize)}
+                      style={getStatusColor(pct, isOutCategory)}
+                    >
+                      {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    </div>
                   </td>
                 );
               })}
@@ -723,27 +736,35 @@ export default function FootballTeamSeedProjections({
                   <td
                     key={`total-bid-${category}`}
                     style={{
-                      ...styles.dataCell,
-                      ...getCellColor(pct),
+                      height: cellHeight,
                       width: bidColWidth,
                       minWidth: bidColWidth,
                       maxWidth: bidColWidth,
+                      padding: 0,
                     }}
                   >
-                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    <div
+                      className={cn(styles.heatTile, textSize)}
+                      style={getCellColor(pct)}
+                    >
+                      {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    </div>
                   </td>
                 );
               })}
 
               <td
                 style={{
-                  ...styles.dataCell,
+                  height: cellHeight,
                   width: totalColWidth,
                   minWidth: totalColWidth,
                   maxWidth: totalColWidth,
+                  padding: 0,
                 }}
               >
-                {`${Math.round((data.totalRow.total / data.grandTotal) * 100)}%`}
+                <div className={cn(styles.heatTile, textSize)}>
+                  {`${Math.round((data.totalRow.total / data.grandTotal) * 100)}%`}
+                </div>
               </td>
             </tr>
           </tbody>

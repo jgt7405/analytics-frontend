@@ -8,7 +8,7 @@ import "@/lib/chartjs-setup";
 import { useResponsive } from "@/hooks/useResponsive";
 import { getFootballDateRange } from "@/lib/chartDateRange";
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
-import type { Chart, TooltipModel } from "chart.js";
+import type { Chart, ChartArea, TooltipModel } from "chart.js";
 import {
   Chart as ChartJS,
 } from "chart.js";
@@ -82,6 +82,8 @@ export default function FootballTeamWinValues({
       document.getElementById("chartjs-tooltip-winvalues")?.remove();
     };
   }, []);
+
+  const [chartArea, setChartArea] = useState<ChartArea | null>(null);
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -201,6 +203,36 @@ export default function FootballTeamWinValues({
   };
 
   const { continuousData, labels, twvData, cwvData } = processScheduleData();
+
+  // Tracks the end-of-line marker with a ResizeObserver (not a one-shot
+  // timeout) so it stays aligned with the chart's actual current layout
+  // (PAGE_MODERNIZATION_GUIDE.md §8g).
+  useEffect(() => {
+    const canvas = chartRef.current?.canvas;
+    if (!canvas) return;
+
+    const updateChartArea = () => {
+      const area = chartRef.current?.chartArea;
+      if (!area) return;
+      setChartArea((prev) =>
+        prev &&
+        prev.top === area.top &&
+        prev.right === area.right &&
+        prev.bottom === area.bottom
+          ? prev
+          : { ...area },
+      );
+    };
+
+    const observer = new ResizeObserver(updateChartArea);
+    observer.observe(canvas);
+    updateChartArea();
+
+    return () => observer.disconnect();
+  }, [continuousData]);
+
+  const lastTwv = twvData.length > 0 ? twvData[twvData.length - 1] : null;
+  const lastCwv = cwvData.length > 0 ? cwvData[cwvData.length - 1] : null;
 
   const datasets = [
     {
@@ -397,6 +429,33 @@ export default function FootballTeamWinValues({
         </div>
       )}
       <Line ref={chartRef} data={chartData} options={options} />
+      {chartArea && (lastTwv !== null || lastCwv !== null) && (
+        <svg
+          className="pointer-events-none absolute left-0 top-0"
+          style={{ width: "100%", height: "100%" }}
+        >
+          {[
+            { value: lastTwv, color: "rgb(0, 151, 178)" },
+            { value: lastCwv, color: "rgb(217, 119, 6)" },
+          ].map(({ value, color }, i) => {
+            if (value === null) return null;
+            const y = chartRef.current?.scales?.y?.getPixelForValue(value);
+            if (y === undefined) return null;
+            return (
+              <circle
+                key={i}
+                cx={chartArea.right}
+                cy={y}
+                r="4.25"
+                fill={isDark ? "#0f172a" : "#ffffff"}
+                stroke={color}
+                strokeWidth="2.5"
+                style={{ filter: `drop-shadow(0 0 3px ${color})` }}
+              />
+            );
+          })}
+        </svg>
+      )}
     </div>
   );
 }

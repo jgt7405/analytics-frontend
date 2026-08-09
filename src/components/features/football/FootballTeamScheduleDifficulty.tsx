@@ -524,7 +524,11 @@ export default function FootballTeamScheduleDifficulty({
           height={CHART_HEIGHT}
           className="border border-gray-200 dark:border-gray-600 rounded"
         >
-          <rect width={CHART_WIDTH} height={CHART_HEIGHT} fill="white" />
+          <rect
+            width={CHART_WIDTH}
+            height={CHART_HEIGHT}
+            fill="var(--bg-primary)"
+          />
 
           {percentiles.map((percentile) => {
             const y = MARGIN.top + (percentile.percentile / 100) * PLOT_HEIGHT;

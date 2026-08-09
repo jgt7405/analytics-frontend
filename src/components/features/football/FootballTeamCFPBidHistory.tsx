@@ -12,7 +12,7 @@ import {
   getFootballDateRange,
 } from "@/lib/chartDateRange";
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
-import type { Chart, TooltipModel } from "chart.js";
+import type { Chart, ChartArea, TooltipModel } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
@@ -85,6 +85,8 @@ export default function FootballTeamCFPBidHistory({
       document.getElementById("chartjs-tooltip-cfpbid")?.remove();
     };
   }, []);
+
+  const [chartArea, setChartArea] = useState<ChartArea | null>(null);
 
   const parseDateCentralTime = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
@@ -194,6 +196,37 @@ export default function FootballTeamCFPBidHistory({
       ? point.average_seed
       : null;
   });
+
+  const lastCfpBid = [...cfpBidData].reverse().find((v) => v !== null) ?? null;
+  const lastAvgSeed =
+    [...avgSeedData].reverse().find((v) => v !== null) ?? null;
+
+  // Tracks the end-of-line markers with a ResizeObserver (not a one-shot
+  // timeout) so they stay aligned with the chart's actual current layout
+  // (PAGE_MODERNIZATION_GUIDE.md §8g).
+  useEffect(() => {
+    const canvas = chartRef.current?.canvas;
+    if (!canvas) return;
+
+    const updateChartArea = () => {
+      const area = chartRef.current?.chartArea;
+      if (!area) return;
+      setChartArea((prev: ChartArea | null) =>
+        prev &&
+        prev.top === area.top &&
+        prev.right === area.right &&
+        prev.bottom === area.bottom
+          ? prev
+          : { ...area },
+      );
+    };
+
+    const observer = new ResizeObserver(updateChartArea);
+    observer.observe(canvas);
+    updateChartArea();
+
+    return () => observer.disconnect();
+  }, [data]);
 
   const chartData = {
     labels: chartLabels.map((l) => l.displayLabel),
@@ -444,6 +477,51 @@ export default function FootballTeamCFPBidHistory({
       )}
 
       <Line ref={chartRef} data={chartData} options={options} />
+      {chartArea && (lastCfpBid !== null || lastAvgSeed !== null) && (
+        <svg
+          className="pointer-events-none absolute left-0 top-0"
+          style={{ width: "100%", height: "100%" }}
+        >
+          {lastCfpBid !== null &&
+            (() => {
+              const y = chartRef.current?.scales?.y?.getPixelForValue(
+                lastCfpBid,
+              );
+              if (y === undefined) return null;
+              return (
+                <circle
+                  cx={chartArea.right}
+                  cy={y}
+                  r="4.25"
+                  fill={isDark ? "#0f172a" : "#ffffff"}
+                  stroke={primaryColor}
+                  strokeWidth="2.5"
+                  style={{ filter: `drop-shadow(0 0 3px ${primaryColor})` }}
+                />
+              );
+            })()}
+          {lastAvgSeed !== null &&
+            (() => {
+              const y = chartRef.current?.scales?.y1?.getPixelForValue(
+                lastAvgSeed,
+              );
+              if (y === undefined) return null;
+              return (
+                <circle
+                  cx={chartArea.right}
+                  cy={y}
+                  r="4.25"
+                  fill={isDark ? "#0f172a" : "#ffffff"}
+                  stroke={finalSecondaryColor}
+                  strokeWidth="2.5"
+                  style={{
+                    filter: `drop-shadow(0 0 3px ${finalSecondaryColor})`,
+                  }}
+                />
+              );
+            })()}
+        </svg>
+      )}
     </div>
   );
 }
