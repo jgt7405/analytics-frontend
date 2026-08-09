@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
 import { ChartArea, Chart as ChartJS, Plugin, TooltipModel } from "chart.js";
+import { RotateCcw } from "lucide-react";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
@@ -348,6 +349,7 @@ export default function FootballStandingsHistoryChart({
         ticks: {
           maxTicksLimit: isMobile ? 5 : 10,
           color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
           font: {
             weight: 600,
             size: isMobile ? 13 : 15,
@@ -361,6 +363,10 @@ export default function FootballStandingsHistoryChart({
           display: true,
           text: "Average Standing",
           color: isDark ? "#cbd5e1" : "#334155",
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
         },
         reverse: true,
         min: 1,
@@ -602,8 +608,9 @@ export default function FootballStandingsHistoryChart({
             <button
               type="button"
               onClick={clearSelectedTeams}
-              className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-red-400/50 dark:hover:bg-red-950/30 dark:hover:text-red-400"
             >
+              <RotateCcw className="h-3 w-3" />
               Show All
             </button>
           )}
@@ -620,10 +627,15 @@ export default function FootballStandingsHistoryChart({
                 aria-pressed={isSelected}
                 aria-label={`${team.team_name}, final standing ${team.avg_standing.toFixed(1)}. Select to emphasize this team.`}
                 onClick={() => handleTeamClick(team.team_name)}
+                style={{
+                  borderColor:
+                    team.team_info.primary_color ||
+                    (isDark ? "#475569" : "#cbd5e1"),
+                }}
                 className={cn(
-                  "flex min-w-0 cursor-pointer flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white/80 px-1 py-2 transition-[border-color,box-shadow,opacity,filter,background-color] hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:hover:border-slate-600 dark:hover:bg-slate-800",
+                  "flex min-w-0 cursor-pointer flex-col items-center gap-0.5 rounded-xl border-2 bg-white/80 px-1 pb-1.5 pt-1 transition-[box-shadow,opacity,filter,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
                   isExplicitlySelected &&
-                    "border-sky-500 ring-2 ring-sky-500/20 dark:border-sky-400",
+                    "ring-2 ring-sky-500/30 dark:ring-sky-400/40",
                   !isSelected && "opacity-30 grayscale",
                 )}
               >
