@@ -348,39 +348,49 @@ export default function FootballCompareSchedulesChart({
       gamesByTeam.get(game.teamIndex)!.push(game);
     });
 
+    const topBound = MARGIN.top + 15;
+    const bottomBound = MARGIN.top + PLOT_HEIGHT - 15;
+
     gamesByTeam.forEach((teamGamesList) => {
       const sorted = [...teamGamesList].sort(
         (a, b) => a.percentilePosition - b.percentilePosition
       );
 
-      sorted.forEach((game, gameIndexInTeam) => {
+      // Forward pass: cascade each game at least minSpacing below the one
+      // before it, without clamping to bottomBound yet. A team with many
+      // games clustered in percentile can cascade well past bottomBound;
+      // clamping each one individually (the old behavior) collapsed every
+      // game past that point onto the exact same pixel, so they all
+      // visually overlapped instead of staying spaced out.
+      const adjustedYs: number[] = [];
+      sorted.forEach((game, i) => {
         const gameY =
           MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
-
-        let logoY = gameY;
-
-        const teamColumnGames = positioned.filter(
-          (p) => p.teamIndex === game.teamIndex
+        adjustedYs.push(
+          i === 0
+            ? Math.max(topBound, gameY)
+            : Math.max(gameY, adjustedYs[i - 1] + minSpacing),
         );
+      });
 
-        if (gameIndexInTeam === 0) {
-          logoY = Math.max(MARGIN.top + 15, gameY);
-        } else {
-          const previousGame = teamColumnGames[teamColumnGames.length - 1];
-          const minimumY = previousGame.adjustedY + minSpacing;
-
-          if (gameY >= minimumY) {
-            logoY = gameY;
-          } else {
-            logoY = minimumY;
-          }
-
-          logoY = Math.min(MARGIN.top + PLOT_HEIGHT - 15, logoY);
+      // If the cascade overflowed past the bottom, compress the whole
+      // column proportionally instead - keeps every game visible and
+      // spaced apart (just tighter than the ideal minSpacing) rather than
+      // letting the overflow pile up on top of each other at the bottom.
+      const overflow = adjustedYs[adjustedYs.length - 1] - bottomBound;
+      if (overflow > 0 && adjustedYs.length > 1) {
+        const span = adjustedYs[adjustedYs.length - 1] - adjustedYs[0];
+        const availableSpan = bottomBound - adjustedYs[0];
+        const scale = span > 0 ? availableSpan / span : 1;
+        for (let i = 1; i < adjustedYs.length; i++) {
+          adjustedYs[i] = adjustedYs[0] + (adjustedYs[i] - adjustedYs[0]) * scale;
         }
+      }
 
+      sorted.forEach((game, i) => {
         positioned.push({
           ...game,
-          adjustedY: logoY,
+          adjustedY: adjustedYs[i],
         });
       });
     });

@@ -460,17 +460,29 @@ export default function FootballChampGameHistoryChart({
     }
 
     // Teams tied (or nearly tied) at the top get pushed into a stack right
-    // at chartTop by the loop above. Fan just that bunched subset out by a
-    // fixed minSpacing each - NOT `availableSpace / (positions.length - 1)`,
-    // which spaces relative to the *total* team count and, with only two or
-    // three teams bunched, stretches the second one almost to chartBottom
-    // even though its value is nearly identical to the first.
+    // at chartTop by the loop above. Fan just that bunched subset out,
+    // tight (minSpacing per step) by default - near-identical values should
+    // look close together regardless of how much chart height is free, so
+    // don't space relative to the *total* team count (that stretches two
+    // 100% teams almost the full chart height when nothing else is nearby).
+    // But cap the span so it never pushes past wherever the next, already
+    // correctly-cascaded entry sits - otherwise a large bunched group (many
+    // teams, not just two) can overrun into entries positioned right after
+    // it, producing new overlaps instead of fixing the original ones.
     const topBunchedLogos = positions.filter(
       (pos) => pos.adjustedY <= chartTop + minSpacing,
     );
     if (topBunchedLogos.length > 1) {
+      const bunchedCount = topBunchedLogos.length;
+      const nextPosition = positions[bunchedCount];
+      const idealSpan = (bunchedCount - 1) * minSpacing;
+      const availableSpan = nextPosition
+        ? Math.max(0, nextPosition.adjustedY - minSpacing - chartTop)
+        : idealSpan;
+      const span = Math.min(idealSpan, availableSpan);
+      const step = span / (bunchedCount - 1);
       topBunchedLogos.forEach((pos, i) => {
-        pos.adjustedY = chartTop + i * minSpacing;
+        pos.adjustedY = chartTop + i * step;
       });
     }
 
