@@ -119,8 +119,10 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                   absolutely positioning the toggles above the chart - that
                   previously overlapped the title whenever it wrapped to two
                   lines or the toggle row's rendered height exceeded the
-                  fixed clearance budgeted for it. */}
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+                  fixed clearance budgeted for it. justify-start (not
+                  -between) keeps the toggles close to the now-short title
+                  instead of stranding them at the far right edge. */}
+              <div className="mb-3 flex flex-wrap items-center justify-start gap-x-6 gap-y-2">
                 <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
                   {mode === "current" ? "CFP — Current Snapshot" : "CFP Projections"}
                 </h2>
