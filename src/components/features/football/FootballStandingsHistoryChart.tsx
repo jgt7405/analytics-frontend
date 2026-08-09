@@ -248,6 +248,8 @@ export default function FootballStandingsHistoryChart({
     };
   });
 
+  const clearSelectedTeams = () => setSelectedTeams(new Set());
+
   const handleTeamClick = (teamName: string) => {
     setSelectedTeams((prev) => {
       const newSet = new Set(prev);
@@ -345,9 +347,10 @@ export default function FootballStandingsHistoryChart({
         title: { display: false },
         ticks: {
           maxTicksLimit: isMobile ? 5 : 10,
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
           font: {
             weight: 600,
+            size: isMobile ? 13 : 15,
           },
         },
         grid: { display: false, drawOnChartArea: false, drawTicks: false },
@@ -364,9 +367,10 @@ export default function FootballStandingsHistoryChart({
         max: conferenceSize,
         ticks: {
           stepSize: 1,
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
           font: {
             weight: 600,
+            size: isMobile ? 13 : 15,
           },
           callback: function (value: string | number) {
             return Number(value);
@@ -379,7 +383,7 @@ export default function FootballStandingsHistoryChart({
       },
     },
     layout: {
-      padding: { left: 10, right: 76 },
+      padding: { left: 10, right: 76, top: 14 },
     },
     animation: {
       duration: 750,
@@ -590,10 +594,21 @@ export default function FootballStandingsHistoryChart({
       </div>
 
       <div className="border-t border-slate-200/80 px-4 pb-5 pt-4 dark:border-slate-700/80 sm:px-[1.35rem]">
-        <p className="mb-3 text-xs font-medium text-slate-500 dark:text-slate-400">
-          Select teams to emphasize
-        </p>
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-8 lg:grid-cols-[repeat(16,minmax(0,1fr))]">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Select teams to emphasize
+          </p>
+          {selectedTeams.size > 0 && (
+            <button
+              type="button"
+              onClick={clearSelectedTeams}
+              className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            >
+              Show All
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-1.5 sm:gap-2">
           {allTeamsSorted.map((team) => {
             const isSelected =
               selectedTeams.size === 0 || selectedTeams.has(team.team_name);
