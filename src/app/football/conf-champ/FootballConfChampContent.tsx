@@ -72,9 +72,11 @@ const FOOTBALL_CONF_CHAMP: ConfChampContentConfig<ChampData, History> = {
       explainer: [
         `Progression of projected probability of conference championship game appearance from ${SIM_BLURB}`,
       ],
-      render: (history) => (
+      titleInCard: true,
+      render: (history, ctx) => (
         <FootballChampGameHistoryChart
           champGameData={history.champ_game_data}
+          headerRight={ctx.headerRight}
         />
       ),
     },
@@ -88,9 +90,11 @@ const FOOTBALL_CONF_CHAMP: ConfChampContentConfig<ChampData, History> = {
       explainer: [
         `Progression of projected probability of conference championship from ${SIM_BLURB}`,
       ],
-      render: (history) => (
+      titleInCard: true,
+      render: (history, ctx) => (
         <FootballConfChampionHistoryChart
           championData={history.champion_data}
+          headerRight={ctx.headerRight}
         />
       ),
     },

@@ -42,6 +42,12 @@ export interface ChampHistorySection<THistory> {
   shareTitle: string;
   explainer: string[];
   render: (history: THistory, ctx: ChampRenderContext) => ReactNode;
+  /**
+   * Lets this section's own chart own the modern card title/header instead
+   * of the external sectionFrame heading (see PAGE_MODERNIZATION_GUIDE.md
+   * §8a). Only set on football sections - basketball is unaffected.
+   */
+  titleInCard?: boolean;
 }
 
 export interface ConfChampContentConfig<TData, THistory> {
@@ -358,13 +364,21 @@ export default function ConfChampContent<TData, THistory>({
                       s.pageName,
                       s.pageTitle,
                       s.shareTitle,
-                      <>
-                        {s.heading}
-                        <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
-                          (Over Time)
-                        </span>
-                      </>,
-                      s.render(visibleHistory, ctx),
+                      s.titleInCard ? null : (
+                        <>
+                          {s.heading}
+                          <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+                            (Over Time)
+                          </span>
+                        </>
+                      ),
+                      s.render(visibleHistory, {
+                        ...ctx,
+                        headerRight:
+                          s.titleInCard && config.hidePageTitle
+                            ? conferenceSelector
+                            : undefined,
+                      }),
                     ),
                   )}
                 </div>
