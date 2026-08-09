@@ -186,10 +186,12 @@ export default function FootballTeamRankHistory({
         grid: {
           display: false,
         },
+        border: { display: false },
         ticks: {
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
           font: {
-            size: isMobile ? 9 : 10,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
           maxTicksLimit: isMobile ? 6 : 10,
@@ -201,12 +203,13 @@ export default function FootballTeamRankHistory({
         min: 1,
         max: 140,
         grid: {
-          color: isDark ? "rgb(148 163 184 / 0.15)" : "rgba(0, 0, 0, 0.1)",
+          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
         },
+        border: { display: false },
         ticks: {
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
           font: {
-            size: isMobile ? 10 : 11,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
           stepSize: 20,
@@ -217,13 +220,16 @@ export default function FootballTeamRankHistory({
         title: {
           display: true,
           text: "Rating Rank",
-          color: isDark ? "#cbd5e1" : "#374151",
+          color: isDark ? "#cbd5e1" : "#334155",
           font: {
-            size: isMobile ? 11 : 12,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
         },
       },
+    },
+    layout: {
+      padding: { top: 14 },
     },
   } as const;
 

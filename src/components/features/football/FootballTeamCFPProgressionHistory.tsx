@@ -277,7 +277,7 @@ export default function FootballTeamCFPProgressionHistory({
         position: "top" as const,
         labels: {
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 12 : 14,
             weight: 600,
           },
           color: isDark ? "#cbd5e1" : "#334155",
@@ -374,9 +374,10 @@ export default function FootballTeamCFPProgressionHistory({
       x: {
         display: true,
         ticks: {
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
           font: {
-            size: isMobile ? 9 : 10,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
           maxTicksLimit: isMobile ? 8 : 12,
@@ -384,15 +385,16 @@ export default function FootballTeamCFPProgressionHistory({
         grid: {
           display: false,
         },
+        border: { display: false },
       },
       y: {
         display: true,
         min: 0,
         max: 100,
         ticks: {
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
           font: {
-            size: isMobile ? 9 : 10,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
           stepSize: 20,
@@ -403,13 +405,17 @@ export default function FootballTeamCFPProgressionHistory({
         title: {
           display: true,
           text: "CFP Progression %",
-          color: isDark ? "#cbd5e1" : "#374151",
-          font: { weight: 600 },
+          color: isDark ? "#cbd5e1" : "#334155",
+          font: { weight: 600, size: isMobile ? 13 : 15 },
         },
         grid: {
-          color: isDark ? "rgb(148 163 184 / 0.15)" : "rgba(0, 0, 0, 0.1)",
+          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
         },
+        border: { display: false },
       },
+    },
+    layout: {
+      padding: { top: 14 },
     },
   };
 

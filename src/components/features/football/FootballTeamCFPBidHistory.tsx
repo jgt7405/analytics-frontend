@@ -250,7 +250,7 @@ export default function FootballTeamCFPBidHistory({
         position: "top" as const,
         labels: {
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 12 : 14,
             weight: 600,
           },
           color: isDark ? "#cbd5e1" : "#334155",
@@ -300,9 +300,10 @@ export default function FootballTeamCFPBidHistory({
       x: {
         display: true,
         ticks: {
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
           font: {
-            size: isMobile ? 9 : 10,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
           maxTicksLimit: isMobile ? 8 : 12,
@@ -310,6 +311,7 @@ export default function FootballTeamCFPBidHistory({
         grid: {
           display: false, // Remove vertical grid lines
         },
+        border: { display: false },
       },
       y: {
         type: "linear" as const,
@@ -320,7 +322,7 @@ export default function FootballTeamCFPBidHistory({
         ticks: {
           color: primaryColor,
           font: {
-            size: isMobile ? 9 : 10,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
           stepSize: 20,
@@ -332,12 +334,13 @@ export default function FootballTeamCFPBidHistory({
           display: true,
           text: "CFP Bid %",
           color: primaryColor,
-          font: { weight: 600 },
+          font: { weight: 600, size: isMobile ? 13 : 15 },
         },
         grid: {
-          color: isDark ? "rgb(148 163 184 / 0.15)" : "#f3f4f6",
+          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
           lineWidth: 1,
         },
+        border: { display: false },
       },
       y1: {
         type: "linear" as const,
@@ -347,7 +350,7 @@ export default function FootballTeamCFPBidHistory({
         max: 12,
         ticks: {
           font: {
-            size: isMobile ? 9 : 10,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
           color: finalSecondaryColor,
@@ -361,13 +364,17 @@ export default function FootballTeamCFPBidHistory({
           display: true,
           text: "Avg Seed",
           color: finalSecondaryColor,
-          font: { weight: 600 },
+          font: { weight: 600, size: isMobile ? 13 : 15 },
         },
+        border: { display: false },
         grid: {
           display: false, // Remove grid lines from right axis
         },
         reverse: true, // Keep this - it makes #1 appear at top, #12 at bottom
       },
+    },
+    layout: {
+      padding: { top: 14 },
     },
   };
 

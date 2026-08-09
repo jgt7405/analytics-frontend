@@ -247,7 +247,7 @@ export default function FootballTeamWinValues({
         labels: {
           color: isDark ? "#cbd5e1" : "#334155",
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 12 : 14,
             weight: 600,
           },
         },
@@ -290,13 +290,15 @@ export default function FootballTeamWinValues({
         title: { display: false },
         ticks: {
           maxTicksLimit: isMobile ? 5 : 10,
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
           font: {
-            size: isMobile ? 9 : 11,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
         },
         grid: { display: false },
+        border: { display: false },
       },
       y: {
         grid: {
@@ -310,13 +312,17 @@ export default function FootballTeamWinValues({
           drawOnChartArea: true,
         },
         ticks: {
-          color: isDark ? "#94a3b8" : "#64748b",
+          color: isDark ? "#94a3b8" : "#475569",
           font: {
-            size: isMobile ? 10 : 12,
+            size: isMobile ? 13 : 15,
             weight: 600,
           },
         },
+        border: { display: false },
       },
+    },
+    layout: {
+      padding: { top: 14 },
     },
     elements: {
       point: {
