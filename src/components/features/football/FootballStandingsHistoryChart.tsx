@@ -167,6 +167,9 @@ export default function FootballStandingsHistoryChart({
   }, []);
 
   useEffect(() => {
+    const canvas = chartRef.current?.canvas;
+    if (!canvas) return;
+
     const updateDimensions = () => {
       if (chartRef.current?.chartArea && chartRef.current?.canvas) {
         const area = chartRef.current.chartArea;
@@ -185,8 +188,18 @@ export default function FootballStandingsHistoryChart({
       }
     };
 
-    const timeout = setTimeout(updateDimensions, 500);
-    return () => clearTimeout(timeout);
+    // A ResizeObserver (rather than a one-shot timeout) keeps the SVG
+    // end-of-line markers and logo overlay in sync with the actual
+    // canvas layout. Mobile browsers reflow the page after mount more
+    // than desktop (address bar collapse, later font/webfont swap-in
+    // shifting the y-axis label width), so a value captured once at
+    // 500ms could go stale and the dots/logos would drift from the
+    // lines they're supposed to mark.
+    const observer = new ResizeObserver(updateDimensions);
+    observer.observe(canvas);
+    updateDimensions();
+
+    return () => observer.disconnect();
   }, [timelineData, conferenceSize]);
 
   const range = getFootballDateRange(season, timelineData);
