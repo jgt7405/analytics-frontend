@@ -98,9 +98,13 @@
      cell's border-radius, which reads as a curved seam wherever two
      stacked rows (e.g. the Average row, or the summary rows) have
      different backgrounds. A solid offset+spread strip stays a flat
-     rectangle, so stacked rows line up into one straight edge. */
+     rectangle, so stacked rows line up into one straight edge.
+     Spread is capped at 1px (matching the table's own border-spacing) -
+     a wider ring paints straight over the gap between this column and
+     the next one, erasing the seam that's visible between every other
+     pair of columns. */
   box-shadow:
-    0 0 0 3px var(--sticky-column-background),
+    0 0 0 1px var(--sticky-column-background),
     0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
   isolation: isolate;
 }
@@ -227,13 +231,13 @@
    bar edge-to-edge. */
 .summaryLabel,
 .summaryValue {
-  min-height: 2.35rem;
   color: #334155;
   font-size: 0.94rem;
 }
 
 .summaryLabel {
   --sticky-column-background: #f1f5f9;
+  min-height: 2.35rem;
   padding: 0 0.75rem;
   border-bottom: 1px solid rgb(226 232 240 / 0.7);
   background: var(--sticky-column-background);
@@ -242,7 +246,14 @@
   white-space: normal;
 }
 
+/* height (not min-height): a table cell's height only counts as "definite"
+   for a percentage-height child (summaryChip's height:100%) when set via
+   the height property - min-height doesn't qualify, even though the cell
+   still grows past it when a taller sibling (e.g. a two-line label) forces
+   the row taller. Without a definite height here, the chip fell back to
+   sizing itself to its own content and left the extra row height unfilled. */
 .summaryValue {
+  height: 2.35rem;
   padding: 0;
   text-align: center;
   font-weight: 700;
@@ -365,7 +376,8 @@
   }
 
   .winLabel,
-  .probabilityCell {
+  .probabilityCell,
+  .summaryValue {
     height: 2rem;
   }
 
@@ -380,6 +392,7 @@
   }
 
   .summaryLabel {
+    min-height: 2rem;
     padding: 0 0.45rem;
     line-height: 1.15;
   }
