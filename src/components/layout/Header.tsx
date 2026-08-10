@@ -17,8 +17,11 @@ function Header() {
 
   return (
     <header
-      className="main-header w-full"
-      style={{ borderBottom: "1px solid var(--border-color)" }}
+      className="main-header w-full sticky top-0 z-50"
+      style={{
+        borderBottom: "1px solid var(--border-color)",
+        backgroundColor: "var(--bg-primary)",
+      }}
     >
       <LogoAnimationProvider>
         <div className="header-content flex items-center justify-between w-full px-4 py-0 md:justify-start md:gap-8">

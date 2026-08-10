@@ -134,7 +134,7 @@ export default function FootballBoxWhiskerChart({
 
   const chartHeight = isMobile ? 300 : 400;
   // Footer below the plot: average value, then logo, then team name.
-  const avgRowHeight = isMobile ? 16 : 18;
+  const avgRowHeight = isMobile ? 18 : 22;
   const logoSize = isMobile ? 26 : 32;
   const nameRowHeight = isMobile ? 24 : 28;
   const footerGap = 4;
@@ -249,6 +249,29 @@ export default function FootballBoxWhiskerChart({
             </div>
           </div>
 
+          {/* Grid lines - sized to the card's actual rendered width (not
+              just chartWidth) so they still reach the right edge when a
+              conference has few enough teams that the plot area is narrower
+              than the card. */}
+          <div
+            className="absolute"
+            style={{
+              left: padding.left,
+              right: padding.right,
+              top: padding.top,
+              height: chartHeight,
+              zIndex: 1,
+            }}
+          >
+            {yAxisTicks.map((tick) => (
+              <div
+                key={tick}
+                className={cn(styles.gridLine, "absolute w-full")}
+                style={{ top: `${scale(tick)}px` }}
+              />
+            ))}
+          </div>
+
           {/* Chart content area */}
           <div
             className="absolute"
@@ -260,17 +283,6 @@ export default function FootballBoxWhiskerChart({
               zIndex: 1,
             }}
           >
-            {/* Grid lines */}
-            <div className="absolute inset-0">
-              {yAxisTicks.map((tick) => (
-                <div
-                  key={tick}
-                  className={cn(styles.gridLine, "absolute w-full")}
-                  style={{ top: `${scale(tick)}px` }}
-                />
-              ))}
-            </div>
-
             {/* Team box plots */}
             <div
               className="relative flex items-start justify-start"

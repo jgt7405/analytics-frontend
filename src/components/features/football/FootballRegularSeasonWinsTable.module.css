@@ -94,9 +94,14 @@
   max-width: var(--label-column-width) !important;
   background: var(--sticky-column-background);
   background-clip: border-box;
+  /* No blur: a blurred shadow rounds its own corners regardless of the
+     cell's border-radius, which reads as a curved seam wherever two
+     stacked rows (e.g. the Average row, or the summary rows) have
+     different backgrounds. A solid offset+spread strip stays a flat
+     rectangle, so stacked rows line up into one straight edge. */
   box-shadow:
     0 0 0 3px var(--sticky-column-background),
-    0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
+    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
   isolation: isolate;
 }
 
@@ -239,14 +244,20 @@
 }
 
 /* Matches the heat-tile grid's shape/size exactly (same border-radius,
-   same fill-the-cell sizing) so the Average and Curr Conf Record rows
-   read as part of the same grid instead of plain table cells. */
+   same border, same fill-the-cell sizing) so the Average and summary
+   (Est #12 Wins / TWV / Curr Record) rows read as part of the same grid
+   instead of plain table cells. The border matters as much as the radius
+   here - without it the chip's fill runs edge-to-edge in its cell while
+   heatTile's fill sits inset by its own border, so those rows end up with
+   different-looking gaps even though both share the same 1px table
+   border-spacing. */
 .summaryChip {
   display: flex;
   width: 100%;
   height: 100%;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
   border-radius: 3px;
 }
 
