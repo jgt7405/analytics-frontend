@@ -135,6 +135,12 @@ export default function FootballConferenceBidsTable({
   const teamLogoSize = isMobile ? 24 : 28;
   const columnWidth = isMobile ? 70 : 90;
   const numColumns = columns.length;
+  const columnGap = 4;
+  // Full rendered width of a numColumns-wide grid row, including the gaps
+  // between columns - the separator bar needs this (not just
+  // numColumns * columnWidth) or it comes up short of the grid's right edge.
+  const gridWidth =
+    numColumns * columnWidth + Math.max(numColumns - 1, 0) * columnGap;
 
   return (
     <div className={styles.card}>
@@ -264,7 +270,7 @@ export default function FootballConferenceBidsTable({
         {/* Group separator */}
         <div
           className={styles.groupSeparator}
-          style={{ height: "3px", width: `${numColumns * columnWidth}px` }}
+          style={{ height: "3px", width: `${gridWidth}px` }}
         />
 
         {/* Out-of-Playoff Section (First/Next Four Out) */}
@@ -333,7 +339,7 @@ export default function FootballConferenceBidsTable({
           <>
             <div
               className={styles.groupSeparator}
-              style={{ height: "3px", width: `${numColumns * columnWidth}px` }}
+              style={{ height: "3px", width: `${gridWidth}px` }}
             />
 
             <div
