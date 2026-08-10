@@ -263,7 +263,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
           </thead>
 
           <tbody>
-            <tr className={styles.averageRow}>
+            <tr>
               <th
                 className={cn(styles.stickyColumn, styles.summaryLabel)}
                 scope="row"
@@ -318,7 +318,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   key={`record-${team.team_name}`}
                   className={styles.summaryValue}
                 >
-                  {team.current_record || ""}
+                  <div className={styles.cwvChip}>
+                    {team.current_record || ""}
+                  </div>
                 </td>
               ))}
             </tr>
@@ -334,7 +336,9 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                   key={`est-record-${team.team_name}`}
                   className={styles.summaryValue}
                 >
-                  {team.est_avg_record || ""}
+                  <div className={styles.cwvChip}>
+                    {team.est_avg_record || ""}
+                  </div>
                 </td>
               ))}
             </tr>

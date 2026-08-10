@@ -165,7 +165,7 @@ function FootballStandingsTableNoTies({
           </thead>
 
           <tbody>
-            <tr className={styles.averageRow}>
+            <tr>
               <th
                 className={cn(styles.stickyColumn, styles.summaryLabel)}
                 scope="row"
@@ -177,7 +177,9 @@ function FootballStandingsTableNoTies({
                   key={`${team.team_id}-${team.team_name}-average`}
                   className={styles.summaryValue}
                 >
-                  {(team.conf_standing_no_ties_avg ?? team.avg_standing ?? 0).toFixed(1)}
+                  <div className={styles.summaryChip}>
+                    {(team.conf_standing_no_ties_avg ?? team.avg_standing ?? 0).toFixed(1)}
+                  </div>
                 </td>
               ))}
             </tr>
@@ -244,8 +246,10 @@ function FootballStandingsTableNoTies({
                   key={`${team.team_id}-${team.team_name}-record`}
                   className={styles.summaryValue}
                 >
-                  {team.actual_conference_wins ?? 0}-
-                  {team.actual_conference_losses ?? 0}
+                  <div className={styles.summaryChip}>
+                    {team.actual_conference_wins ?? 0}-
+                    {team.actual_conference_losses ?? 0}
+                  </div>
                 </td>
               ))}
             </tr>

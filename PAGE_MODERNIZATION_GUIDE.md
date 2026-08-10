@@ -436,7 +436,167 @@ it added. Check every history chart for this pattern before assuming its
 overlay positioning is safe — the bug is invisible on desktop in a quick
 look and only shows up after real-world mobile layout shift.
 
-## 9. Working checklist for a new page
+## 9. Post-modernization polish bugs (found auditing every table/chart, 2026-08)
+
+These weren't caught by §1-8 because they only show up once a table's
+sticky column meets a plain (unstuck) neighbor, once a chart is rendered
+with fewer items than the card is wide, or once two summary-type rows in
+the same table are compared side by side. Check every item here whenever
+touching a table/chart that's already "modernized" — it's easy to fix one
+occurrence (the table/chart someone happened to be looking at) and leave
+the identical bug in every sibling component that was built from the same
+pattern.
+
+**a. Site header needs to actually be sticky.** The top nav bar
+(`Header.tsx`) must have `position: sticky; top: 0` plus an **opaque**
+background:
+```tsx
+<header
+  className="main-header w-full sticky top-0 z-50"
+  style={{ borderBottom: "...", backgroundColor: "var(--bg-primary)" }}
+>
+```
+Without the explicit background, the header is still visually a "card" on
+top of the page background, but the *scrolled page content* shows through
+it as it passes underneath — sticky positioning alone doesn't imply
+opacity.
+
+**b. Chart gridlines must span the container's actual width, not the
+plotted content's width.** A box-whisker chart's outer wrapper often sets
+only `minWidth` (so it can auto-stretch to fill a wider card) while the
+gridlines were nested inside a narrower sibling sized to `chartWidth`
+(team-count-driven). For a conference with few teams, `chartWidth` is
+smaller than the card, so the dashed gridlines stopped short of the right
+edge while the card itself was full width. Fix: render gridlines as their
+own layer positioned with `left`/`right` (not a fixed `width`) against the
+*outer* wrapper, so they always span whatever width that wrapper actually
+renders at:
+```tsx
+<div style={{ left: padding.left, right: padding.right, top: padding.top, height: chartHeight }}>
+  {yAxisTicks.map((tick) => <div className={styles.gridLine} style={{ top: scale(tick) }} />)}
+</div>
+```
+This only bites charts whose wrapper can render wider than its own content
+(`minWidth` without `width`) — a chart that hard-sets `width: chartWidth +
+padding` (never stretches) can't have this bug, since the gridlines and
+the card are always the same width by construction.
+
+**c. Manually-computed CSS-grid separator bars need the grid's own `gap` in
+their width math, matching inset, and never a pill radius.** For a
+non-`<table>` grid layout (e.g. the conference-bids grid), a divider bar
+between sections is often sized as `numColumns * columnWidth` — which
+omits the `(numColumns - 1) * gap` between columns, so it comes up short.
+It also needs the *same* left inset (border + padding) as the grid cells
+it's dividing, since the bar itself usually isn't wrapped in that padded
+box:
+```ts
+const gridWidth = numColumns * columnWidth + Math.max(numColumns - 1, 0) * columnGap;
+```
+```css
+.groupSeparator {
+  /* no border-radius: 999px here - that's a pill, and on a 2-3px-tall
+     bar it reads as a rounded blob at each end instead of a flat divider.
+     Radius belongs on the outer card only. */
+  margin-left: calc(1px + 0.35rem); /* match the grid's own border + padding inset */
+  background: #1e293b;
+}
+```
+
+**d. A sticky column's background-matching "seal" ring must not exceed the
+table's `border-spacing`.** `.stickyColumn`'s box-shadow includes a ring in
+its own background color to hide the sub-pixel gap where scrolled content
+could otherwise peek through as it passes underneath during horizontal
+scroll:
+```css
+box-shadow: 0 0 0 1px var(--sticky-column-background), /* not 3px */
+  0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
+```
+A wider spread (several tables had `3px`, copied from table to table) is
+overkill for that purpose and paints straight over — and erases — the
+gap between the sticky column and the very next column, since border-
+spacing is only `1px`. That's the *only* pair of columns without a visible
+seam, because only the sticky column carries this ring. Cap it at `1px` to
+match `border-spacing` exactly.
+
+**e. A blurred box-shadow always rounds its own corners, independent of
+the element's `border-radius`.** The second half of `.stickyColumn`'s
+shadow — simulating "content passing under this column" — used to have a
+non-zero blur radius (`0.85rem`). Applied per-row, a blurred shadow's
+corners are visibly soft no matter what `border-radius` the element
+declares, so wherever two stacked rows had different backgrounds (e.g. an
+"Average" row against the header above it, or a footer summary row against
+the data grid above it), the blur read as a curved seam right at that
+transition. Fix: zero the blur, use only offset + spread:
+```css
+box-shadow: 0 0 0 1px var(--sticky-column-background),
+  0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32); /* was 0.65rem 0 0.85rem -0.9rem, i.e. blurred */
+```
+Any shadow meant to read as a flat rule/divider needs `blur-radius: 0` —
+offset and spread only.
+
+**f. `min-height` on a table cell doesn't count as "definite" for a
+percentage-height child.** A cell hosting a `.heatTile`/`.summaryChip`-
+style child that relies on `height: 100%` (per §5) must declare `height`
+(not `min-height`) on the `<td>`/`<th>` itself:
+```css
+/* wrong: chip falls back to its own content size when a sibling row
+   (e.g. a wrapping two-line label) forces this row taller than 2.35rem */
+.summaryValue { min-height: 2.35rem; }
+
+/* right: table layout still treats `height` as a minimum - the cell still
+   grows for a taller sibling - but only `height` gives percentage-height
+   children in this cell a definite basis to resolve against */
+.summaryValue { height: 2.35rem; }
+```
+Symptom: the chip visibly doesn't fill the cell whenever that row happens
+to be taller than the declared height — most commonly wherever a summary
+row's *label* wraps to two lines ("Est #12 Wins", "Curr Record") and
+stretches the whole row, including sibling cells that don't themselves
+have any wrapping content.
+
+**g. Every summary-type row in a table needs the *same* background/chip
+treatment — not just the one that was styled first.** This is §3's
+"duplicate titles" bug (one thing gets the new treatment, its sibling
+doesn't, and now they visibly disagree) recurring for row backgrounds. A
+table with a heat-tile grid often has more than one summary row — e.g. an
+"Average" row above the grid and a "Curr Conf Record"/"Est #12 Wins"/"TWV"
+row (or rows) below it in a `tfoot`. If only the first one ever got a
+`.averageRow`-style override for background/border, the rest keep the
+older flat styling and read as a visibly different (usually just plain
+text with no per-cell border at all, so it looks like one solid bar edge
+to edge instead of tiles with gaps like the rest of the grid) kind of row
+even though they're conceptually the same thing. Fix, applied uniformly:
+- Merge the "special" row's background into the *base* `.summaryLabel`/
+  `.summaryValue` rule so every summary row shares it — don't leave a
+  `.averageRow .summaryLabel, .averageRow .summaryValue { background: ... }`
+  override as the only source of that color.
+- Give every summary **value** cell the same chip treatment as `.heatTile`
+  — background/border/radius on an inner div per §5/§5f, not on the `<td>`
+  directly — even for cells with no data-driven color (a plain win-loss
+  record, a game count). Give `.summaryChip`/`.cwvChip`/etc. a sensible
+  default background/border; a colored cell's inline `style={getColor(...)}`
+  overrides just the background, so the border/radius/gap still match.
+- Give the label column (`.winLabel`/`.rankLabel`) a subtle `border-bottom`
+  (`1px solid rgb(226 232 240 / 0.7)`, dark: `rgb(51 65 85 / 0.6)`) matching
+  the seam the heat-tile's own border already creates between data rows —
+  otherwise the label column (plain text, no per-cell border) shows no
+  row-to-row division at all while the data grid right next to it clearly
+  does.
+- Mark the transition **into** a summary-row block with a heavier top
+  divider, but only on the *first* row of that block, not every row inside
+  it: `.table tfoot tr:first-child .summaryLabel, .table tfoot tr:first-child
+  .summaryValue { border-top: 2px solid #cbd5e1; }` (dark:
+  `rgb(71 85 105 / 0.8)`). A background color change alone doesn't read as
+  a section break as clearly as an explicit rule.
+
+**h. Keep font sizes matching between a box-whisker chart and its paired
+table.** They're describing the same teams/entities on the same page and
+should read as one system. If the table uses `0.6rem` for team names, the
+box-whisker chart's team names should too — don't let two components
+converge on different sizes just because they were touched at different
+times.
+
+## 10. Working checklist for a new page
 
 1. Read the target page's `*Content.tsx` and its table/chart component(s).
    Check: does the table already have its own `cardHeader`/`.title`? Does it
@@ -474,7 +634,7 @@ look and only shows up after real-world mobile layout shift.
    (`headerRight`, `hidePageTitle`, `tableTitle`, `inline`) is optional, so
    basketball configs that don't set them should type-check unchanged.
 
-## 10. Files touched (for reference)
+## 11. Files touched (for reference)
 
 **2026-08, initial pass:**
 - `src/components/layout/PageLayoutWrapper.tsx` — `hideTitle` prop
@@ -512,6 +672,24 @@ look and only shows up after real-world mobile layout shift.
   highlight band on hover), auto-fill chip grid with team-colored borders,
   "Show All" reset pill, and the `ResizeObserver` overlay-drift fix
 
+**2026-08, polish/consistency pass (§9 added):** found by fixing reported
+bugs on the Wins page tables/charts and the Home page's conference-bids
+grid, then auditing every other already-modernized football table for the
+same patterns.
+- `src/components/layout/Header.tsx` — site-wide sticky header (§9a)
+- `FootballBoxWhiskerChart`, `FootballRegularSeasonBoxWhiskerChart` (+
+  `.module.css`) — gridline width (§9b), team-name/avg-label font sizing
+  (§9h), sticky-column ring already at 1px (added fresh, not a fix)
+- `FootballConferenceBidsTable.tsx` + `.module.css` — group-separator width
+  and inset (§9c)
+- `FootballWinsTable`, `FootballRegularSeasonWinsTable`,
+  `FootballStandingsTable`, `FootballStandingsTableNoTies`, `CWVTable`,
+  `ScheduleTable` (each `.tsx` + `.module.css`) — summary-row background/
+  chip unification and row dividers (§9f, §9g)
+- Sticky-column ring capped at 1px (§9d) and de-blurred (§9e) in the six
+  files above plus `FootballConfChampTable`, `FootballTWVTable` — every
+  table using the `--sticky-column-background` ring pattern
+
 ## Not yet done
 
 Basketball pages were deliberately left untouched throughout both passes —
@@ -519,7 +697,9 @@ every config flag defaults to `undefined`/`false` so basketball's behavior
 is unchanged. Two things remain:
 
 1. Applying §1-7 to the basketball table equivalents (`BballWinsContent.tsx`,
-   `SeedTable.tsx`, `BasketballWhatIfScenarios.tsx`, etc.), following §9.
+   `SeedTable.tsx`, `BasketballWhatIfScenarios.tsx`, etc.), following §10.
+   Also apply §9's polish checklist to those once built - basketball wasn't
+   audited for §9 items since it hasn't been through §1-8 yet.
 2. Applying §8 to the ~18 other Chart.js history/trend charts still on the
    old pattern (plain container, hand-rolled light-mode-only tooltip,
    default-sized axis labels, no `ResizeObserver` on any overlay markers).

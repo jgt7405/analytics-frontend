@@ -139,7 +139,7 @@
   min-width: var(--winprob-col-width) !important;
   max-width: var(--winprob-col-width) !important;
   box-shadow:
-    0 0 0 3px var(--sticky-column-background),
+    0 0 0 1px var(--sticky-column-background),
     0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
 }
 
@@ -155,7 +155,7 @@
   background: var(--sticky-column-background);
   background-clip: border-box;
   box-shadow:
-    0 0 0 3px var(--sticky-column-background),
+    0 0 0 1px var(--sticky-column-background),
     0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
   isolation: isolate;
 }
@@ -357,23 +357,25 @@
   background: #e0e0e0;
 }
 
+/* Marks "Expected Wins" as the first row of this summary block, the same
+   way the wins tables mark the first tfoot row - background/border-top
+   live here rather than on every row, but the background color itself
+   (below) is shared by all summary rows so they don't look like two
+   different kinds of row. */
 .summaryRow .summaryLabel,
 .summaryRow .summaryValue {
-  --sticky-column-background: #f1f5f9;
-  background: #f1f5f9;
   border-top: 2px solid #cbd5e1;
 }
 
 .summaryLabel,
 .summaryValue {
-  min-height: 2.3rem;
-  background: #f8fafc;
   color: #334155;
   font-size: 0.88rem;
 }
 
 .summaryLabel {
-  --sticky-column-background: #f8fafc;
+  --sticky-column-background: #f1f5f9;
+  min-height: 2.3rem;
   position: sticky;
   left: 0;
   z-index: 40;
@@ -385,23 +387,35 @@
   white-space: normal;
   isolation: isolate;
   box-shadow:
-    0 0 0 3px var(--sticky-column-background),
+    0 0 0 1px var(--sticky-column-background),
     0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
 }
 
+/* height (not min-height): summaryChip's height:100% needs a definite
+   basis to fill the cell, and only the height property (not min-height)
+   counts as "definite" for a percentage-height child - even though the
+   cell still grows past it for a wrapping colSpan label like "Top
+   Quartile (Hardest)". */
 .summaryValue {
+  height: 2.3rem;
   text-align: center;
   font-weight: 700;
   padding: 0;
 }
 
+/* Default look for a summary chip with no per-value color (e.g. Total
+   Games, which has no meaningful color scale) - Expected Wins/quartile
+   chips override backgroundColor via inline style but keep this border,
+   so every stat in the row reads as the same kind of tile. */
 .summaryChip {
   display: flex;
   width: 100%;
   height: 100%;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
   border-radius: 3px;
+  background: #f1f5f9;
 }
 
 /* Summary table body cells (Expected Wins / Total Games / quartiles). */
@@ -467,20 +481,20 @@
 
 :global(.dark) .summaryLabel,
 :global(.dark) .summaryValue {
-  border-color: #334155;
-  background: #1e293b;
   color: #e2e8f0;
 }
 
 :global(.dark) .summaryLabel {
-  --sticky-column-background: #1e293b;
+  --sticky-column-background: #263449;
   background: var(--sticky-column-background);
+}
+
+:global(.dark) .summaryChip {
+  background: #263449;
 }
 
 :global(.dark) .summaryRow .summaryLabel,
 :global(.dark) .summaryRow .summaryValue {
-  --sticky-column-background: #263449;
-  background: #263449;
   border-top: 2px solid rgb(71 85 105 / 0.8);
 }
 

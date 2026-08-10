@@ -389,7 +389,9 @@ function FootballScheduleTable({
                     </th>
                     {teams.map((team) => (
                       <td key={`${team}-total`} className={styles.summaryValue}>
-                        {summary[team]?.total_games || 0}
+                        <div className={styles.summaryChip}>
+                          {summary[team]?.total_games || 0}
+                        </div>
                       </td>
                     ))}
                   </tr>
@@ -543,7 +545,11 @@ function FootballScheduleTable({
                           </div>
                         </td>
 
-                        <td className={styles.statCell}>{teamSummary.total_games || 0}</td>
+                        <td className={styles.statCell}>
+                          <div className={styles.summaryChip}>
+                            {teamSummary.total_games || 0}
+                          </div>
+                        </td>
 
                         <td className={styles.statCell}>
                           <div

@@ -121,7 +121,7 @@
   max-width: var(--team-col-width) !important;
   text-align: left;
   box-shadow:
-    0 0 0 3px var(--sticky-column-background),
+    0 0 0 1px var(--sticky-column-background),
     0.65rem 0 0.85rem -0.9rem rgb(15 23 42 / 0.42);
 }
 
