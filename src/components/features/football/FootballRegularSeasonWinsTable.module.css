@@ -214,22 +214,21 @@
   box-shadow: none;
 }
 
-.averageRow .summaryLabel,
-.averageRow .summaryValue {
-  background: #f1f5f9;
-  border-bottom: 2px solid #cbd5e1;
-}
-
+/* All summary rows (Average, and the Est #12 Wins/TWV/Curr Record footer
+   rows) share one look - previously only the Average row got the #f1f5f9
+   background and border-bottom, leaving the footer rows visibly lighter
+   even though they're the same kind of row. */
 .summaryLabel,
 .summaryValue {
   min-height: 2.35rem;
-  background: #f8fafc;
+  background: #f1f5f9;
+  border-bottom: 2px solid #cbd5e1;
   color: #334155;
   font-size: 0.94rem;
 }
 
 .summaryLabel {
-  --sticky-column-background: #f8fafc;
+  --sticky-column-background: #f1f5f9;
   padding: 0 0.75rem;
   background: var(--sticky-column-background);
   font-weight: 650;
@@ -293,20 +292,14 @@
 
 :global(.dark) .summaryLabel,
 :global(.dark) .summaryValue {
-  border-color: #334155;
-  background: #1e293b;
+  background: #263449;
+  border-bottom: 2px solid rgb(71 85 105 / 0.8);
   color: #e2e8f0;
 }
 
 :global(.dark) .summaryLabel {
-  --sticky-column-background: #1e293b;
+  --sticky-column-background: #263449;
   background: var(--sticky-column-background);
-}
-
-:global(.dark) .averageRow .summaryLabel,
-:global(.dark) .averageRow .summaryValue {
-  background: #263449;
-  border-bottom: 2px solid rgb(71 85 105 / 0.8);
 }
 
 @media (max-width: 767px) {

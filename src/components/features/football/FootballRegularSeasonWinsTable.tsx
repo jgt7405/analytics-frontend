@@ -159,7 +159,7 @@ function FootballRegularSeasonWinsTable({
           </thead>
 
           <tbody>
-            <tr className={styles.averageRow}>
+            <tr>
               <th
                 className={cn(styles.stickyColumn, styles.summaryLabel)}
                 scope="row"

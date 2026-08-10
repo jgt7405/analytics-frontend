@@ -127,6 +127,12 @@
 }
 
 .groupSeparator {
+  /* sectionGrid/confHeaderRow each inset their grid content by their own
+     1px border + 0.35rem padding; this bar isn't wrapped in that box, so
+     without matching the same offset here it sits ~6.6px left of where
+     the actual columns start, falling short of the right edge by the same
+     amount even though its width matches the grid exactly. */
+  margin-left: calc(1px + 0.35rem);
   background: #1e293b;
 }
 
