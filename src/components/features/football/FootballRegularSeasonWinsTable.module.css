@@ -172,8 +172,12 @@
   hyphens: auto;
 }
 
+/* Subtle row divider - matches the seam that heatTile's own border already
+   creates between data rows, so the label column reads as the same rows
+   instead of an undivided list of numbers. */
 .winLabel {
   height: 2.35rem;
+  border-bottom: 1px solid rgb(226 232 240 / 0.7);
   color: #475569;
   font-size: 0.98rem;
   font-weight: 700;
@@ -216,13 +220,14 @@
 
 /* All summary rows (Average, and the Est #12 Wins/TWV/Curr Record footer
    rows) share one look - previously only the Average row got the #f1f5f9
-   background and border-bottom, leaving the footer rows visibly lighter
-   even though they're the same kind of row. */
+   background, leaving the footer rows visibly lighter even though they're
+   the same kind of row. summaryValue itself stays transparent, like
+   probabilityCell - the background/border live on summaryChip below so
+   these rows tile the same way the heat-tile grid does, instead of
+   reading as one solid bar edge-to-edge. */
 .summaryLabel,
 .summaryValue {
   min-height: 2.35rem;
-  background: #f1f5f9;
-  border-bottom: 2px solid #cbd5e1;
   color: #334155;
   font-size: 0.94rem;
 }
@@ -230,6 +235,7 @@
 .summaryLabel {
   --sticky-column-background: #f1f5f9;
   padding: 0 0.75rem;
+  border-bottom: 1px solid rgb(226 232 240 / 0.7);
   background: var(--sticky-column-background);
   font-weight: 650;
   text-align: left;
@@ -258,6 +264,15 @@
   justify-content: center;
   border: 1px solid rgb(255 255 255 / 0.68);
   border-radius: 3px;
+  background: #f1f5f9;
+}
+
+/* Marks the boundary between the heat-tile data grid and the footer
+   summary rows below it with a clearer divider than the plain row-to-row
+   line, since the background color alone doesn't read as a section break. */
+.table tfoot tr:first-child .summaryLabel,
+.table tfoot tr:first-child .summaryValue {
+  border-top: 2px solid #cbd5e1;
 }
 
 :global(.dark) .card {
@@ -287,19 +302,28 @@
 
 :global(.dark) .winLabel {
   --sticky-column-background: #0f172a;
+  border-bottom-color: rgb(51 65 85 / 0.6);
   background: var(--sticky-column-background);
 }
 
 :global(.dark) .summaryLabel,
 :global(.dark) .summaryValue {
-  background: #263449;
-  border-bottom: 2px solid rgb(71 85 105 / 0.8);
   color: #e2e8f0;
 }
 
 :global(.dark) .summaryLabel {
   --sticky-column-background: #263449;
+  border-bottom-color: rgb(51 65 85 / 0.6);
   background: var(--sticky-column-background);
+}
+
+:global(.dark) .summaryChip {
+  background: #263449;
+}
+
+:global(.dark) .table tfoot tr:first-child .summaryLabel,
+:global(.dark) .table tfoot tr:first-child .summaryValue {
+  border-top: 2px solid rgb(71 85 105 / 0.8);
 }
 
 @media (max-width: 767px) {
