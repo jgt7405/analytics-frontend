@@ -618,6 +618,22 @@ even though they're conceptually the same thing. Fix, applied uniformly:
   `rgb(71 85 105 / 0.8)`). A background color change alone doesn't read as
   a section break as clearly as an explicit rule.
 
+Giving the chip a "sensible default background" (bullet above) needs real
+contrast against the card, not just *a* color — `#f1f5f9` (the card's own
+near-white background is `#ffffff`→`#fbfdff`) is close enough to the
+gradient that the 1px `border-spacing` gap between two chips, and the
+chip's own `rgb(255 255 255 / 0.68)` border (designed for contrast against
+saturated `heatTile` fills, not this), both become nearly invisible. The
+practical symptom: the summary rows visually merge into one undivided bar
+in *both* directions (row-to-row and column-to-column) even after doing
+everything else in this section, while the label column's border-bottom
+(a real border, not a background/gap trick) still shows fine. Use `#e2e8f0`
+(dark: unchanged — a white border already has plenty of contrast against
+the dark chip background, this is a light-mode-only problem) instead —
+distinguishable enough from the card to make both the gap and the border
+read clearly, still light/neutral enough not to compete with actual data
+colors.
+
 **h. Keep font sizes matching between a box-whisker chart and its paired
 table.** They're describing the same teams/entities on the same page and
 should read as one system. If the table uses `0.6rem` for team names, the

@@ -236,7 +236,7 @@
 }
 
 .summaryLabel {
-  --sticky-column-background: #f1f5f9;
+  --sticky-column-background: #e2e8f0;
   min-height: 2.35rem;
   padding: 0 0.75rem;
   border-bottom: 1px solid rgb(226 232 240 / 0.7);
@@ -275,7 +275,7 @@
   justify-content: center;
   border: 1px solid rgb(255 255 255 / 0.68);
   border-radius: 3px;
-  background: #f1f5f9;
+  background: #e2e8f0;
 }
 
 /* Marks the boundary between the heat-tile data grid and the footer
