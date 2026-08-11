@@ -630,14 +630,26 @@ even though they're conceptually the same thing. Fix, applied uniformly:
   already creates between data rows — otherwise the label column (plain
   text, no per-cell border) shows no row-to-row division at all while the
   data grid right next to it clearly does.
-  **Don't add this same border-bottom to `.summaryLabel`.** Once §9d's
-  directional ring fix is in place, the summary-row label cells already
-  get a clean row-to-row gap for free (same mechanism as the value
-  columns' chips), so an explicit border-bottom on top of that gap
-  double-renders as two lines where the value columns only show one —
-  the opposite problem from the one this bullet exists to fix, caused by
-  copying the fix for data rows onto summary rows without checking
-  whether they needed it.
+- **Give `.summaryLabel` itself the same border + `border-radius: 3px` as
+  `.summaryChip`** (`1px solid rgb(255 255 255 / 0.68)`), directly on the
+  `<th>` — don't rely on the bare border-spacing gap the way the data-row
+  label column does. This one took three attempts to get right, in order:
+  1. A `border-bottom` divider (copying the data-row fix above) — wrong,
+     because once §9d's directional-ring fix is in place the row-to-row
+     gap already exists geometrically, so the explicit line just
+     double-renders on top of it as two lines where the value columns
+     only show one.
+  2. Remove the border-bottom entirely and trust the bare gap — also
+     wrong. The gap exists geometrically (the ring fix stopped erasing
+     it) but reads as *nothing at all*: a plain `background` color with
+     no border has no visible edge, so the 1px sliver of card-color
+     between two identically-filled cells is imperceptible at normal
+     zoom, same low-contrast problem as everywhere else in §9g.
+  3. **What actually works:** put a real border + radius directly on
+     `.summaryLabel`, matching the value chips. The border is what makes
+     each row read as a *tile* — the gap's own color contrast was never
+     the mechanism that made the value columns look separated; their
+     chip borders were.
 - Mark the transition **into** a summary-row block with a heavier top
   divider, but only on the *first* row of that block, not every row inside
   it: `.table tfoot tr:first-child .summaryLabel, .table tfoot tr:first-child

@@ -235,10 +235,18 @@
   font-size: 0.94rem;
 }
 
+/* Border + radius (matching summaryChip/heatTile) is what actually reads
+   as "a distinct tile with a gap" - the 1px border-spacing gap alone is
+   low-contrast against the card background regardless of the cell's own
+   fill color, same as every other gap-contrast issue in this table. The
+   border is what outlines each row, not the color of the sliver between
+   them. */
 .summaryLabel {
   --sticky-column-background: #e2e8f0;
   min-height: 2.35rem;
   padding: 0 0.75rem;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
   background: var(--sticky-column-background);
   font-weight: 650;
   text-align: left;
