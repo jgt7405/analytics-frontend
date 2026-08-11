@@ -1,13 +1,12 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { CWVData } from "@/types/basketball";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo, useState } from "react";
+import styles from "./CWVTable.module.css";
 
 interface GameData {
   rank: number;
@@ -34,7 +33,6 @@ interface CWVTableProps {
 }
 
 function CWVTable({ cwvData, className, season }: CWVTableProps) {
-  const { isMobile } = useResponsive();
   const router = useRouter();
   const [hoveredGame, setHoveredGame] = useState<HoverState | null>(null);
 
@@ -146,7 +144,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
     return record || "";
   }, []);
 
-  const renderGameCell = useCallback(
+  const renderGameTile = useCallback(
     (rank: number, teamName: string) => {
       const game = gamesByRankAndTeam[rank]?.[teamName];
       if (!game) return null;
@@ -192,7 +190,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
         backgroundColor = isNextGame ? "#d6ebf2" : "#f0f0f0";
         content = formatDate(game.date);
-        textColor = "var(--border-color)";
+        textColor = "#4b5563";
       }
 
       const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -210,9 +208,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
 
       return (
         <div
-          className={`absolute inset-0 flex items-center justify-center ${
-            isMobile ? "text-xs" : "text-sm"
-          } cursor-default`}
+          className={styles.gameTile}
           style={{ backgroundColor, color: textColor }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
@@ -221,12 +217,14 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
         </div>
       );
     },
-    [gamesByRankAndTeam, formatDate, isMobile],
+    [gamesByRankAndTeam, formatDate],
   );
 
   if (!cwvData || !cwvData.teams || !cwvData.games) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-300">No CWV data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
+        No CWV data available
+      </div>
     );
   }
 
@@ -234,264 +232,153 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
   const maxVisibleRows = shouldVirtualize ? 50 : ranks.length;
   const visibleRanks = ranks.slice(0, maxVisibleRows);
 
-  const firstColWidth = isMobile ? 32 : 40;
-  const secondColWidth = isMobile ? 50 : 70;
-  const teamColWidth = isMobile ? 40 : 64;
-  const cellHeight = isMobile ? 24 : 28;
-  const headerHeight = isMobile ? 40 : 48;
-  const summaryRowHeight = isMobile ? 24 : 28;
-
-  const tableClassName = cn(tableStyles.tableContainer, "cwv-table", className);
-
   return (
-    <div className={`${tableClassName} relative overflow-x-auto`}>
-      <table
-        className="border-collapse border-spacing-0"
-        style={{
-          width: "max-content",
-          borderCollapse: "separate",
-          borderSpacing: 0,
-        }}
+    <section
+      className={cn(styles.card, "cwv-table", className)}
+      aria-label="Conference win value by game"
+    >
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="Conference win value by game. Scroll horizontally to see every team."
+        tabIndex={0}
       >
-        <thead>
-          <tr>
-            <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: headerHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              #
-            </th>
-            <th
-              className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: secondColWidth,
-                minWidth: secondColWidth,
-                maxWidth: secondColWidth,
-                height: headerHeight,
-                position: "sticky",
-                left: firstColWidth,
-                border: "1px solid var(--border-color)",
-                borderLeft: "none",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Win Prob
-            </th>
-            {sortedTeams.map((team) => (
+        <table className={styles.table}>
+          <thead>
+            <tr>
               <th
-                key={team.team_name}
-                className="bg-gray-50 dark:bg-slate-800 text-center font-normal p-0 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
-                style={{
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  height: headerHeight,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
-                onClick={() => navigateToTeam(team.team_name)}
+                className={cn(styles.stickyRank, styles.rankHeader)}
+                scope="col"
               >
-                <div className="flex flex-col items-center justify-center h-full px-1">
-                  <TeamLogo
-                    logoUrl={team.logo_url}
-                    teamName={team.team_name}
-                    size={isMobile ? 30 : 36}
-                    className="flex-shrink-0"
-                  />
-                </div>
+                #
               </th>
+              <th
+                className={cn(styles.stickyWinProb, styles.winProbHeader)}
+                scope="col"
+              >
+                Win Prob
+              </th>
+              {sortedTeams.map((team) => (
+                <th
+                  key={team.team_name}
+                  className={styles.teamHeader}
+                  scope="col"
+                  data-screenshot-team-header="true"
+                >
+                  <button
+                    type="button"
+                    className={styles.teamButton}
+                    onClick={() => navigateToTeam(team.team_name)}
+                    aria-label={`View ${team.team_name}`}
+                  >
+                    <TeamLogo
+                      logoUrl={team.logo_url}
+                      teamName={team.team_name}
+                      size={32}
+                      showTooltip
+                      className={styles.teamLogo}
+                    />
+                    <span className={styles.teamName}>{team.team_name}</span>
+                  </button>
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {visibleRanks.map((rank) => (
+              <tr key={rank}>
+                <th
+                  className={cn(styles.stickyRank, styles.rankLabel)}
+                  scope="row"
+                >
+                  {rank}
+                </th>
+                <th
+                  className={cn(styles.stickyWinProb, styles.winProbLabel)}
+                  scope="row"
+                >
+                  {winProbsByRank[rank]
+                    ? `${Math.round(winProbsByRank[rank])}%`
+                    : ""}
+                </th>
+                {sortedTeams.map((team) => (
+                  <td
+                    key={`${team.team_name}-${rank}`}
+                    className={styles.gameCell}
+                    data-screenshot-tile="true"
+                  >
+                    {renderGameTile(rank, team.team_name)}
+                  </td>
+                ))}
+              </tr>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {visibleRanks.map((rank) => (
-            <tr key={rank}>
-              <td
-                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: firstColWidth,
-                  minWidth: firstColWidth,
-                  maxWidth: firstColWidth,
-                  height: cellHeight,
-                  position: "sticky",
-                  left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderRight: "1px solid var(--border-color)",
-                }}
+
+            <tr className={styles.summaryRow}>
+              <th
+                colSpan={2}
+                className={cn(styles.stickyLabel, styles.summaryLabel)}
+                scope="row"
               >
-                {rank}
-              </td>
-              <td
-                className={`sticky z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: secondColWidth,
-                  minWidth: secondColWidth,
-                  maxWidth: secondColWidth,
-                  height: cellHeight,
-                  position: "sticky",
-                  left: firstColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  borderRight: "1px solid var(--border-color)",
-                }}
-              >
-                {winProbsByRank[rank]
-                  ? `${Math.round(winProbsByRank[rank])}%`
-                  : ""}
-              </td>
+                Conf Win Value
+              </th>
               {sortedTeams.map((team) => (
                 <td
-                  key={`${team.team_name}-${rank}`}
-                  className="relative p-0"
-                  style={{
-                    height: cellHeight,
-                    width: teamColWidth,
-                    minWidth: teamColWidth,
-                    maxWidth: teamColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                  }}
+                  key={`cwv-${team.team_name}`}
+                  className={styles.summaryValue}
                 >
-                  {renderGameCell(rank, team.team_name)}
+                  <div className={styles.cwvChip} style={getCWVColor(team.cwv)}>
+                    {team.cwv > 0
+                      ? `+${team.cwv.toFixed(1)}`
+                      : team.cwv.toFixed(1)}
+                  </div>
                 </td>
               ))}
             </tr>
-          ))}
 
-          {/* CWV row with color shading */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
-            <td
-              colSpan={2}
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth + secondColWidth,
-                minWidth: firstColWidth + secondColWidth,
-                height: summaryRowHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderTop: "none",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Conf Win Value
-            </td>
-            {sortedTeams.map((team) => (
-              <td
-                key={`cwv-${team.team_name}`}
-                className={`text-center font-medium ${isMobile ? "text-xs" : "text-sm"} relative p-0`}
-                style={{
-                  height: summaryRowHeight,
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                }}
+            <tr className={styles.summaryRow}>
+              <th
+                colSpan={2}
+                className={cn(styles.stickyLabel, styles.summaryLabel)}
+                scope="row"
               >
-                <div
-                  className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}
-                  style={getCWVColor(team.cwv)}
+                Current Record
+              </th>
+              {sortedTeams.map((team) => (
+                <td
+                  key={`record-${team.team_name}`}
+                  className={styles.summaryValue}
                 >
-                  {team.cwv > 0
-                    ? `+${team.cwv.toFixed(1)}`
-                    : team.cwv.toFixed(1)}
-                </div>
-              </td>
-            ))}
-          </tr>
+                  <div className={styles.cwvChip}>
+                    {formatTeamRecord(team.current_record)}
+                  </div>
+                </td>
+              ))}
+            </tr>
 
-          {/* Current Record row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
-            <td
-              colSpan={2}
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth + secondColWidth,
-                minWidth: firstColWidth + secondColWidth,
-                height: summaryRowHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderTop: "none",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Current Record
-            </td>
-            {sortedTeams.map((team) => (
-              <td
-                key={`record-${team.team_name}`}
-                className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  height: summaryRowHeight,
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  padding: "2px",
-                }}
+            <tr className={styles.summaryRow}>
+              <th
+                colSpan={2}
+                className={cn(styles.stickyLabel, styles.summaryLabel)}
+                scope="row"
               >
-                {formatTeamRecord(team.current_record)}
-              </td>
-            ))}
-          </tr>
+                Est Avg Team Record
+              </th>
+              {sortedTeams.map((team) => (
+                <td
+                  key={`est-record-${team.team_name}`}
+                  className={styles.summaryValue}
+                >
+                  <div className={styles.cwvChip}>
+                    {formatTeamRecord(team.est_avg_record)}
+                  </div>
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-          {/* Est Avg Team Record row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
-            <td
-              colSpan={2}
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-1 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth + secondColWidth,
-                minWidth: firstColWidth + secondColWidth,
-                height: summaryRowHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderTop: "none",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Est Avg Team Record
-            </td>
-            {sortedTeams.map((team) => (
-              <td
-                key={`est-record-${team.team_name}`}
-                className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  height: summaryRowHeight,
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  padding: "2px",
-                }}
-              >
-                {formatTeamRecord(team.est_avg_record)}
-              </td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
-      {/* Tooltip */}
       {hoveredGame &&
         (() => {
           const game =
@@ -613,7 +500,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
             </div>
           );
         })()}
-    </div>
+    </section>
   );
 }
 

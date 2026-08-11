@@ -73,23 +73,28 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
   const getCWVColor = useCallback(
     (cwv: number) => {
       const blue = [24, 98, 123];
-      const white = [255, 255, 255];
+      // Baseline matches cwvChip's own default fill (#e2e8f0) instead of
+      // pure white - a cwv of 0 (or the min/max clamp collapsing to no
+      // spread) then renders as the same neutral tile every other summary
+      // row already uses, instead of disappearing into the white card
+      // background with no visible border/fill at all.
+      const neutral = [226, 232, 240];
       const yellow = [255, 230, 113];
 
       let r: number, g: number, b: number;
 
       if (cwv > 0) {
         const ratio = Math.min(Math.abs(cwv / maxCWV), 1);
-        r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
-        g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
-        b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
+        r = Math.round(neutral[0] + (blue[0] - neutral[0]) * ratio);
+        g = Math.round(neutral[1] + (blue[1] - neutral[1]) * ratio);
+        b = Math.round(neutral[2] + (blue[2] - neutral[2]) * ratio);
       } else if (cwv < 0) {
         const ratio = Math.min(Math.abs(cwv / minCWV), 1);
-        r = Math.round(white[0] + (yellow[0] - white[0]) * ratio);
-        g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
-        b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
+        r = Math.round(neutral[0] + (yellow[0] - neutral[0]) * ratio);
+        g = Math.round(neutral[1] + (yellow[1] - neutral[1]) * ratio);
+        b = Math.round(neutral[2] + (yellow[2] - neutral[2]) * ratio);
       } else {
-        [r, g, b] = white;
+        [r, g, b] = neutral;
       }
 
       const brightness = (r * 299 + g * 587 + b * 114) / 1000;
@@ -329,7 +334,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                 className={cn(styles.stickyColumn, styles.summaryLabel)}
                 scope="row"
               >
-                Est .500 Team Record
+                Est .500 Record
               </th>
               {sortedTeams.map((team) => (
                 <td

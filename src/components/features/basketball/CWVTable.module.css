@@ -1,6 +1,6 @@
 .card {
-  --wins-cell-text: #1f2937;
-  --label-column-width: 4.75rem;
+  --rank-column-width: 2.5rem;
+  --winprob-column-width: 4.375rem;
   --team-column-width: 3.65rem;
   position: relative;
   overflow: hidden;
@@ -62,23 +62,52 @@
   max-width: var(--team-column-width);
 }
 
-.stickyColumn {
-  --sticky-column-background: #ffffff;
+/* Two sticky label columns (# and Win Prob), each anchored at its own left
+   offset. --rank-column-width is a CSS custom property (redefined per
+   breakpoint on .card), so the second column's offset can stay pure CSS
+   via var() instead of needing a JS-computed inline value. */
+.stickyRank,
+.stickyWinProb,
+.stickyLabel {
   position: sticky;
   left: 0;
   z-index: 40;
-  width: var(--label-column-width) !important;
-  min-width: var(--label-column-width) !important;
-  max-width: var(--label-column-width) !important;
   background: var(--sticky-column-background);
   background-clip: border-box;
-  box-shadow:
-    1px 0 0 0 var(--sticky-column-background),
-    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
   isolation: isolate;
 }
 
+.stickyRank {
+  --sticky-column-background: #ffffff;
+  width: var(--rank-column-width) !important;
+  min-width: var(--rank-column-width) !important;
+  max-width: var(--rank-column-width) !important;
+  box-shadow: 1px 0 0 0 rgb(226 232 240 / 0.8);
+}
+
+.stickyWinProb {
+  --sticky-column-background: #ffffff;
+  left: var(--rank-column-width);
+  width: var(--winprob-column-width) !important;
+  min-width: var(--winprob-column-width) !important;
+  max-width: var(--winprob-column-width) !important;
+  box-shadow:
+    1px 0 0 0 var(--sticky-column-background),
+    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
+}
+
+/* Summary rows (Conf Win Value / Current Record / Est Avg Team Record)
+   merge the two label columns into one colSpan={2} cell - its width comes
+   from the table's <colgroup> tracks, not this class, so it deliberately
+   doesn't force a width like .stickyRank/.stickyWinProb do. */
+.stickyLabel {
+  box-shadow:
+    1px 0 0 0 var(--sticky-column-background),
+    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
+}
+
 .rankHeader,
+.winProbHeader,
 .teamHeader {
   height: 5.25rem;
   border: 0;
@@ -86,10 +115,11 @@
   box-shadow: none;
 }
 
-.rankHeader {
+.rankHeader,
+.winProbHeader {
   z-index: 50;
   color: #334155;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 650;
   letter-spacing: 0.01em;
   text-align: center;
@@ -146,13 +176,14 @@
 }
 
 /* Subtle row divider - matches the seam that gameTile's own border already
-   creates between data rows, so the label column reads as the same rows
+   creates between data rows, so the label columns read as the same rows
    instead of an undivided list of numbers. */
-.rankLabel {
+.rankLabel,
+.winProbLabel {
   height: 2.35rem;
   border-bottom: 1px solid rgb(226 232 240 / 0.7);
   color: #475569;
-  font-size: 0.98rem;
+  font-size: 0.92rem;
   font-weight: 700;
   text-align: center;
 }
@@ -182,27 +213,23 @@
   border-color: rgb(255 255 255 / 0.9);
 }
 
-/* All summary rows (Conf Win Value and the Current Record/Est .500 Team
-   Record footer rows) share one look - summaryValue itself stays
-   transparent, like gameCell - the background lives on cwvChip below so
-   every summary row tiles the same way, instead of only the colored CWV
-   row reading as a chip and the plain-text footer rows reading as a flat
-   bar. */
+/* All summary rows (Conf Win Value, Current Record, Est Avg Team Record)
+   share one look - summaryValue itself stays transparent, like gameCell -
+   the background lives on cwvChip below so every summary row tiles the
+   same way, instead of only the colored CWV row reading as a chip and the
+   plain-text rows below it reading as a flat bar. */
 .summaryLabel,
 .summaryValue {
   color: #334155;
   font-size: 0.94rem;
 }
 
-/* Border + radius (matching summaryChip/cwvChip) is what actually reads
-   as "a distinct tile with a gap" - the 1px border-spacing gap alone is
-   low-contrast against the card background regardless of the cell's own
-   fill color, same as every other gap-contrast issue in this table. The
-   border is what outlines each row, not the color of the sliver between
-   them. */
+/* Border + radius (matching cwvChip) is what actually reads as "a distinct
+   tile with a gap" - the 1px border-spacing gap alone is low-contrast
+   against the card background regardless of the cell's own fill color. */
 .summaryLabel {
   --sticky-column-background: #e2e8f0;
-  min-height: 2.35rem;
+  min-height: 2.15rem;
   padding: 0 0.75rem;
   border: 1px solid rgb(255 255 255 / 0.68);
   border-radius: 3px;
@@ -213,41 +240,37 @@
 }
 
 /* height (not min-height): a table cell's height only counts as "definite"
-   for a percentage-height child (cwvChip's height:100%) when set via
+   for a percentage-height child (cwvChip's calc(100% - ...)) when set via
    the height property - min-height doesn't qualify, even though the cell
    still grows past it when a taller sibling forces the row taller. */
 .summaryValue {
-  height: 2.35rem;
+  height: 2.15rem;
   text-align: center;
   font-weight: 700;
   padding: 0;
 }
 
-/* Matches the Wins table's summaryChip exactly - fills the cell edge-to-
-   edge (same sizing as gameTile) with its own 1px border, instead of a
-   smaller chip floating inside a visible margin. Default look for a chip
-   with no per-value color (Current Record / Est .500 Team Record have no
-   meaningful color scale) - the CWV row overrides backgroundColor via
-   inline style but keeps this look otherwise, so every summary row reads
-   as the same kind of tile as the Wins page's Average/Curr Conf Record
-   rows. */
+/* Default look for a chip with no per-value color (Current Record / Est
+   Avg Team Record have no meaningful color scale) - the CWV row overrides
+   backgroundColor via inline style but keeps this look otherwise, so every
+   summary row reads as the same kind of tile. */
 .cwvChip {
   display: flex;
-  width: 100%;
-  height: 100%;
+  width: calc(100% - 0.5rem);
+  height: calc(100% - 0.4rem);
+  margin: 0.2rem 0.25rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgb(255 255 255 / 0.68);
-  border-radius: 3px;
+  border-radius: 4px;
   background: #e2e8f0;
   font-weight: 700;
 }
 
-/* Marks the boundary between the game-result data grid and the footer
-   summary rows below it with a clearer divider than the plain row-to-row
-   line, since the background color alone doesn't read as a section break. */
-.table tfoot tr:first-child .summaryLabel,
-.table tfoot tr:first-child .summaryValue {
+/* Marks the boundary between the game-result data grid and the summary
+   rows below it with a clearer divider than the plain row-to-row line,
+   since the background color alone doesn't read as a section break. */
+.table tbody tr.summaryRow:first-of-type .summaryLabel,
+.table tbody tr.summaryRow:first-of-type .summaryValue {
   border-top: 2px solid #cbd5e1;
 }
 
@@ -264,18 +287,20 @@
   color: #e2e8f0;
 }
 
-:global(.dark) .stickyColumn,
+:global(.dark) .stickyRank,
+:global(.dark) .stickyWinProb,
 :global(.dark) .rankHeader,
+:global(.dark) .winProbHeader,
 :global(.dark) .teamHeader {
   --sticky-column-background: #111827;
   background: #111827;
   color: #cbd5e1;
 }
 
-:global(.dark) .rankLabel {
-  --sticky-column-background: #0f172a;
+:global(.dark) .rankLabel,
+:global(.dark) .winProbLabel {
   border-bottom-color: rgb(51 65 85 / 0.6);
-  background: var(--sticky-column-background);
+  background: #0f172a;
 }
 
 :global(.dark) .summaryLabel,
@@ -292,14 +317,15 @@
   background: #263449;
 }
 
-:global(.dark) .table tfoot tr:first-child .summaryLabel,
-:global(.dark) .table tfoot tr:first-child .summaryValue {
+:global(.dark) .table tbody tr.summaryRow:first-of-type .summaryLabel,
+:global(.dark) .table tbody tr.summaryRow:first-of-type .summaryValue {
   border-top: 2px solid rgb(71 85 105 / 0.8);
 }
 
 @media (max-width: 767px) {
   .card {
-    --label-column-width: 3.75rem;
+    --rank-column-width: 2rem;
+    --winprob-column-width: 3.25rem;
     --team-column-width: 2.95rem;
     border-radius: 1rem;
   }
@@ -308,11 +334,8 @@
     padding: 0.9rem 0.35rem 0.55rem 0;
   }
 
-  .table {
-    border-spacing: 1px;
-  }
-
   .rankHeader,
+  .winProbHeader,
   .teamHeader {
     height: 4.65rem;
   }
@@ -322,15 +345,22 @@
   }
 
   .rankLabel,
+  .winProbLabel,
   .gameCell,
   .summaryValue {
     height: 2rem;
   }
 
   .rankLabel,
+  .winProbLabel,
   .summaryLabel,
   .summaryValue {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+  }
+
+  .rankHeader,
+  .winProbHeader {
+    font-size: 0.72rem;
   }
 
   .gameTile {

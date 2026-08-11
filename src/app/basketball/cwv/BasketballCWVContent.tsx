@@ -14,6 +14,7 @@ type CWVData = CWVApiResponse["data"];
 
 const BASKETBALL_CWV: CWVContentConfig<CWVData> = {
   pageId: "cwv",
+  tableTitle: "Conference Win Value (CWV)",
   useCWVData: useCWV,
   CWVTable,
 };
