@@ -518,6 +518,14 @@ spacing is only `1px`. That's the *only* pair of columns without a visible
 seam, because only the sticky column carries this ring. Cap it at `1px` to
 match `border-spacing` exactly.
 
+Don't grep for one variable name and assume you've found every instance —
+this codebase has at least two names for the same background-var-for-a-
+ring pattern (`--sticky-column-background` on the wins/standings-family
+tables, `--sticky-bg` on the seed/CFP/conf-data family). Grep for the
+*value* (`0 0 0 3px var(`, or just `0 0 0 3px`) to catch every ring
+regardless of what its author happened to name the variable, then check
+each match individually for the color it resolves to.
+
 **e. A blurred box-shadow always rounds its own corners, independent of
 the element's `border-radius`.** The second half of `.stickyColumn`'s
 shadow — simulating "content passing under this column" — used to have a
@@ -533,6 +541,20 @@ box-shadow: 0 0 0 1px var(--sticky-column-background),
 ```
 Any shadow meant to read as a flat rule/divider needs `blur-radius: 0` —
 offset and spread only.
+
+The blurred version isn't just "has slightly soft corners" — at that
+particular offset/blur/spread combination (`0.65rem 0 0.85rem -0.9rem`) the
+shadow is nearly imperceptible, because the heavy negative spread cancels
+out almost all of the blur's visible extent. So the practical, user-facing
+symptom of leaving this one unfixed isn't a curved corner, it's "this
+table doesn't have the line to the right of the first column that the
+[already-fixed table] has" — reported as a missing feature, not a
+rendering glitch. When fixing this on one table, grep the *value*
+(`0.65rem 0 0.85rem -0.9rem`, across both `rgb(15 23 42 / 0.42)` and any
+other alpha it might be paired with) across every table file in the same
+family, not just the one that prompted the fix — this exact miss happened
+once already this session (fixed on the wins tables, then found missing
+on every other table days later when a user compared them side by side).
 
 **f. `min-height` on a table cell doesn't count as "definite" for a
 percentage-height child.** A cell hosting a `.heatTile`/`.summaryChip`-
@@ -689,6 +711,18 @@ same patterns.
 - Sticky-column ring capped at 1px (§9d) and de-blurred (§9e) in the six
   files above plus `FootballConfChampTable`, `FootballTWVTable` — every
   table using the `--sticky-column-background` ring pattern
+
+**2026-08, follow-up (§9d/e's own miss, fixed same day):** the ring/blur
+fix above only touched the `--sticky-column-background`-named ring; a
+second family of tables uses `--sticky-bg` for the identical pattern and
+was missed on the first pass, caught when a user compared two pages side
+by side and noticed one was missing the directional-shadow line the other
+had. De-blurred (§9e) `FootballCFPBracketTable`, `FootballCFPTable`,
+`FootballConfDataTable`, `FootballSeedTable`, `FootballTeamSeedProjections`,
+`WhatIfProbTable`; capped the `--sticky-bg` ring at 1px (§9d) in the same
+five files that have one (`FootballCFPBracketTable` deliberately has no
+ring at all, see its own comment). See §9d/e's note on grepping by value,
+not by variable name.
 
 ## Not yet done
 
