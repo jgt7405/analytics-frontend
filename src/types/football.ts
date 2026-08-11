@@ -398,6 +398,7 @@ export interface PlayoffRankingsResponse {
   first_four_out: BubbleTeam[];
   next_four_out: BubbleTeam[];
   other_teams?: OtherTeam[];
+  last_updated?: string;
 }
 
 export interface ConferenceApiResponse {

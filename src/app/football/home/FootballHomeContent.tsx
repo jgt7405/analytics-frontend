@@ -47,14 +47,28 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
     });
   }, [trackEvent]);
 
-  // Format the last updated timestamp
+  // Format the last updated timestamp - reflects when the data pipeline
+  // actually ran (data.last_updated), not just today's client date.
   const lastUpdated = useMemo(() => {
+    if (data?.last_updated) {
+      try {
+        const date = new Date(data.last_updated);
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${month}/${day}/${year}`;
+      } catch (error) {
+        console.error("Error formatting date:", error);
+      }
+    }
+
+    // Fallback to current date
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     const year = now.getFullYear();
     return `${month}/${day}/${year}`;
-  }, []);
+  }, [data?.last_updated]);
 
   // Filter toggle button - matches basketball conf-data styling.
   // Not using the .conference-selector class here: on desktop that class is
