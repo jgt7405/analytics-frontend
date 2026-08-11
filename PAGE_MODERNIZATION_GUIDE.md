@@ -786,6 +786,32 @@ five files that have one (`FootballCFPBracketTable` deliberately has no
 ring at all, see its own comment). See §9d/e's note on grepping by value,
 not by variable name.
 
+**2026-08, follow-up 2 (the ring-width fix wasn't sufficient on its own):**
+capping the ring at `1px` (previous entry) stopped it from *erasing* the
+row-to-row gap in summary-row label cells, but didn't make that gap
+*visible* — two more rounds of user-reported screenshots on the same
+tables, now written up as §9d's directional-vs-spread distinction and
+§9g's three-attempt `.summaryLabel` writeup:
+- Changed the ring from the four-value spread form (`0 0 0 1px`, expands
+  on all four sides) to the two-value offset form (`1px 0 0 0`, expands
+  only in the offset direction) — the width was already correct, but the
+  omnidirectional spread was still painting over the vertical gap between
+  same-colored summary rows from the top/bottom sides, invisibly on
+  ordinary white-on-white data rows and visibly on colored summary rows.
+  Applied to every file from both entries above (both ring variable
+  names).
+- Removed a `border-bottom` on `.summaryLabel` that pre-dated the ring
+  fix and was the *only* thing providing row separation at the time —
+  once the ring fix (above) made the geometric gap real, that border
+  became a second, redundant line stacked on top of it.
+- Discovered removing it left *no* visible separation at all — a plain
+  background with no border has no visible edge, so the now-real 1px gap
+  was still imperceptible. Added a real border + `border-radius: 3px` to
+  `.summaryLabel` matching `.summaryChip`, which is what actually reads
+  as "a tile" (the border, not the gap's color contrast, per §9g).
+Touched the same files as both prior entries, plus `ScheduleTable`'s own
+inline `.summaryLabel` (it doesn't use the shared `.stickyColumn` class).
+
 ## Not yet done
 
 Basketball pages were deliberately left untouched throughout both passes —
