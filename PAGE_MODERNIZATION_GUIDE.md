@@ -526,6 +526,13 @@ tables, `--sticky-bg` on the seed/CFP/conf-data family). Grep for the
 regardless of what its author happened to name the variable, then check
 each match individually for the color it resolves to.
 
+Also grep `*.tsx` files, not just `*.module.css` — most tables put their
+sticky-column styling in a CSS module, but a couple (`BowlPicksTable.tsx`,
+`BowlScoreboard.tsx`) style `position: sticky` inline instead, so a
+file-based sweep of `grep -l "position: sticky" *.module.css` silently
+skips them. `grep -rl "position: sticky" *.tsx *.module.css` (or search
+both extensions) catches both.
+
 **e. A blurred box-shadow always rounds its own corners, independent of
 the element's `border-radius`.** The second half of `.stickyColumn`'s
 shadow — simulating "content passing under this column" — used to have a
@@ -752,3 +759,14 @@ is unchanged. Two things remain:
    `BasketballTeamFirstPlaceHistory`, `BasketballConfChampionHistoryChart`,
    `TeamWinValues`) — leave these for whenever basketball itself is
    deliberately taken on, per point 1 above.
+3. `/football/bowlpicks` (`BowlPicksTable.tsx` + `BowlScoreboard.tsx`) —
+   found while auditing §9d/e's shadow pattern (its sticky columns style
+   inline in the `.tsx` rather than via a CSS module, so file-based greps
+   for `position: sticky` across `*.module.css` miss it entirely - grep
+   `*.tsx` too when auditing sticky columns). Still on the pre-§1 pattern
+   throughout: inline `border: "1px solid var(--border-color)"` cells (§5),
+   no `.card`/`.cardHeader` shell (§1-2), and a different, older sticky-
+   column shadow (`8px 0 8px -4px rgba(0,0,0,0.1)`) that predates the ring/
+   directional-shadow pattern in §9d/e - not an instance of that bug, just
+   a page that was never brought into the modernized pattern at all. Needs
+   the full §9 checklist treatment, not just a shadow-value swap.
