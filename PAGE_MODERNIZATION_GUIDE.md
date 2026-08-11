@@ -623,12 +623,21 @@ even though they're conceptually the same thing. Fix, applied uniformly:
   record, a game count). Give `.summaryChip`/`.cwvChip`/etc. a sensible
   default background/border; a colored cell's inline `style={getColor(...)}`
   overrides just the background, so the border/radius/gap still match.
-- Give the label column (`.winLabel`/`.rankLabel`) a subtle `border-bottom`
-  (`1px solid rgb(226 232 240 / 0.7)`, dark: `rgb(51 65 85 / 0.6)`) matching
-  the seam the heat-tile's own border already creates between data rows —
-  otherwise the label column (plain text, no per-cell border) shows no
-  row-to-row division at all while the data grid right next to it clearly
-  does.
+- Give the **data-row** label column (`.winLabel`/`.rankLabel` — the plain
+  numeric row labels next to the heat-tile grid, not the summary rows) a
+  subtle `border-bottom` (`1px solid rgb(226 232 240 / 0.7)`, dark:
+  `rgb(51 65 85 / 0.6)`) matching the seam the heat-tile's own border
+  already creates between data rows — otherwise the label column (plain
+  text, no per-cell border) shows no row-to-row division at all while the
+  data grid right next to it clearly does.
+  **Don't add this same border-bottom to `.summaryLabel`.** Once §9d's
+  directional ring fix is in place, the summary-row label cells already
+  get a clean row-to-row gap for free (same mechanism as the value
+  columns' chips), so an explicit border-bottom on top of that gap
+  double-renders as two lines where the value columns only show one —
+  the opposite problem from the one this bullet exists to fix, caused by
+  copying the fix for data rows onto summary rows without checking
+  whether they needed it.
 - Mark the transition **into** a summary-row block with a heavier top
   divider, but only on the *first* row of that block, not every row inside
   it: `.table tfoot tr:first-child .summaryLabel, .table tfoot tr:first-child
