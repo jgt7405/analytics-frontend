@@ -502,27 +502,45 @@ const gridWidth = numColumns * columnWidth + Math.max(numColumns - 1, 0) * colum
 }
 ```
 
-**d. A sticky column's background-matching "seal" ring must not exceed the
-table's `border-spacing`.** `.stickyColumn`'s box-shadow includes a ring in
-its own background color to hide the sub-pixel gap where scrolled content
-could otherwise peek through as it passes underneath during horizontal
-scroll:
+**d. A sticky column's background-matching "seal" ring must be directional
+(right-side only), not an omnidirectional spread.** `.stickyColumn`'s
+box-shadow includes a ring in its own background color to hide the
+sub-pixel gap where scrolled content could otherwise peek through as it
+passes underneath during horizontal scroll:
 ```css
-box-shadow: 0 0 0 1px var(--sticky-column-background), /* not 3px */
+box-shadow: 1px 0 0 0 var(--sticky-column-background), /* not "0 0 0 1px" or 3px */
   0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
 ```
-A wider spread (several tables had `3px`, copied from table to table) is
-overkill for that purpose and paints straight over — and erases — the
-gap between the sticky column and the very next column, since border-
-spacing is only `1px`. That's the *only* pair of columns without a visible
-seam, because only the sticky column carries this ring. Cap it at `1px` to
-match `border-spacing` exactly.
+Two separate mistakes stack on this one line:
+- **Width.** A wider spread (several tables had `3px`, copied from table
+  to table) is overkill for masking a sub-pixel seam and paints straight
+  over — and erases — the gap between the sticky column and the very next
+  column, since border-spacing is only `1px`. That's the *only* pair of
+  columns without a visible seam, because only the sticky column carries
+  this ring.
+- **Direction.** Even after capping the width to `1px`, using the
+  four-value spread form (`0 0 0 1px`) still expands the ring on *all four
+  sides* — top and bottom included, not just the right edge it's actually
+  meant to seal. Since every summary-type row in a table shares the same
+  `--sticky-column-background` (per §9g), each row's ring extends 1px
+  upward and downward into the vertical border-spacing gap between it and
+  its neighbor, and because the color matches exactly, the two overlapping
+  rings paint that gap solid — the label column reads as one merged block
+  across all the summary rows while the value columns right next to it
+  (which carry no ring at all) still show a clean gap between every row.
+  This was invisible on ordinary data rows only because their ring color
+  (`#ffffff`, matching the surrounding card) has zero contrast against
+  itself — the bug was equally present there, just undetectable by eye.
+  Use the two-value offset form (`1px 0 0 0`) instead of the four-value
+  spread form (`0 0 0 1px`) — offset-based shadows only extend in the
+  direction of the offset, leaving the row-to-row gap alone entirely.
 
 Don't grep for one variable name and assume you've found every instance —
 this codebase has at least two names for the same background-var-for-a-
 ring pattern (`--sticky-column-background` on the wins/standings-family
 tables, `--sticky-bg` on the seed/CFP/conf-data family). Grep for the
-*value* (`0 0 0 3px var(`, or just `0 0 0 3px`) to catch every ring
+*value* (`0 0 0 3px var(`, or `0 0 0 1px var(` if checking for the
+direction bug on a table already width-fixed) to catch every ring
 regardless of what its author happened to name the variable, then check
 each match individually for the color it resolves to.
 

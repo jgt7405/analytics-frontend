@@ -99,12 +99,17 @@
      stacked rows (e.g. the Average row, or the summary rows) have
      different backgrounds. A solid offset+spread strip stays a flat
      rectangle, so stacked rows line up into one straight edge.
-     Spread is capped at 1px (matching the table's own border-spacing) -
-     a wider ring paints straight over the gap between this column and
-     the next one, erasing the seam that's visible between every other
-     pair of columns. */
+     Right-side only (1px 0 0 0, not 0 0 0 1px): an omnidirectional
+     spread also expands 1px onto the TOP and BOTTOM of this cell, which
+     paints straight over the vertical border-spacing gap between this
+     row and the next one whenever consecutive rows share the same
+     --sticky-column-background (every summary row does) - the label
+     column then reads as one solid merged block while the value columns
+     right next to it still show a gap between every row. A directional
+     shadow only covers the one edge it's meant to (the seam with the
+     next column), leaving the row-to-row gap alone. */
   box-shadow:
-    0 0 0 1px var(--sticky-column-background),
+    1px 0 0 0 var(--sticky-column-background),
     0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
   isolation: isolate;
 }

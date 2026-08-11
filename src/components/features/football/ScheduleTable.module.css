@@ -139,7 +139,7 @@
   min-width: var(--winprob-col-width) !important;
   max-width: var(--winprob-col-width) !important;
   box-shadow:
-    0 0 0 1px var(--sticky-column-background),
+    1px 0 0 0 var(--sticky-column-background),
     0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
 }
 
@@ -155,7 +155,7 @@
   background: var(--sticky-column-background);
   background-clip: border-box;
   box-shadow:
-    0 0 0 1px var(--sticky-column-background),
+    1px 0 0 0 var(--sticky-column-background),
     0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
   isolation: isolate;
 }
@@ -387,7 +387,7 @@
   white-space: normal;
   isolation: isolate;
   box-shadow:
-    0 0 0 1px var(--sticky-column-background),
+    1px 0 0 0 var(--sticky-column-background),
     0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
 }
 
