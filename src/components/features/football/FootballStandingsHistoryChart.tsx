@@ -18,8 +18,14 @@ import { Line } from "react-chartjs-2";
 
 // Matches the gradient/border/shadow "card" look used across the
 // modernized Wins/Standings/CWV/etc. pages.
+// No `border` property: on this user's Windows Chrome/Edge, a real
+// `border` combined with this element's `border-radius` hit the same
+// sub-pixel rasterization artifact documented on the chip buttons below
+// (zoom-dependent dark corner/edge fringe, invisible to computed-style
+// checks). The 1px ring is folded into the shadow stack as an inset
+// layer instead - same visual result, different rasterization path.
 const CARD_CLASS =
-  "relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+  "relative rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[inset_0_0_0_1px_rgb(226_232_240_/_0.9),0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[inset_0_0_0_1px_rgb(51_65_85_/_0.9),0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
 
 interface TimelineData {
   team_name: string;

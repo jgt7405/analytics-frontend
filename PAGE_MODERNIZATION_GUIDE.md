@@ -450,6 +450,37 @@ original bug) and a bare `border-2` + inline `borderColor` combo (the
 intermediate fix that itself had the rasterization bug) before assuming a
 chip picker elsewhere is already correct.
 
+**The same bug also hit these components' own outer `CARD_CLASS`,
+one level up.** After the chip buttons themselves were fixed, the user
+reported the exact same symptom (a dark line, this time around the
+*whole card*) - because `CARD_CLASS` used `border border-slate-200/90
+dark:border-slate-700/90` combined with `rounded-[1.25rem]`, the identical
+property combination that caused the chip bug, just on a bigger element.
+Same fix, same reasoning: drop the `border` utility and fold a `1px`
+inset ring into the existing `shadow-[...]` value as an additional
+comma-separated layer instead:
+```tsx
+// before
+"relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] ... shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]"
+
+// after
+"relative rounded-[1.25rem] ... shadow-[inset_0_0_0_1px_rgb(226_232_240_/_0.9),0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[inset_0_0_0_1px_rgb(51_65_85_/_0.9),0_24px_58px_-34px_rgb(0_0_0_/_0.82)]"
+```
+`rgb(226 232 240 / 0.9)` / `rgb(51 65 85 / 0.9)` are just `slate-200/90`
+and `slate-700/90` (the original border colors) expressed as raw values,
+since an inset shadow layer can't reference a Tailwind border-color
+utility directly. This is the *same* `CARD_CLASS` constant duplicated
+verbatim across all five files (not a shared component), so all five
+needed the identical edit.
+
+This wasn't a one-and-done fix — it's the same underlying rasterization
+bug recurring on every element in this component tree that combines a
+real `border` property with `border-radius`, not just the one element a
+user happens to point at first. Anyone touching one of these five files
+again should treat *any* remaining `border-*` utility inside them as
+suspect and check whether it needs the same inset-shadow treatment,
+rather than assuming the chip fix alone was sufficient.
+
 **f. "Reset to all" affordance.** Any chip picker that supports narrowing
 (click a team to isolate it) needs a visible way back out once something's
 selected — don't make people click every chip again to deselect. Render it
