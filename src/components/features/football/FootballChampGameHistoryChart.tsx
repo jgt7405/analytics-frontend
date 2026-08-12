@@ -679,7 +679,7 @@ export default function FootballChampGameHistoryChart({
                     (isDark ? "#475569" : "#cbd5e1"),
                 }}
                 className={cn(
-                  "flex min-w-0 cursor-pointer flex-col items-center gap-0.5 rounded-xl border-2 bg-white/80 px-1 pb-1.5 pt-1 transition-[border-width,opacity,filter,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
+                  "flex min-w-0 cursor-pointer appearance-none flex-col items-center gap-0.5 rounded-xl border-2 bg-white/80 px-1 pb-1.5 pt-1 shadow-none transition-[border-width,opacity,filter,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
                   isExplicitlySelected && "border-[3px]",
                   !isSelected && "opacity-30 grayscale",
                 )}
