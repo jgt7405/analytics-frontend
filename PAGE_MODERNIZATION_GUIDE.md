@@ -397,30 +397,58 @@ Give each chip's border the entity's own primary color via inline
 `style={{ borderColor: team.team_info.primary_color || fallback }}` instead
 of a generic slate border.
 
-**Selected-state indicator (2026-08, revised):** originally a generic
-`ring-2 ring-sky-500/30 dark:ring-sky-400/40` layered on top of the
-colored border, on the reasoning that "whose color is this" and "is this
-currently selected" should be two separate visual signals instead of both
-fighting over `border-color`. Reversed on user request: the sky ring read
-as an unwanted shadow, so selection is now shown by thickening the same
-entity-colored border instead (`border-2` → `border-[3px]` when
-`isExplicitlySelected`, no ring/shadow at all):
+**Selected-state indicator (2026-08, revised twice):** originally a
+generic `ring-2 ring-sky-500/30 dark:ring-sky-400/40` layered on top of
+the colored border, on the reasoning that "whose color is this" and "is
+this currently selected" should be two separate visual signals instead of
+both fighting over `border-color`. Reversed on user request (the sky ring
+read as an unwanted shadow) to thickening the same entity-colored border
+instead — but that first fix (`border-2` → `border-[3px]`, an actual CSS
+`border` property) turned out to have its own, much harder to diagnose
+problem: a persistent dark corner artifact, Windows-desktop-only (both
+Chrome and Edge, not mobile), not present in an incognito window (ruled
+out extensions), unaffected by toggling hardware acceleration (ruled out
+GPU/driver compositing), invisible to `getComputedStyle` and to automated
+screenshots including ones forcing GPU rasterization flags — and the one
+detail that finally explained it: it changed with **browser zoom level**
+(faded out around 50%). That combination points at a `border` +
+`border-radius` sub-pixel rasterization artifact tied to the effective
+device pixel ratio (zoom × OS display scaling), not a real box-shadow at
+all — which is exactly why every DevTools/computed-style check kept
+coming back clean.
+
+Fix: stop using the `border` CSS property entirely for this ring. Paint
+it as an **inset `box-shadow`** instead — visually identical (same color,
+same apparent width, same rounded corners since an inset shadow follows
+the element's own `border-radius`), but painted through a completely
+different rasterization path that doesn't hit the same corner bug:
 ```tsx
+style={{
+  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 3 : 2}px ${
+    team.team_info.primary_color || fallback
+  }`,
+}}
 className={cn(
-  "... border-2 ... transition-[border-width,opacity,filter,background-color] ...",
-  isExplicitlySelected && "border-[3px]",
+  "... rounded-xl ... transition-[box-shadow,background-color] ...",
+  // no border-2 / border-[3px] here at all
   !isSelected && "opacity-30 grayscale",
 )}
 ```
-Note `transition` also changed from `box-shadow` to `border-width` to
-match what's actually animating now. Touched every chip picker that had
-the old ring: `FootballStandingsHistoryChart`, `FootballFirstPlaceChart`
-(Standings page's two charts), `FootballConfChampionHistoryChart`,
-`FootballChampGameHistoryChart` (Conf Champ page's two charts), and
-`FootballConfBidsHistoryChart` (Conf Data page's chart). If a new history
-chart is built from one of these as a template, carry over the solid-
-border version, not the ring — grep `ring-2 ring-sky` before assuming any
-remaining hit is intentional; as of this pass there shouldn't be any left.
+`filter` was also dropped from `transition-property` in the intermediate
+fix (listing `filter` as transitionable can make Chromium eagerly promote
+an element to its own GPU layer even at rest, a separate potential source
+of the same class of artifact) — kept dropped here since there's no
+reason to add it back.
+
+Touched every chip picker that had the old ring: `FootballStandingsHistoryChart`,
+`FootballFirstPlaceChart` (Standings page's two charts),
+`FootballConfChampionHistoryChart`, `FootballChampGameHistoryChart` (Conf
+Champ page's two charts), and `FootballConfBidsHistoryChart` (Conf Data
+page's chart). If a new history chart is built from one of these as a
+template, copy the inset-shadow version — grep `ring-2 ring-sky` (the
+original bug) and a bare `border-2` + inline `borderColor` combo (the
+intermediate fix that itself had the rasterization bug) before assuming a
+chip picker elsewhere is already correct.
 
 **f. "Reset to all" affordance.** Any chip picker that supports narrowing
 (click a team to isolate it) needs a visible way back out once something's

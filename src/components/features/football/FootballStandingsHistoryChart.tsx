@@ -644,13 +644,22 @@ export default function FootballStandingsHistoryChart({
                 aria-label={`${team.team_name}, final standing ${team.avg_standing.toFixed(1)}. Select to emphasize this team.`}
                 onClick={() => handleTeamClick(team.team_name)}
                 style={{
-                  borderColor:
+                  // Inset box-shadow instead of a real `border`: a bordered
+                  // rounded-corner button was showing a persistent dark
+                  // fringe at one corner on Windows desktop Chrome/Edge
+                  // (not reproducible in devtools/computed-style checks,
+                  // not present on mobile, tied to browser zoom level -
+                  // a border+border-radius rasterization artifact, not an
+                  // actual CSS shadow). An inset shadow paints the same
+                  // ring visually without going through the same stroke/
+                  // clip rasterization path that triggered it.
+                  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 3 : 2}px ${
                     team.team_info.primary_color ||
-                    (isDark ? "#475569" : "#cbd5e1"),
+                    (isDark ? "#475569" : "#cbd5e1")
+                  }`,
                 }}
                 className={cn(
-                  "flex min-w-0 cursor-pointer appearance-none flex-col items-center gap-0.5 rounded-xl border-2 bg-white/80 px-1 pb-1.5 pt-1 shadow-none transition-[border-width,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
-                  isExplicitlySelected && "border-[3px]",
+                  "flex min-w-0 cursor-pointer appearance-none flex-col items-center gap-0.5 rounded-xl bg-white/80 px-1 pb-1.5 pt-1 transition-[box-shadow,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
                   !isSelected && "opacity-30 grayscale",
                 )}
               >

@@ -722,11 +722,16 @@ export default function FootballConfBidsHistoryChart({
                 aria-label={`${conf.conference_name}, projected ${conf.final_bids.toFixed(1)} bids. Select to emphasize this conference.`}
                 onClick={() => handleConferenceClick(conf.conference_name)}
                 style={{
-                  borderColor: confColor || (isDark ? "#475569" : "#cbd5e1"),
+                  // Inset box-shadow instead of a real `border` - see
+                  // FootballStandingsHistoryChart for the full explanation
+                  // (Windows-desktop-only corner rendering artifact from
+                  // border + border-radius rasterization).
+                  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 3 : 2}px ${
+                    confColor || (isDark ? "#475569" : "#cbd5e1")
+                  }`,
                 }}
                 className={cn(
-                  "flex min-w-0 cursor-pointer appearance-none flex-col items-center gap-0.5 rounded-xl border-2 bg-white/80 px-1 pb-1.5 pt-1 shadow-none transition-[border-width,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
-                  isExplicitlySelected && "border-[3px]",
+                  "flex min-w-0 cursor-pointer appearance-none flex-col items-center gap-0.5 rounded-xl bg-white/80 px-1 pb-1.5 pt-1 transition-[box-shadow,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
                   !isSelected && "opacity-30 grayscale",
                 )}
               >
