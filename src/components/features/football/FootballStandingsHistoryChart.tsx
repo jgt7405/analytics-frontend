@@ -659,7 +659,7 @@ export default function FootballStandingsHistoryChart({
                   // actual CSS shadow). An inset shadow paints the same
                   // ring visually without going through the same stroke/
                   // clip rasterization path that triggered it.
-                  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 3 : 2}px ${
+                  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 2 : 1.5}px ${
                     team.team_info.primary_color ||
                     (isDark ? "#475569" : "#cbd5e1")
                   }`,

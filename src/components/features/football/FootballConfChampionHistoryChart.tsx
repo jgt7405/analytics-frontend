@@ -680,7 +680,7 @@ export default function FootballConfChampionHistoryChart({
                   // FootballStandingsHistoryChart for the full explanation
                   // (Windows-desktop-only corner rendering artifact from
                   // border + border-radius rasterization).
-                  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 3 : 2}px ${
+                  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 2 : 1.5}px ${
                     team.team_info.primary_color ||
                     (isDark ? "#475569" : "#cbd5e1")
                   }`,
