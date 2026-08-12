@@ -397,9 +397,6 @@
   text-align: left;
   white-space: normal;
   isolation: isolate;
-  box-shadow:
-    1px 0 0 0 var(--sticky-column-background),
-    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
 }
 
 /* height (not min-height): summaryChip's height:100% needs a definite
