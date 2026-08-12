@@ -680,6 +680,43 @@ box-whisker chart's team names should too — don't let two components
 converge on different sizes just because they were touched at different
 times.
 
+**i. A data-driven color scale's neutral/zero point must match the chip's
+own default fill, not the card's white background.** `CWVTable`'s "Conf
+Win Value" row colors each value chip by interpolating between a negative
+color (yellow), a positive color (blue), and a baseline for `cwv === 0` —
+that baseline was pure white (`#ffffff`), matching the *card*, not
+`.cwvChip`'s own default fill (`#e2e8f0`, same gray every other summary
+chip uses per §9g). A team sitting at exactly 0 (e.g. before any games are
+played) then rendered a chip with no visible fill *and* no visible border
+(the chip's `rgb(255 255 255 / 0.68)` border has zero contrast against a
+white background too) — it disappeared into the card entirely, reading as
+"this row isn't colored" rather than "this team is neutral." Fix: use the
+same `#e2e8f0` as the interpolation baseline instead of white, so a
+neutral value renders as the same visible tile every other summary chip
+already uses, and colors still scale away from that baseline exactly as
+before as the value moves off zero. Any per-value color scale on a
+summary/heat-tile cell needs this same check — grep for `[255, 255, 255]`
+or `white`/`#ffffff` used as an interpolation endpoint in a `getXColor`
+helper and confirm it isn't also the surrounding card's own background.
+
+**j. One unusually long summary-row label among short siblings breaks row-
+height consistency across the summary block.** §9f already covers a
+*single* row growing taller than its declared height when its label wraps
+— this is the same mechanism but comparing *across* rows in one table.
+`CWVTable`'s "Est .500 Team Record" (3 words) wrapped to 3 lines in the
+`--label-column-width: 4.75rem` column while its sibling summary rows
+("Conf Win Value", "Current Record") wrapped to only 2, so that one row
+rendered ~74px tall against ~50px for the others — a visibly oversized
+outlier in what should read as a uniform stack of tiles (compare the Wins
+table's summary rows, which stay within a ~37–51px range because none of
+its labels need 3 lines). Widening the column to fit the longest label is
+usually the wrong fix (it wastes space on every other row); shortening the
+one outlier label to fit 2 lines like its siblings (`"Est .500 Team
+Record"` → `"Est .500 Record"`) is cheaper and keeps the whole column
+width unchanged. When auditing a table's summary block, check that every
+label wraps to the *same* number of lines as its siblings, not just that
+each individually fits its declared `min-height`.
+
 ## 10. Working checklist for a new page
 
 1. Read the target page's `*Content.tsx` and its table/chart component(s).
@@ -812,16 +849,45 @@ tables, now written up as §9d's directional-vs-spread distinction and
 Touched the same files as both prior entries, plus `ScheduleTable`'s own
 inline `.summaryLabel` (it doesn't use the shared `.stickyColumn` class).
 
+**2026-08, CWV pass:** basketball's CWV table was the first basketball
+table brought fully onto the §1-9 pattern (previously basketball was
+untouched everywhere, per "Not yet done" below); a football CWV
+side-by-side comparison against the Wins table then surfaced two more
+§9-class bugs, now written up as §9i and §9j.
+- `src/components/features/basketball/CWVTable.tsx` +
+  new `CWVTable.module.css` — full modernization: `.card` shell, two
+  sticky label columns (`#` and `Win Prob`, each with its own `left`
+  offset via a CSS custom property rather than a JS-computed value, since
+  the offset only needs to change per breakpoint, not per instance),
+  heat-tile game cells, and the §9g summary-chip treatment for `Conf Win
+  Value`/`Current Record`/`Est Avg Team Record`. All original game-status/
+  next-game/tooltip logic preserved as-is.
+- `src/app/basketball/cwv/BasketballCWVContent.tsx` — added `tableTitle`
+  so the page gets the in-card bold title per §3, matching football's CWV
+  page config.
+- `src/components/features/football/CWVTable.module.css` — `.cwvChip`
+  changed from an inset floating chip (`width: calc(100% - 0.5rem)`,
+  `margin: 0.2rem 0.25rem`) to fill its cell edge-to-edge with its own 1px
+  border, matching the Wins table's `.summaryChip` exactly (§9g); summary
+  row height bumped `2.15rem` → `2.35rem` to match.
+- `src/components/features/football/CWVTable.tsx` — fixed per §9i (the
+  `getCWVColor` zero-value baseline was pure white, making a team at
+  `cwv === 0` invisible) and §9j (`"Est .500 Team Record"` wrapped to 3
+  lines against its siblings' 2, shortened to `"Est .500 Record"`).
+
 ## Not yet done
 
 Basketball pages were deliberately left untouched throughout both passes —
 every config flag defaults to `undefined`/`false` so basketball's behavior
-is unchanged. Two things remain:
+is unchanged. CWV is now done on both sports (see the CWV pass entry
+above); the rest remains:
 
-1. Applying §1-7 to the basketball table equivalents (`BballWinsContent.tsx`,
-   `SeedTable.tsx`, `BasketballWhatIfScenarios.tsx`, etc.), following §10.
-   Also apply §9's polish checklist to those once built - basketball wasn't
-   audited for §9 items since it hasn't been through §1-8 yet.
+1. Applying §1-7 to the other basketball table equivalents
+   (`BballWinsContent.tsx`, `SeedTable.tsx`,
+   `BasketballWhatIfScenarios.tsx`, etc.), following §10. Also apply §9's
+   polish checklist to those once built - basketball wasn't audited for
+   §9 items since it hasn't been through §1-8 yet (CWV is the one
+   exception - see the CWV pass entry above).
 2. Applying §8 to the ~18 other Chart.js history/trend charts still on the
    old pattern (plain container, hand-rolled light-mode-only tooltip,
    default-sized axis labels, no `ResizeObserver` on any overlay markers).
