@@ -125,9 +125,6 @@
   z-index: 40;
   background: var(--sticky-bg);
   background-clip: border-box;
-  box-shadow:
-    1px 0 0 0 var(--sticky-bg),
-    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
   isolation: isolate;
 }
 
@@ -140,9 +137,6 @@
   z-index: 15;
   background: var(--sticky-bg);
   background-clip: border-box;
-  box-shadow:
-    1px 0 0 0 var(--sticky-bg),
-    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
   isolation: isolate;
 }
 

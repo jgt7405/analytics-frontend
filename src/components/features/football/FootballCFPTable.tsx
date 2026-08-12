@@ -294,9 +294,11 @@ function FootballCFPTable({
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
-                      size={isMobile ? 16 : 20}
+                      size={28}
                     />
-                    <span className="truncate">{team.team_name}</span>
+                    <span className="truncate text-[0.88rem] font-semibold">
+                      {team.team_name}
+                    </span>
                   </div>
                 </td>
                 {/* Round cells */}

@@ -395,10 +395,32 @@ comically wide chips just because it has fewer teams than the Big 12).
 
 Give each chip's border the entity's own primary color via inline
 `style={{ borderColor: team.team_info.primary_color || fallback }}` instead
-of a generic slate border, and reserve Tailwind ring utilities
-(`ring-2 ring-sky-500/30`) for the *selected* state — keep "whose color is
-this" and "is this currently selected" as two separate visual signals
-instead of both fighting over `border-color`.
+of a generic slate border.
+
+**Selected-state indicator (2026-08, revised):** originally a generic
+`ring-2 ring-sky-500/30 dark:ring-sky-400/40` layered on top of the
+colored border, on the reasoning that "whose color is this" and "is this
+currently selected" should be two separate visual signals instead of both
+fighting over `border-color`. Reversed on user request: the sky ring read
+as an unwanted shadow, so selection is now shown by thickening the same
+entity-colored border instead (`border-2` → `border-[3px]` when
+`isExplicitlySelected`, no ring/shadow at all):
+```tsx
+className={cn(
+  "... border-2 ... transition-[border-width,opacity,filter,background-color] ...",
+  isExplicitlySelected && "border-[3px]",
+  !isSelected && "opacity-30 grayscale",
+)}
+```
+Note `transition` also changed from `box-shadow` to `border-width` to
+match what's actually animating now. Touched every chip picker that had
+the old ring: `FootballStandingsHistoryChart`, `FootballFirstPlaceChart`
+(Standings page's two charts), `FootballConfChampionHistoryChart`,
+`FootballChampGameHistoryChart` (Conf Champ page's two charts), and
+`FootballConfBidsHistoryChart` (Conf Data page's chart). If a new history
+chart is built from one of these as a template, carry over the solid-
+border version, not the ring — grep `ring-2 ring-sky` before assuming any
+remaining hit is intentional; as of this pass there shouldn't be any left.
 
 **f. "Reset to all" affordance.** Any chip picker that supports narrowing
 (click a team to isolate it) needs a visible way back out once something's
@@ -748,11 +770,39 @@ were *not* touched - their teams aren't in a sticky column at all):
 main per-game table's `.stickyWinProb` - the rightmost of its Location/
 Opponent/WinProb sticky block, immediately right of the Opponent/team-
 name cell - and its schedule-difficulty summary sub-table's
-`.stickyColumn`). Explicitly *not* touched: `FootballConfDataTable`
-(sticky column is conference, not team), `FootballTeamSeedProjections`
+`.stickyColumn`). Explicitly *not* touched: `FootballTeamSeedProjections`
 (sticky column is a win-loss record string, not team), and
 `ScheduleTable`'s own `.summaryLabel` (a stat-name row label like
-"Expected Wins", not team).
+"Expected Wins", not team). `FootballConfDataTable` was in this
+not-touched list originally (its sticky column is conference, not team)
+but got the identical line-removal treatment in a later pass once the
+user asked for the same thing on conference names - see §9l.
+
+**l. `FootballTWVTable`'s team-name treatment (28px `TeamLogo`, `0.88rem`
+`font-weight: 600` name, no responsive size variation) is the reference
+size other row-per-team/row-per-conference tables get matched to when
+asked to "match TWV."** Applied this pass to `FootballCFPTable` (was
+`isMobile ? 16 : 20` logo, no dedicated name class at all - just
+`<span className="truncate">`) and `FootballSeedTable` (was
+`isMobile ? 20 : 22` logo, unstyled name span, name hidden entirely on
+mobile). Both now use a fixed `size={28}` (no `isMobile` branch, matching
+TWV) and `text-[0.88rem] font-semibold` on the name span.
+`FootballConfDataTable` doesn't use the `TeamLogo` component (conference
+logos render as a plain `<Image>` in a white circle badge, not a team
+logo), so it was scaled proportionally instead: the inner `Image` from
+`24`/`isMobile ? 20` to a fixed `28`, and the circle badge from
+`32`/`isMobile ? 26` to a fixed `36`, plus the same
+`text-[0.88rem] font-semibold` on the conference-name span, and its
+sticky-column line removed too (§9k) since a user asked for the line-
+removal treatment to extend to conference names, not just team names.
+Also bolded at the same time (not strictly a sizing change, but requested
+alongside it and touches the same cell): `FootballTWVTable`'s
+`.recordCell` (Actual/Expected Record columns, `font-weight: 500` → `700`)
+and `FootballSeedTable`'s Average Seed cell (`font-bold` added). When a
+future table gets a "make it match TWV" request, check both the `TeamLogo`
+`size` prop and whether the name has a dedicated styled span before
+assuming a CSS-only fix is enough - `FootballCFPTable`/`FootballSeedTable`
+both needed the JSX changed, not just a class tweak.
 
 ## 10. Working checklist for a new page
 

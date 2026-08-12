@@ -324,7 +324,7 @@ function FootballScheduleTable({
                               teamLogos[row.Team] || "/images/team_logos/default.png"
                             }
                             teamName={row.Team}
-                            size={20}
+                            size={26}
                             showTooltip
                             className="flex-shrink-0"
                           />
@@ -528,7 +528,7 @@ function FootballScheduleTable({
                             <TeamLogo
                               logoUrl={teamLogos[team] || "/images/team_logos/default.png"}
                               teamName={team}
-                              size={20}
+                              size={26}
                               showTooltip
                               className={styles.teamLogo}
                             />

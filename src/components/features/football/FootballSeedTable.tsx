@@ -594,18 +594,24 @@ function FootballSeedTable({
                       <TeamLogo
                         logoUrl={team.logo_url}
                         teamName={team.team_name}
-                        size={isMobile ? 20 : 22}
+                        size={28}
                         onClick={() => navigateToTeam(team.team_name)}
                       />
                       {!isMobile && (
-                        <span className="truncate">{team.team_name}</span>
+                        <span className="truncate text-[0.88rem] font-semibold">
+                          {team.team_name}
+                        </span>
                       )}
                     </div>
                   </td>
 
                   {/* Average Seed Cell */}
                   <td
-                    className={cn(styles.plainCell, isMobile ? "text-xs" : "text-sm")}
+                    className={cn(
+                      styles.plainCell,
+                      "font-bold",
+                      isMobile ? "text-xs" : "text-sm",
+                    )}
                     style={{
                       width: avgSeedColWidth,
                       minWidth: avgSeedColWidth,

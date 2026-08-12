@@ -301,7 +301,7 @@
   flex: 1;
   overflow: hidden;
   color: #334155;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.15;
@@ -320,6 +320,15 @@
   font-size: 0.78rem;
   font-weight: 400;
   text-align: center;
+}
+
+/* Location and Avg Conf Win Prob specifically (not Opponent, which is
+   just a logo with no text) - a little larger and bold so they read as
+   clearly as the data grid next to them. */
+.stickyLocation .rowLabel,
+.stickyWinProb .rowLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .gameCell {
@@ -562,7 +571,7 @@
   }
 
   .summaryTeamName {
-    font-size: 0.64rem;
+    font-size: 0.74rem;
   }
 
   .teamLogo {
@@ -582,6 +591,11 @@
   .summaryValue,
   .statCell {
     font-size: 0.7rem;
+  }
+
+  .stickyLocation .rowLabel,
+  .stickyWinProb .rowLabel {
+    font-size: 0.78rem;
   }
 
   .gameTile {
