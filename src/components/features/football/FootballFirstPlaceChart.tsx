@@ -669,7 +669,6 @@ export default function FootballFirstPlaceChart({
           {allTeamsSorted.map((team) => {
             const isSelected =
               selectedTeams.size === 0 || selectedTeams.has(team.team_name);
-            const isExplicitlySelected = selectedTeams.has(team.team_name);
             return (
               <button
                 key={team.team_name}
@@ -682,7 +681,7 @@ export default function FootballFirstPlaceChart({
                   // FootballStandingsHistoryChart for the full explanation
                   // (Windows-desktop-only corner rendering artifact from
                   // border + border-radius rasterization).
-                  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 3 : 2}px ${
+                  boxShadow: `inset 0 0 0 1px ${
                     team.team_info.primary_color ||
                     (isDark ? "#475569" : "#cbd5e1")
                   }`,
