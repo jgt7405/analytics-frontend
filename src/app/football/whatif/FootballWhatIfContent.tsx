@@ -587,9 +587,9 @@ export default function FootballWhatIfContent() {
 
                                 <div
                                   style={{
-                                    fontSize: "10px",
-                                    fontWeight: "bold",
-                                    color: isDark ? "#6b7280" : "#9ca3af",
+                                    fontSize: "11px",
+                                    fontWeight: 800,
+                                    color: isDark ? "#d1d5db" : "#4b5563",
                                   }}
                                 >
                                   {separator}
