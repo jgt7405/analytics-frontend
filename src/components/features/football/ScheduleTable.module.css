@@ -4,7 +4,7 @@
   --opponent-col-width: 3rem;
   --winprob-col-width: 4rem;
   --team-column-width: 3.65rem;
-  --summary-team-col-width: 9rem;
+  --summary-team-col-width: 11rem;
   --summary-stat-col-width: 3.65rem;
   position: relative;
   overflow: hidden;
@@ -243,7 +243,7 @@
   top: 0;
   left: 0;
   z-index: 65;
-  height: 2.25rem;
+  height: 2.7rem;
   border: 0 !important;
   background: #ffffff;
   box-shadow: 0 1px 0 0 #ffffff;
@@ -299,15 +299,16 @@
   display: block;
   min-width: 0;
   flex: 1;
-  overflow: hidden;
   color: #334155;
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.15;
   text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
 }
 
 .rowLabel {
@@ -512,7 +513,7 @@
     --opponent-col-width: 2.4rem;
     --winprob-col-width: 3.1rem;
     --team-column-width: 2.95rem;
-    --summary-team-col-width: 7.5rem;
+    --summary-team-col-width: 8.5rem;
     --summary-stat-col-width: 2.4rem;
     border-radius: 1rem;
   }
@@ -558,12 +559,12 @@
     display: inline;
   }
 
-  .summaryTeamHeader,
-  .summaryStatHeader {
-    height: 2rem;
+  .summaryTeamHeader {
+    height: 2.5rem;
   }
 
   .summaryStatHeader {
+    height: 2rem;
     font-size: 0.56rem;
   }
 

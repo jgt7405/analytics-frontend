@@ -428,7 +428,7 @@ export default function FootballTeamScheduleDifficulty({
         >
           ×
         </button>
-        <div className="text-sm font-semibold mb-1">{game.opponent}</div>
+        <div className="text-sm font-bold mb-1">{game.opponent}</div>
         <div className="text-xs space-y-1">
           <div>Location: {game.location}</div>
           <div>{winProb}% Win Probability for #12 Rated Team</div>
@@ -437,7 +437,7 @@ export default function FootballTeamScheduleDifficulty({
             {comparisonDataset.length.toLocaleString()} Games in{" "}
             {getFilterDescription()} ({percentile} Percentile)
           </div>
-          <div style={{ marginTop: "6px", fontWeight: "500" }}>
+          <div style={{ marginTop: "6px", fontWeight: "bold" }}>
             Result:{" "}
             {game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}
           </div>
@@ -546,7 +546,7 @@ export default function FootballTeamScheduleDifficulty({
                   x={MARGIN.left - 10}
                   y={y + 4}
                   textAnchor="end"
-                  className="text-xs fill-gray-600 font-semibold"
+                  className="text-xs fill-gray-600 font-bold"
                 >
                   {percentile.percentile}%
                 </text>
@@ -554,7 +554,7 @@ export default function FootballTeamScheduleDifficulty({
                   x={MARGIN.left + PLOT_WIDTH + 10}
                   y={y + 4}
                   textAnchor="start"
-                  className="text-xs fill-gray-600 font-semibold"
+                  className="text-xs fill-gray-600 font-bold"
                 >
                   {(percentile.value * 100).toFixed(0)}%
                 </text>
@@ -699,7 +699,7 @@ export default function FootballTeamScheduleDifficulty({
                     x={logoX}
                     y={game.adjustedY + 4}
                     textAnchor={game.isRightSide ? "start" : "end"}
-                    className="text-xs fill-gray-700 font-semibold"
+                    className="text-xs fill-gray-700 font-bold"
                   >
                     {game.opponent.length > 8
                       ? `${game.opponent.slice(0, 8)}...`
@@ -734,7 +734,7 @@ export default function FootballTeamScheduleDifficulty({
             x={MARGIN.left + PLOT_WIDTH - 150}
             y={MARGIN.top - 8}
             textAnchor="start"
-            className="text-xs fill-gray-500 font-semibold"
+            className="text-xs fill-gray-500 font-bold"
           >
             Hardest
           </text>
@@ -743,7 +743,7 @@ export default function FootballTeamScheduleDifficulty({
             x={MARGIN.left + PLOT_WIDTH - 150}
             y={MARGIN.top + PLOT_HEIGHT + 18}
             textAnchor="start"
-            className="text-xs fill-gray-500 font-semibold"
+            className="text-xs fill-gray-500 font-bold"
           >
             Easiest
           </text>
@@ -763,34 +763,34 @@ export default function FootballTeamScheduleDifficulty({
         <div className="text-center mt-0 border-b border-gray-300 dark:border-gray-600 text-xs">
           <div className="grid grid-cols-5 gap-4 justify-center px-2">
             <div>
-              <div className="font-semibold text-gray-600 dark:text-gray-400">Record:</div>
-              <div className="font-semibold" style={{ color: teamColor }}>
+              <div className="font-bold text-gray-600 dark:text-gray-400">Record:</div>
+              <div className="font-bold" style={{ color: teamColor }}>
                 {teamStats.wins}-{teamStats.losses}
               </div>
             </div>
             <div>
-              <div className="font-semibold text-gray-600 dark:text-gray-400">#12 Fcst:</div>
-              <div className="font-semibold text-gray-600 dark:text-gray-300">
+              <div className="font-bold text-gray-600 dark:text-gray-400">#12 Fcst:</div>
+              <div className="font-bold text-gray-600 dark:text-gray-300">
                 {teamStats.expectedWins.toFixed(1)}-
                 {teamStats.expectedLosses.toFixed(1)}
               </div>
             </div>
             <div>
-              <div className="font-semibold text-gray-600 dark:text-gray-400">Act Win %:</div>
-              <div className="font-semibold" style={{ color: teamColor }}>
+              <div className="font-bold text-gray-600 dark:text-gray-400">Act Win %:</div>
+              <div className="font-bold" style={{ color: teamColor }}>
                 {teamStats.actualWinPct.toFixed(0)}%
               </div>
             </div>
             <div>
-              <div className="font-semibold text-gray-600 dark:text-gray-400">#12 Fcst %:</div>
-              <div className="font-semibold text-gray-600 dark:text-gray-300">
+              <div className="font-bold text-gray-600 dark:text-gray-400">#12 Fcst %:</div>
+              <div className="font-bold text-gray-600 dark:text-gray-300">
                 {teamStats.forecastWinPct.toFixed(0)}%
               </div>
             </div>
             <div>
-              <div className="font-semibold text-gray-600 dark:text-gray-400">TWV:</div>
+              <div className="font-bold text-gray-600 dark:text-gray-400">TWV:</div>
               <div
-                className="font-semibold"
+                className="font-bold"
                 style={{
                   color:
                     teamStats.twv > 0
@@ -807,12 +807,12 @@ export default function FootballTeamScheduleDifficulty({
           </div>
         </div>
         {/* Existing footnote */}
-        <div className="mb-2 mt-2 font-semibold">
-          <span className="font-semibold">
+        <div className="mb-2 mt-2 font-bold">
+          <span className="font-bold">
             {teamGames.length.toLocaleString()}
           </span>{" "}
           {teamGames.length === 1 ? "game" : "games"} compared to{" "}
-          <span className="font-semibold">
+          <span className="font-bold">
             {comparisonDataset.length.toLocaleString()}
           </span>{" "}
           {comparisonDataset.length === 1 ? "game" : "games"} in{" "}

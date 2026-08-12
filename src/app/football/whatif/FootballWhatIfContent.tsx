@@ -470,7 +470,7 @@ export default function FootballWhatIfContent() {
                     .sort()
                     .map((date) => (
                       <div key={date}>
-                        <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1 px-1">
+                        <div className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1 px-1">
                           {date}
                         </div>
 
@@ -577,7 +577,7 @@ export default function FootballWhatIfContent() {
                                   <span
                                     style={{
                                       fontSize: "10px",
-                                      fontWeight: "500",
+                                      fontWeight: "bold",
                                       color: isDark ? "#d1d5db" : "#4b5563",
                                     }}
                                   >
@@ -673,7 +673,7 @@ export default function FootballWhatIfContent() {
                                   <span
                                     style={{
                                       fontSize: "10px",
-                                      fontWeight: "500",
+                                      fontWeight: "bold",
                                       color: isDark ? "#d1d5db" : "#4b5563",
                                     }}
                                   >

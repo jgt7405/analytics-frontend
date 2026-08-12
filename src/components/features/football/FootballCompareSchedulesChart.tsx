@@ -606,7 +606,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 35}
           textAnchor="middle"
-          className={isDark ? "text-xs font-semibold fill-gray-300" : "text-xs font-semibold fill-gray-700"}
+          className={isDark ? "text-xs font-bold fill-gray-300" : "text-xs font-bold fill-gray-700"}
         >
           {stats.wins}-{stats.losses}
         </text>
@@ -614,7 +614,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 50}
           textAnchor="middle"
-          className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
+          className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
         >
           {stats.expectedWins.toFixed(1)}-
           {stats.expectedLosses.toFixed(1)}
@@ -623,7 +623,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 65}
           textAnchor="middle"
-          className={isDark ? "text-xs font-semibold fill-gray-300" : "text-xs font-semibold fill-gray-700"}
+          className={isDark ? "text-xs font-bold fill-gray-300" : "text-xs font-bold fill-gray-700"}
         >
           {stats.actualWinPct.toFixed(0)}%
         </text>
@@ -631,7 +631,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 80}
           textAnchor="middle"
-          className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
+          className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
         >
           {stats.forecastWinPct.toFixed(0)}%
         </text>
@@ -639,7 +639,7 @@ export default function FootballCompareSchedulesChart({
           x={columnX}
           y={MARGIN.top + PLOT_HEIGHT + 95}
           textAnchor="middle"
-          className={`text-xs font-medium ${
+          className={`text-xs font-bold ${
             stats.twv > 0
               ? isDark ? "fill-green-400" : "fill-green-600"
               : stats.twv < 0
@@ -658,7 +658,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 35}
               textAnchor="end"
-              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
+              className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
             >
               Record:
             </text>
@@ -666,7 +666,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 50}
               textAnchor="end"
-              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
+              className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
             >
               #12 Fcst:
             </text>
@@ -674,7 +674,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 65}
               textAnchor="end"
-              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
+              className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
             >
               Act Win %:
             </text>
@@ -682,7 +682,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 80}
               textAnchor="end"
-              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
+              className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
             >
               #12 Fcst %:
             </text>
@@ -690,7 +690,7 @@ export default function FootballCompareSchedulesChart({
               x={MARGIN.left - 50}
               y={MARGIN.top + PLOT_HEIGHT + 95}
               textAnchor="end"
-              className={isDark ? "text-xs font-medium fill-gray-400" : "text-xs font-medium fill-gray-600"}
+              className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
             >
               TWV:
             </text>
@@ -782,7 +782,7 @@ export default function FootballCompareSchedulesChart({
                     x={MARGIN.left - 10}
                     y={y + 4}
                     textAnchor="end"
-                    className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
+                    className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
                   >
                     {percentile.percentile}%
                   </text>
@@ -790,7 +790,7 @@ export default function FootballCompareSchedulesChart({
                     x={MARGIN.left + PLOT_WIDTH + 10}
                     y={y + 4}
                     textAnchor="start"
-                    className={isDark ? "text-xs fill-gray-400" : "text-xs fill-gray-600"}
+                    className={isDark ? "text-xs font-bold fill-gray-400" : "text-xs font-bold fill-gray-600"}
                   >
                     {(percentile.value * 100).toFixed(0)}%
                   </text>
@@ -804,7 +804,7 @@ export default function FootballCompareSchedulesChart({
               y={MARGIN.top + PLOT_HEIGHT / 2}
               textAnchor="middle"
               transform={`rotate(-90, ${MARGIN.left - 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-              className={isDark ? "text-sm fill-gray-300 font-medium" : "text-sm fill-gray-700 font-medium"}
+              className={isDark ? "text-sm fill-gray-300 font-bold" : "text-sm fill-gray-700 font-bold"}
             >
               Difficulty Percentile
             </text>
@@ -815,7 +815,7 @@ export default function FootballCompareSchedulesChart({
               y={MARGIN.top + PLOT_HEIGHT / 2}
               textAnchor="middle"
               transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 60}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-              className={isDark ? "text-sm fill-gray-300 font-medium" : "text-sm fill-gray-700 font-medium"}
+              className={isDark ? "text-sm fill-gray-300 font-bold" : "text-sm fill-gray-700 font-bold"}
             >
               Win Probability for #12 Rated Team
             </text>
