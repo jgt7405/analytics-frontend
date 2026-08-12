@@ -135,10 +135,10 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
 
   // Responsive dimensions - matches football
   const rankColWidth = isMobile ? 50 : 60;
-  const teamColWidth = isMobile ? 150 : 220;
+  const teamColWidth = isMobile ? 168 : 220;
   const twvColWidth = isMobile ? 70 : 80;
   const recordColWidth = isMobile ? 70 : 120;
-  const cellHeight = isMobile ? 32 : 36;
+  const cellHeight = isMobile ? 40 : 36;
   const headerHeight = isMobile ? 40 : 48;
 
   const tableClassName = cn(tableStyles.tableContainer, "twv-table", className);
@@ -407,7 +407,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                       onClick={() => navigateToTeam(team.team_name)}
                       className="flex-shrink-0"
                     />
-                    <span className="truncate">{team.team_name}</span>
+                    <span className="whitespace-normal break-words leading-tight">{team.team_name}</span>
                   </div>
                 </td>
 

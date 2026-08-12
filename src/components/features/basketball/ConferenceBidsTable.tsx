@@ -58,10 +58,10 @@ function ConferenceBidsTable({
   };
 
   // Responsive dimensions
-  const confColWidth = isMobile ? 120 : 180;
+  const confColWidth = isMobile ? 140 : 180;
   const bidColWidth = isMobile ? 30 : 40;
   const avgColWidth = isMobile ? 40 : 50;
-  const cellHeight = isMobile ? 24 : 28;
+  const cellHeight = isMobile ? 34 : 28;
   const headerHeight = isMobile ? 40 : 48;
 
   const tableClassName = cn(
@@ -176,7 +176,7 @@ function ConferenceBidsTable({
                       className="object-contain flex-shrink-0"
                     />
                   )}
-                  <span className="truncate">{conf.conference_name}</span>
+                  <span className="whitespace-normal break-words leading-tight">{conf.conference_name}</span>
                 </div>
               </td>
 

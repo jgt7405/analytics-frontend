@@ -94,9 +94,9 @@ function ConferenceTourneyTable({
     });
   }, [tourneyData, activeRounds, roundOrder]);
 
-  const firstColWidth = isMobile ? 120 : 180;
+  const firstColWidth = isMobile ? 140 : 180;
   const roundColWidth = isMobile ? 55 : 70; // Increased width for wrapped labels
-  const cellHeight = isMobile ? 24 : 28;
+  const cellHeight = isMobile ? 34 : 28;
   const headerHeight = isMobile ? 50 : 60; // Increased height for wrapped labels
 
   const tableClassName = cn(
@@ -187,7 +187,7 @@ function ConferenceTourneyTable({
                     size={isMobile ? 20 : 24}
                     onClick={() => navigateToTeam(team.team_name)}
                   />
-                  <span className="truncate">{team.team_name}</span>
+                  <span className="whitespace-normal break-words leading-tight">{team.team_name}</span>
                 </div>
               </td>
               {activeRounds.map((round) => {

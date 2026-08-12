@@ -163,9 +163,9 @@ function NCAATeamTable({
   };
 
   const rankColWidth = isMobile ? 35 : 45;
-  const firstColWidth = isMobile ? 120 : 180;
+  const firstColWidth = isMobile ? 140 : 180;
   const roundColWidth = isMobile ? 55 : 70;
-  const cellHeight = isMobile ? 24 : 28;
+  const cellHeight = isMobile ? 34 : 28;
   const headerHeight = isMobile ? 50 : 60;
 
   const tableClassName = cn(
@@ -347,7 +347,7 @@ function NCAATeamTable({
                       teamName={team.team_name}
                       size={isMobile ? 16 : 20}
                     />
-                    <span className="truncate">{team.team_name}</span>
+                    <span className="whitespace-normal break-words leading-tight">{team.team_name}</span>
                   </div>
                 </td>
                 {/* Round cells */}

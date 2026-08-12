@@ -106,11 +106,11 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
   // Responsive dimensions - matches TWV table
   const seedColWidth = isMobile ? 50 : 60;
-  const teamColWidth = isMobile ? 150 : 220;
+  const teamColWidth = isMobile ? 168 : 220;
   const confColWidth = isMobile ? 80 : 120;
   const categoryColWidth = isMobile ? 80 : 120;
   const twvColWidth = isMobile ? 70 : 80;
-  const cellHeight = isMobile ? 32 : 36;
+  const cellHeight = isMobile ? 40 : 36;
   const headerHeight = isMobile ? 40 : 48;
 
   // Helper function to get category badge color
@@ -220,7 +220,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
               onClick={() => navigateToTeam(team.team_name)}
               className="flex-shrink-0"
             />
-            <span className="truncate">{team.team_name}</span>
+            <span className="whitespace-normal break-words leading-tight">{team.team_name}</span>
           </div>
         </td>
 
