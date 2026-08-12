@@ -89,10 +89,6 @@
   width: var(--team-col-width) !important;
   min-width: var(--team-col-width) !important;
   max-width: var(--team-col-width) !important;
-  /* Directional shadow only (no uniform ring): a ring here would paint
-     over the row's own border-bottom right where it crosses this sticky
-     column, breaking the horizontal divider exactly under the team name. */
-  box-shadow: 0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
 }
 
 .stickyTeam.teamCell {

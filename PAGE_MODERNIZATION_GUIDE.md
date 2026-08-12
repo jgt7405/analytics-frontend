@@ -717,6 +717,43 @@ width unchanged. When auditing a table's summary block, check that every
 label wraps to the *same* number of lines as its siblings, not just that
 each individually fits its declared `min-height`.
 
+**k. A sticky *team-name* column does not get the §9d seal-ring/drop-
+shadow line — by explicit design decision, reversing §9d for this one
+column type.** §9d's ring (`box-shadow: 1px 0 0 0 var(--sticky-*-
+background), 0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32)`, or the drop-shadow
+half alone on tables that skip the 1px ring) exists to mask a sub-pixel
+gap and hint that content is scrolling underneath a sticky column. On a
+sticky column whose content *is the team name* (with logo), a user
+reported it simply as an unwanted colored/shadowed line next to the team
+name across every table that has one — so for this specific column type
+the line is removed outright, not fixed. This is a deliberate style
+choice, not a rendering bug, and only applies to the column that shows
+the row's own team name; other sticky columns in the *same* table (a
+leading rank/seed number, a trailing Win Prob column) keep their ring/
+shadow as before per §9d - removing it from a purely-numeric sticky
+column wasn't requested and isn't part of this change. When two sticky
+columns share one CSS class (e.g. `.stickyBodyCell` used by both a rank
+`<td>` and a team `<td>`), the shadow was removed from the shared class
+entirely rather than split into two classes - the rank column never
+showed a visible line anyway (its right neighbor is the same-colored
+sticky team column), so this is a no-op there and a real fix on the team
+column.
+
+Files touched (grepped for `TeamLogo` + a sticky row-per-team column,
+i.e. the transposed team-as-header-column tables like Wins/CWV/Standings
+were *not* touched - their teams aren't in a sticky column at all):
+`FootballTWVTable`, `FootballCFPBracketTable`, `FootballConfChampTable`,
+`FootballCFPTable`, `FootballSeedTable`, `WhatIfProbTable` (shared by
+`FootballConfChampProb`/`FootballCFPProb`), and `ScheduleTable` (both its
+main per-game table's `.stickyWinProb` - the rightmost of its Location/
+Opponent/WinProb sticky block, immediately right of the Opponent/team-
+name cell - and its schedule-difficulty summary sub-table's
+`.stickyColumn`). Explicitly *not* touched: `FootballConfDataTable`
+(sticky column is conference, not team), `FootballTeamSeedProjections`
+(sticky column is a win-loss record string, not team), and
+`ScheduleTable`'s own `.summaryLabel` (a stat-name row label like
+"Expected Wins", not team).
+
 ## 10. Working checklist for a new page
 
 1. Read the target page's `*Content.tsx` and its table/chart component(s).

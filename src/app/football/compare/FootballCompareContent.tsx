@@ -333,20 +333,12 @@ export default function FootballCompareContent() {
                               !isSelected && selectedTeams.length >= MAX_SELECTED_TEAMS;
                             const isHighlighted = highlightedTeam === team.team_name;
 
-                            const idleBorderColor =
-                              team.primary_color || "rgb(148 163 184 / 0.6)";
-
                             return (
                               <button
                                 key={team.team_name}
                                 onClick={() => handleTeamClick(team)}
                                 disabled={isDisabled}
                                 title={team.team_name}
-                                style={
-                                  !isSelected && !isHighlighted && !isDisabled
-                                    ? { borderColor: idleBorderColor }
-                                    : undefined
-                                }
                                 className={`relative w-10 h-10 rounded-lg border-2 transition-all flex-shrink-0 overflow-hidden ${
                                   isSelected
                                     ? "border-[rgb(0,151,178)] shadow-lg ring-2 ring-[rgb(0,151,178)] ring-offset-1"
@@ -354,7 +346,7 @@ export default function FootballCompareContent() {
                                       ? "border-[rgb(0,151,178)] shadow-lg scale-110"
                                       : isDisabled
                                         ? "bg-gray-100 dark:bg-slate-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-50"
-                                        : "bg-white dark:bg-slate-800 hover:border-[rgb(0,151,178)] hover:shadow-md"
+                                        : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-[rgb(0,151,178)] hover:shadow-md"
                                 }`}
                               >
                                 <Image
