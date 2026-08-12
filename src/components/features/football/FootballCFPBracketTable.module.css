@@ -19,11 +19,12 @@
   overflow: auto;
   max-height: 75vh;
   overscroll-behavior: contain;
-  /* No left padding: the sticky seed/team columns sit at left: 0 of this
-     container's content box, so any left padding here would leave an
-     unsticky gap that scrolled rows could show through as they pass
-     underneath. */
-  padding: 1.1rem 0.9rem 1rem 0;
+  /* No top or left padding: the header row sticks to top: 0 and the seed/
+     team columns stick to left: 0 of this container's content box, so any
+     padding on those sides would leave an unsticky gap that scrolled rows
+     could show through as they pass underneath (the top gap is exactly
+     what let a scrolled-past row peek out above the sticky header). */
+  padding: 0 0.9rem 1rem 0;
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -278,7 +279,7 @@
   }
 
   .scrollViewport {
-    padding: 0.9rem 0.5rem 0.8rem 0;
+    padding: 0 0.5rem 0.8rem 0;
     max-height: 70vh;
   }
 

@@ -44,11 +44,11 @@
   overflow: auto;
   max-height: 75vh;
   overscroll-behavior: contain;
-  /* No left padding: the sticky rank/team columns sit at left: 0 of this
-     container's content box, so any left padding here would leave an
-     unsticky gap that scrolled rows could show through as they pass
-     underneath. */
-  padding: 0.6rem 0.9rem 1rem 0;
+  /* No top or left padding: the header row sticks to top: 0 and the
+     rank/team columns stick to left: 0 of this container's content box,
+     so any padding on those sides would leave an unsticky gap that
+     scrolled rows could show through as they pass underneath. */
+  padding: 0 0.9rem 1rem 0;
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -278,12 +278,17 @@
   }
 
   .scrollViewport {
-    padding: 0.4rem 0.5rem 0.8rem 0;
+    padding: 0 0.5rem 0.8rem 0;
     max-height: 70vh;
   }
 
+  /* margin, not padding: the header row still sticks to top: 0 of the
+     scrollable content box even without the .controls bar above it, so
+     the breathing-room fix has to live outside that box (a scrollable
+     top padding would recreate the exact §6a gap this table was just
+     fixed for). */
   .scrollViewportNoHeader {
-    padding-top: 0.9rem;
+    margin-top: 0.9rem;
   }
 
   .headerRow th {

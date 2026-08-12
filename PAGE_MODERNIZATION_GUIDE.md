@@ -875,6 +875,39 @@ side-by-side comparison against the Wins table then surfaced two more
   `cwv === 0` invisible) and §9j (`"Est .500 Team Record"` wrapped to 3
   lines against its siblings' 2, shortened to `"Est .500 Record"`).
 
+**2026-08, §6a regression found on the football home page:** a user
+screenshot of the CFP Projections table (`/football/home`, "Season
+Projection" tab) showed a scrolled-past row peeking out above the sticky
+header — the exact symptom §6a already documents, on a table that predates
+§6a's write-up and was never swept for it. `FootballCFPBracketTable`'s
+`.scrollViewport` had `padding: 1.1rem 0.9rem 1rem 0` (non-zero top) while
+its `.headerRow th` sticks to `top: 0` inside that same scrollable
+container — scrolling revealed the gap. Grepping every other table with
+`max-height` (i.e. every table that scrolls *internally* rather than
+relying on page scroll, which is when a top-sticky header's padding
+actually matters) for the same shape of bug turned up two more instances:
+`FootballTWVTable` and `WhatIfProbTable` (shared by
+`FootballConfChampProb`/`FootballCFPProb`), both desktop and mobile media
+queries. Fixed all three the same way (zero the top padding on
+`.scrollViewport`, `padding-right`/`bottom`/`left` unchanged).
+`FootballTWVTable` has a `.scrollViewportNoHeader` modifier (applied when
+its `.controls` bar is hidden) that was compensating with
+`padding-top: 0.9rem` — its `<thead>` is *always* rendered/sticky
+regardless of that modifier, so that padding was the same bug in the
+`!showAllTeams` case too. Fix there was `margin-top` instead of `padding-
+top`: margin sits outside the scrollable content box entirely, so it adds
+the same visual breathing room without recreating the gap a sticky header
+would show through. Lesson: §6a being documented doesn't mean every table
+built before the write-up got audited against it — when this bug is fixed
+on one table, grep `max-height` across the same component family (not
+just `position: sticky`) and check every result's top padding, since the
+bug is invisible until someone actually scrolls the internal container far
+enough, and a user reporting it from a live screenshot is a normal way
+for it to first surface. Also noted but *not* fixed (out of scope for this
+report, needs its own visual verification pass): `WhatIfProbTable.card`
+has `overflow: hidden`, which §1 flags as a sticky-positioning risk in
+some browsers — worth checking next time that file is touched.
+
 ## Not yet done
 
 Basketball pages were deliberately left untouched throughout both passes —
