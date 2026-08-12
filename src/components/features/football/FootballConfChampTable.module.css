@@ -215,7 +215,7 @@
 
 @media (max-width: 767px) {
   .card {
-    --team-col-width: 8rem;
+    --team-col-width: 9.5rem;
     --stat-col-width: 3.75rem;
     border-radius: 1rem;
   }
@@ -246,7 +246,7 @@
   }
 
   .bodyRow td {
-    height: 1.8rem;
+    height: 2.3rem;
   }
 
   .teamLogo {
@@ -254,7 +254,14 @@
   }
 
   .teamName {
-    font-size: 0.76rem;
+    overflow: visible;
+    font-size: 0.72rem;
+    line-height: 1.15;
+    white-space: normal;
+    text-overflow: clip;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: auto;
   }
 
   .heatTile {

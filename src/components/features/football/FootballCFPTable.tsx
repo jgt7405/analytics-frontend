@@ -141,9 +141,9 @@ function FootballCFPTable({
   };
 
   const rankColWidth = isMobile ? 35 : 45;
-  const firstColWidth = isMobile ? 120 : 180;
+  const firstColWidth = isMobile ? 140 : 180;
   const roundColWidth = isMobile ? 55 : 70;
-  const cellHeight = isMobile ? 24 : 28;
+  const cellHeight = isMobile ? 34 : 28;
   const headerHeight = isMobile ? 50 : 60;
 
   // Format percentage without decimal if it's a whole number
@@ -296,7 +296,7 @@ function FootballCFPTable({
                       teamName={team.team_name}
                       size={28}
                     />
-                    <span className="truncate text-[0.88rem] font-semibold">
+                    <span className="whitespace-normal break-words leading-tight text-[0.88rem] font-semibold">
                       {team.team_name}
                     </span>
                   </div>

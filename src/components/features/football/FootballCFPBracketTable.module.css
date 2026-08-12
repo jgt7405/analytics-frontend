@@ -266,7 +266,7 @@
 @media (max-width: 767px) {
   .card {
     --seed-col-width: 2.5rem;
-    --team-col-width: 8rem;
+    --team-col-width: 9.5rem;
     --conf-col-width: 3.5rem;
     --category-col-width: 4.5rem;
     --stat-col-width: 3.4rem;
@@ -285,7 +285,7 @@
   }
 
   .bodyRow td {
-    height: 2rem;
+    height: 2.5rem;
   }
 
   .teamLogo {
@@ -293,7 +293,14 @@
   }
 
   .teamName {
-    font-size: 0.74rem;
+    overflow: visible;
+    font-size: 0.7rem;
+    line-height: 1.15;
+    white-space: normal;
+    text-overflow: clip;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: auto;
   }
 
   .categoryBadge {
