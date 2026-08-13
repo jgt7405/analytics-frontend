@@ -98,6 +98,27 @@ function formatCellValue(column: ColumnDef, value: CellValue): string {
   return String(value);
 }
 
+function getStickyClass(columnKey: string): string {
+  if (columnKey === "rank") {
+    return "sticky left-0 z-10 bg-white dark:bg-gray-900 w-12";
+  }
+  if (columnKey === "team_name") {
+    return "sticky left-[3rem] z-10 bg-white dark:bg-gray-900 w-40 truncate";
+  }
+  return "";
+}
+
+function escapeCsvValue(value: string): string {
+  const hasComma = value.indexOf(",") !== -1;
+  const hasQuote = value.indexOf(String.fromCharCode(34)) !== -1;
+  if (hasComma || hasQuote) {
+    const quoteChar = String.fromCharCode(34);
+    const doubled = value.split(quoteChar).join(quoteChar + quoteChar);
+    return quoteChar + doubled + quoteChar;
+  }
+  return value;
+}
+
 function compareValues(a: CellValue, b: CellValue): number {
     if (a === null && b === null) return 0;
   if (a === null) return 1;
@@ -209,6 +230,28 @@ return sortDirection === "asc" ? cmp : -cmp;
     }
   }
 
+  function handleDownloadCsv() {
+    const headerCells = columns.map(function (column) { return escapeCsvValue(column.label); });
+    const headerRow = headerCells.join(",");
+    const dataRows = sortedTeams.map(function (team) {
+      const cells = columns.map(function (column) {
+        const value = getCellValue(column, team, sourceRankMaps);
+        return escapeCsvValue(formatCellValue(column, value));
+      });
+      return cells.join(",");
+    });
+    const allRows = [headerRow].concat(dataRows);
+    const csvText = allRows.join(String.fromCharCode(10));
+    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "composite_football_ratings.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+
   if (teams.length === 0) {
     return (
       <div className="text-sm text-gray-600 dark:text-gray-300 py-8 text-center">
@@ -218,6 +261,16 @@ return sortDirection === "asc" ? cmp : -cmp;
   }
 
   return (
+    <div>
+      <div className="mb-2 flex justify-end">
+        <button
+          type="button"
+          onClick={handleDownloadCsv}
+          className="text-xs border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+        >
+          Download CSV
+        </button>
+      </div>
     <div className="overflow-x-auto overflow-y-auto max-h-[70vh] border border-gray-200 dark:border-gray-700 rounded">
       <table className="min-w-full text-sm border-collapse">
         <thead className="sticky top-0 z-20 bg-white dark:bg-gray-900">
@@ -235,7 +288,8 @@ return sortDirection === "asc" ? cmp : -cmp;
                   }}
                   className={
                     alignClass +
-                    " py-2 px-3 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap cursor-pointer select-none hover:text-[rgb(0,151,178)]"
+                    " py-2 px-3 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap cursor-pointer select-none hover:text-[rgb(0,151,178)]" +
+                    getStickyClass(column.key)
                   }
                 >
                   {column.label}
@@ -254,6 +308,26 @@ return sortDirection === "asc" ? cmp : -cmp;
                         {selectedConferences.length === 0 ? "All" : selectedConferences.length + " selected"}
                       </summary>
                       <div className="absolute z-10 mt-1 left-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-64 overflow-y-auto p-2 min-w-[10rem]">
+                        <div className="flex gap-2 mb-1.5 pb-1.5 border-b border-gray-200 dark:border-gray-700">
+                          <button
+                            type="button"
+                            onClick={function () {
+                              setSelectedConferences(conferenceOptions.slice());
+                            }}
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            Select all
+                          </button>
+                          <button
+                            type="button"
+                            onClick={function () {
+                              setSelectedConferences([]);
+                            }}
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            Clear
+                          </button>
+                        </div>
                         {conferenceOptions.map(function (conference) {
                           return (
                             <label key={conference} className="flex items-center gap-1.5 text-xs py-0.5 whitespace-nowrap">
@@ -274,7 +348,7 @@ return sortDirection === "asc" ? cmp : -cmp;
                 );
               }
               return (
-                <th key={column.key} className="py-1 px-3">
+                <th key={column.key} className={"py-1 px-3 " + getStickyClass(column.key)}>
                   <input
                     type="text"
                     value={filters[column.key] || ""}
@@ -307,7 +381,7 @@ return sortDirection === "asc" ? cmp : -cmp;
                   return (
                     <td
                       key={column.key}
-                      className={alignClass + " py-2 px-3 " + textColorClass}
+                      className={alignClass + " py-2 px-3 " + textColorClass + " " + getStickyClass(column.key)}
                     >
                       {display}
                     </td>
@@ -318,6 +392,7 @@ return sortDirection === "asc" ? cmp : -cmp;
           })}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }
