@@ -558,12 +558,19 @@ export interface CompositeRatingTeam {
   composite_rating: number;
   display_score: number;
   num_sources: number;
+  sources: Record<string, number | null>;
+}
+
+export interface CompositeRatingSource {
+  key: string;
+  label: string;
 }
 
 export interface CompositeRatingsResponse {
   teams: CompositeRatingTeam[];
   last_updated: string | null;
   requested_date?: string;
+  sources?: CompositeRatingSource[];
   error?: string;
 }
 

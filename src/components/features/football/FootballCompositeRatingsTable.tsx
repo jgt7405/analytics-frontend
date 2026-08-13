@@ -1,13 +1,15 @@
 "use client";
 
-import { CompositeRatingTeam } from "@/types/football";
+import { CompositeRatingSource, CompositeRatingTeam } from "@/types/football";
 
 interface FootballCompositeRatingsTableProps {
   teams: CompositeRatingTeam[];
+  sources?: CompositeRatingSource[];
 }
 
 export default function FootballCompositeRatingsTable({
   teams,
+  sources = [],
 }: FootballCompositeRatingsTableProps) {
   if (teams.length === 0) {
     return (
@@ -40,6 +42,14 @@ export default function FootballCompositeRatingsTable({
             <th className="text-right py-2 px-3 font-semibold text-gray-700 dark:text-gray-200">
               # Sources
             </th>
+            {sources.map((source) => (
+              <th
+                key={source.key}
+                className="text-right py-2 px-3 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap"
+              >
+                {source.label}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -62,6 +72,18 @@ export default function FootballCompositeRatingsTable({
               <td className="py-2 px-3 text-right text-gray-600 dark:text-gray-300">
                 {team.num_sources}/10
               </td>
+              {sources.map((source) => {
+                const value = team.sources ? team.sources[source.key] : undefined;
+                const display = typeof value === "number" ? value.toFixed(1) : "-";
+                return (
+                  <td
+                    key={source.key}
+                    className="py-2 px-3 text-right text-gray-500 dark:text-gray-400"
+                  >
+                    {display}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

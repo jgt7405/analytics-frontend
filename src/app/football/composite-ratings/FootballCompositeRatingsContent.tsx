@@ -72,7 +72,7 @@ export default function FootballCompositeRatingsContent() {
             See composite_methodology.md for the full methodology.
           </div>
 
-          <FootballCompositeRatingsTable teams={teams} />
+          <FootballCompositeRatingsTable teams={teams} sources={data?.sources ?? []} />
         </div>
       </PageLayoutWrapper>
     </ErrorBoundary>
