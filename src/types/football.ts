@@ -549,3 +549,25 @@ export type FootballApiResponse<T> = {
   success?: boolean;
   error?: string | null;
 };
+
+// Composite rating (10-system blend, see composite_methodology.md)
+export interface CompositeRatingTeam {
+  rank: number;
+  team_name: string;
+  conference: string;
+  composite_rating: number;
+  display_score: number;
+  num_sources: number;
+}
+
+export interface CompositeRatingsResponse {
+  teams: CompositeRatingTeam[];
+  last_updated: string | null;
+  requested_date?: string;
+  error?: string;
+}
+
+export interface CompositeRatingDatesResponse {
+  dates: string[];
+  error?: string;
+}

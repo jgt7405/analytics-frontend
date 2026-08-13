@@ -20,7 +20,7 @@ function validatePathSegment(segment: string): boolean {
  */
 function getForwardedQueryString(request: NextRequest): string {
   const forwarded = new URLSearchParams();
-  for (const key of ["season", "mode"]) {
+  for (const key of ["season", "mode", "date"]) {
     const value = request.nextUrl.searchParams.get(key);
     if (value) forwarded.set(key, value);
   }
@@ -280,6 +280,7 @@ export async function GET(
       if (
         footballEndpoint !== "playoff_rankings" &&
         footballEndpoint !== "debug" &&
+        footballEndpoint !== "composite_ratings" &&
         !validatePathSegment(footballConference)
       ) {
         return NextResponse.json(
@@ -316,6 +317,18 @@ export async function GET(
           break;
         case "playoff_rankings":
           backendPath = `/football/playoff_rankings`;
+          break;
+        case "composite_ratings":
+          // Handle sub-routes: football/composite_ratings/dates,
+          // football/composite_ratings/history
+          if (footballConference === "dates" || footballConference === "history") {
+            backendPath = `/football/composite_ratings/${footballConference}`;
+          } else {
+            return NextResponse.json(
+              { error: "Unknown composite_ratings endpoint" },
+              { status: 404 },
+            );
+          }
           break;
         case "debug":
           // Handle debug sub-routes: football/debug/probability_check
@@ -401,6 +414,9 @@ export async function GET(
             break;
           case "bowl-scoreboard":
             backendPath = `/football/bowl-scoreboard`;
+            break;
+          case "composite_ratings":
+            backendPath = `/football/composite_ratings`;
             break;
           default:
             return NextResponse.json(
