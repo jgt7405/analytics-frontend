@@ -34,6 +34,8 @@ function buildColumns(sources: CompositeRatingSource[]): ColumnDef[] {
     const ratingKey = "rating_" + source.key;
     const ratingLabel = source.label + " Rtg";
     columns.push({ key: ratingKey, label: ratingLabel, numeric: true });
+  });
+  sources.forEach(function (source) {
     const rankKey = "rank_" + source.key;
     const rankLabel = source.label + " Rank";
     columns.push({ key: rankKey, label: rankLabel, numeric: true });
@@ -122,6 +124,10 @@ export default function FootballCompositeRatingsTable(
   const filters = filterState[0];
   const setFilters = filterState[1];
 
+  const conferenceFilterState = useState<string[]>([]);
+  const selectedConferences = conferenceFilterState[0];
+  const setSelectedConferences = conferenceFilterState[1];
+
   const columns = useMemo(function () {
     return buildColumns(sources);
   }, [sources]);
@@ -134,6 +140,14 @@ export default function FootballCompositeRatingsTable(
     return maps;
   }, [teams, sources]);
 
+  const conferenceOptions = useMemo(function () {
+    const seen = new Set<string>();
+
+    teams.forEach(function (team) {
+      seen.add(team.conference);
+    });
+    return Array.from(seen).sort();
+  }, [teams]);
   function handleHeaderClick(columnKey: string) {
     if (sortKey === columnKey) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -150,18 +164,29 @@ export default function FootballCompositeRatingsTable(
     setFilters(next);
   }
 
+  function toggleConference(conference: string) {
+    const isSelected = selectedConferences.indexOf(conference) !== -1;
+    if (isSelected) {
+      setSelectedConferences(selectedConferences.filter(function (c) { return c !== conference; }));
+    } else {
+      setSelectedConferences(selectedConferences.concat([conference]));
+    }
+  }
+
   const filteredTeams = teams.filter(function (team) {
+    if (selectedConferences.length > 0 && selectedConferences.indexOf(team.conference) === -1) {
+      return false;
+    }
     let passesAllFilters = true;
     columns.forEach(function (column) {
       const filterText = filters[column.key];
       if (filterText) {
-
         const value = getCellValue(column, team, sourceRankMaps);
         const display = formatCellValue(column, value);
-                if (display.toLowerCase().indexOf(filterText.toLowerCase()) === -1) {
+        if (display.toLowerCase().indexOf(filterText.toLowerCase()) === -1) {
           passesAllFilters = false;
-                }
-            }
+        }
+      }
     });
     return passesAllFilters;
   });
@@ -193,9 +218,9 @@ return sortDirection === "asc" ? cmp : -cmp;
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto overflow-y-auto max-h-[70vh] border border-gray-200 dark:border-gray-700 rounded">
       <table className="min-w-full text-sm border-collapse">
-        <thead>
+        <thead className="sticky top-0 z-20 bg-white dark:bg-gray-900">
           <tr className="border-b border-gray-300 dark:border-gray-600">
             {columns.map(function (column) {
               const alignClass = column.numeric ? "text-right" : "text-left";
@@ -221,6 +246,33 @@ return sortDirection === "asc" ? cmp : -cmp;
           </tr>
           <tr className="border-b border-gray-200 dark:border-gray-700">
             {columns.map(function (column) {
+              if (column.key === "conference") {
+                return (
+                  <th key={column.key} className="py-1 px-3 relative">
+                    <details className="relative">
+                      <summary className="cursor-pointer list-none text-xs border border-gray-300 dark:border-gray-600 rounded px-1.5 py-1 bg-white dark:bg-gray-800 truncate">
+                        {selectedConferences.length === 0 ? "All" : selectedConferences.length + " selected"}
+                      </summary>
+                      <div className="absolute z-10 mt-1 left-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-64 overflow-y-auto p-2 min-w-[10rem]">
+                        {conferenceOptions.map(function (conference) {
+                          return (
+                            <label key={conference} className="flex items-center gap-1.5 text-xs py-0.5 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={selectedConferences.indexOf(conference) !== -1}
+                                onChange={function () {
+                                  toggleConference(conference);
+                                }}
+                              />
+                              <span>{conference}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </details>
+                  </th>
+                );
+              }
               return (
                 <th key={column.key} className="py-1 px-3">
                   <input
