@@ -565,6 +565,7 @@ export interface CompositeRatingSource {
   key: string;
   label: string;
   last_updated: string | null;
+  source_url: string | null;
 }
 
 export interface CompositeRatingsResponse {

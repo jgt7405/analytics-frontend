@@ -18,6 +18,7 @@ interface ColumnDef {
     label: string;
     numeric: boolean;
     lastUpdated?: string | null;
+    sourceUrl?: string | null;
 }
 
 function buildColumns(sources: CompositeRatingSource[]): ColumnDef[] {
@@ -34,12 +35,24 @@ function buildColumns(sources: CompositeRatingSource[]): ColumnDef[] {
   sources.forEach(function (source) {
     const ratingKey = "rating_" + source.key;
     const ratingLabel = source.label + " Rtg";
-    columns.push({ key: ratingKey, label: ratingLabel, numeric: true, lastUpdated: source.last_updated });
+    columns.push({
+      key: ratingKey,
+      label: ratingLabel,
+      numeric: true,
+      lastUpdated: source.last_updated,
+      sourceUrl: source.source_url,
+    });
   });
   sources.forEach(function (source) {
     const rankKey = "rank_" + source.key;
     const rankLabel = source.label + " Rank";
-    columns.push({ key: rankKey, label: rankLabel, numeric: true, lastUpdated: source.last_updated });
+    columns.push({
+      key: rankKey,
+      label: rankLabel,
+      numeric: true,
+      lastUpdated: source.last_updated,
+      sourceUrl: source.source_url,
+    });
   });
 return columns;
 }
@@ -302,6 +315,34 @@ return sortDirection === "asc" ? cmp : -cmp;
                 >
                   {column.label}
                   {arrow ? <span className="text-xs ml-1">{arrow}</span> : null}
+                  {column.sourceUrl ? (
+                    <a
+                      href={column.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={"Open " + column.label.replace(/ (Rtg|Rank)$/, "") + " source site"}
+                      onClick={function (e) {
+                        e.stopPropagation();
+                      }}
+                      className="ml-1 inline-block align-middle text-gray-400 hover:text-[rgb(0,151,178)]"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                    </a>
+                  ) : null}
                   {formatLastUpdated(column.lastUpdated) ? (
                     <div className="text-[10px] font-normal text-gray-400 dark:text-gray-500 normal-case">
                       Updated {formatLastUpdated(column.lastUpdated)}
