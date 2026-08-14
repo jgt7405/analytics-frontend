@@ -153,7 +153,7 @@ export default function FootballRegularSeasonBoxWhiskerChart({
     avgRowHeight + footerGap + logoSize + footerGap + nameRowHeight + footerGap;
   const boxWidth = isMobile ? 28 : 30;
   const whiskerWidth = isMobile ? 12 : 18;
-  const lineThickness = isMobile ? 2 : 2;
+  const lineThickness = isMobile ? 3 : 4;
   // Whisker caps and the median line need real thickness for their
   // border-radius to read as rounded at all - CSS clamps a pill radius to
   // half the element's height, so a 2px-tall bar barely rounds.
