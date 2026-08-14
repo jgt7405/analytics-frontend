@@ -107,9 +107,13 @@ export default function FootballTeamRankHistory({
 
     const rawData = allHistoryData.confWins.data;
     const range = getFootballDateRange(season, rawData);
+    // sagarin_rank is FBS-only; 999 is the site-wide FCS sentinel (not a
+    // real rank to plot) - excluded the same way missing values already are.
     const filteredData = filterDataToRange(rawData, range).filter(
       (point: HistoricalDataPoint) =>
-        point.sagarin_rank !== null && point.sagarin_rank !== undefined
+        point.sagarin_rank !== null &&
+        point.sagarin_rank !== undefined &&
+        point.sagarin_rank !== 999
     );
 
     // Group by date and take the FIRST entry per day (earliest version_id)
