@@ -479,8 +479,7 @@ export default function FootballWhatIfContent() {
                             const selectedTeam = gameSelections.get(
                               game.game_id
                             );
-                            const isNeutral =
-                              !game.away_team_logo || !game.home_team_logo;
+                            const isNeutral = Boolean(game.neutral_site);
                             const separator = isNeutral ? "vs" : "@";
 
                             return (

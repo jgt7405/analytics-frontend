@@ -420,6 +420,7 @@ export interface WhatIfGame {
   away_probability: number;
   completed: boolean;
   conf_game: boolean;
+  neutral_site?: boolean;
 }
 
 export interface WhatIfTeamResult {
