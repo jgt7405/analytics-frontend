@@ -17,6 +17,7 @@ interface ColumnDef {
   key: string;
     label: string;
     numeric: boolean;
+    lastUpdated?: string | null;
 }
 
 function buildColumns(sources: CompositeRatingSource[]): ColumnDef[] {
@@ -33,14 +34,21 @@ function buildColumns(sources: CompositeRatingSource[]): ColumnDef[] {
   sources.forEach(function (source) {
     const ratingKey = "rating_" + source.key;
     const ratingLabel = source.label + " Rtg";
-    columns.push({ key: ratingKey, label: ratingLabel, numeric: true });
+    columns.push({ key: ratingKey, label: ratingLabel, numeric: true, lastUpdated: source.last_updated });
   });
   sources.forEach(function (source) {
     const rankKey = "rank_" + source.key;
     const rankLabel = source.label + " Rank";
-    columns.push({ key: rankKey, label: rankLabel, numeric: true });
+    columns.push({ key: rankKey, label: rankLabel, numeric: true, lastUpdated: source.last_updated });
   });
 return columns;
+}
+
+function formatLastUpdated(lastUpdated: string | null | undefined): string | null {
+  if (!lastUpdated) return null;
+  const parsed = new Date(lastUpdated + "T00:00:00");
+  if (isNaN(parsed.getTime())) return lastUpdated;
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function computeSourceRanks(teams: CompositeRatingTeam[], sourceKey: string): Map<string, number> {
@@ -294,6 +302,11 @@ return sortDirection === "asc" ? cmp : -cmp;
                 >
                   {column.label}
                   {arrow ? <span className="text-xs ml-1">{arrow}</span> : null}
+                  {formatLastUpdated(column.lastUpdated) ? (
+                    <div className="text-[10px] font-normal text-gray-400 dark:text-gray-500 normal-case">
+                      Updated {formatLastUpdated(column.lastUpdated)}
+                    </div>
+                  ) : null}
                 </th>
               );
             })}
