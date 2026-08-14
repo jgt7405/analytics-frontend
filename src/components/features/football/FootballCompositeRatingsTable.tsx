@@ -111,6 +111,10 @@ function getCellValue(
 
 function formatCellValue(column: ColumnDef, value: CellValue): string {
   if (value === null || value === undefined) return "-";
+  // rank is FBS-only; FCS teams carry the site-wide 999 sentinel (see
+  // teams.py's opponent_sagarin_rank / FootballTeamSchedule.tsx's
+  // formatRanking) rather than competing in the same numbered pool.
+  if (column.key === "rank") return value === 999 ? "FCS" : String(value);
   if (column.key === "num_sources") return String(value) + "/10";
   if (column.key === "display_score") return typeof value === "number" ? value.toFixed(1) : "-";
     if (column.key === "composite_rating") return typeof value === "number" ? value.toFixed(3) : "-";
