@@ -518,7 +518,7 @@ function FootballScheduleTable({
 
                     return (
                       <tr key={team}>
-                        <th className={cn(styles.stickyColumn, styles.summaryTeamHeader)} scope="row">
+                        <th className={styles.stickyColumn} scope="row">
                           <button
                             type="button"
                             className={styles.summaryTeamButton}
