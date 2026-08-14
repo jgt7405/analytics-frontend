@@ -12,11 +12,11 @@ interface ConferenceData {
   conference_name: string;
   teamcount: number;
   teams: string[];
-  sagarin_min: number;
-  sagarin_q25: number;
-  sagarin_median: number;
-  sagarin_q75: number;
-  sagarin_max: number;
+  winprob_min: number;
+  winprob_q25: number;
+  winprob_median: number;
+  winprob_q75: number;
+  winprob_max: number;
   bid_distribution: Record<string, number>;
   average_bids: number;
   logo_url?: string;
@@ -68,25 +68,6 @@ function ConferenceLogo({
       />
     </div>
   );
-}
-
-// Probability calculation function from Python code
-function calculateWinProbability(
-  teamRating: number,
-  avgRating: number
-): number {
-  const variance = Math.abs(teamRating - avgRating);
-  let probability: number;
-
-  if (teamRating >= avgRating) {
-    probability = -0.0005 * Math.pow(variance, 2) + 0.0284 * variance + 0.5017;
-  } else {
-    probability =
-      1 - (-0.0005 * Math.pow(variance, 2) + 0.0284 * variance + 0.5017);
-  }
-
-  // Convert to percentage and clamp between 0-100
-  return Math.max(0, Math.min(100, probability * 100));
 }
 
 export default function ConferenceSagarinBoxWhiskerChart({
@@ -146,11 +127,11 @@ export default function ConferenceSagarinBoxWhiskerChart({
         return false;
 
       const fields = [
-        "sagarin_min",
-        "sagarin_q25",
-        "sagarin_median",
-        "sagarin_q75",
-        "sagarin_max",
+        "winprob_min",
+        "winprob_q25",
+        "winprob_median",
+        "winprob_q75",
+        "winprob_max",
       ];
       const values = fields.map((field) => conf[field as keyof typeof conf]);
 
@@ -160,46 +141,11 @@ export default function ConferenceSagarinBoxWhiskerChart({
     });
   }, [conferenceData]);
 
-  // Calculate average rating across all teams
-  const averageRating = useMemo(() => {
-    const allRatings: number[] = [];
-
-    validConferences.forEach((conf) => {
-      // Add each quartile value, weighted by approximate team count in each quartile
-      const quarterTeams = conf.teamcount / 4;
-
-      // Add ratings for each quartile section
-      for (let i = 0; i < quarterTeams; i++) {
-        allRatings.push(conf.sagarin_min); // Bottom quartile
-        allRatings.push(conf.sagarin_q25); // Second quartile
-        allRatings.push(conf.sagarin_median); // Third quartile
-        allRatings.push(conf.sagarin_q75); // Top quartile
-        allRatings.push(conf.sagarin_max); // Maximum
-      }
-    });
-
-    return allRatings.length > 0
-      ? allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length
-      : 70; // Default fallback
-  }, [validConferences]);
-
-  // Convert conferences to probability data
-  const probabilityConferences = useMemo(() => {
-    return validConferences.map((conf) => ({
-      ...conf,
-      prob_min: calculateWinProbability(conf.sagarin_min, averageRating),
-      prob_q25: calculateWinProbability(conf.sagarin_q25, averageRating),
-      prob_median: calculateWinProbability(conf.sagarin_median, averageRating),
-      prob_q75: calculateWinProbability(conf.sagarin_q75, averageRating),
-      prob_max: calculateWinProbability(conf.sagarin_max, averageRating),
-    }));
-  }, [validConferences, averageRating]);
-
   const sortedConferences = useMemo(() => {
-    return [...probabilityConferences].sort(
-      (a, b) => b.prob_median - a.prob_median
+    return [...validConferences].sort(
+      (a, b) => b.winprob_median - a.winprob_median
     );
-  }, [probabilityConferences]);
+  }, [validConferences]);
 
   const chartBounds = useMemo(() => {
     return { yMin: 0, yMax: 100 };
@@ -220,7 +166,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
   if (validConferences.length === 0) {
     return (
       <div className={cn(layout.card, "p-8 text-center")}>
-        <p className="text-gray-500 dark:text-gray-300">No valid Sagarin rating data available</p>
+        <p className="text-gray-500 dark:text-gray-300">No valid win probability data available</p>
       </div>
     );
   }
@@ -339,11 +285,11 @@ export default function ConferenceSagarinBoxWhiskerChart({
                     ? conf.secondary_color
                     : "#64748b";
 
-                const bottom = conf.prob_min;
-                const q1 = conf.prob_q25;
-                const median = conf.prob_median;
-                const q3 = conf.prob_q75;
-                const top = conf.prob_max;
+                const bottom = conf.winprob_min;
+                const q1 = conf.winprob_q25;
+                const median = conf.winprob_median;
+                const q3 = conf.winprob_q75;
+                const top = conf.winprob_max;
 
                 // Conferences with 2 or fewer teams have no meaningful
                 // quartile spread (q25/q75 are just linear interpolations

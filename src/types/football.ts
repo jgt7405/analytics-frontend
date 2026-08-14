@@ -246,6 +246,11 @@ export interface FootballConferenceData {
   sagarin_median: number;
   sagarin_q75: number;
   sagarin_max: number;
+  winprob_min: number;
+  winprob_q25: number;
+  winprob_median: number;
+  winprob_q75: number;
+  winprob_max: number;
 }
 
 export interface FootballConferenceApiResponse {
