@@ -4,7 +4,6 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
-import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { NCAATeam } from "@/types/basketball";
@@ -348,7 +347,7 @@ function NCAATeamTable({
                       teamName={team.team_name}
                       size={isMobile ? 16 : 20}
                     />
-                    <span className="whitespace-normal break-words leading-tight">{formatTeamName(team.team_name)}</span>
+                    <span className="whitespace-normal break-words leading-tight">{team.team_name}</span>
                   </div>
                 </td>
                 {/* Round cells */}

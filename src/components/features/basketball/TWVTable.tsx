@@ -2,7 +2,6 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
@@ -243,7 +242,7 @@ function TWVTable({
                       showTooltip
                       className={styles.teamLogo}
                     />
-                    <span className={styles.teamName}>{formatTeamName(team.team_name)}</span>
+                    <span className={styles.teamName}>{team.team_name}</span>
                   </button>
                 </td>
 

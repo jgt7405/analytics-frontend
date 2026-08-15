@@ -2,7 +2,6 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { getCellColor } from "@/lib/color-utils";
-import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { memo, ReactNode, useMemo } from "react";
@@ -151,9 +150,7 @@ function ConferenceTourneyTable({
                       showTooltip
                       className={styles.teamLogo}
                     />
-                    <span className={styles.teamName}>
-                      {formatTeamName(team.team_name)}
-                    </span>
+                    <span className={styles.teamName}>{team.team_name}</span>
                   </button>
                 </td>
                 {activeRounds.map((round) => {

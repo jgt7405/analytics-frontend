@@ -3,7 +3,6 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { NCAATeam, useNCAAProjections } from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
-import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
@@ -231,9 +230,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                           onClick={() => navigateToTeam(team.team_name)}
                           className={styles.teamLogo}
                         />
-                        <span className={styles.teamName}>
-                          {formatTeamName(team.team_name)}
-                        </span>
+                        <span className={styles.teamName}>{team.team_name}</span>
                       </div>
                     </td>
 

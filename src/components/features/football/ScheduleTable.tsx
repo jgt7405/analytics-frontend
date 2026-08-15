@@ -524,7 +524,7 @@ function FootballScheduleTable({
                               showTooltip
                               className={styles.teamLogo}
                             />
-                            <span className={styles.summaryTeamName}>{formatTeamName(team)}</span>
+                            <span className={styles.summaryTeamName}>{team}</span>
                           </button>
                         </th>
 
