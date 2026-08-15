@@ -8,6 +8,7 @@
    titles" bug §3 documents. */
 .card {
   position: relative;
+  isolation: isolate;
   /* No overflow: hidden - see StandingsTable.module.css's comment; breaks
      position: sticky descendants in some browsers per the guide's §1. */
   border: 1px solid rgb(226 232 240 / 0.9);

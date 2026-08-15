@@ -7,6 +7,7 @@
   --summary-team-col-width: 11rem;
   --summary-stat-col-width: 3.65rem;
   position: relative;
+  isolation: isolate;
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 1.25rem;
   background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);

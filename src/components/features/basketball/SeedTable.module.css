@@ -1,5 +1,6 @@
 .card {
   position: relative;
+  isolation: isolate;
   border-radius: 1.25rem;
   background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
   box-shadow:

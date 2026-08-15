@@ -3,6 +3,7 @@
   --winprob-column-width: 4.375rem;
   --team-column-width: 3.65rem;
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 1.25rem;

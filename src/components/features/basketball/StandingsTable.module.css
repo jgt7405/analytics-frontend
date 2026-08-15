@@ -3,6 +3,7 @@
   --label-column-width: 4.75rem;
   --team-column-width: 3.65rem;
   position: relative;
+  isolation: isolate;
   /* No overflow: hidden here (unlike the football reference this table was
      modeled on) - per PAGE_MODERNIZATION_GUIDE.md §1, overflow: hidden on
      .card breaks position: sticky descendants in some browsers (Chrome in

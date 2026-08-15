@@ -5,6 +5,7 @@
   --category-col-width: 6.5rem;
   --stat-col-width: 4.5rem;
   position: relative;
+  isolation: isolate;
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 1.25rem;
   background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
