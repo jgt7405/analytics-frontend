@@ -13,7 +13,7 @@
 }
 
 .tabButton:hover {
-  color: var(--color-primary);
+  color: rgb(0, 127, 151);
 }
 
 .tabButton:focus {
@@ -27,14 +27,31 @@
 
 .tabButtonActive {
   color: rgb(0, 127, 151);
-  background-color: rgba(0, 151, 178, 0.12);
+  background-color: transparent;
   border-bottom-color: transparent;
   border-radius: 8px;
   font-weight: 500;
+  isolation: isolate;
 }
 
-.tabButtonActive:hover {
+.tabButtonActive::before {
+  content: "";
+  position: absolute;
+  inset: 3px 0;
+  z-index: -1;
+  background-color: rgba(0, 151, 178, 0.12);
+  border-radius: 8px;
+}
+
+.tabButtonActive:hover,
+.tabButtonActive:active,
+.tabButtonActive:focus,
+.tabButtonActive:focus-visible,
+.tabButtonActive:visited {
   color: rgb(0, 127, 151);
+}
+
+.tabButtonActive:hover::before {
   background-color: rgba(0, 151, 178, 0.18);
 }
 
@@ -112,25 +129,37 @@
 
 .mobileNav .tabButtonActive {
   color: rgb(0, 127, 151);
-  background-color: rgba(0, 151, 178, 0.12);
+  background-color: transparent;
   font-weight: 500;
   border-bottom: 1px solid transparent;
 }
 
 .mobileNav .tabButton[aria-current="page"] {
   color: rgb(0, 127, 151);
-  background-color: rgba(0, 151, 178, 0.12);
+  background-color: transparent;
   font-weight: 500;
   border-bottom: 1px solid transparent;
 }
 
 @media (prefers-color-scheme: dark) {
+  .tabButton:hover,
   .tabButtonActive,
   .tabButtonActive:hover,
+  .tabButtonActive:active,
+  .tabButtonActive:focus,
+  .tabButtonActive:focus-visible,
+  .tabButtonActive:visited,
   .mobileNav .tabButtonActive,
   .mobileNav .tabButton[aria-current="page"] {
     color: rgb(67, 212, 230);
+  }
+
+  .tabButtonActive::before {
     background-color: rgba(67, 212, 230, 0.14);
+  }
+
+  .tabButtonActive:hover::before {
+    background-color: rgba(67, 212, 230, 0.2);
   }
 }
 
