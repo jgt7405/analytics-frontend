@@ -3,6 +3,7 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
+import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
@@ -187,7 +188,7 @@ function ConferenceTourneyTable({
                     size={isMobile ? 20 : 24}
                     onClick={() => navigateToTeam(team.team_name)}
                   />
-                  <span className="whitespace-normal break-words leading-tight">{team.team_name}</span>
+                  <span className="whitespace-normal break-words leading-tight">{formatTeamName(team.team_name)}</span>
                 </div>
               </td>
               {activeRounds.map((round) => {

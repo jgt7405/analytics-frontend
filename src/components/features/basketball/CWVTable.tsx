@@ -1,6 +1,7 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
+import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import { CWVData } from "@/types/basketball";
 import Image from "next/image";
@@ -278,7 +279,7 @@ function CWVTable({ cwvData, className, season }: CWVTableProps) {
                       showTooltip
                       className={styles.teamLogo}
                     />
-                    <span className={styles.teamName}>{team.team_name}</span>
+                    <span className={styles.teamName}>{formatTeamName(team.team_name)}</span>
                   </button>
                 </th>
               ))}

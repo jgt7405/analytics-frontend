@@ -1,6 +1,7 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
+import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
@@ -37,15 +38,6 @@ function getWinCellColor(value: number): { backgroundColor: string; color: strin
 
 function formatConferenceName(conference?: string) {
   return conference?.replace(/_/g, " ") || "Conference";
-}
-
-// A soft hyphen (\u00AD) only renders as a visible "-" when the browser
-// itself breaks the line there; html2canvas (used for the download/print
-// export) doesn't replicate that behavior and just drops it, so "Northwestern"
-// silently loses its hyphen in exports. Using a real hyphen + zero-width
-// space instead guarantees the same visible break on-screen and in exports.
-function formatTeamName(name: string) {
-  return name.replace(/\bNorthwestern\b/g, "North-\u200Bwestern");
 }
 
 function FootballWinsTable({

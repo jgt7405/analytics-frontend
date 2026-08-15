@@ -1,6 +1,7 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
+import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import { FootballCWVData } from "@/types/football";
 import Image from "next/image";
@@ -30,15 +31,6 @@ interface CWVTableProps {
   cwvData: FootballCWVData;
   className?: string;
   season?: string;
-}
-
-// A soft hyphen only renders as a visible "-" when the browser itself
-// breaks the line there; html2canvas (used for the download/print export)
-// doesn't replicate that behavior and just drops it, so "Northwestern"
-// silently loses its hyphen in exports. Using a real hyphen + zero-width
-// space instead guarantees the same visible break on-screen and in exports.
-function formatTeamName(name: string) {
-  return name.replace(/\bNorthwestern\b/g, "North-" + String.fromCharCode(8203) + "western");
 }
 
 function CWVTable({ cwvData, className, season }: CWVTableProps) {

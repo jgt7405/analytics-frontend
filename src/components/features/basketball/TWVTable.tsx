@@ -3,6 +3,7 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
+import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
@@ -407,7 +408,7 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
                       onClick={() => navigateToTeam(team.team_name)}
                       className="flex-shrink-0"
                     />
-                    <span className="whitespace-normal break-words leading-tight">{team.team_name}</span>
+                    <span className="whitespace-normal break-words leading-tight">{formatTeamName(team.team_name)}</span>
                   </div>
                 </td>
 
