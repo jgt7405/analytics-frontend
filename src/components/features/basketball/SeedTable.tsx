@@ -5,16 +5,18 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import type { SeedTeam } from "@/types/basketball";
 import { useRouter } from "next/navigation";
-import { memo, useMemo, useState } from "react";
+import { memo, ReactNode, useMemo, useState } from "react";
+import styles from "./SeedTable.module.css";
 
 interface SeedTableProps {
   seedData: SeedTeam[];
   className?: string;
   showAllTeams?: boolean;
   season?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the title row. */
+  headerRight?: ReactNode;
 }
 
 type SortColumn =
@@ -32,6 +34,7 @@ function SeedTable({
   className,
   showAllTeams = false,
   season,
+  headerRight,
 }: SeedTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -211,7 +214,7 @@ function SeedTable({
 
   // Responsive dimensions
   const rankColWidth = isMobile ? 35 : 45;
-  const firstColWidth = isMobile ? 60 : 140;
+  const firstColWidth = isMobile ? 60 : 150;
   const avgSeedColWidth = isMobile ? 50 : 70;
   const seedColWidth = isMobile ? 25 : 35;
   const tourneyColWidth = isMobile ? 50 : 70;
@@ -219,12 +222,6 @@ function SeedTable({
   const bidColWidth = isMobile ? 40 : 50;
   const cellHeight = isMobile ? 24 : 28;
   const headerHeight = isMobile ? 40 : 48;
-
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "seed-table",
-    className
-  );
 
   // Format tournament percentage
   const formatTournamentPct = (value?: number) => {
@@ -260,7 +257,7 @@ function SeedTable({
 
   if (!seedData || seedData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-300 dark:text-gray-300">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         No seed data available
       </div>
     );
@@ -278,12 +275,19 @@ function SeedTable({
   const bidCategoryColumns = ["Auto Bid", "At Large"];
 
   return (
-    <div className="space-y-3">
+    <div className={cn(styles.card, "seed-table", className)}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
+          <h2 className={styles.title}>NCAA Tournament Seed Projections</h2>
+        </div>
+        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+      </div>
+
       {/* Row filter - only show when All Teams is selected */}
       {showAllTeams && (
-        <div className="flex items-center gap-3 px-2">
+        <div className={styles.filterRow}>
           <label
-            className={`text-gray-700 dark:text-gray-300 dark:text-gray-300 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+            className={`text-gray-700 dark:text-gray-300 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
           >
             Show top:
           </label>
@@ -293,67 +297,43 @@ function SeedTable({
             max={seedData.length}
             value={inputValue}
             onChange={handleRowsInputChange}
-            className={`border border-gray-300 dark:border-gray-600 rounded px-3 py-1 w-24 ${
-              isMobile ? "text-xs" : "text-sm"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={cn(styles.filterInput, isMobile ? "text-xs" : "text-sm")}
             placeholder={seedData.length.toString()}
           />
-          <span className={`text-gray-600 dark:text-gray-300 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
             teams (of {seedData.length})
           </span>
         </div>
       )}
 
-      <div
-        className={`${tableClassName} relative overflow-x-auto overflow-y-auto max-h-[80vh]`}
-      >
-        <table
-          className="border-collapse border-spacing-0"
-          style={{
-            width: "max-content",
-            borderCollapse: "separate",
-            borderSpacing: 0,
-          }}
-        >
+      <div className={styles.scrollViewport}>
+        <table className={styles.table}>
           <thead>
             {/* First header row - category groupings */}
             <tr>
               <th
-                rowSpan={2}
-                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
+                className={cn(styles.headerCell, styles.stickyCell, isMobile ? "text-xs" : "text-sm")}
                 style={{
                   width: rankColWidth,
                   minWidth: rankColWidth,
                   maxWidth: rankColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
                   left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 #
               </th>
 
               <th
-                rowSpan={2}
-                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
+                className={cn(styles.headerCell, styles.stickyCell, isMobile ? "text-xs" : "text-sm")}
                 style={{
                   width: firstColWidth,
                   minWidth: firstColWidth,
                   maxWidth: firstColWidth,
                   height: headerHeight,
-                  position: "sticky",
-                  top: 0,
+                  textAlign: "left",
+                  paddingLeft: "0.5rem",
                   left: rankColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  borderRight: "1px solid var(--border-color)",
                 }}
               >
                 Team
@@ -362,16 +342,7 @@ function SeedTable({
               {/* Seed Category Header - INCLUDES Wgtd Avg Seed + Seeds 1-16 */}
               <th
                 colSpan={seedColumns.length + 1}
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
-                style={{
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
+                className={cn(styles.headerCell, isMobile ? "text-xs" : "text-sm")}
               >
                 Seed
               </th>
@@ -379,16 +350,7 @@ function SeedTable({
               {/* NCAA Tournament Status Category Header */}
               <th
                 colSpan={tournamentStatusColumns.length}
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
-                style={{
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
+                className={cn(styles.headerCell, isMobile ? "text-xs" : "text-sm")}
               >
                 NCAA Tournament Status
               </th>
@@ -396,16 +358,7 @@ function SeedTable({
               {/* Bid Category Header */}
               <th
                 colSpan={bidCategoryColumns.length}
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
-                style={{
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
+                className={cn(styles.headerCell, isMobile ? "text-xs" : "text-sm")}
               >
                 Bid Category
               </th>
@@ -413,31 +366,58 @@ function SeedTable({
 
             {/* Second header row - individual columns */}
             <tr>
+              {/* Rank column placeholder - rowSpan on a sticky <th> doesn't
+                  reliably stick across browsers, so the rank/team headers
+                  are two real per-row cells instead; this one just extends
+                  the sticky white background under row 1's "#" header and
+                  is itself sticky (top: headerHeight) so it stays pinned
+                  alongside the rest of row 2. */}
+              <th
+                className={styles.stickyCell}
+                style={{
+                  width: rankColWidth,
+                  minWidth: rankColWidth,
+                  maxWidth: rankColWidth,
+                  height: headerHeight,
+                  top: headerHeight,
+                  left: 0,
+                }}
+              />
+
+              {/* Team column placeholder - see rank column note above. */}
+              <th
+                className={styles.stickyCell}
+                style={{
+                  width: firstColWidth,
+                  minWidth: firstColWidth,
+                  maxWidth: firstColWidth,
+                  height: headerHeight,
+                  top: headerHeight,
+                  left: rankColWidth,
+                }}
+              />
+
               {/* Wgtd Avg Seed Column - FIRST under Seed category */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  isMobile ? "text-xs" : "text-sm"
-                } ${sortColumn === "average_seed" ? "bg-blue-100" : ""}`}
+                className={cn(
+                  styles.colHeaderCell,
+                  sortColumn === "average_seed" && styles.colHeaderCellActive,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 onClick={() => handleColumnClick("average_seed")}
                 style={{
                   width: avgSeedColWidth,
                   minWidth: avgSeedColWidth,
                   maxWidth: avgSeedColWidth,
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: headerHeight / 2,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
+                  height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
-                  lineHeight: "1.1",
                 }}
                 title="Click to sort by average seed"
               >
                 Wgtd Avg{"\n"}Seed
                 {sortColumn === "average_seed" && (
-                  <div className="text-blue-600 text-xs mt-1">▲</div>
+                  <div className={styles.sortArrow}>▲</div>
                 )}
               </th>
 
@@ -445,195 +425,169 @@ function SeedTable({
               {seedColumns.map((seed) => (
                 <th
                   key={`seed-${seed}`}
-                  className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                    isMobile ? "text-xs" : "text-sm"
-                  } ${sortColumn === seed.toString() ? "bg-blue-100" : ""}`}
+                  className={cn(
+                    styles.colHeaderCell,
+                    sortColumn === seed.toString() && styles.colHeaderCellActive,
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
                   onClick={() => handleColumnClick(seed.toString())}
                   style={{
                     width: seedColWidth,
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
-                    height: headerHeight / 2,
-                    position: "sticky",
-                    top: headerHeight / 2,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
+                    height: headerHeight,
+                    top: headerHeight,
                   }}
                   title={`Click to sort by seed ${seed}`}
                 >
                   {seed}
                   {sortColumn === seed.toString() && (
-                    <div className="text-blue-600 text-xs mt-1">▼</div>
+                    <div className={styles.sortArrow}>▼</div>
                   )}
                 </th>
               ))}
 
               {/* In Tourney Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  isMobile ? "text-xs" : "text-sm"
-                } ${sortColumn === "tournament_bid_pct" ? "bg-blue-100" : ""}`}
+                className={cn(
+                  styles.colHeaderCell,
+                  sortColumn === "tournament_bid_pct" && styles.colHeaderCellActive,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 onClick={() => handleColumnClick("tournament_bid_pct")}
                 style={{
                   width: tourneyColWidth,
                   minWidth: tourneyColWidth,
                   maxWidth: tourneyColWidth,
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: headerHeight / 2,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
+                  height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
-                  lineHeight: "1.1",
                 }}
                 title="Click to sort by tournament probability"
               >
                 {getCompactHeader("In Tourney")}
                 {sortColumn === "tournament_bid_pct" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className={styles.sortArrow}>▼</div>
                 )}
               </th>
 
               {/* First Four Out Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  isMobile ? "text-xs" : "text-sm"
-                } ${sortColumn === "first_four_out" ? "bg-blue-100" : ""}`}
+                className={cn(
+                  styles.colHeaderCell,
+                  sortColumn === "first_four_out" && styles.colHeaderCellActive,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 onClick={() => handleColumnClick("first_four_out")}
                 style={{
                   width: outColWidth,
                   minWidth: outColWidth,
                   maxWidth: outColWidth,
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: headerHeight / 2,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
+                  height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
-                  lineHeight: "1.1",
                 }}
                 title="Click to sort by First Four Out"
               >
                 {getCompactHeader("First Four Out")}
                 {sortColumn === "first_four_out" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className={styles.sortArrow}>▼</div>
                 )}
               </th>
 
               {/* Next Four Out Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  isMobile ? "text-xs" : "text-sm"
-                } ${sortColumn === "next_four_out" ? "bg-blue-100" : ""}`}
+                className={cn(
+                  styles.colHeaderCell,
+                  sortColumn === "next_four_out" && styles.colHeaderCellActive,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 onClick={() => handleColumnClick("next_four_out")}
                 style={{
                   width: outColWidth,
                   minWidth: outColWidth,
                   maxWidth: outColWidth,
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: headerHeight / 2,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
+                  height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
-                  lineHeight: "1.1",
                 }}
                 title="Click to sort by Next Four Out"
               >
                 {getCompactHeader("Next Four Out")}
                 {sortColumn === "next_four_out" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className={styles.sortArrow}>▼</div>
                 )}
               </th>
 
               {/* Out of Tourney Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  isMobile ? "text-xs" : "text-sm"
-                } ${sortColumn === "out_of_tourney" ? "bg-blue-100" : ""}`}
+                className={cn(
+                  styles.colHeaderCell,
+                  sortColumn === "out_of_tourney" && styles.colHeaderCellActive,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 onClick={() => handleColumnClick("out_of_tourney")}
                 style={{
                   width: outColWidth,
                   minWidth: outColWidth,
                   maxWidth: outColWidth,
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: headerHeight / 2,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
+                  height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
-                  lineHeight: "1.1",
                 }}
                 title="Click to sort by Out of Tourney"
               >
                 {getCompactHeader("Out of Tourney")}
                 {sortColumn === "out_of_tourney" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className={styles.sortArrow}>▼</div>
                 )}
               </th>
 
               {/* Auto Bid Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  isMobile ? "text-xs" : "text-sm"
-                } ${sortColumn === "auto_bid_overall_pct" ? "bg-blue-100" : ""}`}
+                className={cn(
+                  styles.colHeaderCell,
+                  sortColumn === "auto_bid_overall_pct" && styles.colHeaderCellActive,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 onClick={() => handleColumnClick("auto_bid_overall_pct")}
                 style={{
                   width: bidColWidth,
                   minWidth: bidColWidth,
                   maxWidth: bidColWidth,
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: headerHeight / 2,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
+                  height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
-                  lineHeight: "1.1",
                 }}
                 title="Click to sort by Auto Bid percentage"
               >
                 {getCompactHeader("Auto Bid")}
                 {sortColumn === "auto_bid_overall_pct" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className={styles.sortArrow}>▼</div>
                 )}
               </th>
 
               {/* At Large Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                  isMobile ? "text-xs" : "text-sm"
-                } ${sortColumn === "at_large_overall_pct" ? "bg-blue-100" : ""}`}
+                className={cn(
+                  styles.colHeaderCell,
+                  sortColumn === "at_large_overall_pct" && styles.colHeaderCellActive,
+                  isMobile ? "text-xs" : "text-sm",
+                )}
                 onClick={() => handleColumnClick("at_large_overall_pct")}
                 style={{
                   width: bidColWidth,
                   minWidth: bidColWidth,
                   maxWidth: bidColWidth,
-                  height: headerHeight / 2,
-                  position: "sticky",
-                  top: headerHeight / 2,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  whiteSpace: "pre-line",
+                  height: headerHeight,
+                  top: headerHeight,
                   fontSize: isMobile ? "10px" : "11px",
-                  lineHeight: "1.1",
                 }}
                 title="Click to sort by At Large percentage"
               >
                 {getCompactHeader("At Large")}
                 {sortColumn === "at_large_overall_pct" && (
-                  <div className="text-blue-600 text-xs mt-1">▼</div>
+                  <div className={styles.sortArrow}>▼</div>
                 )}
               </th>
             </tr>
@@ -643,19 +597,17 @@ function SeedTable({
               <tr key={`${team.team_name}-${index}`}>
                 {/* Rank Cell */}
                 <td
-                  className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  } font-medium`}
+                  className={cn(
+                    styles.rankCell,
+                    styles.stickyBodyCell,
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
                   style={{
                     width: rankColWidth,
                     minWidth: rankColWidth,
                     maxWidth: rankColWidth,
                     height: cellHeight,
-                    position: "sticky",
                     left: 0,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderRight: "1px solid var(--border-color)",
                   }}
                 >
                   {index + 1}
@@ -663,46 +615,47 @@ function SeedTable({
 
                 {/* Team Cell */}
                 <td
-                  className={`sticky z-20 bg-white dark:bg-slate-900 text-left px-2 ${
-                    isMobile ? "text-xs" : "text-sm"
-                  }`}
+                  className={cn(
+                    styles.teamCell,
+                    styles.stickyBodyCell,
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
                   style={{
                     width: firstColWidth,
                     minWidth: firstColWidth,
                     maxWidth: firstColWidth,
                     height: cellHeight,
-                    position: "sticky",
+                    paddingLeft: "0.5rem",
                     left: rankColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderRight: "1px solid var(--border-color)",
                   }}
                 >
                   <div className="flex items-center gap-2">
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
-                      size={isMobile ? 20 : 22}
+                      size={28}
                       onClick={() => navigateToTeam(team.team_name)}
                     />
                     {!isMobile && (
-                      <span className="truncate">{team.team_name}</span>
+                      <span className="truncate text-[0.88rem] font-semibold">
+                        {team.team_name}
+                      </span>
                     )}
                   </div>
                 </td>
 
                 {/* Average Seed Cell */}
                 <td
-                  className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
+                  className={cn(
+                    styles.plainCell,
+                    "font-bold",
+                    isMobile ? "text-xs" : "text-sm",
+                  )}
                   style={{
                     width: avgSeedColWidth,
                     minWidth: avgSeedColWidth,
                     maxWidth: avgSeedColWidth,
                     height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
                   }}
                 >
                   {team.average_seed ? team.average_seed.toFixed(1) : "-"}
@@ -712,28 +665,21 @@ function SeedTable({
                 {seedColumns.map((seedNum) => {
                   const value =
                     team.seed_distribution?.[seedNum.toString()] || 0;
-                  const colorStyle = getCellColor(value);
 
                   return (
                     <td
                       key={`${team.team_name}-seed-${seedNum}`}
-                      className="relative p-0"
                       style={{
                         height: cellHeight,
                         width: seedColWidth,
                         minWidth: seedColWidth,
                         maxWidth: seedColWidth,
-                        border: "1px solid var(--border-color)",
-                        borderTop: "none",
-                        borderLeft: "none",
-                        backgroundColor: colorStyle.backgroundColor,
-                        color: colorStyle.color,
+                        padding: 0,
                       }}
                     >
                       <div
-                        className={`absolute inset-0 flex items-center justify-center ${
-                          isMobile ? "text-xs" : "text-sm"
-                        }`}
+                        className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                        style={getCellColor(value)}
                       >
                         {value > 0 ? `${Math.round(value)}%` : ""}
                       </div>
@@ -743,26 +689,21 @@ function SeedTable({
 
                 {/* In Tourney Cell */}
                 <td
-                  className="relative p-0"
                   style={{
                     height: cellHeight,
                     width: tourneyColWidth,
                     minWidth: tourneyColWidth,
                     maxWidth: tourneyColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getCellColor(
-                      team.tournament_bid_pct && team.tournament_bid_pct <= 1
-                        ? team.tournament_bid_pct * 100
-                        : team.tournament_bid_pct || 0
-                    ),
+                    padding: 0,
                   }}
                 >
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      isMobile ? "text-xs" : "text-sm"
-                    }`}
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={getCellColor(
+                      team.tournament_bid_pct && team.tournament_bid_pct <= 1
+                        ? team.tournament_bid_pct * 100
+                        : team.tournament_bid_pct || 0
+                    )}
                   >
                     {formatTournamentPct(team.tournament_bid_pct)}
                   </div>
@@ -770,24 +711,19 @@ function SeedTable({
 
                 {/* First Four Out Cell */}
                 <td
-                  className="relative p-0"
                   style={{
                     height: cellHeight,
                     width: outColWidth,
                     minWidth: outColWidth,
                     maxWidth: outColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getOutColor(
-                      team.seed_distribution?.["First Four Out"] || 0
-                    ),
+                    padding: 0,
                   }}
                 >
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      isMobile ? "text-xs" : "text-sm"
-                    }`}
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={getOutColor(
+                      team.seed_distribution?.["First Four Out"] || 0
+                    )}
                   >
                     {(team.seed_distribution?.["First Four Out"] || 0) > 0
                       ? `${Math.round(team.seed_distribution["First Four Out"])}%`
@@ -797,24 +733,19 @@ function SeedTable({
 
                 {/* Next Four Out Cell */}
                 <td
-                  className="relative p-0"
                   style={{
                     height: cellHeight,
                     width: outColWidth,
                     minWidth: outColWidth,
                     maxWidth: outColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getOutColor(
-                      team.seed_distribution?.["Next Four Out"] || 0
-                    ),
+                    padding: 0,
                   }}
                 >
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      isMobile ? "text-xs" : "text-sm"
-                    }`}
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={getOutColor(
+                      team.seed_distribution?.["Next Four Out"] || 0
+                    )}
                   >
                     {(team.seed_distribution?.["Next Four Out"] || 0) > 0
                       ? `${Math.round(team.seed_distribution["Next Four Out"])}%`
@@ -824,27 +755,22 @@ function SeedTable({
 
                 {/* Out of Tourney Cell */}
                 <td
-                  className="relative p-0"
                   style={{
                     height: cellHeight,
                     width: outColWidth,
                     minWidth: outColWidth,
                     maxWidth: outColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getOutColor(
+                    padding: 0,
+                  }}
+                >
+                  <div
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={getOutColor(
                       100 -
                         (team.tournament_bid_pct && team.tournament_bid_pct <= 1
                           ? team.tournament_bid_pct * 100
                           : team.tournament_bid_pct || 0)
-                    ),
-                  }}
-                >
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      isMobile ? "text-xs" : "text-sm"
-                    }`}
+                    )}
                   >
                     {(() => {
                       const outOfTourneyPct =
@@ -861,22 +787,17 @@ function SeedTable({
 
                 {/* Auto Bid Cell */}
                 <td
-                  className="relative p-0"
                   style={{
                     height: cellHeight,
                     width: bidColWidth,
                     minWidth: bidColWidth,
                     maxWidth: bidColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getCellColor(team.auto_bid_overall_pct ?? 0),
+                    padding: 0,
                   }}
                 >
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      isMobile ? "text-xs" : "text-sm"
-                    }`}
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={getCellColor(team.auto_bid_overall_pct ?? 0)}
                   >
                     {(team.auto_bid_overall_pct ?? 0) > 0
                       ? `${Math.round(team.auto_bid_overall_pct!)}%`
@@ -886,22 +807,17 @@ function SeedTable({
 
                 {/* At Large Cell */}
                 <td
-                  className="relative p-0"
                   style={{
                     height: cellHeight,
                     width: bidColWidth,
                     minWidth: bidColWidth,
                     maxWidth: bidColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    ...getCellColor(team.at_large_overall_pct ?? 0),
+                    padding: 0,
                   }}
                 >
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      isMobile ? "text-xs" : "text-sm"
-                    }`}
+                    className={cn(styles.heatTile, isMobile ? "text-xs" : "text-sm")}
+                    style={getCellColor(team.at_large_overall_pct ?? 0)}
                   >
                     {(team.at_large_overall_pct ?? 0) > 0
                       ? `${Math.round(team.at_large_overall_pct!)}%`

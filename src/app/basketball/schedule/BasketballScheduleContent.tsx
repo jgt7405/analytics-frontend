@@ -15,6 +15,7 @@ type Summary = ScheduleApiResponse["summary"][string];
 
 const BASKETBALL_SCHEDULE: ScheduleContentConfig<Game, Summary> = {
   sport: "basketball",
+  hidePageTitle: true,
   pageId: "basketball-schedule",
   useScheduleData: useSchedule,
   ScheduleTable: BasketballScheduleTable,

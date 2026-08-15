@@ -141,18 +141,21 @@ export default function BasketballConfDataContent({ initialData }: { initialData
     );
   }, [historyData?.timeline_data, showAll]);
 
-  // Filter toggle button component with conference-selector class
+  // Filter toggle button, rendered inline in the table's own card header
+  // (headerRight) instead of PageLayoutWrapper's page-header - see §4 of
+  // PAGE_MODERNIZATION_GUIDE.md: once the page-level title is hidden, the
+  // `.conference-selector` class's desktop absolute positioning
+  // (relative to `.page-header`) has nothing to size the header against
+  // and would float over the nav bar.
   const filterToggle = (
-    <div className="conference-selector">
-      <button
-        onClick={() => setShowAll(!showAll)}
-        className={`px-3 py-2 border rounded transition-colors ${
-          isMobile ? "text-xs px-2 py-1.5" : "text-sm px-4 py-2"
-        } bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100`}
-      >
-        {showAll ? "Show Top 12 Only" : "Show All Conferences"}
-      </button>
-    </div>
+    <button
+      onClick={() => setShowAll(!showAll)}
+      className={`border rounded transition-colors ${
+        isMobile ? "text-xs px-2 py-1.5" : "text-sm px-4 py-2"
+      } bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100 dark:bg-slate-800 dark:border-slate-600 dark:text-gray-200 dark:hover:bg-slate-700`}
+    >
+      {showAll ? "Show Top 12 Only" : "Show All Conferences"}
+    </button>
   );
 
   if (confError) {
@@ -160,6 +163,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
       <ErrorBoundary level="page" onRetry={() => refetch()}>
         <PageLayoutWrapper
           title="Conference Tournament Bid Projections"
+          hideTitle
           isLoading={false}
         >
           <ErrorMessage
@@ -175,8 +179,8 @@ export default function BasketballConfDataContent({ initialData }: { initialData
   return (
     <PageLayoutWrapper
       title="Conference Tournament Bid Projections"
+      hideTitle
       isLoading={confLoading}
-      conferenceSelector={filterToggle}
     >
       <ErrorBoundary level="component" onRetry={() => refetch()}>
         <div className="-mt-4 md:-mt-6">
@@ -224,6 +228,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                       <ConferenceBidsTable
                         confData={filteredConfData}
                         className="conf-data-table"
+                        headerRight={filterToggle}
                       />
                     )}
                   </Suspense>
@@ -302,9 +307,10 @@ export default function BasketballConfDataContent({ initialData }: { initialData
 
               {/* Conference Tournament Bid Trends Section */}
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
-                  Conference Tournament Bid Trends Over Time
-                </h3>
+                {/* No external h3 here - BballConfBidsHistoryChart renders
+                    its own bold in-card title ("Conference Tournament Bid
+                    Trends (Over Time)") per §8a of PAGE_MODERNIZATION_GUIDE.md.
+                    An external heading here would duplicate it (§3). */}
                 <div className="conf-bids-history-container">
                   <ErrorBoundary level="component">
                     {historyLoading ? (

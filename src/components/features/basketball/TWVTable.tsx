@@ -2,12 +2,11 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { useResponsive } from "@/hooks/useResponsive";
 import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import styles from "./TWVTable.module.css";
 
 interface TWVTeam {
   rank: number;
@@ -26,24 +25,62 @@ interface TWVTableProps {
   season?: string;
 }
 
-function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTableProps) {
-  const { isMobile } = useResponsive();
+// Same diverging blue/yellow scale as the CWV table: a signed value (over
+// vs under the 50th-rated team), not a probability, so it keeps its own
+// color treatment rather than the win-distribution heat ramp.
+function getTWVColor(twv: number, minTWV: number, maxTWV: number) {
+  const blue = [24, 98, 123];
+  const white = [255, 255, 255];
+  const yellow = [255, 230, 113];
+
+  let r: number, g: number, b: number;
+
+  if (twv > 0) {
+    const ratio = Math.min(Math.abs(twv / maxTWV), 1);
+    r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
+    g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
+    b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
+  } else if (twv < 0) {
+    const ratio = Math.min(Math.abs(twv / minTWV), 1);
+    r = Math.round(white[0] + (yellow[0] - white[0]) * ratio);
+    g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
+    b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
+  } else {
+    [r, g, b] = white;
+  }
+
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  const textColor = brightness > 140 ? "#000000" : "#ffffff";
+
+  return {
+    backgroundColor: `rgb(${r}, ${g}, ${b})`,
+    color: textColor,
+  };
+}
+
+function TWVTable({
+  twvData,
+  className,
+  showAllTeams = false,
+  season,
+}: TWVTableProps) {
   const router = useRouter();
   const [rowsToShow, setRowsToShow] = useState<number>(twvData.length);
-  const [inputValue, setInputValue] = useState<string>(
-    twvData.length.toString(),
-  );
+  const [inputValue, setInputValue] = useState<string>(twvData.length.toString());
   const [isHydrated, setIsHydrated] = useState(false);
-  const [showTWVTooltip, setShowTWVTooltip] = useState<boolean>(false);
-  const [showActualRecordTooltip, setShowActualRecordTooltip] =
-    useState<boolean>(false);
-  const [showExpectedRecordTooltip, setShowExpectedRecordTooltip] =
-    useState<boolean>(false);
+  const [activeTooltip, setActiveTooltip] = useState<
+    "twv" | "actual" | "expected" | null
+  >(null);
 
-  // Hydration fix: Only show tooltips after hydration
+  // Hydration fix: only show tooltips after hydration.
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  useEffect(() => {
+    setRowsToShow(twvData.length);
+    setInputValue(twvData.length.toString());
+  }, [twvData.length]);
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
@@ -55,15 +92,14 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
     [router, season],
   );
 
-  // Use ranks from backend - no recalculation
+  // Use ranks from backend - no recalculation, just re-sort for display.
   const rankedTwvData = useMemo(() => {
     if (!twvData || twvData.length === 0) return [];
-
-    // Sort by TWV descending for display order, but preserve global rank from backend
-    return [...twvData].sort((a, b) => b.twv - a.twv);
+    return [...twvData].sort(
+      (a, b) => b.twv - a.twv || a.team_name.localeCompare(b.team_name),
+    );
   }, [twvData]);
 
-  // Apply row limit filter
   const displayedTeams = useMemo(() => {
     if (showAllTeams) {
       return rankedTwvData.slice(0, rowsToShow);
@@ -81,7 +117,6 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
     }
   };
 
-  // Calculate min/max for color scaling
   const { minTWV, maxTWV } = useMemo(() => {
     const twvValues = rankedTwvData.map((team) => team.twv);
     return {
@@ -90,273 +125,97 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
     };
   }, [rankedTwvData]);
 
-  // Color function for TWV values - matches the exact specification
-  const getTWVColor = useCallback(
-    (twv: number) => {
-      const blue = [24, 98, 123]; // Dark blue for positive values
-      const white = [255, 255, 255]; // White baseline
-      const yellow = [255, 230, 113]; // Yellow for negative values
-
-      let r: number, g: number, b: number;
-
-      if (twv > 0) {
-        // Positive values: interpolate from white to dark blue
-        const ratio = Math.min(Math.abs(twv / maxTWV), 1);
-        r = Math.round(white[0] + (blue[0] - white[0]) * ratio);
-        g = Math.round(white[1] + (blue[1] - white[1]) * ratio);
-        b = Math.round(white[2] + (blue[2] - white[2]) * ratio);
-      } else if (twv < 0) {
-        // Negative values: interpolate from white to yellow
-        const ratio = Math.min(Math.abs(twv / minTWV), 1);
-        r = Math.round(white[0] + (yellow[0] - white[0]) * ratio);
-        g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
-        b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
-      } else {
-        // Zero values remain white
-        [r, g, b] = white;
-      }
-
-      // Calculate brightness for text color contrast
-      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-      const textColor = brightness > 140 ? "#000000" : "#ffffff";
-
-      return {
-        backgroundColor: `rgb(${r}, ${g}, ${b})`,
-        color: textColor,
-      };
-    },
-    [maxTWV, minTWV],
-  );
-
   if (!rankedTwvData || rankedTwvData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-300">No TWV data available</div>
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
+        No TWV data available
+      </div>
     );
   }
 
-  // Responsive dimensions - matches football
-  const rankColWidth = isMobile ? 50 : 60;
-  const teamColWidth = isMobile ? 168 : 220;
-  const twvColWidth = isMobile ? 70 : 80;
-  const recordColWidth = isMobile ? 70 : 120;
-  const cellHeight = isMobile ? 40 : 36;
-  const headerHeight = isMobile ? 40 : 48;
-
-  const tableClassName = cn(tableStyles.tableContainer, "twv-table", className);
-
   return (
-    <div className="space-y-3">
-      {/* Row filter - only show when All Teams is selected */}
+    <section className={cn(styles.card, "twv-table", className)} aria-label="True Win Value">
       {showAllTeams && (
-        <div className="flex items-center gap-3 px-2">
-          <label
-            className={`text-gray-700 dark:text-gray-300 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
-          >
-            Show top:
-          </label>
+        <div className={styles.controls} data-screenshot-hide="true">
+          <label htmlFor="basketball-twv-rows-input">Show top:</label>
           <input
+            id="basketball-twv-rows-input"
             type="number"
             min="1"
             max={twvData.length}
             value={inputValue}
             onChange={handleRowsInputChange}
-            className={`border border-gray-300 dark:border-gray-600 rounded px-3 py-1 w-24 ${
-              isMobile ? "text-xs" : "text-sm"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={styles.rowsInput}
             placeholder={twvData.length.toString()}
           />
-          <span className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
-            teams (of {twvData.length})
-          </span>
+          <span>teams (of {twvData.length})</span>
         </div>
       )}
 
       <div
-        className={`${tableClassName} relative`}
-        style={{
-          overflowX: "auto",
-          overflowY: "auto",
-          maxHeight: "80vh",
-        }}
+        className={cn(
+          styles.scrollViewport,
+          !showAllTeams && styles.scrollViewportNoHeader,
+        )}
+        role="region"
+        aria-label="True win value by team. Scroll to see every team."
+        tabIndex={0}
       >
-        <table
-          className="border-collapse border-spacing-0"
-          style={{
-            width: "max-content",
-            borderCollapse: "separate",
-            borderSpacing: 0,
-          }}
-        >
+        <table className={styles.table}>
           <thead>
-            <tr>
-              {/* Rank Column */}
-              <th
-                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: rankColWidth,
-                  minWidth: rankColWidth,
-                  maxWidth: rankColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderRight: "1px solid var(--border-color)",
-                }}
-              >
+            <tr className={styles.headerRow}>
+              <th className={styles.stickyRank} scope="col">
                 Rank
               </th>
-
-              {/* Team Column */}
-              <th
-                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  left: rankColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  borderRight: "2px solid var(--border-color)",
-                }}
-              >
+              <th className={styles.stickyTeam} scope="col">
                 Team
               </th>
-
-              {/* TWV Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
-                style={{
-                  width: twvColWidth,
-                  minWidth: twvColWidth,
-                  maxWidth: twvColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  cursor: "help",
-                }}
-                onMouseEnter={() => setShowTWVTooltip(true)}
-                onMouseLeave={() => setShowTWVTooltip(false)}
+                className={styles.helpHeader}
+                scope="col"
+                onMouseEnter={() => setActiveTooltip("twv")}
+                onMouseLeave={() => setActiveTooltip(null)}
               >
                 TWV
-                {/* Tooltip */}
-                {isHydrated && showTWVTooltip && (
-                  <div
-                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 pointer-events-none z-50"
-                    style={{
-                      width: "300px",
-                      minWidth: "300px",
-                      left: "0",
-                    }}
-                  >
-                    <div className="text-gray-900 dark:text-gray-100 text-sm">
-                      <div className="font-semibold mb-2">
-                        TWV = True Win Value
-                      </div>
-                      <div className="text-gray-700 dark:text-gray-300">
-                        # of wins above (or below) what would be expected by the
-                        50th rated team with the same schedule.
-                      </div>
+                {isHydrated && activeTooltip === "twv" && (
+                  <div className={styles.tooltip}>
+                    <div className={styles.tooltipTitle}>TWV = True Win Value</div>
+                    <div className={styles.tooltipBody}>
+                      # of wins above (or below) what would be expected by the
+                      50th rated team with the same schedule.
                     </div>
                   </div>
                 )}
               </th>
-
-              {/* Actual Record Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
-                style={{
-                  width: recordColWidth,
-                  minWidth: recordColWidth,
-                  maxWidth: recordColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  cursor: "help",
-                }}
-                onMouseEnter={() => setShowActualRecordTooltip(true)}
-                onMouseLeave={() => setShowActualRecordTooltip(false)}
+                className={cn(styles.recordHeader, styles.helpHeader)}
+                scope="col"
+                onMouseEnter={() => setActiveTooltip("actual")}
+                onMouseLeave={() => setActiveTooltip(null)}
               >
-                {isMobile ? (
-                  <>
-                    Actual
-                    <br />
-                    Record
-                  </>
-                ) : (
-                  "Actual Record"
-                )}
-
-                {/* Tooltip */}
-                {isHydrated && showActualRecordTooltip && (
-                  <div
-                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 pointer-events-none z-50"
-                    style={{
-                      width: "300px",
-                      minWidth: "300px",
-                      left: "0",
-                    }}
-                  >
-                    <div className="text-gray-900 dark:text-gray-100 text-sm">
-                      <div className="font-semibold mb-2">Actual Record</div>
-                      <div className="text-gray-700 dark:text-gray-300">
-                        Current actual win/loss record.
-                      </div>
+                Actual Record
+                {isHydrated && activeTooltip === "actual" && (
+                  <div className={styles.tooltip}>
+                    <div className={styles.tooltipTitle}>Actual Record</div>
+                    <div className={styles.tooltipBody}>
+                      Current actual win/loss record.
                     </div>
                   </div>
                 )}
               </th>
-
-              {/* Expected Record Column */}
               <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"} relative`}
-                style={{
-                  width: recordColWidth,
-                  minWidth: recordColWidth,
-                  maxWidth: recordColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  cursor: "help",
-                }}
-                onMouseEnter={() => setShowExpectedRecordTooltip(true)}
-                onMouseLeave={() => setShowExpectedRecordTooltip(false)}
+                className={cn(styles.recordHeader, styles.helpHeader)}
+                scope="col"
+                onMouseEnter={() => setActiveTooltip("expected")}
+                onMouseLeave={() => setActiveTooltip(null)}
               >
-                {isMobile ? (
-                  <>
-                    Expected
-                    <br />
-                    Record
-                  </>
-                ) : (
-                  "Expected Record"
-                )}
-
-                {/* Tooltip */}
-                {isHydrated && showExpectedRecordTooltip && (
-                  <div
-                    className="absolute top-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 pointer-events-none z-50"
-                    style={{
-                      width: "320px",
-                      minWidth: "320px",
-                      left: "0",
-                    }}
-                  >
-                    <div className="text-gray-900 dark:text-gray-100 text-sm">
-                      <div className="font-semibold mb-2">Expected Record</div>
-                      <div className="text-gray-700 dark:text-gray-300">
-                        Win/loss record that would be expected by the 50th rated
-                        team with the same schedule.
-                      </div>
+                Expected Record
+                {isHydrated && activeTooltip === "expected" && (
+                  <div className={styles.tooltip}>
+                    <div className={styles.tooltipTitle}>Expected Record</div>
+                    <div className={styles.tooltipBody}>
+                      Win/loss record that would be expected by the 50th rated
+                      team with the same schedule.
                     </div>
                   </div>
                 )}
@@ -365,115 +224,47 @@ function TWVTable({ twvData, className, showAllTeams = false, season }: TWVTable
           </thead>
           <tbody>
             {displayedTeams.map((team, index) => (
-              <tr key={`${team.team_name}-${index}`}>
-                {/* Rank Cell */}
-                <td
-                  className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                  style={{
-                    width: rankColWidth,
-                    minWidth: rankColWidth,
-                    maxWidth: rankColWidth,
-                    height: cellHeight,
-                    position: "sticky",
-                    left: 0,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderRight: "1px solid var(--border-color)",
-                  }}
-                >
-                  {team.rank}
+              <tr key={`${team.team_name}-${index}`} className={styles.bodyRow}>
+                <td className={styles.stickyRank}>
+                  <span className={styles.rankValue}>{team.rank}</span>
                 </td>
 
-                {/* Team Cell */}
-                <td
-                  className={`sticky z-20 bg-white dark:bg-slate-900 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                  style={{
-                    width: teamColWidth,
-                    minWidth: teamColWidth,
-                    maxWidth: teamColWidth,
-                    height: cellHeight,
-                    position: "sticky",
-                    left: rankColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderRight: "2px solid var(--border-color)",
-                  }}
-                >
-                  <div className="flex items-center gap-2">
+                <td className={cn(styles.stickyTeam, styles.teamCell)}>
+                  <button
+                    type="button"
+                    className={styles.teamButton}
+                    onClick={() => navigateToTeam(team.team_name)}
+                    aria-label={`View ${team.team_name}`}
+                  >
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
-                      size={isMobile ? 24 : 28}
-                      onClick={() => navigateToTeam(team.team_name)}
-                      className="flex-shrink-0"
+                      size={28}
+                      showTooltip
+                      className={styles.teamLogo}
                     />
-                    <span className="whitespace-normal break-words leading-tight">{formatTeamName(team.team_name)}</span>
-                  </div>
+                    <span className={styles.teamName}>{formatTeamName(team.team_name)}</span>
+                  </button>
                 </td>
 
-                {/* TWV Cell with exact color specification */}
-                <td
-                  className={`relative p-0`}
-                  style={{
-                    width: twvColWidth,
-                    minWidth: twvColWidth,
-                    maxWidth: twvColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                  }}
-                >
+                <td className={styles.twvCell} data-screenshot-tile="true">
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"} font-medium`}
-                    style={getTWVColor(team.twv)}
+                    className={styles.twvChip}
+                    style={getTWVColor(team.twv, minTWV, maxTWV)}
                   >
-                    {team.twv > 0
-                      ? `+${team.twv.toFixed(1)}`
-                      : team.twv.toFixed(1)}
+                    {team.twv > 0 ? `+${team.twv.toFixed(1)}` : team.twv.toFixed(1)}
                   </div>
                 </td>
 
-                {/* Actual Record Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                  style={{
-                    width: recordColWidth,
-                    minWidth: recordColWidth,
-                    maxWidth: recordColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    padding: "6px 4px",
-                  }}
-                >
-                  {team.actual_record}
-                </td>
+                <td className={styles.recordCell}>{team.actual_record}</td>
 
-                {/* Expected Record Cell */}
-                <td
-                  className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                  style={{
-                    width: recordColWidth,
-                    minWidth: recordColWidth,
-                    maxWidth: recordColWidth,
-                    height: cellHeight,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    padding: "6px 4px",
-                  }}
-                >
-                  {team.expected_record}
-                </td>
+                <td className={styles.recordCell}>{team.expected_record}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }
 

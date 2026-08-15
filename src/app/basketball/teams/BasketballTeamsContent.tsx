@@ -9,6 +9,7 @@ import TeamsContent, {
 
 const BASKETBALL_TEAMS: TeamsContentConfig = {
   sport: "basketball",
+  hidePageTitle: true,
   pageId: "basketball-teams",
   endpoint: "basketball_teams",
   bidLabel: "NCAA Bid",

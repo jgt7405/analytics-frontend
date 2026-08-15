@@ -4,6 +4,7 @@ import ConferenceSelector from "@/components/common/ConferenceSelector";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { getCellColor } from "@/lib/color-utils";
+import { cn } from "@/lib/utils";
 import { Camera, Check, ChevronDown, Download, Loader } from "lucide-react";
 
 import NextGameImpact from "@/components/features/basketball/NextGameImpact";
@@ -16,6 +17,7 @@ import {
   type WhatIfTeamResult,
 } from "@/hooks/useBasketballWhatIf";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import styles from "./BasketballWhatIfScenarios.module.css";
 
 const TEAL_COLOR = "rgb(0, 151, 178)";
 
@@ -522,7 +524,7 @@ function ProbabilityTable({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-base font-medium">{title}</h3>
+        <h3 className={styles.subTitle}>{title}</h3>
         <div className="flex items-center gap-2" data-no-screenshot>
           <ScreenshotBtn
             targetRef={screenshotRef}
@@ -533,7 +535,10 @@ function ProbabilityTable({
         </div>
       </div>
       <div ref={screenshotRef}>
-        <table className="text-sm" style={{ width: "auto", minWidth: "320px" }}>
+        <table
+          className={cn(styles.table, "text-sm")}
+          style={{ width: "auto", minWidth: "320px" }}
+        >
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300">
               <th
@@ -600,37 +605,45 @@ function ProbabilityTable({
                 </td>
                 {hasCalculated ? (
                   <>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getCellColor(before, "blue")}
-                    >
-                      {before > 0 ? `${before.toFixed(1)}%` : ""}
+                    <td style={{ height: "2.1rem", padding: 0 }}>
+                      <div
+                        className={cn(styles.heatTile, "tabular-nums text-sm")}
+                        style={getCellColor(before, "blue")}
+                      >
+                        {before > 0 ? `${before.toFixed(1)}%` : ""}
+                      </div>
                     </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getCellColor(after, "blue")}
-                    >
-                      {after > 0 ? `${after.toFixed(1)}%` : ""}
+                    <td style={{ height: "2.1rem", padding: 0 }}>
+                      <div
+                        className={cn(styles.heatTile, "tabular-nums text-sm")}
+                        style={getCellColor(after, "blue")}
+                      >
+                        {after > 0 ? `${after.toFixed(1)}%` : ""}
+                      </div>
                     </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getDeltaColor(change, maxAbs)}
-                    >
-                      {Math.abs(change) < 0.05 ? (
-                        <span style={{ color: "#9ca3af" }}>&mdash;</span>
-                      ) : change > 0 ? (
-                        `+${change.toFixed(1)}%`
-                      ) : (
-                        `${change.toFixed(1)}%`
-                      )}
+                    <td style={{ height: "2.1rem", padding: 0 }}>
+                      <div
+                        className={cn(styles.heatTile, "tabular-nums text-sm")}
+                        style={getDeltaColor(change, maxAbs)}
+                      >
+                        {Math.abs(change) < 0.05 ? (
+                          <span style={{ color: "#9ca3af" }}>&mdash;</span>
+                        ) : change > 0 ? (
+                          `+${change.toFixed(1)}%`
+                        ) : (
+                          `${change.toFixed(1)}%`
+                        )}
+                      </div>
                     </td>
                   </>
                 ) : (
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={getCellColor(before, "blue")}
-                  >
-                    {before > 0 ? `${before.toFixed(1)}%` : ""}
+                  <td style={{ height: "2.1rem", padding: 0 }}>
+                    <div
+                      className={cn(styles.heatTile, "tabular-nums text-sm")}
+                      style={getCellColor(before, "blue")}
+                    >
+                      {before > 0 ? `${before.toFixed(1)}%` : ""}
+                    </div>
                   </td>
                 )}
               </tr>
@@ -731,7 +744,7 @@ function FullStandingsTable({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-medium">{label}</h3>
+        <h3 className={styles.subTitle}>{label}</h3>
         <div data-no-screenshot>
           <ScreenshotBtn
             targetRef={screenshotRef}
@@ -742,11 +755,24 @@ function FullStandingsTable({
         </div>
       </div>
       <div ref={screenshotRef}>
-        <div className="overflow-x-auto border border-gray-200 dark:border-gray-600 rounded-lg">
-          <table className="text-xs" style={{ width: "auto" }}>
+        <div
+          className={cn(
+            styles.scrollViewport,
+            "overflow-x-auto border border-gray-200 dark:border-gray-600 rounded-lg",
+          )}
+        >
+          <table
+            className={cn(styles.table, "text-xs")}
+            style={{ width: "auto" }}
+          >
             <thead>
               <tr className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300">
-                <th className="text-left py-2 px-2 font-normal sticky left-0 bg-gray-50 dark:bg-slate-800 z-10">
+                <th
+                  className={cn(
+                    styles.stickyCell,
+                    "text-left py-2 px-2 font-normal",
+                  )}
+                >
                   Team
                 </th>
                 <th className={thSort} onClick={() => handleSort("wins")}>
@@ -769,18 +795,20 @@ function FullStandingsTable({
               </tr>
             </thead>
             <tbody>
-              {sortedTeams.map((team, idx) => {
+              {sortedTeams.map((team) => {
                 const bl = baselineMap.get(team.team_id);
                 const winsChange = bl
                   ? (team.avg_projected_conf_wins ?? 0) -
                     (bl.avg_projected_conf_wins ?? 0)
                   : 0;
+                const avgChange = bl
+                  ? (team.avg_conference_standing ?? 0) -
+                    (bl.avg_conference_standing ?? 0)
+                  : 0;
+                const hasAvgChange = Math.abs(avgChange) > 0.01;
                 return (
-                  <tr
-                    key={team.team_id}
-                    className={`border-b border-gray-100 ${idx % 2 === 1 ? "bg-gray-50/50" : ""}`}
-                  >
-                    <td className="py-0.5 px-2 sticky left-0 bg-white dark:bg-slate-900 z-10">
+                  <tr key={team.team_id}>
+                    <td className={cn(styles.stickyBodyCell, "py-0.5 px-2")}>
                       <div className="flex items-center gap-1.5">
                         <TeamLogo
                           src={team.logo_url}
@@ -792,34 +820,29 @@ function FullStandingsTable({
                         </span>
                       </div>
                     </td>
-                    <td className="text-center py-0.5 px-2 tabular-nums">
-                      {(team.avg_projected_conf_wins ?? 0).toFixed(1)}
-                      <span
-                        className={`block text-[9px] ${Math.abs(winsChange) > 0.01 ? (winsChange > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
-                      >
-                        {Math.abs(winsChange) > 0.01
-                          ? `${winsChange > 0 ? "+" : ""}${winsChange.toFixed(1)}`
-                          : "\u00A0"}
-                      </span>
+                    <td style={{ height: "2.35rem", padding: 0 }}>
+                      <div className={cn(styles.heatTileStack, "tabular-nums")}>
+                        <span>{(team.avg_projected_conf_wins ?? 0).toFixed(1)}</span>
+                        <span
+                          className={`text-[9px] ${Math.abs(winsChange) > 0.01 ? (winsChange > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
+                        >
+                          {Math.abs(winsChange) > 0.01
+                            ? `${winsChange > 0 ? "+" : ""}${winsChange.toFixed(1)}`
+                            : "\u00A0"}
+                        </span>
+                      </div>
                     </td>
-                    <td className="text-center py-0.5 px-2 tabular-nums">
-                      {(team.avg_conference_standing ?? 0).toFixed(1)}
-                      {(() => {
-                        const avgChange = bl
-                          ? (team.avg_conference_standing ?? 0) -
-                            (bl.avg_conference_standing ?? 0)
-                          : 0;
-                        const hasAvgChange = Math.abs(avgChange) > 0.01;
-                        return (
-                          <span
-                            className={`block text-[9px] ${hasAvgChange ? (avgChange < 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
-                          >
-                            {hasAvgChange
-                              ? `${avgChange > 0 ? "+" : ""}${avgChange.toFixed(1)}`
-                              : "\u00A0"}
-                          </span>
-                        );
-                      })()}
+                    <td style={{ height: "2.35rem", padding: 0 }}>
+                      <div className={cn(styles.heatTileStack, "tabular-nums")}>
+                        <span>{(team.avg_conference_standing ?? 0).toFixed(1)}</span>
+                        <span
+                          className={`text-[9px] ${hasAvgChange ? (avgChange < 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
+                        >
+                          {hasAvgChange
+                            ? `${avgChange > 0 ? "+" : ""}${avgChange.toFixed(1)}`
+                            : "\u00A0"}
+                        </span>
+                      </div>
                     </td>
                     {Array.from({ length: maxStandings }, (_, i) => {
                       const standing = i + 1;
@@ -828,25 +851,26 @@ function FullStandingsTable({
                       const delta = val - blVal;
                       const hasChange = Math.abs(delta) > 0.05;
                       return (
-                        <td
-                          key={standing}
-                          className="text-center py-0.5 px-1 tabular-nums"
-                          style={{
-                            backgroundColor: hasChange
-                              ? delta > 0
-                                ? "rgba(40,167,69,0.08)"
-                                : "rgba(220,53,69,0.06)"
-                              : "transparent",
-                          }}
-                        >
-                          {val > 0 ? `${val.toFixed(1)}` : "\u00A0"}
-                          <span
-                            className={`block text-[8px] ${hasChange ? (delta > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
+                        <td key={standing} style={{ height: "2.35rem", padding: 0 }}>
+                          <div
+                            className={cn(styles.heatTileStack, "tabular-nums")}
+                            style={{
+                              backgroundColor: hasChange
+                                ? delta > 0
+                                  ? "rgba(40,167,69,0.08)"
+                                  : "rgba(220,53,69,0.06)"
+                                : "#e2e8f0",
+                            }}
                           >
-                            {hasChange
-                              ? `${delta > 0 ? "+" : ""}${delta.toFixed(1)}`
-                              : "\u00A0"}
-                          </span>
+                            <span>{val > 0 ? `${val.toFixed(1)}` : "\u00A0"}</span>
+                            <span
+                              className={`text-[8px] ${hasChange ? (delta > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
+                            >
+                              {hasChange
+                                ? `${delta > 0 ? "+" : ""}${delta.toFixed(1)}`
+                                : "\u00A0"}
+                            </span>
+                          </div>
                         </td>
                       );
                     })}
@@ -1289,10 +1313,8 @@ export default function BasketballWhatIfScenarios() {
 
   if (conferencesLoading || !selectedConference) {
     return (
-      <div className="container mx-auto px-4 py-4">
-        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300">
-          What If Calculator
-        </h1>
+      <div className="container mx-auto px-4 py-4 md:py-6">
+        <h1 className={styles.title}>What If Calculator</h1>
         <div className="flex justify-center py-20">
           <LoadingSpinner />
         </div>
@@ -1302,25 +1324,23 @@ export default function BasketballWhatIfScenarios() {
 
   if (conferencesError) {
     return (
-      <div className="container mx-auto px-4 py-4">
-        <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300">
-          What If Calculator
-        </h1>
+      <div className="container mx-auto px-4 py-4 md:py-6">
+        <h1 className={styles.title}>What If Calculator</h1>
         <ErrorMessage message={conferencesError.message} />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-4">
-      <h1 className="text-xl font-normal text-gray-500 dark:text-gray-300 mb-6">
-        What If Calculator
-      </h1>
+    <div className="container mx-auto px-4 py-4 md:py-6">
+      <div className="mb-6" data-screenshot-hide="true">
+        <h1 className={styles.title}>What If Calculator</h1>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ▓▓▓ LEFT PANEL ▓▓▓ */}
         <div className="lg:col-span-1 order-1">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4">
+          <div className={cn(styles.card, "p-4")}>
             {/* Conference – inline */}
             <div className="mb-4 flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
@@ -1485,13 +1505,14 @@ export default function BasketballWhatIfScenarios() {
 
         {/* ▓▓▓ RIGHT PANEL ▓▓▓ */}
         <div className="lg:col-span-2 order-3 lg:order-2">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4">
+          <div className={cn(styles.card, "p-4")}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-medium">
-                {hasCalculated ? "What-If Results" : "Current Standings"}
-              </h2>
-              {hasCalculated && <span />}
+            <div className={styles.cardHeader} style={{ marginBottom: "0.75rem" }}>
+              <div className={styles.titleGroup} data-screenshot-hide="true">
+                <h2 className={styles.title}>
+                  {hasCalculated ? "What-If Results" : "Current Standings"}
+                </h2>
+              </div>
             </div>
 
             {/* Always-visible selection legend */}
@@ -1559,7 +1580,7 @@ export default function BasketballWhatIfScenarios() {
 
           {/* ▓▓▓ FULL STANDINGS TABLES (restored – Change 8) ▓▓▓ */}
           {hasCalculated && displayBaseline.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 mt-6">
+            <div className={cn(styles.card, "p-4 mt-6")}>
               <FullStandingsTable
                 baseline={whatIfData?.current_projections_no_ties ?? []}
                 whatif={whatIfData?.data_no_ties ?? []}

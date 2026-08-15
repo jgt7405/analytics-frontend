@@ -1,0 +1,214 @@
+.card {
+  /* Shrink-wraps to the grid's actual content width (numColumns *
+     columnWidth) instead of stretching to fill its container, so the
+     card's rounded right edge sits right where the data ends - capped at
+     100% so it still scrolls instead of overflowing on narrow screens. */
+  display: inline-block;
+  width: max-content;
+  max-width: 100%;
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.35rem 0.5rem;
+}
+
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-height: 75vh;
+  overscroll-behavior: contain;
+  /* No top padding: the sticky conf-header row sits at top: 0 of this
+     container's content box, so any top padding here would leave an
+     unsticky gap that scrolled rows could show through as they pass
+     behind it (see PAGE_MODERNIZATION_GUIDE §6a). */
+  padding: 0 0.9rem 1rem 0.9rem;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.confHeaderRow {
+  position: sticky;
+  top: 0;
+  z-index: 55;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 0.65rem 0.65rem 0 0;
+  background: #f8fafc;
+  /* Matches .sectionGrid's horizontal padding so each conference's column
+     lines up pixel-for-pixel between the header and the rows below it. */
+  padding: 0 0.35rem;
+  /* Seals the seam below the sticky header so a sliver of the row
+     scrolling underneath can't peek through as it passes behind. */
+  box-shadow: 0 1px 0 0 #f8fafc;
+  isolation: isolate;
+}
+
+.confHeaderCell {
+  border-radius: 0.5rem;
+  background: #f1f5f9;
+}
+
+.confLogoWrap {
+  filter: drop-shadow(0 3px 3px rgb(15 23 42 / 0.14));
+}
+
+.confTeamCount {
+  color: #475569;
+  font-weight: 600;
+}
+
+.sectionGrid {
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-top: none;
+  border-radius: 0 0 0.65rem 0.65rem;
+  background: #fbfdff;
+  padding: 0.35rem;
+}
+
+.sectionGrid.lastSection {
+  border-radius: 0 0 0.65rem 0.65rem;
+}
+
+/* Rounded chip per row, separated by the grid's own gap, instead of a
+   continuous bordered grid - matches the win-distribution table's
+   heat-tile look. The whole chip is the team row (clickable). */
+.teamRow {
+  border-radius: 4px;
+  background: #eef4f8;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.teamRow:hover {
+  background: #e0edf4;
+  transform: translateY(-1px);
+}
+
+.teamLogoInner {
+  flex-shrink: 0;
+  display: flex;
+  transition: transform 160ms ease;
+}
+
+.teamRow:hover .teamLogoInner {
+  transform: scale(1.06);
+}
+
+.teamValue {
+  color: #334155;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.emptyCell {
+  border-radius: 4px;
+  background: rgb(226 232 240 / 0.5);
+}
+
+.groupSeparator {
+  /* sectionGrid/confHeaderRow each inset their grid content by their own
+     1px border + 0.35rem padding; this bar isn't wrapped in that box, so
+     without matching the same offset here it sits left of where the
+     actual columns start, falling short of the right edge even though its
+     width matches the grid exactly. */
+  margin-left: calc(1px + 0.35rem);
+  background: #1e293b;
+}
+
+:global(.dark) .title {
+  color: #cbd5e1;
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .confHeaderRow {
+  border-color: rgb(51 65 85 / 0.8);
+  background: #111827;
+  box-shadow: 0 1px 0 0 #111827;
+}
+
+:global(.dark) .confHeaderCell {
+  background: #1e293b;
+}
+
+:global(.dark) .confTeamCount {
+  color: #94a3b8;
+}
+
+:global(.dark) .sectionGrid {
+  border-color: rgb(51 65 85 / 0.8);
+  background: #0f172a;
+}
+
+:global(.dark) .teamRow {
+  background: #1e293b;
+}
+
+:global(.dark) .teamRow:hover {
+  background: #263449;
+}
+
+:global(.dark) .teamValue {
+  color: #cbd5e1;
+}
+
+:global(.dark) .emptyCell {
+  background: rgb(51 65 85 / 0.5);
+}
+
+:global(.dark) .groupSeparator {
+  background: #94a3b8;
+}

@@ -1,8 +1,10 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import type { SeedTeam } from "@/types/basketball";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import styles from "./BballCeiling.module.css";
 
 interface BballCeilingProps {
   seedData: SeedTeam[];
@@ -338,6 +340,7 @@ export default function BballCeiling({
       >
         {/* Ceiling side */}
         <div
+          className={styles.seedRow}
           style={{
             display: "flex",
             flexDirection: "row",
@@ -348,17 +351,15 @@ export default function BballCeiling({
             paddingTop: 4,
             paddingBottom: 2,
             minHeight: fixedHeight,
-            borderBottom: "1px solid #f0f0f0",
             boxSizing: "border-box",
           }}
         >
           <div
+            className={styles.seedLabel}
             style={{
               width: seedLabelWidth,
               flexShrink: 0,
               fontSize: isMobile ? "12px" : "13px",
-              fontWeight: "400",
-              color: "#374151",
               textAlign: "center",
               boxSizing: "border-box",
               display: "flex",
@@ -408,17 +409,17 @@ export default function BballCeiling({
 
         {/* Divider line */}
         <div
+          className={cn(styles.divider, styles.seedRow)}
           style={{
-            backgroundColor: "var(--border-color)",
             width: "1px",
             minHeight: fixedHeight,
             boxSizing: "border-box",
-            borderBottom: "1px solid #f0f0f0",
           }}
         />
 
         {/* Floor side */}
         <div
+          className={styles.seedRow}
           style={{
             display: "flex",
             flexDirection: "row",
@@ -429,17 +430,15 @@ export default function BballCeiling({
             paddingTop: 4,
             paddingBottom: 2,
             minHeight: fixedHeight,
-            borderBottom: "1px solid #f0f0f0",
             boxSizing: "border-box",
           }}
         >
           <div
+            className={styles.seedLabel}
             style={{
               width: seedLabelWidth,
               flexShrink: 0,
               fontSize: isMobile ? "12px" : "13px",
-              fontWeight: "400",
-              color: "#374151",
               textAlign: "center",
               boxSizing: "border-box",
               display: "flex",
@@ -493,6 +492,7 @@ export default function BballCeiling({
   return (
     <div
       data-component-type="bball-ceiling"
+      className={styles.card}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -503,6 +503,7 @@ export default function BballCeiling({
     >
       {/* Header row */}
       <div
+        className={styles.headerRow}
         style={{
           display: "grid",
           gridTemplateColumns: `${seedColumnWidth}px 1px ${seedColumnWidth}px`,
@@ -511,16 +512,14 @@ export default function BballCeiling({
           paddingRight: paddingHorizontal,
           paddingTop: 12,
           paddingBottom: 8,
-          borderBottom: "2px solid var(--border-color)",
           boxSizing: "border-box",
           flexShrink: 0,
         }}
       >
         <div
+          className={styles.headerLabel}
           style={{
             fontSize: isMobile ? "12px" : "14px",
-            fontWeight: "400",
-            color: "#374151",
             textAlign: "center",
             display: "flex",
             alignItems: "center",
@@ -531,10 +530,9 @@ export default function BballCeiling({
         </div>
         <div style={{ width: "1px" }} />
         <div
+          className={styles.headerLabel}
           style={{
             fontSize: isMobile ? "12px" : "14px",
-            fontWeight: "400",
-            color: "#374151",
             textAlign: "center",
             display: "flex",
             alignItems: "center",
@@ -567,13 +565,13 @@ export default function BballCeiling({
 
       {/* Explanation text */}
       <div
+        className={styles.explainer}
         style={{
           marginTop: 12,
           marginLeft: paddingHorizontal,
           marginRight: paddingHorizontal,
           marginBottom: 12,
           fontSize: isMobile ? "11px" : "12px",
-          color: "#6b7280",
           lineHeight: "1.4",
           boxSizing: "border-box",
           flexShrink: 0,

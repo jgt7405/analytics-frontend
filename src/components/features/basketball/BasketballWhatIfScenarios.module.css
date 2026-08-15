@@ -1,0 +1,144 @@
+/* Card shell — matches PAGE_MODERNIZATION_GUIDE.md §1 */
+.card {
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+/* Card header: bold title — §2 */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+:global(.dark) .title {
+  color: #cbd5e1;
+}
+
+/* Sub-section headings (per-table titles nested inside the results card) —
+   kept a step below the card's own bold title since this page stacks five
+   sub-tables (three probability tables + two full-standings tables) under
+   one card title; giving all of them the full clamp() size would read as
+   five competing page titles instead of one card with subsections. */
+.subTitle {
+  margin: 0;
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+:global(.dark) .subTitle {
+  color: #cbd5e1;
+}
+
+/* Heat-tile grid cells — §5 */
+.table {
+  border-collapse: separate;
+  border-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.heatTile {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  font-weight: 650;
+  transition: border-color 150ms ease;
+}
+
+.heatTile:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+/* Two-line variant (value + small delta line beneath it) used by the Full
+   Standings tables' Wins/Avg/per-rank columns — same tile chrome as
+   .heatTile, but stacked vertically instead of centered in one row since
+   each cell shows a value and a delta line under it. */
+.heatTileStack {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  font-weight: 650;
+  transition: border-color 150ms ease;
+  gap: 0;
+  line-height: 1.25;
+  padding: 0.15rem 0;
+}
+
+.heatTileStack:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+/* Sticky first column (team name) for the Full Standings tables — §6/§9k.
+   No seal-ring/drop-shadow on this column by explicit §9k design decision:
+   it's a team-name column, so the ring is omitted outright. */
+.scrollViewport {
+  padding: 0 0 0.5rem 0;
+}
+
+.stickyCell {
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  background: #f8fafc;
+}
+
+:global(.dark) .stickyCell {
+  background: #1e293b;
+}
+
+.stickyBodyCell {
+  position: sticky;
+  left: 0;
+  z-index: 15;
+  background: #ffffff;
+}
+
+:global(.dark) .stickyBodyCell {
+  background: #0f172a;
+}

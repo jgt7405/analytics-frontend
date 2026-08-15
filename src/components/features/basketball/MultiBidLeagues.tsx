@@ -4,9 +4,9 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { NCAATeam, useNCAAProjections } from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import styles from "./MultiBidLeagues.module.css";
 
 interface NCAATeamWithConfLogo extends NCAATeam {
   conf_logo_url?: string;
@@ -235,47 +235,102 @@ function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
     );
   }
 
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "multibid-leagues-table",
-    className
-  );
-
   // Responsive sizing
   const confHeaderHeight = isMobile ? 60 : 75;
   const teamRowHeight = isMobile ? 36 : 44;
   const confLogoSize = isMobile ? 28 : 36;
   const teamLogoSize = isMobile ? 24 : 28;
   const columnWidth = isMobile ? 70 : 90;
-  const borderColor = "#e5e7eb";
+  const columnGap = 4;
+  // Full rendered width of a numColumns-wide grid row, including the gaps
+  // between columns - the separator bar needs this (not just
+  // numColumns * columnWidth) or it comes up short of the grid's right edge.
+  const gridWidth =
+    numColumns * columnWidth + Math.max(numColumns - 1, 0) * columnGap;
 
   return (
-    <div className={tableClassName}>
-      {/* Single Scrolling Container for both sections */}
-      <div
-        style={{
-          overflowX: "auto",
-          overflowY: "hidden",
-        }}
-      >
-        {/* Tournament Section */}
+    <div className={cn(styles.card, className)}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
+          <h2 className={styles.title}>Potential Multi-Bid Conferences</h2>
+        </div>
+      </div>
+
+      <div className={styles.scrollViewport}>
+        {/* Sticky conference-header row: stays pinned to the top of the scroll
+            area while the team rows below scroll, so you can always tell which
+            column is which conference. */}
         <div
+          className={styles.confHeaderRow}
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
-            gap: "0",
-            border: `1px solid ${borderColor}`,
-            backgroundColor: "#ffffff",
+            gap: `${columnGap}px`,
           }}
         >
-          {/* Conference Headers and Tournament Teams */}
-          {allConferencesWithOutTeams.map((confData) => {
-            const confName = confData.name;
-            const tournamentTeams = confData.tournamentTeams;
-            const confLogoUrl = confData.confLogoUrl;
+          {allConferencesWithOutTeams.map((confData) => (
+            <div
+              key={`hdr-${confData.name}`}
+              className={styles.confHeaderCell}
+              style={{
+                height: confHeaderHeight,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                gap: "4px",
+                padding: "12px 8px 8px 8px",
+              }}
+            >
+              {confData.confLogoUrl ? (
+                <div
+                  className={styles.confLogoWrap}
+                  style={{ marginTop: "-5px" }}
+                >
+                  <TeamLogo
+                    logoUrl={confData.confLogoUrl}
+                    teamName={confData.name}
+                    size={confLogoSize}
+                    showTooltip
+                  />
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width: confLogoSize,
+                    height: confLogoSize,
+                    backgroundColor: "#e2e8f0",
+                    borderRadius: "6px",
+                    marginTop: "-5px",
+                  }}
+                />
+              )}
+              <div
+                className={styles.confTeamCount}
+                style={{
+                  fontSize: isMobile ? "12px" : "14px",
+                  marginTop: "-10px",
+                }}
+              >
+                {confData.tournamentTeams.length} team
+                {confData.tournamentTeams.length !== 1 ? "s" : ""}
+              </div>
+            </div>
+          ))}
+        </div>
 
+        {/* Tournament Section */}
+        <div
+          className={styles.sectionGrid}
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
+            gap: `${columnGap}px`,
+          }}
+        >
+          {allConferencesWithOutTeams.map((confData) => {
             // Sort tournament teams by seed then TWV
-            const sortedTeams = [...tournamentTeams].sort((a, b) => {
+            const sortedTeams = [...confData.tournamentTeams].sort((a, b) => {
               const seedA = a.seed ? parseInt(a.seed, 10) : 999;
               const seedB = b.seed ? parseInt(b.seed, 10) : 999;
               if (seedA !== seedB) {
@@ -286,105 +341,35 @@ function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
 
             return (
               <div
-                key={confName}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  borderRight: `1px solid ${borderColor}`,
-                }}
+                key={confData.name}
+                style={{ display: "flex", flexDirection: "column", gap: "3px" }}
               >
-                {/* Conference Header */}
-                <div
-                  style={{
-                    height: confHeaderHeight,
-                    borderBottom: `1px solid ${borderColor}`,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "flex-start",
-                    gap: "4px",
-                    padding: "12px 8px 8px 8px",
-                    backgroundColor: "#f9fafb",
-                  }}
-                >
-                  {/* Conference Logo - Clickable */}
-                  <div
-                    onClick={() => {
-                      if (sortedTeams.length > 0) {
-                        navigateToTeam(sortedTeams[0].team_name);
-                      }
-                    }}
-                    style={{
-                      cursor: sortedTeams.length > 0 ? "pointer" : "default",
-                      marginTop: "-5px",
-                    }}
-                    title={
-                      sortedTeams.length > 0
-                        ? `View ${sortedTeams[0].team_name}`
-                        : undefined
-                    }
-                  >
-                    {confLogoUrl ? (
-                      <TeamLogo
-                        logoUrl={confLogoUrl}
-                        teamName={confName}
-                        size={confLogoSize}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: confLogoSize,
-                          height: confLogoSize,
-                          backgroundColor: "#e5e7eb",
-                          borderRadius: "4px",
-                        }}
-                      />
-                    )}
-                  </div>
-                  {/* Team Count - only count tournament teams */}
-                  <div
-                    style={{
-                      fontSize: isMobile ? "12px" : "14px",
-                      fontWeight: "400",
-                      color: "#374151",
-                      marginTop: "-10px",
-                    }}
-                  >
-                    {sortedTeams.length} team
-                    {sortedTeams.length !== 1 ? "s" : ""}
-                  </div>
-                </div>
-
-                {/* Tournament Teams in Conference */}
                 {sortedTeams.map((team, idx) => (
                   <div
                     key={`${team.teamid}-${idx}`}
                     onClick={() => navigateToTeam(team.team_name)}
+                    className={styles.teamRow}
                     style={{
                       height: teamRowHeight,
-                      borderBottom: `1px solid ${borderColor}`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "flex-start",
                       gap: "4px",
                       padding: "4px 4px 4px 12px",
-                      backgroundColor: "#ffffff",
-                      cursor: "pointer",
                     }}
                     title={`View ${team.team_name}`}
                   >
-                    {/* Team Logo */}
-                    <TeamLogo
-                      logoUrl={team.logo_url}
-                      teamName={team.team_name}
-                      size={teamLogoSize}
-                    />
-                    {/* Seed */}
+                    <span className={styles.teamLogoInner}>
+                      <TeamLogo
+                        logoUrl={team.logo_url}
+                        teamName={team.team_name}
+                        size={teamLogoSize}
+                      />
+                    </span>
                     <div
+                      className={styles.teamValue}
                       style={{
                         fontSize: isMobile ? "12px" : "14px",
-                        fontWeight: "400",
-                        color: "#374151",
                         minWidth: "20px",
                         textAlign: "center",
                       }}
@@ -402,11 +387,8 @@ function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
                   }).map((_, idx) => (
                     <div
                       key={`empty-tournament-${idx}`}
-                      style={{
-                        height: teamRowHeight,
-                        borderBottom: `1px solid ${borderColor}`,
-                        backgroundColor: "#f3f4f6",
-                      }}
+                      className={styles.emptyCell}
+                      style={{ height: teamRowHeight }}
                     />
                   ))}
               </div>
@@ -414,89 +396,71 @@ function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
           })}
         </div>
 
-        {/* Global Black Separator Line */}
+        {/* Group separator */}
         <div
-          style={{
-            height: "3px",
-            backgroundColor: "#000000",
-            width: `${numColumns * columnWidth}px`,
-          }}
+          className={styles.groupSeparator}
+          style={{ height: "3px", width: `${gridWidth}px` }}
         />
 
         {/* Out-of-Tournament Section */}
         <div
+          className={styles.sectionGrid}
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
-            gap: "0",
-            border: `1px solid ${borderColor}`,
-            borderTop: "none",
-            backgroundColor: "#ffffff",
+            gap: `${columnGap}px`,
           }}
         >
-          {/* F4O and N4O Teams */}
           {allConferencesWithOutTeams.map((confData) => {
-            const confName = confData.name;
             const outTeamsForConf =
-              outTeamsByConference.get(confName)?.teams || [];
+              outTeamsByConference.get(confData.name)?.teams || [];
 
             return (
               <div
-                key={`out-${confName}`}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  borderRight: `1px solid ${borderColor}`,
-                }}
+                key={`out-${confData.name}`}
+                style={{ display: "flex", flexDirection: "column", gap: "3px" }}
               >
-                {/* F4O and N4O Teams for this Conference */}
-                {outTeamsForConf.map(
-                  (team: NCAATeamWithConfLogo, idx: number) => {
-                    // Determine if this is F4O or N4O
-                    const isF4O = (
-                      data.first_four_out as NCAATeamWithConfLogo[]
-                    )?.some((t) => t.teamid === team.teamid);
-                    const category = isF4O ? "F4O" : "N4O";
+                {outTeamsForConf.map((team, idx) => {
+                  const isF4O = (
+                    data.first_four_out as NCAATeamWithConfLogo[]
+                  )?.some((t) => t.teamid === team.teamid);
+                  const category = isF4O ? "F4O" : "N4O";
 
-                    return (
-                      <div
-                        key={`out-${team.teamid}-${idx}`}
-                        onClick={() => navigateToTeam(team.team_name)}
-                        style={{
-                          height: teamRowHeight,
-                          borderBottom: `1px solid ${borderColor}`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-start",
-                          gap: "4px",
-                          padding: "4px 4px 4px 12px",
-                          backgroundColor: "#ffffff",
-                          cursor: "pointer",
-                        }}
-                        title={`View ${team.team_name}`}
-                      >
-                        {/* Team Logo */}
+                  return (
+                    <div
+                      key={`out-${team.teamid}-${idx}`}
+                      onClick={() => navigateToTeam(team.team_name)}
+                      className={styles.teamRow}
+                      style={{
+                        height: teamRowHeight,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        gap: "4px",
+                        padding: "4px 4px 4px 12px",
+                      }}
+                      title={`View ${team.team_name}`}
+                    >
+                      <span className={styles.teamLogoInner}>
                         <TeamLogo
                           logoUrl={team.logo_url}
                           teamName={team.team_name}
                           size={teamLogoSize}
                         />
-                        {/* Category Badge */}
-                        <div
-                          style={{
-                            fontSize: isMobile ? "12px" : "14px",
-                            fontWeight: "400",
-                            color: "#374151",
-                            minWidth: "20px",
-                            textAlign: "center",
-                          }}
-                        >
-                          {category}
-                        </div>
+                      </span>
+                      <div
+                        className={styles.teamValue}
+                        style={{
+                          fontSize: isMobile ? "12px" : "14px",
+                          minWidth: "20px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {category}
                       </div>
-                    );
-                  }
-                )}
+                    </div>
+                  );
+                })}
 
                 {/* Empty cells for alignment */}
                 {outTeamsForConf.length < maxRowsPerSection.maxOutRows &&
@@ -506,11 +470,8 @@ function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
                   }).map((_, idx) => (
                     <div
                       key={`empty-out-${idx}`}
-                      style={{
-                        height: teamRowHeight,
-                        borderBottom: `1px solid ${borderColor}`,
-                        backgroundColor: "#f3f4f6",
-                      }}
+                      className={styles.emptyCell}
+                      style={{ height: teamRowHeight }}
                     />
                   ))}
               </div>

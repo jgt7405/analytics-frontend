@@ -430,7 +430,7 @@ style={{
 }}
 className={cn(
   "... rounded-xl ... transition-[box-shadow,background-color] ...",
-  // no border-2 / border-[3px] here at all
+  // intentionally no border utility class here at all
   !isSelected && "opacity-30 grayscale",
 )}
 ```
@@ -1054,38 +1054,38 @@ report, needs its own visual verification pass): `WhatIfProbTable.card`
 has `overflow: hidden`, which §1 flags as a sticky-positioning risk in
 some browsers — worth checking next time that file is touched.
 
+## 2026-08, basketball full pass (§1-9 on every remaining page + §8 on basketball's history charts)
+
+Brings basketball onto the same §1-9 pattern as football across every remaining page — Wins, Standings, Schedule, TWV, Conf Tourney, Seed, What If, Home/bracket, Compare, Conf Data, and the team-detail page's history charts. CWV was already done in an earlier pass (see above) and served as the template. Ten parallel work batches, one per page group, each mirroring the analogous already-modernized football file(s) named in its own brief; verified afterward with a project-wide `type-check` and a live Puppeteer pass (screenshot + scroll-to-test-sticky-headers) per §10 step 8.
+
+**Config flags set** (mirroring football's `hidePageTitle`/`tableTitle`/`titleInCard` exactly, per §3/§4): `BballWinsContent.tsx`, `BasketballStandingsContent.tsx` (+ `historyTitleInCard`/`firstPlaceTitleInCard`), `BasketballScheduleContent.tsx`, `BasketballTWVContent.tsx` (`tableTitle`), `BasketballConfTourneyContent.tsx` (+ its champion-history section's `titleInCard`), `BasketballSeedContent.tsx`, `BasketballTeamsContent.tsx` — all in `src/app/basketball/*/`.
+
+**Files modernized** (each with a new/updated `.module.css` where the pattern needs one): `BoxWhiskerChart`, `BballRegSeasonBoxWhiskerChart`, `WinsTable`, `BballRegSeasonWinsTable` (Wins); `StandingsTable`, `StandingsTableNoTies`, `BballStandingsHistoryChart`, `BballFirstPlaceHistoryChart`, `BballStandingsProgressionTable` (Standings); `ScheduleTable`, `TWVTable` (Schedule/TWV, matched to CWV's "title rendered externally" pattern rather than football's TWV table, since basketball's `TWVContent.tsx` shape matches CWV's, not football's); `ConferenceTourneyTable`, `BasketballConfChampionHistoryChart` (Conf Tourney); `SeedTable` (incl. the §6b rowSpan-sticky-header fix), `BballCeiling`, `BballSeedCeilingFloor`, `BballSeedWinsAndProbability` (Seed); `BasketballWhatIfScenarios` (What If — five inline sub-tables brought onto the heat-tile/sticky pattern, given `.subTitle`-tier headings rather than five competing full-size titles); `BasketballHomeContent`, `NCAABracketTable`, `MultiBidLeagues` (Home); `BasketballCompareContent`, `BasketballCompareSchedulesChart` (Compare — also fixed a pre-existing `dark:bg-slate-8000` typo found along the way); `BasketballConfDataContent`, `ConferenceBidsTable`, `BballConfBidsHistoryChart` (Conf Data); and seven team-detail-page Chart.js history charts — `BasketballTeamStandingsHistory`, `BasketballTeamWinHistory`, `BasketballTeamRankHistory`, `BasketballTeamFirstPlaceHistory`, `TeamWinValues`, `BasketballTeamTournamentBidHistory`, `BasketballTeamTournamentProgressionHistory` (§8 b/c/d only — no card shell added, since these render inside `TeamContent.tsx`'s own existing card/heading and a second nested card+title would violate §3; see the `TeamContent.tsx` note below). All in `src/components/features/basketball/`.
+
+**Deliberately left as-is:** `BasketballTeamWinsBreakdown.tsx`, `BasketballTeamScheduleChart.tsx` (a plain `<table>` despite the name), `BasketballTeamScheduleDifficulty.tsx` — confirmed via grep none import `chart.js`/`react-chartjs-2`, so §8 doesn't apply; these are bespoke SVG/div visualizations or a table, out of scope for this pass.
+
+**One real bug found and fixed by this pass's own live-verification step** (not by an agent — caught during the post-pass Puppeteer screenshot review): `BasketballWhatIfScenarios.tsx`'s three page-wrapper divs used `className="container mx-auto px-4 py-4"` (bare, no responsive bump), one `md:py-6` short of matching football's `FootballWhatIfContent.tsx` container. The root layout applies a global `-mt-6` (`-24px`) on `<main>` to compensate for `PageLayoutWrapper`'s own padding on pages that use it; both What-If pages bypass `PageLayoutWrapper` and rely on their own container padding to cancel that margin. Football's `py-4 md:py-6` (24px at ≥768px) cancels it exactly; basketball's `py-4` alone (16px) left the title rendered 8px net **behind** the sticky nav bar (`z-index: 50`), clipping the top of every letter. Fixed by adding `md:py-6` to match football's container class on all three instances (loading/error/main). Any future bespoke page (no shared `*Content.tsx`, no `PageLayoutWrapper`) needs this same `py-4 md:py-6` container padding — check by measuring `getBoundingClientRect()` on the page's own `<h1>` against `header.main-header`'s `bottom`, not by eyeballing a screenshot; the clipping is easy to miss at a glance since only the top few pixels of the glyphs are cut.
+
+**`TeamContent.tsx` has an unset `config.modernCards` flag** (found while modernizing the team-detail history charts) — exists for exactly the "avoid double card/title when a chart lives inside an already-carded section" problem this pass hit repeatedly. Worth wiring up in a future pass rather than continuing to special-case around it per-chart.
+
+**Not addressed by this pass, flagged along the way:**
+- `overflow: hidden` on `.card` still present in `FootballScheduleTable.module.css`'s and basketball's `CWVTable.module.css`'s `.card` rule — §1 flags this as a sticky-positioning regression risk in Chrome; pre-existing drift from before that rule was written, not introduced or fixed by this pass.
+- `NextGameImpact.tsx` (still on the old `bg-white dark:bg-slate-900 rounded-lg shadow` card style) sits directly above `WhatIfTeamSummary` on the What-If page; `WhatIfTeamSummary`'s wrapper divs were deliberately left un-modernized too, to avoid a mismatched seam between a modernized and un-modernized card stacked back to back. Modernize both together if either is touched next.
+
 ## Not yet done
 
-Basketball pages were deliberately left untouched throughout both passes —
-every config flag defaults to `undefined`/`false` so basketball's behavior
-is unchanged. CWV is now done on both sports (see the CWV pass entry
-above); the rest remains:
-
-1. Applying §1-7 to the other basketball table equivalents
-   (`BballWinsContent.tsx`, `SeedTable.tsx`,
-   `BasketballWhatIfScenarios.tsx`, etc.), following §10. Also apply §9's
-   polish checklist to those once built - basketball wasn't audited for
-   §9 items since it hasn't been through §1-8 yet (CWV is the one
-   exception - see the CWV pass entry above).
-2. Applying §8 to the ~18 other Chart.js history/trend charts still on the
-   old pattern (plain container, hand-rolled light-mode-only tooltip,
-   default-sized axis labels, no `ResizeObserver` on any overlay markers).
-   Football ones seen so far: `FootballConfBidsHistoryChart` (conf-data —
-   already has the `ResizeObserver`, still needs the card/tooltip/axis
-   treatment), `FootballTeamStandingsHistory`, `FootballTeamWinValues`,
+1. Applying §8 to the remaining football Chart.js history/trend charts:
+   `FootballConfBidsHistoryChart` (conf-data — already has the
+   `ResizeObserver`, still needs the card/tooltip/axis treatment),
+   `FootballTeamStandingsHistory`, `FootballTeamWinValues`,
    `FootballTeamFirstPlaceHistory`, `FootballTeamRankHistory`,
    `FootballTeamWinHistory`, `FootballFirstPlaceChart` (standings page's
    *other* chart — natural next one, sits right next to the now-modernized
    history chart), `FootballConfChampionHistoryChart`,
    `FootballChampGameHistoryChart`, `FootballTeamCFPBidHistory`,
-   `FootballTeamCFPProgressionHistory`. Basketball has a matching set
-   (`BballFirstPlaceHistoryChart`, `BballConfBidsHistoryChart`,
-   `BballStandingsHistoryChart`, `BasketballTeamStandingsHistory`,
-   `BasketballTeamWinHistory`, `BasketballTeamRankHistory`,
-   `BasketballTeamFirstPlaceHistory`, `BasketballConfChampionHistoryChart`,
-   `TeamWinValues`) — leave these for whenever basketball itself is
-   deliberately taken on, per point 1 above.
-3. `/football/bowlpicks` (`BowlPicksTable.tsx` + `BowlScoreboard.tsx`) —
+   `FootballTeamCFPProgressionHistory`. Basketball's matching set is now
+   done (see the 2026-08 basketball pass above).
+2. `/football/bowlpicks` (`BowlPicksTable.tsx` + `BowlScoreboard.tsx`) —
    found while auditing §9d/e's shadow pattern (its sticky columns style
    inline in the `.tsx` rather than via a CSS module, so file-based greps
    for `position: sticky` across `*.module.css` miss it entirely - grep

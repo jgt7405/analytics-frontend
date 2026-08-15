@@ -1,0 +1,228 @@
+.card {
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.scrollViewport {
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  /* No left padding: the sticky y-axis sits at left: 0 of this container's
+     content box, so any left padding here would leave an unsticky gap
+     between the card edge and the axis that scrolled content can show
+     through as it passes underneath. */
+  padding: 0.5rem 0.9rem 1rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* This chart has no card title of its own - the shared WinsContent.tsx
+   already renders an external heading above it for this section (see
+   the "Projected Regular Season Wins" heading passed to its section()
+   call) - so this stands in for the missing header's top padding to keep
+   the same breathing room before the chart starts. Matches
+   FootballRegularSeasonBoxWhiskerChart exactly. */
+.scrollViewportNoHeader {
+  padding-top: 1.1rem;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.yAxisLabel {
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.gridLine {
+  border-top: 1px dashed rgb(203 213 225 / 0.6);
+}
+
+.teamColumn {
+  cursor: pointer;
+}
+
+.whiskerLine {
+  border-radius: 999px;
+}
+
+.whiskerCap {
+  border-radius: 999px;
+}
+
+.box {
+  border-radius: 5px;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.boxHovered {
+  transform: scaleX(1.08);
+  filter: brightness(1.04);
+  box-shadow: 0 8px 18px -10px rgb(15 23 42 / 0.45);
+}
+
+.medianLine {
+  border-radius: 999px;
+}
+
+.teamLogoWrap {
+  filter: drop-shadow(0 4px 4px rgb(15 23 42 / 0.14));
+  transition: transform 160ms ease;
+}
+
+.teamColumn:hover .teamLogoWrap {
+  transform: translateY(-2px) scale(1.06);
+}
+
+.avgLabel {
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.kp40Marker {
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.teamNameWrap {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.teamName {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: #334155;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.12;
+  /* break-word (unlike anywhere) is a last-resort break, applied only when
+     there's no other valid break point - anywhere lets the browser break
+     at any character regardless, which preempts hyphenation entirely and
+     was why words wrapped with no dash. */
+  overflow-wrap: break-word;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
+  word-break: normal;
+  -webkit-hyphens: auto;
+  -ms-hyphens: auto;
+  hyphens: auto;
+}
+
+:global(.dark) .avgLabel,
+:global(.dark) .teamName {
+  color: #e2e8f0;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 60;
+  min-width: 9.5rem;
+  border: 1px solid rgb(203 213 225 / 0.9);
+  border-radius: 0.65rem;
+  background: #ffffff;
+  box-shadow: 0 16px 32px -16px rgb(15 23 42 / 0.45);
+  padding: 0.55rem 0.7rem;
+  pointer-events: none;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.tooltipTeam {
+  margin-bottom: 0.3rem;
+  color: #334155;
+  font-weight: 700;
+}
+
+.tooltipRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: #64748b;
+}
+
+.tooltipRow strong {
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .yAxisLabel {
+  color: #94a3b8;
+}
+
+:global(.dark) .gridLine {
+  border-top-color: rgb(71 85 105 / 0.5);
+}
+
+:global(.dark) .tooltip {
+  border-color: rgb(71 85 105 / 0.8);
+  background: #1e293b;
+  box-shadow: 0 16px 32px -16px rgb(0 0 0 / 0.7);
+}
+
+:global(.dark) .tooltipTeam {
+  color: #e2e8f0;
+}
+
+:global(.dark) .tooltipRow {
+  color: #94a3b8;
+}
+
+:global(.dark) .tooltipRow strong {
+  color: #f1f5f9;
+}
+
+@media (max-width: 767px) {
+  .scrollViewport {
+    padding: 0.4rem 0.5rem 0.8rem 0;
+  }
+
+  .scrollViewportNoHeader {
+    padding-top: 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box,
+  .teamLogoWrap {
+    transition: none;
+  }
+}

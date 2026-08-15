@@ -1,0 +1,249 @@
+/* Basketball-only table (no football equivalent) - gets the general §1/§2/§5
+   card + heat-tile-adjacent treatment from PAGE_MODERNIZATION_GUIDE.md on
+   its own merit. No internal title: the shared StandingsContent.tsx
+   `section()` helper already renders an external bold heading for this
+   section unconditionally (unlike the main standings table, which passes
+   `null` for its external heading specifically because it has grown its
+   own). Adding another title here would reintroduce the exact "duplicate
+   titles" bug §3 documents. */
+.card {
+  position: relative;
+  /* No overflow: hidden - see StandingsTable.module.css's comment; breaks
+     position: sticky descendants in some browsers per the guide's §1. */
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.scrollViewport {
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 1rem 1rem 0.85rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport:focus-visible {
+  outline: 3px solid rgb(14 116 144 / 0.35);
+  outline-offset: -3px;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.grid {
+  display: flex;
+  width: max-content;
+}
+
+.axisColumn {
+  --sticky-column-background: #ffffff;
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
+  box-shadow:
+    1px 0 0 0 var(--sticky-column-background),
+    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
+  isolation: isolate;
+}
+
+.axisHeaderSpacer {
+  height: 2.75rem;
+}
+
+.axisCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.75rem;
+  border-bottom: 1px solid rgb(226 232 240 / 0.7);
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dateColumn {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+}
+
+.dateHeader {
+  display: flex;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid #cbd5e1;
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.tileCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgb(226 232 240 / 0.7);
+  transition: background-color 150ms ease;
+}
+
+.tileCell:hover {
+  background: rgb(226 232 240 / 0.35);
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  transition: opacity 150ms ease, filter 150ms ease;
+}
+
+.emptyMark {
+  color: #cbd5e1;
+  font-size: 0.75rem;
+}
+
+.footerNote {
+  border-top: 1px solid rgb(226 232 240 / 0.9);
+  padding: 0.9rem 1.35rem;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.filterHeading {
+  margin-bottom: 0.75rem;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filterSection {
+  border-top: 1px solid rgb(226 232 240 / 0.9);
+  padding: 1rem 1.35rem 1.25rem;
+}
+
+.filterChip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 0.8);
+  box-shadow: inset 0 0 0 1px rgb(226 232 240 / 0.9);
+  cursor: pointer;
+  padding: 0.35rem;
+  transition: box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.filterChip:hover {
+  background: rgb(248 250 252 / 1);
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .axisColumn {
+  --sticky-column-background: #111827;
+}
+
+:global(.dark) .axisCell {
+  border-bottom-color: rgb(51 65 85 / 0.6);
+  color: #94a3b8;
+}
+
+:global(.dark) .dateHeader {
+  border-bottom-color: rgb(71 85 105 / 0.8);
+  color: #cbd5e1;
+}
+
+:global(.dark) .tileCell {
+  border-bottom-color: rgb(51 65 85 / 0.6);
+}
+
+:global(.dark) .tileCell:hover {
+  background: rgb(51 65 85 / 0.35);
+}
+
+:global(.dark) .emptyMark {
+  color: #475569;
+}
+
+:global(.dark) .footerNote {
+  border-top-color: rgb(51 65 85 / 0.88);
+  color: #94a3b8;
+}
+
+:global(.dark) .filterHeading {
+  color: #cbd5e1;
+}
+
+:global(.dark) .filterSection {
+  border-top-color: rgb(51 65 85 / 0.88);
+}
+
+:global(.dark) .filterChip {
+  background: rgb(15 23 42 / 0.6);
+  box-shadow: inset 0 0 0 1px rgb(51 65 85 / 0.9);
+}
+
+:global(.dark) .filterChip:hover {
+  background: rgb(30 41 59 / 1);
+}
+
+@media (max-width: 767px) {
+  .card {
+    border-radius: 1rem;
+  }
+
+  .axisHeaderSpacer,
+  .dateHeader {
+    height: 2.35rem;
+  }
+
+  .axisCell {
+    padding-right: 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .dateHeader {
+    font-size: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tileCell,
+  .tile,
+  .filterChip {
+    transition: none;
+  }
+}

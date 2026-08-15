@@ -1,7 +1,7 @@
 // src/components/features/basketball/BasketballCompareSchedulesChart.tsx
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const GRAY_COLOR = "#9ca3af";
 const THRESHOLD = 0.95; // 95% probability threshold
@@ -110,6 +110,11 @@ export default function BasketballCompareSchedulesChart({
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("all");
   const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }, []);
 
   const TOP_SECTION_HEIGHT = 580;
   const BOTTOM_SECTION_HEIGHT = 130;
@@ -594,7 +599,7 @@ export default function BasketballCompareSchedulesChart({
           x2={columnX}
           y1={MARGIN.top}
           y2={MARGIN.top + PLOT_HEIGHT}
-          stroke="#374151"
+          stroke={isDark ? "#94a3b8" : "#374151"}
           strokeWidth={2}
         />
 
@@ -605,7 +610,7 @@ export default function BasketballCompareSchedulesChart({
             x2={dividerX}
             y1={MARGIN.top - 50}
             y2={CHART_HEIGHT - 10}
-            stroke="#6b7280"
+            stroke={isDark ? "#4b5563" : "#6b7280"}
             strokeWidth={1.5}
             strokeDasharray="5,5"
           />
@@ -760,7 +765,7 @@ export default function BasketballCompareSchedulesChart({
               x={columnX}
               y={TOP_SECTION_HEIGHT + 37}
               textAnchor="middle"
-              className="text-xs fill-gray-600"
+              className="text-xs fill-gray-600 dark:fill-gray-400"
               style={{
                 fontSize: "12px",
                 fontFamily:
@@ -834,10 +839,10 @@ export default function BasketballCompareSchedulesChart({
           textAnchor="middle"
           className={`text-xs font-medium ${
             stats.twv > 0
-              ? "fill-green-600"
+              ? "fill-green-600 dark:fill-green-400"
               : stats.twv < 0
-                ? "fill-red-600"
-                : "fill-gray-600"
+                ? "fill-red-600 dark:fill-red-400"
+                : "fill-gray-600 dark:fill-gray-400"
           }`}
           style={{
             fontSize: "12px",
@@ -857,7 +862,7 @@ export default function BasketballCompareSchedulesChart({
               x={MARGIN.left - 35}
               y={TOP_SECTION_HEIGHT + 63}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-600"
+              className="text-xs font-medium fill-gray-600 dark:fill-gray-400"
               style={{
                 fontSize: "12px",
                 fontWeight: 500,
@@ -871,7 +876,7 @@ export default function BasketballCompareSchedulesChart({
               x={MARGIN.left - 35}
               y={TOP_SECTION_HEIGHT + 78}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-600"
+              className="text-xs font-medium fill-gray-600 dark:fill-gray-400"
               style={{
                 fontSize: "12px",
                 fontWeight: 500,
@@ -885,7 +890,7 @@ export default function BasketballCompareSchedulesChart({
               x={MARGIN.left - 35}
               y={TOP_SECTION_HEIGHT + 93}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-600"
+              className="text-xs font-medium fill-gray-600 dark:fill-gray-400"
               style={{
                 fontSize: "12px",
                 fontWeight: 500,
@@ -899,7 +904,7 @@ export default function BasketballCompareSchedulesChart({
               x={MARGIN.left - 35}
               y={TOP_SECTION_HEIGHT + 108}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-600"
+              className="text-xs font-medium fill-gray-600 dark:fill-gray-400"
               style={{
                 fontSize: "12px",
                 fontWeight: 500,
@@ -913,7 +918,7 @@ export default function BasketballCompareSchedulesChart({
               x={MARGIN.left - 35}
               y={TOP_SECTION_HEIGHT + 123}
               textAnchor="end"
-              className="text-xs font-medium fill-gray-600"
+              className="text-xs font-medium fill-gray-600 dark:fill-gray-400"
               style={{
                 fontSize: "12px",
                 fontWeight: 500,
@@ -938,9 +943,7 @@ export default function BasketballCompareSchedulesChart({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-600 p-4 pt-0">
-      <h3 className="text-lg font-semibold mb-4">Compare Schedules</h3>
-
+    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
       {/* Filter Controls */}
       <div className="mb-4 space-y-1">
         <div>
@@ -1055,7 +1058,7 @@ export default function BasketballCompareSchedulesChart({
                   x2={MARGIN.left + PLOT_WIDTH}
                   y1={yPos}
                   y2={yPos}
-                  stroke="#e5e7eb"
+                  stroke={isDark ? "#4b5563" : "#e5e7eb"}
                   strokeWidth={1}
                   strokeDasharray="4,4"
                 />
@@ -1065,7 +1068,7 @@ export default function BasketballCompareSchedulesChart({
                   x={MARGIN.left - 10}
                   y={yPos + 4}
                   textAnchor="end"
-                  className="text-xs fill-gray-600"
+                  className="text-xs fill-gray-600 dark:fill-gray-400"
                 >
                   {percentile}%
                 </text>
@@ -1076,7 +1079,7 @@ export default function BasketballCompareSchedulesChart({
                     x={MARGIN.left + PLOT_WIDTH + 10}
                     y={yPos + 4}
                     textAnchor="start"
-                    className="text-xs fill-gray-600"
+                    className="text-xs fill-gray-600 dark:fill-gray-400"
                   >
                     {(winProbValue * 100).toFixed(0)}%
                   </text>
@@ -1091,7 +1094,7 @@ export default function BasketballCompareSchedulesChart({
             y={MARGIN.top + PLOT_HEIGHT / 2}
             textAnchor="middle"
             transform={`rotate(-90, ${MARGIN.left - 55}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-            className="text-sm fill-gray-700 font-medium"
+            className="text-sm fill-gray-700 dark:fill-gray-300 font-medium"
           >
             Difficulty Percentile: Games &lt;95% Probability for 50th Rated Team
           </text>
@@ -1102,7 +1105,7 @@ export default function BasketballCompareSchedulesChart({
             y={MARGIN.top + PLOT_HEIGHT / 2}
             textAnchor="middle"
             transform={`rotate(90, ${MARGIN.left + PLOT_WIDTH + 55}, ${MARGIN.top + PLOT_HEIGHT / 2})`}
-            className="text-sm fill-gray-700 font-medium"
+            className="text-sm fill-gray-700 dark:fill-gray-300 font-medium"
           >
             Win Probability for #50 Rated Team
           </text>
@@ -1116,7 +1119,7 @@ export default function BasketballCompareSchedulesChart({
             x2={MARGIN.left + PLOT_WIDTH + MARGIN.right}
             y1={TOP_SECTION_HEIGHT + 5}
             y2={TOP_SECTION_HEIGHT + 5}
-            stroke="#9ca3af"
+            stroke={isDark ? "#64748b" : "#9ca3af"}
             strokeWidth={1}
             strokeDasharray="4,4"
           />
@@ -1127,7 +1130,7 @@ export default function BasketballCompareSchedulesChart({
             x2={MARGIN.left + PLOT_WIDTH + MARGIN.right}
             y1={TOP_SECTION_HEIGHT + 50}
             y2={TOP_SECTION_HEIGHT + 50}
-            stroke="#9ca3af"
+            stroke={isDark ? "#64748b" : "#9ca3af"}
             strokeWidth={1}
             strokeDasharray="4,4"
           />
@@ -1137,7 +1140,7 @@ export default function BasketballCompareSchedulesChart({
             x={MARGIN.left - 85}
             y={TOP_SECTION_HEIGHT + 21}
             textAnchor="start"
-            className="text-xs fill-gray-700"
+            className="text-xs fill-gray-700 dark:fill-gray-300"
           >
             &gt;95%
           </text>
@@ -1145,7 +1148,7 @@ export default function BasketballCompareSchedulesChart({
             x={MARGIN.left - 85}
             y={TOP_SECTION_HEIGHT + 33}
             textAnchor="start"
-            className="text-xs fill-gray-700"
+            className="text-xs fill-gray-700 dark:fill-gray-300"
           >
             Probability
           </text>
@@ -1153,7 +1156,7 @@ export default function BasketballCompareSchedulesChart({
             x={MARGIN.left - 85}
             y={TOP_SECTION_HEIGHT + 45}
             textAnchor="start"
-            className="text-xs fill-gray-700"
+            className="text-xs fill-gray-700 dark:fill-gray-300"
           >
             Games
           </text>
@@ -1186,8 +1189,8 @@ export default function BasketballCompareSchedulesChart({
                   left: `${columnX - 120}px`,
                   top: `${tooltipTop}px`,
                   width: "240px",
-                  backgroundColor: "#ffffff",
-                  border: "1px solid var(--border-color)",
+                  backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                  border: `1px solid ${isDark ? "#4b5563" : "#d1d5db"}`,
                   borderRadius: "6px",
                   padding: "12px",
                   boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
@@ -1197,7 +1200,7 @@ export default function BasketballCompareSchedulesChart({
                     "var(--font-roboto-condensed), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                   zIndex: 50,
                   pointerEvents: "none",
-                  whiteSpace: "nowrap",
+                  whiteSpace: "normal",
                 }}
               >
                 <div
@@ -1205,11 +1208,18 @@ export default function BasketballCompareSchedulesChart({
                     fontWeight: "600",
                     marginBottom: "8px",
                     fontSize: "13px",
+                    color: hoveredGame.opponentColor,
                   }}
                 >
                   {hoveredGame.opponent}
                 </div>
-                <div style={{ lineHeight: "1.6", textAlign: "left" }}>
+                <div
+                  style={{
+                    lineHeight: "1.6",
+                    textAlign: "left",
+                    color: isDark ? "#d1d5db" : "#4b5563",
+                  }}
+                >
                   <div>Location: {hoveredGame.location}</div>
                   <div>
                     {(hoveredGame.winProb * 100).toFixed(0)}% Win Probability
@@ -1219,7 +1229,13 @@ export default function BasketballCompareSchedulesChart({
                     #{gameRank.toLocaleString()} Most Difficult Game (
                     {Math.round(hoveredGame.percentilePosition)} Percentile)
                   </div>
-                  <div style={{ marginTop: "6px", fontWeight: "500" }}>
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      fontWeight: "500",
+                      color: hoveredGame.opponentColor,
+                    }}
+                  >
                     Result:{" "}
                     {hoveredGame.status === "W"
                       ? "Win"
@@ -1245,7 +1261,10 @@ export default function BasketballCompareSchedulesChart({
             <span>Loss</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-gray-50 dark:bg-slate-8000"></div>
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: GRAY_COLOR }}
+            ></div>
             <span>Future Game</span>
           </div>
         </div>

@@ -5,10 +5,20 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { cn } from "@/lib/utils";
+import { RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ============ MAIN PAGE COMPONENT ============
+
+// Matches the gradient/border/shadow "card" look used across the
+// modernized Wins/Standings/CWV/etc. pages (mirrors FootballCompareContent).
+const CARD_CLASS =
+  "relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+
+const TITLE_CLASS =
+  "text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300";
 
 interface Team {
   team_name: string;
@@ -403,7 +413,7 @@ export default function BasketballCompareContent() {
 
   if (isLoadingInitial) {
     return (
-      <PageLayoutWrapper title="Compare Schedules" isLoading={true}>
+      <PageLayoutWrapper title="Compare Schedules" hideTitle isLoading={true}>
         <div className="flex justify-center py-12">
           <LoadingSpinner />
         </div>
@@ -412,12 +422,16 @@ export default function BasketballCompareContent() {
   }
 
   return (
-    <PageLayoutWrapper title="Compare Schedules" isLoading={false}>
+    <PageLayoutWrapper title="Compare Schedules" hideTitle isLoading={false}>
       <ErrorBoundary level="page">
-        <div className="space-y-0 px-4 pt-0 pb-0 -mt-10">
+        <div className={cn(CARD_CLASS, "p-4 md:p-6")}>
+        <h1 className={cn(TITLE_CLASS, "mb-4")} data-screenshot-hide="true">
+          Compare Schedules
+        </h1>
+        <div className="space-y-0">
           {/* Scrollable Conference Cards with Team Logos */}
           <div
-            className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-600 p-3 overflow-hidden"
+            className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-3 overflow-hidden"
             data-debug="Conference Cards Section"
           >
             <div ref={scrollContainerRef} className="overflow-x-auto pb-1">
@@ -468,14 +482,14 @@ export default function BasketballCompareContent() {
                                 }}
                                 disabled={isDisabled}
                                 title={team.team_name}
-                                className={`relative w-10 h-10 rounded border-2 transition-all flex-shrink-0 overflow-hidden ${
+                                className={`relative w-10 h-10 rounded-lg border-2 transition-all flex-shrink-0 overflow-hidden ${
                                   isSelected
                                     ? "border-[rgb(0,151,178)] shadow-lg ring-2 ring-[rgb(0,151,178)] ring-offset-1"
                                     : isHighlighted
                                       ? "border-[rgb(0,151,178)] shadow-lg scale-110"
                                       : isDisabled
                                         ? "bg-gray-100 dark:bg-slate-700 border-gray-200 dark:border-gray-600 cursor-not-allowed opacity-50"
-                                        : "bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-600 hover:border-[rgb(0,151,178)] hover:shadow-md"
+                                        : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:border-[rgb(0,151,178)] hover:shadow-md"
                                 }`}
                               >
                                 <Image
@@ -515,12 +529,12 @@ export default function BasketballCompareContent() {
               placeholder="Search teams..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(0,151,178)] m-0"
+              className="w-full px-3 py-2 text-sm border border-slate-200/90 dark:border-slate-700/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(0,151,178)] m-0"
             />
 
             {/* Search Results Dropdown */}
             {showSearchResults && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-40 max-h-96 overflow-y-auto [&>button]:border-0">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700/90 rounded-xl shadow-lg z-40 max-h-96 overflow-y-auto [&>button]:border-0">
                 {searchResults.map((team) => {
                   const isSelected = selectedTeamNames.has(team.team_name);
                   const isDisabled =
@@ -564,7 +578,7 @@ export default function BasketballCompareContent() {
             )}
 
             {showSearchResults && searchResults.length === 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-3 text-center text-xs text-gray-500 dark:text-gray-300 z-40">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700/90 rounded-xl shadow-lg p-3 text-center text-xs text-gray-500 dark:text-gray-300 z-40">
                 No teams found
               </div>
             )}
@@ -573,7 +587,7 @@ export default function BasketballCompareContent() {
           {/* Selected Teams Summary */}
           {selectedTeams.length > 0 && (
             <div
-              className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-600 p-3 -mt-10"
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700/80 p-3 -mt-10"
               data-debug="Selected Teams Section"
             >
               <div className="flex items-center justify-between mb-2">
@@ -582,16 +596,18 @@ export default function BasketballCompareContent() {
                 </h2>
                 <button
                   onClick={clearAllTeams}
-                  className="text-xs text-red-600 hover:text-red-700 font-medium"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-red-400/50 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                 >
+                  <RotateCcw className="h-3 w-3" />
                   Clear All
                 </button>
               </div>
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1.5">
                 {selectedTeams.map((team) => (
                   <div
                     key={team.teamName}
-                    className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded border border-gray-300 text-xs"
+                    style={{ borderColor: team.teamColor || "rgb(148 163 184 / 0.6)" }}
+                    className="flex items-center gap-1 rounded-full border-2 bg-gray-100 px-2 py-1 text-xs dark:bg-slate-900/60"
                   >
                     <div className="relative w-4 h-4">
                       <Image
@@ -643,7 +659,7 @@ export default function BasketballCompareContent() {
 
           {selectedTeams.length === 0 && (
             <div
-              className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-600 rounded-lg p-8 text-center text-sm"
+              className="bg-gray-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-8 text-center text-sm"
               data-debug="Empty State Section"
             >
               <p className="text-gray-500 dark:text-gray-300">
@@ -651,6 +667,7 @@ export default function BasketballCompareContent() {
               </p>
             </div>
           )}
+        </div>
         </div>
       </ErrorBoundary>
     </PageLayoutWrapper>

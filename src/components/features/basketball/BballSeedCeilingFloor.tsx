@@ -1,7 +1,9 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import type { SeedTeam } from "@/types/basketball";
 import { useEffect, useMemo, useState } from "react";
+import styles from "./BballSeedCeilingFloor.module.css";
 
 interface BballSeedCeilingFloorProps {
   seedData: SeedTeam[];
@@ -105,6 +107,7 @@ export default function BballSeedCeilingFloor({
   maxHeight = 700,
 }: BballSeedCeilingFloorProps) {
   const [isMobile, setIsMobile] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -112,6 +115,19 @@ export default function BballSeedCeilingFloor({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  useEffect(() => {
+    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }, []);
+
+  // Match FootballBoxWhiskerChart's axis label treatment (§8c/§9h): a
+  // slate tick color and a slightly darker/lighter axis-title color, each
+  // with a dark-mode counterpart, rather than the flat #333/#6b7280 this
+  // chart used to hardcode (which read fine in light mode but had no
+  // contrast against a dark card).
+  const axisLineColor = isDark ? "#94a3b8" : "#334155";
+  const axisLabelColor = isDark ? "#cbd5e1" : "#334155";
+  const axisCaptionColor = isDark ? "#94a3b8" : "#6b7280";
 
   const xAxisLabels: string[] = [
     "1",
@@ -198,6 +214,7 @@ export default function BballSeedCeilingFloor({
 
   return (
     <div
+      className={styles.card}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -207,6 +224,7 @@ export default function BballSeedCeilingFloor({
     >
       {/* Main chart container */}
       <div
+        className={styles.surface}
         style={{
           display: isMobile ? "flex" : "block",
           overflowY:
@@ -214,7 +232,6 @@ export default function BballSeedCeilingFloor({
           overflowX: isMobile ? "hidden" : "auto",
           maxHeight: maxHeight,
           width: "100%",
-          backgroundColor: "white",
           scrollbarGutter: "stable",
         }}
       >
@@ -223,14 +240,14 @@ export default function BballSeedCeilingFloor({
           <svg
             width={chartPaddingLeft}
             height={contentHeight}
+            className={cn(styles.surface, styles.axisDivider)}
             style={{
               display: "block",
-              backgroundColor: "white",
               flexShrink: 0,
               position: "sticky",
               left: 0,
               zIndex: 5,
-              borderRight: "1px solid var(--border-color)",
+              borderRight: "1px solid",
             }}
           >
             {/* Y-axis: team logos and pie charts */}
@@ -281,9 +298,9 @@ export default function BballSeedCeilingFloor({
           <svg
             width={isMobile ? chartWidth + chartPadding.right : width}
             height={contentHeight}
+            className={styles.surface}
             style={{
               display: "block",
-              backgroundColor: "white",
               minWidth: isMobile ? "auto" : "100%",
             }}
           >
@@ -297,7 +314,7 @@ export default function BballSeedCeilingFloor({
                   : chartPadding.left + chartWidth
               }
               y2={chartPadding.top + totalTeamHeight}
-              stroke="#333"
+              stroke={axisLineColor}
               strokeWidth={2}
             />
 
@@ -308,7 +325,7 @@ export default function BballSeedCeilingFloor({
                 y1={chartPadding.top}
                 x2={chartPadding.left}
                 y2={chartPadding.top + totalTeamHeight}
-                stroke="#333"
+                stroke={axisLineColor}
                 strokeWidth={2}
               />
             )}
@@ -455,11 +472,11 @@ export default function BballSeedCeilingFloor({
 
       {/* Sticky bottom axis - inside scrollable container */}
       <div
+        className={cn(styles.surface, styles.axisDivider)}
         style={{
           display: "flex",
           overflowX: isMobile ? "hidden" : "auto",
-          backgroundColor: "white",
-          borderTop: "1px solid var(--border-color)",
+          borderTop: "1px solid",
           scrollbarGutter: "stable",
         }}
       >
@@ -470,9 +487,9 @@ export default function BballSeedCeilingFloor({
         <svg
           width={isMobile ? chartWidth + chartPadding.right : width}
           height={isMobile ? 80 : 100}
+          className={styles.surface}
           style={{
             display: "block",
-            backgroundColor: "white",
             flex: isMobile ? 1 : "none",
           }}
         >
@@ -486,7 +503,7 @@ export default function BballSeedCeilingFloor({
                 : chartPadding.left + chartWidth
             }
             y2={10}
-            stroke="#333"
+            stroke={axisLineColor}
             strokeWidth={2}
           />
 
@@ -503,7 +520,7 @@ export default function BballSeedCeilingFloor({
                   y1={15}
                   x2={xPos}
                   y2={25}
-                  stroke="#333"
+                  stroke={axisLineColor}
                   strokeWidth={1}
                 />
                 <text
@@ -511,7 +528,7 @@ export default function BballSeedCeilingFloor({
                   y={isMobile ? 40 : 50}
                   textAnchor="middle"
                   fontSize={isMobile ? 9 : 11}
-                  fill="#333"
+                  fill={axisLabelColor}
                   fontWeight={isSpecialLabel ? "600" : "normal"}
                 >
                   {label}
@@ -526,7 +543,7 @@ export default function BballSeedCeilingFloor({
             y={isMobile ? 70 : 95}
             textAnchor="middle"
             fontSize={isMobile ? 11 : 12}
-            fill="#6b7280"
+            fill={axisCaptionColor}
             fontWeight="500"
           >
             Projected Seed/Tournament Status
@@ -540,7 +557,7 @@ export default function BballSeedCeilingFloor({
                 y={70}
                 textAnchor="middle"
                 fontSize={12}
-                fill="#6b7280"
+                fill={axisCaptionColor}
                 fontWeight="500"
               >
                 In Tourney
@@ -550,7 +567,7 @@ export default function BballSeedCeilingFloor({
                 y={85}
                 textAnchor="middle"
                 fontSize={12}
-                fill="#6b7280"
+                fill={axisCaptionColor}
                 fontWeight="500"
               >
                 Probability

@@ -5,9 +5,9 @@ import { NCAATeam, useNCAAProjections } from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
 import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import styles from "./NCAABracketTable.module.css";
 
 interface NCAABracketTableProps {
   className?: string;
@@ -18,6 +18,43 @@ interface NCAABracketTableProps {
 interface NCAATeamWithConfLogo extends NCAATeam {
   conf_logo_url?: string;
 }
+
+// Helper function to get category badge color
+const getCategoryBgColor = (category: string | undefined) => {
+  switch (category) {
+    case "Auto Bid":
+      return "#dcfce7"; // light green
+    case "At Large":
+      return "#dbeafe"; // light blue
+    case "Last 12 In": // 76-team format
+    case "Last 4 In": // historical seasons
+      return "#e9d5ff"; // light purple
+    case "First 4 Out":
+      return "#ffedd5"; // light orange
+    case "Next 4 Out":
+      return "#fee2e2"; // light red
+    default:
+      return "#f3f4f6"; // light gray
+  }
+};
+
+const getCategoryTextColor = (category: string | undefined) => {
+  switch (category) {
+    case "Auto Bid":
+      return "#166534"; // green
+    case "At Large":
+      return "#1e40af"; // blue
+    case "Last 12 In": // 76-team format
+    case "Last 4 In": // historical seasons
+      return "#6b21a8"; // purple
+    case "First 4 Out":
+      return "#b45309"; // orange
+    case "Next 4 Out":
+      return "#991b1b"; // red
+    default:
+      return "#374151"; // gray
+  }
+};
 
 function NCAABracketTable({ className, season }: NCAABracketTableProps) {
   const { isMobile } = useResponsive();
@@ -76,6 +113,40 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
     return [...sortedTournament, ...sortedFirst4Out, ...sortedNext4Out];
   }, [data]);
 
+  // Dark separator between seed groups and between tournament/out-of-tournament
+  // sections - mirrors the football CFP bracket's isGroupBoundary logic but
+  // keyed off basketball's seed/category fields instead of a "group" enum.
+  const isGroupBoundary = useCallback(
+    (index: number) => {
+      const team = allTeams[index];
+      const nextTeam = allTeams[index + 1];
+
+      if (!nextTeam) return true; // last row overall
+
+      if (team.seed !== "Out" && nextTeam.seed === "Out") {
+        return true; // last tournament team before out teams
+      }
+
+      if (
+        team.seed === "Out" &&
+        nextTeam.seed === "Out" &&
+        team.category !== nextTeam.category
+      ) {
+        return true; // last First 4 Out before Next 4 Out
+      }
+
+      if (team.seed !== "Out" && team.seed !== "-") {
+        const currentSeed = parseInt(team.seed || "0", 10);
+        const nextSeed =
+          nextTeam.seed !== "Out" ? parseInt(nextTeam.seed || "0", 10) : 999;
+        if (currentSeed !== nextSeed) return true;
+      }
+
+      return false;
+    },
+    [allTeams]
+  );
+
   if (loading) {
     return (
       <div className="p-4 text-center text-gray-500 dark:text-gray-300">
@@ -99,343 +170,114 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
     );
   }
 
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "ncaa-bracket-table",
-    className
-  );
-
-  // Responsive dimensions - matches TWV table
-  const seedColWidth = isMobile ? 50 : 60;
-  const teamColWidth = isMobile ? 168 : 220;
-  const confColWidth = isMobile ? 80 : 120;
-  const categoryColWidth = isMobile ? 80 : 120;
-  const twvColWidth = isMobile ? 70 : 80;
-  const cellHeight = isMobile ? 40 : 36;
-  const headerHeight = isMobile ? 40 : 48;
-
-  // Helper function to get category badge color
-  const getCategoryBgColor = (category: string | undefined) => {
-    switch (category) {
-      case "Auto Bid":
-        return "#dcfce7"; // light green
-      case "At Large":
-        return "#dbeafe"; // light blue
-      case "Last 12 In": // 76-team format
-      case "Last 4 In": // historical seasons
-        return "#e9d5ff"; // light purple
-      case "First 4 Out":
-        return "#ffedd5"; // light orange
-      case "Next 4 Out":
-        return "#fee2e2"; // light red
-      default:
-        return "#f3f4f6"; // light gray
-    }
-  };
-
-  const getCategoryTextColor = (category: string | undefined) => {
-    switch (category) {
-      case "Auto Bid":
-        return "#166534"; // green
-      case "At Large":
-        return "#1e40af"; // blue
-      case "Last 12 In": // 76-team format
-      case "Last 4 In": // historical seasons
-        return "#6b21a8"; // purple
-      case "First 4 Out":
-        return "#b45309"; // orange
-      case "Next 4 Out":
-        return "#991b1b"; // red
-      default:
-        return "#374151"; // gray
-    }
-  };
-
-  // Get border style for seed separator and out teams separator
-  const getSeedBorderStyle = (
-    _seed: string | undefined,
-    isLastInGroup: boolean
-  ) => {
-    if (isLastInGroup) {
-      return "3px solid #1f2937"; // Dark separator
-    }
-    return "1px solid var(--border-color)";
-  };
-
-  // Render a team row with conditional highlighting for secured auto bids
-  const renderTeamRow = (
-    team: NCAATeamWithConfLogo,
-    index: number,
-    isLastInGroup: boolean
-  ) => {
-    // Only highlight teams that have SECURED auto bid (won completed conf tourney game)
-    // Not teams with projected "Auto Bid" status
-    const isSecuredAutoBid = team.is_conf_tourney_winner === true;
-    const teamCellBgColor = isSecuredAutoBid ? "#dcfce7" : "white"; // light green only for team cell
-    const teamCellBorderColor = isSecuredAutoBid ? "#16a34a" : "var(--border-color)"; // darker green border only for team cell
-
-    return (
-      <tr key={`${team.teamid}-${index}`}>
-        {/* Seed Cell */}
-        <td
-          className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-          style={{
-            width: seedColWidth,
-            minWidth: seedColWidth,
-            maxWidth: seedColWidth,
-            height: cellHeight,
-            position: "sticky",
-            left: 0,
-            border: "1px solid var(--border-color)",
-            borderTop: "none",
-            borderRight: "1px solid var(--border-color)",
-            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-          }}
-        >
-          {team.seed || "-"}
-        </td>
-
-        {/* Team Cell (with logo and name) - HIGHLIGHTED FOR SECURED AUTO BIDS */}
-        <td
-          className={`sticky z-20 text-left px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-          style={{
-            width: teamColWidth,
-            minWidth: teamColWidth,
-            maxWidth: teamColWidth,
-            height: cellHeight,
-            position: "sticky",
-            left: seedColWidth,
-            backgroundColor: teamCellBgColor,
-            border: "1px solid " + teamCellBorderColor,
-            borderTop: "none",
-            borderLeft: "none",
-            borderRight: "2px solid " + teamCellBorderColor,
-            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <TeamLogo
-              logoUrl={team.logo_url}
-              teamName={team.team_name}
-              size={isMobile ? 24 : 28}
-              onClick={() => navigateToTeam(team.team_name)}
-              className="flex-shrink-0"
-            />
-            <span className="whitespace-normal break-words leading-tight">{formatTeamName(team.team_name)}</span>
-          </div>
-        </td>
-
-        {/* Conference Cell - with logo from backend */}
-        <td
-          className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-          style={{
-            width: confColWidth,
-            minWidth: confColWidth,
-            maxWidth: confColWidth,
-            height: cellHeight,
-            border: "1px solid var(--border-color)",
-            borderTop: "none",
-            borderLeft: "none",
-            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-            verticalAlign: "middle",
-          }}
-        >
-          <div className="flex items-center justify-center">
-            {team.conf_logo_url ? (
-              <TeamLogo
-                logoUrl={team.conf_logo_url}
-                teamName={team.full_conference_name}
-                size={isMobile ? 20 : 24}
-                className="flex-shrink-0"
-              />
-            ) : (
-              <span className="text-xs text-gray-500 dark:text-gray-300">-</span>
-            )}
-          </div>
-        </td>
-
-        {/* Category Cell */}
-        <td
-          className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-          style={{
-            width: categoryColWidth,
-            minWidth: categoryColWidth,
-            maxWidth: categoryColWidth,
-            height: cellHeight,
-            border: "1px solid var(--border-color)",
-            borderTop: "none",
-            borderLeft: "none",
-            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-            backgroundColor: getCategoryBgColor(team.category),
-            color: getCategoryTextColor(team.category),
-            fontWeight: "500",
-          }}
-        >
-          {team.category}
-        </td>
-
-        {/* Proj TWV Cell */}
-        <td
-          className={`bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-          style={{
-            width: twvColWidth,
-            minWidth: twvColWidth,
-            maxWidth: twvColWidth,
-            height: cellHeight,
-            border: "1px solid var(--border-color)",
-            borderTop: "none",
-            borderLeft: "none",
-            borderBottom: getSeedBorderStyle(team.seed, isLastInGroup),
-            fontWeight: "500",
-          }}
-        >
-          {team.post_conf_tourney_twv.toFixed(2)}
-        </td>
-      </tr>
-    );
-  };
-
   return (
-    <div>
-      {/* Single Combined Table */}
-      <div className={`${tableClassName} relative overflow-x-auto`}>
-        <table
-          className="border-collapse border-spacing-0"
-          style={{
-            width: "max-content",
-            borderCollapse: "separate",
-            borderSpacing: 0,
-          }}
+    <section className={cn("relative", className)}>
+      <div className={styles.card}>
+        <div
+          className={styles.scrollViewport}
+          role="region"
+          aria-label="NCAA Tournament bracket projections. Scroll to see every team."
+          tabIndex={0}
         >
-          <thead>
-            <tr>
-              {/* Seed Column */}
-              <th
-                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: seedColWidth,
-                  minWidth: seedColWidth,
-                  maxWidth: seedColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderRight: "1px solid var(--border-color)",
-                }}
-              >
-                Seed
-              </th>
+          <table className={styles.table}>
+            <thead>
+              <tr className={styles.headerRow}>
+                <th className={styles.stickySeed} scope="col">
+                  Seed
+                </th>
+                <th className={styles.stickyTeam} scope="col">
+                  Team
+                </th>
+                <th className={styles.confHeader} scope="col">
+                  Conf
+                </th>
+                <th className={styles.categoryHeader} scope="col">
+                  Category
+                </th>
+                <th scope="col">Proj TWV</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allTeams.map((team, index) => {
+                // Only highlight teams that have SECURED auto bid (won
+                // completed conf tourney game) - not teams with projected
+                // "Auto Bid" status.
+                const isSecuredAutoBid = team.is_conf_tourney_winner === true;
 
-              {/* Team Column */}
-              <th
-                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  left: seedColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  borderRight: "2px solid var(--border-color)",
-                }}
-              >
-                Team
-              </th>
+                return (
+                  <tr
+                    key={`${team.teamid}-${index}`}
+                    className={cn(
+                      styles.bodyRow,
+                      isGroupBoundary(index) && styles.groupBoundary
+                    )}
+                  >
+                    <td className={styles.stickySeed}>
+                      <span className={styles.seedValue}>{team.seed || "-"}</span>
+                    </td>
 
-              {/* Conference Column */}
-              <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: confColWidth,
-                  minWidth: confColWidth,
-                  maxWidth: confColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
-              >
-                Conf
-              </th>
+                    <td
+                      className={cn(
+                        styles.stickyTeam,
+                        styles.teamCell,
+                        isSecuredAutoBid && styles.autoBidSecured
+                      )}
+                    >
+                      <div className={styles.teamLink}>
+                        <TeamLogo
+                          logoUrl={team.logo_url}
+                          teamName={team.team_name}
+                          size={isMobile ? 24 : 28}
+                          onClick={() => navigateToTeam(team.team_name)}
+                          className={styles.teamLogo}
+                        />
+                        <span className={styles.teamName}>
+                          {formatTeamName(team.team_name)}
+                        </span>
+                      </div>
+                    </td>
 
-              {/* Category Column */}
-              <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: categoryColWidth,
-                  minWidth: categoryColWidth,
-                  maxWidth: categoryColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
-              >
-                Category
-              </th>
+                    <td className={styles.confCell}>
+                      <div className={styles.confLogoWrap}>
+                        {team.conf_logo_url ? (
+                          <TeamLogo
+                            logoUrl={team.conf_logo_url}
+                            teamName={team.full_conference_name}
+                            size={isMobile ? 20 : 22}
+                          />
+                        ) : (
+                          <span className={styles.confPlaceholder}>—</span>
+                        )}
+                      </div>
+                    </td>
 
-              {/* Proj TWV Column */}
-              <th
-                className={`sticky bg-gray-50 dark:bg-slate-800 text-center font-normal z-20 ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: twvColWidth,
-                  minWidth: twvColWidth,
-                  maxWidth: twvColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  top: 0,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
-              >
-                Proj TWV
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {allTeams.map((team, idx) => {
-              const nextTeam = allTeams[idx + 1];
+                    <td className={styles.categoryCell}>
+                      {team.category && (
+                        <span
+                          className={styles.categoryBadge}
+                          style={{
+                            backgroundColor: getCategoryBgColor(team.category),
+                            color: getCategoryTextColor(team.category),
+                          }}
+                        >
+                          {team.category}
+                        </span>
+                      )}
+                    </td>
 
-              // Determine if this is the last row in a group
-              let isLastInGroup = false;
-
-              if (!nextTeam) {
-                // Last row overall
-                isLastInGroup = true;
-              } else if (team.seed !== "Out" && nextTeam.seed === "Out") {
-                // Last tournament team before out teams
-                isLastInGroup = true;
-              } else if (
-                team.seed === "Out" &&
-                nextTeam.seed === "Out" &&
-                team.category !== nextTeam.category
-              ) {
-                // Last First 4 Out before Next 4 Out
-                isLastInGroup = true;
-              } else if (team.seed !== "Out" && team.seed !== "-") {
-                // Within tournament seeds - dark line between seeds
-                const currentSeed = parseInt(team.seed || "0", 10);
-                const nextSeed =
-                  nextTeam.seed !== "Out"
-                    ? parseInt(nextTeam.seed || "0", 10)
-                    : 999;
-                if (currentSeed !== nextSeed) {
-                  isLastInGroup = true;
-                }
-              }
-
-              return renderTeamRow(team, idx, isLastInGroup);
-            })}
-          </tbody>
-        </table>
+                    <td>
+                      <span className={styles.statValue}>
+                        {team.post_conf_tourney_twv.toFixed(2)}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 

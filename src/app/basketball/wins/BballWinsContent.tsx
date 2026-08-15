@@ -69,10 +69,12 @@ const SIM_BLURB =
 
 const BASKETBALL_WINS: WinsContentConfig<Standing> = {
   sport: "basketball",
+  hidePageTitle: true,
   resolveInitialConference: (conf) =>
     KNOWN_CONFERENCES.includes(conf) ? conf : "Big 12",
   useStandingsData: useStandings,
   ConferenceChart: BoxWhiskerChart,
+  conferenceChartTitle: "Projected Conference Wins Distribution",
   ConferenceTable: WinsTable,
   RegSeasonChart: BballRegSeasonBoxWhiskerChart,
   RegSeasonTable: BballRegSeasonWinsTable,

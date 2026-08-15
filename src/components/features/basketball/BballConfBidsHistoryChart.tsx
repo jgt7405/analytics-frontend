@@ -6,22 +6,33 @@
 import "@/lib/chartjs-setup";
 
 import { buildChartLabels, filterDataToRange, getBasketballDateRange } from "@/lib/chartDateRange";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
+import { cn } from "@/lib/utils";
 import { useResponsive } from "@/hooks/useResponsive";
 import type { Chart } from "chart.js";
-import {
-  Chart as ChartJS,
-  ChartArea,
-  TooltipModel,
-} from "chart.js";
+import { ChartArea, Chart as ChartJS, Plugin, TooltipModel } from "chart.js";
+import { RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+
+// Matches the gradient/border/shadow "card" look used across the
+// modernized Wins/Standings/CWV/etc. pages.
+// No `border` property - a real `border` combined with this element's
+// `border-radius` hit a Windows-desktop-only sub-pixel rasterization
+// artifact (zoom-dependent dark corner/edge fringe, invisible to
+// computed-style checks) on the football chart this pattern is ported
+// from. The 1px ring is folded into the shadow stack as an inset layer
+// instead - same visual result, different rasterization path.
+const CARD_CLASS =
+  "relative rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[inset_0_0_0_1px_rgb(226_232_240_/_0.9),0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[inset_0_0_0_1px_rgb(51_65_85_/_0.9),0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
 
 interface ConfHistoryData {
   conference: string;
   date: string;
   avg_bids: number;
   bid_distribution?: Record<string, number>;
+  version_id?: string;
   conference_info: {
     primary_color?: string;
     secondary_color?: string;
@@ -48,6 +59,71 @@ type ConferenceData = {
   };
 };
 
+// Same focus-lens treatment as the other modernized history charts: a
+// transient guide band and a marker for every conference at the hovered
+// date.
+const HOVER_LENS_PLUGIN: Plugin<"line"> = {
+  id: "bball-conf-bids-hover-lens",
+  beforeDatasetsDraw(chart) {
+    const active = chart.getActiveElements();
+    if (active.length === 0) return;
+
+    const point = chart.getDatasetMeta(active[0].datasetIndex).data[
+      active[0].index
+    ];
+    if (!point) return;
+
+    const { x } = point.getProps(["x"], true);
+    const { ctx, chartArea } = chart;
+    const isDarkMode = document.documentElement.classList.contains("dark");
+
+    ctx.save();
+    ctx.fillStyle = isDarkMode
+      ? "rgb(56 189 248 / 0.08)"
+      : "rgb(14 165 233 / 0.07)";
+    ctx.fillRect(x - 18, chartArea.top, 36, chartArea.bottom - chartArea.top);
+    ctx.strokeStyle = isDarkMode
+      ? "rgb(125 211 252 / 0.75)"
+      : "rgb(2 132 199 / 0.65)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+  afterDatasetsDraw(chart) {
+    const active = chart.getActiveElements();
+    if (active.length === 0) return;
+
+    const dataIndex = active[0].index;
+    const isDarkMode = document.documentElement.classList.contains("dark");
+    const { ctx } = chart;
+
+    ctx.save();
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      const point = meta.data[dataIndex];
+      if (!point || meta.hidden) return;
+
+      const { x, y } = point.getProps(["x", "y"], true);
+      const datasetColor = Array.isArray(dataset.borderColor)
+        ? dataset.borderColor[dataIndex]
+        : dataset.borderColor;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = isDarkMode ? "#0f172a" : "#ffffff";
+      ctx.fill();
+      ctx.strokeStyle =
+        typeof datasetColor === "string" ? datasetColor : "#64748b";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+    ctx.restore();
+  },
+};
+
 export default function BballConfBidsHistoryChart({
   timelineData,
   season,
@@ -63,20 +139,98 @@ export default function BballConfBidsHistoryChart({
   const [selectedConferences, setSelectedConferences] = useState<Set<string>>(
     new Set()
   );
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
+    };
+    const observer = new MutationObserver(updateTheme);
+
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    setSelectedConferences(new Set());
+  }, [timelineData]);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("chartjs-tooltip-bball-conf")?.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = chartRef.current?.canvas;
+    if (!canvas) return;
+
     const updateDimensions = () => {
       if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-        setChartDimensions({
-          chartArea: chartRef.current.chartArea,
-          canvas: chartRef.current.canvas,
+        const area = chartRef.current.chartArea;
+        setChartDimensions((prev) => {
+          if (
+            prev &&
+            prev.chartArea.top === area.top &&
+            prev.chartArea.bottom === area.bottom &&
+            prev.chartArea.left === area.left &&
+            prev.chartArea.right === area.right
+          ) {
+            return prev;
+          }
+          return { chartArea: area, canvas: chartRef.current!.canvas };
         });
       }
     };
 
-    const timeout = setTimeout(updateDimensions, 1000);
-    return () => clearTimeout(timeout);
+    // A ResizeObserver (rather than a one-shot timeout) keeps the SVG
+    // end-of-line markers and logo overlay in sync with the actual
+    // canvas layout - see FootballConfBidsHistoryChart/
+    // FootballStandingsHistoryChart, the reference implementations this
+    // pattern is ported from.
+    const observer = new ResizeObserver(updateDimensions);
+    observer.observe(canvas);
+    updateDimensions();
+
+    return () => observer.disconnect();
   }, [timelineData, season]);
+
+  const header = (
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 px-[1.35rem] pb-4 pt-5">
+      <div
+        className="flex min-w-0 items-center gap-3"
+        data-screenshot-hide="true"
+      >
+        <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+          Conference Tournament Bid Trends
+          <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+            (Over Time)
+          </span>
+        </h2>
+      </div>
+    </div>
+  );
+
+  if (!timelineData || timelineData.length === 0) {
+    return (
+      <div className={CARD_CLASS}>
+        {header}
+        <div className="flex h-64 items-center justify-center px-4 pb-5">
+          <p className="text-gray-500 dark:text-gray-300">
+            No history data available.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const range = getBasketballDateRange(season, timelineData);
   const filteredData = filterDataToRange(timelineData, range);
@@ -109,7 +263,10 @@ export default function BballConfBidsHistoryChart({
 
   const allDates = chartLabels.map((l) => l.displayLabel);
 
-  // Only show conferences with >= 1.1 bids
+  // Only show conferences with >= 1.1 bids on the chart's end-of-line
+  // overlay (kept from the pre-modernization threshold - basketball has
+  // many more low-bid conferences than football, so this avoids
+  // cluttering the right margin with near-zero entries).
   const conferencesForLogos = Object.entries(confData)
     .map(([confName, conf]) => {
       const finalBids = conf.data[conf.data.length - 1]?.y || 0;
@@ -133,6 +290,8 @@ export default function BballConfBidsHistoryChart({
       };
     })
     .sort((a, b) => b.final_bids - a.final_bids);
+
+  const clearSelectedConferences = () => setSelectedConferences(new Set());
 
   const handleConferenceClick = (confName: string) => {
     setSelectedConferences((prev) => {
@@ -171,9 +330,10 @@ export default function BballConfBidsHistoryChart({
       data: conf.data,
       borderColor: color,
       backgroundColor: "transparent",
-      borderWidth: isSelected ? 2 : 1,
+      borderWidth: isSelected ? 2.25 : 1.1,
+      order: isSelected ? 0 : 1,
       pointRadius: 0,
-      pointHoverRadius: 4,
+      pointHoverRadius: 0,
       tension: 0.1,
       fill: false,
     };
@@ -183,6 +343,15 @@ export default function BballConfBidsHistoryChart({
     labels: allDates,
     datasets,
   };
+
+  const maxBids = (() => {
+    const allValues = datasets.flatMap((dataset) =>
+      dataset.data.map((d: { x: string; y: number }) => d.y)
+    );
+    if (allValues.length === 0) return 4;
+    const maxValue = Math.max(...allValues);
+    return Math.max(4, Math.ceil(maxValue * 1.1));
+  })();
 
   const options = {
     responsive: true,
@@ -206,59 +375,13 @@ export default function BballConfBidsHistoryChart({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-bball-conf");
-          if (!tooltipEl) {
-            tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-bball-conf";
-            tooltipEl.style.background = "#ffffff";
-            tooltipEl.style.border = "1px solid var(--border-color)";
-            tooltipEl.style.borderRadius = "8px";
-            tooltipEl.style.color = "#1f2937";
-            tooltipEl.style.fontFamily = "Inter, system-ui, sans-serif";
-            tooltipEl.style.fontSize = "12px";
-            tooltipEl.style.opacity = "0";
-            tooltipEl.style.padding = "16px";
-            tooltipEl.style.paddingTop = "8px";
-            tooltipEl.style.pointerEvents = "auto";
-            tooltipEl.style.position = "absolute";
-            tooltipEl.style.transition = "all .1s ease";
-            tooltipEl.style.zIndex = "1000";
-            tooltipEl.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
-            tooltipEl.style.minWidth = "200px";
-            tooltipEl.style.maxWidth = "300px";
-
-            const handleClickOutside = (e: Event) => {
-              if (!tooltipEl?.contains(e.target as Node)) {
-                tooltipEl!.style.opacity = "0";
-                setTimeout(() => {
-                  if (tooltipEl && tooltipEl.parentNode) {
-                    document.removeEventListener("click", handleClickOutside);
-                    document.removeEventListener(
-                      "touchstart",
-                      handleClickOutside
-                    );
-                    document.body.removeChild(tooltipEl);
-                  }
-                }, 100);
-              }
-            };
-
-            document.addEventListener("click", handleClickOutside);
-            document.addEventListener("touchstart", handleClickOutside);
-
-            document.body.appendChild(tooltipEl);
-          }
-
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
+          let heading = "";
+          let rows: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const displayDate = chartLabels[dataIndex]?.displayLabel;
-
-            const confsAtDate = Object.entries(confData)
+            heading = displayDate ?? "";
+            rows = Object.entries(confData)
               .map(([confName, conf]) => {
                 const dataPoint = conf.data.find(
                   (d: { x: string; y: number }) => d.x === displayDate
@@ -267,145 +390,69 @@ export default function BballConfBidsHistoryChart({
                   name: confName,
                   bids: dataPoint?.y || 0,
                   color: conf.conference_info.primary_color || "#666666",
+                  logoUrl: conf.conference_info.logo_url,
                 };
               })
-              .sort((a, b) => b.bids - a.bids);
-
-            let innerHtml = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${displayDate}</div>
-                <button id="tooltip-close" style="
-                  background: none; 
-                  border: none; 
-                  font-size: 16px; 
-                  cursor: pointer; 
-                  color: #6b7280;
-                  padding: 0;
-                  margin: 0;
-                  line-height: 1;
-                  width: 20px;
-                  height: 20px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">&times;</button>
-              </div>
-            `;
-
-            confsAtDate.forEach((conf) => {
-              innerHtml += `<div style="color: ${conf.color}; margin: 2px 0; font-weight: 400;">${conf.name}: ${conf.bids.toFixed(1)} bids</div>`;
-            });
-
-            tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
-            }
+              .sort((a, b) => b.bids - a.bids)
+              .map((conf, index) => ({
+                label: `${index + 1}. ${conf.name}`,
+                value: `${conf.bids.toFixed(1)} bids`,
+                color: conf.color,
+                logoUrl: conf.logoUrl,
+              }));
           }
 
-          // Smart positioning
-          const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
-          const tooltipWidth = tooltipEl.offsetWidth || 200;
-          const caretX = tooltipModel.caretX;
-          const caretY = tooltipModel.caretY;
-
-          const isLeftSide = caretX < chartWidth / 2;
-
-          let leftPosition: number;
-          let arrowPosition: string;
-
-          if (isLeftSide) {
-            leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
-          } else {
-            leftPosition =
-              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
-          }
-
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          } else {
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
-          }
-
-          const maxLeft = window.innerWidth - tooltipWidth - 10;
-          const minLeft = 10;
-          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
-
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.left = leftPosition + "px";
-          tooltipEl.style.top =
-            position.top +
-            window.pageYOffset +
-            caretY -
-            tooltipEl.offsetHeight / 2 -
-            150 +
-            "px";
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "chartjs-tooltip-bball-conf",
+            isDark,
+            heading,
+            rows,
+            verticalOffset: 0,
+          });
         },
       },
     },
     scales: {
       x: {
         title: { display: false },
-        ticks: { maxTicksLimit: isMobile ? 5 : 10 },
+        ticks: {
+          maxTicksLimit: isMobile ? 5 : 10,
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
+        },
         grid: { display: false },
       },
       y: {
-        title: { display: true, text: "Projected NCAA Tournament Bids" },
+        title: {
+          display: true,
+          text: "Projected NCAA Tournament Bids",
+          color: isDark ? "#cbd5e1" : "#334155",
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
+        },
         min: 0,
-        max: (() => {
-          const allValues = datasets.flatMap((dataset) =>
-            dataset.data.map((d: { x: string; y: number }) => d.y)
-          );
-          if (allValues.length === 0) return 4;
-          const maxValue = Math.max(...allValues);
-          return Math.max(4, Math.ceil(maxValue * 1.1));
-        })(),
-        ticks: { stepSize: 1 },
+        max: maxBids,
+        ticks: {
+          stepSize: 1,
+          color: isDark ? "#94a3b8" : "#475569",
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
+        },
+        grid: {
+          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
+        },
       },
     },
     layout: {
-      padding: { left: 10, right: 100 },
+      padding: { left: 10, right: 100, top: 14 },
     },
     animation: {
       duration: 750,
@@ -417,13 +464,7 @@ export default function BballConfBidsHistoryChart({
   const getChartJsYPosition = (bids: number) => {
     if (!chartDimensions?.chartArea) return null;
     const { top, bottom } = chartDimensions.chartArea;
-    const allValues = datasets.flatMap((dataset) =>
-      dataset.data.map((d: { x: string; y: number }) => d.y)
-    );
-    if (allValues.length === 0) return null;
-    const maxY = Math.max(...allValues);
-    const adjustedMaxY = Math.max(4, Math.ceil(maxY * 1.1));
-    return top + ((adjustedMaxY - bids) / adjustedMaxY) * (bottom - top);
+    return top + ((maxBids - bids) / maxBids) * (bottom - top);
   };
 
   const getAdjustedLogoPositions = () => {
@@ -489,192 +530,265 @@ export default function BballConfBidsHistoryChart({
 
   if (datasets.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 p-4">
-        <p className="text-gray-500 dark:text-gray-300">
-          No conference data available for display
-        </p>
+      <div className={CARD_CLASS}>
+        {header}
+        <div className="flex h-64 items-center justify-center px-4 pb-5">
+          <p className="text-gray-500 dark:text-gray-300">
+            No conference data available for display
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900">
-      <div
-        className="relative w-full"
-        style={{ height: `${chartHeight}px`, overflow: "visible" }}
-      >
-        <Line ref={chartRef} data={chartData} options={options} />
+    <div className={CARD_CLASS} style={{ zIndex: 10, isolation: "isolate" }}>
+      {header}
 
-        {chartDimensions && (
-          <div
-            className="absolute right-0 top-0"
-            style={{
-              zIndex: 20,
-              pointerEvents: "none",
-              width: "100px",
-              height: `${chartHeight}px`,
-            }}
-          >
-            {logoPositions.map(({ conf, idealY, adjustedY }) => {
-              const isSelected =
-                selectedConferences.size === 0 ||
-                selectedConferences.has(conf.conference);
-              const confColor = isSelected
-                ? conf.conference_info.primary_color || "#94a3b8"
-                : "#d1d5db";
-              const logoUrl = conf.conference_info.logo_url;
+      <div className="px-3 pb-2 sm:px-4">
+        <div
+          className="relative w-full"
+          style={{ height: `${chartHeight}px`, overflow: "visible" }}
+        >
+          <Line
+            ref={chartRef}
+            data={chartData}
+            options={options}
+            plugins={[HOVER_LENS_PLUGIN]}
+            role="img"
+            aria-label="Conference NCAA tournament bid trends showing each conference's projected bid count over time. Hover a date to see all conferences ranked for that date."
+          />
 
-              return (
-                <div key={`end-${conf.conference}`}>
-                  <svg
-                    className="absolute"
-                    style={{
-                      top: 0,
-                      right: 0,
-                      width: "100px",
-                      height: `${chartHeight}px`,
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <line
-                      x1={0}
-                      y1={idealY}
-                      x2={12}
-                      y2={adjustedY}
-                      stroke={confColor}
-                      strokeWidth="1"
-                      strokeDasharray="2,2"
-                      opacity="0.7"
-                    />
-                  </svg>
+          {chartDimensions && (
+            <div
+              className="pointer-events-none absolute left-0 top-0"
+              style={{ width: "100%", height: "100%" }}
+            >
+              {logoPositions.map(({ conf, idealY, adjustedY }) => {
+                const isSelected =
+                  selectedConferences.size === 0 ||
+                  selectedConferences.has(conf.conference);
+                const confColor = isSelected
+                  ? conf.conference_info.primary_color || "#94a3b8"
+                  : "#d1d5db";
 
-                  <div
-                    className="absolute flex items-center"
-                    style={{
-                      top: `${adjustedY - 12}px`,
-                      right: "25px",
-                      opacity: isSelected ? 1 : 0.3,
-                    }}
-                  >
-                    {logoUrl ? (
-                      <Image
-                        src={logoUrl}
-                        alt={conf.conference}
-                        width={24}
-                        height={24}
-                        className="object-contain"
-                        unoptimized
-                        style={{
-                          filter: isSelected ? "none" : "grayscale(100%)",
-                        }}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          const parent = target.parentElement;
-                          if (
-                            parent &&
-                            !parent.querySelector(".fallback-square")
-                          ) {
-                            const fallback = document.createElement("div");
-                            fallback.className =
-                              "w-6 h-6 rounded border fallback-square";
-                            fallback.style.backgroundColor = confColor;
-                            fallback.title = conf.conference;
-                            parent.appendChild(fallback);
-                          }
-                        }}
-                        title={conf.conference}
-                      />
-                    ) : (
-                      <div
-                        className="w-6 h-6 rounded border"
-                        style={{ backgroundColor: confColor }}
-                        title={conf.conference}
-                      />
-                    )}
-                    <span
-                      className="text-xs font-medium ml-2"
+                return (
+                  <div key={`end-${conf.conference}`}>
+                    <svg
+                      className="absolute left-0 top-0"
                       style={{
-                        color: isSelected ? confColor : "#d1d5db",
-                        minWidth: "35px",
-                        textAlign: "left",
+                        width: "100%",
+                        height: "100%",
+                        pointerEvents: "none",
                       }}
                     >
-                      {conf.final_bids.toFixed(1)}
-                    </span>
+                      <line
+                        x1={chartDimensions.chartArea.right}
+                        y1={idealY}
+                        x2={chartDimensions.chartArea.right + 6}
+                        y2={adjustedY}
+                        stroke={confColor}
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                        opacity="0.7"
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="8"
+                        fill={confColor}
+                        opacity={isDark ? "0.24" : "0.18"}
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="4.25"
+                        fill={isDark ? "#0f172a" : "#ffffff"}
+                        stroke={confColor}
+                        strokeWidth="2.5"
+                        style={{
+                          filter: `drop-shadow(0 0 3px ${confColor})`,
+                        }}
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="1.75"
+                        fill={confColor}
+                      />
+                    </svg>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+
+              <div className="absolute inset-0">
+                {logoPositions.map(({ conf, adjustedY }) => {
+                  const isSelected =
+                    selectedConferences.size === 0 ||
+                    selectedConferences.has(conf.conference);
+                  const confColor = isSelected
+                    ? conf.conference_info.primary_color || "#94a3b8"
+                    : "#d1d5db";
+                  const logoUrl = conf.conference_info.logo_url;
+
+                  return (
+                    <div
+                      key={`logo-${conf.conference}`}
+                      className="absolute flex items-center"
+                      style={{
+                        left: `${chartDimensions.chartArea.right + 8}px`,
+                        top: `${adjustedY - 10}px`,
+                        zIndex: 10,
+                        opacity: isSelected ? 1 : 0.3,
+                      }}
+                    >
+                      {logoUrl ? (
+                        <Image
+                          src={logoUrl}
+                          alt={conf.conference}
+                          width={20}
+                          height={20}
+                          className="object-contain"
+                          unoptimized
+                          style={{
+                            filter: isSelected ? "none" : "grayscale(100%)",
+                          }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const parent = target.parentElement;
+                            if (
+                              parent &&
+                              !parent.querySelector(".fallback-square")
+                            ) {
+                              const fallback = document.createElement("div");
+                              fallback.className =
+                                "w-5 h-5 rounded border fallback-square";
+                              fallback.style.backgroundColor = confColor;
+                              fallback.title = conf.conference;
+                              parent.appendChild(fallback);
+                            }
+                          }}
+                          title={conf.conference}
+                        />
+                      ) : (
+                        <div
+                          className="h-5 w-5 rounded border"
+                          style={{ backgroundColor: confColor }}
+                          title={conf.conference}
+                        />
+                      )}
+                      <span
+                        className="ml-1.5 min-w-[30px] text-left text-xs font-medium tabular-nums"
+                        style={{ color: isSelected ? confColor : "#d1d5db" }}
+                      >
+                        {conf.final_bids.toFixed(1)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Bottom logo selector */}
-      <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
-        {allConferencesSorted.map((conf) => {
-          const isSelected =
-            selectedConferences.size === 0 ||
-            selectedConferences.has(conf.conference);
-          const logoUrl = conf.conference_info.logo_url;
-          const confColor = conf.conference_info.primary_color || "#666666";
-
-          return (
+      <div className="border-t border-slate-200/80 px-4 pb-5 pt-4 dark:border-slate-700/80 sm:px-[1.35rem]">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Select conferences to emphasize
+          </p>
+          {selectedConferences.size > 0 && (
             <button
-              key={conf.conference}
-              onClick={() => handleConferenceClick(conf.conference)}
-              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 dark:bg-slate-700 transition-colors cursor-pointer"
-              style={{
-                opacity: isSelected ? 1 : 0.3,
-                filter: isSelected ? "none" : "grayscale(100%)",
-              }}
+              type="button"
+              onClick={clearSelectedConferences}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-red-400/50 dark:hover:bg-red-950/30 dark:hover:text-red-400"
             >
-              {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt={conf.conference}
-                  width={isMobile ? 24 : 28}
-                  height={isMobile ? 24 : 28}
-                  className="object-contain"
-                  unoptimized
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                    const parent = target.parentElement;
-                    if (parent && !parent.querySelector(".fallback-square")) {
-                      const fallback = document.createElement("div");
-                      fallback.className = "rounded border fallback-square";
-                      fallback.style.width = isMobile ? "24px" : "28px";
-                      fallback.style.height = isMobile ? "24px" : "28px";
-                      fallback.style.backgroundColor = confColor;
-                      fallback.title = conf.conference;
-                      parent.appendChild(fallback);
-                    }
-                  }}
-                  title={conf.conference}
-                />
-              ) : (
-                <div
-                  className="rounded border"
-                  style={{
-                    width: isMobile ? "24px" : "28px",
-                    height: isMobile ? "24px" : "28px",
-                    backgroundColor: confColor,
-                  }}
-                  title={conf.conference}
-                />
-              )}
-              <span
-                className="text-[10px] font-medium"
-                style={{
-                  color: isSelected ? confColor : "#9ca3af",
-                }}
-              >
-                {conf.final_bids.toFixed(1)}
-              </span>
+              <RotateCcw className="h-3 w-3" />
+              Show All
             </button>
-          );
-        })}
+          )}
+        </div>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-1.5 sm:gap-2">
+          {allConferencesSorted.map((conf) => {
+            const isSelected =
+              selectedConferences.size === 0 ||
+              selectedConferences.has(conf.conference);
+            const isExplicitlySelected = selectedConferences.has(
+              conf.conference
+            );
+            const logoUrl = conf.conference_info.logo_url;
+            const confColor = conf.conference_info.primary_color || "#666666";
+
+            return (
+              <button
+                key={conf.conference}
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={`${conf.conference}, projected ${conf.final_bids.toFixed(1)} bids. Select to emphasize this conference.`}
+                onClick={() => handleConferenceClick(conf.conference)}
+                style={{
+                  // Inset box-shadow instead of a real `border` - see
+                  // FootballStandingsHistoryChart for the full explanation
+                  // (Windows-desktop-only corner rendering artifact from
+                  // border + border-radius rasterization).
+                  boxShadow: `inset 0 0 0 ${isExplicitlySelected ? 3 : 2}px ${
+                    confColor || (isDark ? "#475569" : "#cbd5e1")
+                  }`,
+                }}
+                className={cn(
+                  "flex min-w-0 cursor-pointer appearance-none flex-col items-center gap-0.5 rounded-xl bg-white/80 px-1 pb-1.5 pt-1 transition-[box-shadow,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
+                  !isSelected && "opacity-30 grayscale"
+                )}
+              >
+                {logoUrl ? (
+                  <Image
+                    src={logoUrl}
+                    alt={conf.conference}
+                    width={isMobile ? 24 : 28}
+                    height={isMobile ? 24 : 28}
+                    className="object-contain"
+                    unoptimized
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      const parent = target.parentElement;
+                      if (
+                        parent &&
+                        !parent.querySelector(".fallback-square")
+                      ) {
+                        const fallback = document.createElement("div");
+                        fallback.className = "rounded border fallback-square";
+                        fallback.style.width = isMobile ? "24px" : "28px";
+                        fallback.style.height = isMobile ? "24px" : "28px";
+                        fallback.style.backgroundColor = confColor;
+                        fallback.title = conf.conference;
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                    title={conf.conference}
+                  />
+                ) : (
+                  <div
+                    className="rounded border"
+                    style={{
+                      width: isMobile ? "24px" : "28px",
+                      height: isMobile ? "24px" : "28px",
+                      backgroundColor: confColor,
+                    }}
+                    title={conf.conference}
+                  />
+                )}
+                <span
+                  className="text-xs font-semibold tabular-nums"
+                  style={{ color: isSelected ? confColor : "#9ca3af" }}
+                >
+                  {conf.final_bids.toFixed(1)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

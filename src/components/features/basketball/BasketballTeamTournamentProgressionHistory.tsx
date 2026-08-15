@@ -8,6 +8,7 @@ import {
   filterDataToRange,
   getBasketballDateRange,
 } from "@/lib/chartDateRange";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
 import type { Chart, PointStyle, TooltipModel } from "chart.js";
 import {
   Chart as ChartJS,
@@ -63,6 +64,7 @@ export default function BasketballTeamTournamentProgressionHistory({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
   const [data, setData] = useState<TournamentProgressionDataPoint[]>([]);
+  const [isDark, setIsDark] = useState(false);
 
   const {
     data: allHistoryData,
@@ -71,6 +73,30 @@ export default function BasketballTeamTournamentProgressionHistory({
   } = useBasketballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
+    };
+    const observer = new MutationObserver(updateTheme);
+
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("ncaa-progression-tooltip-basketball")?.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!allHistoryData?.ncaa) {
@@ -305,160 +331,52 @@ export default function BasketballTeamTournamentProgressionHistory({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById(
-            "ncaa-progression-tooltip-basketball",
-          );
-          if (!tooltipEl) {
-            tooltipEl = document.createElement("div");
-            tooltipEl.id = "ncaa-progression-tooltip-basketball";
-
-            Object.assign(tooltipEl.style, {
-              background: "#ffffff",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              color: "#1f2937",
-              fontFamily: "Inter, system-ui, sans-serif",
-              fontSize: "12px",
-              opacity: "0",
-              padding: "16px",
-              paddingTop: "8px",
-              pointerEvents: "auto",
-              position: "absolute",
-              transition: "all .1s ease",
-              zIndex: "1000",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              minWidth: "200px",
-              maxWidth: "300px",
-            });
-
-            const handleClickOutside = (e: Event) => {
-              if (!tooltipEl?.contains(e.target as Node)) {
-                tooltipEl!.style.opacity = "0";
-                setTimeout(() => {
-                  if (tooltipEl && tooltipEl.parentNode) {
-                    document.removeEventListener("click", handleClickOutside);
-                    document.removeEventListener(
-                      "touchstart",
-                      handleClickOutside,
-                    );
-                    document.body.removeChild(tooltipEl);
-                  }
-                }, 100);
-              }
-            };
-
-            document.addEventListener("click", handleClickOutside);
-            document.addEventListener("touchstart", handleClickOutside);
-            document.body.appendChild(tooltipEl);
-          }
-
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
+          let heading = "";
+          let rows: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const label = chartLabels[dataIndex];
-            const point = dataByDate.get(label.isoDate);
-            if (!point) return;
-            const currentDate = label.displayLabel;
-
-            let innerHtml = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-                <button id="tooltip-close" style="
-                  background: none; 
-                  border: none; 
-                  font-size: 16px; 
-                  cursor: pointer; 
-                  color: #6b7280;
-                  padding: 0;
-                  margin: 0;
-                  line-height: 1;
-                  width: 20px;
-                  height: 20px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">&times;</button>
-              </div>
-            `;
-
-            const displayData = point as TournamentProgressionDataPoint;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Sweet Sixteen: ${displayData.sweet_sixteen_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${finalSecondaryColor}; margin: 2px 0; font-weight: 400;">Elite Eight: ${displayData.elite_eight_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Final Four: ${displayData.final_four_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Championship: ${displayData.championship_pct.toFixed(1)}%</div>`;
-            innerHtml += `<div style="color: ${primaryColor}; margin: 2px 0; font-weight: 400;">Champion: ${displayData.champion_pct.toFixed(1)}%</div>`;
-
-            tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
+            const point = dataByDate.get(label.isoDate) as
+              | TournamentProgressionDataPoint
+              | undefined;
+            if (point) {
+              heading = label.displayLabel;
+              rows = [
+                {
+                  label: "Sweet Sixteen",
+                  value: `${point.sweet_sixteen_pct.toFixed(1)}%`,
+                  color: finalSecondaryColor,
+                },
+                {
+                  label: "Elite Eight",
+                  value: `${point.elite_eight_pct.toFixed(1)}%`,
+                  color: finalSecondaryColor,
+                },
+                {
+                  label: "Final Four",
+                  value: `${point.final_four_pct.toFixed(1)}%`,
+                  color: primaryColor,
+                },
+                {
+                  label: "Championship",
+                  value: `${point.championship_pct.toFixed(1)}%`,
+                  color: primaryColor,
+                },
+                {
+                  label: "Champion",
+                  value: `${point.champion_pct.toFixed(1)}%`,
+                  color: primaryColor,
+                },
+              ];
             }
           }
 
-          const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
-          const tooltipWidth = tooltipEl.offsetWidth || 200;
-          const caretX = tooltipModel.caretX;
-          const caretY = tooltipModel.caretY;
-
-          const isLeftSide = caretX < chartWidth / 2;
-          let leftPosition: number;
-          let arrowPosition: string;
-
-          if (isLeftSide) {
-            leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
-          } else {
-            leftPosition =
-              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
-          }
-
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          }
-
-          const maxLeft = window.innerWidth - tooltipWidth - 10;
-          const minLeft = 10;
-          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
-
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.left = leftPosition + "px";
-          tooltipEl.style.top =
-            position.top +
-            window.pageYOffset +
-            caretY -
-            tooltipEl.offsetHeight / 2 -
-            20 +
-            "px";
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "ncaa-progression-tooltip-basketball",
+            isDark,
+            heading,
+            rows,
+          });
         },
       },
     },
@@ -466,9 +384,11 @@ export default function BasketballTeamTournamentProgressionHistory({
       x: {
         display: true,
         ticks: {
-          color: "#6b7280",
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
           font: {
-            size: isMobile ? 9 : 10,
+            weight: 600,
+            size: isMobile ? 13 : 15,
           },
           maxTicksLimit: isMobile ? 8 : 12,
         },
@@ -481,9 +401,10 @@ export default function BasketballTeamTournamentProgressionHistory({
         min: 0,
         max: 100,
         ticks: {
-          color: "#6b7280",
+          color: isDark ? "#94a3b8" : "#475569",
           font: {
-            size: isMobile ? 9 : 10,
+            weight: 600,
+            size: isMobile ? 13 : 15,
           },
           stepSize: 20,
           callback: function (value: string | number) {
@@ -493,9 +414,16 @@ export default function BasketballTeamTournamentProgressionHistory({
         title: {
           display: true,
           text: "NCAA Progression %",
-          color: "#6b7280",
+          color: isDark ? "#cbd5e1" : "#334155",
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
         },
       },
+    },
+    layout: {
+      padding: { top: 14 },
     },
   };
 

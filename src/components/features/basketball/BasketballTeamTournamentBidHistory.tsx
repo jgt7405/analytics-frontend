@@ -12,9 +12,11 @@ import {
   filterDataToRange,
   getBasketballDateRange,
 } from "@/lib/chartDateRange";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
+import type { Chart } from "chart.js";
 import {
   Chart as ChartJS,
-  type TooltipItem,
+  type TooltipModel,
 } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -50,6 +52,7 @@ export default function BasketballTeamTournamentBidHistory({
     null
   );
   const [data, setData] = useState<TournamentHistoricalDataPoint[]>([]);
+  const [isDark, setIsDark] = useState(false);
 
   const {
     data: allHistoryData,
@@ -58,6 +61,30 @@ export default function BasketballTeamTournamentBidHistory({
   } = useBasketballTeamAllHistory(teamName, season);
 
   const error = queryError?.message || null;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
+    };
+    const observer = new MutationObserver(updateTheme);
+
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("chartjs-tooltip-tourneybid-basketball")?.remove();
+    };
+  }, []);
 
   const parseDateCentralTime = (dateString: string) => {
     const [year, month, day] = dateString.split("-").map(Number);
@@ -207,55 +234,41 @@ export default function BasketballTeamTournamentBidHistory({
         },
       },
       tooltip: {
-        enabled: true,
-        backgroundColor: "#ffffff",
-        titleColor: "#1f2937",
-        bodyColor: "#1f2937",
-        borderColor: "#e5e7eb",
-        borderWidth: 1,
-        cornerRadius: 8,
-        displayColors: false,
-        padding: 12,
-        titleFont: {
-          size: 14,
-          weight: "bold" as const,
-        },
-        bodyFont: {
-          size: 12,
-        },
-        callbacks: {
-          title: function (context: TooltipItem<"line">[]) {
-            if (context.length > 0) {
-              const dataIndex = context[0].dataIndex;
-              return chartLabels[dataIndex].displayLabel;
-            }
-            return "";
-          },
-          labelTextColor: function (context: TooltipItem<"line">) {
-            const datasetIndex = context.datasetIndex;
-            if (datasetIndex === 0) {
-              return primaryColor;
-            } else if (datasetIndex === 1) {
-              return finalSecondaryColor;
-            }
-            return "#1f2937";
-          },
-          label: function (context: TooltipItem<"line">) {
-            const dataIndex = context.dataIndex;
-            const datasetIndex = context.datasetIndex;
+        enabled: false,
+        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+          const { tooltip: tooltipModel, chart } = args;
+
+          let heading = "";
+          let rows: TooltipRow[] = [];
+          if (tooltipModel.body) {
+            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             const label = chartLabels[dataIndex];
             const point = dataByDate.get(label.isoDate);
-            if (!point) return "";
-
-            if (datasetIndex === 0) {
+            if (point) {
+              heading = label.displayLabel;
               const bidPct = (point.tournament_bid_pct || 0) * 100;
-              return `NCAA Bid Probability: ${bidPct.toFixed(1)}%`;
-            } else if (datasetIndex === 1) {
               const avgSeed = point.average_seed || 0;
-              return `Average Seed: ${avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A"}`;
+              rows = [
+                {
+                  label: "NCAA Bid Probability",
+                  value: `${bidPct.toFixed(1)}%`,
+                  color: primaryColor,
+                },
+                {
+                  label: "Average Seed",
+                  value: avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A",
+                  color: finalSecondaryColor,
+                },
+              ];
             }
-            return "";
-          },
+          }
+
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "chartjs-tooltip-tourneybid-basketball",
+            isDark,
+            heading,
+            rows,
+          });
         },
       },
     },
@@ -263,9 +276,11 @@ export default function BasketballTeamTournamentBidHistory({
       x: {
         display: true,
         ticks: {
-          color: "#6b7280",
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
           font: {
-            size: isMobile ? 9 : 10,
+            weight: 600,
+            size: isMobile ? 13 : 15,
           },
           maxTicksLimit: isMobile ? 8 : 12,
         },
@@ -282,7 +297,8 @@ export default function BasketballTeamTournamentBidHistory({
         ticks: {
           color: primaryColor,
           font: {
-            size: isMobile ? 9 : 10,
+            weight: 600,
+            size: isMobile ? 13 : 15,
           },
           stepSize: 20,
           callback: function (value: string | number) {
@@ -293,9 +309,13 @@ export default function BasketballTeamTournamentBidHistory({
           display: true,
           text: "NCAA Bid %",
           color: primaryColor,
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
         },
         grid: {
-          color: "#f3f4f6",
+          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
           lineWidth: 1,
         },
       },
@@ -307,7 +327,8 @@ export default function BasketballTeamTournamentBidHistory({
         max: 16,
         ticks: {
           font: {
-            size: isMobile ? 9 : 10,
+            weight: 600,
+            size: isMobile ? 13 : 15,
           },
           color: finalSecondaryColor,
           stepSize: 1,
@@ -319,12 +340,19 @@ export default function BasketballTeamTournamentBidHistory({
           display: true,
           text: "Avg Seed",
           color: finalSecondaryColor,
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
         },
         grid: {
           display: false,
         },
         reverse: true,
       },
+    },
+    layout: {
+      padding: { top: 14 },
     },
   };
 

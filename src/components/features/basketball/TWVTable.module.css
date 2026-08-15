@@ -1,0 +1,392 @@
+.card {
+  --rank-col-width: 3.25rem;
+  --team-col-width: 12.5rem;
+  --twv-col-width: 4.5rem;
+  --record-col-width: 6.5rem;
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1.1rem 1.1rem 0.6rem;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rowsInput {
+  width: 4.5rem;
+  border: 1px solid rgb(203 213 225 / 0.9);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  padding: 0.3rem 0.6rem;
+  color: #0f172a;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rowsInput:focus {
+  outline: none;
+  border-color: rgb(14 116 144 / 0.6);
+  box-shadow: 0 0 0 3px rgb(14 116 144 / 0.15);
+}
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-height: 75vh;
+  overscroll-behavior: contain;
+  /* No top or left padding: the header row sticks to top: 0 and the
+     rank/team columns stick to left: 0 of this container's content box,
+     so any padding on those sides would leave an unsticky gap that
+     scrolled rows could show through as they pass underneath. */
+  padding: 0 0.9rem 1rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* No card title on this table - the page's own "True Win Value (TWV)"
+   heading already covers it - so this stands in for the missing header's
+   top padding. */
+.scrollViewportNoHeader {
+  padding-top: 1.1rem;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.table {
+  /* Only 5 narrow columns - min-width: 100% would stretch every column to
+     fill the card's full width instead of sizing to its own content. */
+  width: max-content;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0 1px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  width: var(--twv-col-width);
+  min-width: var(--twv-col-width);
+  max-width: var(--twv-col-width);
+}
+
+.stickyRank,
+.stickyTeam {
+  --sticky-column-background: #ffffff;
+  position: sticky;
+  z-index: 40;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
+  isolation: isolate;
+}
+
+.stickyRank {
+  left: 0;
+  width: var(--rank-col-width) !important;
+  min-width: var(--rank-col-width) !important;
+  max-width: var(--rank-col-width) !important;
+  text-align: center;
+}
+
+.stickyTeam {
+  left: var(--rank-col-width);
+  width: var(--team-col-width) !important;
+  min-width: var(--team-col-width) !important;
+  max-width: var(--team-col-width) !important;
+  text-align: left;
+}
+
+.headerRow th {
+  position: sticky;
+  top: 0;
+  z-index: 55;
+  height: 2.5rem;
+  border: 0;
+  background: #ffffff;
+  box-shadow: 0 1px 0 0 #ffffff;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-align: center;
+  isolation: isolate;
+}
+
+.headerRow .stickyRank,
+.headerRow .stickyTeam {
+  z-index: 65;
+}
+
+/* TWV/Actual Record/Expected Record headers show an explanatory tooltip
+   on hover (basketball-specific; football's table has no tooltips). */
+.helpHeader {
+  position: relative;
+  cursor: help;
+}
+
+.tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 70;
+  width: 260px;
+  margin-top: 0.4rem;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow:
+    0 18px 40px -20px rgb(15 23 42 / 0.35),
+    0 6px 16px -10px rgb(15 23 42 / 0.22);
+  padding: 0.75rem 0.85rem;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+}
+
+.tooltipTitle {
+  margin-bottom: 0.35rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.tooltipBody {
+  color: #475569;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.bodyRow td {
+  height: 2rem;
+}
+
+.rankValue {
+  color: #475569;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.teamCell {
+  padding: 0 0.6rem;
+}
+
+.teamButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.55rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.teamLogo {
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 3px rgb(15 23 42 / 0.14));
+  transition: transform 160ms ease;
+}
+
+.teamButton:hover .teamLogo {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.teamName {
+  overflow: visible;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: left;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+  line-height: 1.15;
+}
+
+.twvCell {
+  padding: 0;
+}
+
+.twvChip {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.recordCell,
+.recordHeader {
+  width: var(--record-col-width) !important;
+  min-width: var(--record-col-width) !important;
+  max-width: var(--record-col-width) !important;
+}
+
+.recordCell {
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+:global(.dark) .card {
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .controls {
+  color: #94a3b8;
+}
+
+:global(.dark) .rowsInput {
+  border-color: rgb(71 85 105 / 0.8);
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+:global(.dark) .stickyRank,
+:global(.dark) .stickyTeam,
+:global(.dark) .headerRow th {
+  --sticky-column-background: #111827;
+  background: #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .headerRow th {
+  box-shadow: 0 1px 0 0 #111827;
+}
+
+:global(.dark) .tooltip {
+  border-color: rgb(51 65 85 / 0.88);
+  background: #111827;
+  color: #e2e8f0;
+}
+
+:global(.dark) .tooltipTitle {
+  color: #f1f5f9;
+}
+
+:global(.dark) .tooltipBody {
+  color: #94a3b8;
+}
+
+:global(.dark) .rankValue {
+  color: #94a3b8;
+}
+
+:global(.dark) .teamName {
+  color: #f1f5f9;
+}
+
+:global(.dark) .recordCell {
+  color: #cbd5e1;
+}
+
+@media (max-width: 767px) {
+  .card {
+    --rank-col-width: 2.75rem;
+    --team-col-width: 9.5rem;
+    --twv-col-width: 3.6rem;
+    --record-col-width: 4.75rem;
+    border-radius: 1rem;
+  }
+
+  .controls {
+    padding: 0.9rem 0.9rem 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  .scrollViewport {
+    padding: 0 0.5rem 0.8rem 0;
+    max-height: 70vh;
+  }
+
+  /* margin, not padding: the header row still sticks to top: 0 of the
+     scrollable content box even without the .controls bar above it, so
+     the breathing-room fix has to live outside that box (a scrollable
+     top padding would recreate the exact §6a gap this table was just
+     fixed for). */
+  .scrollViewportNoHeader {
+    margin-top: 0.9rem;
+  }
+
+  .headerRow th {
+    height: 2.25rem;
+    font-size: 0.7rem;
+  }
+
+  .bodyRow td {
+    height: 2.3rem;
+  }
+
+  .teamLogo {
+    transform: scale(0.9);
+  }
+
+  .teamName {
+    overflow: visible;
+    font-size: 0.72rem;
+    line-height: 1.15;
+    white-space: normal;
+    text-overflow: clip;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: auto;
+  }
+
+  .twvChip {
+    font-size: 0.76rem;
+  }
+
+  .recordCell,
+  .rankValue {
+    font-size: 0.74rem;
+  }
+
+  .tooltip {
+    width: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teamButton {
+    transition: none;
+  }
+}

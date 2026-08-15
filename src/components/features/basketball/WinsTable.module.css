@@ -1,0 +1,418 @@
+.card {
+  --wins-cell-text: #1f2937;
+  --label-column-width: 4.75rem;
+  --team-column-width: 3.65rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.35rem 1rem;
+}
+
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.scrollViewport {
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding: 0 0.65rem 0.7rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport:focus-visible {
+  outline: 3px solid rgb(14 116 144 / 0.35);
+  outline-offset: -3px;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.table {
+  width: max-content;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 1px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  width: var(--team-column-width);
+  min-width: var(--team-column-width);
+  max-width: var(--team-column-width);
+}
+
+.stickyColumn {
+  --sticky-column-background: #ffffff;
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  width: var(--label-column-width) !important;
+  min-width: var(--label-column-width) !important;
+  max-width: var(--label-column-width) !important;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
+  /* No blur: a blurred shadow rounds its own corners regardless of the
+     cell's border-radius, which reads as a curved seam wherever two
+     stacked rows (e.g. the Average row, or the summary rows) have
+     different backgrounds. A solid offset+spread strip stays a flat
+     rectangle, so stacked rows line up into one straight edge.
+     Right-side only (1px 0 0 0, not 0 0 0 1px): an omnidirectional
+     spread also expands 1px onto the TOP and BOTTOM of this cell, which
+     paints straight over the vertical border-spacing gap between this
+     row and the next one whenever consecutive rows share the same
+     --sticky-column-background (every summary row does) - the label
+     column then reads as one solid merged block while the value columns
+     right next to it still show a gap between every row. A directional
+     shadow only covers the one edge it's meant to (the seam with the
+     next column), leaving the row-to-row gap alone. Spread is capped at
+     1px (matching the table's own border-spacing) - a wider ring paints
+     straight over the gap between this column and the next one, erasing
+     the seam that's visible between every other pair of columns. */
+  box-shadow:
+    1px 0 0 0 var(--sticky-column-background),
+    0.4rem 0 0 -0.25rem rgb(15 23 42 / 0.32);
+  isolation: isolate;
+}
+
+.winsHeader,
+.teamHeader {
+  height: 5.25rem;
+  border: 0;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.winsHeader {
+  z-index: 50;
+  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.teamHeader {
+  position: relative;
+  border: 0 !important;
+}
+
+.teamButton {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.28rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.teamButton:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.teamButton:focus-visible {
+  border-radius: 0.65rem;
+  outline: 3px solid rgb(14 116 144 / 0.38);
+  outline-offset: -3px;
+}
+
+.teamLogo {
+  filter: drop-shadow(0 5px 5px rgb(15 23 42 / 0.12));
+}
+
+.teamName {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: #334155;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+  overflow-wrap: break-word;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* Subtle row divider - matches the seam that heatTile's own border already
+   creates between data rows, so the label column reads as the same rows
+   instead of an undivided list of numbers. */
+.winLabel {
+  height: 2.35rem;
+  border-bottom: 1px solid rgb(226 232 240 / 0.7);
+  color: #475569;
+  font-size: 0.98rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.probabilityCell {
+  height: 2.35rem;
+  padding: 0;
+}
+
+.heatTile {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  font-size: 0.95rem;
+  font-weight: 450;
+  transition: border-color 150ms ease;
+}
+
+.heatTile:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+.peakTile {
+  border-color: rgb(255 255 255 / 0.72);
+  font-weight: 800;
+}
+
+.emptyTile {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* All summary rows (Average and the Curr Conf Record footer row) share
+   one look - summaryValue itself stays transparent, like probabilityCell
+   - the background/border live on summaryChip below so these rows tile
+   the same way the heat-tile grid does, instead of reading as one solid
+   bar edge-to-edge. */
+.summaryLabel,
+.summaryValue {
+  color: #334155;
+  font-size: 0.94rem;
+}
+
+/* Border + radius (matching summaryChip/heatTile) is what actually reads
+   as "a distinct tile with a gap" - the 1px border-spacing gap alone is
+   low-contrast against the card background regardless of the cell's own
+   fill color, same as every other gap-contrast issue in this table. The
+   border is what outlines each row, not the color of the sliver between
+   them. */
+.summaryLabel {
+  --sticky-column-background: #e2e8f0;
+  min-height: 2.35rem;
+  padding: 0 0.75rem;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  background: var(--sticky-column-background);
+  font-weight: 650;
+  text-align: left;
+  white-space: normal;
+}
+
+/* height (not min-height): a table cell's height only counts as "definite"
+   for a percentage-height child (summaryChip's height:100%) when set via
+   the height property - min-height doesn't qualify, even though the cell
+   still grows past it when a taller sibling (e.g. a two-line label) forces
+   the row taller. Without a definite height here, the chip fell back to
+   sizing itself to its own content and left the extra row height unfilled. */
+.summaryValue {
+  height: 2.35rem;
+  padding: 0;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Matches the heat-tile grid's shape/size exactly (same border-radius,
+   same border, same fill-the-cell sizing) so the Average and Curr Conf
+   Record rows read as part of the same grid instead of plain table cells.
+   The border matters as much as the radius here - without it the chip's
+   fill runs edge-to-edge in its cell while heatTile's fill sits inset by
+   its own border, so the two rows end up with different-looking gaps even
+   though both share the same 1px table border-spacing. */
+.summaryChip {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  background: #e2e8f0;
+}
+
+/* Marks the boundary between the heat-tile data grid and the footer
+   summary row(s) below it with a clearer divider than the plain row-to-row
+   line, since the background color alone doesn't read as a section break. */
+.table tfoot tr:first-child .summaryLabel,
+.table tfoot tr:first-child .summaryValue {
+  border-top: 2px solid #cbd5e1;
+}
+
+:global(.dark) .card {
+  --wins-cell-text: #e2e8f0;
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .title {
+  color: #cbd5e1;
+}
+
+:global(.dark) .teamName {
+  color: #e2e8f0;
+}
+
+:global(.dark) .stickyColumn,
+:global(.dark) .winsHeader,
+:global(.dark) .teamHeader {
+  --sticky-column-background: #111827;
+  background: #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .winLabel {
+  --sticky-column-background: #0f172a;
+  border-bottom-color: rgb(51 65 85 / 0.6);
+  background: var(--sticky-column-background);
+}
+
+:global(.dark) .summaryLabel,
+:global(.dark) .summaryValue {
+  color: #e2e8f0;
+}
+
+:global(.dark) .summaryLabel {
+  --sticky-column-background: #263449;
+  background: var(--sticky-column-background);
+}
+
+:global(.dark) .summaryChip {
+  background: #263449;
+}
+
+:global(.dark) .table tfoot tr:first-child .summaryLabel,
+:global(.dark) .table tfoot tr:first-child .summaryValue {
+  border-top: 2px solid rgb(71 85 105 / 0.8);
+}
+
+@media (max-width: 767px) {
+  .card {
+    --label-column-width: 3.75rem;
+    --team-column-width: 2.95rem;
+    border-radius: 1rem;
+  }
+
+  .cardHeader {
+    align-items: flex-start;
+    padding: 1rem 0.9rem 0.7rem;
+  }
+
+  .titleGroup {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .scrollViewport {
+    padding: 0 0.35rem 0.55rem 0;
+  }
+
+  .table {
+    border-spacing: 1px;
+  }
+
+  .winsHeader,
+  .teamHeader {
+    height: 4.65rem;
+  }
+
+  .teamLogo {
+    transform: scale(0.9);
+  }
+
+  .winLabel,
+  .probabilityCell,
+  .summaryValue {
+    height: 2rem;
+  }
+
+  .winLabel,
+  .summaryLabel,
+  .summaryValue {
+    font-size: 0.85rem;
+  }
+
+  .heatTile {
+    font-size: 0.82rem;
+  }
+
+  .summaryLabel {
+    min-height: 2rem;
+    padding: 0 0.45rem;
+    line-height: 1.15;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teamButton,
+  .heatTile {
+    transition: none;
+  }
+}

@@ -2,7 +2,9 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
-import { useMemo, useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { useMemo, useState } from "react";
+import styles from "./BballStandingsProgressionTable.module.css";
 
 interface TimelineData {
   team_name: string;
@@ -34,11 +36,6 @@ export default function BballStandingsProgressionTable({
 }: BballStandingsProgressionTableProps) {
   const { isMobile } = useResponsive();
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  }, []);
 
   // Generate dates: 1st and 15th of each month, last date - IN PROPER CHRONOLOGICAL ORDER
   const selectedDates = useMemo(() => {
@@ -48,7 +45,7 @@ export default function BballStandingsProgressionTable({
 
     // Step 1: Get all unique dates and sort them chronologically (accounting for year)
     const allDates = [...new Set(timelineData.map((d) => d.date))].sort(
-      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+      (a, b) => new Date(a).getTime() - new Date(b).getTime(),
     );
 
     if (allDates.length === 0) {
@@ -78,7 +75,7 @@ export default function BballStandingsProgressionTable({
 
     // Step 3: Extract month keys and sort them chronologically
     const sortedMonthKeys = Array.from(monthMap.keys()).sort(
-      (a, b) => new Date(a + "-01").getTime() - new Date(b + "-01").getTime()
+      (a, b) => new Date(a + "-01").getTime() - new Date(b + "-01").getTime(),
     );
 
     // Step 4: Add 1st and 15th dates in chronological order
@@ -105,11 +102,9 @@ export default function BballStandingsProgressionTable({
 
   // Build data lookup: date -> sorted teams by standing
   const dateTeamsLookup = useMemo(() => {
-    console.log("🔨 Building dateTeamsLookup...");
     const lookup = new Map<string, TeamDateData[]>();
 
     if (!timelineData || timelineData.length === 0) {
-      console.log("  ❌ No timelineData");
       return lookup;
     }
 
@@ -122,10 +117,7 @@ export default function BballStandingsProgressionTable({
       dateGroups.get(item.date)!.push(item);
     });
 
-    console.log(`  ✓ Grouped into ${dateGroups.size} date buckets`);
-
     // For each date, sort teams by standing
-    let totalTeams = 0;
     dateGroups.forEach((items, dateStr) => {
       const validItems = items.filter((item) => {
         const standing = item.avg_standing ?? item.standings_with_ties;
@@ -166,13 +158,9 @@ export default function BballStandingsProgressionTable({
 
       if (sorted.length > 0) {
         lookup.set(dateStr, sorted);
-        totalTeams += sorted.length;
       }
     });
 
-    console.log(
-      `✅ Lookup complete: ${lookup.size} dates, ${totalTeams} total teams`
-    );
     return lookup;
   }, [timelineData]);
 
@@ -223,48 +211,38 @@ export default function BballStandingsProgressionTable({
   }, [timelineData]);
 
   // Responsive dimensions
-  const logoSize = isMobile ? 28 : 36;
-  const cellHeight = isMobile ? 36 : 44;
-  const cellWidth = isMobile ? 80 : 100;
-  const axisLabelWidth = isMobile ? 28 : 36;
-  const borderColor = isDark ? "#374151" : "#e5e7eb";
+  const logoSize = isMobile ? 26 : 32;
+  const cellHeight = isMobile ? 34 : 42;
+  const cellWidth = isMobile ? 76 : 96;
+  const axisLabelWidth = isMobile ? 26 : 32;
 
   if (!timelineData || timelineData.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
-        No standings progression data available
+      <div className={styles.card}>
+        <div className="p-4 text-center text-gray-500 dark:text-gray-300">
+          No standings progression data available
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-gray-600">
-      {/* Chart */}
-      <div className="overflow-x-auto p-4 w-full">
-        <div
-          className="flex"
-          style={{ minWidth: "max-content", maxWidth: "100vw" }}
-        >
+    <div className={styles.card}>
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="Projected conference standings progression. Scroll horizontally to see every date."
+        tabIndex={0}
+      >
+        <div className={styles.grid}>
           {/* Left axis (position numbers) */}
-          <div className="flex flex-col flex-shrink-0">
-            {/* Top spacer for header */}
-            <div
-              style={{
-                height: "48px",
-                borderRight: `1px solid ${borderColor}`,
-              }}
-            />
-
-            {/* Position numbers 1-conferenceSize */}
+          <div className={styles.axisColumn} style={{ width: axisLabelWidth }}>
+            <div className={styles.axisHeaderSpacer} />
             {Array.from({ length: conferenceSize }).map((_, idx) => (
               <div
                 key={`axis-${idx + 1}`}
-                className="text-xs text-gray-600 dark:text-gray-300 flex items-center justify-end pr-3"
-                style={{
-                  width: `${axisLabelWidth}px`,
-                  height: `${cellHeight}px`,
-                  borderRight: `1px solid ${borderColor}`,
-                }}
+                className={styles.axisCell}
+                style={{ height: cellHeight }}
               >
                 {idx + 1}
               </div>
@@ -272,122 +250,96 @@ export default function BballStandingsProgressionTable({
           </div>
 
           {/* Data columns */}
-          <div className="flex gap-0">
-            {selectedDates.map((dateStr) => {
-              const teams = getTeamsForDate(dateStr);
+          {selectedDates.map((dateStr) => {
+            const teams = getTeamsForDate(dateStr);
 
-              return (
-                <div
-                  key={`column-${dateStr}`}
-                  className="flex flex-col flex-shrink-0"
-                >
-                  {/* Column header with date */}
-                  <div
-                    className="text-center text-sm text-gray-700 dark:text-gray-300 flex items-center justify-center"
-                    style={{
-                      width: `${cellWidth}px`,
-                      height: "48px",
-                      borderRight: `1px solid ${borderColor}`,
-                      borderBottom: `1px solid ${borderColor}`,
-                      borderTop: `1px solid ${borderColor}`,
-                    }}
-                  >
-                    {formatDateDisplay(dateStr)}
-                  </div>
-
-                  {/* Position cells with team logos only */}
-                  {Array.from({ length: conferenceSize }).map((_, idx) => {
-                    const position = idx + 1;
-                    const team = teams[idx];
-
-                    return (
-                      <div
-                        key={`${dateStr}-pos-${position}`}
-                        className="flex items-center justify-center bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800 transition-colors"
-                        style={{
-                          width: `${cellWidth}px`,
-                          height: `${cellHeight}px`,
-                          borderRight: `1px solid ${borderColor}`,
-                          borderBottom: `1px solid ${borderColor}`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        {team ? (
-                          (() => {
-                            const isSelected =
-                              selectedTeams.size === 0 ||
-                              selectedTeams.has(team.team_name);
-                            return (
-                              <div
-                                style={{
-                                  opacity: isSelected ? 1 : 0.25,
-                                  filter: isSelected
-                                    ? "none"
-                                    : "grayscale(100%)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <TeamLogo
-                                  logoUrl={
-                                    team.team_info.logo_url ||
-                                    "/images/team_logos/default.png"
-                                  }
-                                  teamName={team.team_name}
-                                  size={logoSize}
-                                />
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <span className="text-xs text-gray-300">—</span>
-                        )}
-                      </div>
-                    );
-                  })}
+            return (
+              <div
+                key={`column-${dateStr}`}
+                className={styles.dateColumn}
+                style={{ width: cellWidth }}
+              >
+                <div className={styles.dateHeader}>
+                  {formatDateDisplay(dateStr)}
                 </div>
-              );
-            })}
-          </div>
+
+                {Array.from({ length: conferenceSize }).map((_, idx) => {
+                  const position = idx + 1;
+                  const team = teams[idx];
+
+                  return (
+                    <div
+                      key={`${dateStr}-pos-${position}`}
+                      className={styles.tileCell}
+                      style={{ height: cellHeight }}
+                    >
+                      {team ? (
+                        (() => {
+                          const isSelected =
+                            selectedTeams.size === 0 ||
+                            selectedTeams.has(team.team_name);
+                          return (
+                            <div
+                              className={styles.tile}
+                              style={{
+                                opacity: isSelected ? 1 : 0.25,
+                                filter: isSelected ? "none" : "grayscale(100%)",
+                              }}
+                            >
+                              <TeamLogo
+                                logoUrl={
+                                  team.team_info.logo_url ||
+                                  "/images/team_logos/default.png"
+                                }
+                                teamName={team.team_name}
+                                size={logoSize}
+                              />
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <span className={styles.emptyMark}>—</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Info text */}
-      <div className="p-4 text-xs text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-gray-600">
+      <div className={styles.footerNote}>
         <p>
           Team logos show projected standing for that date, ordered from best
           (1) to worst ({conferenceSize}).
         </p>
       </div>
 
-      {/* Team logo selector - bottom */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-600">
-        <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Filter Teams:
-        </div>
-        <div className="flex flex-wrap gap-2">
+      <div className={styles.filterSection}>
+        <div className={styles.filterHeading}>Filter Teams</div>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-1.5 sm:gap-2">
           {allTeams.map((team) => {
             const isSelected =
               selectedTeams.size === 0 || selectedTeams.has(team.team_name);
             return (
               <button
                 key={team.team_name}
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={`${team.team_name}. Select to filter the progression grid.`}
                 onClick={() => handleTeamClick(team.team_name)}
-                className="flex items-center justify-center p-1.5 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:bg-slate-800 transition-colors cursor-pointer"
-                style={{
-                  opacity: isSelected ? 1 : 0.3,
-                  filter: isSelected ? "none" : "grayscale(100%)",
-                }}
+                className={cn(
+                  styles.filterChip,
+                  !isSelected && "opacity-30 grayscale",
+                )}
               >
                 <TeamLogo
                   logoUrl={
                     team.team_info.logo_url || "/images/team_logos/default.png"
                   }
                   teamName={team.team_name}
-                  size={isMobile ? 20 : 24}
+                  size={isMobile ? 18 : 22}
                 />
               </button>
             );

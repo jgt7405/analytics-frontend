@@ -7,10 +7,11 @@ import "@/lib/chartjs-setup";
 
 import { useResponsive } from "@/hooks/useResponsive";
 import { getBasketballDateRange } from "@/lib/chartDateRange";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
 import type { Chart } from "chart.js";
 import { Chart as ChartJS, TooltipModel, } from "chart.js";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
 interface TeamGame {
@@ -54,17 +55,31 @@ export default function TeamWinValues({
     Array<{ x: string; y: number }>,
     string
   > | null>(null);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const updateDimensions = () => {
-      if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-        // Chart is ready
-      }
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
     };
+    const observer = new MutationObserver(updateTheme);
 
-    const timeout = setTimeout(updateDimensions, 500);
-    return () => clearTimeout(timeout);
-  }, [schedule]);
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("chartjs-tooltip-winvalues")?.remove();
+    };
+  }, []);
 
   const formatDate = (dateStr: string) => {
     const [month, day] = dateStr.split("/").map(Number);
@@ -210,168 +225,31 @@ export default function TeamWinValues({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-winvalues");
-          if (!tooltipEl) {
-            tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-winvalues";
-
-            Object.assign(tooltipEl.style, {
-              background: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              color: "#1f2937",
-              fontFamily: "Inter, system-ui, sans-serif",
-              fontSize: "12px",
-              opacity: "0",
-              padding: "16px",
-              paddingTop: "8px",
-              pointerEvents: "auto",
-              position: "absolute",
-              transition: "all .1s ease",
-              zIndex: "1000",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              minWidth: "200px",
-              maxWidth: "300px",
-            });
-
-            const handleClickOutside = (e: Event) => {
-              if (!tooltipEl?.contains(e.target as Node)) {
-                tooltipEl!.style.opacity = "0";
-                setTimeout(() => {
-                  if (tooltipEl && tooltipEl.parentNode) {
-                    document.removeEventListener("click", handleClickOutside);
-                    document.removeEventListener(
-                      "touchstart",
-                      handleClickOutside
-                    );
-                  }
-                }, 100);
-              }
-            };
-
-            document.addEventListener("click", handleClickOutside);
-            document.addEventListener("touchstart", handleClickOutside);
-            document.body.appendChild(tooltipEl);
-          }
-
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
+          let heading = "";
+          let rows: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const currentDate = labels[dataIndex];
-            const twvValue = twvData[dataIndex];
-            const cwvValue = cwvData[dataIndex];
-
-            let innerHtml = `
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-               <div style="font-weight: 600; color: #1f2937;">${currentDate}</div>
-               <button id="tooltip-close" style="
-                 background: none; 
-                 border: none; 
-                 font-size: 16px; 
-                 cursor: pointer; 
-                 color: #6b7280;
-                 padding: 0;
-                 margin: 0;
-                 line-height: 1;
-                 width: 20px;
-                 height: 20px;
-                 display: flex;
-                 align-items: center;
-                 justify-content: center;
-               ">&times;</button>
-             </div>
-           `;
-
-            innerHtml += `<div style="color: rgb(0, 151, 178); margin: 2px 0; font-weight: 400;">TWV: ${twvValue.toFixed(1)}</div>`;
-            innerHtml += `<div style="color: rgb(255, 230, 113); margin: 2px 0; font-weight: 400;">CWV: ${cwvValue.toFixed(1)}</div>`;
-
-            tooltipEl.innerHTML = innerHtml;
-
-            const closeBtn = tooltipEl.querySelector("#tooltip-close");
-            if (closeBtn) {
-              closeBtn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                tooltipEl.style.opacity = "0";
-              });
-            }
+            heading = labels[dataIndex];
+            rows = [
+              {
+                label: "TWV",
+                value: twvData[dataIndex].toFixed(1),
+                color: "rgb(0, 151, 178)",
+              },
+              {
+                label: "CWV",
+                value: cwvData[dataIndex].toFixed(1),
+                color: "rgb(255, 230, 113)",
+              },
+            ];
           }
 
-          const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width;
-          const tooltipWidth = tooltipEl.offsetWidth || 200;
-          const caretX = tooltipModel.caretX;
-          const caretY = tooltipModel.caretY;
-
-          const isLeftSide = caretX < chartWidth / 2;
-          let leftPosition: number;
-          let arrowPosition: string;
-
-          if (isLeftSide) {
-            leftPosition = position.left + window.pageXOffset + caretX + 20;
-            arrowPosition = "left";
-          } else {
-            leftPosition =
-              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-            arrowPosition = "right";
-          }
-
-          if (!tooltipEl.querySelector(".tooltip-arrow")) {
-            const arrow = document.createElement("div");
-            arrow.className = "tooltip-arrow";
-            arrow.style.position = "absolute";
-            arrow.style.width = "0";
-            arrow.style.height = "0";
-            arrow.style.top = "50%";
-            arrow.style.transform = "translateY(-50%)";
-
-            if (arrowPosition === "left") {
-              arrow.style.left = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderRight = "8px solid #ffffff";
-            } else {
-              arrow.style.right = "-8px";
-              arrow.style.borderTop = "8px solid transparent";
-              arrow.style.borderBottom = "8px solid transparent";
-              arrow.style.borderLeft = "8px solid #ffffff";
-            }
-
-            tooltipEl.appendChild(arrow);
-          } else {
-            const arrow = tooltipEl.querySelector(
-              ".tooltip-arrow"
-            ) as HTMLElement;
-            if (arrow) {
-              arrow.style.left = arrowPosition === "left" ? "-8px" : "auto";
-              arrow.style.right = arrowPosition === "right" ? "-8px" : "auto";
-
-              if (arrowPosition === "left") {
-                arrow.style.borderLeft = "none";
-                arrow.style.borderRight = "8px solid #ffffff";
-              } else {
-                arrow.style.borderRight = "none";
-                arrow.style.borderLeft = "8px solid #ffffff";
-              }
-            }
-          }
-
-          const maxLeft = window.innerWidth - tooltipWidth - 10;
-          const minLeft = 10;
-          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
-
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.left = leftPosition + "px";
-          tooltipEl.style.top =
-            position.top +
-            window.pageYOffset +
-            caretY -
-            tooltipEl.offsetHeight / 2 -
-            0 +
-            "px";
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "chartjs-tooltip-winvalues",
+            isDark,
+            heading,
+            rows,
+          });
         },
       },
     },
@@ -380,8 +258,11 @@ export default function TeamWinValues({
         title: { display: false },
         ticks: {
           maxTicksLimit: isMobile ? 5 : 10,
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
           font: {
-            size: isMobile ? 9 : 11,
+            weight: 600,
+            size: isMobile ? 13 : 15,
           },
         },
         grid: { display: false },
@@ -390,7 +271,7 @@ export default function TeamWinValues({
         grid: {
           color: (context: { tick: { value: number } }) => {
             if (context.tick.value === 0) {
-              return "rgba(0, 0, 0, 0.5)";
+              return isDark ? "rgb(148 163 184 / 0.5)" : "rgba(0, 0, 0, 0.5)";
             }
             return "transparent";
           },
@@ -398,8 +279,10 @@ export default function TeamWinValues({
           drawOnChartArea: true,
         },
         ticks: {
+          color: isDark ? "#94a3b8" : "#475569",
           font: {
-            size: isMobile ? 10 : 12,
+            weight: 600,
+            size: isMobile ? 13 : 15,
           },
         },
       },
@@ -411,6 +294,9 @@ export default function TeamWinValues({
     },
     animation: {
       duration: 750,
+    },
+    layout: {
+      padding: { top: 14 },
     },
   };
 

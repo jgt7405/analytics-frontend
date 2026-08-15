@@ -101,6 +101,9 @@ const BASKETBALL_STANDINGS: StandingsContentConfig<
 > = {
   sport: "basketball",
   pageId: "standings",
+  hidePageTitle: true,
+  historyTitleInCard: true,
+  firstPlaceTitleInCard: true,
   resolveInitialConference: (conf) =>
     KNOWN_CONFERENCES.includes(conf) ? conf : "Big 12",
   useStandingsData: useStandings,

@@ -2,16 +2,30 @@
 
 import "@/lib/chartjs-setup";
 import TeamLogo from "@/components/ui/TeamLogo";
-import { buildChartLabels, filterDataToRange, getBasketballDateRange } from "@/lib/chartDateRange";
 import { useResponsive } from "@/hooks/useResponsive";
-import type { Chart } from "chart.js";
 import {
-  ChartArea,
-  Chart as ChartJS,
-  TooltipModel,
-} from "chart.js";
-import { useEffect, useRef, useState } from "react";
+  buildChartLabels,
+  filterDataToRange,
+  getBasketballDateRange,
+} from "@/lib/chartDateRange";
+import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
+import { cn } from "@/lib/utils";
+import type { Chart } from "chart.js";
+import { ChartArea, Chart as ChartJS, TooltipModel } from "chart.js";
+import { RotateCcw } from "lucide-react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+
+// Matches the gradient/border/shadow "card" look used across the
+// modernized Wins/Standings/CWV/etc. pages.
+// No `border` property: a real `border` combined with this element's
+// `border-radius` hits a sub-pixel rasterization artifact on some
+// Windows Chrome/Edge configurations (zoom-dependent dark corner/edge
+// fringe, invisible to computed-style checks). The 1px ring is folded
+// into the shadow stack as an inset layer instead - same visual result,
+// different rasterization path.
+const CARD_CLASS =
+  "relative rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[inset_0_0_0_1px_rgb(226_232_240_/_0.9),0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[inset_0_0_0_1px_rgb(51_65_85_/_0.9),0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
 
 interface ChampionHistoryData {
   team_name: string;
@@ -29,6 +43,7 @@ interface BasketballConfChampionHistoryChartProps {
   championData: ChampionHistoryData[];
   selectedConference: string;
   season?: string;
+  headerRight?: ReactNode;
 }
 
 interface TeamDataPoint {
@@ -54,6 +69,7 @@ export default function BasketballConfChampionHistoryChart({
   championData,
   selectedConference,
   season,
+  headerRight,
 }: BasketballConfChampionHistoryChartProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", TeamDataPoint[], string> | null>(
@@ -62,31 +78,72 @@ export default function BasketballConfChampionHistoryChart({
   const [chartDimensions, setChartDimensions] =
     useState<ChartDimensions | null>(null);
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const root = document.documentElement;
+    const updateTheme = () => {
+      setIsDark(root.classList.contains("dark") || mediaQuery.matches);
+    };
+    const observer = new MutationObserver(updateTheme);
+
+    updateTheme();
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mediaQuery.addEventListener("change", updateTheme);
+
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener("change", updateTheme);
+    };
+  }, []);
+
+  useEffect(() => {
+    setSelectedTeams(new Set());
+  }, [championData]);
+
+  useEffect(() => {
+    return () => {
+      document.getElementById("chartjs-tooltip-conf-champ")?.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    const canvas = chartRef.current?.canvas;
+    if (!canvas) return;
+
     const updateDimensions = () => {
       if (chartRef.current?.chartArea && chartRef.current?.canvas) {
-        setChartDimensions({
-          chartArea: chartRef.current.chartArea,
-          canvas: chartRef.current.canvas,
+        const area = chartRef.current.chartArea;
+        setChartDimensions((prev) => {
+          if (
+            prev &&
+            prev.chartArea.top === area.top &&
+            prev.chartArea.bottom === area.bottom &&
+            prev.chartArea.left === area.left &&
+            prev.chartArea.right === area.right
+          ) {
+            return prev;
+          }
+          return { chartArea: area, canvas: chartRef.current!.canvas };
         });
       }
     };
 
-    const timeout = setTimeout(updateDimensions, 500);
-    return () => clearTimeout(timeout);
+    // A ResizeObserver (rather than a one-shot timeout) keeps the SVG
+    // end-of-line markers and logo overlay in sync with the actual canvas
+    // layout, including on mobile where the page reflows after mount more
+    // than desktop (address bar collapse, later webfont swap-in shifting
+    // the y-axis label width).
+    const observer = new ResizeObserver(updateDimensions);
+    observer.observe(canvas);
+    updateDimensions();
+
+    return () => observer.disconnect();
   }, [championData, selectedConference, season]);
 
   const range = getBasketballDateRange(season, championData);
   const filteredChampionData = filterDataToRange(championData, range);
-
-  // Debug logging
-  useEffect(() => {
-    console.log(`?? Champion History Chart Debug - ${selectedConference} (season: ${season})`);
-    console.log("Raw championData:", championData);
-    console.log("Date range:", range);
-    console.log("Filtered champion data:", filteredChampionData);
-  }, [championData, range, selectedConference, season]);
 
   const dataByTeamAndDate = new Map<string, ChampionHistoryData>();
   filteredChampionData.forEach((item: ChampionHistoryData) => {
@@ -101,7 +158,9 @@ export default function BasketballConfChampionHistoryChart({
     }
   });
 
-  const allDatesFromData = [...new Set(filteredChampionData.map((d) => d.date))].sort();
+  const allDatesFromData = [
+    ...new Set(filteredChampionData.map((d) => d.date)),
+  ].sort();
   const chartLabels = buildChartLabels(allDatesFromData, range, "basketball");
   const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
 
@@ -151,6 +210,8 @@ export default function BasketballConfChampionHistoryChart({
     })
     .sort((a, b) => b.final_pct - a.final_pct);
 
+  const clearSelectedTeams = () => setSelectedTeams(new Set());
+
   const handleTeamClick = (teamName: string) => {
     setSelectedTeams((prev) => {
       const newSet = new Set(prev);
@@ -175,6 +236,14 @@ export default function BasketballConfChampionHistoryChart({
     });
   };
 
+  const maxYValue = (() => {
+    const allValues = Object.values(mappedTeamData).flatMap((team) =>
+      team.data.map((d: TeamDataPoint) => d.y),
+    );
+    const maxValue = allValues.length > 0 ? Math.max(...allValues) : 0;
+    return Math.max(20, Math.ceil(maxValue / 10) * 10);
+  })();
+
   const datasets = Object.entries(mappedTeamData).map(([teamName, team]) => {
     // Show team if no teams are selected OR this team is in the selected set
     const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
@@ -187,9 +256,10 @@ export default function BasketballConfChampionHistoryChart({
       data: team.data,
       borderColor: color,
       backgroundColor: color,
-      borderWidth: isSelected ? 2 : 1,
+      borderWidth: isSelected ? 2.25 : 1.1,
+      order: isSelected ? 0 : 1,
       pointRadius: 0,
-      pointHoverRadius: 4,
+      pointHoverRadius: 0,
       tension: 0.1,
       fill: false,
     };
@@ -215,153 +285,77 @@ export default function BasketballConfChampionHistoryChart({
         external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
           const { tooltip: tooltipModel, chart } = args;
 
-          let tooltipEl = document.getElementById("chartjs-tooltip-conf-champ");
-          if (!tooltipEl) {
-            tooltipEl = document.createElement("div");
-            tooltipEl.id = "chartjs-tooltip-conf-champ";
-
-            Object.assign(tooltipEl.style, {
-              background: "#ffffff",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              color: "#1f2937",
-              fontFamily: "Inter, system-ui, sans-serif",
-              fontSize: "12px",
-              opacity: "0",
-              padding: "16px",
-              paddingTop: "8px",
-              pointerEvents: "auto",
-              position: "absolute",
-              transition: "all .1s ease",
-              zIndex: "1000",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              minWidth: "200px",
-              maxWidth: "300px",
-            });
-
-            const handleClickOutside = (e: Event) => {
-              if (!tooltipEl?.contains(e.target as Node)) {
-                tooltipEl!.style.opacity = "0";
-                setTimeout(() => {
-                  if (tooltipEl && tooltipEl.parentNode) {
-                    document.removeEventListener("click", handleClickOutside);
-                    document.removeEventListener(
-                      "touchstart",
-                      handleClickOutside,
-                    );
-                    document.body.removeChild(tooltipEl);
-                  }
-                }, 100);
-              }
-            };
-
-            document.addEventListener("click", handleClickOutside);
-            document.addEventListener("touchstart", handleClickOutside);
-            document.body.appendChild(tooltipEl);
-          }
-
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = "0";
-            return;
-          }
-
+          let heading = "";
+          let rows: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const displayDate = chartLabels[dataIndex]?.displayLabel;
-
-            // Create array of teams with their values at this date
-            const teamsAtDate = tooltipModel.dataPoints
-              .map((point) => {
-                const datasetIndex = point.datasetIndex;
-                const dataset = chart.data.datasets[datasetIndex];
-                const dataPoint = dataset.data[
-                  dataIndex
-                ] as unknown as TeamDataPoint;
-                return {
-                  label: dataset.label,
-                  value: dataPoint.y || 0,
-                  borderColor: dataset.borderColor,
-                };
-              })
-              .sort((a, b) => b.value - a.value); // Sort high to low for champion prob
-
-            const teamsHtml = teamsAtDate
-              .map((team) => {
-                return `
-              <div style="color: ${team.borderColor}; font-weight: 500; margin-bottom: 4px;">
-                ${team.label}: ${team.value.toFixed(1)}%
-              </div>
-            `;
-              })
-              .join("");
-
-            const innerHtml = `
-              <div style="font-size: 11px; color: #6b7280; margin-bottom: 8px; font-weight: 500;">
-                ${displayDate}
-              </div>
-              ${teamsHtml}
-            `;
-
-            tooltipEl.innerHTML = innerHtml;
+            const isoDate = chartLabels[dataIndex]?.isoDate;
+            heading = chartLabels[dataIndex]?.displayLabel ?? "";
+            rows = filteredChampionData
+              .filter((item) => item.date === isoDate)
+              .sort((a, b) => b.champion_pct - a.champion_pct)
+              .map((item) => ({
+                label: item.team_name,
+                value: `${item.champion_pct.toFixed(1)}%`,
+                color: item.team_info.primary_color || "#000000",
+                logoUrl:
+                  item.team_info.logo_url || "/images/team_logos/default.png",
+              }));
           }
 
-          const position = chart.canvas.getBoundingClientRect();
-          const chartWidth = chart.width || 600;
-          const tooltipWidth = tooltipEl.offsetWidth || 200;
-          const caretX = tooltipModel.caretX;
-          const caretY = tooltipModel.caretY;
-
-          // Determine position based on whether caret is on left or right side
-          const isLeftSide = caretX < chartWidth / 2;
-          let leftPosition: number;
-
-          if (isLeftSide) {
-            leftPosition = position.left + window.pageXOffset + caretX + 20;
-          } else {
-            leftPosition =
-              position.left + window.pageXOffset + caretX - tooltipWidth - 20;
-          }
-
-          // Ensure tooltip stays within viewport
-          const maxLeft = window.innerWidth - tooltipWidth - 10;
-          const minLeft = 10;
-          leftPosition = Math.max(minLeft, Math.min(maxLeft, leftPosition));
-
-          tooltipEl.style.opacity = "1";
-          tooltipEl.style.left = leftPosition + "px";
-          tooltipEl.style.top =
-            position.top +
-            window.pageYOffset +
-            caretY -
-            tooltipEl.offsetHeight -
-            19 +
-            "px";
+          renderExternalTooltip(chart, tooltipModel, {
+            id: "chartjs-tooltip-conf-champ",
+            isDark,
+            heading,
+            rows,
+            verticalOffset: 0,
+          });
         },
       },
     },
     scales: {
       x: {
         title: { display: false },
-        ticks: { maxTicksLimit: isMobile ? 5 : 10 },
-        grid: { display: false },
+        ticks: {
+          maxTicksLimit: isMobile ? 5 : 10,
+          color: isDark ? "#94a3b8" : "#475569",
+          padding: 8,
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
+        },
+        grid: { display: false, drawOnChartArea: false, drawTicks: false },
+        border: { display: false },
       },
       y: {
-        title: { display: true, text: "Conference Champion Probability (%)" },
+        title: {
+          display: true,
+          text: "Conference Champion Probability (%)",
+          color: isDark ? "#cbd5e1" : "#334155",
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
+        },
         min: 0,
-        max: (() => {
-          const allValues = Object.values(mappedTeamData).flatMap((team) =>
-            team.data.map((d: TeamDataPoint) => d.y),
-          );
-          const maxValue = Math.max(...allValues);
-          return Math.max(20, Math.ceil(maxValue / 10) * 10);
-        })(),
+        max: maxYValue,
         ticks: {
+          color: isDark ? "#94a3b8" : "#475569",
+          font: {
+            weight: 600,
+            size: isMobile ? 13 : 15,
+          },
           callback: (value: string | number) => `${value}%`,
         },
+        grid: {
+          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
+        },
+        border: { display: false },
       },
     },
     layout: {
-      padding: { left: 10, right: 100 },
+      padding: { left: 10, right: 76, top: 14 },
     },
     animation: {
       duration: 750,
@@ -373,24 +367,12 @@ export default function BasketballConfChampionHistoryChart({
   const getChartJsYPosition = (percentage: number) => {
     if (!chartDimensions?.chartArea) return null;
     const { top, bottom } = chartDimensions.chartArea;
-    const maxY = (() => {
-      const allValues = Object.values(mappedTeamData).flatMap((team) =>
-        team.data.map((d: TeamDataPoint) => d.y),
-      );
-      const maxValue = Math.max(...allValues);
-      return Math.max(20, Math.ceil(maxValue / 10) * 10);
-    })();
-    return top + ((maxY - percentage) / maxY) * (bottom - top);
-  };
-
-  const getChartEndXPosition = () => {
-    if (!chartDimensions?.chartArea) return null;
-    return chartDimensions.chartArea.right;
+    return top + ((maxYValue - percentage) / maxYValue) * (bottom - top);
   };
 
   const getAdjustedLogoPositions = () => {
     if (!chartDimensions) return [];
-    const minSpacing = 25;
+    const minSpacing = isMobile ? 21 : 25;
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom - 15;
 
@@ -406,7 +388,6 @@ export default function BasketballConfChampionHistoryChart({
       team,
       idealY: getChartJsYPosition(team.final_pct) || 0,
       adjustedY: getChartJsYPosition(team.final_pct) || 0,
-      endX: getChartEndXPosition() || 0,
     }));
 
     // If only one team visible, don't adjust - use ideal position
@@ -456,23 +437,41 @@ export default function BasketballConfChampionHistoryChart({
   }
 
   return (
-    <div
-      className="bg-white dark:bg-slate-900 rounded-lg p-4 border relative"
-      style={{ zIndex: 10, isolation: "isolate" }}
-    >
-      <div
-        className="relative"
-        style={{ height: `${chartHeight}px`, overflow: "visible" }}
-      >
-        <Line ref={chartRef} data={chartData} options={options} />
+    <div className={CARD_CLASS} style={{ zIndex: 10, isolation: "isolate" }}>
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 px-[1.35rem] pb-4 pt-5">
+        <div
+          className="flex min-w-0 items-center gap-3"
+          data-screenshot-hide="true"
+        >
+          <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+            Conference Champion Probability History
+            <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+              (Over Time)
+            </span>
+          </h2>
+        </div>
+        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+      </div>
 
-        {chartDimensions && (
-          <div
-            className="absolute left-0 top-0 pointer-events-none"
-            style={{ width: "100%", height: "100%" }}
-          >
-            {getAdjustedLogoPositions().map(
-              ({ team, idealY, adjustedY, endX }) => {
+      <div className="px-3 pb-2 sm:px-4">
+        <div
+          className="relative"
+          style={{ height: `${chartHeight}px`, overflow: "visible" }}
+        >
+          <Line
+            ref={chartRef}
+            data={chartData}
+            options={options}
+            role="img"
+            aria-label="Conference champion probability history showing every team's championship odds over time. Hover a date to see all teams ranked for that date."
+          />
+
+          {chartDimensions && (
+            <div
+              className="pointer-events-none absolute left-0 top-0"
+              style={{ width: "100%", height: "100%" }}
+            >
+              {getAdjustedLogoPositions().map(({ team, idealY, adjustedY }) => {
                 const isSelected =
                   selectedTeams.size === 0 || selectedTeams.has(team.team_name);
                 const teamColor = isSelected
@@ -482,7 +481,7 @@ export default function BasketballConfChampionHistoryChart({
                 return (
                   <div key={`end-${team.team_name}`}>
                     <svg
-                      className="absolute top-0 left-0"
+                      className="absolute left-0 top-0"
                       style={{
                         width: "100%",
                         height: "100%",
@@ -490,109 +489,158 @@ export default function BasketballConfChampionHistoryChart({
                       }}
                     >
                       <line
-                        x1={endX}
+                        x1={chartDimensions.chartArea.right}
                         y1={idealY}
-                        x2={endX + 12}
+                        x2={chartDimensions.chartArea.right + 6}
                         y2={adjustedY}
                         stroke={teamColor}
                         strokeWidth="1"
                         strokeDasharray="2,2"
                         opacity="0.7"
                       />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="8"
+                        fill={teamColor}
+                        opacity={isDark ? "0.24" : "0.18"}
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="4.25"
+                        fill={isDark ? "#0f172a" : "#ffffff"}
+                        stroke={teamColor}
+                        strokeWidth="2.5"
+                        style={{
+                          filter: `drop-shadow(0 0 3px ${teamColor})`,
+                        }}
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="1.75"
+                        fill={teamColor}
+                      />
                     </svg>
                   </div>
                 );
-              },
-            )}
-
-            <div className="absolute right-0 top-0">
-              {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
-                const isSelected =
-                  selectedTeams.size === 0 || selectedTeams.has(team.team_name);
-                const teamDataPoint = mappedTeamData[team.team_name];
-                const lastPoint =
-                  teamDataPoint?.data[teamDataPoint.data.length - 1];
-
-                return (
-                  <div
-                    key={`logo-${team.team_name}`}
-                    className="absolute flex items-center"
-                    style={{
-                      right: "25px",
-                      top: `${adjustedY - 10}px`,
-                      zIndex: 10,
-                      opacity: isSelected ? 1 : 0.3,
-                    }}
-                  >
-                    <div
-                      style={{
-                        filter: isSelected ? "none" : "grayscale(100%)",
-                      }}
-                    >
-                      <TeamLogo
-                        logoUrl={
-                          team.team_info.logo_url ||
-                          "/images/team_logos/default.png"
-                        }
-                        teamName={team.team_name}
-                        size={20}
-                      />
-                    </div>
-                    <span
-                      className="text-xs font-medium ml-2"
-                      style={{
-                        color: isSelected
-                          ? team.team_info.primary_color || "#000000"
-                          : "#d1d5db",
-                        minWidth: "35px",
-                        textAlign: "left",
-                      }}
-                    >
-                      {lastPoint?.y.toFixed(1) || team.final_pct.toFixed(1)}%
-                    </span>
-                  </div>
-                );
               })}
+
+              <div className="absolute inset-0">
+                {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
+                  const isSelected =
+                    selectedTeams.size === 0 ||
+                    selectedTeams.has(team.team_name);
+                  const teamDataPoint = mappedTeamData[team.team_name];
+                  const lastPoint =
+                    teamDataPoint?.data[teamDataPoint.data.length - 1];
+
+                  return (
+                    <div
+                      key={`logo-${team.team_name}`}
+                      className="absolute flex items-center"
+                      style={{
+                        left: `${chartDimensions.chartArea.right + 8}px`,
+                        top: `${adjustedY - 10}px`,
+                        zIndex: 10,
+                        opacity: isSelected ? 1 : 0.3,
+                      }}
+                    >
+                      <div
+                        style={{
+                          filter: isSelected ? "none" : "grayscale(100%)",
+                        }}
+                      >
+                        <TeamLogo
+                          logoUrl={
+                            team.team_info.logo_url ||
+                            "/images/team_logos/default.png"
+                          }
+                          teamName={team.team_name}
+                          size={isMobile ? 18 : 20}
+                        />
+                      </div>
+                      <span
+                        className="ml-1.5 min-w-[35px] text-left text-xs font-medium tabular-nums"
+                        style={{
+                          color: isSelected
+                            ? team.team_info.primary_color || "#000000"
+                            : "#d1d5db",
+                        }}
+                      >
+                        {(lastPoint?.y ?? team.final_pct).toFixed(1)}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Bottom logo selector */}
-      <div className="mt-4 flex flex-wrap gap-2 justify-center items-center pb-2">
-        {allTeamsSorted.map((team) => {
-          const isSelected =
-            selectedTeams.size === 0 || selectedTeams.has(team.team_name);
-          return (
+      <div className="border-t border-slate-200/80 px-4 pb-5 pt-4 dark:border-slate-700/80 sm:px-[1.35rem]">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Select teams to emphasize
+          </p>
+          {selectedTeams.size > 0 && (
             <button
-              key={team.team_name}
-              onClick={() => handleTeamClick(team.team_name)}
-              className="flex flex-col items-center gap-0.5 p-1 rounded hover:bg-gray-100 dark:bg-slate-700 transition-colors cursor-pointer"
-              style={{
-                opacity: isSelected ? 1 : 0.3,
-                filter: isSelected ? "none" : "grayscale(100%)",
-              }}
+              type="button"
+              onClick={clearSelectedTeams}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-red-400/50 dark:hover:bg-red-950/30 dark:hover:text-red-400"
             >
-              <TeamLogo
-                logoUrl={
-                  team.team_info.logo_url || "/images/team_logos/default.png"
-                }
-                teamName={team.team_name}
-                size={isMobile ? 24 : 28}
-              />
-              <span
-                className="text-[10px] font-medium"
-                style={{
-                  color: isSelected
-                    ? team.team_info.primary_color || "#000000"
-                    : "#9ca3af",
-                }}
-              >
-                {team.final_pct.toFixed(1)}%
-              </span>
+              <RotateCcw className="h-3 w-3" />
+              Show All
             </button>
-          );
-        })}
+          )}
+        </div>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-1.5 sm:gap-2">
+          {allTeamsSorted.map((team) => {
+            const isSelected =
+              selectedTeams.size === 0 || selectedTeams.has(team.team_name);
+            return (
+              <button
+                key={team.team_name}
+                type="button"
+                aria-pressed={isSelected}
+                aria-label={`${team.team_name}, final championship probability ${team.final_pct.toFixed(1)}%. Select to emphasize this team.`}
+                onClick={() => handleTeamClick(team.team_name)}
+                style={{
+                  // Inset box-shadow instead of a real `border` - see the
+                  // CARD_CLASS comment above for why.
+                  boxShadow: `inset 0 0 0 1px ${
+                    team.team_info.primary_color ||
+                    (isDark ? "#475569" : "#cbd5e1")
+                  }`,
+                }}
+                className={cn(
+                  "flex min-w-0 cursor-pointer appearance-none flex-col items-center gap-0.5 rounded-xl bg-white/80 px-1 pb-1.5 pt-1 transition-[box-shadow,background-color] hover:bg-slate-50 dark:bg-slate-900/60 dark:hover:bg-slate-800",
+                  !isSelected && "opacity-30 grayscale",
+                )}
+              >
+                <TeamLogo
+                  logoUrl={
+                    team.team_info.logo_url || "/images/team_logos/default.png"
+                  }
+                  teamName={team.team_name}
+                  size={isMobile ? 24 : 28}
+                />
+                <span
+                  className="text-xs font-semibold tabular-nums"
+                  style={{
+                    color: isSelected
+                      ? team.team_info.primary_color || "#000000"
+                      : "#9ca3af",
+                  }}
+                >
+                  {team.final_pct.toFixed(1)}%
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ type SeedRow = any;
 const BASKETBALL_SEED: SeedContentConfig<SeedRow> = {
   pageId: "seed",
   title: "NCAA Tournament Seed Projections",
+  hidePageTitle: true,
   skeletonTeamCols: 18,
   useSeedData: useSeed,
   renderTable: (data, ctx) => (
@@ -30,6 +31,7 @@ const BASKETBALL_SEED: SeedContentConfig<SeedRow> = {
       seedData={data}
       showAllTeams={ctx.showAllTeams}
       season={ctx.season}
+      headerRight={ctx.headerRight}
     />
   ),
   tableExplainer: [

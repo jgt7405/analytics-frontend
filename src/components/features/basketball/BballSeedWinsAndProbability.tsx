@@ -4,9 +4,11 @@ import {
   useBasketballSeedWinsData,
   type SeedWinsTeam,
 } from "@/hooks/useBasketballSeedWinsData";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import styles from "./BballSeedWinsAndProbability.module.css";
 
 interface ConfChampData extends SeedWinsTeam {
   wins_probabilities?: Record<string, number>;
@@ -326,9 +328,9 @@ export default function BballSeedWinsAndProbability({
     if (teams.length === 0) {
       return (
         <div
+          className={styles.placeholder}
           style={{
             fontSize: isMobile ? "11px" : "12px",
-            color: "#9ca3af",
             flex: 1,
           }}
         >
@@ -390,9 +392,9 @@ export default function BballSeedWinsAndProbability({
     if (teams.length === 0) {
       return (
         <div
+          className={styles.placeholder}
           style={{
             fontSize: isMobile ? "11px" : "12px",
-            color: "#9ca3af",
             flex: 1,
           }}
         >
@@ -450,13 +452,13 @@ export default function BballSeedWinsAndProbability({
   if (isLoading) {
     return (
       <div
+        className={cn(styles.card, styles.explainer)}
         style={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           height: "400px",
           fontSize: "14px",
-          color: "#6b7280",
         }}
       >
         Loading...
@@ -467,6 +469,7 @@ export default function BballSeedWinsAndProbability({
   if (error) {
     return (
       <div
+        className={styles.card}
         style={{
           display: "flex",
           justifyContent: "center",
@@ -483,6 +486,7 @@ export default function BballSeedWinsAndProbability({
 
   return (
     <div
+      className={styles.card}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -492,6 +496,7 @@ export default function BballSeedWinsAndProbability({
     >
       {/* SEED DROPDOWN */}
       <div
+        className={styles.controlsRow}
         style={{
           display: "flex",
           flexDirection: "row",
@@ -500,16 +505,16 @@ export default function BballSeedWinsAndProbability({
           paddingRight: paddingHorizontal,
           paddingTop: 12,
           paddingBottom: 12,
-          borderBottom: "2px solid var(--border-color)",
+          borderBottom: "2px solid",
           boxSizing: "border-box",
           flexShrink: 0,
         }}
       >
         <label
+          className={styles.controlLabel}
           style={{
             fontSize: isMobile ? "12px" : "13px",
             fontWeight: "500",
-            color: "#374151",
             display: "flex",
             alignItems: "center",
           }}
@@ -519,13 +524,12 @@ export default function BballSeedWinsAndProbability({
         <select
           value={selectedSeed}
           onChange={(e) => setSelectedSeed(e.target.value as SeedLevel)}
+          className={styles.select}
           style={{
             padding: "6px 8px",
             borderRadius: "4px",
-            border: "1px solid var(--border-color)",
+            border: "1px solid",
             fontSize: isMobile ? "12px" : "13px",
-            backgroundColor: "white",
-            color: "#1f2937",
             cursor: "pointer",
             fontWeight: "500",
           }}
@@ -551,18 +555,20 @@ export default function BballSeedWinsAndProbability({
       >
         {/* LEFT CHART: WINS REQUIRED */}
         <div
+          className={styles.chartDivider}
           style={{
             flex: 1,
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
             boxSizing: "border-box",
-            borderRight: `2px solid var(--border-color)`,
+            borderRight: `2px solid`,
             paddingRight: chartGap / 2,
             maxWidth: "320px",
           }}
         >
           <div
+            className={styles.chartDivider}
             style={{
               display: "flex",
               flexDirection: "row",
@@ -571,19 +577,19 @@ export default function BballSeedWinsAndProbability({
               paddingRight: paddingHorizontal,
               paddingTop: 6,
               paddingBottom: 4,
-              borderBottom: "2px solid var(--border-color)",
+              borderBottom: "2px solid",
               boxSizing: "border-box",
               flexShrink: 0,
               alignItems: "flex-end",
             }}
           >
             <div
+              className={styles.columnHeaderText}
               style={{
                 width: labelWidth,
                 flexShrink: 0,
                 fontSize: isMobile ? "12px" : "13px",
                 fontWeight: "400",
-                color: "#374151",
                 textAlign: "left",
                 boxSizing: "border-box",
               }}
@@ -592,10 +598,10 @@ export default function BballSeedWinsAndProbability({
             </div>
 
             <div
+              className={styles.columnHeaderText}
               style={{
                 fontSize: isMobile ? "12px" : "13px",
                 fontWeight: "400",
-                color: "#374151",
                 flex: 1,
               }}
             >
@@ -614,6 +620,11 @@ export default function BballSeedWinsAndProbability({
               return (
                 <div
                   key={`wins-${winsLevel}`}
+                  className={cn(
+                    styles.winsRow,
+                    isNeedsHelp && styles.needsHelpRow,
+                    isZeroWins && styles.zeroWinsRow,
+                  )}
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -623,26 +634,23 @@ export default function BballSeedWinsAndProbability({
                     paddingRight: paddingHorizontal,
                     paddingTop: 2,
                     paddingBottom: 2,
-                    borderBottom: "1px solid #f3f4f6",
-                    backgroundColor: isNeedsHelp
-                      ? "#fef3c7"
-                      : isZeroWins
-                        ? "#f0fdf4"
-                        : "transparent",
+                    borderBottom: "1px solid",
                     boxSizing: "border-box",
                   }}
                 >
                   <div
+                    className={cn(
+                      isNeedsHelp
+                        ? styles.needsHelpText
+                        : isZeroWins
+                          ? styles.zeroWinsText
+                          : styles.neutralText,
+                    )}
                     style={{
                       width: labelWidth,
                       flexShrink: 0,
                       fontSize: isMobile ? "11px" : "12px",
                       fontWeight: "400",
-                      color: isNeedsHelp
-                        ? "#92400e"
-                        : isZeroWins
-                          ? "#166534"
-                          : "#1f2937",
                       textAlign: "left",
                       boxSizing: "border-box",
                       lineHeight: "1.2",
@@ -655,6 +663,7 @@ export default function BballSeedWinsAndProbability({
               );
             })}
             <div
+              className={cn(styles.winsRow, styles.notPossibleRow)}
               style={{
                 display: "flex",
                 flexDirection: "row",
@@ -664,18 +673,17 @@ export default function BballSeedWinsAndProbability({
                 paddingRight: paddingHorizontal,
                 paddingTop: 2,
                 paddingBottom: 2,
-                borderBottom: "1px solid #f3f4f6",
-                backgroundColor: "#fef2f2",
+                borderBottom: "1px solid",
                 boxSizing: "border-box",
               }}
             >
               <div
+                className={styles.notPossibleText}
                 style={{
                   width: labelWidth,
                   flexShrink: 0,
                   fontSize: isMobile ? "11px" : "12px",
                   fontWeight: "400",
-                  color: "#991b1b",
                   textAlign: "left",
                   boxSizing: "border-box",
                   lineHeight: "1.2",
@@ -704,6 +712,7 @@ export default function BballSeedWinsAndProbability({
           }}
         >
           <div
+            className={styles.chartDivider}
             style={{
               display: "flex",
               flexDirection: "row",
@@ -712,19 +721,19 @@ export default function BballSeedWinsAndProbability({
               paddingRight: paddingHorizontal,
               paddingTop: 6,
               paddingBottom: 4,
-              borderBottom: "2px solid var(--border-color)",
+              borderBottom: "2px solid",
               boxSizing: "border-box",
               flexShrink: 0,
               alignItems: "flex-end",
             }}
           >
             <div
+              className={styles.columnHeaderText}
               style={{
                 width: labelWidth,
                 flexShrink: 0,
                 fontSize: isMobile ? "12px" : "13px",
                 fontWeight: "400",
-                color: "#374151",
                 textAlign: "left",
                 boxSizing: "border-box",
               }}
@@ -733,10 +742,10 @@ export default function BballSeedWinsAndProbability({
             </div>
 
             <div
+              className={styles.columnHeaderText}
               style={{
                 fontSize: isMobile ? "12px" : "13px",
                 fontWeight: "400",
-                color: "#374151",
                 flex: 1,
               }}
             >
@@ -751,6 +760,7 @@ export default function BballSeedWinsAndProbability({
               return (
                 <div
                   key={`prob-${probCategory}`}
+                  className={styles.probRow}
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -760,7 +770,7 @@ export default function BballSeedWinsAndProbability({
                     paddingRight: paddingHorizontal,
                     paddingTop: 0,
                     paddingBottom: 0,
-                    borderBottom: "1px solid #f3f4f6",
+                    borderBottom: "1px solid",
                     boxSizing: "border-box",
                   }}
                 >
@@ -795,13 +805,13 @@ export default function BballSeedWinsAndProbability({
 
       {/* FOOTER EXPLANATION */}
       <div
+        className={styles.explainer}
         style={{
           marginTop: 12,
           marginLeft: paddingHorizontal,
           marginRight: paddingHorizontal,
           marginBottom: 12,
           fontSize: isMobile ? "10px" : "11px",
-          color: "#6b7280",
           lineHeight: "1.5",
           boxSizing: "border-box",
           flexShrink: 0,

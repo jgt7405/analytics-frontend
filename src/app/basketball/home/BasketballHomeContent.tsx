@@ -137,10 +137,6 @@ export default function BasketballHomeContent({ initialData }: { initialData?: N
           {/* Multi-Bid Conferences Section */}
           <ErrorBoundary level="component">
             <div className="mb-8">
-              <h2 className="text-xl font-normal text-gray-500 dark:text-gray-200">
-                Potential Multi-Bid Conferences
-              </h2>
-
               <div className="multibid-leagues-table min-h-[300px]" ref={multiBidRef}>
                 <MultiBidLeagues />
               </div>

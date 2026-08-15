@@ -14,6 +14,7 @@ type TWVTeam = ComponentProps<typeof TWVTable>["twvData"][number];
 
 const BASKETBALL_TWV: TWVContentConfig<TWVTeam> = {
   pageId: "twv",
+  tableTitle: "True Win Value (TWV)",
   useTWVData: useTWV,
   TWVTable,
   explainerLines: [

@@ -1,13 +1,13 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { useResponsive } from "@/hooks/useResponsive";
+import { formatTeamName } from "@/lib/formatTeamName";
 import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { Standing } from "@/types/basketball";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
+import styles from "./StandingsTableNoTies.module.css";
 
 interface StandingsTableNoTiesProps {
   standings: Standing[];
@@ -15,12 +15,30 @@ interface StandingsTableNoTiesProps {
   season?: string;
 }
 
+// Standing_Dist_No_Ties keys have shown up as both "3" and "3.0" from the
+// backend (same quirk documented on the football equivalent); check both
+// forms before concluding a position has no data.
+function readDistribution(
+  distribution: Record<number, number> | undefined,
+  position: number,
+): { hasData: boolean; percentage: number } {
+  const intKey = position.toString();
+  const floatKey = `${position}.0`;
+  const record = distribution as unknown as Record<string, number> | undefined;
+  if (record && Object.prototype.hasOwnProperty.call(record, intKey)) {
+    return { hasData: true, percentage: record[intKey] };
+  }
+  if (record && Object.prototype.hasOwnProperty.call(record, floatKey)) {
+    return { hasData: true, percentage: record[floatKey] };
+  }
+  return { hasData: false, percentage: 0 };
+}
+
 function StandingsTableNoTies({
   standings,
   className,
   season,
 }: StandingsTableNoTiesProps) {
-  const { isMobile } = useResponsive();
   const router = useRouter();
 
   const navigateToTeam = useCallback(
@@ -33,251 +51,180 @@ function StandingsTableNoTies({
     [router, season],
   );
 
-  const sortedTeams = useMemo(() => {
-    const startTime = performance.now();
-    const result = [...standings].sort((a, b) => {
-      const aStanding = a.Conf_Standing_No_Ties_Avg ?? a.avg_standing ?? 999;
-      const bStanding = b.Conf_Standing_No_Ties_Avg ?? b.avg_standing ?? 999;
-      return aStanding - bStanding;
-    });
-
-    if (process.env.NODE_ENV === "development") {
-      const duration = performance.now() - startTime;
-      if (duration > 10) {
-        console.log(
-          `StandingsTableNoTies sort took ${duration.toFixed(2)}ms for ${standings.length} teams`,
-        );
-      }
-    }
-    return result;
-  }, [standings]);
+  const sortedTeams = useMemo(
+    () =>
+      [...standings].sort((a, b) => {
+        const aStanding = a.Conf_Standing_No_Ties_Avg ?? a.avg_standing ?? 999;
+        const bStanding = b.Conf_Standing_No_Ties_Avg ?? b.avg_standing ?? 999;
+        return aStanding - bStanding;
+      }),
+    [standings],
+  );
 
   const positions = useMemo(() => {
-    const startTime = performance.now();
     const maxPosition = Math.max(1, sortedTeams.length);
-
-    if (process.env.NODE_ENV === "development") {
-      const duration = performance.now() - startTime;
-      if (duration > 1) {
-        console.log(
-          `StandingsTableNoTies positions calculation took ${duration.toFixed(2)}ms`,
-        );
-      }
-    }
     return Array.from({ length: maxPosition }, (_, i) => i + 1);
   }, [sortedTeams.length]);
 
+  const peakProbabilityByTeam = useMemo(
+    () =>
+      new Map(
+        sortedTeams.map((team) => [
+          team.team_name,
+          Math.max(0, ...Object.values(team.Standing_Dist_No_Ties ?? {})),
+        ]),
+      ),
+    [sortedTeams],
+  );
+
   if (!standings || standings.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-300 dark:text-gray-300">
+      <div className="p-4 text-center text-gray-500 dark:text-gray-300">
         No standings data available
       </div>
     );
   }
 
-  // Responsive dimensions
-  const firstColWidth = isMobile ? 60 : 80;
-  const teamColWidth = isMobile ? 40 : 64;
-  const cellHeight = isMobile ? 24 : 28;
-  const headerHeight = isMobile ? 40 : 48;
-  const summaryRowHeight = isMobile ? 24 : 28;
-
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "standings-no-ties-table",
-    className,
-  );
-
   return (
-    <div className={`${tableClassName} relative overflow-x-auto`}>
-      <table
-        className="border-collapse border-spacing-0"
-        style={{
-          width: "max-content",
-          borderCollapse: "separate",
-          borderSpacing: 0,
-        }}
+    <section
+      className={cn(styles.card, "standings-no-ties-table", className)}
+      aria-label="Projected conference standings, ties broken"
+    >
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="Projected conference standings distribution, ties broken. Scroll horizontally to see every team."
+        tabIndex={0}
       >
-        <thead>
-          <tr>
-            <th
-              className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: headerHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Position
-            </th>
-            {sortedTeams.map((team) => (
-              <th
-                key={team.team_name}
-                className="bg-gray-50 dark:bg-slate-800 text-center font-normal"
-                style={{
-                  height: headerHeight,
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                }}
-              >
-                <div
-                  className="flex justify-center items-center h-full cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigateToTeam(team.team_name);
-                  }}
-                >
-                  <TeamLogo
-                    logoUrl={team.logo_url}
-                    teamName={team.team_name}
-                    size={isMobile ? 30 : 36}
-                    className="flex-shrink-0"
-                    onClick={() => navigateToTeam(team.team_name)}
-                  />
-                </div>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th className={cn(styles.stickyColumn, styles.winsHeader)} scope="col">
+                Position
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {positions.map((position) => (
-            <tr key={`position-${position}`}>
-              <td
-                className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${isMobile ? "text-xs" : "text-sm"}`}
-                style={{
-                  width: firstColWidth,
-                  minWidth: firstColWidth,
-                  maxWidth: firstColWidth,
-                  height: cellHeight,
-                  position: "sticky",
-                  left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderRight: "1px solid var(--border-color)",
-                }}
-              >
-                {position}
-              </td>
-              {sortedTeams.map((team) => {
-                // Use the correct property name with proper typing
-                const percentage = team.Standing_Dist_No_Ties?.[position] || 0;
-                const colorStyle = getCellColor(percentage);
-
-                return (
-                  <td
-                    key={`${team.team_name}-position-${position}`}
-                    className="relative p-0"
-                    style={{
-                      height: cellHeight,
-                      width: teamColWidth,
-                      minWidth: teamColWidth,
-                      maxWidth: teamColWidth,
-                      border: "1px solid var(--border-color)",
-                      borderTop: "none",
-                      borderLeft: "none",
-                      backgroundColor: colorStyle.backgroundColor,
-                      color: colorStyle.color,
-                    }}
+              {sortedTeams.map((team) => (
+                <th
+                  key={team.team_name}
+                  className={styles.teamHeader}
+                  scope="col"
+                  data-screenshot-team-header="true"
+                >
+                  <button
+                    type="button"
+                    className={styles.teamButton}
+                    onClick={() => navigateToTeam(team.team_name)}
+                    aria-label={`View ${team.team_name}`}
                   >
-                    <div
-                      className={`absolute inset-0 flex items-center justify-center ${isMobile ? "text-xs" : "text-sm"}`}
-                    >
-                      {percentage > 0 ? `${Math.round(percentage)}%` : ""}
-                    </div>
-                  </td>
-                );
-              })}
+                    <TeamLogo
+                      logoUrl={team.logo_url}
+                      teamName={team.team_name}
+                      size={32}
+                      showTooltip
+                      className={styles.teamLogo}
+                    />
+                    <span className={styles.teamName}>
+                      {formatTeamName(team.team_name)}
+                    </span>
+                  </button>
+                </th>
+              ))}
             </tr>
-          ))}
+          </thead>
 
-          {/* Summary row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
-            <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: summaryRowHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderTop: "2px solid var(--border-color)",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Avg Position
-            </td>
-            {sortedTeams.map((team) => (
-              <td
-                key={`${team.team_name}-avg-position`}
-                className="bg-gray-50 dark:bg-slate-800 text-center"
-                style={{
-                  height: summaryRowHeight,
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "2px solid var(--border-color)",
-                  borderLeft: "none",
-                  fontSize: isMobile ? "12px" : "14px",
-                }}
-              >
-                {(team.Conf_Standing_No_Ties_Avg ?? team.avg_standing)?.toFixed(
-                  1,
-                ) || "-"}
-              </td>
-            ))}
-          </tr>
+          <tbody>
+            {positions.map((position) => (
+              <tr key={`position-${position}`}>
+                <th
+                  className={cn(styles.stickyColumn, styles.winLabel)}
+                  scope="row"
+                >
+                  {position}
+                </th>
+                {sortedTeams.map((team) => {
+                  const { hasData, percentage } = readDistribution(
+                    team.Standing_Dist_No_Ties,
+                    position,
+                  );
+                  const rounded = Math.round(percentage);
+                  const cellStyle = hasData
+                    ? getCellColor(percentage)
+                    : { backgroundColor: "transparent", color: "transparent" };
+                  const isPeak =
+                    hasData &&
+                    percentage > 0 &&
+                    percentage === peakProbabilityByTeam.get(team.team_name);
 
-          {/* Curr Conf Record row */}
-          <tr className="bg-gray-50 dark:bg-slate-800">
-            <td
-              className={`sticky left-0 z-20 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${isMobile ? "text-xs" : "text-sm"}`}
-              style={{
-                width: firstColWidth,
-                minWidth: firstColWidth,
-                maxWidth: firstColWidth,
-                height: summaryRowHeight,
-                position: "sticky",
-                left: 0,
-                border: "1px solid var(--border-color)",
-                borderTop: "none",
-                borderRight: "1px solid var(--border-color)",
-              }}
-            >
-              Curr Conf Record
-            </td>
-            {sortedTeams.map((team) => (
-              <td
-                key={`${team.team_name}-conf-record`}
-                className="bg-gray-50 dark:bg-slate-800 text-center"
-                style={{
-                  height: summaryRowHeight,
-                  width: teamColWidth,
-                  minWidth: teamColWidth,
-                  maxWidth: teamColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderTop: "none",
-                  borderLeft: "none",
-                  fontSize: isMobile ? "12px" : "14px",
-                }}
-              >
-                {team.conference_record || "-"}
-              </td>
+                  return (
+                    <td
+                      key={`${team.team_name}-position-${position}`}
+                      className={styles.probabilityCell}
+                    >
+                      <div
+                        data-screenshot-tile="true"
+                        className={cn(
+                          styles.heatTile,
+                          isPeak && styles.peakTile,
+                          !hasData && styles.emptyTile,
+                        )}
+                        style={cellStyle}
+                        title={
+                          hasData
+                            ? `${team.team_name}: ${rounded}% chance of finishing position ${position}`
+                            : `${team.team_name}: no data for position ${position}`
+                        }
+                      >
+                        {hasData && percentage > 0 ? `${rounded}%` : ""}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
             ))}
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+
+          <tfoot>
+            <tr>
+              <th
+                className={cn(styles.stickyColumn, styles.summaryLabel)}
+                scope="row"
+              >
+                Avg Position
+              </th>
+              {sortedTeams.map((team) => (
+                <td
+                  key={`${team.team_name}-average`}
+                  className={styles.summaryValue}
+                >
+                  <div className={styles.summaryChip}>
+                    {(team.Conf_Standing_No_Ties_Avg ?? team.avg_standing)?.toFixed(
+                      1,
+                    ) ?? "-"}
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <th
+                className={cn(styles.stickyColumn, styles.summaryLabel)}
+                scope="row"
+              >
+                Curr Conf Record
+              </th>
+              {sortedTeams.map((team) => (
+                <td
+                  key={`${team.team_name}-record`}
+                  className={styles.summaryValue}
+                >
+                  <div className={styles.summaryChip}>
+                    {team.conference_record || "-"}
+                  </div>
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
   );
 }
 

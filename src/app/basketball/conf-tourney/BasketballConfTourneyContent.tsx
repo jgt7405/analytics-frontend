@@ -55,13 +55,18 @@ const computeSeason = (history: History | null | undefined): string => {
 const BASKETBALL_CONF_TOURNEY: ConfChampContentConfig<TourneyData, History> = {
   pageId: "conf-tourney",
   title: "Conference Tournament Projections",
+  hidePageTitle: true,
   tableClass: "conf-tourney-table",
   skeletonTeamCols: 8,
   useChampData: useConferenceTourney,
   useHistoryData: useBasketballConfTourneyHistory,
   computeSeason,
   renderTable: (data, ctx) => (
-    <ConferenceTourneyTable tourneyData={data} season={ctx.season} />
+    <ConferenceTourneyTable
+      tourneyData={data}
+      season={ctx.season}
+      headerRight={ctx.headerRight}
+    />
   ),
   tableExplainer: [
     `Probabilities from ${SIM_BLURB}`,
@@ -86,8 +91,10 @@ const BASKETBALL_CONF_TOURNEY: ConfChampContentConfig<TourneyData, History> = {
           championData={history.champion_data}
           selectedConference={ctx.selectedConference}
           season={ctx.displaySeason}
+          headerRight={ctx.headerRight}
         />
       ),
+      titleInCard: true,
     },
   ],
 };

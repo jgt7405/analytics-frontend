@@ -1,0 +1,606 @@
+.card {
+  --wins-cell-text: #1f2937;
+  --location-col-width: 3.5rem;
+  --opponent-col-width: 3rem;
+  --winprob-col-width: 4rem;
+  --team-column-width: 3.65rem;
+  --summary-team-col-width: 11rem;
+  --summary-stat-col-width: 3.65rem;
+  position: relative;
+  border: 1px solid rgb(226 232 240 / 0.9);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  box-shadow:
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.35rem 1rem;
+}
+
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-height: 75vh;
+  overscroll-behavior: contain;
+  padding: 0 0.65rem 0.7rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport:focus-visible {
+  outline: 3px solid rgb(14 116 144 / 0.35);
+  outline-offset: -3px;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+/* No top padding on the summary table's viewport: its card has no header
+   of its own (the page already shows an external heading above it), so a
+   little top breathing room stands in for the missing header's padding. */
+.scrollViewportNoHeader {
+  padding-top: 1.1rem;
+}
+
+.table {
+  width: max-content;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 1px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+/* No longer strictly needed now that .table itself has no min-width:100%
+   to override, but kept as an explicit, harmless marker that the summary
+   table (only 7 narrow columns) is meant to size to its own content. */
+.compactTable {
+  min-width: 0;
+}
+
+.table th,
+.table td {
+  width: var(--team-column-width);
+  min-width: var(--team-column-width);
+  max-width: var(--team-column-width);
+}
+
+/* Leading sticky columns (main table): Location, Opponent, Win Prob. Each
+   stacks to the right of the ones before it via the shared width vars. */
+.stickyLocation,
+.stickyOpponent,
+.stickyWinProb {
+  --sticky-column-background: #ffffff;
+  position: sticky;
+  z-index: 40;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
+  isolation: isolate;
+}
+
+.stickyLocation {
+  left: 0;
+  width: var(--location-col-width) !important;
+  min-width: var(--location-col-width) !important;
+  max-width: var(--location-col-width) !important;
+}
+
+.stickyOpponent {
+  left: var(--location-col-width);
+  width: var(--opponent-col-width) !important;
+  min-width: var(--opponent-col-width) !important;
+  max-width: var(--opponent-col-width) !important;
+}
+
+.stickyWinProb {
+  left: calc(var(--location-col-width) + var(--opponent-col-width));
+  width: var(--winprob-col-width) !important;
+  min-width: var(--winprob-col-width) !important;
+  max-width: var(--winprob-col-width) !important;
+}
+
+/* Single leading sticky column (summary table): Team. */
+.stickyColumn {
+  --sticky-column-background: #ffffff;
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  width: var(--summary-team-col-width) !important;
+  min-width: var(--summary-team-col-width) !important;
+  max-width: var(--summary-team-col-width) !important;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
+  isolation: isolate;
+}
+
+.rowHeader,
+.teamHeader {
+  position: sticky;
+  top: 0;
+  height: 5.25rem;
+  border: 0;
+  background: #ffffff;
+  /* Seals the border-spacing seam below the sticky header so a sliver of
+     the row scrolling underneath can't peek through as it passes behind. */
+  box-shadow: 0 1px 0 0 #ffffff;
+  isolation: isolate;
+}
+
+.rowHeader {
+  z-index: 65;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-align: center;
+}
+
+/* Full "Location"/"Opponent" text on desktop; swaps to "Loc"/"Opp" on
+   narrow screens (see mobile media query) where those sticky columns
+   are too narrow for the full word. */
+.rowHeaderShort {
+  display: none;
+}
+
+.teamHeader {
+  z-index: 60;
+  position: sticky;
+  border: 0 !important;
+}
+
+.teamButton {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.22rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.teamButton:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.teamButton:focus-visible {
+  border-radius: 0.65rem;
+  outline: 3px solid rgb(14 116 144 / 0.38);
+  outline-offset: -3px;
+}
+
+.teamLogo {
+  filter: drop-shadow(0 5px 5px rgb(15 23 42 / 0.12));
+}
+
+.teamName {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: #334155;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+  overflow-wrap: break-word;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* Summary table only: much shorter header, logo + name side by side
+   instead of stacked, since this table only has 7 columns total and
+   doesn't need the main table's narrow-and-tall per-game layout. */
+.summaryTeamHeader {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 65;
+  height: 2.7rem;
+  border: 0 !important;
+  background: #ffffff;
+  box-shadow: 0 1px 0 0 #ffffff;
+  isolation: isolate;
+}
+
+.summaryStatHeader {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  height: 2.25rem;
+  border: 0;
+  background: #ffffff;
+  box-shadow: 0 1px 0 0 #ffffff;
+  color: #334155;
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-align: center;
+  width: var(--summary-stat-col-width) !important;
+  min-width: var(--summary-stat-col-width) !important;
+  max-width: var(--summary-stat-col-width) !important;
+  isolation: isolate;
+}
+
+.summaryTeamButton {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  padding: 0 0.5rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.summaryTeamButton:hover {
+  background: rgb(15 23 42 / 0.04);
+}
+
+.summaryTeamButton:focus-visible {
+  border-radius: 0.5rem;
+  outline: 3px solid rgb(14 116 144 / 0.38);
+  outline-offset: -3px;
+}
+
+.summaryTeamName {
+  display: block;
+  min-width: 0;
+  flex: 1;
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+.rowLabel {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 400;
+  text-align: center;
+}
+
+/* Location and Avg Conf Win Prob specifically (not Opponent, which is
+   just a logo with no text) - a little larger and bold so they read as
+   clearly as the data grid next to them. */
+.stickyLocation .rowLabel,
+.stickyWinProb .rowLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.gameCell {
+  height: 2.35rem;
+  padding: 0;
+}
+
+.gameTile {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  font-size: 0.95rem;
+  font-weight: 450;
+  cursor: default;
+  transition: border-color 150ms ease;
+}
+
+.gameTile:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+.byeTile {
+  background: #e0e0e0;
+}
+
+/* Marks "Expected Wins" as the first row of this summary block, the same
+   way the wins tables mark the first tfoot row - background/border-top
+   live here rather than on every row, but the background color itself
+   (below) is shared by all summary rows so they don't look like two
+   different kinds of row. */
+.summaryRow .summaryLabel,
+.summaryRow .summaryValue {
+  border-top: 2px solid #cbd5e1;
+}
+
+.summaryLabel,
+.summaryValue {
+  color: #334155;
+  font-size: 0.88rem;
+}
+
+/* Border + radius (matching summaryChip) is what actually reads as "a
+   distinct tile with a gap" - the 1px border-spacing gap alone is
+   low-contrast against the card background regardless of the cell's own
+   fill color, same as every other gap-contrast issue in this table. The
+   border is what outlines each row, not the color of the sliver between
+   them. */
+.summaryLabel {
+  --sticky-column-background: #e2e8f0;
+  min-height: 2.3rem;
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  padding: 0 0.5rem;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  background: var(--sticky-column-background);
+  background-clip: border-box;
+  font-weight: 650;
+  text-align: left;
+  white-space: normal;
+  isolation: isolate;
+}
+
+/* height (not min-height): summaryChip's height:100% needs a definite
+   basis to fill the cell, and only the height property (not min-height)
+   counts as "definite" for a percentage-height child - even though the
+   cell still grows past it for a wrapping colSpan label like "Top
+   Quartile (Hardest)". */
+.summaryValue {
+  height: 2.3rem;
+  text-align: center;
+  font-weight: 700;
+  padding: 0;
+}
+
+/* Default look for a summary chip with no per-value color (e.g. Total
+   Games, which has no meaningful color scale) - Expected Wins/quartile
+   chips override backgroundColor via inline style but keep this border,
+   so every stat in the row reads as the same kind of tile. */
+.summaryChip {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  background: #e2e8f0;
+}
+
+/* Summary table body cells (Expected Wins / Total Games / quartiles). */
+.statCell {
+  width: var(--summary-stat-col-width) !important;
+  min-width: var(--summary-stat-col-width) !important;
+  max-width: var(--summary-stat-col-width) !important;
+  height: 1.75rem;
+  padding: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+:global(.dark) .card {
+  --wins-cell-text: #e2e8f0;
+  border-color: rgb(51 65 85 / 0.88);
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .title {
+  color: #cbd5e1;
+}
+
+:global(.dark) .teamName {
+  color: #e2e8f0;
+}
+
+:global(.dark) .stickyColumn,
+:global(.dark) .stickyLocation,
+:global(.dark) .stickyOpponent,
+:global(.dark) .stickyWinProb,
+:global(.dark) .rowHeader,
+:global(.dark) .teamHeader,
+:global(.dark) .summaryTeamHeader,
+:global(.dark) .summaryStatHeader {
+  --sticky-column-background: #111827;
+  background: #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .rowHeader,
+:global(.dark) .teamHeader,
+:global(.dark) .summaryTeamHeader,
+:global(.dark) .summaryStatHeader {
+  box-shadow: 0 1px 0 0 #111827;
+}
+
+:global(.dark) .summaryTeamName {
+  color: #e2e8f0;
+}
+
+:global(.dark) .summaryTeamButton:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+
+:global(.dark) .byeTile {
+  background: #334155;
+}
+
+:global(.dark) .summaryLabel,
+:global(.dark) .summaryValue {
+  color: #e2e8f0;
+}
+
+:global(.dark) .summaryLabel {
+  --sticky-column-background: #263449;
+  background: var(--sticky-column-background);
+}
+
+:global(.dark) .summaryChip {
+  background: #263449;
+}
+
+:global(.dark) .summaryRow .summaryLabel,
+:global(.dark) .summaryRow .summaryValue {
+  border-top: 2px solid rgb(71 85 105 / 0.8);
+}
+
+@media (max-width: 767px) {
+  .card {
+    --location-col-width: 2.6rem;
+    --opponent-col-width: 2.4rem;
+    --winprob-col-width: 3.1rem;
+    --team-column-width: 2.95rem;
+    --summary-team-col-width: 8.5rem;
+    --summary-stat-col-width: 2.4rem;
+    border-radius: 1rem;
+  }
+
+  .cardHeader {
+    align-items: flex-start;
+    padding: 1rem 0.9rem 0.7rem;
+  }
+
+  .titleGroup {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .scrollViewport {
+    padding: 0 0.35rem 0.55rem 0;
+    max-height: 70vh;
+  }
+
+  .scrollViewportNoHeader {
+    padding-top: 0.9rem;
+  }
+
+  .table {
+    border-spacing: 1px;
+  }
+
+  .rowHeader,
+  .teamHeader {
+    height: 4.65rem;
+  }
+
+  .rowHeaderFull {
+    display: none;
+  }
+
+  .rowHeaderShort {
+    display: inline;
+  }
+
+  .summaryTeamHeader {
+    height: 2.5rem;
+  }
+
+  .summaryStatHeader {
+    height: 2rem;
+    font-size: 0.56rem;
+  }
+
+  .summaryTeamName {
+    font-size: 0.74rem;
+  }
+
+  .teamLogo {
+    transform: scale(0.9);
+  }
+
+  .rowLabel {
+    height: 1.75rem;
+  }
+
+  .gameCell {
+    height: 2rem;
+  }
+
+  .rowLabel,
+  .summaryLabel,
+  .summaryValue,
+  .statCell {
+    font-size: 0.7rem;
+  }
+
+  .stickyLocation .rowLabel,
+  .stickyWinProb .rowLabel {
+    font-size: 0.78rem;
+  }
+
+  .gameTile {
+    font-size: 0.82rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teamButton,
+  .gameTile {
+    transition: none;
+  }
+}
