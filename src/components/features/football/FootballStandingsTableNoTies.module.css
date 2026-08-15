@@ -69,7 +69,6 @@
 
 .table {
   width: max-content;
-  min-width: 100%;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 1px;

@@ -83,7 +83,6 @@
 
 .table {
   width: max-content;
-  min-width: 100%;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 1px;
@@ -91,10 +90,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The summary table only has 7 narrow columns; without this it stretches
-   to fill the card's full width (min-width: 100% above), inflating every
-   cell far past its intended size. This lets it size to its own content
-   instead, like a normal compact table. */
+/* No longer strictly needed now that .table itself has no min-width:100%
+   to override, but kept as an explicit, harmless marker that the summary
+   table (only 7 narrow columns) is meant to size to its own content. */
 .compactTable {
   min-width: 0;
 }
