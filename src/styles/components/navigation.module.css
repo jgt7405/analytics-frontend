@@ -26,9 +26,16 @@
 }
 
 .tabButtonActive {
-  color: var(--color-primary);
+  color: rgb(0, 127, 151);
+  background-color: rgba(0, 151, 178, 0.12);
   border-bottom-color: transparent;
+  border-radius: 8px;
   font-weight: 500;
+}
+
+.tabButtonActive:hover {
+  color: rgb(0, 127, 151);
+  background-color: rgba(0, 151, 178, 0.18);
 }
 
 /* Mobile Navigation */
@@ -104,15 +111,27 @@
 }
 
 .mobileNav .tabButtonActive {
-  color: var(--color-primary);
+  color: rgb(0, 127, 151);
+  background-color: rgba(0, 151, 178, 0.12);
   font-weight: 500;
-  border-bottom: 2px solid var(--color-primary);
+  border-bottom: 1px solid transparent;
 }
 
 .mobileNav .tabButton[aria-current="page"] {
-  color: var(--color-primary);
+  color: rgb(0, 127, 151);
+  background-color: rgba(0, 151, 178, 0.12);
   font-weight: 500;
-  border-bottom: 2px solid var(--color-primary);
+  border-bottom: 1px solid transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tabButtonActive,
+  .tabButtonActive:hover,
+  .mobileNav .tabButtonActive,
+  .mobileNav .tabButton[aria-current="page"] {
+    color: rgb(67, 212, 230);
+    background-color: rgba(67, 212, 230, 0.14);
+  }
 }
 
 @media (max-width: 768px) {
@@ -128,13 +147,6 @@
   }
 
   .tabButtonActive::after {
-    content: "";
-    position: absolute;
-    bottom: 5px !important;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 16px);
-    height: 2px;
-    background-color: var(--color-primary);
+    content: none;
   }
 }
