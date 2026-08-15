@@ -222,11 +222,6 @@ function NavigationContent() {
       basePath: "/football/compare",
       description: "Compare teams side by side",
     },
-    {
-      name: "Composite",
-      basePath: "/football/composite-ratings",
-      description: "10-system composite team ratings",
-    },
   ];
 
   const navItems = isFootball ? footballNavItems : basketballNavItems;

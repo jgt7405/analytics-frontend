@@ -1,5 +1,8 @@
 /* Tab Navigation */
 .tabButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 400;
   color: var(--text-secondary);
   padding: 8px 12px;
@@ -37,7 +40,7 @@
 .tabButtonActive::before {
   content: "";
   position: absolute;
-  inset: 3px 0;
+  inset: 4px 0;
   z-index: -1;
   background-color: rgba(0, 151, 178, 0.12);
   border-radius: 8px;
