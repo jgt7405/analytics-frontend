@@ -18,18 +18,18 @@ interface FootballScheduleSummary {
 }
 
 interface WinProbBucket {
-  key: "b0_20" | "b20_40" | "b40_60" | "b60_80" | "b80_100";
+  key: "b0_30" | "b30_45" | "b45_55" | "b55_70" | "b70_100";
   label: string;
   tag: "Hardest" | "Easiest" | null;
   max: number;
 }
 
 const WIN_PROB_BUCKETS: WinProbBucket[] = [
-  { key: "b0_20", label: "0-20%", tag: "Hardest", max: 0.2 },
-  { key: "b20_40", label: "20-40%", tag: null, max: 0.4 },
-  { key: "b40_60", label: "40-60%", tag: null, max: 0.6 },
-  { key: "b60_80", label: "60-80%", tag: null, max: 0.8 },
-  { key: "b80_100", label: "80-100%", tag: "Easiest", max: 1 },
+  { key: "b0_30", label: "0-30%", tag: "Hardest", max: 0.3 },
+  { key: "b30_45", label: "30-45%", tag: null, max: 0.45 },
+  { key: "b45_55", label: "45-55%", tag: null, max: 0.55 },
+  { key: "b55_70", label: "55-70%", tag: null, max: 0.7 },
+  { key: "b70_100", label: "70-100%", tag: "Easiest", max: 1 },
 ];
 
 function getWinProbBucketKey(rawValue: number | undefined): WinProbBucket["key"] {
@@ -179,15 +179,15 @@ function FootballScheduleTable({
 
   const bucketCounts = useMemo(() => {
     const rowCounts: Record<WinProbBucket["key"], number> = {
-      b0_20: 0,
-      b20_40: 0,
-      b40_60: 0,
-      b60_80: 0,
-      b80_100: 0,
+      b0_30: 0,
+      b30_45: 0,
+      b45_55: 0,
+      b55_70: 0,
+      b70_100: 0,
     };
     const teamCounts: Record<string, Record<WinProbBucket["key"], number>> = {};
     teams.forEach((team) => {
-      teamCounts[team] = { b0_20: 0, b20_40: 0, b40_60: 0, b60_80: 0, b80_100: 0 };
+      teamCounts[team] = { b0_30: 0, b30_45: 0, b45_55: 0, b55_70: 0, b70_100: 0 };
     });
 
     filteredScheduleData.forEach((row) => {
