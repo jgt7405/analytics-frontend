@@ -29,9 +29,12 @@ export function getFootballDateRange(
     year = dataYear ?? new Date().getFullYear();
   }
 
+  const seasonEnd = new Date(year, 11, 15, 12, 0, 0); // 12/15
+  const today = new Date();
+
   return {
-    start: new Date(year, 7, 15, 12, 0, 0),  // 8/15
-    end: new Date(year, 11, 15, 12, 0, 0),   // 12/15
+    start: new Date(year, 7, 15, 12, 0, 0), // 8/15
+    end: today < seasonEnd ? today : seasonEnd,
   };
 }
 
