@@ -88,7 +88,7 @@
   z-index: 25;
   border: 0;
   background: #ffffff;
-  box-shadow: 0 1px 0 0 #ffffff;
+  box-shadow: 0 2px 0 0 #ffffff;
   color: #334155;
   font-weight: 650;
   letter-spacing: 0.01em;
@@ -154,7 +154,7 @@
 
 :global(.dark) .headerCell {
   background: #111827;
-  box-shadow: 0 1px 0 0 #111827;
+  box-shadow: 0 2px 0 0 #111827;
   color: #cbd5e1;
 }
 

@@ -129,7 +129,7 @@
   height: 2.5rem;
   border: 0;
   background: #ffffff;
-  box-shadow: 0 1px 0 0 #ffffff;
+  box-shadow: 0 2px 0 0 #ffffff;
   color: #334155;
   font-size: 0.84rem;
   font-weight: 650;
@@ -249,7 +249,7 @@
 }
 
 :global(.dark) .headerRow th {
-  box-shadow: 0 1px 0 0 #111827;
+  box-shadow: 0 2px 0 0 #111827;
 }
 
 :global(.dark) .rankValue {

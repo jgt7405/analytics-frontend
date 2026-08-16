@@ -61,7 +61,7 @@
   padding: 0 0.35rem;
   /* Seals the seam below the sticky header so a sliver of the row
      scrolling underneath can't peek through as it passes behind. */
-  box-shadow: 0 1px 0 0 #f8fafc;
+  box-shadow: 0 2px 0 0 #f8fafc;
   isolation: isolate;
 }
 
@@ -159,7 +159,7 @@
 :global(.dark) .confHeaderRow {
   border-color: rgb(51 65 85 / 0.8);
   background: #111827;
-  box-shadow: 0 1px 0 0 #111827;
+  box-shadow: 0 2px 0 0 #111827;
 }
 
 :global(.dark) .confHeaderRow::before {
