@@ -74,11 +74,11 @@
   background-clip: padding-box;
 }
 
-/* No top padding on the summary table's viewport: its card has no header
-   of its own (the page already shows an external heading above it), so a
-   little top breathing room stands in for the missing header's padding. */
+/* The summary table's sticky header must sit flush against the viewport's
+   top edge. Any padding here creates an unprotected strip where body rows
+   remain visible after they scroll behind the header. */
 .scrollViewportNoHeader {
-  padding-top: 1.1rem;
+  padding-top: 0;
 }
 
 .table {
@@ -534,10 +534,6 @@
   .scrollViewport {
     padding: 0 0.35rem 0.55rem 0;
     max-height: 70vh;
-  }
-
-  .scrollViewportNoHeader {
-    padding-top: 0.9rem;
   }
 
   .table {
