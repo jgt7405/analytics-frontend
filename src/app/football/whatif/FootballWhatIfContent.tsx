@@ -43,6 +43,9 @@ export default function FootballWhatIfContent() {
   const [gameSelections, setGameSelections] = useState<Map<number, string>>(
     new Map()
   );
+  const [calculatedSelections, setCalculatedSelections] = useState<
+    Map<number, string>
+  >(new Map());
   const [games, setGames] = useState<WhatIfGame[]>([]);
   const [currentProjections, setCurrentProjections] = useState<
     WhatIfTeamResult[]
@@ -126,7 +129,10 @@ export default function FootballWhatIfContent() {
 
   const handleConferenceChange = (conference: string) => {
     setSelectedConference(conference);
+    setGameSelections(new Map());
+    setCalculatedSelections(new Map());
     setWhatIfResults([]);
+    setAllTeamsWhatIfCFP([]);
     setGames([]);
     setCurrentProjections([]);
   };
@@ -144,8 +150,9 @@ export default function FootballWhatIfContent() {
   const handleCalculateImpact = () => {
     if (!selectedConference || gameSelections.size === 0) return;
 
+    const selectionSnapshot = new Map(gameSelections);
     const selections: GameSelection[] = Array.from(
-      gameSelections.entries()
+      selectionSnapshot.entries()
     ).map(([game_id, winner_team_id]) => ({
       game_id,
       winner_team_id: String(winner_team_id),
@@ -157,6 +164,7 @@ export default function FootballWhatIfContent() {
         onSuccess: (response: WhatIfResponse) => {
           setWhatIfResults(response.data);
           setAllTeamsWhatIfCFP(response.all_teams_whatif_cfp || []);
+          setCalculatedSelections(selectionSnapshot);
         },
       }
     );
@@ -164,6 +172,7 @@ export default function FootballWhatIfContent() {
 
   const handleReset = () => {
     setGameSelections(new Map());
+    setCalculatedSelections(new Map());
     setWhatIfResults([]);
     setAllTeamsWhatIfCFP([]);
   };
@@ -350,7 +359,7 @@ export default function FootballWhatIfContent() {
 
   const selectedGamesWithDetails = useMemo(() => {
     const result = [];
-    for (const [gameId, winnerId] of gameSelections.entries()) {
+    for (const [gameId, winnerId] of calculatedSelections.entries()) {
       const game = allKnownGames.get(gameId);
       if (game) {
         result.push({
@@ -369,7 +378,7 @@ export default function FootballWhatIfContent() {
       }
     }
     return result.sort((a, b) => a.game.date.localeCompare(b.game.date));
-  }, [gameSelections, games]);
+  }, [calculatedSelections, allKnownGames]);
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-6">

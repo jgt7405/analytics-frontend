@@ -65,6 +65,18 @@
   isolation: isolate;
 }
 
+/* The rounded top corners of the sticky row otherwise leave a tiny
+   transparent seam where vertically scrolling team rows can peek through.
+   This square backing layer travels with the sticky header and seals that
+   seam without changing the visible rounded border. */
+.confHeaderRow::before {
+  content: "";
+  position: absolute;
+  inset: -2px -1px 0;
+  z-index: -1;
+  background: #f8fafc;
+}
+
 .confHeaderCell {
   border-radius: 0.5rem;
   background: #f1f5f9;
@@ -148,6 +160,10 @@
   border-color: rgb(51 65 85 / 0.8);
   background: #111827;
   box-shadow: 0 1px 0 0 #111827;
+}
+
+:global(.dark) .confHeaderRow::before {
+  background: #111827;
 }
 
 :global(.dark) .confHeaderCell {
