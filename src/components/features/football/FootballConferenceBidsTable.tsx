@@ -155,6 +155,12 @@ export default function FootballConferenceBidsTable({
             display: "grid",
             gridTemplateColumns: `repeat(${numColumns}, ${columnWidth}px)`,
             gap: "4px",
+            // A block-level grid otherwise sizes to the visible scroll viewport
+            // while its columns overflow horizontally. Give the sticky row a
+            // box as wide as every column so its opaque backing layer continues
+            // to cover the rows beneath it at every horizontal scroll position.
+            width: `calc(${gridWidth}px + 0.7rem + 2px)`,
+            boxSizing: "border-box",
           }}
         >
           {columns.map((col) => (
