@@ -607,7 +607,9 @@ export default function FootballStandingsHistoryChart({
                           color: isSelected
                             ? team.team_info.primary_color || "#000000"
                             : "#d1d5db",
-                          transform: "translateY(-1px)",
+                          alignSelf: "stretch",
+                          display: "flex",
+                          alignItems: "center",
                         }}
                       >
                         {lastPoint?.y.toFixed(1) ||
