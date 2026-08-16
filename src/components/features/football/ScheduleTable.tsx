@@ -17,6 +17,33 @@ interface FootballScheduleSummary {
   bottom_quartile: number;
 }
 
+interface WinProbBucket {
+  key: "b0_20" | "b20_40" | "b40_60" | "b60_80" | "b80_100";
+  label: string;
+  tag: "Hardest" | "Easiest" | null;
+  max: number;
+}
+
+const WIN_PROB_BUCKETS: WinProbBucket[] = [
+  { key: "b0_20", label: "0-20%", tag: "Hardest", max: 0.2 },
+  { key: "b20_40", label: "20-40%", tag: null, max: 0.4 },
+  { key: "b40_60", label: "40-60%", tag: null, max: 0.6 },
+  { key: "b60_80", label: "60-80%", tag: null, max: 0.8 },
+  { key: "b80_100", label: "80-100%", tag: "Easiest", max: 1 },
+];
+
+function getWinProbBucketKey(rawValue: number | undefined): WinProbBucket["key"] {
+  const value = typeof rawValue === "number" ? rawValue : 0;
+  const bucket = WIN_PROB_BUCKETS.find((b) => value <= b.max);
+  return (bucket ?? WIN_PROB_BUCKETS[WIN_PROB_BUCKETS.length - 1]).key;
+}
+
+function getBucketLabel(bucket: WinProbBucket, count: number): string {
+  return bucket.tag
+    ? `${bucket.label} (${bucket.tag}; ${count} possible)`
+    : `${bucket.label} (${count} possible)`;
+}
+
 interface FootballScheduleTableProps {
   scheduleData: FootballScheduleData[];
   teams: string[];
@@ -150,6 +177,35 @@ function FootballScheduleTable({
     return nextGames;
   }, [filteredScheduleData, teams, getCellValue, formatCellValue]);
 
+  const bucketCounts = useMemo(() => {
+    const rowCounts: Record<WinProbBucket["key"], number> = {
+      b0_20: 0,
+      b20_40: 0,
+      b40_60: 0,
+      b60_80: 0,
+      b80_100: 0,
+    };
+    const teamCounts: Record<string, Record<WinProbBucket["key"], number>> = {};
+    teams.forEach((team) => {
+      teamCounts[team] = { b0_20: 0, b20_40: 0, b40_60: 0, b60_80: 0, b80_100: 0 };
+    });
+
+    filteredScheduleData.forEach((row) => {
+      const bucketKey = getWinProbBucketKey(row.Win_Pct_Raw);
+      rowCounts[bucketKey] += 1;
+
+      teams.forEach((team) => {
+        const cellValue = getCellValue(row, team);
+        const formattedValue = formatCellValue(cellValue);
+        if (formattedValue !== "" && formattedValue !== "-") {
+          teamCounts[team][bucketKey] += 1;
+        }
+      });
+    });
+
+    return { rowCounts, teamCounts };
+  }, [filteredScheduleData, teams, getCellValue, formatCellValue]);
+
   const getCellStyle = useCallback(
     (value: string | undefined, teamName: string, rowIndex: number) => {
       if (!value || typeof value !== "string") return {};
@@ -193,19 +249,15 @@ function FootballScheduleTable({
         const textColor = brightness > 140 ? "black" : "white";
 
         return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: textColor };
-      } else if (type === "quartile") {
-        const maxQuartile = Math.max(
-          ...Object.values(summary).flatMap((team) =>
-            [
-              team.top_quartile,
-              team.second_quartile,
-              team.third_quartile,
-              team.bottom_quartile,
-            ].filter(Boolean),
+      } else if (type === "bucket") {
+        const maxBucket = Math.max(
+          1,
+          ...Object.values(bucketCounts.teamCounts).flatMap((counts) =>
+            Object.values(counts),
           ),
         );
 
-        const intensity = value / maxQuartile;
+        const intensity = value / maxBucket;
         const r = Math.round(195 - (195 - 24) * intensity);
         const g = Math.round(224 - (224 - 98) * intensity);
         const b = Math.round(236 - (236 - 123) * intensity);
@@ -214,7 +266,7 @@ function FootballScheduleTable({
       }
       return { backgroundColor: "var(--bg-primary)" };
     },
-    [summary],
+    [summary, bucketCounts],
   );
 
   if (
@@ -388,47 +440,24 @@ function FootballScheduleTable({
                     ))}
                   </tr>
 
-                  {(["top", "second", "third", "bottom"] as const).map((quartile) => (
-                    <tr key={quartile}>
+                  {WIN_PROB_BUCKETS.map((bucket) => (
+                    <tr key={bucket.key}>
                       <th colSpan={3} className={styles.summaryLabel} scope="row">
-                        {quartile === "top"
-                          ? "Top Quartile (Hardest)"
-                          : quartile === "second"
-                            ? "2nd Quartile"
-                            : quartile === "third"
-                              ? "3rd Quartile"
-                              : "Bottom Quartile (Easiest)"}
+                        {getBucketLabel(bucket, bucketCounts.rowCounts[bucket.key])}
                       </th>
                       {teams.map((team) => {
-                        const teamSummary = summary[team];
-                        let quartileValue = 0;
-                        if (teamSummary) {
-                          switch (quartile) {
-                            case "top":
-                              quartileValue = teamSummary.top_quartile || 0;
-                              break;
-                            case "second":
-                              quartileValue = teamSummary.second_quartile || 0;
-                              break;
-                            case "third":
-                              quartileValue = teamSummary.third_quartile || 0;
-                              break;
-                            case "bottom":
-                              quartileValue = teamSummary.bottom_quartile || 0;
-                              break;
-                          }
-                        }
+                        const bucketValue = bucketCounts.teamCounts[team]?.[bucket.key] || 0;
 
                         return (
                           <td
-                            key={`${team}-${quartile}-quartile`}
+                            key={`${team}-${bucket.key}`}
                             className={styles.summaryValue}
                           >
                             <div
                               className={styles.summaryChip}
-                              style={getSummaryColor(quartileValue, "quartile")}
+                              style={getSummaryColor(bucketValue, "bucket")}
                             >
-                              {quartileValue}
+                              {bucketValue}
                             </div>
                           </td>
                         );
@@ -445,54 +474,56 @@ function FootballScheduleTable({
       {renderSummaryTable && (
         <section
           className={cn(styles.card, "football-schedule-summary-table", className)}
-          aria-label="Schedule difficulty summary by quartile"
+          aria-label="Schedule difficulty summary by win probability"
         >
           <div
             className={cn(styles.scrollViewport, styles.scrollViewportNoHeader)}
             role="region"
-            aria-label="Schedule difficulty summary by quartile. Scroll to see every team."
+            aria-label="Schedule difficulty summary by win probability. Scroll to see every team."
             tabIndex={0}
           >
             <table className={cn(styles.table, styles.compactTable)}>
               <thead>
                 <tr>
-                  <th className={cn(styles.stickyColumn, styles.summaryTeamHeader)} scope="col">
+                  <th
+                    className={cn(styles.stickyColumn, styles.summaryTeamHeader)}
+                    scope="col"
+                    rowSpan={2}
+                  >
                     Team
                   </th>
-                  <th className={styles.summaryStatHeader} scope="col">
+                  <th className={styles.summaryStatHeader} scope="col" rowSpan={2}>
                     Expected
                     <br />
                     Wins
                   </th>
-                  <th className={styles.summaryStatHeader} scope="col">
+                  <th className={styles.summaryStatHeader} scope="col" rowSpan={2}>
                     Total
                     <br />
                     Games
                   </th>
-                  <th className={styles.summaryStatHeader} scope="col">
-                    Top
-                    <br />
-                    Quartile
-                    <br />
-                    (Hardest)
+                  <th
+                    className={styles.summaryStatHeader}
+                    scope="colgroup"
+                    colSpan={WIN_PROB_BUCKETS.length}
+                  >
+                    Probability team would win against an average conference team
                   </th>
-                  <th className={styles.summaryStatHeader} scope="col">
-                    2nd
-                    <br />
-                    Quartile
-                  </th>
-                  <th className={styles.summaryStatHeader} scope="col">
-                    3rd
-                    <br />
-                    Quartile
-                  </th>
-                  <th className={styles.summaryStatHeader} scope="col">
-                    Bottom
-                    <br />
-                    Quartile
-                    <br />
-                    (Easiest)
-                  </th>
+                </tr>
+                <tr>
+                  {WIN_PROB_BUCKETS.map((bucket) => (
+                    <th key={bucket.key} className={styles.summaryStatHeader} scope="col">
+                      {bucket.label}
+                      {bucket.tag && (
+                        <>
+                          <br />
+                          {`(${bucket.tag})`}
+                        </>
+                      )}
+                      <br />
+                      {`(${bucketCounts.rowCounts[bucket.key]} possible)`}
+                    </th>
+                  ))}
                 </tr>
               </thead>
 
@@ -543,41 +574,19 @@ function FootballScheduleTable({
                           </div>
                         </td>
 
-                        <td className={styles.statCell}>
-                          <div
-                            className={styles.summaryChip}
-                            style={getSummaryColor(teamSummary.top_quartile || 0, "quartile")}
-                          >
-                            {teamSummary.top_quartile || 0}
-                          </div>
-                        </td>
-
-                        <td className={styles.statCell}>
-                          <div
-                            className={styles.summaryChip}
-                            style={getSummaryColor(teamSummary.second_quartile || 0, "quartile")}
-                          >
-                            {teamSummary.second_quartile || 0}
-                          </div>
-                        </td>
-
-                        <td className={styles.statCell}>
-                          <div
-                            className={styles.summaryChip}
-                            style={getSummaryColor(teamSummary.third_quartile || 0, "quartile")}
-                          >
-                            {teamSummary.third_quartile || 0}
-                          </div>
-                        </td>
-
-                        <td className={styles.statCell}>
-                          <div
-                            className={styles.summaryChip}
-                            style={getSummaryColor(teamSummary.bottom_quartile || 0, "quartile")}
-                          >
-                            {teamSummary.bottom_quartile || 0}
-                          </div>
-                        </td>
+                        {WIN_PROB_BUCKETS.map((bucket) => {
+                          const bucketValue = bucketCounts.teamCounts[team]?.[bucket.key] || 0;
+                          return (
+                            <td key={`${team}-${bucket.key}-summary`} className={styles.statCell}>
+                              <div
+                                className={styles.summaryChip}
+                                style={getSummaryColor(bucketValue, "bucket")}
+                              >
+                                {bucketValue}
+                              </div>
+                            </td>
+                          );
+                        })}
                       </tr>
                     );
                   })}

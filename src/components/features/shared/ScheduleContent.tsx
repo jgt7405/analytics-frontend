@@ -366,6 +366,11 @@ export default function ScheduleContent<TGame, TSummary>({
                                 Each column shows game results from perspective
                                 of team at top of column.
                               </div>
+                              <div style={{ marginTop: "6px" }}>
+                                The percentage buckets represent the probability
+                                that a team would win against an average rated
+                                team from the conference.
+                              </div>
                             </div>
                           </div>
                           <div
@@ -394,7 +399,7 @@ export default function ScheduleContent<TGame, TSummary>({
                       <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4">
                         Schedule Difficulty Summary
                         <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
-                          (By Quartile)
+                          (By Win Probability)
                         </span>
                       </h1>
 
@@ -416,7 +421,10 @@ export default function ScheduleContent<TGame, TSummary>({
                           <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
-                                Team schedule difficulty breakdown by quartile.
+                                Team schedule difficulty breakdown by win
+                                probability. The percentage buckets represent
+                                the probability that a team would win against
+                                an average rated team from the conference.
                               </div>
                               <div style={{ marginTop: "6px" }}>
                                 Darker blues indicate more games in that
