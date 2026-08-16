@@ -6,6 +6,7 @@
   --team-column-width: 3.65rem;
   --summary-team-col-width: 11rem;
   --summary-stat-col-width: 3.65rem;
+  --summary-header-first-row-height: 2.25rem;
   position: relative;
   overflow: hidden;
   border: 1px solid rgb(226 232 240 / 0.9);
@@ -268,6 +269,14 @@
   isolation: isolate;
 }
 
+/* This table has two header rows. The bucket headings belong to the second
+   row, so they must stick below the first-row group heading. If both rows use
+   top: 0, the bucket row overlaps the first row and lets its first data cells
+   slide underneath the row-spanning Team / Expected Wins / Total Games cells. */
+.summaryBucketHeader {
+  top: var(--summary-header-first-row-height);
+}
+
 .summaryTeamButton {
   display: flex;
   width: 100%;
@@ -513,6 +522,7 @@
     --team-column-width: 2.95rem;
     --summary-team-col-width: 8.5rem;
     --summary-stat-col-width: 2.4rem;
+    --summary-header-first-row-height: 2rem;
     border-radius: 1rem;
   }
 

@@ -512,7 +512,14 @@ function FootballScheduleTable({
                 </tr>
                 <tr>
                   {WIN_PROB_BUCKETS.map((bucket) => (
-                    <th key={bucket.key} className={styles.summaryStatHeader} scope="col">
+                    <th
+                      key={bucket.key}
+                      className={cn(
+                        styles.summaryStatHeader,
+                        styles.summaryBucketHeader,
+                      )}
+                      scope="col"
+                    >
                       {bucket.label}
                       {bucket.tag && (
                         <>
