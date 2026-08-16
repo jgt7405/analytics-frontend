@@ -602,11 +602,12 @@ export default function FootballStandingsHistoryChart({
                         />
                       </div>
                       <span
-                        className="ml-1.5 min-w-[30px] text-left text-xs font-medium tabular-nums"
+                        className="ml-1 min-w-[30px] text-left text-xs font-medium leading-none tabular-nums"
                         style={{
                           color: isSelected
                             ? team.team_info.primary_color || "#000000"
                             : "#d1d5db",
+                          transform: "translateY(-1px)",
                         }}
                       >
                         {lastPoint?.y.toFixed(1) ||

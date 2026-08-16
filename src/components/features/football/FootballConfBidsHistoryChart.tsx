@@ -675,8 +675,11 @@ export default function FootballConfBidsHistoryChart({
                         />
                       )}
                       <span
-                        className="ml-1.5 min-w-[30px] text-left text-xs font-medium tabular-nums"
-                        style={{ color: isSelected ? confColor : "#d1d5db" }}
+                        className="ml-1 min-w-[30px] text-left text-xs font-medium leading-none tabular-nums"
+                        style={{
+                          color: isSelected ? confColor : "#d1d5db",
+                          transform: "translateY(-1px)",
+                        }}
                       >
                         {conf.final_bids.toFixed(1)}
                       </span>
