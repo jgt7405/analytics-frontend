@@ -6,6 +6,7 @@ import {
   useExportModal,
 } from "@/components/common/ExportOptionsModal";
 import ScreenshotModal from "@/components/common/ScreenshotModal";
+import TeamMultiSearch from "@/components/common/TeamMultiSearch";
 import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
 import FootballCFPProb from "@/components/features/football/FootballCFPProb";
 import { WhatIfTableSkeleton } from "@/components/ui/LoadingSkeleton";
@@ -37,7 +38,8 @@ export default function FootballWhatIfContent() {
   const [selectedConference, setSelectedConference] = useState<string>("Big 12");
   const [showAllCFPTeams, setShowAllCFPTeams] = useState(false);
   const [gameFilter, setGameFilter] = useState<"conference" | "all">("conference");
-  const [teamSearch, setTeamSearch] = useState("");
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [teamSearchActivated, setTeamSearchActivated] = useState(false);
   const [gameSelections, setGameSelections] = useState<Map<number, string>>(
     new Map()
   );
@@ -57,7 +59,7 @@ export default function FootballWhatIfContent() {
     showAllCFPTeams
   );
   const { data: allFutureGamesData, isLoading: isLoadingAllGames } =
-    useFootballFutureGames(gameFilter === "all" || teamSearch.trim().length > 0);
+    useFootballFutureGames(gameFilter === "all" || teamSearchActivated);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
@@ -308,20 +310,27 @@ export default function FootballWhatIfContent() {
   // Determine the game pool based on filter + team search
   const allFutureGames: WhatIfGame[] = allFutureGamesData?.games || [];
 
+  const allTeamNames = useMemo(() => {
+    const names = new Set<string>();
+    [...games, ...allFutureGames].forEach((g) => {
+      names.add(g.home_team);
+      names.add(g.away_team);
+    });
+    return Array.from(names);
+  }, [games, allFutureGames]);
+
   const filteredGames = useMemo(() => {
-    const search = teamSearch.trim().toLowerCase();
-    if (search) {
-      // Team search overrides toggle: search all FBS games
+    if (selectedTeams.length > 0) {
+      // Team selection overrides toggle: search all FBS games
       const pool = allFutureGames.length > 0 ? allFutureGames : games;
+      const selectedSet = new Set(selectedTeams);
       return pool.filter(
-        (g) =>
-          g.home_team.toLowerCase().includes(search) ||
-          g.away_team.toLowerCase().includes(search)
+        (g) => selectedSet.has(g.home_team) || selectedSet.has(g.away_team)
       );
     }
     if (gameFilter === "all") return allFutureGames;
     return games; // "conference" = games involving at least one conference team
-  }, [games, allFutureGames, gameFilter, teamSearch]);
+  }, [games, allFutureGames, gameFilter, selectedTeams]);
 
   // Group games by date
   const gamesByDate: { [key: string]: WhatIfGame[] } = {};
@@ -419,13 +428,12 @@ export default function FootballWhatIfContent() {
                   {gameFilter === "all" ? "Show Conference Teams" : "Show All Teams"}
                 </button>
               </div>
-              <input
-                type="text"
+              <TeamMultiSearch
+                teamNames={allTeamNames}
+                selectedTeams={selectedTeams}
+                onChange={setSelectedTeams}
+                onActivate={() => setTeamSearchActivated(true)}
                 placeholder="Search by team..."
-                value={teamSearch}
-                onChange={(e) => setTeamSearch(e.target.value)}
-                className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1"
-                style={{ "--tw-ring-color": TEAL_COLOR } as React.CSSProperties}
               />
             </div>
 
@@ -437,28 +445,28 @@ export default function FootballWhatIfContent() {
 
             {/* Future Games List - Scrollable */}
             <div className="flex-1 overflow-y-auto mb-4 pr-2">
-              {!selectedConference && gameFilter === "conference" && !teamSearch && (
+              {!selectedConference && gameFilter === "conference" && selectedTeams.length === 0 && (
                 <p className="text-gray-500 dark:text-gray-300 text-center py-8 text-sm">
                   Select a conference to view games
                 </p>
               )}
-              {selectedConference && isLoadingData && gameFilter === "conference" && !teamSearch && (
+              {selectedConference && isLoadingData && gameFilter === "conference" && selectedTeams.length === 0 && (
                 <p className="text-gray-500 dark:text-gray-300 text-center py-8 text-sm">
                   Loading games...
                 </p>
               )}
-              {(gameFilter === "all" || (!!teamSearch && allFutureGames.length === 0)) && isLoadingAllGames && (
+              {(gameFilter === "all" || (selectedTeams.length > 0 && allFutureGames.length === 0)) && isLoadingAllGames && (
                 <p className="text-gray-500 dark:text-gray-300 text-center py-8 text-sm">
                   Loading all games...
                 </p>
               )}
-              {filteredGames.length === 0 && !isLoadingData && !isLoadingAllGames && (gameFilter === "all" || !!teamSearch || selectedConference) && (
+              {filteredGames.length === 0 && !isLoadingData && !isLoadingAllGames && (gameFilter === "all" || selectedTeams.length > 0 || selectedConference) && (
                 <div className="text-center py-8">
                   <p className="text-gray-500 dark:text-gray-300 mb-2 text-sm">
                     No games found
                   </p>
                   <p className="text-xs text-gray-400">
-                    {teamSearch ? "Try a different team name." : "Season may be complete."}
+                    {selectedTeams.length > 0 ? "Try a different team." : "Season may be complete."}
                   </p>
                 </div>
               )}
