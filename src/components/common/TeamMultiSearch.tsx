@@ -1,6 +1,7 @@
 // src/components/common/TeamMultiSearch.tsx
 "use client";
 
+import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 interface TeamMultiSearchProps {
@@ -106,20 +107,20 @@ export default function TeamMultiSearch({
   return (
     <div ref={wrapperRef} className={className ? className : "relative"}>
       {selectedTeams.length > 0 && (
-        <div className="mb-1.5 flex flex-wrap gap-1">
+        <div className="mb-2 flex flex-wrap gap-1.5">
           {selectedTeams.map((team) => (
             <span
               key={team}
-              className="inline-flex items-center gap-1 rounded-full bg-teal-50 dark:bg-teal-900/40 border border-teal-200 dark:border-teal-700 px-2 py-0.5 text-xs text-teal-800 dark:text-teal-200"
+              className="inline-flex items-center gap-1 rounded-full bg-teal-50 dark:bg-teal-900/30 px-2.5 py-1 text-xs font-medium text-teal-800 dark:text-teal-200 shadow-[inset_0_0_0_1px_rgb(13_148_136_/_0.28)] dark:shadow-[inset_0_0_0_1px_rgb(45_212_191_/_0.35)]"
             >
               {team}
               <button
                 type="button"
                 onClick={() => removeTeam(team)}
                 aria-label={`Remove ${team}`}
-                className="leading-none text-teal-600 hover:text-teal-900 dark:text-teal-300 dark:hover:text-white"
+                className="rounded-full p-0.5 text-teal-600 hover:bg-teal-100 hover:text-teal-900 dark:text-teal-300 dark:hover:bg-teal-800/60 dark:hover:text-white transition-colors"
               >
-                ✕
+                <X className="h-3 w-3" strokeWidth={2.5} />
               </button>
             </span>
           ))}
@@ -127,6 +128,10 @@ export default function TeamMultiSearch({
       )}
 
       <div className="relative">
+        <Search
+          className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+          strokeWidth={2}
+        />
         <input
           ref={inputRef}
           type="text"
@@ -141,14 +146,14 @@ export default function TeamMultiSearch({
           }}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
-          className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1"
-          style={{ "--tw-ring-color": "rgb(0, 151, 178)" } as React.CSSProperties}
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 py-1.5 pl-8 pr-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-[0_1px_2px_rgb(15_23_42_/_0.06)] transition-shadow focus:outline-none focus:ring-2 focus:ring-offset-0"
+          style={{ "--tw-ring-color": "rgb(0 151 178 / 0.45)" } as React.CSSProperties}
         />
 
         {isOpen && suggestions.length > 0 && (
           <ul
             role="listbox"
-            className="absolute z-20 mt-1 w-full max-h-52 overflow-y-auto rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-slate-800 shadow-lg"
+            className="absolute z-20 mt-1.5 w-full max-h-56 overflow-y-auto rounded-xl border border-slate-200/90 dark:border-slate-700/90 bg-white dark:bg-slate-800 p-1 shadow-[0_16px_36px_-18px_rgb(15_23_42_/_0.35),0_4px_12px_-6px_rgb(15_23_42_/_0.18)] dark:shadow-[0_18px_40px_-16px_rgb(0_0_0_/_0.65)]"
           >
             {suggestions.map((team, index) => (
               <li key={team} role="option" aria-selected={index === highlightedIndex}>
@@ -157,11 +162,16 @@ export default function TeamMultiSearch({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => addTeam(team)}
                   onMouseEnter={() => setHighlightedIndex(index)}
-                  className={`block w-full text-left px-2 py-1.5 text-xs ${
+                  className={`block w-full rounded-lg text-left px-2.5 py-1.5 text-xs font-medium transition-colors ${
                     index === highlightedIndex
-                      ? "bg-teal-50 dark:bg-teal-900/40 text-teal-900 dark:text-teal-100"
-                      : "text-gray-800 dark:text-gray-100"
+                      ? "text-teal-900 dark:text-teal-100"
+                      : "text-slate-700 dark:text-slate-200"
                   }`}
+                  style={
+                    index === highlightedIndex
+                      ? { backgroundColor: "rgb(0 151 178 / 0.12)" }
+                      : undefined
+                  }
                 >
                   {team}
                 </button>
