@@ -1,12 +1,7 @@
 // Long words wrap awkwardly in narrow table columns: overflow-wrap: break-word
-// still has to fragment a word wider than the column, and it does so silently
-// - no visible "-" - so the reader sees e.g. "Oklahom" / "a State" with no
-// indication a word was cut. A soft hyphen only renders as a visible "-" when
-// the browser itself breaks the line there; html2canvas (used for the
-// download/print export) doesn't replicate that behavior and just drops it.
-// A real hyphen + zero-width space instead guarantees the same visible break
-// on-screen and in exports.
-const ZWS = "​";
+// can fragment a word silently. A soft hyphen gives the browser a preferred
+// break point and displays a visible "-" only when the word actually wraps.
+const SOFT_HYPHEN = "\u00AD";
 
 // Empirically, a plain word up to 7 characters fits on one line in the
 // tightest team-name columns (--team-column-width: 2.95rem on mobile); 8+
@@ -85,15 +80,14 @@ function hyphenateWord(word: string): string {
     return word;
   }
   const withHyphen = CURATED_BREAKS[word] ?? mechanicalBreak(word);
-  return withHyphen.replace("-", `-${ZWS}`);
+  return withHyphen.replace("-", SOFT_HYPHEN);
 }
 
-// Inserts a visible hyphenation break into any long word - whether the whole
+// Inserts a discretionary hyphenation break into any long word - whether the whole
 // team name is one word ("Northwestern") or the word is just part of a
-// multi-word name ("Oklahoma" in "Oklahoma State") - so it wraps cleanly
-// instead of overflowing or splitting mid-word with no indication. Words
-// that already contain a real hyphen (e.g. "Gardner-Webb") wrap fine at that
-// hyphen already and are left untouched.
+// multi-word name ("Oklahoma" in "Oklahoma State"). The hyphen remains hidden
+// when the word fits and becomes visible only when it wraps. Words that already
+// contain a real hyphen (e.g. "Gardner-Webb") are left untouched.
 export function formatTeamName(name: string): string {
   return name
     .split(" ")
