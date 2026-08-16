@@ -675,7 +675,7 @@ export default function FootballConfBidsHistoryChart({
                         />
                       )}
                       <span
-                        className="-translate-y-[3px] ml-0.5 min-w-[30px] text-left text-xs font-medium leading-none tabular-nums"
+                        className="ml-0.5 min-w-[30px] text-left text-xs font-medium leading-none tabular-nums"
                         style={{
                           color: isSelected ? confColor : "#d1d5db",
                           alignSelf: "stretch",
