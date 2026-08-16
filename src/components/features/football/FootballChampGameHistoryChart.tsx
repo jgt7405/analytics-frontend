@@ -629,7 +629,7 @@ export default function FootballChampGameHistoryChart({
                         />
                       </div>
                       <span
-                        className="ml-1 min-w-[30px] text-left text-xs font-medium leading-none tabular-nums"
+                        className="-translate-y-px ml-0.5 min-w-[30px] text-left text-xs font-medium leading-none tabular-nums"
                         style={{
                           color: isSelected
                             ? team.team_info.primary_color || "#000000"
