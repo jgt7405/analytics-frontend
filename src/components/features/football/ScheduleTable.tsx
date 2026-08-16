@@ -308,7 +308,7 @@ function FootballScheduleTable({
           >
             <table className={styles.table}>
               <thead>
-                <tr>
+                <tr className={styles.mainHeaderRow}>
                   <th className={cn(styles.stickyLocation, styles.rowHeader)} scope="col">
                     <span className={styles.rowHeaderFull}>Location</span>
                     <span className={styles.rowHeaderShort}>Loc</span>

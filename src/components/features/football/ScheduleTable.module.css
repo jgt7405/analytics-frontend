@@ -162,7 +162,7 @@
   background: #ffffff;
   /* Seals the border-spacing seam below the sticky header so a sliver of
      the row scrolling underneath can't peek through as it passes behind. */
-  box-shadow: 0 1px 0 0 #ffffff;
+  box-shadow: 0 2px 0 0 #ffffff;
   isolation: isolate;
 }
 
@@ -266,6 +266,18 @@
   width: var(--summary-stat-col-width) !important;
   min-width: var(--summary-stat-col-width) !important;
   max-width: var(--summary-stat-col-width) !important;
+  isolation: isolate;
+}
+
+/* Keep the complete header row above the scrolling body. The row-level
+   background and seal also cover the 1px border-spacing gaps between header
+   cells, where body-cell colors would otherwise remain visible. */
+.mainHeaderRow {
+  position: sticky;
+  top: 0;
+  z-index: 55;
+  background: #ffffff;
+  box-shadow: 0 2px 0 0 #ffffff;
   isolation: isolate;
 }
 
@@ -459,6 +471,11 @@
   color: #cbd5e1;
 }
 
+:global(.dark) .mainHeaderRow {
+  background: #111827;
+  box-shadow: 0 2px 0 0 #111827;
+}
+
 :global(.dark) .teamName {
   color: #e2e8f0;
 }
@@ -477,7 +494,10 @@
 }
 
 :global(.dark) .rowHeader,
-:global(.dark) .teamHeader,
+:global(.dark) .teamHeader {
+  box-shadow: 0 2px 0 0 #111827;
+}
+
 :global(.dark) .summaryTeamHeader,
 :global(.dark) .summaryStatHeader {
   box-shadow: 0 1px 0 0 #111827;
