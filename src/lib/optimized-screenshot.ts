@@ -1,4 +1,10 @@
 // src/lib/optimized-screenshot.ts
+import {
+  expandExportClone,
+  getFullContentWidth,
+  getFullScreenshotDimensions,
+} from "./screenshot-layout";
+
 interface ScreenshotOptions {
   pageTitle: string;
   selectedConference: string;
@@ -16,6 +22,10 @@ interface Html2CanvasOptions {
   allowTaint?: boolean;
   foreignObjectRendering?: boolean;
   scale?: number;
+  windowWidth?: number;
+  windowHeight?: number;
+  scrollX?: number;
+  scrollY?: number;
 }
 
 export async function createOptimizedScreenshot(
@@ -30,6 +40,7 @@ export async function createOptimizedScreenshot(
 
     await waitForAssetsToLoad(wrapper);
 
+    const captureSize = getFullScreenshotDimensions(wrapper);
     const canvasOptions: Html2CanvasOptions = {
       useCORS: true,
       allowTaint: false,
@@ -37,6 +48,12 @@ export async function createOptimizedScreenshot(
       backgroundColor: "#ffffff",
       foreignObjectRendering: true,
       scale: 2,
+      width: captureSize.width,
+      height: captureSize.height,
+      windowWidth: captureSize.width,
+      windowHeight: captureSize.height,
+      scrollX: 0,
+      scrollY: 0,
     };
 
     const canvas = await html2canvas(wrapper, canvasOptions);
@@ -100,55 +117,7 @@ function createScreenshotWrapper(
 ): HTMLElement {
   const wrapper = document.createElement("div");
 
-  // Measure content width more accurately
-  const clone = element.cloneNode(true) as HTMLElement;
-  clone.style.cssText = `
-    position: fixed;
-    left: -9999px;
-    top: 0;
-    overflow: visible !important;
-    width: max-content !important;
-    opacity: 0.01;
-    z-index: -9999;
-  `;
-
-  document.body.appendChild(clone);
-
-  let actualContentWidth = 0;
-
-  // Try to measure table first (for standings/data tables)
-  const table = clone.querySelector("table");
-  if (table) {
-    actualContentWidth = table.offsetWidth;
-  } else {
-    // For charts (SVG, Canvas, etc), measure the actual rendered content
-    const svg = clone.querySelector("svg") as SVGSVGElement;
-    if (svg) {
-      // Get the SVG's bounding box to find actual content width
-      try {
-        const bbox = svg.getBBox();
-        actualContentWidth = Math.ceil(bbox.width + bbox.x);
-      } catch {
-        // Fallback to clientWidth if getBBox fails
-        actualContentWidth = svg.clientWidth || svg.viewBox.baseVal?.width || 0;
-      }
-    } else {
-      // For other components, find the widest child element
-      let maxWidth = clone.offsetWidth;
-      const allElements = clone.querySelectorAll("*");
-      allElements.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        const elementWidth = htmlEl.offsetWidth;
-        if (elementWidth > 0 && elementWidth < 5000) {
-          // Ignore unrealistic widths
-          maxWidth = Math.max(maxWidth, elementWidth);
-        }
-      });
-      actualContentWidth = maxWidth;
-    }
-  }
-
-  document.body.removeChild(clone);
+  const actualContentWidth = Math.max(getFullContentWidth(element), 660);
 
   // Add minimal padding (20px total: 10px on each side)
   const wrapperWidth = actualContentWidth + 40;
@@ -170,6 +139,7 @@ function createScreenshotWrapper(
   wrapper.appendChild(header);
 
   const contentClone = cleanElementForScreenshot(element);
+  expandExportClone(element, contentClone);
   contentClone.style.cssText = `
     overflow: visible !important;
     width: 100% !important;

@@ -346,7 +346,9 @@ function BasketballScheduleTable({
                           showTooltip
                           className={styles.teamLogo}
                         />
-                        <span className={styles.teamName}>{formatTeamName(team)}</span>
+                        <span className={styles.teamName} data-screenshot-label>
+                          {formatTeamName(team)}
+                        </span>
                       </button>
                     </th>
                   ))}
@@ -561,7 +563,9 @@ function BasketballScheduleTable({
                               showTooltip
                               className={styles.teamLogo}
                             />
-                            <span className={styles.summaryTeamName}>{team}</span>
+                            <span className={styles.summaryTeamName} data-screenshot-label>
+                              {team}
+                            </span>
                           </button>
                         </th>
 

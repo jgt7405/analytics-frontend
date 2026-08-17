@@ -1,6 +1,11 @@
 "use client";
 
 import { X } from "lucide-react";
+import {
+  expandExportClone,
+  getFullContentWidth,
+  getFullScreenshotDimensions,
+} from "@/lib/screenshot-layout";
 import { useState } from "react";
 
 interface ScreenshotOption {
@@ -46,7 +51,8 @@ export default function ScreenshotModal({
       script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
       script.async = true;
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load screenshot library"));
+      script.onerror = () =>
+        reject(new Error("Failed to load screenshot library"));
       document.body.appendChild(script);
     });
   };
@@ -180,51 +186,31 @@ export default function ScreenshotModal({
 
       console.log("Images converted, creating clone...");
 
-      // Calculate width based on actual content
-      const table = targetElement.querySelector("table");
-      const isChart = targetElement.querySelector("canvas") !== null;
-      const isSvgChart = targetElement.querySelector("svg") !== null;
-
-      let actualWidth: number;
-      if (table) {
-        // Get the full scrollWidth of the table to include all columns
-        const tableScrollWidth = (table as HTMLElement).scrollWidth;
-        actualWidth = tableScrollWidth + 100; // Add padding
-      } else if (isChart) {
-        actualWidth = targetElement.scrollWidth + 100;
-      } else if (isSvgChart) {
-        // For SVG charts, get the SVG width and add padding for controls
-        const svg = targetElement.querySelector("svg") as SVGElement;
-        const svgWidth = svg?.getAttribute("width");
-        if (svgWidth) {
-          actualWidth = parseInt(svgWidth) + 200; // Add extra padding for controls
-        } else {
-          actualWidth = targetElement.scrollWidth + 200;
-        }
-      } else {
-        actualWidth = Math.max(targetElement.scrollWidth, 600) + 100;
-      }
+      // Use intrinsic and scroll dimensions so off-screen rows/columns are part
+      // of the export instead of inheriting the current viewport crop.
+      const actualWidth =
+        Math.max(getFullContentWidth(targetElement), 660) + 100;
 
       // Clone and replace images with base64
       const clone = targetElement.cloneNode(true) as HTMLElement;
+      expandExportClone(targetElement as HTMLElement, clone);
 
-      // Handle canvas
-      const originalCanvas = targetElement.querySelector(
-        "canvas",
-      ) as HTMLCanvasElement;
-      if (originalCanvas) {
+      // Handle every canvas in composite chart components.
+      const originalCanvases = targetElement.querySelectorAll("canvas");
+      const clonedCanvases = clone.querySelectorAll("canvas");
+      originalCanvases.forEach((originalCanvas, index) => {
         console.log("Cloning canvas...");
         const tempCanvas = document.createElement("canvas");
         tempCanvas.width = originalCanvas.width;
         tempCanvas.height = originalCanvas.height;
-        tempCanvas.style.width = originalCanvas.style.width;
-        tempCanvas.style.height = originalCanvas.style.height;
+        tempCanvas.style.width = `${originalCanvas.getBoundingClientRect().width}px`;
+        tempCanvas.style.height = `${originalCanvas.getBoundingClientRect().height}px`;
         const ctx = tempCanvas.getContext("2d");
         if (ctx) ctx.drawImage(originalCanvas, 0, 0);
-        const clonedCanvas = clone.querySelector("canvas");
+        const clonedCanvas = clonedCanvases[index];
         if (clonedCanvas?.parentNode)
           clonedCanvas.parentNode.replaceChild(tempCanvas, clonedCanvas);
-      }
+      });
 
       // Replace cloned images with base64
       const clonedImages = clone.querySelectorAll("img");
@@ -349,12 +335,19 @@ export default function ScreenshotModal({
       console.log("Starting html2canvas render...");
 
       // Add timeout to html2canvas
+      const captureSize = getFullScreenshotDimensions(wrapper);
       const renderPromise = window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
         scale: 2,
         logging: false,
         useCORS: true,
         allowTaint: false,
+        width: captureSize.width,
+        height: captureSize.height,
+        windowWidth: captureSize.width,
+        windowHeight: captureSize.height,
+        scrollX: 0,
+        scrollY: 0,
       });
 
       const timeoutPromise = new Promise((_, reject) =>
@@ -417,7 +410,9 @@ export default function ScreenshotModal({
               disabled={isCapturing}
               className="w-full text-left px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="font-medium text-gray-900 dark:text-gray-100">{option.label}</div>
+              <div className="font-medium text-gray-900 dark:text-gray-100">
+                {option.label}
+              </div>
             </button>
           ))}
         </div>

@@ -5,6 +5,11 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import {
+  expandExportClone,
+  getFullContentWidth,
+  getFullScreenshotDimensions,
+} from "@/lib/screenshot-layout";
 import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import Image from "next/image";
@@ -287,13 +292,16 @@ export default function BasketballCompareContent() {
       const TEAM_COLUMN_WIDTH = 130;
       const MARGIN_LEFT = 100;
       const MARGIN_RIGHT = 100;
-      const chartWidth =
-        MARGIN_LEFT + selectedTeams.length * TEAM_COLUMN_WIDTH + MARGIN_RIGHT;
+      const chartWidth = Math.max(
+        MARGIN_LEFT + selectedTeams.length * TEAM_COLUMN_WIDTH + MARGIN_RIGHT,
+        getFullContentWidth(chartElement),
+      );
       const WRAPPER_PADDING = 20;
       const totalWidth = chartWidth + WRAPPER_PADDING * 2;
 
       // Clone the chart element WITHOUT adding to DOM yet
       const chartClone = chartElement.cloneNode(true) as HTMLElement;
+      expandExportClone(chartElement, chartClone);
 
       // Create wrapper with calculated width
       const wrapper = document.createElement("div");
@@ -370,6 +378,7 @@ export default function BasketballCompareContent() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Render with html2canvas
+      const captureSize = getFullScreenshotDimensions(wrapper);
       const canvas = await (
         window.html2canvas as (
           element: HTMLElement,
@@ -382,6 +391,12 @@ export default function BasketballCompareContent() {
         backgroundColor: "#ffffff",
         logging: false,
         fontTimeout: 3000,
+        width: captureSize.width,
+        height: captureSize.height,
+        windowWidth: captureSize.width,
+        windowHeight: captureSize.height,
+        scrollX: 0,
+        scrollY: 0,
       });
 
       // Remove from DOM IMMEDIATELY after rendering - before any styles affect live page

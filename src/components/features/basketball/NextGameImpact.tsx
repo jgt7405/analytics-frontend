@@ -3,6 +3,11 @@
 
 import type { WhatIfGame, WhatIfTeamResult } from "@/hooks/useBasketballWhatIf";
 import { getCellColor } from "@/lib/color-utils";
+import {
+  expandExportClone,
+  getFullContentWidth,
+  getFullScreenshotDimensions,
+} from "@/lib/screenshot-layout";
 import { Camera, Loader } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -79,11 +84,9 @@ async function captureScreenshot(
   }
   if (!html2canvas) return;
   const clone = element.cloneNode(true) as HTMLElement;
+  expandExportClone(element, clone);
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
-  const contentWidth = Math.min(
-    element.scrollWidth + 48,
-    element.offsetWidth + 48,
-  );
+  const contentWidth = Math.max(getFullContentWidth(element) + 48, 660);
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
   const header = document.createElement("div");
@@ -125,12 +128,19 @@ async function captureScreenshot(
   wrapper.appendChild(explainer);
   document.body.appendChild(wrapper);
   await new Promise((r) => setTimeout(r, 400));
+  const captureSize = getFullScreenshotDimensions(wrapper);
   const canvas = await html2canvas(wrapper, {
     backgroundColor: "#ffffff",
     scale: 2,
     useCORS: true,
     allowTaint: true,
     logging: false,
+    width: captureSize.width,
+    height: captureSize.height,
+    windowWidth: captureSize.width,
+    windowHeight: captureSize.height,
+    scrollX: 0,
+    scrollY: 0,
   });
   document.body.removeChild(wrapper);
   const link = document.createElement("a");

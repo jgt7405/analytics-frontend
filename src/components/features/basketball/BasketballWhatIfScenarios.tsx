@@ -4,6 +4,11 @@ import ConferenceSelector from "@/components/common/ConferenceSelector";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { getCellColor } from "@/lib/color-utils";
+import {
+  expandExportClone,
+  getFullContentWidth,
+  getFullScreenshotDimensions,
+} from "@/lib/screenshot-layout";
 import { cn } from "@/lib/utils";
 import { Camera, Check, ChevronDown, Download, Loader } from "lucide-react";
 
@@ -68,6 +73,7 @@ async function captureScreenshot(
   if (!html2canvas) return;
 
   const clone = element.cloneNode(true) as HTMLElement;
+  expandExportClone(element, clone);
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
 
   // Remove only the page-level explainer text (not the component's built-in explainer)
@@ -84,10 +90,7 @@ async function captureScreenshot(
   });
 
   // Measure actual content width for tighter screenshots
-  const contentWidth = Math.min(
-    element.scrollWidth + 48,
-    element.offsetWidth + 48,
-  );
+  const contentWidth = Math.max(getFullContentWidth(element) + 48, 660);
 
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
@@ -126,12 +129,19 @@ async function captureScreenshot(
   document.body.appendChild(wrapper);
   await new Promise((r) => setTimeout(r, 400));
 
+  const captureSize = getFullScreenshotDimensions(wrapper);
   const canvas = await html2canvas(wrapper, {
     backgroundColor: "#ffffff",
     scale: 2,
     useCORS: true,
     allowTaint: true,
     logging: false,
+    width: captureSize.width,
+    height: captureSize.height,
+    windowWidth: captureSize.width,
+    windowHeight: captureSize.height,
+    scrollX: 0,
+    scrollY: 0,
   });
   document.body.removeChild(wrapper);
 
@@ -822,7 +832,9 @@ function FullStandingsTable({
                     </td>
                     <td style={{ height: "2.35rem", padding: 0 }}>
                       <div className={cn(styles.heatTileStack, "tabular-nums")}>
-                        <span>{(team.avg_projected_conf_wins ?? 0).toFixed(1)}</span>
+                        <span>
+                          {(team.avg_projected_conf_wins ?? 0).toFixed(1)}
+                        </span>
                         <span
                           className={`text-[9px] ${Math.abs(winsChange) > 0.01 ? (winsChange > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
                         >
@@ -834,7 +846,9 @@ function FullStandingsTable({
                     </td>
                     <td style={{ height: "2.35rem", padding: 0 }}>
                       <div className={cn(styles.heatTileStack, "tabular-nums")}>
-                        <span>{(team.avg_conference_standing ?? 0).toFixed(1)}</span>
+                        <span>
+                          {(team.avg_conference_standing ?? 0).toFixed(1)}
+                        </span>
                         <span
                           className={`text-[9px] ${hasAvgChange ? (avgChange < 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
                         >
@@ -851,7 +865,10 @@ function FullStandingsTable({
                       const delta = val - blVal;
                       const hasChange = Math.abs(delta) > 0.05;
                       return (
-                        <td key={standing} style={{ height: "2.35rem", padding: 0 }}>
+                        <td
+                          key={standing}
+                          style={{ height: "2.35rem", padding: 0 }}
+                        >
                           <div
                             className={cn(styles.heatTileStack, "tabular-nums")}
                             style={{
@@ -862,7 +879,9 @@ function FullStandingsTable({
                                 : "#e2e8f0",
                             }}
                           >
-                            <span>{val > 0 ? `${val.toFixed(1)}` : "\u00A0"}</span>
+                            <span>
+                              {val > 0 ? `${val.toFixed(1)}` : "\u00A0"}
+                            </span>
                             <span
                               className={`text-[8px] ${hasChange ? (delta > 0 ? "text-green-600" : "text-red-500") : "invisible"}`}
                             >
@@ -956,7 +975,10 @@ function TeamFilterDropdown({
       {isOpen && (
         <div
           className="absolute z-30 mt-1 w-full rounded-md shadow-lg max-h-[240px] overflow-y-auto"
-          style={{ backgroundColor: "#ffffff", border: "1px solid var(--border-color)" }}
+          style={{
+            backgroundColor: "#ffffff",
+            border: "1px solid var(--border-color)",
+          }}
         >
           <button
             onClick={handleSelectAll}
@@ -1011,7 +1033,8 @@ function TeamFilterDropdown({
                       width: 24,
                       height: 24,
                       borderRadius: "50%",
-                      backgroundColor: checked && isDark ? "white" : "transparent",
+                      backgroundColor:
+                        checked && isDark ? "white" : "transparent",
                     }}
                   >
                     <TeamLogo src={t.logo_url} alt={t.team_name} size={16} />
@@ -1048,7 +1071,7 @@ export default function BasketballWhatIfScenarios() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
   const firstPlaceRef = useRef<HTMLDivElement>(null);
@@ -1507,7 +1530,10 @@ export default function BasketballWhatIfScenarios() {
         <div className="lg:col-span-2 order-3 lg:order-2">
           <div className={cn(styles.card, "p-4")}>
             {/* Header */}
-            <div className={styles.cardHeader} style={{ marginBottom: "0.75rem" }}>
+            <div
+              className={styles.cardHeader}
+              style={{ marginBottom: "0.75rem" }}
+            >
               <div className={styles.titleGroup} data-screenshot-hide="true">
                 <h2 className={styles.title}>
                   {hasCalculated ? "What-If Results" : "Current Standings"}

@@ -3,6 +3,11 @@
 import { Button } from "@/components/ui/Button";
 import { Download, Loader2, Share2 } from "@/components/ui/icons";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  expandExportClone,
+  getFullContentWidth,
+  getFullScreenshotDimensions,
+} from "@/lib/screenshot-layout";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -28,6 +33,8 @@ export interface TableActionButtonsProps {
   disabled?: boolean;
   explainerSelector?: string;
 }
+
+const MIN_EXPORT_CONTENT_WIDTH = 660;
 
 export default function TableActionButtons({
   contentSelector,
@@ -92,26 +99,6 @@ export default function TableActionButtons({
         ? document.querySelector(explainerSelector)
         : null;
 
-      // Temporarily force element to show full width for measurement
-      const originalStyles = new Map();
-      const containers = targetElement.querySelectorAll(
-        '[style*="overflow"], .overflow-x-auto, [style*="max-width"]',
-      );
-      containers.forEach((container) => {
-        const el = container as HTMLElement;
-        originalStyles.set(el, {
-          overflow: el.style.overflow,
-          overflowX: el.style.overflowX,
-          width: el.style.width,
-          maxWidth: el.style.maxWidth,
-        });
-        el.style.overflow = "visible";
-        el.style.overflowX = "visible";
-        el.style.width = "max-content";
-        el.style.maxWidth = "none";
-        console.log(`🔍 SCREENSHOT DEBUG: Removed constraints from container`);
-      });
-
       // Check chart type and calculate width
       const isLineChart = targetElement.querySelector("canvas") !== null;
       const table = targetElement.querySelector("table");
@@ -120,7 +107,6 @@ export default function TableActionButtons({
           '[data-component-type="bball-seed-wins-and-probability"]',
         ) !== null || contentSelector.includes("seed-wins");
       let actualWidth;
-      let isLineChartSpecific = false;
 
       console.log(
         `🔍 SCREENSHOT DEBUG: Found table=`,
@@ -130,8 +116,8 @@ export default function TableActionButtons({
       );
 
       if (table) {
-        // Measure the actual table width including all cells
-        let tableWidth = (table as HTMLElement).offsetWidth;
+        // scrollWidth includes columns outside the current viewport.
+        let tableWidth = getFullContentWidth(table);
         console.log(`🔍 SCREENSHOT DEBUG: table.offsetWidth=${tableWidth}`);
 
         // Check the rightmost cell position to ensure we capture full table width
@@ -145,7 +131,7 @@ export default function TableActionButtons({
           );
         }
 
-        actualWidth = tableWidth + 40; // Minimal padding (20px on each side)
+        actualWidth = Math.max(tableWidth, MIN_EXPORT_CONTENT_WIDTH) + 40;
         console.log(`📊 TABLE SCREENSHOT: actualWidth set to ${actualWidth}`);
       } else if (contentSelector.includes("standings-progression")) {
         // For standings progression table (flex-based layout)
@@ -158,9 +144,18 @@ export default function TableActionButtons({
           console.log(
             `🔍 SCREENSHOT DEBUG: Standings progression flex container width=${containerWidth}`,
           );
-          actualWidth = containerWidth + 40;
+          actualWidth =
+            Math.max(
+              containerWidth,
+              getFullContentWidth(targetElement),
+              MIN_EXPORT_CONTENT_WIDTH,
+            ) + 40;
         } else {
-          actualWidth = (targetElement as HTMLElement).offsetWidth + 40;
+          actualWidth =
+            Math.max(
+              getFullContentWidth(targetElement),
+              MIN_EXPORT_CONTENT_WIDTH,
+            ) + 40;
         }
         console.log(
           `📊 STANDINGS PROGRESSION SCREENSHOT: actualWidth set to ${actualWidth}`,
@@ -169,21 +164,14 @@ export default function TableActionButtons({
         // For seed-wins component, use a narrower width to fit content better
         actualWidth = 700;
       } else if (isLineChart) {
-        // Distinguish line charts from box plots
-        isLineChartSpecific =
-          targetElement.textContent?.includes("Over Time") ||
-          false ||
-          targetElement.textContent?.includes("History") ||
-          false ||
-          pageTitle?.includes("History") ||
-          false ||
-          pageTitle?.includes("Over Time") ||
-          false;
-        // Use fixed width for history charts, smaller to position logos closer
-        actualWidth = isLineChartSpecific ? 1410 : 800;
+        actualWidth = Math.max(getFullContentWidth(targetElement), 800) + 40;
       } else if (contentSelector.includes("ceiling")) {
         // For ceiling/floor chart, use actual component width with minimal buffer
-        actualWidth = (targetElement as HTMLElement).offsetWidth + 20;
+        actualWidth =
+          Math.max(
+            getFullContentWidth(targetElement),
+            MIN_EXPORT_CONTENT_WIDTH,
+          ) + 40;
       } else {
         const teamLogos1 = targetElement.querySelectorAll(
           'img[src*="team_logos"]',
@@ -210,28 +198,24 @@ export default function TableActionButtons({
 
         const baseWidth = isMobile ? 200 : 400;
         const widthPerTeam = isMobile ? 40 : 50;
-        actualWidth = baseWidth + teamCount * widthPerTeam;
+        actualWidth = Math.max(
+          getFullContentWidth(targetElement) + 40,
+          baseWidth + teamCount * widthPerTeam,
+          MIN_EXPORT_CONTENT_WIDTH + 40,
+        );
       }
-
-      // Restore original styles
-      containers.forEach((container) => {
-        const el = container as HTMLElement;
-        const original = originalStyles.get(el);
-        if (original) {
-          el.style.overflow = original.overflow || "";
-          el.style.width = original.width || "";
-        }
-      });
 
       // Clone element first
       const clone = targetElement.cloneNode(true) as HTMLElement;
+      expandExportClone(targetElement as HTMLElement, clone);
 
       // html2canvas can turn translucent/inset cell effects into large dark
       // blocks. Freeze the live heat-tile colors and typography as explicit
       // solid styles on the export clone so the PNG matches the screen.
-      const originalScreenshotTiles = targetElement.querySelectorAll<HTMLElement>(
-        '[data-screenshot-tile="true"]',
-      );
+      const originalScreenshotTiles =
+        targetElement.querySelectorAll<HTMLElement>(
+          '[data-screenshot-tile="true"]',
+        );
       const clonedScreenshotTiles = clone.querySelectorAll<HTMLElement>(
         '[data-screenshot-tile="true"]',
       );
@@ -248,7 +232,11 @@ export default function TableActionButtons({
         );
         clonedTile.style.setProperty("background-image", "none", "important");
         clonedTile.style.setProperty("color", computed.color, "important");
-        clonedTile.style.setProperty("font-size", computed.fontSize, "important");
+        clonedTile.style.setProperty(
+          "font-size",
+          computed.fontSize,
+          "important",
+        );
         clonedTile.style.setProperty(
           "font-weight",
           computed.fontWeight,
@@ -267,26 +255,25 @@ export default function TableActionButtons({
       });
 
       // Handle canvas replacement
-      const originalCanvas = targetElement.querySelector(
-        "canvas",
-      ) as HTMLCanvasElement;
-      if (originalCanvas) {
+      const originalCanvases = targetElement.querySelectorAll("canvas");
+      const clonedCanvases = clone.querySelectorAll("canvas");
+      originalCanvases.forEach((originalCanvas, index) => {
         const tempCanvas = document.createElement("canvas");
         tempCanvas.width = originalCanvas.width;
         tempCanvas.height = originalCanvas.height;
-        tempCanvas.style.width = originalCanvas.style.width;
-        tempCanvas.style.height = originalCanvas.style.height;
+        tempCanvas.style.width = `${originalCanvas.getBoundingClientRect().width}px`;
+        tempCanvas.style.height = `${originalCanvas.getBoundingClientRect().height}px`;
 
         const ctx = tempCanvas.getContext("2d");
         if (ctx) {
           ctx.drawImage(originalCanvas, 0, 0);
         }
 
-        const clonedCanvas = clone.querySelector("canvas");
+        const clonedCanvas = clonedCanvases[index];
         if (clonedCanvas && clonedCanvas.parentNode) {
           clonedCanvas.parentNode.replaceChild(tempCanvas, clonedCanvas);
         }
-      }
+      });
 
       // Simple fixes only
       const style = document.createElement("style");
@@ -317,6 +304,14 @@ export default function TableActionButtons({
           height: 40px !important;
         }
         [data-screenshot-hide="true"] { display: none !important; }
+        [data-screenshot-label] {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          white-space: normal !important;
+          overflow: visible !important;
+          text-overflow: clip !important;
+        }
         select { display: none !important; }
         label:has(+ select) { display: none !important; }
       `;
@@ -439,16 +434,37 @@ export default function TableActionButtons({
       }
 
       document.body.appendChild(wrapper);
+      const renderedContentWidth = Math.max(
+        contentWidth,
+        getFullContentWidth(clone),
+      );
+      if (renderedContentWidth > contentWidth) {
+        actualWidth = renderedContentWidth + 40;
+        wrapper.style.width = `${actualWidth}px`;
+        header.style.width = `${renderedContentWidth}px`;
+        clone.style.setProperty(
+          "width",
+          `${renderedContentWidth}px`,
+          "important",
+        );
+      }
       console.log("ÃƒÂ¢Ã‚ÂÃ‚Â³ Taking screenshot of component as displayed...");
       await new Promise((resolve) => setTimeout(resolve, 500));
       console.log("ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Screenshot captured");
 
+      const captureSize = getFullScreenshotDimensions(wrapper);
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
         scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
+        width: captureSize.width,
+        height: captureSize.height,
+        windowWidth: captureSize.width,
+        windowHeight: captureSize.height,
+        scrollX: 0,
+        scrollY: 0,
       });
 
       document.body.removeChild(wrapper);

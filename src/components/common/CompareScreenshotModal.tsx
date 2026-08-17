@@ -3,6 +3,11 @@
 
 import { Button } from "@/components/ui/Button";
 import { Download } from "@/components/ui/icons";
+import {
+  expandExportClone,
+  getFullContentWidth,
+  getFullScreenshotDimensions,
+} from "@/lib/screenshot-layout";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -16,7 +21,7 @@ declare global {
   interface Window {
     html2canvas?: (
       element: HTMLElement,
-      options?: object
+      options?: object,
     ) => Promise<HTMLCanvasElement>;
   }
 }
@@ -97,20 +102,17 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
       // Determine if this is schedule difficulty
       const isScheduleDifficulty = selector.includes("schedule-difficulty");
 
-      // Calculate component width based on type
-      let componentWidth: number;
-      if (isScheduleDifficulty) {
-        // Schedule difficulty needs more width due to the chart layout
-        componentWidth = 500;
-      } else {
-        // Other charts - fill more space with less white space
-        componentWidth = 380;
-      }
+      // Give every component enough room for its complete intrinsic content.
+      // Comparison charts are not assumed to share the same width.
+      const minimumComponentWidth = isScheduleDifficulty ? 500 : 380;
+      const componentWidths = Array.from(elements).map((element) =>
+        Math.max(getFullContentWidth(element), minimumComponentWidth),
+      );
 
       const gap = 20; // Reduced gap for line charts
       const padding = 100; // Left and right padding
       const totalWidth =
-        componentWidth * elements.length +
+        componentWidths.reduce((total, width) => total + width, 0) +
         gap * (elements.length - 1) +
         padding;
 
@@ -146,7 +148,7 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
       const logo = document.createElement("img");
       const logoPath = "/images/JThom_Logo_Football.png";
       const logoBase64 = await imageToBase64(
-        `${window.location.origin}${logoPath}`
+        `${window.location.origin}${logoPath}`,
       );
       logo.src = logoBase64;
       logo.style.cssText = `height: 50px; width: auto;`;
@@ -195,7 +197,9 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
       // Clone and process each component
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
+        const componentWidth = componentWidths[i];
         const clone = element.cloneNode(true) as HTMLElement;
+        expandExportClone(element as HTMLElement, clone);
 
         // Find team name and logo from parent container
         const teamNameElement = element.closest("[data-team-name]");
@@ -206,7 +210,7 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
           teamName = teamNameElement.getAttribute("data-team-name") || "";
           // Try to find the team logo from the page
           const teamHeaderLogo = teamNameElement.querySelector(
-            'img[alt*="logo"]'
+            'img[alt*="logo"]',
           ) as HTMLImageElement;
           if (teamHeaderLogo) {
             teamLogoUrl = teamHeaderLogo.src;
@@ -267,10 +271,9 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
         }
 
         // Handle canvas elements - expand them to fill available space
-        const originalCanvas = element.querySelector(
-          "canvas"
-        ) as HTMLCanvasElement;
-        if (originalCanvas) {
+        const originalCanvases = element.querySelectorAll("canvas");
+        const clonedCanvases = clone.querySelectorAll("canvas");
+        originalCanvases.forEach((originalCanvas, canvasIndex) => {
           const tempCanvas = document.createElement("canvas");
           tempCanvas.width = originalCanvas.width;
           tempCanvas.height = originalCanvas.height;
@@ -289,15 +292,15 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
             ctx.drawImage(originalCanvas, 0, 0);
           }
 
-          const clonedCanvas = clone.querySelector("canvas");
+          const clonedCanvas = clonedCanvases[canvasIndex];
           if (clonedCanvas && clonedCanvas.parentNode) {
             clonedCanvas.parentNode.replaceChild(tempCanvas, clonedCanvas);
           }
-        }
+        });
 
         // Remove overflow restrictions and ensure full visibility
         const scrollableContainers = clone.querySelectorAll(
-          '[style*="overflow"]'
+          '[style*="overflow"]',
         );
         scrollableContainers.forEach((container) => {
           (container as HTMLElement).style.overflow = "visible";
@@ -330,7 +333,7 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
         if (isScheduleDifficulty) {
           // Reset any transform scaling
           const transformedElements = clone.querySelectorAll(
-            '[style*="transform"]'
+            '[style*="transform"]',
           );
           transformedElements.forEach((el) => {
             const element = el as HTMLElement;
@@ -434,14 +437,19 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
         throw new Error("html2canvas failed to load");
       }
 
+      const captureSize = getFullScreenshotDimensions(wrapper);
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
         scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
-        width: totalWidth,
-        windowWidth: totalWidth,
+        width: captureSize.width,
+        height: captureSize.height,
+        windowWidth: captureSize.width,
+        windowHeight: captureSize.height,
+        scrollX: 0,
+        scrollY: 0,
       });
 
       document.body.removeChild(wrapper);
@@ -461,7 +469,7 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
       console.error("Download failed:", error);
       toast.dismiss();
       toast.error(
-        `Screenshot failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Screenshot failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     } finally {
       setDownloading(false);

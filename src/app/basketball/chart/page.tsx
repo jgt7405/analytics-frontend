@@ -3,6 +3,11 @@
 import BballScatterplotChart from "@/components/features/basketball/BballScatterplotChart";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import {
+  expandExportClone,
+  getFullContentWidth,
+  getFullScreenshotDimensions,
+} from "@/lib/screenshot-layout";
 import { Download, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -10,7 +15,7 @@ declare global {
   interface Window {
     html2canvas?: (
       element: HTMLElement,
-      options?: object
+      options?: object,
     ) => Promise<HTMLCanvasElement>;
   }
 }
@@ -75,17 +80,13 @@ export default function BasketballChartPage() {
 
       if (!response.ok) {
         throw new Error(
-          `Failed to fetch team schedule: ${response.statusText}`
+          `Failed to fetch team schedule: ${response.statusText}`,
         );
       }
 
       const jsonData = await response.json();
 
-      if (
-        !jsonData.success ||
-        !jsonData.data ||
-        jsonData.data.length === 0
-      ) {
+      if (!jsonData.success || !jsonData.data || jsonData.data.length === 0) {
         alert("No team schedule data available");
         setIsLoading(false);
         return;
@@ -115,7 +116,7 @@ export default function BasketballChartPage() {
               }
               return stringValue;
             })
-            .join(",")
+            .join(","),
         ),
       ].join("\n");
 
@@ -134,7 +135,7 @@ export default function BasketballChartPage() {
       alert(
         `Failed to download: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     } finally {
       setIsLoading(false);
@@ -156,10 +157,11 @@ export default function BasketballChartPage() {
 
       // Clone the element
       const clone = targetElement.cloneNode(true) as HTMLElement;
+      expandExportClone(targetElement, clone);
 
       // Remove the Chart Settings section from the clone
       const settingsPanel = clone.querySelector(
-        '[data-exclude-screenshot="true"]'
+        '[data-exclude-screenshot="true"]',
       );
       if (settingsPanel) {
         settingsPanel.remove();
@@ -216,7 +218,9 @@ export default function BasketballChartPage() {
         }
       }
 
-      // Create wrapper with fixed width
+      const exportWidth = Math.max(getFullContentWidth(targetElement), 1000);
+
+      // Create wrapper at the full chart width.
       const wrapper = document.createElement("div");
       wrapper.style.cssText = `
   position: fixed;
@@ -225,7 +229,7 @@ export default function BasketballChartPage() {
   background-color: white;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-  width: 1000px;
+  width: ${exportWidth}px;
   box-sizing: border-box;
   z-index: -1;
   overflow: visible;
@@ -257,7 +261,7 @@ export default function BasketballChartPage() {
       const logo = document.createElement("img");
       try {
         const logoBase64 = await imageToBase64(
-          `${window.location.origin}/images/JThom_Logo.png`
+          `${window.location.origin}/images/JThom_Logo.png`,
         );
         logo.src = logoBase64;
         logo.style.cssText = `
@@ -304,7 +308,8 @@ export default function BasketballChartPage() {
       header.appendChild(dateElement);
       wrapper.appendChild(header);
 
-      // Add chart container with reduced height to show bottom labels
+      // Let the chart determine its own height so axis labels and legends are
+      // never clipped by a fixed export viewport.
       const chartContainer = document.createElement("div");
       chartContainer.style.cssText = `
   width: 100%;
@@ -312,8 +317,9 @@ export default function BasketballChartPage() {
   display: block;
   padding: 2px 16px 0 24px;
   box-sizing: border-box;
-  height: 680px;
-  overflow: hidden;
+  min-height: 680px;
+  height: auto;
+  overflow: visible;
 `;
 
       clone.style.cssText = `
@@ -322,7 +328,7 @@ export default function BasketballChartPage() {
   display: block !important;
   background: white !important;
   padding: 0 !important;
-  margin-top: -60px !important;
+  margin-top: 0 !important;
 `;
       chartContainer.appendChild(clone);
       wrapper.appendChild(chartContainer);
@@ -336,6 +342,7 @@ export default function BasketballChartPage() {
       console.log("Starting html2canvas render...");
 
       // Convert to canvas with proper options
+      const captureSize = getFullScreenshotDimensions(wrapper);
       const canvas = (await Promise.race([
         window.html2canvas!(wrapper, {
           backgroundColor: "#ffffff",
@@ -343,15 +350,19 @@ export default function BasketballChartPage() {
           logging: false,
           useCORS: true,
           allowTaint: true,
-          width: 1000,
-          windowWidth: 1000,
+          width: captureSize.width,
+          height: captureSize.height,
+          windowWidth: captureSize.width,
+          windowHeight: captureSize.height,
+          scrollX: 0,
+          scrollY: 0,
           letterRendering: true,
         }),
         new Promise((_, reject) =>
           setTimeout(
             () => reject(new Error("Screenshot timed out after 30 seconds")),
-            30000
-          )
+            30000,
+          ),
         ),
       ])) as HTMLCanvasElement;
 
@@ -376,7 +387,7 @@ export default function BasketballChartPage() {
     } catch (error) {
       console.error("Screenshot failed:", error);
       alert(
-        `Failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       setIsCapturing(false);
     }
@@ -386,7 +397,7 @@ export default function BasketballChartPage() {
     const url = new URL("https://twitter.com/intent/tweet");
     url.searchParams.append(
       "text",
-      `Check out my ${chartTitle} scatterplot chart! 📊 Built with JThom Analytics`
+      `Check out my ${chartTitle} scatterplot chart! 📊 Built with JThom Analytics`,
     );
     url.searchParams.append("via", "JThom_Analytics");
     window.open(url.toString(), "_blank");
