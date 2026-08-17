@@ -36,7 +36,10 @@ interface FootballTeamStandingsHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side 8/15-12/15 display window. */
+  displaySeason?: string;
 }
 
 export default function FootballTeamStandingsHistory({
@@ -45,6 +48,7 @@ export default function FootballTeamStandingsHistory({
   secondaryColor,
   logoUrl,
   season,
+  displaySeason,
 }: FootballTeamStandingsHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,7 +116,7 @@ export default function FootballTeamStandingsHistory({
     }
 
     // Filter data to season range
-    const range = getFootballDateRange(season, rawData);
+    const range = getFootballDateRange(displaySeason ?? season, rawData);
     const filteredData = filterDataToRange(rawData, range);
 
     // Deduplicate by date, keeping earliest version_id
@@ -134,7 +138,7 @@ export default function FootballTeamStandingsHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
@@ -161,7 +165,7 @@ export default function FootballTeamStandingsHistory({
   })();
 
   // Build chart labels and datasets
-  const range = getFootballDateRange(season, data);
+  const range = getFootballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((point) => point.date);
   const chartLabels = buildChartLabels(dataDates, range, "football");
   const dataByDate = new Map(data.map((point) => [point.date, point]));

@@ -94,18 +94,28 @@ const transformRecordSeedCounts = (apiData: ApiRecordSeedCount[]) => {
   }));
 };
 
+// `season` (raw URL param, undefined on the current/non-archive page) is
+// what's safe to send to the backend's conf_wins history query, which
+// filters by an exact `season` column match - the DB isn't tagging
+// in-progress-season rows with a season label the frontend can predict,
+// so sending the computed `displaySeason` there silently returns no rows
+// (see CFP Bid History, which never sends season to its backend query and
+// therefore isn't affected). `displaySeason` is still what charts use to
+// pick their client-side 8/15-12/15 display window.
 const historySectionProps = (ctx: {
   teamInfo: {
     team_name: string;
     primary_color?: string;
     secondary_color?: string;
   };
+  season?: string;
   displaySeason: string;
 }) => ({
   teamName: ctx.teamInfo.team_name,
   primaryColor: ctx.teamInfo.primary_color,
   secondaryColor: ctx.teamInfo.secondary_color,
-  season: ctx.displaySeason,
+  season: ctx.season,
+  displaySeason: ctx.displaySeason,
 });
 
 const SECTIONS: TeamSection<FootballTeamData>[] = [

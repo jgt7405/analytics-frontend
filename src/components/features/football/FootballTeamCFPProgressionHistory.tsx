@@ -39,7 +39,10 @@ interface FootballTeamCFPProgressionHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side 8/15-12/15 display window. */
+  displaySeason?: string;
 }
 
 interface CFPRoundDataPoint {
@@ -61,6 +64,7 @@ export default function FootballTeamCFPProgressionHistory({
   primaryColor = "#3b82f6",
   secondaryColor,
   season,
+  displaySeason,
 }: FootballTeamCFPProgressionHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -164,13 +168,13 @@ export default function FootballTeamCFPProgressionHistory({
       cfp_champion_pct: item.cfp_champion_pct!,
     }));
 
-    const range = getFootballDateRange(season, allData);
+    const range = getFootballDateRange(displaySeason ?? season, allData);
     const finalData = filterDataToRange(allData, range).sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
     setData(finalData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
@@ -182,7 +186,7 @@ export default function FootballTeamCFPProgressionHistory({
       : "#10b981";
 
   // Build chart labels and datasets
-  const range = getFootballDateRange(season, data);
+  const range = getFootballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((item) => item.date);
   const chartLabels = buildChartLabels(dataDates, range, "football");
   const dataByDate = new Map(data.map((item) => [item.date, item]));

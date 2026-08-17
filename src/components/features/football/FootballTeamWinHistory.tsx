@@ -28,7 +28,10 @@ interface FootballTeamWinHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side 8/15-12/15 display window. */
+  displaySeason?: string;
 }
 
 export default function FootballTeamWinHistory({
@@ -37,6 +40,7 @@ export default function FootballTeamWinHistory({
   secondaryColor,
   logoUrl,
   season,
+  displaySeason,
 }: FootballTeamWinHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,7 +98,7 @@ export default function FootballTeamWinHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-    const range = getFootballDateRange(season, rawData);
+    const range = getFootballDateRange(displaySeason ?? season, rawData);
     const filteredData = filterDataToRange(rawData, range);
 
     // Group by date and take the FIRST entry per day (earliest version_id)
@@ -121,7 +125,7 @@ export default function FootballTeamWinHistory({
     });
 
     setData(uniqueData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   // Determine colors - handle white secondary color properly
   const finalSecondaryColor = (() => {
@@ -147,7 +151,7 @@ export default function FootballTeamWinHistory({
     return secondaryColor;
   })();
 
-  const range = getFootballDateRange(season, data);
+  const range = getFootballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((point) => point.date);
   const chartLabels = buildChartLabels(dataDates, range, "football");
 

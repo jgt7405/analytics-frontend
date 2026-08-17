@@ -44,7 +44,11 @@ interface FootballTeamCFPBidHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  /** Raw archive season (undefined on the current page); unused here since
+   * this component's backend fetch is never season-filtered. */
   season?: string;
+  /** Season used for the chart's client-side 8/15-12/15 display window. */
+  displaySeason?: string;
 }
 
 export default function FootballTeamCFPBidHistory({
@@ -52,6 +56,7 @@ export default function FootballTeamCFPBidHistory({
   primaryColor = "#3b82f6",
   secondaryColor,
   season,
+  displaySeason,
 }: FootballTeamCFPBidHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -145,7 +150,7 @@ export default function FootballTeamCFPBidHistory({
 
         // Filter to season range and sort
         const allData = Array.from(dataByDate.values());
-        const range = getFootballDateRange(season, allData);
+        const range = getFootballDateRange(displaySeason ?? season, allData);
         const processedData = filterDataToRange(allData, range).sort((a, b) => {
           const dateA = parseDateCentralTime(a.date);
           const dateB = parseDateCentralTime(b.date);
@@ -165,7 +170,7 @@ export default function FootballTeamCFPBidHistory({
     if (teamName) {
       fetchData();
     }
-  }, [teamName, season]);
+  }, [teamName, season, displaySeason]);
 
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
@@ -177,7 +182,7 @@ export default function FootballTeamCFPBidHistory({
       : "#10b981";
 
   // Build chart labels and datasets
-  const range = getFootballDateRange(season, data);
+  const range = getFootballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((item) => item.date);
   const chartLabels = buildChartLabels(dataDates, range, "football");
   const dataByDate = new Map(data.map((item) => [item.date, item]));

@@ -40,7 +40,10 @@ interface FootballTeamRankHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side 8/15-12/15 display window. */
+  displaySeason?: string;
 }
 
 export default function FootballTeamRankHistory({
@@ -48,6 +51,7 @@ export default function FootballTeamRankHistory({
   primaryColor = "#3b82f6",
   logoUrl,
   season,
+  displaySeason,
 }: FootballTeamRankHistoryProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", (number | null)[], string> | null>(
@@ -106,7 +110,7 @@ export default function FootballTeamRankHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-    const range = getFootballDateRange(season, rawData);
+    const range = getFootballDateRange(displaySeason ?? season, rawData);
     // sagarin_rank is FBS-only; 999 is the site-wide FCS sentinel (not a
     // real rank to plot) - excluded the same way missing values already are.
     const filteredData = filterDataToRange(rawData, range).filter(
@@ -140,7 +144,7 @@ export default function FootballTeamRankHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   // Chart options
   const options = {
@@ -240,7 +244,7 @@ export default function FootballTeamRankHistory({
   } as const;
 
   // Chart data
-  const range = getFootballDateRange(season, data);
+  const range = getFootballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((point) => point.date);
   const chartLabels = buildChartLabels(dataDates, range, "football");
   const dataByDate = new Map(data.map((point) => [point.date, point]));
