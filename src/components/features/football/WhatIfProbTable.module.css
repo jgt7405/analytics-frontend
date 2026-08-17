@@ -17,10 +17,11 @@
   position: relative;
   overflow: auto;
   max-height: 70vh;
-  /* No top padding: the header row sticks to top: 0 of this container's
-     content box, so any top padding here would leave an unsticky gap
-     that scrolled rows could show through as they pass underneath. */
-  padding: 0 0.9rem 1rem;
+  /* No top or left padding: the header row sticks to top: 0 and the
+     rank/team columns stick to left: 0 of this container's content box.
+     Padding on either edge leaves an unsticky strip where scrolling cells
+     can show through. Keep the breathing room on the right and bottom. */
+  padding: 0 0.9rem 1rem 0;
   scrollbar-color: #94a3b8 transparent;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
@@ -187,7 +188,7 @@
   }
 
   .scrollViewport {
-    padding: 0 0.6rem 0.8rem;
+    padding: 0 0.6rem 0.8rem 0;
     max-height: 65vh;
   }
 
