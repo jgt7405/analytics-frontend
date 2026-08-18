@@ -322,7 +322,7 @@ export default function PostseasonContent<TTeam>({
 
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                    <div className="postseason-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         {config.explainer.map((line, i) => (
                           <div
@@ -340,6 +340,7 @@ export default function PostseasonContent<TTeam>({
                       <TableActionButtons
                         selectedConference={selectedConference}
                         contentSelector={`.${config.tableClass}`}
+                        explainerSelector=".postseason-explainer"
                         pageName={config.actionPageName}
                         pageTitle={config.title}
                         shareTitle={config.shareTitle}

@@ -69,7 +69,7 @@ export default function ArchiveBasketballHome({
 
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                  <div className="ncaa-bracket-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
                         NCAA tournament projections based on 1,000 season
@@ -124,6 +124,7 @@ export default function ArchiveBasketballHome({
                   >
                     <TableActionButtons
                       contentSelector=".ncaa-bracket-table"
+                      explainerSelector=".ncaa-bracket-explainer"
                       pageName="ncaa-tournament"
                     />
                   </div>
@@ -151,7 +152,7 @@ export default function ArchiveBasketballHome({
 
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                  <div className="multibid-leagues-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
                         Conferences with multiple teams projected to be in the
@@ -165,6 +166,7 @@ export default function ArchiveBasketballHome({
                   >
                     <TableActionButtons
                       contentSelector=".multibid-leagues-table"
+                      explainerSelector=".multibid-leagues-explainer"
                       pageName="multi-bid-conferences"
                     />
                   </div>

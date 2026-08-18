@@ -179,7 +179,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
 
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                  <div className="cfp-bracket-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
                         {mode === "current"
@@ -205,6 +205,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                   >
                     <TableActionButtons
                       contentSelector=".cfp-bracket-table"
+                      explainerSelector=".cfp-bracket-explainer"
                       pageName="cfp-bracket"
                     />
                   </div>
@@ -226,7 +227,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
 
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                  <div className="conf-multi-bid-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
                         Projected CFP rank for all teams, based on 1,000 season
@@ -241,6 +242,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                   >
                     <TableActionButtons
                       contentSelector=".conf-multi-bid-table"
+                      explainerSelector=".conf-multi-bid-explainer"
                       pageName="conference-multi-bid"
                     />
                   </div>

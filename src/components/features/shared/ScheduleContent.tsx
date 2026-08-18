@@ -355,7 +355,7 @@ export default function ScheduleContent<TGame, TSummary>({
 
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                          <div className="schedule-table-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
                                 Location and Opponent are sorted by difficulty,
@@ -379,6 +379,7 @@ export default function ScheduleContent<TGame, TSummary>({
                             <TableActionButtons
                               selectedConference={selectedConference}
                               contentSelector={`.${tableClass}`}
+                              explainerSelector=".schedule-table-explainer"
                               pageName={pageId}
                               pageTitle="Team Schedules"
                               shareTitle="Team Schedule Analysis"
@@ -418,7 +419,7 @@ export default function ScheduleContent<TGame, TSummary>({
 
                       <div className="mt-6">
                         <div className="flex flex-row items-start gap-4">
-                          <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                          <div className="schedule-summary-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                             <div style={{ lineHeight: "1.3" }}>
                               <div>
                                 Team schedule difficulty breakdown by win
@@ -438,6 +439,7 @@ export default function ScheduleContent<TGame, TSummary>({
                             <TableActionButtons
                               selectedConference={selectedConference}
                               contentSelector={`.${summaryClass}`}
+                              explainerSelector=".schedule-summary-explainer"
                               pageName={`${pageId}-summary`}
                               pageTitle="Schedule Difficulty Summary"
                               shareTitle="Schedule Difficulty Summary"

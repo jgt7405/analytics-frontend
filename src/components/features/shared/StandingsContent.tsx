@@ -130,9 +130,17 @@ interface StandingsContentProps<
   initialData?: { data: TTeam[]; conferences: string[] };
 }
 
-function Explainer({ lines }: { lines: string[] }) {
+function Explainer({
+  lines,
+  explainerClass,
+}: {
+  lines: string[];
+  explainerClass?: string;
+}) {
   return (
-    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+    <div
+      className={`flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4 ${explainerClass || ""}`}
+    >
       <div style={{ lineHeight: "1.3" }}>
         {lines.map((line, i) => (
           <div key={i} style={i > 0 ? { marginTop: "6px" } : undefined}>
@@ -357,13 +365,17 @@ export default function StandingsContent<
         <div className={containerClass}>{body}</div>
         <div className="mt-6">
           <div className="flex flex-row items-start gap-4">
-            <Explainer lines={explainerLines} />
+            <Explainer
+              lines={explainerLines}
+              explainerClass={`${containerClass}-explainer`}
+            />
             <div
               className={`flex-shrink-0 ${isMobile ? "w-1/3" : "w-auto mr-2"}`}
             >
               <TableActionButtons
                 selectedConference={selectedConference}
                 contentSelector={`.${containerClass}`}
+                explainerSelector={`.${containerClass}-explainer`}
                 pageName={actionPageName}
                 pageTitle={pageTitle}
                 shareTitle={shareTitle}

@@ -279,7 +279,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                 </div>
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                    <div className="netrtg-box-whisker-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           Rating distribution by conference showing the strength
@@ -296,6 +296,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                     >
                       <TableActionButtons
                         contentSelector=".netrtg-box-whisker-container"
+                        explainerSelector=".netrtg-box-whisker-explainer"
                         pageName="conference-netrtg-chart"
                         pageTitle="Conference Net Rating Distribution"
                         shareTitle="Conference Net Rating Distribution"
@@ -365,7 +366,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                 </div>
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                    <div className="conf-bids-history-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           Progression of projected NCAA tournament bids by
@@ -380,6 +381,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                     >
                       <TableActionButtons
                         contentSelector=".conf-bids-history-container"
+                        explainerSelector=".conf-bids-history-explainer"
                         pageName="conference-bids-history-chart"
                         pageTitle="Conference Tournament Bids History"
                         shareTitle="Conference Tournament Bid Trends Over Time"

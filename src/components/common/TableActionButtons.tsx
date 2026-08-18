@@ -431,6 +431,8 @@ export default function TableActionButtons({
           overflow: visible !important;
         `;
         wrapper.appendChild(explainerClone);
+      } else {
+        clone.style.setProperty("margin-bottom", "16px", "important");
       }
 
       document.body.appendChild(wrapper);

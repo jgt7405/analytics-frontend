@@ -178,7 +178,7 @@ export default function FootballConfDataArchivePage({
               </div>
               <div className="mt-6">
                 <div className="flex flex-row items-start gap-4">
-                  <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                  <div className="sagarin-box-whisker-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                     <div style={{ lineHeight: "1.3" }}>
                       <div>
                         Win probability distribution by conference based on
@@ -196,6 +196,7 @@ export default function FootballConfDataArchivePage({
                   >
                     <TableActionButtons
                       contentSelector=".sagarin-box-whisker-container"
+                      explainerSelector=".sagarin-box-whisker-explainer"
                       pageName="conference-win-probability-chart"
                       pageTitle="Conference Win Probability Distribution"
                       shareTitle="Conference Win Probability vs Average Team"
@@ -216,7 +217,7 @@ export default function FootballConfDataArchivePage({
                 </div>
                 <div className="mt-6">
                   <div className="flex flex-row items-start gap-4">
-                    <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                    <div className="conf-bids-history-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
                       <div style={{ lineHeight: "1.3" }}>
                         <div>
                           Progression of projected CFP bids by conference over
@@ -230,6 +231,7 @@ export default function FootballConfDataArchivePage({
                     >
                       <TableActionButtons
                         contentSelector=".conf-bids-history-container"
+                        explainerSelector=".conf-bids-history-explainer"
                         pageName="conference-bids-history-chart"
                         pageTitle="Conference CFP Bids History"
                         shareTitle="Conference CFP Bid Trends Over Time"
