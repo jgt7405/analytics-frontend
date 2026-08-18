@@ -43,3 +43,7 @@ next-env.d.ts
 
 # IDE
 .idea/
+
+# generated infographics
+/public/images/infographics/
+/scripts/generate-cfp-infographic.mjs
