@@ -11,6 +11,7 @@ export interface FootballStanding {
   // Current records
   actual_conference_wins: number;
   actual_conference_losses: number;
+  actual_conference_win_pct?: number;
   actual_total_wins: number;
   actual_total_losses: number;
 

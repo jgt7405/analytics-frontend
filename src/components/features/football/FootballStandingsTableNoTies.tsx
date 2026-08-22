@@ -241,6 +241,14 @@ function FootballStandingsTableNoTies({
                   <div className={styles.summaryChip}>
                     {team.actual_conference_wins ?? 0}-
                     {team.actual_conference_losses ?? 0}
+                    {(() => {
+                      const wins = team.actual_conference_wins ?? 0;
+                      const losses = team.actual_conference_losses ?? 0;
+                      const games = wins + losses;
+                      if (games === 0) return null;
+                      const pct = team.actual_conference_win_pct ?? wins / games;
+                      return ` (${pct.toFixed(3).replace(/^0/, "")})`;
+                    })()}
                   </div>
                 </td>
               ))}
