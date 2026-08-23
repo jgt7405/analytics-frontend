@@ -365,7 +365,7 @@ function FootballCFPProb({
                   maxWidth: probColWidth,
                   height: headerHeight,
                 }}
-                title="Click to sort — % of all scenarios team makes CFP as auto bid (top-5 conf champion)"
+                title="Click to sort — % of all scenarios team makes CFP as an automatic bid (Power 4 conf champion, or highest-ranked Group of 5/Pac-12 team)"
               >
                 {isMobile ? "Auto\n%" : "Auto %"}
                 {sortColumn === "auto" && (
