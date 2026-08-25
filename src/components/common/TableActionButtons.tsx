@@ -8,6 +8,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/screenshot-layout";
+import { saveImageBlob } from "@/lib/save-image";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -481,35 +482,7 @@ export default function TableActionButtons({
         }, "image/png");
       });
 
-      if (isMobile) {
-        const file = new File([blob], filename, { type: "image/png" });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: pageTitle || "Analytics",
-            });
-            return;
-          } catch (shareError: unknown) {
-            if (
-              shareError &&
-              typeof shareError === "object" &&
-              "name" in shareError &&
-              shareError.name === "AbortError"
-            ) {
-              return;
-            }
-          }
-        }
-      }
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      await saveImageBlob(blob, filename, pageTitle || "Analytics");
     } catch (error) {
       console.error("Download failed:", error);
       toast.error(

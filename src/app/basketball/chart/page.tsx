@@ -8,6 +8,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/screenshot-layout";
+import { saveCanvasImage } from "@/lib/save-image";
 import { Download, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -374,12 +375,7 @@ export default function BasketballChartPage() {
       // Download file
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `${chartTitle.replace(/\s+/g, "_")}_${timestamp}.png`;
-      const link = document.createElement("a");
-      link.download = filename;
-      link.href = canvas.toDataURL("image/png");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await saveCanvasImage(canvas, filename, chartTitle);
 
       console.log("Download triggered");
       setIsCapturing(false);

@@ -6,6 +6,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/screenshot-layout";
+import { saveCanvasImage } from "@/lib/save-image";
 import { useState } from "react";
 
 interface ScreenshotOption {
@@ -368,10 +369,7 @@ export default function ScreenshotModal({
       const filename = teamName
         ? `${teamName.replace(/\s+/g, "_")}_${label.replace(/\s+/g, "_")}.png`
         : `${label.replace(/\s+/g, "_")}.png`;
-      const link = document.createElement("a");
-      link.download = filename;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      await saveCanvasImage(canvas, filename, label);
 
       console.log("Download triggered");
       setIsCapturing(false);

@@ -9,6 +9,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/screenshot-layout";
+import { saveCanvasImage } from "@/lib/save-image";
 import { cn } from "@/lib/utils";
 import { Camera, Check, ChevronDown, Download, Loader } from "lucide-react";
 
@@ -145,10 +146,7 @@ async function captureScreenshot(
   });
   document.body.removeChild(wrapper);
 
-  const link = document.createElement("a");
-  link.download = filename;
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  await saveCanvasImage(canvas, filename, "Basketball What-If Scenarios");
 }
 
 declare global {

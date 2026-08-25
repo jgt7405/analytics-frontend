@@ -8,6 +8,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/screenshot-layout";
+import { saveCanvasImage } from "@/lib/save-image";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -458,13 +459,16 @@ const CompareScreenshotModal: React.FC<CompareScreenshotModalProps> = ({
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `compare_${label.replace(/\s+/g, "_")}_${timestamp}.png`;
 
-      const link = document.createElement("a");
-      link.download = filename;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      const saveResult = await saveCanvasImage(canvas, filename, label);
 
       toast.dismiss();
-      toast.success("Screenshot downloaded!");
+      if (saveResult !== "cancelled") {
+        toast.success(
+          saveResult === "shared"
+            ? "Choose Save to Photos in your phone's share menu."
+            : "Screenshot downloaded!",
+        );
+      }
     } catch (error) {
       console.error("Download failed:", error);
       toast.dismiss();

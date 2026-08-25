@@ -11,6 +11,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/screenshot-layout";
+import { saveCanvasImage } from "@/lib/save-image";
 import { Camera, Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
@@ -123,10 +124,7 @@ async function captureScreenshot(
     scrollY: 0,
   });
   document.body.removeChild(wrapper);
-  const link = document.createElement("a");
-  link.download = filename;
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  await saveCanvasImage(canvas, filename, "What-If Team Summary");
 }
 
 const COL_METRIC = { minWidth: "110px" };

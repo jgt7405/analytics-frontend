@@ -10,6 +10,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/screenshot-layout";
+import { saveCanvasImage } from "@/lib/save-image";
 import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import Image from "next/image";
@@ -402,11 +403,11 @@ export default function BasketballCompareContent() {
       // Remove from DOM IMMEDIATELY after rendering - before any styles affect live page
       document.body.removeChild(wrapper);
 
-      // Download
-      const link = document.createElement("a");
-      link.href = canvas.toDataURL("image/png");
-      link.download = `basketball-compare-${new Date().toISOString().split("T")[0]}.png`;
-      link.click();
+      await saveCanvasImage(
+        canvas,
+        `basketball-compare-${new Date().toISOString().split("T")[0]}.png`,
+        "Basketball Comparison",
+      );
     } catch (error) {
       console.error("Download error:", error);
       alert("Failed to download chart. Please try again.");
