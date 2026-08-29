@@ -20,7 +20,7 @@ const FOOTBALL_CFP: PostseasonContentConfig<CFPRow> = {
   tableClass: "cfp-table",
   skeletonTableType: "standings",
   skeletonTeamCols: 6,
-  allTeamsValues: ["All Teams"],
+  allTeamsValues: ["All Teams", "Group of 6"],
   usePostseasonData: useFootballCFP,
   renderTable: (data, ctx) => (
     <FootballCFPTable
