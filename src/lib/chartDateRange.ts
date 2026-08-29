@@ -33,7 +33,7 @@ export function getFootballDateRange(
   const today = new Date();
 
   return {
-    start: new Date(year, 7, 15, 12, 0, 0), // 8/15
+    start: new Date(year, 7, 27, 12, 0, 0), // 8/27
     end: today < seasonEnd ? today : seasonEnd,
   };
 }
