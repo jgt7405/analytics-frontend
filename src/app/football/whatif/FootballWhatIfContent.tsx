@@ -737,11 +737,13 @@ export default function FootballWhatIfContent() {
         {/* Right Column: Results Table */}
         <div className="lg:col-span-2">
           <div className={cn(CARD_CLASS, "p-6 flex flex-col h-fit")}>
-            <div className="mb-4">
-              <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-2">
-                What If Results to Play in Conference Championship
-              </h2>
-            </div>
+            {selectedConference !== "Independent" && (
+              <div className="mb-4">
+                <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-2">
+                  What If Results to Play in Conference Championship
+                </h2>
+              </div>
+            )}
 
             <div
               ref={resultsContainerRef}
@@ -749,7 +751,7 @@ export default function FootballWhatIfContent() {
               data-component="whatif-results"
               data-screenshot={isScreenshotMode ? "true" : "false"}
             >
-              {!selectedConference ? (
+              {selectedConference === "Independent" ? null : !selectedConference ? (
                 <p className="text-gray-500 dark:text-gray-300 text-center py-12">
                   Select a conference to view results
                 </p>

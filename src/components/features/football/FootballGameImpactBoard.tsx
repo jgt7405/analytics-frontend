@@ -1,5 +1,6 @@
 "use client";
 
+import TableActionButtons from "@/components/common/TableActionButtons";
 import TeamLogo from "@/components/ui/TeamLogo";
 import {
   fetchGameImpacts,
@@ -71,10 +72,10 @@ function WinnerDelta({
   teamName: string;
 }) {
   return (
-    <div className="flex items-center justify-center gap-1.5">
-      <TeamLogo logoUrl={logoUrl} teamName={teamName} size={16} />
+    <div className="flex items-center justify-center gap-2">
+      <TeamLogo logoUrl={logoUrl} teamName={teamName} size={24} />
       <span
-        className="inline-flex min-w-[3rem] items-center justify-center rounded-md px-1.5 py-1 text-xs font-bold tabular-nums"
+        className="inline-flex min-w-[3.25rem] items-center justify-center rounded-md px-2 py-0.5 text-sm font-bold tabular-nums"
         style={deltaStyle(delta)}
       >
         {fmtDelta(delta)}
@@ -95,15 +96,19 @@ export default function FootballGameImpactBoard({
   const [baseline, setBaseline] = useState<{ ccg: number; cfp: number } | null>(
     null,
   );
-  const [computedAt, setComputedAt] = useState<string | null>(null);
   const [rowsById, setRowsById] = useState<Map<number, GameImpactRow>>(new Map());
   const [pending, setPending] = useState<Set<number>>(new Set());
   const runIdRef = useRef(0);
 
-  const [metric, setMetric] = useState<Metric>("cfp");
+  const [metricState, setMetric] = useState<Metric>("cfp");
   const [sortCol, setSortCol] = useState<SortCol>("swing");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [topN, setTopN] = useState<string>("");
+
+  // Independents have no conference championship game, so CCG is meaningless
+  // for them - CFP only.
+  const isIndependent = conference === "Independent";
+  const metric: Metric = isIndependent ? "cfp" : metricState;
 
   const sortedTeams = useMemo(
     () =>
@@ -118,7 +123,6 @@ export default function FootballGameImpactBoard({
     setPhase("idle");
     setError(null);
     setBaseline(null);
-    setComputedAt(null);
     setTeamName("");
     setRowsById(new Map());
     setPending(new Set());
@@ -150,7 +154,6 @@ export default function FootballGameImpactBoard({
 
         setTeamName(plan.team_name);
         setBaseline({ ccg: plan.baseline.ccg_pct, cfp: plan.baseline.cfp_pct });
-        setComputedAt(plan.computed_at ?? null);
         const initial = new Map<number, GameImpactRow>();
         plan.games.forEach((g) => initial.set(g.game_id, g));
         setRowsById(initial);
@@ -252,6 +255,9 @@ export default function FootballGameImpactBoard({
   const total = rows.length;
   const done = rows.filter((r) => r.simulated).length;
   const metricLabel = metric === "cfp" ? "CFP" : "CCG";
+  const focusLogo =
+    teams.find((t) => t.team_id === focusTeamId)?.logo_url ||
+    "/images/team_logos/default.png";
 
   const SortHead = ({
     col,
@@ -273,7 +279,7 @@ export default function FootballGameImpactBoard({
           : "none"
       }
       className={cn(
-        "cursor-pointer select-none whitespace-nowrap px-2 py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors",
+        "cursor-pointer select-none whitespace-nowrap px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors",
         align === "left" && "text-left",
         align === "center" && "text-center",
         align === "right" && "text-right",
@@ -292,38 +298,57 @@ export default function FootballGameImpactBoard({
   );
 
   return (
-    <div className={cn(CARD_CLASS, "p-5 sm:p-6", className)}>
-      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3 className={TITLE_CLASS}>Game Impact — Next 7 Days</h3>
-        {baseline && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {teamName}: CCG{" "}
-            <b className="tabular-nums">{baseline.ccg.toFixed(1)}%</b> · CFP{" "}
-            <b className="tabular-nums">{baseline.cfp.toFixed(1)}%</b> now
-            {computedAt && (
-              <>
-                {" "}
-                · as of{" "}
-                {new Date(computedAt).toLocaleDateString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-              </>
-            )}
-          </span>
+    <div className={cn(CARD_CLASS, "game-impact-board p-5 sm:p-6", className)}>
+      <div className="mb-1 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0">
+          <h3 className={TITLE_CLASS}>Game Impact — Next 7 Days</h3>
+        </div>
+        {baseline && focusTeamId && (
+          <div className="flex items-center gap-3">
+            <TeamLogo logoUrl={focusLogo} teamName={teamName} size={44} />
+            <div className="flex gap-3">
+              {(
+                isIndependent
+                  ? ([["CFP now", baseline.cfp]] as const)
+                  : ([
+                      ["CFP now", baseline.cfp],
+                      ["CCG now", baseline.ccg],
+                    ] as const)
+              ).map(([label, val]) => (
+                <div
+                  key={label}
+                  className="rounded-lg border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-center dark:border-slate-700/80 dark:bg-slate-800/60"
+                >
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                    {label}
+                  </div>
+                  <div className="text-lg font-bold leading-tight tabular-nums text-slate-700 dark:text-slate-100">
+                    {val.toFixed(1)}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
       <p className="mb-4 text-xs text-gray-600 dark:text-gray-300">
         For every upcoming game, how each result would move the selected
-        team&apos;s probability to reach its{" "}
-        <b>conference championship game (CCG)</b> and make the <b>CFP</b>.
-        <b> Team 1</b> is the visitor, <b>Team 2</b> the home team.
+        team&apos;s probability to make the <b>CFP</b>
+        {!isIndependent && (
+          <>
+            {" "}
+            and reach its{" "}
+            <b>conference championship game (CCG)</b>
+          </>
+        )}
+        . <b>Team 1</b> is the visitor, <b>Team 2</b> the home team.
       </p>
 
       {/* Controls */}
-      <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+      <div
+        className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
+        data-screenshot-hide="true"
+      >
         <select
           value={focusTeamId ?? ""}
           onChange={(e) =>
@@ -341,42 +366,57 @@ export default function FootballGameImpactBoard({
 
         {focusTeamId && (
           <>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Swing by
-              </span>
-              <div className="inline-flex overflow-hidden rounded-md border border-gray-300 dark:border-gray-600">
-                {(["cfp", "ccg"] as Metric[]).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMetric(m)}
-                    className={cn(
-                      "px-2.5 py-1 text-xs font-semibold transition-colors",
-                      metric === m
-                        ? "bg-cyan-600 text-white"
-                        : "bg-white text-gray-600 hover:bg-gray-50 dark:bg-slate-900 dark:text-gray-300 dark:hover:bg-slate-800",
-                    )}
-                  >
-                    {m.toUpperCase()}
-                  </button>
-                ))}
+            {!isIndependent && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  Swing by
+                </span>
+                <div className="inline-flex overflow-hidden rounded-md border border-gray-300 dark:border-gray-600">
+                  {(["cfp", "ccg"] as Metric[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setMetric(m)}
+                      className={cn(
+                        "px-2.5 py-1 text-xs font-semibold transition-colors",
+                        metric === m
+                          ? "bg-cyan-600 text-white"
+                          : "bg-white text-gray-600 hover:bg-gray-50 dark:bg-slate-900 dark:text-gray-300 dark:hover:bg-slate-800",
+                      )}
+                    >
+                      {m.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
               Show top
               <input
-                type="number"
-                min={1}
-                max={done || undefined}
+                type="text"
+                inputMode="numeric"
                 value={topN}
-                onChange={(e) => setTopN(e.target.value)}
+                onChange={(e) =>
+                  setTopN(e.target.value.replace(/[^0-9]/g, ""))
+                }
                 placeholder={String(done || "all")}
                 className="w-16 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm font-semibold text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:border-gray-600 dark:bg-slate-900 dark:text-slate-100"
               />
               <span className="normal-case">swings</span>
             </label>
+
+            {done > 0 && (
+              <div className="ml-auto">
+                <TableActionButtons
+                  contentSelector=".game-impact-board"
+                  selectedConference={conference}
+                  pageName="game-impact"
+                  pageTitle={`Game Impact — ${teamName}`}
+                  shareTitle="Game Impact — Next 7 Days"
+                />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -429,19 +469,21 @@ export default function FootballGameImpactBoard({
           )}
           <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-700/80">
             <table className="w-full min-w-[640px] border-separate border-spacing-0 text-sm">
-              <thead className="sticky top-0 z-10 bg-white/95 backdrop-blur dark:bg-slate-900/95">
-                <tr className="border-b border-gray-200 dark:border-gray-700">
+              <thead>
+                <tr className="border-b-2 border-slate-200 dark:border-slate-700">
                   <SortHead col="date" align="left">
                     Date
                   </SortHead>
-                  <th className="px-2 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     Game
                   </th>
                   <SortHead col="t1">
-                    If Team 1 <span className="font-normal">({metricLabel})</span>
+                    If Team 1 Wins{" "}
+                    <span className="font-normal">({metricLabel})</span>
                   </SortHead>
                   <SortHead col="t2">
-                    If Team 2 <span className="font-normal">({metricLabel})</span>
+                    If Team 2 Wins{" "}
+                    <span className="font-normal">({metricLabel})</span>
                   </SortHead>
                   <SortHead col="swing" align="right">
                     {metricLabel} Swing
@@ -450,45 +492,41 @@ export default function FootballGameImpactBoard({
               </thead>
               <tbody>
                 {visibleRows.map((g) => {
-                  const isFocusGame = g.is_focus_game;
                   const isPending = pending.has(g.game_id) && !g.simulated;
                   const { d1, d2, swing } = outcomeDeltas(g, metric);
                   return (
                     <tr
                       key={g.game_id}
-                      className={cn(
-                        "border-b border-gray-100 last:border-0 dark:border-gray-800",
-                        isFocusGame && "bg-cyan-50/60 dark:bg-cyan-950/20",
-                      )}
+                      className="border-b border-gray-100 last:border-0 dark:border-gray-800"
                     >
-                      <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-500 dark:text-gray-400">
+                      <td className="whitespace-nowrap px-2 py-1 text-sm text-gray-500 dark:text-gray-400">
                         {fmtDate(g.date)}
                       </td>
-                      <td className="px-2 py-2">
-                        <div className="flex items-center gap-1.5">
+                      <td className="px-2 py-1">
+                        <div className="flex items-center gap-2">
                           <TeamLogo
                             logoUrl={
                               g.away_team_logo ||
                               "/images/team_logos/default.png"
                             }
                             teamName={g.away_team}
-                            size={18}
+                            size={24}
                           />
-                          <span className="text-xs tabular-nums text-gray-400">
+                          <span className="text-sm tabular-nums text-gray-400">
                             {g.away_probability != null
                               ? `${Math.round(g.away_probability * 100)}%`
                               : ""}
                           </span>
-                          <span className="text-[10px] text-gray-400">@</span>
+                          <span className="text-xs text-gray-400">@</span>
                           <TeamLogo
                             logoUrl={
                               g.home_team_logo ||
                               "/images/team_logos/default.png"
                             }
                             teamName={g.home_team}
-                            size={18}
+                            size={24}
                           />
-                          <span className="text-xs tabular-nums text-gray-400">
+                          <span className="text-sm tabular-nums text-gray-400">
                             {g.home_probability != null
                               ? `${Math.round(g.home_probability * 100)}%`
                               : ""}
@@ -503,7 +541,7 @@ export default function FootballGameImpactBoard({
                       {isPending ? (
                         <td
                           colSpan={3}
-                          className="px-2 py-2 text-center text-xs text-gray-400"
+                          className="px-2 py-1 text-center text-xs text-gray-400"
                         >
                           <span
                             className="mr-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-t-transparent align-[-2px]"
@@ -516,7 +554,7 @@ export default function FootballGameImpactBoard({
                         </td>
                       ) : (
                         <>
-                          <td className="px-2 py-2">
+                          <td className="px-2 py-1">
                             <WinnerDelta
                               delta={d1}
                               logoUrl={
@@ -526,7 +564,7 @@ export default function FootballGameImpactBoard({
                               teamName={g.away_team}
                             />
                           </td>
-                          <td className="px-2 py-2">
+                          <td className="px-2 py-1">
                             <WinnerDelta
                               delta={d2}
                               logoUrl={
@@ -536,7 +574,7 @@ export default function FootballGameImpactBoard({
                               teamName={g.home_team}
                             />
                           </td>
-                          <td className="px-2 py-2 text-right text-xs font-bold tabular-nums text-gray-700 dark:text-gray-200">
+                          <td className="px-2 py-1 text-right text-sm font-bold tabular-nums text-gray-700 dark:text-gray-200">
                             {swing >= 0.1 ? swing.toFixed(1) : "·"}
                           </td>
                         </>
