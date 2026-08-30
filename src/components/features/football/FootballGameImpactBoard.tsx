@@ -273,11 +273,13 @@ export default function FootballGameImpactBoard({
           : "none"
       }
       className={cn(
-        "cursor-pointer select-none whitespace-nowrap px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 transition-colors hover:text-slate-700 dark:text-gray-400 dark:hover:text-slate-200",
+        "cursor-pointer select-none whitespace-nowrap px-2 py-2 text-[11px] font-semibold uppercase tracking-wide transition-colors",
         align === "left" && "text-left",
         align === "center" && "text-center",
         align === "right" && "text-right",
-        sortCol === col && "text-slate-700 dark:text-slate-200",
+        sortCol === col
+          ? "text-slate-700 dark:text-slate-200"
+          : "text-gray-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-slate-200",
       )}
     >
       <span className="inline-flex items-center gap-1">
