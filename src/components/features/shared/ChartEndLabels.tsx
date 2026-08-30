@@ -5,6 +5,9 @@ import type { ChartArea } from "chart.js";
 // Right padding each host chart should reserve (via options.layout.padding.right)
 // so the end-of-line value labels rendered here don't spill past the card edge.
 export const END_LABEL_PADDING_RIGHT = { mobile: 46, desktop: 60 } as const;
+// Wider variant for charts that keep a visible right-hand axis - the labels
+// sit beyond the axis tick text, so more room is needed.
+export const END_LABEL_PADDING_RIGHT_WIDE = { mobile: 78, desktop: 98 } as const;
 
 export interface ChartEndMarker {
   /** Raw data value at the end of the line; null/undefined hides the marker. */
@@ -27,6 +30,12 @@ interface ChartEndLabelsProps {
   markers: ChartEndMarker[];
   isDark: boolean;
   mobile?: boolean;
+  /**
+   * Distance in px from the right edge of the plot area to the start of the
+   * value text. Defaults to a short connector length; pass a larger value on
+   * charts that keep a visible right-hand axis so the labels clear its ticks.
+   */
+  labelGap?: number;
 }
 
 /**
@@ -41,13 +50,14 @@ export default function ChartEndLabels({
   markers,
   isDark,
   mobile = false,
+  labelGap,
 }: ChartEndLabelsProps) {
   if (!chartArea || !chart) return null;
 
   const fontSize = mobile ? 11 : 13;
   const rowGap = fontSize + 5;
   const connectorLen = mobile ? 14 : 20;
-  const labelX = chartArea.right + connectorLen + 4;
+  const labelX = chartArea.right + (labelGap ?? connectorLen + 4);
 
   type Resolved = ChartEndMarker & { y: number; labelY: number };
 

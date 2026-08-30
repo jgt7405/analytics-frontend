@@ -6,7 +6,7 @@
 import "@/lib/chartjs-setup";
 
 import ChartEndLabels, {
-  END_LABEL_PADDING_RIGHT,
+  END_LABEL_PADDING_RIGHT_WIDE,
 } from "@/components/features/shared/ChartEndLabels";
 import { useResponsive } from "@/hooks/useResponsive";
 import {
@@ -385,13 +385,27 @@ export default function FootballTeamCFPBidHistory({
       },
       y1: {
         type: "linear" as const,
-        // Axis hidden - the "Average Seed" line's current value is shown by
-        // the end-of-line label instead (keeps the right edge uncluttered and
-        // consistent with the page's other single-axis charts).
-        display: false,
+        display: true,
         position: "right" as const,
         min: 1,
         max: 12,
+        ticks: {
+          font: {
+            size: isMobile ? 13 : 15,
+            weight: 600,
+          },
+          color: finalSecondaryColor,
+          stepSize: 1,
+          callback: function (value: string | number) {
+            return `#${value}`;
+          },
+        },
+        title: {
+          display: true,
+          text: "Avg Seed",
+          color: finalSecondaryColor,
+          font: { weight: 600, size: isMobile ? 13 : 15 },
+        },
         border: { display: false },
         grid: { display: false },
         reverse: true, // #1 at top, #12 at bottom
@@ -401,8 +415,8 @@ export default function FootballTeamCFPBidHistory({
       padding: {
         top: 14,
         right: isMobile
-          ? END_LABEL_PADDING_RIGHT.mobile
-          : END_LABEL_PADDING_RIGHT.desktop,
+          ? END_LABEL_PADDING_RIGHT_WIDE.mobile
+          : END_LABEL_PADDING_RIGHT_WIDE.desktop,
       },
     },
   };
@@ -478,6 +492,7 @@ export default function FootballTeamCFPBidHistory({
         chartArea={chartArea}
         isDark={isDark}
         mobile={isMobile}
+        labelGap={isMobile ? 44 : 56}
         markers={[
           {
             value: lastCfpBid,
