@@ -129,7 +129,10 @@ export default function FootballWhatIfContent() {
 
   const handleConferenceChange = (conference: string) => {
     setSelectedConference(conference);
-    setGameSelections(new Map());
+    // Pending game selections are intentionally kept across conference
+    // switches - the user can clear them via "Clear Selections" (handleReset)
+    // once they get to the new conference. Only the calculated results are
+    // cleared here, since those are tied to the conference just left.
     setCalculatedSelections(new Map());
     setWhatIfResults([]);
     setAllTeamsWhatIfCFP([]);

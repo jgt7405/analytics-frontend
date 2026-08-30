@@ -1160,7 +1160,9 @@ export default function BasketballWhatIfScenarios() {
   const handleConferenceChange = useCallback(
     (c: string) => {
       setSelectedConference(c);
-      setGameSelections(new Map());
+      // Pending game selections are intentionally kept across conference
+      // switches - the user can clear them via the "Reset" button once they
+      // get to the new conference.
       setSelectedTeamIds(new Set());
       teamFilterInitialized.current = false;
       setSelectedDetailTeamId(null);
