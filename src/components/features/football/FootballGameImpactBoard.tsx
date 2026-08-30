@@ -23,8 +23,15 @@ interface FootballGameImpactBoardProps {
 
 const CARD_CLASS =
   "relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+const TITLE_CLASS =
+  "text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300";
 
 const BATCH_SIZE = 12;
+
+type Metric = "cfp" | "ccg";
+type SortCol = "date" | "t1" | "t2" | "swing";
+type SortDir = "asc" | "desc";
+type Phase = "idle" | "planning" | "simulating" | "done";
 
 function fmtDate(raw: string): string {
   const d = new Date(raw);
@@ -32,42 +39,49 @@ function fmtDate(raw: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function deltaStyle(delta: number): React.CSSProperties {
-  if (Math.abs(delta) < 0.1) return { color: "#9ca3af" };
-  const mag = Math.min(Math.abs(delta) / 15, 1);
-  const alpha = 0.14 + mag * 0.5;
-  return delta > 0
-    ? { backgroundColor: `rgba(34,197,94,${alpha})`, color: "#14532d" }
-    : { backgroundColor: `rgba(239,68,68,${alpha})`, color: "#7f1d1d" };
-}
-
 function fmtDelta(delta: number): string {
   if (Math.abs(delta) < 0.1) return "·";
   return `${delta > 0 ? "+" : "−"}${Math.abs(delta).toFixed(1)}`;
 }
 
-function OutcomeCell({ ccg, cfp }: { ccg: number; cfp: number }) {
+/** Diverging green/red heat for a signed percentage-point delta. */
+function deltaStyle(delta: number): React.CSSProperties {
+  if (Math.abs(delta) < 0.1) return { color: "#9ca3af" };
+  const mag = Math.min(Math.abs(delta) / 15, 1);
+  const a = 0.14 + mag * 0.5;
+  return delta > 0
+    ? { backgroundColor: `rgba(34,197,94,${a})`, color: "#14532d" }
+    : { backgroundColor: `rgba(239,68,68,${a})`, color: "#7f1d1d" };
+}
+
+function outcomeDeltas(g: GameImpactRow, m: Metric) {
+  // Team 1 = visitor/away, Team 2 = home.
+  const d1 = m === "cfp" ? g.if_away_win.cfp_delta : g.if_away_win.ccg_delta;
+  const d2 = m === "cfp" ? g.if_home_win.cfp_delta : g.if_home_win.ccg_delta;
+  return { d1, d2, swing: Math.round(Math.abs(d1 - d2) * 10) / 10 };
+}
+
+function WinnerDelta({
+  delta,
+  logoUrl,
+  teamName,
+}: {
+  delta: number;
+  logoUrl: string;
+  teamName: string;
+}) {
   return (
-    <div className="flex justify-center gap-1">
+    <div className="flex items-center justify-center gap-1.5">
+      <TeamLogo logoUrl={logoUrl} teamName={teamName} size={16} />
       <span
-        className="inline-flex min-w-[2.6rem] items-center justify-center rounded px-1 py-0.5 text-xs font-semibold tabular-nums"
-        style={deltaStyle(ccg)}
-        title={`Conference championship game: ${fmtDelta(ccg)} pts`}
+        className="inline-flex min-w-[3rem] items-center justify-center rounded-md px-1.5 py-1 text-xs font-bold tabular-nums"
+        style={deltaStyle(delta)}
       >
-        {fmtDelta(ccg)}
-      </span>
-      <span
-        className="inline-flex min-w-[2.6rem] items-center justify-center rounded px-1 py-0.5 text-xs font-semibold tabular-nums"
-        style={deltaStyle(cfp)}
-        title={`CFP: ${fmtDelta(cfp)} pts`}
-      >
-        {fmtDelta(cfp)}
+        {fmtDelta(delta)}
       </span>
     </div>
   );
 }
-
-type Phase = "idle" | "planning" | "simulating" | "done";
 
 export default function FootballGameImpactBoard({
   conference,
@@ -86,6 +100,11 @@ export default function FootballGameImpactBoard({
   const [pending, setPending] = useState<Set<number>>(new Set());
   const runIdRef = useRef(0);
 
+  const [metric, setMetric] = useState<Metric>("cfp");
+  const [sortCol, setSortCol] = useState<SortCol>("swing");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [topN, setTopN] = useState<string>("");
+
   const sortedTeams = useMemo(
     () =>
       [...teams].sort((a, b) =>
@@ -103,9 +122,9 @@ export default function FootballGameImpactBoard({
     setTeamName("");
     setRowsById(new Map());
     setPending(new Set());
+    setTopN("");
   }, []);
 
-  // Conference changed out from under us → clear everything.
   useEffect(() => {
     setFocusTeamId(null);
     reset();
@@ -161,7 +180,7 @@ export default function FootballGameImpactBoard({
               return next;
             });
           } catch {
-            // one slow batch shouldn't kill the run — leave those rows pending
+            /* one slow batch shouldn't kill the run */
           }
           if (myRun !== runIdRef.current) return;
           setPending((prev) => {
@@ -185,57 +204,130 @@ export default function FootballGameImpactBoard({
     else reset();
   }, [focusTeamId, run, reset]);
 
+  const handleSort = (col: SortCol) => {
+    if (col === sortCol) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortCol(col);
+      setSortDir(col === "date" ? "asc" : "desc");
+    }
+  };
+
   const rows = useMemo(() => {
     const arr = Array.from(rowsById.values());
+    const dir = sortDir === "asc" ? 1 : -1;
     arr.sort((a, b) => {
-      // done rows first (ranked by swing), then still-to-come by date
-      if (a.simulated !== b.simulated) return a.simulated ? -1 : 1;
-      if (a.simulated && b.max_abs_delta !== a.max_abs_delta)
-        return b.max_abs_delta - a.max_abs_delta;
+      if (a.simulated !== b.simulated) return a.simulated ? -1 : 1; // pending last
+      let av: number | string;
+      let bv: number | string;
+      if (sortCol === "date") {
+        av = String(a.date);
+        bv = String(b.date);
+      } else if (sortCol === "swing") {
+        av = outcomeDeltas(a, metric).swing;
+        bv = outcomeDeltas(b, metric).swing;
+      } else if (sortCol === "t1") {
+        av = outcomeDeltas(a, metric).d1;
+        bv = outcomeDeltas(b, metric).d1;
+      } else {
+        av = outcomeDeltas(a, metric).d2;
+        bv = outcomeDeltas(b, metric).d2;
+      }
+      if (av < bv) return -dir;
+      if (av > bv) return dir;
       return String(a.date).localeCompare(String(b.date));
     });
     return arr;
-  }, [rowsById]);
+  }, [rowsById, sortCol, sortDir, metric]);
 
-  const simTotal = rows.length;
-  const simDone = rows.filter((r) => r.simulated).length;
+  const visibleRows = useMemo(() => {
+    const done = rows.filter((r) => r.simulated);
+    const notDone = rows.filter((r) => !r.simulated);
+    const n = parseInt(topN, 10);
+    const limited =
+      Number.isFinite(n) && n > 0 ? done.slice(0, n) : done;
+    return [...limited, ...notDone];
+  }, [rows, topN]);
+
+  const total = rows.length;
+  const done = rows.filter((r) => r.simulated).length;
+  const metricLabel = metric === "cfp" ? "CFP" : "CCG";
+
+  const SortHead = ({
+    col,
+    children,
+    align = "center",
+  }: {
+    col: SortCol;
+    children: React.ReactNode;
+    align?: "left" | "center" | "right";
+  }) => (
+    <th
+      scope="col"
+      onClick={() => handleSort(col)}
+      aria-sort={
+        sortCol === col
+          ? sortDir === "asc"
+            ? "ascending"
+            : "descending"
+          : "none"
+      }
+      className={cn(
+        "cursor-pointer select-none whitespace-nowrap px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 transition-colors hover:text-slate-700 dark:text-gray-400 dark:hover:text-slate-200",
+        align === "left" && "text-left",
+        align === "center" && "text-center",
+        align === "right" && "text-right",
+        sortCol === col && "text-slate-700 dark:text-slate-200",
+      )}
+    >
+      <span className="inline-flex items-center gap-1">
+        {children}
+        <span className="text-[9px] text-cyan-600 dark:text-cyan-400">
+          {sortCol === col ? (sortDir === "asc" ? "▲" : "▼") : ""}
+        </span>
+      </span>
+    </th>
+  );
 
   return (
-    <div className={cn(CARD_CLASS, "p-6", className)}>
-      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-[clamp(1.1rem,2vw,1.5rem)] font-bold leading-[1.1] tracking-[-0.03em] text-slate-700 dark:text-slate-300">
-          Game Impact — Next 7 Days
-        </h3>
+    <div className={cn(CARD_CLASS, "p-5 sm:p-6", className)}>
+      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h3 className={TITLE_CLASS}>Game Impact — Next 7 Days</h3>
         {baseline && (
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            {teamName}: conf-title-game{" "}
+            {teamName}: CCG{" "}
             <b className="tabular-nums">{baseline.ccg.toFixed(1)}%</b> · CFP{" "}
             <b className="tabular-nums">{baseline.cfp.toFixed(1)}%</b> now
+            {computedAt && (
+              <>
+                {" "}
+                · as of{" "}
+                {new Date(computedAt).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </>
+            )}
           </span>
         )}
       </div>
-      <p className="mb-3 text-xs text-gray-600 dark:text-gray-300">
-        Every upcoming game, simulated both ways — how each result moves{" "}
-        {teamName || "the selected team"}&apos;s probability to reach its{" "}
-        <b>conference championship game (CCG)</b> and make the <b>CFP</b>, sorted
-        by biggest swing.
-        {computedAt
-          ? ` Precomputed ${new Date(computedAt).toLocaleString(undefined, {
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            })}.`
-          : ""}
+      <p className="mb-4 text-xs text-gray-600 dark:text-gray-300">
+        For every upcoming game, how each result would move the selected
+        team&apos;s probability to reach its{" "}
+        <b>conference championship game (CCG)</b> and make the <b>CFP</b>.
+        <b> Team 1</b> is the visitor, <b>Team 2</b> the home team.
       </p>
 
-      <div className="mb-4">
+      {/* Controls */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
         <select
           value={focusTeamId ?? ""}
           onChange={(e) =>
             setFocusTeamId(e.target.value ? parseInt(e.target.value, 10) : null)
           }
-          className="w-full max-w-xs rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:border-gray-400 dark:border-gray-600 dark:bg-slate-900"
+          className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:border-gray-400 dark:border-gray-600 dark:bg-slate-900"
         >
           <option value="">Select a team…</option>
           {sortedTeams.map((t) => (
@@ -244,6 +336,47 @@ export default function FootballGameImpactBoard({
             </option>
           ))}
         </select>
+
+        {focusTeamId && (
+          <>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Swing by
+              </span>
+              <div className="inline-flex overflow-hidden rounded-md border border-gray-300 dark:border-gray-600">
+                {(["cfp", "ccg"] as Metric[]).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMetric(m)}
+                    className={cn(
+                      "px-2.5 py-1 text-xs font-semibold transition-colors",
+                      metric === m
+                        ? "bg-cyan-600 text-white"
+                        : "bg-white text-gray-600 hover:bg-gray-50 dark:bg-slate-900 dark:text-gray-300 dark:hover:bg-slate-800",
+                    )}
+                  >
+                    {m.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Show top
+              <input
+                type="number"
+                min={1}
+                max={done || undefined}
+                value={topN}
+                onChange={(e) => setTopN(e.target.value)}
+                placeholder={String(done || "all")}
+                className="w-16 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm font-semibold text-slate-900 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 dark:border-gray-600 dark:bg-slate-900 dark:text-slate-100"
+              />
+              <span className="normal-case">swings</span>
+            </label>
+          </>
+        )}
       </div>
 
       {!focusTeamId && (
@@ -259,7 +392,7 @@ export default function FootballGameImpactBoard({
             className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
             style={{ borderColor: "rgb(0,151,178) transparent transparent" }}
           />
-          Finding upcoming games…
+          Loading…
         </div>
       )}
 
@@ -289,49 +422,47 @@ export default function FootballGameImpactBoard({
                 className="h-3 w-3 animate-spin rounded-full border-2 border-t-transparent"
                 style={{ borderColor: "rgb(0,151,178) transparent transparent" }}
               />
-              Simulating every game… {simDone}/{simTotal} — you can leave this
-              open, results are saved as they finish
+              Simulating remaining games… {done}/{total}
             </div>
           )}
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[620px] text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 text-[11px] uppercase tracking-wide text-gray-500 dark:border-gray-600 dark:text-gray-400">
-                  <th className="py-2 pr-2 text-left font-medium">Date</th>
-                  <th className="py-2 pr-2 text-left font-medium">Game</th>
-                  <th className="py-2 pr-2 text-center font-medium">
-                    If away wins
-                    <div className="font-normal normal-case text-gray-400">
-                      CCG · CFP
-                    </div>
+          <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+            <table className="w-full min-w-[640px] border-separate border-spacing-0 text-sm">
+              <thead className="sticky top-0 z-10 bg-white/95 backdrop-blur dark:bg-slate-900/95">
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <SortHead col="date" align="left">
+                    Date
+                  </SortHead>
+                  <th className="px-2 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    Game
                   </th>
-                  <th className="py-2 pr-2 text-center font-medium">
-                    If home wins
-                    <div className="font-normal normal-case text-gray-400">
-                      CCG · CFP
-                    </div>
-                  </th>
-                  <th className="py-2 text-right font-medium">Swing</th>
+                  <SortHead col="t1">
+                    If Team 1 <span className="font-normal">({metricLabel})</span>
+                  </SortHead>
+                  <SortHead col="t2">
+                    If Team 2 <span className="font-normal">({metricLabel})</span>
+                  </SortHead>
+                  <SortHead col="swing" align="right">
+                    {metricLabel} Swing
+                  </SortHead>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((g) => {
+                {visibleRows.map((g) => {
                   const isFocusGame = g.is_focus_game;
-                  const isQueued = !g.simulated;
-                  const isActive = pending.has(g.game_id) && !g.simulated;
+                  const isPending = pending.has(g.game_id) && !g.simulated;
+                  const { d1, d2, swing } = outcomeDeltas(g, metric);
                   return (
                     <tr
                       key={g.game_id}
                       className={cn(
-                        "border-b border-gray-100 dark:border-gray-800",
+                        "border-b border-gray-100 last:border-0 dark:border-gray-800",
                         isFocusGame && "bg-cyan-50/60 dark:bg-cyan-950/20",
-                        isQueued && !isActive && "opacity-50",
                       )}
                     >
-                      <td className="whitespace-nowrap py-2 pr-2 text-xs text-gray-500 dark:text-gray-400">
+                      <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-500 dark:text-gray-400">
                         {fmtDate(g.date)}
                       </td>
-                      <td className="py-2 pr-2">
+                      <td className="px-2 py-2">
                         <div className="flex items-center gap-1.5">
                           <TeamLogo
                             logoUrl={
@@ -341,7 +472,7 @@ export default function FootballGameImpactBoard({
                             teamName={g.away_team}
                             size={18}
                           />
-                          <span className="text-xs tabular-nums text-gray-500">
+                          <span className="text-xs tabular-nums text-gray-400">
                             {g.away_probability != null
                               ? `${Math.round(g.away_probability * 100)}%`
                               : ""}
@@ -355,7 +486,7 @@ export default function FootballGameImpactBoard({
                             teamName={g.home_team}
                             size={18}
                           />
-                          <span className="text-xs tabular-nums text-gray-500">
+                          <span className="text-xs tabular-nums text-gray-400">
                             {g.home_probability != null
                               ? `${Math.round(g.home_probability * 100)}%`
                               : ""}
@@ -367,44 +498,44 @@ export default function FootballGameImpactBoard({
                           )}
                         </div>
                       </td>
-                      {isQueued ? (
+                      {isPending ? (
                         <td
                           colSpan={3}
-                          className="py-2 text-center text-xs text-gray-400"
+                          className="px-2 py-2 text-center text-xs text-gray-400"
                         >
-                          {isActive ? (
-                            <>
-                              <span
-                                className="mr-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-t-transparent align-[-2px]"
-                                style={{
-                                  borderColor:
-                                    "rgb(0,151,178) transparent transparent",
-                                }}
-                              />
-                              simulating…
-                            </>
-                          ) : (
-                            "queued"
-                          )}
+                          <span
+                            className="mr-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-t-transparent align-[-2px]"
+                            style={{
+                              borderColor:
+                                "rgb(0,151,178) transparent transparent",
+                            }}
+                          />
+                          simulating…
                         </td>
                       ) : (
                         <>
-                          <td className="py-2 pr-2 text-center">
-                            <OutcomeCell
-                              ccg={g.if_away_win.ccg_delta}
-                              cfp={g.if_away_win.cfp_delta}
+                          <td className="px-2 py-2">
+                            <WinnerDelta
+                              delta={d1}
+                              logoUrl={
+                                g.away_team_logo ||
+                                "/images/team_logos/default.png"
+                              }
+                              teamName={g.away_team}
                             />
                           </td>
-                          <td className="py-2 pr-2 text-center">
-                            <OutcomeCell
-                              ccg={g.if_home_win.ccg_delta}
-                              cfp={g.if_home_win.cfp_delta}
+                          <td className="px-2 py-2">
+                            <WinnerDelta
+                              delta={d2}
+                              logoUrl={
+                                g.home_team_logo ||
+                                "/images/team_logos/default.png"
+                              }
+                              teamName={g.home_team}
                             />
                           </td>
-                          <td className="py-2 text-right text-xs font-bold tabular-nums text-gray-700 dark:text-gray-200">
-                            {g.max_abs_delta >= 0.1
-                              ? g.max_abs_delta.toFixed(1)
-                              : "·"}
+                          <td className="px-2 py-2 text-right text-xs font-bold tabular-nums text-gray-700 dark:text-gray-200">
+                            {swing >= 0.1 ? swing.toFixed(1) : "·"}
                           </td>
                         </>
                       )}
@@ -418,13 +549,12 @@ export default function FootballGameImpactBoard({
       )}
 
       {baseline && rows.length > 0 && (
-        <p className="mt-3 border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-400 dark:border-gray-800">
-          Each cell is the change in percentage points if that result happens,
-          assuming every other game plays out per the model — the same as
-          picking that winner in the left panel and hitting Calculate. CCG =
-          probability to play in the conference championship game. <b>Swing</b>{" "}
-          is the gap between the two results. A dot (·) means the result barely
-          moves {teamName || "the team"}&apos;s odds.
+        <p className="mt-3 text-[10px] leading-relaxed text-gray-400">
+          Each value is the change in percentage points if that team wins,
+          assuming every other game plays out per the model — the same as picking
+          that winner in the left panel and hitting Calculate. <b>Swing</b> is
+          the gap between the two results. A dot (·) means the result barely
+          moves the number. Click a column heading to sort.
         </p>
       )}
     </div>
