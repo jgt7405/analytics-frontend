@@ -393,6 +393,7 @@ export default function TeamContent<TData, THistory>({
         logoUrl={teamInfo.logo_url}
         teamName={teamInfo.team_name}
         size={mobile ? 40 : 64}
+        noLink
       />
       <div className="flex flex-col justify-center">
         <h1
