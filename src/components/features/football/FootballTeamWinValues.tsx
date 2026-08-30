@@ -127,9 +127,14 @@ export default function FootballTeamWinValues({
           const [year, month, day] = game.date.split("-").map(Number);
           dateObj = new Date(year, month - 1, day);
         } else {
-          // Format: "MM/DD"
+          // Format: "MM/DD" - derive the calendar year from the season prop
+          // (football season spans Aug-Dec of the start year into Jan of the
+          // next). A hardcoded year silently breaks every Aug rollover.
           const [month, day] = game.date.split("/").map(Number);
-          const year = month >= 8 ? 2025 : 2026;
+          const seasonStartYear = season
+            ? parseInt(season.split("-")[0], 10)
+            : new Date().getFullYear();
+          const year = month >= 8 ? seasonStartYear : seasonStartYear + 1;
           dateObj = new Date(year, month - 1, day);
         }
 
