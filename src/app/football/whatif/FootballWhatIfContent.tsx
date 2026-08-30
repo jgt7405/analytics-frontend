@@ -9,6 +9,7 @@ import ScreenshotModal from "@/components/common/ScreenshotModal";
 import TeamMultiSearch from "@/components/common/TeamMultiSearch";
 import FootballConfChampProb from "@/components/features/football/FootballConfChampProb";
 import FootballCFPProb from "@/components/features/football/FootballCFPProb";
+import FootballGameImpactBoard from "@/components/features/football/FootballGameImpactBoard";
 import { WhatIfTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useFootballCFP } from "@/hooks/useFootballCFP";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
@@ -950,6 +951,15 @@ export default function FootballWhatIfContent() {
               </button>
             </div>
           </div>
+
+          {/* Single-team focus: which upcoming games matter most */}
+          {selectedConference && currentProjections.length > 0 && (
+            <FootballGameImpactBoard
+              conference={selectedConference}
+              teams={currentProjections}
+              className="mt-6"
+            />
+          )}
         </div>
       </div>
 

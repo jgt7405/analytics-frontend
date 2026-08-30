@@ -35,7 +35,10 @@ export async function GET(
   try {
     const { slug } = await params;
 
+    // Defaults to production; set BACKEND_API_URL in .env.local to point at a
+    // local backend (e.g. http://localhost:5000/api) for testing.
     const BACKEND_BASE_URL =
+      process.env.BACKEND_API_URL ||
       "https://jthomprodbackend-production.up.railway.app/api";
 
     let backendPath = "";
@@ -635,7 +638,10 @@ export async function POST(
       request.headers.get("content-type"),
     );
 
+    // Defaults to production; set BACKEND_API_URL in .env.local to point at a
+    // local backend (e.g. http://localhost:5000/api) for testing.
     const BACKEND_BASE_URL =
+      process.env.BACKEND_API_URL ||
       "https://jthomprodbackend-production.up.railway.app/api";
 
     let backendPath = "";
@@ -693,6 +699,14 @@ export async function POST(
     ) {
       backendPath = `/football/whatif/download`;
       console.log("📥 FOOTBALL WHAT-IF DOWNLOAD detected");
+    } else if (
+      slug.length === 3 &&
+      slug[0] === "football" &&
+      slug[1] === "whatif" &&
+      slug[2] === "game-impacts"
+    ) {
+      backendPath = `/football/whatif/game-impacts`;
+      console.log("🎯 FOOTBALL WHAT-IF GAME-IMPACTS detected");
     }
 
     // ===== HANDLE BASKETBALL WHAT-IF BASELINE =====
@@ -783,6 +797,8 @@ export async function POST(
         backendPath.includes("validation-csv")
       ) {
         timeout = 300000; // 5 minutes for exports and CSV generation
+      } else if (backendPath.includes("game-impacts")) {
+        timeout = 240000; // 4 minutes: one call fans out to many single-game sims
       } else if (backendPath.includes("baseline")) {
         timeout = 60000; // 1 minute for baseline (should be fast)
       }
