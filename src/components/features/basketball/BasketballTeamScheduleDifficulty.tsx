@@ -1,6 +1,8 @@
 // src/components/features/basketball/BasketballTeamScheduleDifficulty.tsx
 "use client";
 
+import { teamPagePathFromRoute } from "@/components/ui/TeamLogo";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 // Constants
@@ -91,6 +93,13 @@ export default function BasketballTeamScheduleDifficulty({
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("all");
   const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const navigateToOpponent = (opponent: string) => {
+    const path = teamPagePathFromRoute(pathname, opponent);
+    if (path) router.push(path);
+  };
 
   // Detect mobile
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
@@ -650,6 +659,10 @@ export default function BasketballTeamScheduleDifficulty({
                   <g
                     onMouseEnter={() => setHoveredGame(game)}
                     onMouseLeave={() => setHoveredGame(null)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigateToOpponent(game.opponent);
+                    }}
                     style={{ cursor: "pointer" }}
                   >
                     <foreignObject

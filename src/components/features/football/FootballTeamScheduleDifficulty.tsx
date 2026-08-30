@@ -1,5 +1,7 @@
 "use client";
 
+import { teamPagePathFromRoute } from "@/components/ui/TeamLogo";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 // Constants - Adjusted for mobile
@@ -92,6 +94,13 @@ export default function FootballTeamScheduleDifficulty({
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const navigateToOpponent = (opponent: string) => {
+    const path = teamPagePathFromRoute(pathname, opponent);
+    if (path) router.push(path);
+  };
 
   // Detect mobile
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
@@ -624,14 +633,14 @@ export default function FootballTeamScheduleDifficulty({
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleGameClick(game);
+                        navigateToOpponent(game.opponent);
                       }}
                       onTouchStart={(e) => {
                         e.stopPropagation();
                       }}
                       onTouchEnd={(e) => {
                         e.stopPropagation();
-                        handleGameClick(game);
+                        navigateToOpponent(game.opponent);
                       }}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
