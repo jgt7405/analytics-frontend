@@ -5,6 +5,9 @@
 // is guaranteed to have registered them first.
 import "@/lib/chartjs-setup";
 
+import ChartEndLabels, {
+  END_LABEL_PADDING_RIGHT,
+} from "@/components/features/shared/ChartEndLabels";
 import { useResponsive } from "@/hooks/useResponsive";
 import { getFootballDateRange } from "@/lib/chartDateRange";
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
@@ -359,7 +362,12 @@ export default function FootballTeamWinValues({
       },
     },
     layout: {
-      padding: { top: 14, right: 12 },
+      padding: {
+        top: 14,
+        right: isMobile
+          ? END_LABEL_PADDING_RIGHT.mobile
+          : END_LABEL_PADDING_RIGHT.desktop,
+      },
     },
     elements: {
       point: {
@@ -434,33 +442,24 @@ export default function FootballTeamWinValues({
         </div>
       )}
       <Line ref={chartRef} data={chartData} options={options} />
-      {chartArea && (lastTwv !== null || lastCwv !== null) && (
-        <svg
-          className="pointer-events-none absolute left-0 top-0"
-          style={{ width: "100%", height: "100%", overflow: "visible" }}
-        >
-          {[
-            { value: lastTwv, color: "rgb(0, 151, 178)" },
-            { value: lastCwv, color: "rgb(217, 119, 6)" },
-          ].map(({ value, color }, i) => {
-            if (value === null) return null;
-            const y = chartRef.current?.scales?.y?.getPixelForValue(value);
-            if (y === undefined) return null;
-            return (
-              <circle
-                key={i}
-                cx={chartArea.right}
-                cy={y}
-                r="4.25"
-                fill={isDark ? "#0f172a" : "#ffffff"}
-                stroke={color}
-                strokeWidth="2.5"
-                style={{ filter: `drop-shadow(0 0 3px ${color})` }}
-              />
-            );
-          })}
-        </svg>
-      )}
+      <ChartEndLabels
+        chart={chartRef.current}
+        chartArea={chartArea}
+        isDark={isDark}
+        mobile={isMobile}
+        markers={[
+          {
+            value: lastTwv,
+            color: "rgb(0, 151, 178)",
+            text: lastTwv !== null ? lastTwv.toFixed(1) : "",
+          },
+          {
+            value: lastCwv,
+            color: "rgb(217, 119, 6)",
+            text: lastCwv !== null ? lastCwv.toFixed(1) : "",
+          },
+        ]}
+      />
     </div>
   );
 }

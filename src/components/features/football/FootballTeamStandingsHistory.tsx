@@ -5,6 +5,9 @@
 // is guaranteed to have registered them first.
 import "@/lib/chartjs-setup";
 
+import ChartEndLabels, {
+  END_LABEL_PADDING_RIGHT,
+} from "@/components/features/shared/ChartEndLabels";
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import {
@@ -349,7 +352,12 @@ export default function FootballTeamStandingsHistory({
       },
     },
     layout: {
-      padding: { top: 14, right: 12 },
+      padding: {
+        top: 14,
+        right: isMobile
+          ? END_LABEL_PADDING_RIGHT.mobile
+          : END_LABEL_PADDING_RIGHT.desktop,
+      },
     },
   };
 
@@ -415,34 +423,30 @@ export default function FootballTeamStandingsHistory({
         </div>
       )}
       <Line ref={chartRef} data={chartData} options={options} />
-      {chartArea &&
-        (lastStandingsWithTies !== null || lastStandingsNoTies !== null) && (
-          <svg
-            className="pointer-events-none absolute left-0 top-0"
-            style={{ width: "100%", height: "100%", overflow: "visible" }}
-          >
-            {[
-              { value: lastStandingsWithTies, color: primaryColor },
-              { value: lastStandingsNoTies, color: finalSecondaryColor },
-            ].map(({ value, color }, i) => {
-              if (value === null) return null;
-              const y = chartRef.current?.scales?.y?.getPixelForValue(value);
-              if (y === undefined) return null;
-              return (
-                <circle
-                  key={i}
-                  cx={chartArea.right}
-                  cy={y}
-                  r="4.25"
-                  fill={isDark ? "#0f172a" : "#ffffff"}
-                  stroke={color}
-                  strokeWidth="2.5"
-                  style={{ filter: `drop-shadow(0 0 3px ${color})` }}
-                />
-              );
-            })}
-          </svg>
-        )}
+      <ChartEndLabels
+        chart={chartRef.current}
+        chartArea={chartArea}
+        isDark={isDark}
+        mobile={isMobile}
+        markers={[
+          {
+            value: lastStandingsWithTies,
+            color: primaryColor,
+            text:
+              lastStandingsWithTies !== null
+                ? `#${lastStandingsWithTies.toFixed(1)}`
+                : "",
+          },
+          {
+            value: lastStandingsNoTies,
+            color: finalSecondaryColor,
+            text:
+              lastStandingsNoTies !== null
+                ? `#${lastStandingsNoTies.toFixed(1)}`
+                : "",
+          },
+        ]}
+      />
     </div>
   );
 }

@@ -5,6 +5,9 @@
 // is guaranteed to have registered them first.
 import "@/lib/chartjs-setup";
 
+import ChartEndLabels, {
+  END_LABEL_PADDING_RIGHT,
+} from "@/components/features/shared/ChartEndLabels";
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import {
@@ -462,7 +465,12 @@ export default function FootballTeamCFPProgressionHistory({
       },
     },
     layout: {
-      padding: { top: 14, right: 12 },
+      padding: {
+        top: 14,
+        right: isMobile
+          ? END_LABEL_PADDING_RIGHT.mobile
+          : END_LABEL_PADDING_RIGHT.desktop,
+      },
     },
   };
 
@@ -530,35 +538,43 @@ export default function FootballTeamCFPProgressionHistory({
         </div>
       )}
       <Line ref={chartRef} data={chartData} options={options} />
-      {chartArea && (
-        <svg
-          className="pointer-events-none absolute left-0 top-0"
-          style={{ width: "100%", height: "100%", overflow: "visible" }}
-        >
-          {[
-            { value: lastQuarterfinals, color: finalSecondaryColor, solid: false },
-            { value: lastSemifinals, color: finalSecondaryColor, solid: true },
-            { value: lastChampionship, color: primaryColor, solid: false },
-            { value: lastChampion, color: primaryColor, solid: true },
-          ].map(({ value, color, solid }, i) => {
-            if (value === null) return null;
-            const y = chartRef.current?.scales?.y?.getPixelForValue(value);
-            if (y === undefined) return null;
-            return (
-              <circle
-                key={i}
-                cx={chartArea.right}
-                cy={y}
-                r="4.25"
-                fill={solid ? color : isDark ? "#0f172a" : "#ffffff"}
-                stroke={color}
-                strokeWidth="2.5"
-                style={{ filter: `drop-shadow(0 0 3px ${color})` }}
-              />
-            );
-          })}
-        </svg>
-      )}
+      <ChartEndLabels
+        chart={chartRef.current}
+        chartArea={chartArea}
+        isDark={isDark}
+        mobile={isMobile}
+        markers={[
+          {
+            value: lastQuarterfinals,
+            color: finalSecondaryColor,
+            text:
+              lastQuarterfinals !== null
+                ? `${lastQuarterfinals.toFixed(0)}%`
+                : "",
+          },
+          {
+            value: lastSemifinals,
+            color: finalSecondaryColor,
+            filled: true,
+            text:
+              lastSemifinals !== null ? `${lastSemifinals.toFixed(0)}%` : "",
+          },
+          {
+            value: lastChampionship,
+            color: primaryColor,
+            text:
+              lastChampionship !== null
+                ? `${lastChampionship.toFixed(0)}%`
+                : "",
+          },
+          {
+            value: lastChampion,
+            color: primaryColor,
+            filled: true,
+            text: lastChampion !== null ? `${lastChampion.toFixed(0)}%` : "",
+          },
+        ]}
+      />
     </div>
   );
 }

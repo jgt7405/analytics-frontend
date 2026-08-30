@@ -5,6 +5,9 @@
 // is guaranteed to have registered them first.
 import "@/lib/chartjs-setup";
 
+import ChartEndLabels, {
+  END_LABEL_PADDING_RIGHT,
+} from "@/components/features/shared/ChartEndLabels";
 import { useResponsive } from "@/hooks/useResponsive";
 import {
   buildChartLabels,
@@ -382,37 +385,25 @@ export default function FootballTeamCFPBidHistory({
       },
       y1: {
         type: "linear" as const,
-        display: true,
+        // Axis hidden - the "Average Seed" line's current value is shown by
+        // the end-of-line label instead (keeps the right edge uncluttered and
+        // consistent with the page's other single-axis charts).
+        display: false,
         position: "right" as const,
         min: 1,
         max: 12,
-        ticks: {
-          font: {
-            size: isMobile ? 13 : 15,
-            weight: 600,
-          },
-          color: finalSecondaryColor,
-          stepSize: 1,
-          callback: function (value: string | number) {
-            // Remove the inversion logic - just show the value directly
-            return `#${value}`;
-          },
-        },
-        title: {
-          display: true,
-          text: "Avg Seed",
-          color: finalSecondaryColor,
-          font: { weight: 600, size: isMobile ? 13 : 15 },
-        },
         border: { display: false },
-        grid: {
-          display: false, // Remove grid lines from right axis
-        },
-        reverse: true, // Keep this - it makes #1 appear at top, #12 at bottom
+        grid: { display: false },
+        reverse: true, // #1 at top, #12 at bottom
       },
     },
     layout: {
-      padding: { top: 14, right: 12 },
+      padding: {
+        top: 14,
+        right: isMobile
+          ? END_LABEL_PADDING_RIGHT.mobile
+          : END_LABEL_PADDING_RIGHT.desktop,
+      },
     },
   };
 
@@ -482,51 +473,26 @@ export default function FootballTeamCFPBidHistory({
       )}
 
       <Line ref={chartRef} data={chartData} options={options} />
-      {chartArea && (lastCfpBid !== null || lastAvgSeed !== null) && (
-        <svg
-          className="pointer-events-none absolute left-0 top-0"
-          style={{ width: "100%", height: "100%", overflow: "visible" }}
-        >
-          {lastCfpBid !== null &&
-            (() => {
-              const y = chartRef.current?.scales?.y?.getPixelForValue(
-                lastCfpBid,
-              );
-              if (y === undefined) return null;
-              return (
-                <circle
-                  cx={chartArea.right}
-                  cy={y}
-                  r="4.25"
-                  fill={isDark ? "#0f172a" : "#ffffff"}
-                  stroke={primaryColor}
-                  strokeWidth="2.5"
-                  style={{ filter: `drop-shadow(0 0 3px ${primaryColor})` }}
-                />
-              );
-            })()}
-          {lastAvgSeed !== null &&
-            (() => {
-              const y = chartRef.current?.scales?.y1?.getPixelForValue(
-                lastAvgSeed,
-              );
-              if (y === undefined) return null;
-              return (
-                <circle
-                  cx={chartArea.right}
-                  cy={y}
-                  r="4.25"
-                  fill={isDark ? "#0f172a" : "#ffffff"}
-                  stroke={finalSecondaryColor}
-                  strokeWidth="2.5"
-                  style={{
-                    filter: `drop-shadow(0 0 3px ${finalSecondaryColor})`,
-                  }}
-                />
-              );
-            })()}
-        </svg>
-      )}
+      <ChartEndLabels
+        chart={chartRef.current}
+        chartArea={chartArea}
+        isDark={isDark}
+        mobile={isMobile}
+        markers={[
+          {
+            value: lastCfpBid,
+            color: primaryColor,
+            scaleId: "y",
+            text: lastCfpBid !== null ? `${lastCfpBid.toFixed(0)}%` : "",
+          },
+          {
+            value: lastAvgSeed,
+            color: finalSecondaryColor,
+            scaleId: "y1",
+            text: lastAvgSeed !== null ? `#${lastAvgSeed.toFixed(1)}` : "",
+          },
+        ]}
+      />
     </div>
   );
 }

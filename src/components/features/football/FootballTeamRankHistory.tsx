@@ -5,6 +5,9 @@
 // is guaranteed to have registered them first.
 import "@/lib/chartjs-setup";
 
+import ChartEndLabels, {
+  END_LABEL_PADDING_RIGHT,
+} from "@/components/features/shared/ChartEndLabels";
 import { useFootballTeamAllHistory } from "@/hooks/useFootballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import {
@@ -239,7 +242,12 @@ export default function FootballTeamRankHistory({
       },
     },
     layout: {
-      padding: { top: 14, right: 12 },
+      padding: {
+        top: 14,
+        right: isMobile
+          ? END_LABEL_PADDING_RIGHT.mobile
+          : END_LABEL_PADDING_RIGHT.desktop,
+      },
     },
   } as const;
 
@@ -366,28 +374,19 @@ export default function FootballTeamRankHistory({
         </div>
       )}
       <Line ref={chartRef} data={chartData} options={options} />
-      {chartArea && lastRank !== null && (
-        <svg
-          className="pointer-events-none absolute left-0 top-0"
-          style={{ width: "100%", height: "100%", overflow: "visible" }}
-        >
-          {(() => {
-            const y = chartRef.current?.scales?.y?.getPixelForValue(lastRank);
-            if (y === undefined) return null;
-            return (
-              <circle
-                cx={chartArea.right}
-                cy={y}
-                r="4.25"
-                fill={isDark ? "#0f172a" : "#ffffff"}
-                stroke={primaryColor}
-                strokeWidth="2.5"
-                style={{ filter: `drop-shadow(0 0 3px ${primaryColor})` }}
-              />
-            );
-          })()}
-        </svg>
-      )}
+      <ChartEndLabels
+        chart={chartRef.current}
+        chartArea={chartArea}
+        isDark={isDark}
+        mobile={isMobile}
+        markers={[
+          {
+            value: lastRank,
+            color: primaryColor,
+            text: lastRank !== null ? `#${Math.round(lastRank)}` : "",
+          },
+        ]}
+      />
     </div>
   );
 }
