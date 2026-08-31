@@ -327,12 +327,9 @@ export default function FootballGameImpactBoard({
             <TeamLogo logoUrl={focusLogo} teamName={teamName} size={44} />
             <div className="flex gap-3">
               {(
-                isIndependent
+                metric === "cfp"
                   ? ([["CFP now", baseline.cfp]] as const)
-                  : ([
-                      ["CFP now", baseline.cfp],
-                      ["CCG now", baseline.ccg],
-                    ] as const)
+                  : ([["CCG now", baseline.ccg]] as const)
               ).map(([label, val]) => (
                 <div
                   key={label}
