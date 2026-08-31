@@ -282,10 +282,12 @@ export default function FootballGameImpactBoard({
     col,
     children,
     align = "center",
+    corner = false,
   }: {
     col: SortCol;
     children: React.ReactNode;
     align?: "left" | "center" | "right";
+    corner?: boolean;
   }) => (
     <th
       scope="col"
@@ -298,7 +300,9 @@ export default function FootballGameImpactBoard({
           : "none"
       }
       className={cn(
-        "cursor-pointer select-none whitespace-nowrap px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors",
+        "sticky top-0 z-20 cursor-pointer select-none whitespace-nowrap border-b-2 border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors dark:border-slate-700 dark:bg-slate-900",
+        corner &&
+          "left-0 z-30 shadow-[1px_0_0_0_rgba(15,23,42,0.08)] dark:shadow-[1px_0_0_0_rgba(0,0,0,0.5)]",
         align === "left" && "text-left",
         align === "center" && "text-center",
         align === "right" && "text-right",
@@ -317,7 +321,13 @@ export default function FootballGameImpactBoard({
   );
 
   return (
-    <div className={cn(CARD_CLASS, "game-impact-board p-5 sm:p-6", className)}>
+    <div
+      className={cn(
+        CARD_CLASS,
+        "game-impact-board p-3 sm:p-6",
+        className,
+      )}
+    >
       <div className="mb-1 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0">
           <h3 className={TITLE_CLASS}>Game Impact — Next 7 Days</h3>
@@ -482,16 +492,13 @@ export default function FootballGameImpactBoard({
               Simulating remaining games… {done}/{total}
             </div>
           )}
-          <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-            <table className="w-full min-w-[760px] border-separate border-spacing-0 text-sm">
+          <div className="screenshot-expand max-h-[70vh] overflow-auto overscroll-contain rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+            <table className="w-full min-w-[600px] border-separate border-spacing-0 text-sm">
               <thead>
-                <tr className="border-b-2 border-slate-200 dark:border-slate-700">
-                  <SortHead col="date" align="left">
-                    Date
-                  </SortHead>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                <tr>
+                  <SortHead col="date" align="left" corner>
                     Game
-                  </th>
+                  </SortHead>
                   <SortHead col="t1">
                     If Team 1 Wins{" "}
                     <span className="font-normal">({metricLabel})</span>
@@ -503,7 +510,7 @@ export default function FootballGameImpactBoard({
                   <SortHead col="swing" align="right">
                     {metricLabel} Swing
                   </SortHead>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <th className="sticky top-0 z-20 whitespace-nowrap border-b-2 border-slate-200 bg-white px-2 py-1.5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-400">
                     <div>Post-Game {metricLabel} Probability</div>
                     <div className="mt-0.5 flex justify-center gap-2 text-[11px] font-bold normal-case text-gray-500 dark:text-gray-300">
                       <span className="w-12 text-center">Low</span>
@@ -522,20 +529,17 @@ export default function FootballGameImpactBoard({
                       key={g.game_id}
                       className="border-b border-gray-100 last:border-0 dark:border-gray-800"
                     >
-                      <td className="whitespace-nowrap px-2 py-1 text-sm text-gray-500 dark:text-gray-400">
-                        {fmtDate(g.date)}
-                      </td>
-                      <td className="px-2 py-1">
-                        <div className="flex items-center gap-2">
+                      <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-2 py-1.5 align-middle shadow-[1px_0_0_0_rgba(15,23,42,0.08)] dark:bg-slate-900 dark:shadow-[1px_0_0_0_rgba(0,0,0,0.5)]">
+                        <div className="flex items-center gap-1.5">
                           <TeamLogo
                             logoUrl={
                               g.away_team_logo ||
                               "/images/team_logos/default.png"
                             }
                             teamName={g.away_team}
-                            size={24}
+                            size={22}
                           />
-                          <span className="text-sm tabular-nums text-gray-400">
+                          <span className="text-xs tabular-nums text-gray-400">
                             {g.away_probability != null
                               ? `${Math.round(g.away_probability * 100)}%`
                               : ""}
@@ -547,18 +551,21 @@ export default function FootballGameImpactBoard({
                               "/images/team_logos/default.png"
                             }
                             teamName={g.home_team}
-                            size={24}
+                            size={22}
                           />
-                          <span className="text-sm tabular-nums text-gray-400">
+                          <span className="text-xs tabular-nums text-gray-400">
                             {g.home_probability != null
                               ? `${Math.round(g.home_probability * 100)}%`
                               : ""}
                           </span>
                           {g.conf_game && g.involves_focus_conf && (
-                            <span className="ml-1 rounded bg-slate-200 px-1 text-[9px] font-semibold uppercase text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                            <span className="ml-0.5 rounded bg-slate-200 px-1 text-[9px] font-semibold uppercase text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                               Conf
                             </span>
                           )}
+                        </div>
+                        <div className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-400">
+                          {fmtDate(g.date)}
                         </div>
                       </td>
                       {isPending ? (
