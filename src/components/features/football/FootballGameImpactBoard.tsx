@@ -358,8 +358,9 @@ export default function FootballGameImpactBoard({
         )}
       </div>
       <p className="mb-4 text-xs text-gray-600 dark:text-gray-300">
-        For each upcoming game, percentage point impact each result would change
-        the selected team&apos;s probability to make the <b>CFP</b>
+        For each upcoming game, percentage point impact each result would change{" "}
+        {teamName ? <b>{teamName}</b> : "the selected team"}&apos;s probability to
+        make the <b>CFP</b>
         {!isIndependent && (
           <>
             {" "}
