@@ -42,7 +42,7 @@ function fmtDate(raw: string): string {
 
 function fmtDelta(delta: number): string {
   if (Math.abs(delta) < 0.1) return "·";
-  return `${delta > 0 ? "+" : "−"}${Math.abs(delta).toFixed(1)}`;
+  return `${delta > 0 ? "+" : "−"}${Math.abs(delta).toFixed(1)}%`;
 }
 
 /** Diverging green/red heat for a signed percentage-point delta. */
@@ -60,6 +60,13 @@ function outcomeDeltas(g: GameImpactRow, m: Metric) {
   const d1 = m === "cfp" ? g.if_away_win.cfp_delta : g.if_away_win.ccg_delta;
   const d2 = m === "cfp" ? g.if_home_win.cfp_delta : g.if_home_win.ccg_delta;
   return { d1, d2, swing: Math.round(Math.abs(d1 - d2) * 10) / 10 };
+}
+
+/** Absolute post-game probability for the focus team under each outcome. */
+function postGame(g: GameImpactRow, m: Metric) {
+  const p1 = m === "cfp" ? g.if_away_win.cfp_pct : g.if_away_win.ccg_pct;
+  const p2 = m === "cfp" ? g.if_home_win.cfp_pct : g.if_home_win.ccg_pct;
+  return { low: Math.min(p1, p2), high: Math.max(p1, p2) };
 }
 
 function WinnerDelta({
@@ -99,6 +106,7 @@ export default function FootballGameImpactBoard({
   const [rowsById, setRowsById] = useState<Map<number, GameImpactRow>>(new Map());
   const [pending, setPending] = useState<Set<number>>(new Set());
   const runIdRef = useRef(0);
+  const prefilledTopNRef = useRef(false);
 
   const [metricState, setMetric] = useState<Metric>("cfp");
   const [sortCol, setSortCol] = useState<SortCol>("swing");
@@ -127,6 +135,7 @@ export default function FootballGameImpactBoard({
     setRowsById(new Map());
     setPending(new Set());
     setTopN("");
+    prefilledTopNRef.current = false;
   }, []);
 
   useEffect(() => {
@@ -137,6 +146,7 @@ export default function FootballGameImpactBoard({
   const run = useCallback(
     async (teamId: number) => {
       const myRun = ++runIdRef.current;
+      prefilledTopNRef.current = false;
       setError(null);
       setRowsById(new Map());
       setPending(new Set());
@@ -259,6 +269,15 @@ export default function FootballGameImpactBoard({
     teams.find((t) => t.team_id === focusTeamId)?.logo_url ||
     "/images/team_logos/default.png";
 
+  // Seed the "show top" box once per run with the full count so it reads as an
+  // editable number the user can highlight, clear (→ show all), or retype.
+  useEffect(() => {
+    if (phase === "done" && !prefilledTopNRef.current && done > 0) {
+      prefilledTopNRef.current = true;
+      setTopN(String(done));
+    }
+  }, [phase, done]);
+
   const SortHead = ({
     col,
     children,
@@ -332,16 +351,15 @@ export default function FootballGameImpactBoard({
         )}
       </div>
       <p className="mb-4 text-xs text-gray-600 dark:text-gray-300">
-        For every upcoming game, how each result would move the selected
-        team&apos;s probability to make the <b>CFP</b>
+        For each upcoming game, percentage point impact each result would change
+        the selected team&apos;s probability to make the <b>CFP</b>
         {!isIndependent && (
           <>
             {" "}
-            and reach its{" "}
-            <b>conference championship game (CCG)</b>
+            or reach its <b>conference championship game (CCG)</b>
           </>
         )}
-        . <b>Team 1</b> is the visitor, <b>Team 2</b> the home team.
+        .
       </p>
 
       {/* Controls */}
@@ -468,7 +486,7 @@ export default function FootballGameImpactBoard({
             </div>
           )}
           <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-            <table className="w-full min-w-[640px] border-separate border-spacing-0 text-sm">
+            <table className="w-full min-w-[760px] border-separate border-spacing-0 text-sm">
               <thead>
                 <tr className="border-b-2 border-slate-200 dark:border-slate-700">
                   <SortHead col="date" align="left">
@@ -488,12 +506,20 @@ export default function FootballGameImpactBoard({
                   <SortHead col="swing" align="right">
                     {metricLabel} Swing
                   </SortHead>
+                  <th className="whitespace-nowrap px-2 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    <div>Post-Game {metricLabel} Probability</div>
+                    <div className="mt-0.5 flex justify-end gap-2 text-[9px] font-medium normal-case text-gray-400">
+                      <span className="w-12 text-center">Low</span>
+                      <span className="w-12 text-center">High</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {visibleRows.map((g) => {
                   const isPending = pending.has(g.game_id) && !g.simulated;
                   const { d1, d2, swing } = outcomeDeltas(g, metric);
+                  const { low, high } = postGame(g, metric);
                   return (
                     <tr
                       key={g.game_id}
@@ -540,7 +566,7 @@ export default function FootballGameImpactBoard({
                       </td>
                       {isPending ? (
                         <td
-                          colSpan={3}
+                          colSpan={4}
                           className="px-2 py-1 text-center text-xs text-gray-400"
                         >
                           <span
@@ -575,7 +601,17 @@ export default function FootballGameImpactBoard({
                             />
                           </td>
                           <td className="px-2 py-1 text-right text-sm font-bold tabular-nums text-gray-700 dark:text-gray-200">
-                            {swing >= 0.1 ? swing.toFixed(1) : "·"}
+                            {swing >= 0.1 ? `${swing.toFixed(1)}%` : "·"}
+                          </td>
+                          <td className="px-2 py-1">
+                            <div className="flex justify-end gap-2 tabular-nums text-gray-700 dark:text-gray-200">
+                              <span className="w-12 text-center">
+                                {low.toFixed(1)}%
+                              </span>
+                              <span className="w-12 text-center">
+                                {high.toFixed(1)}%
+                              </span>
+                            </div>
                           </td>
                         </>
                       )}
@@ -593,7 +629,9 @@ export default function FootballGameImpactBoard({
           Each value is the change in percentage points if that team wins,
           assuming every other game plays out per the model — the same as picking
           that winner in the left panel and hitting Calculate. <b>Swing</b> is
-          the gap between the two results. A dot (·) means the result barely
+          the gap between the two results. <b>Post-Game {metricLabel} Probability</b>{" "}
+          shows the resulting number itself — <b>Low</b> is the worse outcome for
+          the team, <b>High</b> the better one. A dot (·) means the result barely
           moves the number. Click a column heading to sort.
         </p>
       )}
