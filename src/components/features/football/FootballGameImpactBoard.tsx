@@ -626,13 +626,11 @@ export default function FootballGameImpactBoard({
 
       {baseline && rows.length > 0 && (
         <p className="mt-3 text-[10px] leading-relaxed text-gray-400">
-          Each value is the change in percentage points if that team wins,
-          assuming every other game plays out per the model — the same as picking
-          that winner in the left panel and hitting Calculate. <b>Swing</b> is
-          the gap between the two results. <b>Post-Game {metricLabel} Probability</b>{" "}
-          shows the resulting number itself — <b>Low</b> is the worse outcome for
-          the team, <b>High</b> the better one. A dot (·) means the result barely
-          moves the number. Click a column heading to sort.
+          Each value is the change in percentage point probability for the team
+          selected with the indicated game result. <b>Swing</b> is the gap
+          between the two results. <b>Post-Game {metricLabel} Probability</b>{" "}
+          shows the resulting probability for the selected team — <b>Low</b> is
+          the worse outcome for the team, <b>High</b> the better one.
         </p>
       )}
     </div>
