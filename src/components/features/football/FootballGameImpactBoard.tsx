@@ -69,6 +69,27 @@ function postGame(g: GameImpactRow, m: Metric) {
   return { low: Math.min(p1, p2), high: Math.max(p1, p2) };
 }
 
+/** One team in the matchup cell: logo with its win probability stacked
+ *  underneath on mobile, inline on desktop. */
+function GameTeam({
+  logoUrl,
+  teamName,
+  probability,
+}: {
+  logoUrl: string;
+  teamName: string;
+  probability: number | null;
+}) {
+  return (
+    <span className="flex flex-col items-center leading-none sm:flex-row sm:gap-1">
+      <TeamLogo logoUrl={logoUrl} teamName={teamName} size={22} />
+      <span className="mt-0.5 text-[10px] tabular-nums text-gray-400 sm:mt-0 sm:text-xs">
+        {probability != null ? `${Math.round(probability * 100)}%` : ""}
+      </span>
+    </span>
+  );
+}
+
 function WinnerDelta({
   delta,
   logoUrl,
@@ -494,7 +515,7 @@ export default function FootballGameImpactBoard({
             </div>
           )}
           <div className="screenshot-expand max-h-[70vh] overflow-auto overscroll-contain rounded-xl border border-slate-200/80 dark:border-slate-700/80">
-            <table className="w-full min-w-[600px] border-separate border-spacing-0 text-sm">
+            <table className="w-full min-w-[520px] border-separate border-spacing-0 text-sm sm:min-w-[600px]">
               <thead>
                 <tr>
                   <SortHead col="date" align="left" corner>
@@ -531,34 +552,26 @@ export default function FootballGameImpactBoard({
                       className="border-b border-gray-100 last:border-0 dark:border-gray-800"
                     >
                       <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-2 py-1.5 align-middle shadow-[1px_0_0_0_rgba(15,23,42,0.08)] dark:bg-slate-900 dark:shadow-[1px_0_0_0_rgba(0,0,0,0.5)]">
-                        <div className="flex items-center gap-1.5">
-                          <TeamLogo
+                        <div className="flex items-center gap-1 sm:gap-1.5">
+                          <GameTeam
                             logoUrl={
                               g.away_team_logo ||
                               "/images/team_logos/default.png"
                             }
                             teamName={g.away_team}
-                            size={22}
+                            probability={g.away_probability}
                           />
-                          <span className="text-xs tabular-nums text-gray-400">
-                            {g.away_probability != null
-                              ? `${Math.round(g.away_probability * 100)}%`
-                              : ""}
+                          <span className="text-[10px] text-gray-400 sm:text-xs">
+                            @
                           </span>
-                          <span className="text-xs text-gray-400">@</span>
-                          <TeamLogo
+                          <GameTeam
                             logoUrl={
                               g.home_team_logo ||
                               "/images/team_logos/default.png"
                             }
                             teamName={g.home_team}
-                            size={22}
+                            probability={g.home_probability}
                           />
-                          <span className="text-xs tabular-nums text-gray-400">
-                            {g.home_probability != null
-                              ? `${Math.round(g.home_probability * 100)}%`
-                              : ""}
-                          </span>
                           {g.conf_game && g.involves_focus_conf && (
                             <span className="ml-0.5 rounded bg-slate-200 px-1 text-[9px] font-semibold uppercase text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                               Conf
