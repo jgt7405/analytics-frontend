@@ -508,7 +508,7 @@ export default function FootballGameImpactBoard({
                   </SortHead>
                   <th className="whitespace-nowrap px-2 py-1.5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     <div>Post-Game {metricLabel} Probability</div>
-                    <div className="mt-0.5 flex justify-center gap-2 text-[9px] font-bold normal-case text-gray-500 dark:text-gray-300">
+                    <div className="mt-0.5 flex justify-center gap-2 text-[11px] font-bold normal-case text-gray-500 dark:text-gray-300">
                       <span className="w-12 text-center">Low</span>
                       <span className="w-12 text-center">High</span>
                     </div>
