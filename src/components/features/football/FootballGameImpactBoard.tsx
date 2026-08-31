@@ -452,18 +452,6 @@ export default function FootballGameImpactBoard({
               />
               <span className="normal-case">swings</span>
             </label>
-
-            {done > 0 && (
-              <div className="ml-auto">
-                <TableActionButtons
-                  contentSelector=".game-impact-board"
-                  selectedConference={conference}
-                  pageName="game-impact"
-                  pageTitle={`Game Impact — ${teamName}`}
-                  shareTitle="Game Impact — Next 7 Days"
-                />
-              </div>
-            )}
           </>
         )}
       </div>
@@ -650,6 +638,21 @@ export default function FootballGameImpactBoard({
           shows the resulting probability for the selected team — <b>Low</b> is
           the worse outcome for the team, <b>High</b> the better one.
         </p>
+      )}
+
+      {focusTeamId && done > 0 && (
+        <div
+          className="mt-4 flex justify-end border-t border-slate-200/70 pt-3 dark:border-slate-700/70"
+          data-screenshot-hide="true"
+        >
+          <TableActionButtons
+            contentSelector=".game-impact-board"
+            selectedConference={conference}
+            pageName="game-impact"
+            pageTitle={`Game Impact — ${teamName}`}
+            shareTitle="Game Impact — Next 7 Days"
+          />
+        </div>
       )}
     </div>
   );
