@@ -506,9 +506,9 @@ export default function FootballGameImpactBoard({
                   <SortHead col="swing" align="right">
                     {metricLabel} Swing
                   </SortHead>
-                  <th className="whitespace-nowrap px-2 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <th className="whitespace-nowrap px-2 py-1.5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     <div>Post-Game {metricLabel} Probability</div>
-                    <div className="mt-0.5 flex justify-end gap-2 text-[9px] font-medium normal-case text-gray-400">
+                    <div className="mt-0.5 flex justify-center gap-2 text-[9px] font-bold normal-case text-gray-500 dark:text-gray-300">
                       <span className="w-12 text-center">Low</span>
                       <span className="w-12 text-center">High</span>
                     </div>
@@ -604,7 +604,7 @@ export default function FootballGameImpactBoard({
                             {swing >= 0.1 ? `${swing.toFixed(1)}%` : "·"}
                           </td>
                           <td className="px-2 py-1">
-                            <div className="flex justify-end gap-2 tabular-nums text-gray-700 dark:text-gray-200">
+                            <div className="flex justify-center gap-2 tabular-nums text-gray-700 dark:text-gray-200">
                               <span className="w-12 text-center">
                                 {low.toFixed(1)}%
                               </span>
