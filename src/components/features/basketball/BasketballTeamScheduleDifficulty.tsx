@@ -285,82 +285,70 @@ export default function BasketballTeamScheduleDifficulty({
       (a, b) => a.percentilePosition - b.percentilePosition,
     );
 
-    const positioned: PositionedGame[] = [];
-    const minSpacing = 32;
+    const minSpacing = 28; // Logos are 24px tall; keep a small gap between them.
+    const minY = TOP_MARGIN.top + 15;
+    const maxY = TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15;
     const columnPattern = [0, 3, 1, 2];
 
-    sortedByDifficulty.forEach((game, index) => {
-      const columnIndex = columnPattern[index % 4];
-      const isRightSide = columnIndex >= 2;
+    const withColumn = sortedByDifficulty.map((game, index) => ({
+      game,
+      columnIndex: columnPattern[index % 4],
+    }));
 
-      const gameY =
-        TOP_MARGIN.top + (game.percentilePosition / 100) * TOP_PLOT_HEIGHT;
-      let logoY = gameY;
+    // Spread one column of logos so none overlap, keeping each as close to its
+    // true difficulty position as possible.
+    const layoutColumn = (
+      entries: { game: GameWithPosition; columnIndex: number }[],
+    ): PositionedGame[] => {
+      const items = entries
+        .map(({ game, columnIndex }) => ({
+          game,
+          columnIndex,
+          idealY: Math.max(
+            minY,
+            Math.min(
+              maxY,
+              TOP_MARGIN.top +
+                (game.percentilePosition / 100) * TOP_PLOT_HEIGHT,
+            ),
+          ),
+        }))
+        .sort((a, b) => a.idealY - b.idealY);
 
-      const sameColumnLogos = positioned
-        .filter((p) => p.columnIndex === columnIndex)
-        .sort((a, b) => a.adjustedY - b.adjustedY);
+      const ys = items.map((it) => it.idealY);
 
-      if (sameColumnLogos.length > 0) {
-        let bestY = logoY;
-        let minTotalDisplacement = Infinity;
-
-        const searchRange = 120;
-        const step = 2;
-
-        for (
-          let testY = Math.max(TOP_MARGIN.top + 15, logoY - searchRange);
-          testY <=
-          Math.min(TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15, logoY + searchRange);
-          testY += step
-        ) {
-          let hasCollision = false;
-          for (const existing of sameColumnLogos) {
-            if (Math.abs(testY - existing.adjustedY) < minSpacing) {
-              hasCollision = true;
-              break;
-            }
-          }
-
-          if (!hasCollision) {
-            const displacement = Math.abs(testY - gameY);
-            const totalDisplacement =
-              displacement +
-              positioned.reduce(
-                (sum, p) =>
-                  sum +
-                  Math.abs(
-                    p.adjustedY -
-                      (TOP_MARGIN.top +
-                        (p.percentilePosition / 100) * TOP_PLOT_HEIGHT),
-                  ),
-                0,
-              );
-
-            if (totalDisplacement < minTotalDisplacement) {
-              minTotalDisplacement = totalDisplacement;
-              bestY = testY;
-            }
-          }
-        }
-
-        logoY = bestY;
+      // Forward pass: enforce spacing moving downward.
+      for (let i = 1; i < ys.length; i++) {
+        if (ys[i] - ys[i - 1] < minSpacing) ys[i] = ys[i - 1] + minSpacing;
       }
 
-      logoY = Math.max(
-        TOP_MARGIN.top + 15,
-        Math.min(TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15, logoY),
-      );
+      // If the column overflowed the bottom, shift it all up.
+      const overflow = ys.length ? ys[ys.length - 1] - maxY : 0;
+      if (overflow > 0) {
+        for (let i = 0; i < ys.length; i++) ys[i] -= overflow;
+      }
 
-      positioned.push({
-        ...game,
-        isRightSide,
-        adjustedY: logoY,
-        columnIndex,
-      });
-    });
+      // Backward pass in case the shift pushed the top logo above the plot.
+      for (let i = ys.length - 2; i >= 0; i--) {
+        if (ys[i + 1] - ys[i] < minSpacing) ys[i] = ys[i + 1] - minSpacing;
+      }
 
-    return positioned;
+      // Final clamp (only bites when a column genuinely has more logos than fit).
+      for (let i = 0; i < ys.length; i++) {
+        ys[i] = Math.max(minY, Math.min(maxY, ys[i]));
+      }
+
+      return items.map((it, i) => ({
+        ...it.game,
+        isRightSide: it.columnIndex >= 2,
+        adjustedY: ys[i],
+        columnIndex: it.columnIndex,
+      }));
+    };
+
+    return [0, 1, 2, 3].flatMap((col) =>
+      layoutColumn(withColumn.filter((e) => e.columnIndex === col)),
+    );
   }, [teamGamePositions, TOP_PLOT_HEIGHT, TOP_MARGIN.top]);
 
   // Calculate high prob games record

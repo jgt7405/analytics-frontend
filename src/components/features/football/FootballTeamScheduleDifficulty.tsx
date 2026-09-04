@@ -235,61 +235,63 @@ export default function FootballTeamScheduleDifficulty({
       (a, b) => a.percentilePosition - b.percentilePosition
     );
 
-    const positioned: PositionedGame[] = [];
-    const minSpacing = 45; // Increased spacing for better separation
+    const minSpacing = 36; // Logos are 32px tall; keep a small gap between them.
+    const minY = MARGIN.top + 16;
+    const maxY = MARGIN.top + PLOT_HEIGHT - 16;
 
-    sortedByDifficulty.forEach((game, index) => {
-      const isRightSide = index % 2 === 0;
+    // Spread one column of logos so none overlap, keeping each as close to its
+    // true difficulty position as possible.
+    const layoutSide = (
+      games: GameWithPosition[],
+      isRightSide: boolean
+    ): PositionedGame[] => {
+      const items = games
+        .map((game) => ({
+          game,
+          idealY: Math.max(
+            minY,
+            Math.min(
+              maxY,
+              MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT
+            )
+          ),
+        }))
+        .sort((a, b) => a.idealY - b.idealY);
 
-      const gameY = MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
-      let logoY = gameY;
+      const ys = items.map((it) => it.idealY);
 
-      const sameSideLogos = positioned.filter(
-        (p) => p.isRightSide === isRightSide
-      );
-
-      // Try to find a collision-free position
-      for (let attempts = 0; attempts < 100; attempts++) {
-        let hasCollision = false;
-
-        // Check against ALL logos on the same side
-        for (const existingLogo of sameSideLogos) {
-          if (Math.abs(logoY - existingLogo.adjustedY) < minSpacing) {
-            hasCollision = true;
-
-            // Push away from the collision
-            if (logoY < existingLogo.adjustedY) {
-              logoY = existingLogo.adjustedY - minSpacing;
-            } else {
-              logoY = existingLogo.adjustedY + minSpacing;
-            }
-          }
-        }
-
-        // If no collision found, we're done
-        if (!hasCollision) break;
-
-        // Clamp to bounds to prevent infinite loops
-        logoY = Math.max(
-          MARGIN.top + 20,
-          Math.min(MARGIN.top + PLOT_HEIGHT - 20, logoY)
-        );
+      // Forward pass: enforce spacing moving downward.
+      for (let i = 1; i < ys.length; i++) {
+        if (ys[i] - ys[i - 1] < minSpacing) ys[i] = ys[i - 1] + minSpacing;
       }
 
-      // Final bounds check
-      logoY = Math.max(
-        MARGIN.top + 20,
-        Math.min(MARGIN.top + PLOT_HEIGHT - 20, logoY)
-      );
+      // If the column overflowed the bottom, shift it all up.
+      const overflow = ys.length ? ys[ys.length - 1] - maxY : 0;
+      if (overflow > 0) {
+        for (let i = 0; i < ys.length; i++) ys[i] -= overflow;
+      }
 
-      positioned.push({
-        ...game,
+      // Backward pass in case the shift pushed the top logo above the plot.
+      for (let i = ys.length - 2; i >= 0; i--) {
+        if (ys[i + 1] - ys[i] < minSpacing) ys[i] = ys[i + 1] - minSpacing;
+      }
+
+      // Final clamp (only bites when a side genuinely has more logos than fit).
+      for (let i = 0; i < ys.length; i++) {
+        ys[i] = Math.max(minY, Math.min(maxY, ys[i]));
+      }
+
+      return items.map((it, i) => ({
+        ...it.game,
         isRightSide,
-        adjustedY: logoY,
-      });
-    });
+        adjustedY: ys[i],
+      }));
+    };
 
-    return positioned;
+    const rightGames = sortedByDifficulty.filter((_, i) => i % 2 === 0);
+    const leftGames = sortedByDifficulty.filter((_, i) => i % 2 === 1);
+
+    return [...layoutSide(rightGames, true), ...layoutSide(leftGames, false)];
   }, [teamGamePositions, PLOT_HEIGHT]);
 
   const teamStats = useMemo((): TeamStats => {

@@ -461,6 +461,36 @@ export default function BasketballCompareSchedulesChart({
   const positionedGames = useMemo(() => {
     const positioned: PositionedGame[] = [];
     const minSpacing = 22; // Minimum pixels between logos (18px logo + 4px buffer)
+    const topBound = MARGIN.top + 12;
+    const bottomBound = MARGIN.top + PLOT_HEIGHT - 12;
+
+    // Cascade a single vertical column of logos so none overlap, then compress
+    // proportionally if the cascade overflowed the bottom - clamping each logo
+    // individually (the old behavior) collapsed every overflowing logo onto the
+    // same pixel, so they all visually stacked instead of staying spaced out.
+    const spreadColumn = <T extends { idealY: number }>(entries: T[]) => {
+      const sorted = [...entries].sort((a, b) => a.idealY - b.idealY);
+      const ys: number[] = [];
+      sorted.forEach((entry, i) => {
+        ys.push(
+          i === 0
+            ? Math.max(topBound, entry.idealY)
+            : Math.max(entry.idealY, ys[i - 1] + minSpacing),
+        );
+      });
+
+      const overflow = ys.length ? ys[ys.length - 1] - bottomBound : 0;
+      if (overflow > 0 && ys.length > 1) {
+        const span = ys[ys.length - 1] - ys[0];
+        const availableSpan = bottomBound - ys[0];
+        const scale = span > 0 ? availableSpan / span : 1;
+        for (let i = 1; i < ys.length; i++) {
+          ys[i] = ys[0] + (ys[i] - ys[0]) * scale;
+        }
+      }
+
+      return sorted.map((entry, i) => ({ entry, y: ys[i] }));
+    };
 
     teams.forEach((_team, teamIndex) => {
       const columnGames = gamesWithPercentiles
@@ -469,92 +499,22 @@ export default function BasketballCompareSchedulesChart({
 
       if (columnGames.length === 0) return;
 
-      // First pass: position each logo at its ideal location (actual game point)
-      const initialPositions = columnGames.map((game, index) => {
-        const idealY =
-          MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT;
-        const isRightSide = index % 2 === 1;
+      const entries = columnGames.map((game, index) => ({
+        game,
+        isRightSide: index % 2 === 1,
+        idealY: MARGIN.top + (game.percentilePosition / 100) * PLOT_HEIGHT,
+      }));
 
-        return {
-          game,
-          idealY,
-          currentY: idealY,
-          isRightSide,
-          index,
-        };
-      });
-
-      // Second pass: resolve collisions by moving logos away from ideal position
-      // We'll iterate until no collisions remain or max iterations reached
-      let hasCollisions = true;
-      let iterations = 0;
-      const maxIterations = 100;
-
-      while (hasCollisions && iterations < maxIterations) {
-        hasCollisions = false;
-        iterations++;
-
-        // Check each pair of logos on the same side for collisions
-        for (let i = 0; i < initialPositions.length; i++) {
-          for (let j = i + 1; j < initialPositions.length; j++) {
-            const pos1 = initialPositions[i];
-            const pos2 = initialPositions[j];
-
-            // Only check collision if they're on the same side
-            if (pos1.isRightSide !== pos2.isRightSide) continue;
-
-            const distance = Math.abs(pos1.currentY - pos2.currentY);
-
-            if (distance < minSpacing) {
-              hasCollisions = true;
-
-              // Calculate how much each should move
-              const overlap = minSpacing - distance;
-              const moveAmount = overlap / 2;
-
-              // Determine which direction each should move
-              // Move them apart, but prefer staying close to ideal position
-              const displacement1 = Math.abs(pos1.currentY - pos1.idealY);
-              const displacement2 = Math.abs(pos2.currentY - pos2.idealY);
-
-              if (pos1.currentY < pos2.currentY) {
-                // pos1 is above pos2
-                // If pos1 is already far from ideal, move pos2 down more
-                if (displacement1 > displacement2) {
-                  pos1.currentY -= moveAmount * 0.3;
-                  pos2.currentY += moveAmount * 1.7;
-                } else {
-                  pos1.currentY -= moveAmount * 1.7;
-                  pos2.currentY += moveAmount * 0.3;
-                }
-              } else {
-                // pos2 is above pos1
-                if (displacement1 > displacement2) {
-                  pos1.currentY += moveAmount * 1.7;
-                  pos2.currentY -= moveAmount * 0.3;
-                } else {
-                  pos1.currentY += moveAmount * 0.3;
-                  pos2.currentY -= moveAmount * 1.7;
-                }
-              }
-
-              // Keep within chart bounds
-              const minY = MARGIN.top;
-              const maxY = MARGIN.top + PLOT_HEIGHT;
-              pos1.currentY = Math.max(minY, Math.min(maxY, pos1.currentY));
-              pos2.currentY = Math.max(minY, Math.min(maxY, pos2.currentY));
-            }
-          }
-        }
-      }
-
-      // Add positioned games to final array
-      initialPositions.forEach((pos) => {
-        positioned.push({
-          ...pos.game,
-          adjustedY: pos.currentY,
-          isRightSide: pos.isRightSide,
-        });
+      [false, true].forEach((side) => {
+        spreadColumn(entries.filter((e) => e.isRightSide === side)).forEach(
+          ({ entry, y }) => {
+            positioned.push({
+              ...entry.game,
+              adjustedY: y,
+              isRightSide: entry.isRightSide,
+            });
+          },
+        );
       });
     });
 
