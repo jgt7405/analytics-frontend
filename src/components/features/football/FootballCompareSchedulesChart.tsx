@@ -447,16 +447,26 @@ export default function FootballCompareSchedulesChart({
           stroke="white"
           strokeWidth="2"
         />
-        <image
+        {/* foreignObject + <img> renders reliably in html2canvas exports */}
+        <foreignObject
           x={columnX - 20}
           y={MARGIN.top - 50}
           width="40"
           height="40"
-          href={teams[teamIndex].teamLogo}
-          style={{
-            borderRadius: "4px",
-          }}
-        />
+          style={{ overflow: "hidden" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={teams[teamIndex].teamLogo}
+            alt={teams[teamIndex].teamName}
+            style={{
+              width: "40px",
+              height: "40px",
+              objectFit: "contain",
+              borderRadius: "4px",
+            }}
+          />
+        </foreignObject>
 
         {/* Vertical Line - centered */}
         <line
@@ -566,17 +576,25 @@ export default function FootballCompareSchedulesChart({
                     strokeWidth="1.5"
                     opacity={1}
                   />
-                  <image
+                  <foreignObject
                     x={logoX}
                     y={game.adjustedY - 12}
                     width="24"
                     height="24"
-                    href={game.opponentLogo}
-                    style={{
-                      borderRadius: "4px",
-                      opacity: 1,
-                    }}
-                  />
+                    style={{ overflow: "hidden" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={game.opponentLogo}
+                      alt=""
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        objectFit: "contain",
+                        borderRadius: "4px",
+                      }}
+                    />
+                  </foreignObject>
                 </g>
               )}
 

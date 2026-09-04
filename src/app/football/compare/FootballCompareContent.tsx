@@ -5,12 +5,7 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import {
-  expandExportClone,
-  getFullContentWidth,
-  getFullScreenshotDimensions,
-} from "@/lib/screenshot-layout";
-import { saveCanvasImage } from "@/lib/save-image";
+import { downloadCompareChart } from "@/lib/download-compare-chart";
 import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import Image from "next/image";
@@ -279,144 +274,13 @@ export default function FootballCompareContent() {
   };
 
   const downloadChart = async () => {
-    const chartElement = document.getElementById("football-compare-chart");
-    if (!chartElement) return;
-
     try {
-      if (!window.html2canvas) {
-        const script = document.createElement("script");
-        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          document.body.appendChild(script);
-        });
-      }
-
-      if (!window.html2canvas) {
-        throw new Error("Failed to load html2canvas");
-      }
-
-      const imageToBase64 = async (url: string): Promise<string> => {
-        try {
-          const response = await fetch(url);
-          const blob = await response.blob();
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-        } catch (error) {
-          console.warn(`Failed to load image: ${url}`, error);
-          return url;
-        }
-      };
-
-      // Mirrors the chart's own layout: 100px left + 100px right margins,
-      // 130px per team column.
-      const TEAM_COLUMN_WIDTH = 130;
-      const MARGIN_LEFT = 100;
-      const MARGIN_RIGHT = 100;
-      const chartWidth = Math.max(
-        MARGIN_LEFT + selectedTeams.length * TEAM_COLUMN_WIDTH + MARGIN_RIGHT,
-        getFullContentWidth(chartElement)
-      );
-      const WRAPPER_PADDING = 20;
-      const totalWidth = chartWidth + WRAPPER_PADDING * 2;
-
-      const chartClone = chartElement.cloneNode(true) as HTMLElement;
-      expandExportClone(chartElement, chartClone);
-
-      const wrapper = document.createElement("div");
-      wrapper.style.cssText = `
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        background: white;
-        padding: ${WRAPPER_PADDING}px;
-        width: ${totalWidth}px;
-      `;
-
-      const header = document.createElement("div");
-      header.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid #e5e7eb;
-      `;
-
-      const logo = document.createElement("img");
-      logo.src = "/images/JThom_Logo_Football.png";
-      logo.style.cssText = `height: 50px; width: auto;`;
-
-      const title = document.createElement("div");
-      title.textContent = "Schedule Difficulty Comparison";
-      title.style.cssText = `
-        flex: 1;
-        text-align: center;
-        font-size: 18px;
-        font-weight: 500;
-        color: #1f2937;
-      `;
-
-      const date = document.createElement("div");
-      date.textContent = new Date().toLocaleDateString();
-      date.style.cssText = `font-size: 12px; color: #6b7280; white-space: nowrap;`;
-
-      header.appendChild(logo);
-      header.appendChild(title);
-      header.appendChild(date);
-      wrapper.appendChild(header);
-      wrapper.appendChild(chartClone);
-
-      document.body.appendChild(wrapper);
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const images = wrapper.querySelectorAll("img");
-      await Promise.all(
-        Array.from(images).map(async (img) => {
-          try {
-            img.src = await imageToBase64(img.src);
-          } catch (error) {
-            console.warn("Failed to convert image to base64:", error);
-          }
-        })
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const captureSize = getFullScreenshotDimensions(wrapper);
-      const canvas = await (
-        window.html2canvas as (
-          element: HTMLElement,
-          options: object
-        ) => Promise<HTMLCanvasElement>
-      )(wrapper, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        fontTimeout: 3000,
-        width: captureSize.width,
-        height: captureSize.height,
-        windowWidth: captureSize.width,
-        windowHeight: captureSize.height,
-        scrollX: 0,
-        scrollY: 0,
+      await downloadCompareChart({
+        chartId: "football-compare-chart",
+        title: "Schedule Difficulty Comparison",
+        logoSrc: "/images/JThom_Logo_Football.png",
+        filename: `football-compare-${new Date().toISOString().split("T")[0]}`,
       });
-
-      document.body.removeChild(wrapper);
-
-      await saveCanvasImage(
-        canvas,
-        `football-compare-${new Date().toISOString().split("T")[0]}.png`,
-        "Football Schedule Comparison"
-      );
     } catch (error) {
       console.error("Download error:", error);
       alert("Failed to download chart. Please try again.");
