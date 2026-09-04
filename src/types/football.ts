@@ -334,6 +334,8 @@ export interface FootballSeasonHighlightGame {
   team_points: number | null;
   opp_points: number | null;
   date: string;
+  /** ISO (YYYY-MM-DD) form of `date`, for the date-range filter. */
+  date_iso: string | null;
   location: string;
   team_conf: string;
   team_conf_catg: string;

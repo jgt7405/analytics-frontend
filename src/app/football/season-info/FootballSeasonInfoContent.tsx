@@ -23,6 +23,15 @@ const DIVISION_OPTIONS: { value: DivisionFilter; label: string }[] = [
   { value: "g6", label: "Group of 6" },
 ];
 
+type DateRangeFilter = "7" | "14" | "28" | "all";
+
+const DATE_RANGE_OPTIONS: { value: DateRangeFilter; label: string }[] = [
+  { value: "7", label: "Past 7 Days" },
+  { value: "14", label: "Past 14 Days" },
+  { value: "28", label: "Past 28 Days" },
+  { value: "all", label: "Full Season" },
+];
+
 const PRIORITY_CONFERENCES = [
   "Atlantic Coast",
   "Big 12",
@@ -56,6 +65,7 @@ export default function FootballSeasonInfoContent() {
   const [error, setError] = useState<string | null>(null);
   const [divisionFilter, setDivisionFilter] = useState<DivisionFilter>("all");
   const [conferenceFilter, setConferenceFilter] = useState<string>(ALL_TEAMS);
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -98,6 +108,17 @@ export default function FootballSeasonInfoContent() {
     });
   }, [data]);
 
+  // "Past N days" cuts off at local midnight N-1 days ago, so "today" always
+  // counts as inside every range. null means no date filtering (Full Season).
+  const dateCutoff = useMemo(() => {
+    if (dateRangeFilter === "all") return null;
+    const days = Number(dateRangeFilter);
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - (days - 1));
+    return cutoff.getTime();
+  }, [dateRangeFilter]);
+
   const applyFilters = (rows: FootballSeasonHighlightGame[]) =>
     rows.filter((row) => {
       if (divisionFilter !== "all" && getDivision(row) !== divisionFilter) {
@@ -105,6 +126,10 @@ export default function FootballSeasonInfoContent() {
       }
       if (conferenceFilter !== ALL_TEAMS && row.team_conf !== conferenceFilter) {
         return false;
+      }
+      if (dateCutoff != null) {
+        const rowTime = row.date_iso ? new Date(row.date_iso).getTime() : NaN;
+        if (Number.isNaN(rowTime) || rowTime < dateCutoff) return false;
       }
       return true;
     });
@@ -172,6 +197,27 @@ export default function FootballSeasonInfoContent() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Date Range:
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {DATE_RANGE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setDateRangeFilter(option.value)}
+                  className={`px-3 py-1 text-sm rounded-md border transition-colors ${
+                    dateRangeFilter === option.value
+                      ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
+                      : "bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
