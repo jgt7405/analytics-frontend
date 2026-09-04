@@ -222,6 +222,11 @@ function NavigationContent() {
       basePath: "/football/compare",
       description: "Compare teams side by side",
     },
+    {
+      name: "Season Info",
+      basePath: "/football/season-info",
+      description: "Biggest upsets, best wins, and worst losses this season",
+    },
   ];
 
   const navItems = isFootball ? footballNavItems : basketballNavItems;

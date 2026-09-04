@@ -412,6 +412,9 @@ export async function GET(
           case "all_future_games":
             backendPath = `/football/all_future_games`;
             break;
+          case "season_highlights":
+            backendPath = `/football/season_highlights`;
+            break;
           case "bowl-picks":
             backendPath = `/football/bowl-picks`;
             break;
