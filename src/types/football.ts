@@ -335,6 +335,8 @@ export interface FootballSeasonHighlightGame {
   opp_points: number | null;
   date: string;
   location: string;
+  team_conf: string;
+  team_conf_catg: string;
 }
 
 export interface FootballSeasonHighlightsResponse {
