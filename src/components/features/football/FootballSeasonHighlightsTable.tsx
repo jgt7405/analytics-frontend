@@ -131,7 +131,7 @@ export default function FootballSeasonHighlightsTable({
                     </td>
                     <td className="py-1.5 px-2 text-center text-slate-600 dark:text-slate-300 whitespace-nowrap">
                       {row.team_points != null && row.opp_points != null
-                        ? `${row.team_points}-${row.opp_points}`
+                        ? `${Math.max(row.team_points, row.opp_points)}-${Math.min(row.team_points, row.opp_points)}`
                         : "-"}
                     </td>
                     <td className="py-1.5 px-2 text-center text-slate-500 dark:text-slate-400 whitespace-nowrap">
