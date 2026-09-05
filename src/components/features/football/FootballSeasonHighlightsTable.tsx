@@ -3,7 +3,7 @@
 import TableActionButtons from "@/components/common/TableActionButtons";
 import TeamLogo from "@/components/ui/TeamLogo";
 import type { FootballSeasonHighlightGame } from "@/types/football";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const LIMIT_OPTIONS = [10, 20, 50, 100, "All"] as const;
 
@@ -33,6 +33,22 @@ export default function FootballSeasonHighlightsTable({
   const [limit, setLimit] = useState<number | "All">(defaultLimit);
 
   const visibleRows = limit === "All" ? rows : rows.slice(0, limit);
+
+  // Standard competition ranking (1, 1, 3, ...): rows that tie on the
+  // displayed win-probability value share a rank, keyed off the rounded
+  // percentage actually shown so a display tie always reads as a tie.
+  const ranks = useMemo(() => {
+    let rank = 0;
+    let lastKey: number | null | undefined = undefined;
+    return visibleRows.map((row, index) => {
+      const key = row.win_prob != null ? Math.round(row.win_prob * 1000) : null;
+      if (index === 0 || key !== lastKey) {
+        rank = index + 1;
+        lastKey = key;
+      }
+      return rank;
+    });
+  }, [visibleRows]);
 
   return (
     <div className="relative border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)] p-4 md:p-6">
@@ -113,7 +129,7 @@ export default function FootballSeasonHighlightsTable({
                         className="border-b border-slate-100 dark:border-slate-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                       >
                         <td className="py-1.5 pl-3 pr-2 text-slate-500 dark:text-slate-400">
-                          {index + 1}
+                          {ranks[index]}
                         </td>
                         <td className="py-1.5 px-2">
                           <div className="flex items-center gap-2">
