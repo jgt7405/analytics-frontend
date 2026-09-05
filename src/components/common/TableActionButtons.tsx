@@ -210,6 +210,32 @@ export default function TableActionButtons({
       const clone = targetElement.cloneNode(true) as HTMLElement;
       expandExportClone(targetElement as HTMLElement, clone);
 
+      // Point every logo at its full-resolution source instead of the tiny
+      // next/image variant it renders at on screen (~22-24px). html2canvas
+      // rasterizes whatever the <img> is actually showing, so a 24px source
+      // upscaled by the 2x capture scale looks fuzzy - unwrap
+      // /_next/image?url=<original> and drop the srcset so the browser loads
+      // the real PNG.
+      clone.querySelectorAll("img").forEach((img) => {
+        const src = img.getAttribute("src") || "";
+        if (!src.includes("/_next/image")) return;
+        try {
+          const real = new URL(src, window.location.origin).searchParams.get(
+            "url",
+          );
+          if (!real) return;
+          img.setAttribute(
+            "src",
+            real.startsWith("http")
+              ? real
+              : `${window.location.origin}${real}`,
+          );
+          img.removeAttribute("srcset");
+        } catch {
+          /* leave the original src in place */
+        }
+      });
+
       // html2canvas can turn translucent/inset cell effects into large dark
       // blocks. Freeze the live heat-tile colors and typography as explicit
       // solid styles on the export clone so the PNG matches the screen.
@@ -457,9 +483,20 @@ export default function TableActionButtons({
       console.log("ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Screenshot captured");
 
       const captureSize = getFullScreenshotDimensions(wrapper);
+      // Render at the display's own pixel density (min 2x), but keep the
+      // canvas within browser size limits for very large tables.
+      const MAX_CANVAS_PX = 12000;
+      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+      const scale = Math.max(
+        1,
+        Math.min(
+          Math.max(2, dpr),
+          MAX_CANVAS_PX / Math.max(captureSize.width, captureSize.height, 1),
+        ),
+      );
       const canvas = await window.html2canvas(wrapper, {
         backgroundColor: "#ffffff",
-        scale: 2,
+        scale,
         useCORS: true,
         allowTaint: true,
         logging: false,
