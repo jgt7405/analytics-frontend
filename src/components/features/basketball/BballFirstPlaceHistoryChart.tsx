@@ -693,6 +693,7 @@ export default function BballFirstPlaceHistoryChart({
                   }
                   teamName={team.team_name}
                   size={isMobile ? 24 : 28}
+                  noLink
                 />
                 <span
                   className="text-xs font-semibold tabular-nums"
