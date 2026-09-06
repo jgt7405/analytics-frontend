@@ -224,7 +224,7 @@ export default function FootballSeasonInfoContent() {
         <div className="space-y-6">
           <FootballSeasonHighlightsTable
             title="Biggest Upsets"
-            description="Teams that won despite having the lowest win probability in that matchup."
+            description="Wins where team had the lowest win probability for that game."
             probLabel="Win Prob"
             rows={applyFilters(data?.upsets ?? [])}
             exportClassName="season-highlights-upsets"
@@ -233,7 +233,7 @@ export default function FootballSeasonInfoContent() {
 
           <FootballSeasonHighlightsTable
             title="Best Wins"
-            description="Wins over opponents so tough that a #12-rated team would have had a low win probability against them."
+            description="Wins where the #12-rated team would have the lowest win probability if they played in that game."
             probLabel="#12 Win Prob"
             rows={applyFilters(data?.best_wins ?? [])}
             exportClassName="season-highlights-best-wins"
@@ -242,7 +242,7 @@ export default function FootballSeasonInfoContent() {
 
           <FootballSeasonHighlightsTable
             title="Worst Losses"
-            description="Losses to opponents so weak that a #12-rated team would have been heavily favored against them."
+            description="Losses where the #12-rated team would have the highest win probability if they played in that game."
             probLabel="#12 Win Prob"
             rows={applyFilters(data?.worst_losses ?? [])}
             exportClassName="season-highlights-worst-losses"
