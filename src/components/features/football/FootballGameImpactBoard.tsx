@@ -35,7 +35,13 @@ type SortDir = "asc" | "desc";
 type Phase = "idle" | "planning" | "simulating" | "done";
 
 function fmtDate(raw: string): string {
-  const d = new Date(raw);
+  // `raw` is a plain YYYY-MM-DD date with no time component. Parsing it with
+  // `new Date(raw)` treats it as UTC midnight, which `toLocaleDateString`
+  // then renders in the browser's local timezone — shifting it back a day
+  // for anyone west of UTC. Parse the components directly instead.
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+  if (!match) return raw;
+  const d = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
   if (isNaN(d.getTime())) return raw;
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
