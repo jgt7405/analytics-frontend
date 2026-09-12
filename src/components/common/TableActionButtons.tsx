@@ -398,7 +398,7 @@ export default function TableActionButtons({
 
       const confName = selectedConference || "All";
       if (confName && confName !== "All") {
-        const formattedConfName = confName.replace(/ /g, "_");
+        const formattedConfName = confName.replace(/[ -]/g, "_");
         const conferenceLogoUrl = `/images/conf_logos/${formattedConfName}.png`;
 
         const confLogo = document.createElement("img");
