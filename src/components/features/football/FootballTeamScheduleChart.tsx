@@ -117,7 +117,7 @@ export default function FootballTeamScheduleChart({
           {schedule.map((game, index) => (
             <tr
               key={index}
-              className={`border-b dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors ${
+              className={`border-b dark:border-slate-700 ${
                 game.status === "W"
                   ? "border-2 border-green-500 bg-green-50 dark:bg-green-950/40"
                   : game.status === "L"
