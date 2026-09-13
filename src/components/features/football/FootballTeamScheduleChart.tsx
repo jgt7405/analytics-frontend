@@ -21,11 +21,17 @@ interface FootballTeamGame {
 interface FootballTeamScheduleChartProps {
   schedule: FootballTeamGame[];
   navigateToTeam: (teamName: string) => void;
+  /** Archive seasons' football_team_schedule_archive rows still have
+   * team_points/opp_points swapped at the source (frozen snapshot, never
+   * rebuilt) - flip them here for display. The live table was fixed at
+   * the source (2026-09), so current-season games need no flip. */
+  isArchiveSeason?: boolean;
 }
 
 export default function FootballTeamScheduleChart({
   schedule,
   navigateToTeam,
+  isArchiveSeason = false,
 }: FootballTeamScheduleChartProps) {
   const formatDate = (dateStr: string) => {
     if (!dateStr) {
@@ -90,7 +96,7 @@ export default function FootballTeamScheduleChart({
       oppPts === undefined
     )
       return "";
-    return `${oppPts}-${teamPts}`;
+    return isArchiveSeason ? `${oppPts}-${teamPts}` : `${teamPts}-${oppPts}`;
   };
 
   return (

@@ -141,6 +141,7 @@ const SECTIONS: TeamSection<FootballTeamData>[] = [
       <FootballTeamScheduleChart
         schedule={ctx.teamData.schedule}
         navigateToTeam={ctx.navigateToTeam}
+        isArchiveSeason={!!ctx.season}
       />
     ),
   },
