@@ -223,6 +223,12 @@ export async function captureAndSaveElement({
       allowTaint: true,
       backgroundColor: "#ffffff",
       logging: false,
+      // Render text via the browser's own engine (SVG foreignObject) instead
+      // of html2canvas's manual canvas text-drawing path, which resolves
+      // fonts independently and is fragile with next/font's dynamically
+      // injected, hash-named @font-face rules - it can silently fall back
+      // to a generic font, especially on a device without it cached yet.
+      foreignObjectRendering: true,
       width: totalWidth,
       height: captureSize.height,
       windowWidth: totalWidth,
