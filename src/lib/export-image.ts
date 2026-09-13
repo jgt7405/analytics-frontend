@@ -223,12 +223,12 @@ export async function captureAndSaveElement({
       allowTaint: true,
       backgroundColor: "#ffffff",
       logging: false,
-      // Render text via the browser's own engine (SVG foreignObject) instead
-      // of html2canvas's manual canvas text-drawing path, which resolves
-      // fonts independently and is fragile with next/font's dynamically
-      // injected, hash-named @font-face rules - it can silently fall back
-      // to a generic font, especially on a device without it cached yet.
-      foreignObjectRendering: true,
+      // NOTE: foreignObjectRendering was tried here to fix font fidelity
+      // (see optimized-screenshot.ts) but produced a blank/black canvas on
+      // some mobile browsers - a known html2canvas/WebKit incompatibility.
+      // Reverted; the font-matching issue needs a different fix (e.g.
+      // inlining the resolved @font-face as a data URI in the clone) that
+      // doesn't depend on foreignObjectRendering.
       width: totalWidth,
       height: captureSize.height,
       windowWidth: totalWidth,
