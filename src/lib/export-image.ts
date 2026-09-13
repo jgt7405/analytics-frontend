@@ -119,6 +119,17 @@ export async function captureAndSaveElement({
     padding: ${WRAPPER_PADDING}px;
     width: ${totalWidth}px;
   `;
+  // --font-roboto-condensed (src/styles/base/variables.css) ends in the bare
+  // CSS keyword `system-ui`, which browsers expand correctly for real text
+  // layout but html2canvas's manual Canvas 2D text renderer can't resolve
+  // reliably - it silently falls back to the canvas's own default font
+  // instead. Override it here, scoped to just this export subtree, with
+  // system-ui's actual constituent fonts spelled out (same fallback list a
+  // couple of chart components already append for this exact reason).
+  wrapper.style.setProperty(
+    "--font-roboto-condensed",
+    '"Roboto Condensed", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  );
 
   const header = document.createElement("div");
   header.style.cssText = `
