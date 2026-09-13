@@ -156,16 +156,27 @@ export async function captureAndSaveElement({
   document.body.appendChild(wrapper);
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // Wait for the real page fonts to finish loading/parsing - html2canvas
+    // rasterizes whatever's applied at capture time, and a web font that
+    // hasn't finished loading yet (more likely on a device/network that
+    // hasn't cached it from an earlier visit) silently renders as the
+    // browser's fallback font in the export even though the live page looks
+    // correct a moment later once the font arrives.
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
 
     // Inline every logo - HTML <img> and SVG <image> alike - so html2canvas
     // never has to fetch a cross-origin (or same-origin but async) asset
-    // mid-render.
+    // mid-render. Each inlined <img> is then awaited for a real decode
+    // (not a fixed delay) so a slow phone/network can't get raced into
+    // capturing before the data URI has actually finished rendering.
     const htmlImages = Array.from(wrapper.querySelectorAll("img"));
     await Promise.all(
       htmlImages.map(async (img) => {
         try {
           img.src = await toDataUri(img.src);
+          await img.decode().catch(() => {});
         } catch (err) {
           console.warn("Export: could not inline <img>", img.src, err);
         }
@@ -189,6 +200,14 @@ export async function captureAndSaveElement({
             "xlink:href",
             dataUri,
           );
+          // Data URIs decode near-instantly, but wait for the real 'load'
+          // event (bounded) rather than assume it's already painted.
+          await Promise.race([
+            new Promise<void>((resolve) => {
+              el.addEventListener("load", () => resolve(), { once: true });
+            }),
+            new Promise<void>((resolve) => setTimeout(resolve, 150)),
+          ]);
         } catch (err) {
           console.warn("Export: could not inline <image>", src, err);
         }
