@@ -5,6 +5,8 @@ export const metadata: Metadata = {
     index: false,
     follow: true,
   },
+  // Archive pages use self-referential canonical to maintain structure
+  // while noindex prevents duplicate content issues
 };
 
 export default function ArchiveSeasonLayout({
