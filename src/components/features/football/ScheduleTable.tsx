@@ -47,6 +47,8 @@ function getBucketLabel(bucket: WinProbBucket, count: number): string {
 
 interface BucketGame {
   opponent: string;
+  opponentLogo?: string;
+  location: string;
   winProb: number;
   result: "Win" | "Loss" | "Scheduled";
   date: string | null;
@@ -297,15 +299,19 @@ function FootballScheduleTable({
         .filter(({ formattedValue }) => formattedValue !== "" && formattedValue !== "-")
         .map(({ row, formattedValue }) => {
           const isDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(formattedValue);
+          const location =
+            row.Loc.charAt(0).toUpperCase() + row.Loc.slice(1).toLowerCase();
           return {
             opponent: row.Team,
+            opponentLogo: teamLogos[row.Team],
+            location,
             winProb: row.Win_Pct_Raw,
             result: isDate ? "Scheduled" : formattedValue === "W" ? "Win" : "Loss",
             date: isDate ? formatDateForDisplay(formattedValue) : null,
           };
         });
     },
-    [filteredScheduleData, getCellValue, formatCellValue, formatDateForDisplay],
+    [filteredScheduleData, getCellValue, formatCellValue, formatDateForDisplay, teamLogos],
   );
 
   const showBucketTooltip = useCallback(
@@ -704,7 +710,7 @@ function BucketTooltip({
   x: number;
   y: number;
 }) {
-  const tooltipWidth = 240;
+  const tooltipWidth = 260;
   const maxLeft = typeof window !== "undefined" ? window.innerWidth - tooltipWidth - 10 : x;
   const left = Math.max(10, Math.min(maxLeft, x - tooltipWidth / 2));
   const maxHeight =
@@ -744,22 +750,13 @@ function BucketTooltip({
               display: "flex",
               alignItems: "center",
               gap: "6px",
-              color:
-                game.result === "Win"
-                  ? "rgb(34 197 94)"
-                  : game.result === "Loss"
-                    ? "rgb(239 68 68)"
-                    : "rgb(107 114 128)",
             }}
           >
-            <span
-              style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "999px",
-                backgroundColor: "currentColor",
-                flexShrink: 0,
-              }}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={game.opponentLogo || "/images/team_logos/default.png"}
+              alt=""
+              style={{ width: "16px", height: "16px", objectFit: "contain", flexShrink: 0 }}
             />
             <span
               style={{
@@ -773,10 +770,33 @@ function BucketTooltip({
             >
               {formatTeamName(game.opponent)}
             </span>
-            <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+            <span
+              style={{
+                fontWeight: 600,
+                fontSize: "10px",
+                color: "rgb(107 114 128)",
+                flexShrink: 0,
+              }}
+            >
+              {game.location.charAt(0)}
+            </span>
+            <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
               {Math.round(game.winProb * 100)}%
             </span>
-            <span style={{ fontWeight: 600, minWidth: "58px", textAlign: "right" }}>
+            <span
+              style={{
+                fontWeight: 600,
+                minWidth: "58px",
+                textAlign: "right",
+                flexShrink: 0,
+                color:
+                  game.result === "Win"
+                    ? "rgb(34 197 94)"
+                    : game.result === "Loss"
+                      ? "rgb(239 68 68)"
+                      : "rgb(107 114 128)",
+              }}
+            >
               {game.date ? game.date : game.result}
             </span>
           </div>
