@@ -9,6 +9,12 @@
   --summary-header-first-row-height: 2.25rem;
   position: relative;
   overflow: hidden;
+  /* Contains the sticky header/column z-index values (up to 65) inside this
+     card's own stacking context, so they can never out-rank the page's
+     global sticky Header (z-50) when the card scrolls under it - without
+     isolation here, those numbers compare directly against the whole
+     page's stacking order and were winning. */
+  isolation: isolate;
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 1.25rem;
   background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
