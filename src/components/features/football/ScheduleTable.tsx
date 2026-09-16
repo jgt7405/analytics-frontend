@@ -5,7 +5,8 @@ import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
 import { FootballScheduleData } from "@/types/football";
 import { useRouter } from "next/navigation";
-import { memo, ReactNode, useCallback, useMemo } from "react";
+import { memo, MouseEvent, ReactNode, useCallback, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./ScheduleTable.module.css";
 
 interface FootballScheduleSummary {
@@ -42,6 +43,13 @@ function getBucketLabel(bucket: WinProbBucket, count: number): string {
   return bucket.tag
     ? `${bucket.label} (${bucket.tag}; ${count} possible)`
     : `${bucket.label} (${count} possible)`;
+}
+
+interface BucketGame {
+  opponent: string;
+  winProb: number;
+  result: "Win" | "Loss" | "Scheduled";
+  date: string | null;
 }
 
 interface FootballScheduleTableProps {
@@ -269,6 +277,54 @@ function FootballScheduleTable({
     [summary, bucketCounts],
   );
 
+  const [bucketTooltip, setBucketTooltip] = useState<{
+    team: string;
+    bucket: WinProbBucket;
+    games: BucketGame[];
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const getGamesForBucket = useCallback(
+    (team: string, bucketKey: WinProbBucket["key"]): BucketGame[] => {
+      return filteredScheduleData
+        .filter((row) => getWinProbBucketKey(row.Win_Pct_Raw) === bucketKey)
+        .map((row) => {
+          const cellValue = getCellValue(row, team);
+          const formattedValue = formatCellValue(cellValue);
+          return { row, formattedValue };
+        })
+        .filter(({ formattedValue }) => formattedValue !== "" && formattedValue !== "-")
+        .map(({ row, formattedValue }) => {
+          const isDate = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(formattedValue);
+          return {
+            opponent: row.Team,
+            winProb: row.Win_Pct_Raw,
+            result: isDate ? "Scheduled" : formattedValue === "W" ? "Win" : "Loss",
+            date: isDate ? formatDateForDisplay(formattedValue) : null,
+          };
+        });
+    },
+    [filteredScheduleData, getCellValue, formatCellValue, formatDateForDisplay],
+  );
+
+  const showBucketTooltip = useCallback(
+    (e: MouseEvent<HTMLElement>, team: string, bucket: WinProbBucket) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const games = getGamesForBucket(team, bucket.key);
+      setBucketTooltip({
+        team,
+        bucket,
+        games,
+        x: rect.left + rect.width / 2,
+        y: rect.bottom + 6,
+      });
+    },
+    [getGamesForBucket],
+  );
+
+  const hideBucketTooltip = useCallback(() => setBucketTooltip(null), []);
+
   if (
     !filteredScheduleData ||
     filteredScheduleData.length === 0 ||
@@ -456,8 +512,14 @@ function FootballScheduleTable({
                             className={styles.summaryValue}
                           >
                             <div
-                              className={styles.summaryChip}
+                              className={cn(styles.summaryChip, bucketValue > 0 && styles.summaryChipHoverable)}
                               style={getSummaryColor(bucketValue, "bucket")}
+                              onMouseEnter={
+                                bucketValue > 0
+                                  ? (e) => showBucketTooltip(e, team, bucket)
+                                  : undefined
+                              }
+                              onMouseLeave={bucketValue > 0 ? hideBucketTooltip : undefined}
                             >
                               {bucketValue}
                             </div>
@@ -590,8 +652,14 @@ function FootballScheduleTable({
                           return (
                             <td key={`${team}-${bucket.key}-summary`} className={styles.statCell}>
                               <div
-                                className={styles.summaryChip}
+                                className={cn(styles.summaryChip, bucketValue > 0 && styles.summaryChipHoverable)}
                                 style={getSummaryColor(bucketValue, "bucket")}
+                                onMouseEnter={
+                                  bucketValue > 0
+                                    ? (e) => showBucketTooltip(e, team, bucket)
+                                    : undefined
+                                }
+                                onMouseLeave={bucketValue > 0 ? hideBucketTooltip : undefined}
                               >
                                 {bucketValue}
                               </div>
@@ -606,7 +674,115 @@ function FootballScheduleTable({
           </div>
         </section>
       )}
+
+      {bucketTooltip &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <BucketTooltip
+            team={bucketTooltip.team}
+            bucket={bucketTooltip.bucket}
+            games={bucketTooltip.games}
+            x={bucketTooltip.x}
+            y={bucketTooltip.y}
+          />,
+          document.body,
+        )}
     </>
+  );
+}
+
+function BucketTooltip({
+  team,
+  bucket,
+  games,
+  x,
+  y,
+}: {
+  team: string;
+  bucket: WinProbBucket;
+  games: BucketGame[];
+  x: number;
+  y: number;
+}) {
+  const tooltipWidth = 240;
+  const maxLeft = typeof window !== "undefined" ? window.innerWidth - tooltipWidth - 10 : x;
+  const left = Math.max(10, Math.min(maxLeft, x - tooltipWidth / 2));
+  const maxHeight =
+    typeof window !== "undefined" ? window.innerHeight - y - 20 : undefined;
+
+  return (
+    <div
+      className="fixed bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg z-50"
+      style={{
+        left,
+        top: y,
+        width: tooltipWidth,
+        maxHeight,
+        overflowY: "auto",
+        padding: "8px 10px",
+        fontSize: "12px",
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        style={{
+          fontWeight: 600,
+          fontSize: "12px",
+          marginBottom: "4px",
+          paddingBottom: "4px",
+          borderBottom: "1px solid rgb(226 232 240 / 0.5)",
+          color: "currentColor",
+        }}
+      >
+        {formatTeamName(team)} · {bucket.label} Win Prob
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+        {games.map((game, i) => (
+          <div
+            key={`${game.opponent}-${i}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              color:
+                game.result === "Win"
+                  ? "rgb(34 197 94)"
+                  : game.result === "Loss"
+                    ? "rgb(239 68 68)"
+                    : "rgb(107 114 128)",
+            }}
+          >
+            <span
+              style={{
+                width: "6px",
+                height: "6px",
+                borderRadius: "999px",
+                backgroundColor: "currentColor",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                minWidth: 0,
+                flex: 1,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                color: "rgb(75 85 99)",
+              }}
+            >
+              {formatTeamName(game.opponent)}
+            </span>
+            <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+              {Math.round(game.winProb * 100)}%
+            </span>
+            <span style={{ fontWeight: 600, minWidth: "58px", textAlign: "right" }}>
+              {game.date ? game.date : game.result}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

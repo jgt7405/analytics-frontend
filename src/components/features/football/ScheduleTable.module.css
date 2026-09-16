@@ -446,6 +446,15 @@
   background: #e2e8f0;
 }
 
+.summaryChipHoverable {
+  cursor: pointer;
+}
+
+.summaryChipHoverable:hover {
+  outline: 2px solid rgb(14 116 144 / 0.6);
+  outline-offset: -1px;
+}
+
 /* Summary table body cells (Expected Wins / Total Games / quartiles). */
 .statCell {
   width: var(--summary-stat-col-width) !important;
