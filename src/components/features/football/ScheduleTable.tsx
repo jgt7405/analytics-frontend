@@ -710,7 +710,7 @@ function BucketTooltip({
   x: number;
   y: number;
 }) {
-  const tooltipWidth = 260;
+  const tooltipWidth = 280;
   const maxLeft = typeof window !== "undefined" ? window.innerWidth - tooltipWidth - 10 : x;
   const left = Math.max(10, Math.min(maxLeft, x - tooltipWidth / 2));
   const maxHeight =
@@ -776,9 +776,11 @@ function BucketTooltip({
                 fontSize: "10px",
                 color: "rgb(107 114 128)",
                 flexShrink: 0,
+                minWidth: "38px",
+                textAlign: "center",
               }}
             >
-              {game.location.charAt(0)}
+              {game.location}
             </span>
             <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
               {Math.round(game.winProb * 100)}%
