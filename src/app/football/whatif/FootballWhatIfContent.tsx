@@ -760,13 +760,15 @@ export default function FootballWhatIfContent() {
               ) : currentTableData.length === 0 ? (
                 <WhatIfTableSkeleton rows={8} />
               ) : (
-                <FootballConfChampProb
-                  currentData={currentTableData}
-                  whatIfData={whatIfTableData}
-                  hasWhatIf={whatIfResults.length > 0}
-                  hasCalculated={whatIfResults.length > 0}
-                  isScreenshotMode={isScreenshotMode}
-                />
+                <div data-component="whatif-conf-champ-chart">
+                  <FootballConfChampProb
+                    currentData={currentTableData}
+                    whatIfData={whatIfTableData}
+                    hasWhatIf={whatIfResults.length > 0}
+                    hasCalculated={whatIfResults.length > 0}
+                    isScreenshotMode={isScreenshotMode}
+                  />
+                </div>
               )}
 
               {/* CFP Probability Table */}
@@ -786,20 +788,25 @@ export default function FootballWhatIfContent() {
                   {isLoadingData ? (
                     <WhatIfTableSkeleton rows={10} />
                   ) : (
-                    <FootballCFPProb
-                      currentData={currentCFPTableData}
-                      whatIfData={whatIfCFPTableData}
-                      hasWhatIf={whatIfResults.length > 0}
-                      hasCalculated={whatIfResults.length > 0}
-                      isScreenshotMode={isScreenshotMode}
-                    />
+                    <div data-component="whatif-cfp-chart">
+                      <FootballCFPProb
+                        currentData={currentCFPTableData}
+                        whatIfData={whatIfCFPTableData}
+                        hasWhatIf={whatIfResults.length > 0}
+                        hasCalculated={whatIfResults.length > 0}
+                        isScreenshotMode={isScreenshotMode}
+                      />
+                    </div>
                   )}
                 </div>
               )}
 
               {/* Game Selection Summary */}
               {selectedGamesWithDetails.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <div
+                  data-component="whatif-selected-games"
+                  className="mt-4 pt-4 border-t border-gray-200"
+                >
                   <p className="text-sm text-gray-700 dark:text-gray-200 mb-3 font-semibold">
                     {selectedGamesWithDetails.length}{" "}
                     {selectedGamesWithDetails.length === 1
@@ -992,6 +999,37 @@ export default function FootballWhatIfContent() {
             label: "What If Results",
             selector: "[data-component='whatif-results']",
           },
+          ...(selectedConference !== "Independent" &&
+          currentTableData.length > 0
+            ? [
+                {
+                  id: "whatif-conf-champ-chart",
+                  label: "Conference Championship Chart",
+                  selector:
+                    selectedGamesWithDetails.length > 0
+                      ? [
+                          "[data-component='whatif-conf-champ-chart']",
+                          "[data-component='whatif-selected-games']",
+                        ]
+                      : "[data-component='whatif-conf-champ-chart']",
+                },
+              ]
+            : []),
+          ...(currentCFPTableData.length > 0
+            ? [
+                {
+                  id: "whatif-cfp-chart",
+                  label: "CFP Chart",
+                  selector:
+                    selectedGamesWithDetails.length > 0
+                      ? [
+                          "[data-component='whatif-cfp-chart']",
+                          "[data-component='whatif-selected-games']",
+                        ]
+                      : "[data-component='whatif-cfp-chart']",
+                },
+              ]
+            : []),
         ]}
         teamLogoUrl={
           conferenceData?.data?.find(

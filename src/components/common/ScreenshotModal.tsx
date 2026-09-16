@@ -12,7 +12,11 @@ import { useState } from "react";
 interface ScreenshotOption {
   id: string;
   label: string;
-  selector: string;
+  // A single selector captures one element. An array captures multiple
+  // elements and stacks them into one combined image, in array order -
+  // e.g. a specific chart plus a shared "selected games" summary that
+  // isn't already inside that chart's own DOM subtree.
+  selector: string | string[];
 }
 
 interface ScreenshotModalProps {
@@ -84,8 +88,189 @@ export default function ScreenshotModal({
     });
   };
 
-  const handleScreenshot = async (selector: string, label: string) => {
-    console.log("Screenshot started for selector:", selector);
+  // Processes one source element into an export-ready clone: inlines every
+  // <img>/<svg><image> as base64 (html2canvas can't reliably rasterize
+  // cross-origin/Next.js-optimized image URLs otherwise), snapshots
+  // <canvas> bitmaps, hides each component's own title/logo (the combined
+  // wrapper adds its own header instead), and un-stickies/un-scrolls
+  // tables so nothing gets cropped in the static export.
+  const buildProcessedClone = async (
+    targetElement: Element,
+  ): Promise<{ clone: HTMLElement; width: number }> => {
+    // Extract all Next.js image URLs and convert to base64
+    const images = targetElement.querySelectorAll("img");
+    const imageMap = new Map<HTMLImageElement, string>();
+
+    console.log("Converting images to base64...");
+    for (const img of Array.from(images)) {
+      const imgEl = img as HTMLImageElement;
+      let originalUrl = imgEl.src;
+
+      if (originalUrl.includes("/_next/image")) {
+        try {
+          const url = new URL(originalUrl);
+          const path = url.searchParams.get("url");
+          if (path) {
+            originalUrl = path.startsWith("http")
+              ? path
+              : `${window.location.origin}${path}`;
+          }
+        } catch (e) {
+          console.error("URL parse error:", e);
+        }
+      }
+
+      try {
+        const base64 = await imageToBase64(originalUrl);
+        imageMap.set(imgEl, base64);
+      } catch (e) {
+        console.error("Base64 conversion failed for:", originalUrl, e);
+      }
+    }
+
+    // Extract SVG image elements and convert to base64
+    const svgImages = targetElement.querySelectorAll("svg image");
+    const svgImageMap = new Map<SVGImageElement, string>();
+
+    console.log("Converting SVG images to base64...");
+    for (const svgImg of Array.from(svgImages)) {
+      const svgImgEl = svgImg as SVGImageElement;
+      let originalUrl =
+        svgImgEl.getAttribute("href") ||
+        svgImgEl.getAttribute("xlink:href") ||
+        "";
+
+      if (originalUrl && !originalUrl.includes("data:")) {
+        if (originalUrl.includes("/_next/image")) {
+          try {
+            const url = new URL(originalUrl);
+            const path = url.searchParams.get("url");
+            if (path) {
+              originalUrl = path.startsWith("http")
+                ? path
+                : `${window.location.origin}${path}`;
+            }
+          } catch (e) {
+            console.error("URL parse error:", e);
+          }
+        }
+
+        try {
+          const base64 = await imageToBase64(originalUrl);
+          svgImageMap.set(svgImgEl, base64);
+        } catch (e) {
+          console.error(
+            "Base64 conversion failed for SVG image:",
+            originalUrl,
+            e,
+          );
+        }
+      }
+    }
+
+    console.log("Images converted, creating clone...");
+
+    // Use intrinsic and scroll dimensions so off-screen rows/columns are part
+    // of the export instead of inheriting the current viewport crop.
+    const width = getFullContentWidth(targetElement);
+
+    // Clone and replace images with base64
+    const clone = targetElement.cloneNode(true) as HTMLElement;
+    expandExportClone(targetElement as HTMLElement, clone);
+
+    // Handle every canvas in composite chart components.
+    const originalCanvases = targetElement.querySelectorAll("canvas");
+    const clonedCanvases = clone.querySelectorAll("canvas");
+    originalCanvases.forEach((originalCanvas, index) => {
+      console.log("Cloning canvas...");
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = originalCanvas.width;
+      tempCanvas.height = originalCanvas.height;
+      tempCanvas.style.width = `${originalCanvas.getBoundingClientRect().width}px`;
+      tempCanvas.style.height = `${originalCanvas.getBoundingClientRect().height}px`;
+      const ctx = tempCanvas.getContext("2d");
+      if (ctx) ctx.drawImage(originalCanvas, 0, 0);
+      const clonedCanvas = clonedCanvases[index];
+      if (clonedCanvas?.parentNode)
+        clonedCanvas.parentNode.replaceChild(tempCanvas, clonedCanvas);
+    });
+
+    // Replace cloned images with base64
+    const clonedImages = clone.querySelectorAll("img");
+    const originalImagesArray = Array.from(images);
+    clonedImages.forEach((clonedImg, index) => {
+      const originalImg = originalImagesArray[index] as HTMLImageElement;
+      const base64 = imageMap.get(originalImg);
+      if (base64) {
+        (clonedImg as HTMLImageElement).src = base64;
+      }
+    });
+
+    // Replace cloned SVG images with base64
+    const clonedSvgImages = clone.querySelectorAll("svg image");
+    const originalSvgImagesArray = Array.from(svgImages);
+    clonedSvgImages.forEach((clonedSvgImg, index) => {
+      const originalSvgImg = originalSvgImagesArray[index] as SVGImageElement;
+      const base64 = svgImageMap.get(originalSvgImg);
+      if (base64) {
+        clonedSvgImg.setAttribute("href", base64);
+      }
+    });
+
+    // Hide the component's internal title and logo
+    const componentTitle = clone.querySelector("h2");
+    if (componentTitle) {
+      componentTitle.style.display = "none";
+    }
+
+    const componentLogos = clone.querySelectorAll(".absolute img");
+    componentLogos.forEach((logo) => {
+      (logo as HTMLElement).style.display = "none";
+    });
+
+    // HANDLE SCROLLABLE TABLES: Remove overflow and sticky positioning
+    // Find and remove overflow from scrollable containers
+    const scrollableContainer = clone.querySelector('[style*="overflow"]');
+    if (scrollableContainer) {
+      (scrollableContainer as HTMLElement).style.overflow = "visible";
+      (scrollableContainer as HTMLElement).style.overflowX = "visible";
+    }
+
+    // Remove sticky positioning from all elements (this prevents layout issues)
+    const stickyElements = clone.querySelectorAll('[style*="sticky"]');
+    stickyElements.forEach((element) => {
+      (element as HTMLElement).style.position = "relative";
+    });
+
+    // Also remove sticky from table cells
+    const clonedTable = clone.querySelector("table");
+    if (clonedTable) {
+      // Remove sticky from all th and td elements
+      const stickyCells = clonedTable.querySelectorAll(
+        'th[style*="sticky"], td[style*="sticky"]',
+      );
+      stickyCells.forEach((cell) => {
+        (cell as HTMLElement).style.position = "relative";
+      });
+
+      // Ensure parent containers don't hide content
+      let parent = clonedTable.parentElement;
+      while (parent && parent !== clone) {
+        (parent as HTMLElement).style.overflow = "visible";
+        (parent as HTMLElement).style.overflowX = "visible";
+        parent = parent.parentElement;
+      }
+    }
+
+    return { clone, width };
+  };
+
+  const handleScreenshot = async (
+    selector: string | string[],
+    label: string,
+  ) => {
+    const selectors = Array.isArray(selector) ? selector : [selector];
+    console.log("Screenshot started for selector(s):", selectors);
 
     setIsCapturing(true);
 
@@ -108,177 +293,22 @@ export default function ScreenshotModal({
     console.log("html2canvas is loaded");
 
     try {
-      console.log("Looking for element:", selector);
-      const targetElement = document.querySelector(selector);
-      console.log("Element found:", targetElement);
-
-      if (!targetElement) throw new Error("Element not found");
-
-      // Extract all Next.js image URLs and convert to base64
-      const images = targetElement.querySelectorAll("img");
-      const imageMap = new Map<HTMLImageElement, string>();
-
-      console.log("Converting images to base64...");
-      for (const img of Array.from(images)) {
-        const imgEl = img as HTMLImageElement;
-        let originalUrl = imgEl.src;
-
-        if (originalUrl.includes("/_next/image")) {
-          try {
-            const url = new URL(originalUrl);
-            const path = url.searchParams.get("url");
-            if (path) {
-              originalUrl = path.startsWith("http")
-                ? path
-                : `${window.location.origin}${path}`;
-            }
-          } catch (e) {
-            console.error("URL parse error:", e);
-          }
-        }
-
-        try {
-          const base64 = await imageToBase64(originalUrl);
-          imageMap.set(imgEl, base64);
-        } catch (e) {
-          console.error("Base64 conversion failed for:", originalUrl, e);
-        }
+      console.log("Looking for elements:", selectors);
+      const targetElements = selectors.map((sel) => document.querySelector(sel));
+      const missing = selectors.filter((_, i) => !targetElements[i]);
+      if (missing.length > 0) {
+        throw new Error(`Element(s) not found: ${missing.join(", ")}`);
       }
+      console.log("Elements found:", targetElements);
 
-      // Extract SVG image elements and convert to base64
-      const svgImages = targetElement.querySelectorAll("svg image");
-      const svgImageMap = new Map<SVGImageElement, string>();
+      const processed = await Promise.all(
+        targetElements.map((el) => buildProcessedClone(el as Element)),
+      );
 
-      console.log("Converting SVG images to base64...");
-      for (const svgImg of Array.from(svgImages)) {
-        const svgImgEl = svgImg as SVGImageElement;
-        let originalUrl =
-          svgImgEl.getAttribute("href") ||
-          svgImgEl.getAttribute("xlink:href") ||
-          "";
-
-        if (originalUrl && !originalUrl.includes("data:")) {
-          if (originalUrl.includes("/_next/image")) {
-            try {
-              const url = new URL(originalUrl);
-              const path = url.searchParams.get("url");
-              if (path) {
-                originalUrl = path.startsWith("http")
-                  ? path
-                  : `${window.location.origin}${path}`;
-              }
-            } catch (e) {
-              console.error("URL parse error:", e);
-            }
-          }
-
-          try {
-            const base64 = await imageToBase64(originalUrl);
-            svgImageMap.set(svgImgEl, base64);
-          } catch (e) {
-            console.error(
-              "Base64 conversion failed for SVG image:",
-              originalUrl,
-              e,
-            );
-          }
-        }
-      }
-
-      console.log("Images converted, creating clone...");
-
-      // Use intrinsic and scroll dimensions so off-screen rows/columns are part
-      // of the export instead of inheriting the current viewport crop.
+      // Use intrinsic and scroll dimensions so off-screen rows/columns are
+      // part of the export instead of inheriting the current viewport crop.
       const actualWidth =
-        Math.max(getFullContentWidth(targetElement), 660) + 100;
-
-      // Clone and replace images with base64
-      const clone = targetElement.cloneNode(true) as HTMLElement;
-      expandExportClone(targetElement as HTMLElement, clone);
-
-      // Handle every canvas in composite chart components.
-      const originalCanvases = targetElement.querySelectorAll("canvas");
-      const clonedCanvases = clone.querySelectorAll("canvas");
-      originalCanvases.forEach((originalCanvas, index) => {
-        console.log("Cloning canvas...");
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = originalCanvas.width;
-        tempCanvas.height = originalCanvas.height;
-        tempCanvas.style.width = `${originalCanvas.getBoundingClientRect().width}px`;
-        tempCanvas.style.height = `${originalCanvas.getBoundingClientRect().height}px`;
-        const ctx = tempCanvas.getContext("2d");
-        if (ctx) ctx.drawImage(originalCanvas, 0, 0);
-        const clonedCanvas = clonedCanvases[index];
-        if (clonedCanvas?.parentNode)
-          clonedCanvas.parentNode.replaceChild(tempCanvas, clonedCanvas);
-      });
-
-      // Replace cloned images with base64
-      const clonedImages = clone.querySelectorAll("img");
-      const originalImagesArray = Array.from(images);
-      clonedImages.forEach((clonedImg, index) => {
-        const originalImg = originalImagesArray[index] as HTMLImageElement;
-        const base64 = imageMap.get(originalImg);
-        if (base64) {
-          (clonedImg as HTMLImageElement).src = base64;
-        }
-      });
-
-      // Replace cloned SVG images with base64
-      const clonedSvgImages = clone.querySelectorAll("svg image");
-      const originalSvgImagesArray = Array.from(svgImages);
-      clonedSvgImages.forEach((clonedSvgImg, index) => {
-        const originalSvgImg = originalSvgImagesArray[index] as SVGImageElement;
-        const base64 = svgImageMap.get(originalSvgImg);
-        if (base64) {
-          clonedSvgImg.setAttribute("href", base64);
-        }
-      });
-
-      // Hide the component's internal title and logo
-      const componentTitle = clone.querySelector("h2");
-      if (componentTitle) {
-        componentTitle.style.display = "none";
-      }
-
-      const componentLogos = clone.querySelectorAll(".absolute img");
-      componentLogos.forEach((logo) => {
-        (logo as HTMLElement).style.display = "none";
-      });
-
-      // HANDLE SCROLLABLE TABLES: Remove overflow and sticky positioning
-      // Find and remove overflow from scrollable containers
-      const scrollableContainer = clone.querySelector('[style*="overflow"]');
-      if (scrollableContainer) {
-        (scrollableContainer as HTMLElement).style.overflow = "visible";
-        (scrollableContainer as HTMLElement).style.overflowX = "visible";
-      }
-
-      // Remove sticky positioning from all elements (this prevents layout issues)
-      const stickyElements = clone.querySelectorAll('[style*="sticky"]');
-      stickyElements.forEach((element) => {
-        (element as HTMLElement).style.position = "relative";
-      });
-
-      // Also remove sticky from table cells
-      const clonedTable = clone.querySelector("table");
-      if (clonedTable) {
-        // Remove sticky from all th and td elements
-        const stickyCells = clonedTable.querySelectorAll(
-          'th[style*="sticky"], td[style*="sticky"]',
-        );
-        stickyCells.forEach((cell) => {
-          (cell as HTMLElement).style.position = "relative";
-        });
-
-        // Ensure parent containers don't hide content
-        let parent = clonedTable.parentElement;
-        while (parent && parent !== clone) {
-          (parent as HTMLElement).style.overflow = "visible";
-          (parent as HTMLElement).style.overflowX = "visible";
-          parent = parent.parentElement;
-        }
-      }
+        Math.max(...processed.map((p) => p.width), 660) + 100;
 
       console.log("Creating wrapper...");
       // Create wrapper
@@ -327,8 +357,11 @@ export default function ScreenshotModal({
       header.appendChild(infoSection);
       wrapper.appendChild(header);
 
-      clone.style.cssText = `width: ${contentWidth}px !important; overflow: visible !important; display: block !important;`;
-      wrapper.appendChild(clone);
+      processed.forEach(({ clone }, index) => {
+        const marginBottom = index < processed.length - 1 ? "24px" : "0";
+        clone.style.cssText = `width: ${contentWidth}px !important; overflow: visible !important; display: block !important; margin-bottom: ${marginBottom} !important;`;
+        wrapper.appendChild(clone);
+      });
 
       document.body.appendChild(wrapper);
       await new Promise((resolve) => setTimeout(resolve, 500));
