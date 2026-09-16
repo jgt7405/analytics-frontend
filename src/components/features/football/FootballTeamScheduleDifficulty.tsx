@@ -917,15 +917,15 @@ export default function FootballTeamScheduleDifficulty({
             Easiest
           </text>
         </svg>
-
-        {hoveredGame && (
-          <Tooltip
-            game={hoveredGame}
-            position={tooltipPosition}
-            onClose={() => setHoveredGame(null)}
-          />
-        )}
       </div>
+
+      {hoveredGame && (
+        <Tooltip
+          game={hoveredGame}
+          position={tooltipPosition}
+          onClose={() => setHoveredGame(null)}
+        />
+      )}
 
       <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
         {/* Stats summary grid */}
