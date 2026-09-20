@@ -92,10 +92,10 @@ function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
 
     // Sort each by TWV descending
     const sortedF4o = f4o.sort(
-      (a, b) => b.team.post_conf_tourney_twv - a.team.post_conf_tourney_twv
+      (a, b) => b.team.post_conf_tourney_twv_50 - a.team.post_conf_tourney_twv_50
     );
     const sortedN4o = n4o.sort(
-      (a, b) => b.team.post_conf_tourney_twv - a.team.post_conf_tourney_twv
+      (a, b) => b.team.post_conf_tourney_twv_50 - a.team.post_conf_tourney_twv_50
     );
 
     return [...sortedF4o, ...sortedN4o];
@@ -336,7 +336,7 @@ function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
               if (seedA !== seedB) {
                 return seedA - seedB;
               }
-              return b.post_conf_tourney_twv - a.post_conf_tourney_twv;
+              return b.post_conf_tourney_twv_50 - a.post_conf_tourney_twv_50;
             });
 
             return (

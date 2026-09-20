@@ -36,11 +36,11 @@ interface TeamGameData {
   opponent_primary_color?: string;
   location: string;
   status: string;
-  twv?: number;
+  twv_50?: number;
   cwv?: number;
   kenpom_rank?: number;
   team_win_prob?: number;
-  kenpom_win_prob?: number;
+  rk50_win_prob?: number;
   team_points?: number;
   opp_points?: number;
   team_conf?: string;
@@ -74,7 +74,7 @@ interface TeamInfo {
 interface AllScheduleGame {
   team: string;
   opponent: string;
-  kenpom_win_prob: number;
+  rk50_win_prob: number;
   team_conf: string;
   team_conf_catg?: string;
   status: string;
@@ -414,12 +414,12 @@ function buildTeamNarrative(
   const locW = locCompleted.filter((g) => g.status === "W").length;
   const locL = locCompleted.filter((g) => g.status === "L").length;
 
-  // Rank this game by difficulty within location games using kenpom_win_prob
+  // Rank this game by difficulty within location games using rk50_win_prob
   const withProb = locGames
     .filter(
-      (g) => g.kenpom_win_prob !== undefined && g.kenpom_win_prob !== null,
+      (g) => g.rk50_win_prob !== undefined && g.rk50_win_prob !== null,
     )
-    .sort((a, b) => (a.kenpom_win_prob ?? 1) - (b.kenpom_win_prob ?? 1));
+    .sort((a, b) => (a.rk50_win_prob ?? 1) - (b.rk50_win_prob ?? 1));
 
   const gameIdx = withProb.findIndex((g) => g.opponent === opponentName);
 
@@ -434,9 +434,9 @@ function buildTeamNarrative(
   if (gameIdx >= 0 && withProb.length > 0) {
     const rank = gameIdx + 1;
     const total = withProb.length;
-    const gameProb = Math.round((withProb[gameIdx].kenpom_win_prob ?? 0) * 100);
+    const gameProb = Math.round((withProb[gameIdx].rk50_win_prob ?? 0) * 100);
     parts.push(
-      `This is the ${ordinal(rank)} most difficult ${locLabel} game of ${total} for ${teamName} (with ${gameProb}% win probability for the 30th rated team).`,
+      `This is the ${ordinal(rank)} most difficult ${locLabel} game of ${total} for ${teamName} (with ${gameProb}% win probability for the 50th rated team).`,
     );
 
     // Record in harder games
@@ -768,7 +768,7 @@ function buildWinValuesNarrative(
     );
     if (completed.length === 0) return `${team}: No completed games yet.`;
 
-    const latestTwv = completed[completed.length - 1].twv ?? null;
+    const latestTwv = completed[completed.length - 1].twv_50 ?? null;
     const confGames = completed.filter(
       (g) => g.cwv !== undefined && g.cwv !== null,
     );
@@ -788,9 +788,9 @@ function buildWinValuesNarrative(
       else if (latestTwv >= 1.5)
         twvDesc = `TWV is strong at ${twvSign}${latestTwv.toFixed(1)}`;
       else if (latestTwv >= 0.5)
-        twvDesc = `TWV is a little above what would be expected by the 30th rated team, at ${twvSign}${latestTwv.toFixed(1)}`;
+        twvDesc = `TWV is a little above what would be expected by the 50th rated team, at ${twvSign}${latestTwv.toFixed(1)}`;
       else if (latestTwv > -0.5)
-        twvDesc = `TWV is roughly in line with what the 30th rated team would expect, at ${twvSign}${latestTwv.toFixed(1)}`;
+        twvDesc = `TWV is roughly in line with what the 50th rated team would expect, at ${twvSign}${latestTwv.toFixed(1)}`;
       else if (latestTwv > -1.5)
         twvDesc = `TWV is a bit below expectations at ${latestTwv.toFixed(1)}`;
       else
@@ -798,8 +798,8 @@ function buildWinValuesNarrative(
 
       // Find TWV peak and trough for trend
       const twvValues = completed
-        .filter((g) => g.twv !== undefined && g.twv !== null)
-        .map((g) => g.twv!);
+        .filter((g) => g.twv_50 !== undefined && g.twv_50 !== null)
+        .map((g) => g.twv_50!);
       if (twvValues.length > 3) {
         const maxTwv = Math.max(...twvValues);
         const minTwv = Math.min(...twvValues);
@@ -866,12 +866,12 @@ function buildScheduleDifficultyNarrative(
 
     const actualWinPct = Math.round((wins.length / totalGames) * 100);
 
-    // Expected wins based on kenpom_win_prob (30th rated team) over ALL completed games
+    // Expected wins based on rk50_win_prob (50th rated team) over ALL completed games
     const withProb = completed.filter(
-      (g) => g.kenpom_win_prob !== undefined && g.kenpom_win_prob !== null,
+      (g) => g.rk50_win_prob !== undefined && g.rk50_win_prob !== null,
     );
     const expectedWins = withProb.reduce(
-      (sum, g) => sum + (g.kenpom_win_prob ?? 0),
+      (sum, g) => sum + (g.rk50_win_prob ?? 0),
       0,
     );
     const expectedWinPct =
@@ -887,44 +887,44 @@ function buildScheduleDifficultyNarrative(
 
     if (expectedWinPct !== null) {
       parts.push(
-        `The 30th rated team would have expected ${expectedWins.toFixed(1)} wins for a ${expectedWinPct}% win percent — putting their TWV at ${twv >= 0 ? "+" : ""}${twv.toFixed(1)}.`,
+        `The 50th rated team would have expected ${expectedWins.toFixed(1)} wins for a ${expectedWinPct}% win percent — putting their TWV at ${twv >= 0 ? "+" : ""}${twv.toFixed(1)}.`,
       );
     }
 
-    // Top wins — use kenpom_win_prob (30th rated team win probability)
+    // Top wins — use rk50_win_prob (50th rated team win probability)
     const qualityWins = wins
       .filter(
         (g) =>
           g.kenpom_rank &&
           g.kenpom_rank !== 999 &&
-          g.kenpom_win_prob !== undefined,
+          g.rk50_win_prob !== undefined,
       )
-      .sort((a, b) => (a.kenpom_win_prob ?? 1) - (b.kenpom_win_prob ?? 1));
+      .sort((a, b) => (a.rk50_win_prob ?? 1) - (b.rk50_win_prob ?? 1));
     if (qualityWins.length > 0) {
       const topWins = qualityWins.slice(0, 3).map((g, i) => {
         const prob =
-          g.kenpom_win_prob !== undefined
-            ? Math.round((g.kenpom_win_prob ?? 0) * 100)
+          g.rk50_win_prob !== undefined
+            ? Math.round((g.rk50_win_prob ?? 0) * 100)
             : null;
-        return `${g.opponent}${prob !== null ? ` (${prob}%${i === 0 ? " win probability for 30th rated team" : " probability"})` : ""}`;
+        return `${g.opponent}${prob !== null ? ` (${prob}%${i === 0 ? " win probability for 50th rated team" : " probability"})` : ""}`;
       });
       parts.push(`Top wins include ${joinWithAnd(topWins)}.`);
     }
 
-    // Worst losses — use kenpom_win_prob
+    // Worst losses — use rk50_win_prob
     const badLosses = losses
       .filter(
         (g) =>
           g.kenpom_rank &&
           g.kenpom_rank !== 999 &&
-          g.kenpom_win_prob !== undefined,
+          g.rk50_win_prob !== undefined,
       )
-      .sort((a, b) => (b.kenpom_win_prob ?? 0) - (a.kenpom_win_prob ?? 0));
+      .sort((a, b) => (b.rk50_win_prob ?? 0) - (a.rk50_win_prob ?? 0));
     if (badLosses.length > 0) {
       const worstLosses = badLosses.slice(0, 3).map((g) => {
         const prob =
-          g.kenpom_win_prob !== undefined
-            ? Math.round((g.kenpom_win_prob ?? 0) * 100)
+          g.rk50_win_prob !== undefined
+            ? Math.round((g.rk50_win_prob ?? 0) * 100)
             : null;
         return `${g.opponent}${prob !== null ? ` (${prob}% probability)` : ""}`;
       });

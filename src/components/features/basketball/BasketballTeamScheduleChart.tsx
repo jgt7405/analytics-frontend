@@ -11,12 +11,12 @@ interface BasketballTeamGame {
   opponent_logo?: string;
   location: string;
   status: string;
-  twv?: number;
+  twv_50?: number;
   cwv?: number;
   kenpom_rank?: number;
   opp_kp_rank?: number;
   team_win_prob?: number;
-  kenpom_win_prob?: number;
+  rk50_win_prob?: number;
   team_points?: number;
   opp_points?: number;
 }
@@ -217,7 +217,7 @@ export default function BasketballTeamScheduleChart({
                   {formatProbability(game.team_win_prob)}
                 </td>
                 <td className="text-center p-2">
-                  {formatProbability(game.kenpom_win_prob)}
+                  {formatProbability(game.rk50_win_prob)}
                 </td>
                 <td className="text-center p-2">
                   {isNextGame && !scoreContent && nextGamePreview ? (

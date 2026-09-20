@@ -20,7 +20,7 @@ interface TeamGame {
   opponent_logo?: string;
   location: string;
   status: string;
-  twv?: number;
+  twv_50?: number;
   cwv?: number;
   kenpom_rank?: number;
 }
@@ -40,7 +40,7 @@ interface GameWithDate extends TeamGame {
 interface ContinuousDataPoint {
   date: string;
   dateObj: Date;
-  twv: number;
+  twv_50: number;
   cwv: number;
 }
 
@@ -92,7 +92,7 @@ export default function TeamWinValues({
 
     const validGames = schedule.filter(
       (game): game is TeamGame =>
-        Boolean(game.date) && (game.twv !== undefined || game.cwv !== undefined)
+        Boolean(game.date) && (game.twv_50 !== undefined || game.cwv !== undefined)
     );
 
     if (validGames.length === 0)
@@ -142,10 +142,10 @@ export default function TeamWinValues({
 
       if (gameOnPreviousDate) {
         if (
-          gameOnPreviousDate.twv !== undefined &&
-          gameOnPreviousDate.twv !== null
+          gameOnPreviousDate.twv_50 !== undefined &&
+          gameOnPreviousDate.twv_50 !== null
         ) {
-          lastTWV = gameOnPreviousDate.twv;
+          lastTWV = gameOnPreviousDate.twv_50;
         }
         if (
           gameOnPreviousDate.cwv !== undefined &&
@@ -158,13 +158,13 @@ export default function TeamWinValues({
       return {
         date: formatDate(`${date.getMonth() + 1}/${date.getDate()}`),
         dateObj: date,
-        twv: lastTWV,
+        twv_50: lastTWV,
         cwv: lastCWV,
       };
     });
 
     const labels = continuousData.map((point) => point.date);
-    const twvData = continuousData.map((point) => point.twv);
+    const twvData = continuousData.map((point) => point.twv_50);
     const cwvData = continuousData.map((point) => point.cwv);
 
     return { continuousData, labels, twvData, cwvData };

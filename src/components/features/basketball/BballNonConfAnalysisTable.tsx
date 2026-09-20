@@ -13,13 +13,13 @@ interface Team {
   logo_url?: string;
   power_record: string;
   power_win_pct: number;
-  power_twv: number;
+  power_twv_50: number;
   nonpower_record: string;
   nonpower_win_pct: number;
-  nonpower_twv: number;
+  nonpower_twv_50: number;
   total_record: string;
   total_win_pct: number;
-  total_twv: number;
+  total_twv_50: number;
 }
 
 interface Conference {
@@ -30,13 +30,13 @@ interface Conference {
   teams: Team[];
   power_record: string;
   power_win_pct: number;
-  power_twv: number;
+  power_twv_50: number;
   nonpower_record: string;
   nonpower_win_pct: number;
-  nonpower_twv: number;
+  nonpower_twv_50: number;
   total_record: string;
   total_win_pct: number;
-  total_twv: number;
+  total_twv_50: number;
 }
 
 interface NonconfResponse {
@@ -56,15 +56,15 @@ type SortField =
   | "power_record"
   | "power_win_pct"
   | "power_exp_win_pct"
-  | "power_twv"
+  | "power_twv_50"
   | "nonpower_record"
   | "nonpower_win_pct"
   | "nonpower_exp_win_pct"
-  | "nonpower_twv"
+  | "nonpower_twv_50"
   | "total_record"
   | "total_win_pct"
   | "total_exp_win_pct"
-  | "total_twv";
+  | "total_twv_50";
 type SortOrder = "asc" | "desc";
 type ColumnType = "power" | "nonpower" | "total";
 
@@ -76,7 +76,7 @@ function BballNonConfAnalysisTable({
   const [expandedConferences, setExpandedConferences] = useState<Set<string>>(
     new Set()
   );
-  const [sortField, setSortField] = useState<SortField>("total_twv");
+  const [sortField, setSortField] = useState<SortField>("total_twv_50");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const tableData = useMemo(() => {
@@ -148,9 +148,9 @@ function BballNonConfAnalysisTable({
     // Conference-level values (averaged by team count)
     tableData.forEach((conf: Conference) => {
       const teamCount = conf.teams?.length || 1;
-      const powerTwvAvg = conf.power_twv / teamCount;
-      const nonpowerTwvAvg = conf.nonpower_twv / teamCount;
-      const totalTwvAvg = conf.total_twv / teamCount;
+      const powerTwvAvg = conf.power_twv_50 / teamCount;
+      const nonpowerTwvAvg = conf.nonpower_twv_50 / teamCount;
+      const totalTwvAvg = conf.total_twv_50 / teamCount;
 
       powerConfMinTwv = Math.min(powerConfMinTwv, powerTwvAvg);
       powerConfMaxTwv = Math.max(powerConfMaxTwv, powerTwvAvg);
@@ -169,12 +169,12 @@ function BballNonConfAnalysisTable({
       // Team-level values
       if (conf.teams) {
         conf.teams.forEach((team: Team) => {
-          powerTeamMinTwv = Math.min(powerTeamMinTwv, team.power_twv);
-          powerTeamMaxTwv = Math.max(powerTeamMaxTwv, team.power_twv);
-          nonpowerTeamMinTwv = Math.min(nonpowerTeamMinTwv, team.nonpower_twv);
-          nonpowerTeamMaxTwv = Math.max(nonpowerTeamMaxTwv, team.nonpower_twv);
-          totalTeamMinTwv = Math.min(totalTeamMinTwv, team.total_twv);
-          totalTeamMaxTwv = Math.max(totalTeamMaxTwv, team.total_twv);
+          powerTeamMinTwv = Math.min(powerTeamMinTwv, team.power_twv_50);
+          powerTeamMaxTwv = Math.max(powerTeamMaxTwv, team.power_twv_50);
+          nonpowerTeamMinTwv = Math.min(nonpowerTeamMinTwv, team.nonpower_twv_50);
+          nonpowerTeamMaxTwv = Math.max(nonpowerTeamMaxTwv, team.nonpower_twv_50);
+          totalTeamMinTwv = Math.min(totalTeamMinTwv, team.total_twv_50);
+          totalTeamMaxTwv = Math.max(totalTeamMaxTwv, team.total_twv_50);
 
           powerTeamMinWp = Math.min(powerTeamMinWp, team.power_win_pct);
           powerTeamMaxWp = Math.max(powerTeamMaxWp, team.power_win_pct);
@@ -431,25 +431,25 @@ function BballNonConfAnalysisTable({
       case "power_win_pct":
         return conf.power_win_pct;
       case "power_exp_win_pct":
-        return calculateExpectedWinPct(conf.power_record, conf.power_twv);
-      case "power_twv":
-        return conf.power_twv / (conf.teams?.length || 1);
+        return calculateExpectedWinPct(conf.power_record, conf.power_twv_50);
+      case "power_twv_50":
+        return conf.power_twv_50 / (conf.teams?.length || 1);
       case "nonpower_record":
         return parseRecord(conf.nonpower_record);
       case "nonpower_win_pct":
         return conf.nonpower_win_pct;
       case "nonpower_exp_win_pct":
-        return calculateExpectedWinPct(conf.nonpower_record, conf.nonpower_twv);
-      case "nonpower_twv":
-        return conf.nonpower_twv / (conf.teams?.length || 1);
+        return calculateExpectedWinPct(conf.nonpower_record, conf.nonpower_twv_50);
+      case "nonpower_twv_50":
+        return conf.nonpower_twv_50 / (conf.teams?.length || 1);
       case "total_record":
         return parseRecord(conf.total_record);
       case "total_win_pct":
         return conf.total_win_pct;
       case "total_exp_win_pct":
-        return calculateExpectedWinPct(conf.total_record, conf.total_twv);
-      case "total_twv":
-        return conf.total_twv / (conf.teams?.length || 1);
+        return calculateExpectedWinPct(conf.total_record, conf.total_twv_50);
+      case "total_twv_50":
+        return conf.total_twv_50 / (conf.teams?.length || 1);
       default:
         return 0;
     }
@@ -464,25 +464,25 @@ function BballNonConfAnalysisTable({
       case "power_win_pct":
         return team.power_win_pct;
       case "power_exp_win_pct":
-        return calculateExpectedWinPct(team.power_record, team.power_twv);
-      case "power_twv":
-        return team.power_twv;
+        return calculateExpectedWinPct(team.power_record, team.power_twv_50);
+      case "power_twv_50":
+        return team.power_twv_50;
       case "nonpower_record":
         return parseRecord(team.nonpower_record);
       case "nonpower_win_pct":
         return team.nonpower_win_pct;
       case "nonpower_exp_win_pct":
-        return calculateExpectedWinPct(team.nonpower_record, team.nonpower_twv);
-      case "nonpower_twv":
-        return team.nonpower_twv;
+        return calculateExpectedWinPct(team.nonpower_record, team.nonpower_twv_50);
+      case "nonpower_twv_50":
+        return team.nonpower_twv_50;
       case "total_record":
         return parseRecord(team.total_record);
       case "total_win_pct":
         return team.total_win_pct;
       case "total_exp_win_pct":
-        return calculateExpectedWinPct(team.total_record, team.total_twv);
-      case "total_twv":
-        return team.total_twv;
+        return calculateExpectedWinPct(team.total_record, team.total_twv_50);
+      case "total_twv_50":
+        return team.total_twv_50;
       default:
         return 0;
     }
@@ -793,9 +793,9 @@ function BballNonConfAnalysisTable({
                   padding: "2px",
                   cursor: "pointer",
                 }}
-                onClick={() => handleSort("power_twv")}
+                onClick={() => handleSort("power_twv_50")}
               >
-                TWV{getSortIndicator("power_twv")}
+                TWV{getSortIndicator("power_twv_50")}
               </th>
               <th
                 key="nonpower-record-2"
@@ -901,9 +901,9 @@ function BballNonConfAnalysisTable({
                   padding: "2px",
                   cursor: "pointer",
                 }}
-                onClick={() => handleSort("nonpower_twv")}
+                onClick={() => handleSort("nonpower_twv_50")}
               >
-                TWV{getSortIndicator("nonpower_twv")}
+                TWV{getSortIndicator("nonpower_twv_50")}
               </th>
               <th
                 key="total-record-2"
@@ -1009,9 +1009,9 @@ function BballNonConfAnalysisTable({
                   padding: "2px",
                   cursor: "pointer",
                 }}
-                onClick={() => handleSort("total_twv")}
+                onClick={() => handleSort("total_twv_50")}
               >
-                TWV{getSortIndicator("total_twv")}
+                TWV{getSortIndicator("total_twv_50")}
               </th>
             </tr>
           </thead>
@@ -1162,7 +1162,7 @@ function BballNonConfAnalysisTable({
                     }}
                   >
                     {Math.round(
-                      calculateExpectedWinPct(row.power_record, row.power_twv)
+                      calculateExpectedWinPct(row.power_record, row.power_twv_50)
                     )}
                     %
                   </td>
@@ -1178,17 +1178,17 @@ function BballNonConfAnalysisTable({
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
                       ...getTWVColor(
-                        row.power_twv / (row.teams?.length || 1),
+                        row.power_twv_50 / (row.teams?.length || 1),
                         false,
                         "power"
                       ),
                     }}
                   >
                     {(() => {
-                      const value = row.power_twv / (row.teams?.length || 1);
+                      const value = row.power_twv_50 / (row.teams?.length || 1);
                       console.log("Power Conf TWV Debug:", {
                         conference: row.team_conf,
-                        rawValue: row.power_twv,
+                        rawValue: row.power_twv_50,
                         teamCount: row.teams?.length || 1,
                         averagedValue: value,
                         minTWV: minMaxValues.powerConfMinTWV,
@@ -1196,8 +1196,8 @@ function BballNonConfAnalysisTable({
                       });
                       return null;
                     })()}
-                    {row.power_twv / (row.teams?.length || 1) > 0 ? "+" : ""}
-                    {(row.power_twv / (row.teams?.length || 1)).toFixed(2)}
+                    {row.power_twv_50 / (row.teams?.length || 1) > 0 ? "+" : ""}
+                    {(row.power_twv_50 / (row.teams?.length || 1)).toFixed(2)}
                   </td>
                   {/* NONPOWER SECTION */}
                   <td
@@ -1254,7 +1254,7 @@ function BballNonConfAnalysisTable({
                     {Math.round(
                       calculateExpectedWinPct(
                         row.nonpower_record,
-                        row.nonpower_twv
+                        row.nonpower_twv_50
                       )
                     )}
                     %
@@ -1271,14 +1271,14 @@ function BballNonConfAnalysisTable({
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
                       ...getTWVColor(
-                        row.nonpower_twv / (row.teams?.length || 1),
+                        row.nonpower_twv_50 / (row.teams?.length || 1),
                         false,
                         "nonpower"
                       ),
                     }}
                   >
-                    {row.nonpower_twv / (row.teams?.length || 1) > 0 ? "+" : ""}
-                    {(row.nonpower_twv / (row.teams?.length || 1)).toFixed(2)}
+                    {row.nonpower_twv_50 / (row.teams?.length || 1) > 0 ? "+" : ""}
+                    {(row.nonpower_twv_50 / (row.teams?.length || 1)).toFixed(2)}
                   </td>
 
                   {/* TOTAL SECTION */}
@@ -1330,7 +1330,7 @@ function BballNonConfAnalysisTable({
                     }}
                   >
                     {Math.round(
-                      calculateExpectedWinPct(row.total_record, row.total_twv)
+                      calculateExpectedWinPct(row.total_record, row.total_twv_50)
                     )}
                     %
                   </td>
@@ -1346,14 +1346,14 @@ function BballNonConfAnalysisTable({
                       fontSize: isMobile ? "0.7rem" : "0.8rem",
                       verticalAlign: "middle",
                       ...getTWVColor(
-                        row.total_twv / (row.teams?.length || 1),
+                        row.total_twv_50 / (row.teams?.length || 1),
                         false,
                         "total"
                       ),
                     }}
                   >
-                    {row.total_twv / (row.teams?.length || 1) > 0 ? "+" : ""}
-                    {(row.total_twv / (row.teams?.length || 1)).toFixed(2)}
+                    {row.total_twv_50 / (row.teams?.length || 1) > 0 ? "+" : ""}
+                    {(row.total_twv_50 / (row.teams?.length || 1)).toFixed(2)}
                   </td>
                 </tr>,
 
@@ -1482,7 +1482,7 @@ function BballNonConfAnalysisTable({
                           {Math.round(
                             calculateExpectedWinPct(
                               team.power_record,
-                              team.power_twv
+                              team.power_twv_50
                             )
                           )}
                           %
@@ -1498,11 +1498,11 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getTWVColor(team.power_twv, true, "power"),
+                            ...getTWVColor(team.power_twv_50, true, "power"),
                           }}
                         >
-                          {team.power_twv > 0 ? "+" : ""}
-                          {team.power_twv.toFixed(2)}
+                          {team.power_twv_50 > 0 ? "+" : ""}
+                          {team.power_twv_50.toFixed(2)}
                         </td>
                         {/* NONPOWER */}
                         <td
@@ -1560,7 +1560,7 @@ function BballNonConfAnalysisTable({
                           {Math.round(
                             calculateExpectedWinPct(
                               team.nonpower_record,
-                              team.nonpower_twv
+                              team.nonpower_twv_50
                             )
                           )}
                           %
@@ -1576,11 +1576,11 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getTWVColor(team.nonpower_twv, true, "nonpower"),
+                            ...getTWVColor(team.nonpower_twv_50, true, "nonpower"),
                           }}
                         >
-                          {team.nonpower_twv > 0 ? "+" : ""}
-                          {team.nonpower_twv.toFixed(2)}
+                          {team.nonpower_twv_50 > 0 ? "+" : ""}
+                          {team.nonpower_twv_50.toFixed(2)}
                         </td>
 
                         {/* TOTAL */}
@@ -1639,7 +1639,7 @@ function BballNonConfAnalysisTable({
                           {Math.round(
                             calculateExpectedWinPct(
                               team.total_record,
-                              team.total_twv
+                              team.total_twv_50
                             )
                           )}
                           %
@@ -1655,11 +1655,11 @@ function BballNonConfAnalysisTable({
                             textAlign: "center",
                             fontSize: isMobile ? "0.65rem" : "0.75rem",
                             verticalAlign: "middle",
-                            ...getTWVColor(team.total_twv, true, "total"),
+                            ...getTWVColor(team.total_twv_50, true, "total"),
                           }}
                         >
-                          {team.total_twv > 0 ? "+" : ""}
-                          {team.total_twv.toFixed(2)}
+                          {team.total_twv_50 > 0 ? "+" : ""}
+                          {team.total_twv_50.toFixed(2)}
                         </td>
                       </tr>
                     ))

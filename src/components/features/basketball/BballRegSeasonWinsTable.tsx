@@ -35,7 +35,7 @@ function BballRegSeasonWinsTable({
   const sortedTeams = useMemo(
     () =>
       [...standings].sort(
-        (a, b) => (b.reg_season_twv ?? 0) - (a.reg_season_twv ?? 0),
+        (a, b) => (b.reg_season_twv_50 ?? 0) - (a.reg_season_twv_50 ?? 0),
       ),
     [standings],
   );
@@ -213,11 +213,11 @@ function BballRegSeasonWinsTable({
               </th>
               {sortedTeams.map((team) => (
                 <td
-                  key={`${team.team_name}-kp40`}
+                  key={`${team.team_name}-rk50`}
                   className={styles.summaryValue}
                 >
                   <div className={styles.summaryChip}>
-                    {(team.avg_kp40_reg_season_wins ?? 0).toFixed(1)}
+                    {(team.avg_rk50_reg_season_wins ?? 0).toFixed(1)}
                   </div>
                 </td>
               ))}
@@ -235,7 +235,7 @@ function BballRegSeasonWinsTable({
                   className={styles.summaryValue}
                 >
                   <div className={styles.summaryChip}>
-                    {(team.reg_season_twv ?? 0).toFixed(1)}
+                    {(team.reg_season_twv_50 ?? 0).toFixed(1)}
                   </div>
                 </td>
               ))}

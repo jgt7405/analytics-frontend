@@ -12,7 +12,7 @@ interface TWVTeam {
   team_name: string;
   team_id?: string;
   logo_url: string;
-  twv: number;
+  twv_50: number;
   actual_record: string;
   expected_record: string;
 }
@@ -95,7 +95,7 @@ function TWVTable({
   const rankedTwvData = useMemo(() => {
     if (!twvData || twvData.length === 0) return [];
     return [...twvData].sort(
-      (a, b) => b.twv - a.twv || a.team_name.localeCompare(b.team_name),
+      (a, b) => b.twv_50 - a.twv_50 || a.team_name.localeCompare(b.team_name),
     );
   }, [twvData]);
 
@@ -117,7 +117,7 @@ function TWVTable({
   };
 
   const { minTWV, maxTWV } = useMemo(() => {
-    const twvValues = rankedTwvData.map((team) => team.twv);
+    const twvValues = rankedTwvData.map((team) => team.twv_50);
     return {
       minTWV: Math.min(...twvValues, -1),
       maxTWV: Math.max(...twvValues, 1),
@@ -249,9 +249,9 @@ function TWVTable({
                 <td className={styles.twvCell} data-screenshot-tile="true">
                   <div
                     className={styles.twvChip}
-                    style={getTWVColor(team.twv, minTWV, maxTWV)}
+                    style={getTWVColor(team.twv_50, minTWV, maxTWV)}
                   >
-                    {team.twv > 0 ? `+${team.twv.toFixed(1)}` : team.twv.toFixed(1)}
+                    {team.twv_50 > 0 ? `+${team.twv_50.toFixed(1)}` : team.twv_50.toFixed(1)}
                   </div>
                 </td>
 

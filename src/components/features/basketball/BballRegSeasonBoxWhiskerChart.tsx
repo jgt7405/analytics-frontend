@@ -56,7 +56,7 @@ export default function BballRegSeasonBoxWhiskerChart({
   const sortedTeams = useMemo(
     () =>
       [...standings].sort(
-        (a, b) => (b.reg_season_twv || 0) - (a.reg_season_twv || 0),
+        (a, b) => (b.reg_season_twv_50 || 0) - (a.reg_season_twv_50 || 0),
       ),
     [standings],
   );
@@ -284,10 +284,10 @@ export default function BballRegSeasonBoxWhiskerChart({
                 const median = team.wins_reg_50 || 0;
                 const q3 = team.wins_reg_75 || 0;
                 const top = team.wins_reg_95 || 0;
-                // Estimated wins for the 30th-rated team - basketball's
+                // Estimated wins for the 50th-rated team (rk50) - basketball's
                 // equivalent of football's "12th rated team" (avg_sag12_...)
                 // reference point.
-                const kp40Point = team.avg_kp40_reg_season_wins || 0;
+                const rk50Point = team.avg_rk50_reg_season_wins || 0;
 
                 const primaryColor = team.primary_color || "#1e40af";
                 const rawSecondaryColor = team.secondary_color || "#64748b";
@@ -298,7 +298,7 @@ export default function BballRegSeasonBoxWhiskerChart({
                 const bottomPos = scale(bottom);
                 const q1Pos = scale(q1);
                 const q3Pos = scale(q3);
-                const kp40Pos = scale(kp40Point);
+                const rk50Pos = scale(rk50Point);
 
                 // A white secondary color reads fine sitting on the tinted
                 // fill in the middle of the box, but disappears (or looks
@@ -394,16 +394,16 @@ export default function BballRegSeasonBoxWhiskerChart({
                     {/* KP40 point - X marker, colored by position relative to the box */}
                     <div
                       className={cn(
-                        styles.kp40Marker,
+                        styles.rk50Marker,
                         "absolute flex items-center justify-center",
                       )}
                       style={{
-                        top: kp40Pos - 6,
+                        top: rk50Pos - 6,
                         left: (boxWidth - 12) / 2,
                         width: 12,
                         height: 12,
                         color: adjustColorIfWhite(
-                          kp40Pos >= q3Pos && kp40Pos <= q1Pos
+                          rk50Pos >= q3Pos && rk50Pos <= q1Pos
                             ? rawSecondaryColor
                             : primaryColor,
                         ),
@@ -507,7 +507,7 @@ export default function BballRegSeasonBoxWhiskerChart({
           <div className={styles.tooltipRow}>
             <span>Est #30 wins</span>
             <strong>
-              {(hoveredTeam.avg_kp40_reg_season_wins ?? 0).toFixed(1)}
+              {(hoveredTeam.avg_rk50_reg_season_wins ?? 0).toFixed(1)}
             </strong>
           </div>
         </div>

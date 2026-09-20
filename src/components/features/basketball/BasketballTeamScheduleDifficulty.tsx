@@ -20,14 +20,14 @@ interface BasketballTeamGame {
   opponent_primary_color?: string;
   location: string;
   status: string;
-  kenpom_win_prob?: number;
+  rk50_win_prob?: number;
   team_conf?: string;
 }
 
 interface AllScheduleGame {
   team: string;
   opponent: string;
-  kenpom_win_prob: number;
+  rk50_win_prob: number;
   team_conf: string;
   team_conf_catg?: string;
   status: string;
@@ -117,7 +117,7 @@ export default function BasketballTeamScheduleDifficulty({
     if (!allScheduleData) return [];
 
     return schedule.filter((game) => {
-      if (!game.kenpom_win_prob) return false;
+      if (!game.rk50_win_prob) return false;
 
       // Filter by location
       if (locationFilter !== "all") {
@@ -145,8 +145,8 @@ export default function BasketballTeamScheduleDifficulty({
 
   // Split team games into two groups
   const { lowProbGames, highProbGames } = useMemo(() => {
-    const low = teamGames.filter((g) => (g.kenpom_win_prob || 0) <= THRESHOLD);
-    const high = teamGames.filter((g) => (g.kenpom_win_prob || 0) > THRESHOLD);
+    const low = teamGames.filter((g) => (g.rk50_win_prob || 0) <= THRESHOLD);
+    const high = teamGames.filter((g) => (g.rk50_win_prob || 0) > THRESHOLD);
     return { lowProbGames: low, highProbGames: high };
   }, [teamGames]);
 
@@ -158,7 +158,7 @@ export default function BasketballTeamScheduleDifficulty({
 
     const filtered = allScheduleData.filter((game: AllScheduleGame) => {
       // Only include games <= 95%
-      if ((game.kenpom_win_prob || 0) > THRESHOLD) return false;
+      if ((game.rk50_win_prob || 0) > THRESHOLD) return false;
 
       switch (gameFilter) {
         case "completed":
@@ -217,7 +217,7 @@ export default function BasketballTeamScheduleDifficulty({
   // Calculate percentiles for low probability games only
   const percentiles = useMemo(() => {
     const kenpomProbs = comparisonDataset
-      .map((game: AllScheduleGame) => game.kenpom_win_prob)
+      .map((game: AllScheduleGame) => game.rk50_win_prob)
       .sort((a: number, b: number) => a - b);
 
     if (kenpomProbs.length === 0) return [];
@@ -244,7 +244,7 @@ export default function BasketballTeamScheduleDifficulty({
     if (percentiles.length === 0) return [];
 
     return lowProbGames.map((game, index) => {
-      const kenpomProb = game.kenpom_win_prob!;
+      const kenpomProb = game.rk50_win_prob!;
       let percentilePosition = 100;
 
       for (let i = 0; i < percentiles.length; i++) {
@@ -381,7 +381,7 @@ export default function BasketballTeamScheduleDifficulty({
     if (isRemainingOnly) {
       // For remaining games: show 0-0 record, expected wins from remaining games, TWV = 0
       const expectedWinsLow = lowProbGames.reduce(
-        (sum, g) => sum + (g.kenpom_win_prob || 0),
+        (sum, g) => sum + (g.rk50_win_prob || 0),
         0,
       );
       const totalGamesLow = lowProbGames.length;
@@ -389,7 +389,7 @@ export default function BasketballTeamScheduleDifficulty({
 
       // Include high prob games in totals
       const expectedWinsHigh = highProbGames.reduce(
-        (sum, g) => sum + (g.kenpom_win_prob || 0),
+        (sum, g) => sum + (g.rk50_win_prob || 0),
         0,
       );
       const totalGamesHigh = highProbGames.length;
@@ -408,7 +408,7 @@ export default function BasketballTeamScheduleDifficulty({
         expectedWins: totalExpectedWins,
         expectedLosses: totalExpectedLosses,
         forecastWinPct,
-        twv: 0,
+        twv_50: 0,
         actualWinPct: 0,
         highProbWins: highProbRecord.wins,
         highProbLosses: highProbRecord.losses,
@@ -421,7 +421,7 @@ export default function BasketballTeamScheduleDifficulty({
 
       // Expected wins: sum of all win probabilities (both low and high prob)
       const expectedWins = completedGames.reduce(
-        (sum, g) => sum + (g.kenpom_win_prob || 0),
+        (sum, g) => sum + (g.rk50_win_prob || 0),
         0,
       );
       const expectedLosses = completedGames.length - expectedWins;
@@ -433,7 +433,7 @@ export default function BasketballTeamScheduleDifficulty({
           : 0;
 
       // True Win Value
-      const twv = wins - expectedWins;
+      const twv_50 = wins - expectedWins;
 
       // Actual win %
       const actualWinPct =
@@ -445,7 +445,7 @@ export default function BasketballTeamScheduleDifficulty({
         expectedWins,
         expectedLosses,
         forecastWinPct,
-        twv,
+        twv_50,
         actualWinPct,
         highProbWins: highProbRecord.wins,
         highProbLosses: highProbRecord.losses,
@@ -809,9 +809,9 @@ export default function BasketballTeamScheduleDifficulty({
         {hoveredGame &&
           (() => {
             const allGamesInFilter = comparisonDataset
-              .map((g) => g.kenpom_win_prob)
+              .map((g) => g.rk50_win_prob)
               .sort((a, b) => a - b);
-            const gameProb = hoveredGame.kenpom_win_prob || 0;
+            const gameProb = hoveredGame.rk50_win_prob || 0;
             const position = allGamesInFilter.findIndex(
               (prob) => prob >= gameProb,
             );
@@ -861,7 +861,7 @@ export default function BasketballTeamScheduleDifficulty({
                 <div style={{ lineHeight: "1.6", textAlign: "left" }}>
                   <div>Location: {hoveredGame.location}</div>
                   <div>
-                    {((hoveredGame.kenpom_win_prob || 0) * 100).toFixed(0)}% Win
+                    {((hoveredGame.rk50_win_prob || 0) * 100).toFixed(0)}% Win
                     Probability for 50th Rated Team
                   </div>
                   <div>
@@ -915,15 +915,15 @@ export default function BasketballTeamScheduleDifficulty({
               <div
                 style={{
                   color:
-                    teamStats.twv > 0
+                    teamStats.twv_50 > 0
                       ? "#10b981"
-                      : teamStats.twv < 0
+                      : teamStats.twv_50 < 0
                         ? "#ef4444"
                         : "#6b7280",
                 }}
               >
-                {teamStats.twv > 0 ? "+" : ""}
-                {teamStats.twv.toFixed(1)}
+                {teamStats.twv_50 > 0 ? "+" : ""}
+                {teamStats.twv_50.toFixed(1)}
               </div>
             </div>
           </div>

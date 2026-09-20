@@ -23,7 +23,7 @@ interface TWVApiResponse {
     team_name: string;
     team_id: string;
     logo_url: string;
-    twv: number;
+    twv_50: number;
     actual_record: string;
     expected_record: string;
     rank: number;

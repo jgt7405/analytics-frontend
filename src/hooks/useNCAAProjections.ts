@@ -9,7 +9,7 @@ export interface NCAATeam {
   seed?: string;
   standing?: number;
   category?: string;
-  post_conf_tourney_twv: number;
+  post_conf_tourney_twv_50: number;
   kenpom_rank?: number;
   netrtg?: number;
   logo_url: string;

@@ -87,7 +87,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
         return seedA - seedB;
       }
 
-      return b.post_conf_tourney_twv - a.post_conf_tourney_twv;
+      return b.post_conf_tourney_twv_50 - a.post_conf_tourney_twv_50;
     });
 
     // Sort First 4 Out by TWV descending
@@ -97,7 +97,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
         category: "First 4 Out",
         seed: "Out",
       }))
-      .sort((a, b) => b.post_conf_tourney_twv - a.post_conf_tourney_twv);
+      .sort((a, b) => b.post_conf_tourney_twv_50 - a.post_conf_tourney_twv_50);
 
     // Sort Next 4 Out by TWV descending
     const sortedNext4Out = [...nextFourOut]
@@ -106,7 +106,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
         category: "Next 4 Out",
         seed: "Out",
       }))
-      .sort((a, b) => b.post_conf_tourney_twv - a.post_conf_tourney_twv);
+      .sort((a, b) => b.post_conf_tourney_twv_50 - a.post_conf_tourney_twv_50);
 
     // Return tournament, then First 4 Out, then Next 4 Out
     return [...sortedTournament, ...sortedFirst4Out, ...sortedNext4Out];
@@ -264,7 +264,7 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
 
                     <td>
                       <span className={styles.statValue}>
-                        {team.post_conf_tourney_twv.toFixed(2)}
+                        {team.post_conf_tourney_twv_50.toFixed(2)}
                       </span>
                     </td>
                   </tr>

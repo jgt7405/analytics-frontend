@@ -62,8 +62,8 @@ export interface Standing {
   // Regular season wins fields
   reg_wins_distribution?: { [key: string]: number };
   avg_reg_season_wins?: number;
-  avg_kp40_reg_season_wins?: number;
-  reg_season_twv?: number;
+  avg_rk50_reg_season_wins?: number;
+  reg_season_twv_50?: number;
   wins_reg_05?: number;
   wins_reg_25?: number;
   wins_reg_50?: number;
@@ -315,7 +315,7 @@ export interface TWVTeam {
   team_name: string;
   team_id: string;
   logo_url: string;
-  twv: number;
+  twv_50: number;
   actual_record: string;
   expected_record: string;
   rank: number;
@@ -354,7 +354,7 @@ export interface TeamGame {
   opponent_logo?: string;
   location: string;
   status: string;
-  twv?: number;
+  twv_50?: number;
   cwv?: number;
   kenpom_rank?: number;
   team_points?: number;

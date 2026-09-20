@@ -132,7 +132,7 @@ export const getBasketballConfDataServer = async (
     ),
   ]);
   if (!conf || !nonconf) return undefined;
-  nonconf.data?.sort((a: any, b: any) => b.total_twv - a.total_twv);
+  nonconf.data?.sort((a: any, b: any) => b.total_twv_50 - a.total_twv_50);
   return { conferenceData: conf, nonconfData: nonconf };
 };
 

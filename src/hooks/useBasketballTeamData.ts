@@ -30,12 +30,12 @@ interface TeamGame {
   opponent_logo?: string;
   location: string;
   status: string;
-  twv?: number;
+  twv_50?: number;
   cwv?: number;
   kenpom_rank?: number;
   opp_kp_rank?: number;
   team_win_prob?: number;
-  kenpom_win_prob?: number;
+  rk50_win_prob?: number;
   team_points?: number;
   opp_points?: number;
 }
@@ -43,7 +43,7 @@ interface TeamGame {
 interface AllScheduleGame {
   team: string;
   opponent: string;
-  kenpom_win_prob: number;
+  rk50_win_prob: number;
   team_conf: string;
   status: string;
 }

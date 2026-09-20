@@ -198,7 +198,7 @@ interface BasketballTeamGame {
   opponent_primary_color?: string;
   location: string;
   status: string;
-  kenpom_win_prob?: number;
+  rk50_win_prob?: number;
   team_conf?: string;
 }
 
@@ -206,7 +206,7 @@ interface AllScheduleGame {
   team: string;
   opponent: string;
   opponent_primary_color?: string;
-  kenpom_win_prob: number;
+  rk50_win_prob: number;
   team_conf: string;
   team_conf_catg?: string;
   status: string;
@@ -391,7 +391,7 @@ export default function ArchiveBasketballComparePage({
         opponent: game.opponent,
         opponentLogo: game.opponent_logo,
         opponentColor: game.opponent_primary_color || "#9ca3af",
-        winProb: game.kenpom_win_prob || 0.5,
+        winProb: game.rk50_win_prob || 0.5,
         status: game.status,
         location: game.location,
       })),
@@ -399,7 +399,7 @@ export default function ArchiveBasketballComparePage({
         team: game.team,
         opponent: game.opponent,
         opponentColor: game.opponent_primary_color || "#9ca3af",
-        winProb: game.kenpom_win_prob,
+        winProb: game.rk50_win_prob,
         teamConference: game.team_conf,
         teamConfCategory: game.team_conf_catg,
         status: game.status,

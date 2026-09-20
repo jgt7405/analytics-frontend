@@ -9,7 +9,7 @@ interface BasketballTeamGame {
   opponent_primary_color?: string;
   location: string;
   status: string;
-  kenpom_win_prob?: number;
+  rk50_win_prob?: number;
   team_win_prob?: number;
   team_conf?: string;
 }

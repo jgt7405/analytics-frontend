@@ -95,7 +95,7 @@ interface TeamStats {
   expectedWins: number;
   expectedLosses: number;
   forecastWinPct: number;
-  twv: number;
+  twv_50: number;
   actualWinPct: number;
   highProbWins: number;
   highProbLosses: number;
@@ -370,7 +370,7 @@ export default function BasketballCompareSchedulesChart({
           expectedWins: totalExpectedWins,
           expectedLosses: totalExpectedLosses,
           forecastWinPct,
-          twv: 0,
+          twv_50: 0,
           actualWinPct: 0,
           highProbWins: 0,
           highProbLosses: 0,
@@ -426,7 +426,7 @@ export default function BasketballCompareSchedulesChart({
           totalGames > 0 ? (expectedWins / totalGames) * 100 : 0;
 
         // TWV: actual wins - expected wins
-        const twv = wins - expectedWins;
+        const twv_50 = wins - expectedWins;
 
         // Act Win %: actual wins / total games
         const actualWinPct = totalGames > 0 ? (wins / totalGames) * 100 : 0;
@@ -437,7 +437,7 @@ export default function BasketballCompareSchedulesChart({
           expectedWins,
           expectedLosses,
           forecastWinPct,
-          twv,
+          twv_50,
           actualWinPct,
           highProbWins: winsHigh,
           highProbLosses: lossesHigh,
@@ -798,9 +798,9 @@ export default function BasketballCompareSchedulesChart({
           y={TOP_SECTION_HEIGHT + 123}
           textAnchor="middle"
           className={`text-xs font-medium ${
-            stats.twv > 0
+            stats.twv_50 > 0
               ? "fill-green-600 dark:fill-green-400"
-              : stats.twv < 0
+              : stats.twv_50 < 0
                 ? "fill-red-600 dark:fill-red-400"
                 : "fill-gray-600 dark:fill-gray-400"
           }`}
@@ -811,8 +811,8 @@ export default function BasketballCompareSchedulesChart({
               '"Roboto Condensed", system-ui, -apple-system, sans-serif',
           }}
         >
-          {stats.twv > 0 ? "+" : ""}
-          {stats.twv.toFixed(1)}
+          {stats.twv_50 > 0 ? "+" : ""}
+          {stats.twv_50.toFixed(1)}
         </text>
 
         {/* Labels for records - NEW ORDER: Record, #30 Fcst, Act Win %, #30 Fcst %, TWV */}
