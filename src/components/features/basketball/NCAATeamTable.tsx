@@ -5,10 +5,10 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
-import tableStyles from "@/styles/components/tables.module.css";
 import { NCAATeam } from "@/types/basketball";
 import { useRouter } from "next/navigation";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, ReactNode, useEffect, useMemo, useState } from "react";
+import styles from "./NCAATeamTable.module.css";
 
 interface NCAATeamTableProps {
   ncaaData: NCAATeam[];
@@ -16,6 +16,8 @@ interface NCAATeamTableProps {
   showAllTeams?: boolean;
   hasActualBracket?: boolean;
   season?: string;
+  /** Optional element (e.g. conference selector) rendered on the right of the title row. */
+  headerRight?: ReactNode;
 }
 
 type RoundKey =
@@ -27,12 +29,37 @@ type RoundKey =
   | "NCAA_Championship"
   | "NCAA_Champion";
 
+const ROUND_ORDER = [
+  "NCAA_First_Round",
+  "NCAA_Second_Round",
+  "NCAA_Sweet_Sixteen",
+  "NCAA_Elite_Eight",
+  "NCAA_Final_Four",
+  "NCAA_Championship",
+  "NCAA_Champion",
+] as const;
+
+const FIELD_TO_LABEL: Record<RoundKey, string> = {
+  NCAA_First_Round: "First\nRound",
+  NCAA_Second_Round: "Second\nRound",
+  NCAA_Sweet_Sixteen: "Sweet\nSixteen",
+  NCAA_Elite_Eight: "Elite\nEight",
+  NCAA_Final_Four: "Final\nFour",
+  NCAA_Championship: "Champion-\nship",
+  NCAA_Champion: "Champion",
+};
+
+// Single-line form of a header label for tooltips/aria ("Champion-\nship" -> "Championship").
+const inlineLabel = (round: RoundKey) =>
+  FIELD_TO_LABEL[round].replace("-\n", "").replace("\n", " ");
+
 function NCAATeamTable({
   ncaaData,
   className,
   showAllTeams = false,
   hasActualBracket = false,
   season,
+  headerRight,
 }: NCAATeamTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -57,32 +84,6 @@ function NCAATeamTable({
     router.push(path);
   };
 
-  const roundOrder = useMemo(
-    () =>
-      [
-        "NCAA_First_Round",
-        "NCAA_Second_Round",
-        "NCAA_Sweet_Sixteen",
-        "NCAA_Elite_Eight",
-        "NCAA_Final_Four",
-        "NCAA_Championship",
-        "NCAA_Champion",
-      ] as const,
-    [],
-  );
-
-  const fieldToLabel: Record<string, string> = {
-    NCAA_First_Round: "First\nRound",
-    NCAA_Second_Round: "Second\nRound",
-    NCAA_Sweet_Sixteen: "Sweet\nSixteen",
-    NCAA_Elite_Eight: "Elite\nEight",
-    NCAA_Final_Four: "Final\nFour",
-    NCAA_Championship: "Champion-\nship",
-    NCAA_Champion: "Champion",
-  };
-
-  const allRounds = roundOrder;
-
   const sortedTeams = useMemo(() => {
     const teams = [...ncaaData];
 
@@ -93,7 +94,7 @@ function NCAATeamTable({
         const bSeed = b.ncaa_actual_seed ?? 999;
         if (aSeed !== bSeed) return aSeed - bSeed;
         // Tiebreak by champion probability
-        const reverseRounds = [...roundOrder].reverse();
+        const reverseRounds = [...ROUND_ORDER].reverse();
         for (const round of reverseRounds) {
           const aVal = (a[round as keyof NCAATeam] as number) || 0;
           const bVal = (b[round as keyof NCAATeam] as number) || 0;
@@ -112,7 +113,7 @@ function NCAATeamTable({
         if (aVal !== bVal) return bVal - aVal;
 
         // Secondary sort by remaining columns in reverse order (Champion -> First Round)
-        const reverseRounds = [...roundOrder]
+        const reverseRounds = [...ROUND_ORDER]
           .reverse()
           .filter((r) => r !== sortColumn);
         for (const round of reverseRounds) {
@@ -128,7 +129,7 @@ function NCAATeamTable({
 
     // Default sort (Champion -> Championship -> ... -> First Round)
     return teams.sort((a, b) => {
-      const reverseRounds = [...roundOrder].reverse();
+      const reverseRounds = [...ROUND_ORDER].reverse();
       for (const round of reverseRounds) {
         const aVal = (a[round as keyof NCAATeam] as number) || 0;
         const bVal = (b[round as keyof NCAATeam] as number) || 0;
@@ -138,7 +139,7 @@ function NCAATeamTable({
       // Final tiebreaker: alphabetical order by team name
       return a.team_name.localeCompare(b.team_name);
     });
-  }, [ncaaData, roundOrder, sortColumn, hasActualBracket]);
+  }, [ncaaData, sortColumn, hasActualBracket]);
 
   // Apply row limit filter
   const displayedTeams = useMemo(() => {
@@ -162,25 +163,6 @@ function NCAATeamTable({
     }
   };
 
-  const rankColWidth = isMobile ? 35 : 45;
-  const firstColWidth = isMobile ? 140 : 180;
-  const roundColWidth = isMobile ? 55 : 70;
-  const cellHeight = isMobile ? 34 : 28;
-  const headerHeight = isMobile ? 50 : 60;
-
-  const tableClassName = cn(
-    tableStyles.tableContainer,
-    "ncaa-tourney-table",
-    className,
-  );
-
-  // Format percentage without decimal if it's a whole number
-  const formatPercentage = (value: number): string => {
-    if (value === 0) return "";
-    const rounded = Math.round(value);
-    return `${rounded}%`;
-  };
-
   if (!ncaaData || ncaaData.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500 dark:text-gray-300">
@@ -190,190 +172,130 @@ function NCAATeamTable({
   }
 
   return (
-    <div className="space-y-3">
+    <section
+      className={cn(styles.card, "ncaa-tourney-table", className)}
+      aria-labelledby="ncaa-tourney-title"
+    >
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
+          <h2 id="ncaa-tourney-title" className={styles.title}>
+            NCAA Tournament Projections
+          </h2>
+        </div>
+        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+      </div>
+
       {/* Row filter - only show when All Teams is selected */}
       {showAllTeams && (
-        <div className="flex items-center gap-3 px-2">
+        <div className={styles.filterRow}>
           <label
-            className={`text-gray-700 dark:text-gray-300 font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+            htmlFor="ncaa-rows-to-show"
+            className={cn(styles.filterLabel, isMobile ? "text-xs" : "text-sm")}
           >
             Show top:
           </label>
           <input
+            id="ncaa-rows-to-show"
             type="number"
             min="1"
             max={ncaaData.length}
             value={inputValue}
             onChange={handleRowsInputChange}
-            className={`border border-gray-300 dark:border-gray-600 rounded px-3 py-1 w-24 ${
-              isMobile ? "text-xs" : "text-sm"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={cn(styles.filterInput, isMobile ? "text-xs" : "text-sm")}
             placeholder={ncaaData.length.toString()}
           />
-          <span className={`text-gray-600 dark:text-gray-300 ${isMobile ? "text-xs" : "text-sm"}`}>
+          <span className={cn(styles.filterHint, isMobile ? "text-xs" : "text-sm")}>
             teams (of {ncaaData.length})
           </span>
         </div>
       )}
 
-      <div className={`${tableClassName} relative overflow-x-auto`}>
-        <table
-          className="border-collapse border-spacing-0"
-          style={{
-            width: "max-content",
-            borderCollapse: "separate",
-            borderSpacing: 0,
-          }}
-        >
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="NCAA tournament round probabilities by team. Scroll to see every team."
+        tabIndex={0}
+      >
+        <table className={styles.table}>
           <thead>
-            <tr>
-              {/* Rank/Seed column */}
-              <th
-                className={`sticky left-0 z-30 bg-gray-50 dark:bg-slate-800 text-center font-normal ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
-                style={{
-                  width: rankColWidth,
-                  minWidth: rankColWidth,
-                  maxWidth: rankColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  left: 0,
-                  border: "1px solid var(--border-color)",
-                  borderRight: "1px solid var(--border-color)",
-                  verticalAlign: "middle",
-                }}
-              >
+            <tr className={styles.headerRow}>
+              <th className={cn(styles.stickyHead, styles.rankCol)} scope="col">
                 #
               </th>
-              {/* Team column */}
-              <th
-                className={`sticky z-30 bg-gray-50 dark:bg-slate-800 text-left font-normal px-2 ${
-                  isMobile ? "text-xs" : "text-sm"
-                }`}
-                style={{
-                  width: firstColWidth,
-                  minWidth: firstColWidth,
-                  maxWidth: firstColWidth,
-                  height: headerHeight,
-                  position: "sticky",
-                  left: rankColWidth,
-                  border: "1px solid var(--border-color)",
-                  borderLeft: "none",
-                  borderRight: "1px solid var(--border-color)",
-                  verticalAlign: "middle",
-                }}
-              >
+              <th className={cn(styles.stickyHead, styles.teamCol)} scope="col">
                 Team
               </th>
-              {/* Round columns */}
-              {allRounds.map((round) => (
-                <th
-                  key={round}
-                  className={`bg-gray-50 dark:bg-slate-800 text-center font-normal cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                    sortColumn === round ? "bg-blue-100" : ""
-                  }`}
-                  onClick={() => handleColumnClick(round as RoundKey)}
-                  style={{
-                    height: headerHeight,
-                    width: roundColWidth,
-                    minWidth: roundColWidth,
-                    maxWidth: roundColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderLeft: "none",
-                    fontSize: isMobile ? "10px" : "12px",
-                    whiteSpace: "pre-line",
-                    verticalAlign: "middle",
-                    lineHeight: "1.2",
-                  }}
-                  title="Click to sort by this column"
-                >
-                  {fieldToLabel[round]}
-                  {sortColumn === round && (
-                    <div className="text-blue-600 text-xs mt-1">▼</div>
-                  )}
-                </th>
-              ))}
+              {ROUND_ORDER.map((round) => {
+                const isActive = sortColumn === round;
+                return (
+                  <th
+                    key={round}
+                    scope="col"
+                    aria-sort={isActive ? "descending" : "none"}
+                    className={cn(styles.sortable, isActive && styles.sortActive)}
+                  >
+                    <button
+                      type="button"
+                      className={styles.sortButton}
+                      onClick={() => handleColumnClick(round)}
+                      title="Click to sort by this column"
+                      aria-label={`Sort by ${inlineLabel(round)}`}
+                    >
+                      {FIELD_TO_LABEL[round]}
+                      {isActive && (
+                        <span className={styles.sortArrow} aria-hidden="true">
+                          ▼
+                        </span>
+                      )}
+                    </button>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
             {displayedTeams.map((team, index) => (
-              <tr key={`${team.team_name}-${index}`}>
+              <tr key={`${team.team_name}-${index}`} className={styles.bodyRow}>
                 {/* Rank/Seed cell - show actual seed when bracket exists */}
-                <td
-                  className={`sticky left-0 z-20 bg-white dark:bg-slate-900 text-center ${
-                    isMobile ? "text-xs" : "text-sm"
-                  } font-medium`}
-                  style={{
-                    width: rankColWidth,
-                    minWidth: rankColWidth,
-                    maxWidth: rankColWidth,
-                    height: cellHeight,
-                    position: "sticky",
-                    left: 0,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderRight: "1px solid var(--border-color)",
-                    verticalAlign: "middle",
-                  }}
-                >
+                <td className={cn(styles.stickyBody, styles.rankCol, styles.rankCell)}>
                   {hasActualBracket && team.ncaa_actual_seed
                     ? team.ncaa_actual_seed
                     : index + 1}
                 </td>
-                {/* Team cell */}
-                <td
-                  className={`sticky z-20 bg-white dark:bg-slate-900 text-left px-2 ${
-                    isMobile ? "text-xs" : "text-sm"
-                  } cursor-pointer hover:bg-gray-50 dark:bg-slate-800 transition-colors`}
-                  style={{
-                    width: firstColWidth,
-                    minWidth: firstColWidth,
-                    maxWidth: firstColWidth,
-                    height: cellHeight,
-                    position: "sticky",
-                    left: rankColWidth,
-                    border: "1px solid var(--border-color)",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderRight: "1px solid var(--border-color)",
-                    verticalAlign: "middle",
-                  }}
-                  onClick={() => navigateToTeam(team.team_name)}
-                >
-                  <div className="flex items-center gap-2">
+                <td className={cn(styles.stickyBody, styles.teamCol, styles.teamCell)}>
+                  <button
+                    type="button"
+                    className={styles.teamButton}
+                    onClick={() => navigateToTeam(team.team_name)}
+                    aria-label={`View ${team.team_name}`}
+                  >
                     <TeamLogo
                       logoUrl={team.logo_url}
                       teamName={team.team_name}
-                      size={isMobile ? 16 : 20}
+                      size={24}
+                      showTooltip
+                      className={styles.teamLogo}
                     />
-                    <span className="whitespace-normal break-words leading-tight">{team.team_name}</span>
-                  </div>
+                    <span className={styles.teamName}>{team.team_name}</span>
+                  </button>
                 </td>
-                {/* Round cells */}
-                {allRounds.map((round) => {
+                {ROUND_ORDER.map((round) => {
                   const value = (team[round as keyof NCAATeam] as number) || 0;
-                  const cellStyle = getCellColor(value, "blue");
+                  const rounded = Math.round(value);
                   return (
-                    <td
-                      key={round}
-                      className="text-center"
-                      style={{
-                        fontFamily: "var(--font-roboto-condensed)",
-                        width: roundColWidth,
-                        minWidth: roundColWidth,
-                        maxWidth: roundColWidth,
-                        height: cellHeight,
-                        backgroundColor: cellStyle.backgroundColor,
-                        color: cellStyle.color,
-                        border: "1px solid var(--border-color)",
-                        borderTop: "none",
-                        borderLeft: "none",
-                        fontSize: isMobile ? "10px" : "12px",
-                        verticalAlign: "middle",
-                      }}
-                    >
-                      {formatPercentage(value)}
+                    <td key={round} className={styles.probabilityCell}>
+                      <div
+                        className={styles.heatTile}
+                        data-screenshot-tile="true"
+                        style={value > 0 ? getCellColor(value) : undefined}
+                        title={
+                          value > 0
+                            ? `${team.team_name}: ${rounded}% chance of reaching ${inlineLabel(round)}`
+                            : undefined
+                        }
+                      >
+                        {value > 0 ? `${rounded}%` : ""}
+                      </div>
                     </td>
                   );
                 })}
@@ -382,7 +304,7 @@ function NCAATeamTable({
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }
 

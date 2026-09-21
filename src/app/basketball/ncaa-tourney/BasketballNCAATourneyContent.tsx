@@ -20,6 +20,7 @@ const BASKETBALL_NCAA: PostseasonContentConfig<NCAARow> = {
   pageId: "ncaa-tourney",
   actionPageName: "ncaa-tourney",
   title: "NCAA Tournament",
+  hidePageTitle: true,
   tableClass: "ncaa-table",
   skeletonTableType: "ncaa",
   skeletonTeamCols: 7,
@@ -29,10 +30,10 @@ const BASKETBALL_NCAA: PostseasonContentConfig<NCAARow> = {
   renderTable: (data, ctx) => (
     <NCAATeamTable
       ncaaData={data}
-      className="ncaa-table"
       showAllTeams={ctx.showAllTeams}
       hasActualBracket={ctx.hasActualBracket}
       season={ctx.season}
+      headerRight={ctx.headerRight}
     />
   ),
   explainer: [

@@ -1,0 +1,428 @@
+/* Visual language matches ConferenceTourneyTable; the rank column, sortable
+   headers and row filter (which conf-tourney doesn't have) follow SeedTable,
+   the other table with the same #/Team sticky pair. */
+
+.card {
+  --rank-col-width: 2.8rem;
+  --team-col-width: 11rem;
+  --stat-col-width: 4.4rem;
+  position: relative;
+  isolation: isolate;
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);
+  /* Border drawn as an inset shadow, not a real `border` - border +
+     border-radius hits a Windows sub-pixel corner artifact (see the
+     modernization guide's chip/card writeup). Never add overflow: hidden
+     here: it breaks the sticky header and columns in Chrome. */
+  box-shadow:
+    inset 0 0 0 1px rgb(226 232 240 / 0.9),
+    0 22px 55px -36px rgb(15 23 42 / 0.36),
+    0 8px 22px -18px rgb(15 23 42 / 0.24);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.35rem 1rem;
+}
+
+.titleGroup {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  margin: 0;
+  color: #334155;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.35rem 0.9rem;
+}
+
+/* Filter-row text colors live here rather than as Tailwind dark: classes.
+   Tailwind's darkMode is "media" (follows the OS), but this card's dark
+   styles key off a .dark class - so a Tailwind dark: color would switch to
+   light text while the card behind it stays white, leaving the label
+   near-invisible in OS dark mode. Keeping every color inside the card on
+   the card's own mechanism keeps them in step. */
+.filterLabel {
+  color: #374151;
+  font-weight: 500;
+}
+
+.filterHint {
+  color: #4b5563;
+}
+
+.filterInput {
+  width: 5.5rem;
+  border: 1px solid rgb(203 213 225 / 0.9);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: rgb(14 116 144 / 0.6);
+  box-shadow: 0 0 0 3px rgb(14 116 144 / 0.15);
+}
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-height: 75vh;
+  overscroll-behavior: contain;
+  /* Zero top padding (sticky header row sits at top: 0) and zero left
+     padding (sticky rank column sits at left: 0) - padding on either
+     sticky axis leaves a gap that scrolled rows show through. */
+  padding: 0 0.9rem 1rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.55rem;
+  width: 0.55rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.table {
+  width: max-content;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 1px;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  width: var(--stat-col-width);
+  min-width: var(--stat-col-width);
+  max-width: var(--stat-col-width);
+}
+
+/* Higher specificity than `.table th/td` above, so no !important needed. */
+.table .rankCol {
+  left: 0;
+  width: var(--rank-col-width);
+  min-width: var(--rank-col-width);
+  max-width: var(--rank-col-width);
+}
+
+.table .teamCol {
+  left: var(--rank-col-width);
+  width: var(--team-col-width);
+  min-width: var(--team-col-width);
+  max-width: var(--team-col-width);
+}
+
+/* Two z-index tiers, never one shared class: a left-sticky body cell and a
+   top-sticky header cell compare z-index numerically regardless of axis, so
+   if the body column matched or beat the header row, scrolled rows would
+   paint over the header.
+     .headerRow .stickyHead  65  corner cells - beat everything
+     .headerRow th           55  round headers
+     .stickyBody             40  body #/Team cells - lose to the header row
+   The team column intentionally carries no seal-ring/drop-shadow line
+   (deliberate for team-name columns per the modernization guide). */
+.stickyHead,
+.stickyBody {
+  --sticky-bg: #ffffff;
+  position: sticky;
+  background: var(--sticky-bg);
+  background-clip: border-box;
+  isolation: isolate;
+}
+
+.stickyBody {
+  z-index: 40;
+}
+
+.headerRow th {
+  position: sticky;
+  top: 0;
+  z-index: 55;
+  /* Tall enough for a two-line label plus the sort arrow, so activating a
+     sort doesn't grow the header row and shift the table. */
+  height: 3.3rem;
+  padding: 0;
+  border: 0;
+  background: #ffffff;
+  box-shadow: 0 1px 0 0 #ffffff;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-align: center;
+  white-space: pre-line;
+  isolation: isolate;
+}
+
+/* Needs .headerRow in the selector to outrank `.headerRow th` above. */
+.headerRow .stickyHead {
+  z-index: 65;
+}
+
+.headerRow .teamCol {
+  padding: 0 0.6rem;
+  text-align: left;
+}
+
+.headerRow .sortable {
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.headerRow .sortable:hover {
+  background: #f1f5f9;
+}
+
+.headerRow .sortActive,
+.headerRow .sortActive:hover {
+  background: #e0f2fe;
+}
+
+.sortButton {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  white-space: pre-line;
+}
+
+.sortButton:focus-visible {
+  outline: 2px solid rgb(14 116 144 / 0.6);
+  outline-offset: -2px;
+  border-radius: 3px;
+}
+
+.sortArrow {
+  color: #0e7490;
+  font-size: 0.7rem;
+  margin-top: 0.15rem;
+}
+
+.bodyRow td {
+  height: 2rem;
+}
+
+.rankCell {
+  color: #475569;
+  font-weight: 600;
+  text-align: center;
+}
+
+.teamCell {
+  padding: 0 0.6rem;
+}
+
+.teamButton {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.55rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.teamLogo {
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 3px rgb(15 23 42 / 0.14));
+  transition: transform 160ms ease;
+}
+
+.teamButton:hover .teamLogo {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.teamName {
+  overflow: visible;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+  line-height: 1.15;
+}
+
+.probabilityCell {
+  padding: 0;
+}
+
+.heatTile {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.68);
+  border-radius: 3px;
+  font-size: 0.9rem;
+  font-weight: 650;
+  transition: border-color 150ms ease;
+}
+
+.heatTile:hover {
+  position: relative;
+  z-index: 2;
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+:global(.dark) .card {
+  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(51 65 85 / 0.9),
+    0 24px 58px -34px rgb(0 0 0 / 0.82),
+    inset 0 1px 0 rgb(255 255 255 / 0.025);
+}
+
+:global(.dark) .title {
+  color: #cbd5e1;
+}
+
+:global(.dark) .filterLabel,
+:global(.dark) .filterHint {
+  color: #d1d5db;
+}
+
+:global(.dark) .filterInput {
+  border-color: rgb(71 85 105 / 0.9);
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+:global(.dark) .stickyHead,
+:global(.dark) .stickyBody,
+:global(.dark) .headerRow th {
+  --sticky-bg: #111827;
+  background: #111827;
+  color: #cbd5e1;
+}
+
+:global(.dark) .headerRow th {
+  box-shadow: 0 1px 0 0 #111827;
+}
+
+:global(.dark) .headerRow .sortable:hover {
+  background: #1e293b;
+}
+
+:global(.dark) .headerRow .sortActive,
+:global(.dark) .headerRow .sortActive:hover {
+  background: #1e3a4a;
+}
+
+:global(.dark) .sortArrow {
+  color: #67e8f9;
+}
+
+:global(.dark) .rankCell {
+  color: #e2e8f0;
+}
+
+:global(.dark) .teamName {
+  color: #f1f5f9;
+}
+
+@media (max-width: 767px) {
+  .card {
+    --rank-col-width: 2.2rem;
+    --team-col-width: 9.5rem;
+    --stat-col-width: 3.1rem;
+    border-radius: 1rem;
+  }
+
+  .cardHeader {
+    align-items: flex-start;
+    padding: 1rem 0.9rem 0.7rem;
+  }
+
+  .titleGroup {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .filterRow {
+    padding: 0 0.9rem 0.7rem;
+  }
+
+  .scrollViewport {
+    padding: 0 0.5rem 0.8rem 0;
+    max-height: 70vh;
+  }
+
+  .headerRow th {
+    height: 3rem;
+    font-size: 0.62rem;
+  }
+
+  .bodyRow td {
+    height: 2.3rem;
+  }
+
+  .rankCell {
+    font-size: 0.75rem;
+  }
+
+  .teamLogo {
+    transform: scale(0.9);
+  }
+
+  .teamName {
+    font-size: 0.72rem;
+  }
+
+  .heatTile {
+    border-radius: 2px;
+    font-size: 0.76rem;
+  }
+}
