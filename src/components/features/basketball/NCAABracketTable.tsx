@@ -25,8 +25,10 @@ const getCategoryBgColor = (category: string | undefined) => {
       return "#dcfce7"; // light green
     case "At Large":
       return "#dbeafe"; // light blue
-    case "Last 12 In": // 76-team format
-    case "Last 4 In": // historical seasons
+    case "Play-In Game": // 76-team format: at-large play-ins above the Last 4 In
+      return "#cffafe"; // light cyan
+    case "Last 12 In": // pre-split label, kept for safety
+    case "Last 4 In":
       return "#e9d5ff"; // light purple
     case "First 4 Out":
       return "#ffedd5"; // light orange
@@ -43,8 +45,10 @@ const getCategoryTextColor = (category: string | undefined) => {
       return "#166534"; // green
     case "At Large":
       return "#1e40af"; // blue
-    case "Last 12 In": // 76-team format
-    case "Last 4 In": // historical seasons
+    case "Play-In Game":
+      return "#155e75"; // cyan
+    case "Last 12 In":
+    case "Last 4 In":
       return "#6b21a8"; // purple
     case "First 4 Out":
       return "#b45309"; // orange
