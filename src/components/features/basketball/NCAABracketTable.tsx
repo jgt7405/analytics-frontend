@@ -26,7 +26,7 @@ const getCategoryBgColor = (category: string | undefined) => {
     case "At Large":
       return "#dbeafe"; // light blue
     case "Play-In Game": // 76-team format: at-large play-ins above the Last 4 In
-      return "#cffafe"; // light cyan
+      return "#fce7f3"; // light pink - the remaining hue; cyan read as Auto Bid green
     case "Last 12 In": // pre-split label, kept for safety
     case "Last 4 In":
       return "#e9d5ff"; // light purple
@@ -46,7 +46,7 @@ const getCategoryTextColor = (category: string | undefined) => {
     case "At Large":
       return "#1e40af"; // blue
     case "Play-In Game":
-      return "#155e75"; // cyan
+      return "#9d174d"; // pink
     case "Last 12 In":
     case "Last 4 In":
       return "#6b21a8"; // purple
