@@ -18,46 +18,36 @@ interface NCAATeamWithConfLogo extends NCAATeam {
   conf_logo_url?: string;
 }
 
-// Helper function to get category badge color
-const getCategoryBgColor = (category: string | undefined) => {
-  switch (category) {
-    case "Auto Bid":
-      return "#dcfce7"; // light green
-    case "At Large":
-      return "#dbeafe"; // light blue
-    case "Play-In Game": // 76-team format: at-large play-ins above the Last 4 In
-      return "#fce7f3"; // light pink - the remaining hue; cyan read as Auto Bid green
-    case "Last 12 In": // pre-split label, kept for safety
-    case "Last 4 In":
-      return "#e9d5ff"; // light purple
-    case "First 4 Out":
-      return "#ffedd5"; // light orange
-    case "Next 4 Out":
-      return "#fee2e2"; // light red
-    default:
-      return "#f3f4f6"; // light gray
-  }
+// Category badge palette. Six categories can't be told apart by hue alone -
+// validated against the all-pairs colorblind + normal-vision separation checks,
+// which cap a single-hue-per-category set at ~3. So each badge carries two
+// signals: WEIGHT (tint = in the field, solid = play-in, outlined = out) and
+// hue within its weight tier, where only two hues have to separate.
+const CATEGORY_STYLES: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  // In the field outright - tinted, the calm bulk of the table.
+  "Auto Bid": { bg: "#86efac", text: "#14532d", border: "transparent" },
+  "At Large": { bg: "#93c5fd", text: "#1e3a8a", border: "transparent" },
+  // Playing their way in - solid, the loudest rows on the board.
+  "Play-In Game": { bg: "#f59e0b", text: "#451a03", border: "transparent" },
+  "Last 4 In": { bg: "#6d28d9", text: "#ffffff", border: "transparent" },
+  // Out - outlined, so they read as hollow next to the filled field.
+  "First 4 Out": { bg: "#ffffff", text: "#c2410c", border: "#c2410c" },
+  "Next 4 Out": { bg: "#f8fafc", text: "#334155", border: "#475569" },
+  // Pre-split label, kept so historical seasons still get a badge.
+  "Last 12 In": { bg: "#6d28d9", text: "#ffffff", border: "transparent" },
 };
 
-const getCategoryTextColor = (category: string | undefined) => {
-  switch (category) {
-    case "Auto Bid":
-      return "#166534"; // green
-    case "At Large":
-      return "#1e40af"; // blue
-    case "Play-In Game":
-      return "#9d174d"; // pink
-    case "Last 12 In":
-    case "Last 4 In":
-      return "#6b21a8"; // purple
-    case "First 4 Out":
-      return "#b45309"; // orange
-    case "Next 4 Out":
-      return "#991b1b"; // red
-    default:
-      return "#374151"; // gray
-  }
+const DEFAULT_CATEGORY_STYLE = {
+  bg: "#f3f4f6",
+  text: "#374151",
+  border: "transparent",
 };
+
+const getCategoryStyle = (category: string | undefined) =>
+  (category && CATEGORY_STYLES[category]) || DEFAULT_CATEGORY_STYLE;
 
 function NCAABracketTable({ className, season }: NCAABracketTableProps) {
   const { isMobile } = useResponsive();
@@ -257,8 +247,9 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                         <span
                           className={styles.categoryBadge}
                           style={{
-                            backgroundColor: getCategoryBgColor(team.category),
-                            color: getCategoryTextColor(team.category),
+                            backgroundColor: getCategoryStyle(team.category).bg,
+                            color: getCategoryStyle(team.category).text,
+                            borderColor: getCategoryStyle(team.category).border,
                           }}
                         >
                           {team.category}
