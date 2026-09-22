@@ -98,7 +98,9 @@ const CWVGameSchema = z.object({
   team: z.string(),
   win_prob: z.number().transform((val) => (val > 1 ? val / 100 : val)).pipe(z.number().min(0).max(1)),
   date: z.string().optional(),
-  status: z.enum(["W", "L", "scheduled"]).optional(),
+  // "W"/"L" once played; unplayed games carry the game date (or "") from
+  // bball_team_schedule, and CWVTable treats anything but W/L as unplayed.
+  status: z.string().optional(),
 });
 
 const CWVDataSchema = z.object({
