@@ -21,10 +21,9 @@ interface NCAATeamWithConfLogo extends NCAATeam {
 // Category badge palette. Six categories can't be told apart by hue alone -
 // validated against the all-pairs colorblind + normal-vision separation checks,
 // which cap a single-hue-per-category set at ~3. So each badge carries two
-// signals: WEIGHT (plain tint = in the field, ringed = play-in, outlined on
-// near-white = out) and hue within its weight tier, where only two hues have to
-// separate. Every fill stays in the same mid-light band as the rest of the site
-// with dark text - no white-on-dark chips.
+// signals: WEIGHT (plain tint = in the field or play-in, outlined on near-white
+// = out) and hue, spaced so the four tinted fills stay apart. Every fill sits in
+// the same mid-light band as the rest of the site, with dark text.
 const CATEGORY_STYLES: Record<
   string,
   { bg: string; text: string; border: string }
@@ -32,16 +31,16 @@ const CATEGORY_STYLES: Record<
   // In the field outright - plain tint, the calm bulk of the table.
   "Auto Bid": { bg: "#86efac", text: "#14532d", border: "transparent" },
   "At Large": { bg: "#93c5fd", text: "#1e3a8a", border: "transparent" },
-  // Playing their way in - same lightness, but ringed so they read as a
-  // separate group. Rose, not violet: a light violet collapses into the
-  // At Large blue under deuteranopia.
-  "Play-In Game": { bg: "#fcd34d", text: "#78350f", border: "#d97706" },
-  "Last 4 In": { bg: "#f9a8d4", text: "#9d174d", border: "#db2777" },
+  // Playing their way in - plain tint like the two above, separated by hue.
+  // Rose, not violet: a light violet collapses into the At Large blue under
+  // deuteranopia.
+  "Play-In Game": { bg: "#fcd34d", text: "#78350f", border: "transparent" },
+  "Last 4 In": { bg: "#f9a8d4", text: "#9d174d", border: "transparent" },
   // Out - outlined on near-white, hollow next to the filled field.
   "First 4 Out": { bg: "#fff7ed", text: "#c2410c", border: "#c2410c" },
   "Next 4 Out": { bg: "#f8fafc", text: "#334155", border: "#94a3b8" },
   // Pre-split label, kept so historical seasons still get a badge.
-  "Last 12 In": { bg: "#f9a8d4", text: "#9d174d", border: "#db2777" },
+  "Last 12 In": { bg: "#f9a8d4", text: "#9d174d", border: "transparent" },
 };
 
 const DEFAULT_CATEGORY_STYLE = {
