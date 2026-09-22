@@ -1072,6 +1072,52 @@ Brings basketball onto the same §1-9 pattern as football across every remaining
 - `overflow: hidden` on `.card` still present in `FootballScheduleTable.module.css`'s and basketball's `CWVTable.module.css`'s `.card` rule — §1 flags this as a sticky-positioning regression risk in Chrome; pre-existing drift from before that rule was written, not introduced or fixed by this pass.
 - `NextGameImpact.tsx` (still on the old `bg-white dark:bg-slate-900 rounded-lg shadow` card style) sits directly above `WhatIfTeamSummary` on the What-If page; `WhatIfTeamSummary`'s wrapper divs were deliberately left un-modernized too, to avoid a mismatched seam between a modernized and un-modernized card stacked back to back. Modernize both together if either is touched next.
 
+## 2026-09, basketball leftovers (the gaps the 2026-08 pass and later football work left)
+
+Audit prompted by "are any basketball charts not modernized?" - the 2026-08 pass
+covered every page, but three kinds of gap survived it:
+
+**1. `config.modernCards` was still unset on the basketball team page** - the exact
+flag this guide flagged as "worth wiring up in a future pass." Football set it;
+basketball didn't, so every section on `/basketball/team/*` still rendered the
+legacy card shell and gray headings. One line in `BasketballTeamContent.tsx`.
+
+**2. `ChartEndLabels` is newer than the basketball pass.** The shared end-of-line
+marker component (dot at the line end + the current value just outside the plot,
+with the §8g `ResizeObserver`) was built for the football team charts after
+basketball was done, so all seven basketball history charts ended their lines with
+nothing. Added to `BasketballTeamRankHistory`, `BasketballTeamWinHistory`,
+`BasketballTeamStandingsHistory`, `BasketballTeamFirstPlaceHistory`,
+`BasketballTeamTournamentBidHistory` (`scaleId` per axis - it keeps a right-hand
+`y1`, so it uses `END_LABEL_PADDING_RIGHT_WIDE`),
+`BasketballTeamTournamentProgressionHistory` (five series, `filled` breaking the
+ties where two share a color), and `TeamWinValues` (CWV's marker uses football's
+darker amber - the line's own pale yellow is invisible on white).
+**Lesson: a shared component added for one sport is a to-do for the other; grep
+its importers across both `features/` folders when auditing.**
+
+**3. Files the pass scoped out for §8 were never re-checked for §1/§5.** The pass
+correctly noted that e.g. `BasketballTeamWinsBreakdown` imports no chart.js so §8
+doesn't apply - but "no §8" got read as "nothing to do," and their old
+`bg-white dark:bg-slate-900 rounded-lg shadow` card styling stayed. Fixed here for
+`NextGameImpact` + `WhatIfTeamSummary` (together, per the seam note above),
+`BballNonConfAnalysisTable`, `BballConfBoxWhiskerChart`, `BballScatterplotChart`,
+`TeamSchedule`, `BasketballTeamWinsBreakdown`, and the conf-data page's two
+remaining gray §2 titles. `TeamSeedProjections` went from inline style objects to
+a CSS module mirroring `FootballTeamSeedProjections.module.css`.
+
+`BballNonConfAnalysisTable` deliberately keeps its collapsed 1px borders instead of
+the §5 tile grid: every sticky offset in it (`top: -1`, `left: expandColWidth - 1`)
+is measured against collapsed borders, and §6 documents how easily those seals
+break. It got the card shell and white (not `#f3f4f6`) sticky headers only.
+
+Also swept up: `overflow: hidden` removed from `WinsTable.module.css` and
+`BballRegSeasonWinsTable.module.css` `.card` (§1 - both have sticky headers below
+it), and the dead `TeamCard.tsx` deleted (nothing imported it; `TeamsContent.tsx`
+defines its own local `TeamCard`). The `layout.card` / `components.table.container`
+legacy design-system tokens now have no basketball importers left - only
+`ConferenceSagarinBoxWhiskerChart` (football) still uses one.
+
 ## Not yet done
 
 1. Applying §8 to the remaining football Chart.js history/trend charts:
@@ -1085,7 +1131,12 @@ Brings basketball onto the same §1-9 pattern as football across every remaining
    `FootballChampGameHistoryChart`, `FootballTeamCFPBidHistory`,
    `FootballTeamCFPProgressionHistory`. Basketball's matching set is now
    done (see the 2026-08 basketball pass above).
-2. `/football/bowlpicks` (`BowlPicksTable.tsx` + `BowlScoreboard.tsx`) —
+2. The football equivalents of the 2026-09 basketball sweep above:
+   `FootballRegularSeasonWinsTable.module.css` / `FootballStandingsTable.module.css`
+   still carry `overflow: hidden` on `.card` (§1), and
+   `ConferenceSagarinBoxWhiskerChart` is the last `components.table.container`
+   importer.
+3. `/football/bowlpicks` (`BowlPicksTable.tsx` + `BowlScoreboard.tsx`) —
    found while auditing §9d/e's shadow pattern (its sticky columns style
    inline in the `.tsx` rather than via a CSS module, so file-based greps
    for `position: sticky` across `*.module.css` miss it entirely - grep
