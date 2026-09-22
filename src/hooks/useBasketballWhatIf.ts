@@ -46,10 +46,26 @@ export interface WhatIfTeamResult {
   standing_8_prob?: number;
   // Allow dynamic standing_N_prob keys for conferences with >8 teams
   [key: `standing_${number}_prob`]: number | undefined;
-  // NCAA tournament projection fields
+  // NCAA tournament projection fields (percentages, 0-100)
   tournament_bid_pct?: number;
+  ncaa_auto_bid_pct?: number;
+  ncaa_at_large_pct?: number;
   average_seed?: number | null;
   ncaa_seed_distribution?: Record<string, number>;
+}
+
+/** One D1 team's NCAA bid before/after the picks (all-teams view). */
+export interface NcaaAllTeam {
+  team_id: number;
+  team_name: string;
+  conference: string;
+  logo_url: string;
+  current_bid_pct: number;
+  whatif_bid_pct: number;
+  current_auto_pct: number;
+  whatif_auto_pct: number;
+  current_average_seed: number | null;
+  whatif_average_seed: number | null;
 }
 
 export interface WhatIfMetadata {
@@ -121,6 +137,8 @@ export interface WhatIfResponse {
   num_conference_games: number;
   num_current_projections: number;
   calculation_time: number;
+  ncaa_available?: boolean;
+  ncaa_all_teams?: NcaaAllTeam[];
 }
 
 interface BackendTeamResult {
@@ -171,6 +189,8 @@ interface BackendWhatIfResponse {
   num_conference_games: number;
   num_current_projections: number;
   calculation_time: number;
+  ncaa_available?: boolean;
+  ncaa_all_teams?: NcaaAllTeam[];
 }
 
 const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => {
@@ -183,6 +203,8 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => {
     avg_conference_standing: (team.avg_conference_standing as number) || 0,
     // NCAA tournament projection fields
     tournament_bid_pct: (team.tournament_bid_pct as number) ?? 0,
+    ncaa_auto_bid_pct: (team.ncaa_auto_bid_pct as number) ?? 0,
+    ncaa_at_large_pct: (team.ncaa_at_large_pct as number) ?? 0,
     average_seed: (team.average_seed as number | null) ?? null,
     ncaa_seed_distribution:
       (team.ncaa_seed_distribution as Record<string, number>) ?? {},
@@ -276,6 +298,8 @@ const calculateBasketballWhatIf = async (
     num_conference_games: data.num_conference_games,
     num_current_projections: data.num_current_projections,
     calculation_time: data.calculation_time,
+    ncaa_available: data.ncaa_available ?? false,
+    ncaa_all_teams: data.ncaa_all_teams ?? [],
   };
 
   return mappedData;

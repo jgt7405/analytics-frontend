@@ -18,6 +18,7 @@ import WhatIfTeamSummary from "@/components/features/basketball/WhatIfTeamSummar
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
   useBasketballWhatIf,
+  type NcaaAllTeam,
   type WhatIfGame,
   type WhatIfResponse,
   type WhatIfTeamResult,
@@ -156,6 +157,54 @@ declare global {
       options?: object,
     ) => Promise<HTMLCanvasElement>;
   }
+}
+
+// – NCAA table –
+// Auto %, At-Large % and Avg Seed after the bid % columns. Values describe the
+// displayed row (what-if once calculated), like "What If".
+const NCAA_EXTRA_COLUMNS: ExtraColumn[] = [
+  {
+    key: "auto",
+    label: "Auto %",
+    value: (t) => t.ncaa_auto_bid_pct,
+    format: (v) => `${v.toFixed(1)}%`,
+    color: (v) => getCellColor(v, "blue"),
+  },
+  {
+    key: "at_large",
+    label: "At-Large %",
+    value: (t) => t.ncaa_at_large_pct,
+    format: (v) => `${v.toFixed(1)}%`,
+    color: (v) => getCellColor(v, "blue"),
+  },
+  {
+    key: "avg_seed",
+    label: "Avg Seed",
+    value: (t) => t.average_seed,
+    format: (v) => v.toFixed(1),
+  },
+];
+
+const ncaaBidProb = (t: WhatIfTeamResult) => t.tournament_bid_pct ?? 0;
+
+/** An all-teams row as a WhatIfTeamResult, so the shared table can render it. */
+function ncaaAllTeamResult(
+  t: NcaaAllTeam,
+  which: "current" | "whatif",
+): WhatIfTeamResult {
+  const bid = which === "current" ? t.current_bid_pct : t.whatif_bid_pct;
+  const auto = which === "current" ? t.current_auto_pct : t.whatif_auto_pct;
+  return {
+    team_id: t.team_id,
+    team_name: t.team_name,
+    conference: t.conference,
+    logo_url: t.logo_url,
+    tournament_bid_pct: bid,
+    ncaa_auto_bid_pct: auto,
+    ncaa_at_large_pct: Math.max(bid - auto, 0),
+    average_seed:
+      which === "current" ? t.current_average_seed : t.whatif_average_seed,
+  };
 }
 
 // – CSV –
@@ -442,6 +491,17 @@ function ScreenshotBtn({
 type SortCol = "before" | "after" | "change" | null;
 type SortDir = "asc" | "desc";
 
+/** Extra trailing column. Reads the displayed row (what-if once calculated,
+ *  current before), so it always describes the same state as "What If". */
+interface ExtraColumn {
+  key: string;
+  label: string;
+  value: (t: WhatIfTeamResult) => number | null | undefined;
+  format: (v: number) => string;
+  /** Heat-tile colour for the value; omit for plain text. */
+  color?: (v: number) => React.CSSProperties;
+}
+
 function ProbabilityTable({
   title,
   baseline,
@@ -452,6 +512,8 @@ function ProbabilityTable({
   screenshotFilename,
   selectionHtml,
   isDark,
+  extraColumns = [],
+  headerRight,
 }: {
   title: string;
   baseline: WhatIfTeamResult[];
@@ -462,6 +524,9 @@ function ProbabilityTable({
   screenshotFilename: string;
   selectionHtml: string | null;
   isDark: boolean;
+  extraColumns?: ExtraColumn[];
+  /** Controls rendered next to the screenshot button (e.g. a view toggle). */
+  headerRight?: React.ReactNode;
 }) {
   const [sortCol, setSortCol] = useState<SortCol>("after");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -534,6 +599,7 @@ function ProbabilityTable({
       <div className="flex items-center justify-between mb-2">
         <h3 className={styles.subTitle}>{title}</h3>
         <div className="flex items-center gap-2" data-no-screenshot>
+          {headerRight}
           <ScreenshotBtn
             targetRef={screenshotRef}
             filename={screenshotFilename}
@@ -542,7 +608,7 @@ function ProbabilityTable({
           />
         </div>
       </div>
-      <div ref={screenshotRef}>
+      <div ref={screenshotRef} className="overflow-x-auto">
         <table
           className={cn(styles.table, "text-sm")}
           style={{ width: "auto", minWidth: "320px" }}
@@ -582,6 +648,15 @@ function ProbabilityTable({
               ) : (
                 <th className="text-center py-2 px-2 font-normal">Current %</th>
               )}
+              {extraColumns.map((col) => (
+                <th
+                  key={col.key}
+                  className="text-center py-2 px-2 font-normal whitespace-nowrap"
+                  style={{ minWidth: "62px" }}
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -654,6 +729,20 @@ function ProbabilityTable({
                     </div>
                   </td>
                 )}
+                {extraColumns.map((col) => {
+                  const v = col.value(team);
+                  const has = v !== null && v !== undefined && v > 0;
+                  return (
+                    <td key={col.key} style={{ height: "2.1rem", padding: 0 }}>
+                      <div
+                        className={cn(styles.heatTile, "tabular-nums text-sm")}
+                        style={has && col.color ? col.color(v) : undefined}
+                      >
+                        {has ? col.format(v) : ""}
+                      </div>
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -1075,6 +1164,8 @@ export default function BasketballWhatIfScenarios() {
   const firstPlaceRef = useRef<HTMLDivElement>(null);
   const top4Ref = useRef<HTMLDivElement>(null);
   const top8Ref = useRef<HTMLDivElement>(null);
+  const ncaaRef = useRef<HTMLDivElement>(null);
+  const [showAllNcaaTeams, setShowAllNcaaTeams] = useState(false);
   const standingsNoTiesRef = useRef<HTMLDivElement>(null);
   const standingsWithTiesRef = useRef<HTMLDivElement>(null);
   const teamFilterInitialized = useRef(false);
@@ -1166,6 +1257,7 @@ export default function BasketballWhatIfScenarios() {
       setSelectedTeamIds(new Set());
       teamFilterInitialized.current = false;
       setSelectedDetailTeamId(null);
+      setShowAllNcaaTeams(false);
       setWhatIfData(null);
       setHasCalculated(false);
       fetchBaseline(c);
@@ -1313,10 +1405,28 @@ export default function BasketballWhatIfScenarios() {
 
   const numTeams = whatIfData?.data_no_ties?.length ?? 16;
 
-  const displayBaseline = whatIfData?.current_projections_no_ties ?? [];
-  const displayWhatif = hasCalculated
-    ? (whatIfData?.data_no_ties ?? [])
-    : displayBaseline;
+  const displayBaseline = useMemo(
+    () => whatIfData?.current_projections_no_ties ?? [],
+    [whatIfData?.current_projections_no_ties],
+  );
+  const displayWhatif = useMemo(
+    () => (hasCalculated ? (whatIfData?.data_no_ties ?? []) : displayBaseline),
+    [hasCalculated, whatIfData?.data_no_ties, displayBaseline],
+  );
+
+  // NCAA table rows: this conference, or every D1 team with a nonzero bid
+  // (picks here move at-large bids nationally, like football's CFP table)
+  const ncaaAvailable = whatIfData?.ncaa_available ?? false;
+  const ncaaRows = useMemo(() => {
+    if (!showAllNcaaTeams) {
+      return { baseline: displayBaseline, whatif: displayWhatif };
+    }
+    const all = whatIfData?.ncaa_all_teams ?? [];
+    return {
+      baseline: all.map((t) => ncaaAllTeamResult(t, "current")),
+      whatif: all.map((t) => ncaaAllTeamResult(t, "whatif")),
+    };
+  }, [showAllNcaaTeams, displayBaseline, displayWhatif, whatIfData?.ncaa_all_teams]);
 
   // Prob functions
   const firstPlaceProb = useCallback(
@@ -1592,6 +1702,41 @@ export default function BasketballWhatIfScenarios() {
                     selectionHtml={selectionLegendHtml}
                     isDark={isDark}
                   />
+                  {ncaaAvailable ? (
+                    <ProbabilityTable
+                      title={
+                        showAllNcaaTeams
+                          ? "What If Probabilities - NCAA Tournament Bid (All Teams)"
+                          : "What If Probabilities - NCAA Tournament Bid"
+                      }
+                      baseline={ncaaRows.baseline}
+                      whatif={ncaaRows.whatif}
+                      probFn={ncaaBidProb}
+                      hasCalculated={hasCalculated}
+                      screenshotRef={ncaaRef}
+                      screenshotFilename="ncaa_bid_pct.png"
+                      selectionHtml={selectionLegendHtml}
+                      isDark={isDark}
+                      extraColumns={NCAA_EXTRA_COLUMNS}
+                      headerRight={
+                        <button
+                          type="button"
+                          onClick={() => setShowAllNcaaTeams((v) => !v)}
+                          className="px-2 py-1 text-[11px] text-gray-500 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-slate-800 transition"
+                          aria-pressed={showAllNcaaTeams}
+                        >
+                          {showAllNcaaTeams ? "Conference Only" : "All Teams"}
+                        </button>
+                      }
+                    />
+                  ) : (
+                    hasCalculated && (
+                      <p className="mb-6 text-xs text-gray-500 dark:text-gray-300">
+                        NCAA tournament projection is unavailable for this
+                        calculation.
+                      </p>
+                    )
+                  )}
                 </>
               )}
 
@@ -1636,7 +1781,10 @@ export default function BasketballWhatIfScenarios() {
                   Current reflects current probabilities; what if reflects
                   updated probabilities with game results selected. Change is
                   the difference between current and what if. Ties broken based
-                  on each individual conference tiebreaker rules.
+                  on each individual conference tiebreaker rules. NCAA bid
+                  combines auto bids (conference tournament champions; a result
+                  that changes tournament seeding replays that tournament) and
+                  at-large bids, re-selected in every simulated season.
                 </p>
               </div>
             )}
