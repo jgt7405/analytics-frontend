@@ -18,7 +18,8 @@ function getLatestDataYear(
 
 export function getFootballDateRange(
   season?: string,
-  data?: Array<{ date: string }>
+  data?: Array<{ date: string }>,
+  { clipToData = true }: { clipToData?: boolean } = {}
 ): ChartDateRange {
   let year: number;
 
@@ -30,11 +31,24 @@ export function getFootballDateRange(
   }
 
   const seasonEnd = new Date(year, 11, 15, 12, 0, 0); // 12/15
+  const start = new Date(year, 7, 27, 12, 0, 0); // 8/27
   const today = new Date();
+  let end = today < seasonEnd ? today : seasonEnd;
+
+  // Stop the axis at the latest data point when it falls short of the cap
+  // (e.g. today's pipeline run hasn't landed yet) - otherwise the empty
+  // trailing label pushes the plot's right edge, where ChartEndLabels draws
+  // the end-of-line dot, past the end of the line.
+  if (clipToData && data && data.length > 0) {
+    const maxDate = data.reduce((max, d) => (d.date > max ? d.date : max), data[0].date);
+    const [y, m, d] = maxDate.split("-").map(Number);
+    const latest = new Date(y, m - 1, d, 12, 0, 0);
+    if (latest < end && latest >= start) end = latest;
+  }
 
   return {
-    start: new Date(year, 7, 27, 12, 0, 0), // 8/27
-    end: today < seasonEnd ? today : seasonEnd,
+    start,
+    end,
   };
 }
 

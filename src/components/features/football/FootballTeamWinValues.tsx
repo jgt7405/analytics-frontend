@@ -147,8 +147,11 @@ export default function FootballTeamWinValues({
 
     gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
-    // Get date range based on season
-    const range = getFootballDateRange(season, gameWithDates);
+    // Get date range based on season. Not clipped to the last game - this
+    // chart carries values forward day by day through today.
+    const range = getFootballDateRange(season, gameWithDates, {
+      clipToData: false,
+    });
     const startDate = range.start;
 
     // Use the earlier of today or season end date (don't show future)
