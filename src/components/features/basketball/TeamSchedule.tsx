@@ -111,7 +111,7 @@ export default function TeamSchedule({
               groupedGames.groups[location].map((game, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2 rounded bg-white dark:bg-slate-900 cursor-pointer hover:opacity-80 transition-opacity"
+                  className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800/60 cursor-pointer hover:opacity-80 transition-opacity"
                   style={{
                     width: boxWidth,
                     height: boxHeight,

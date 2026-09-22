@@ -4,7 +4,8 @@
   --team-column-width: 3.65rem;
   position: relative;
   isolation: isolate;
-  overflow: hidden;
+  /* No overflow: hidden - per PAGE_MODERNIZATION_GUIDE.md §1 it silently
+     breaks the sticky header/column below in Chrome. */
   border: 1px solid rgb(226 232 240 / 0.9);
   border-radius: 1.25rem;
   background: linear-gradient(145deg, #ffffff 0%, #fbfdff 100%);

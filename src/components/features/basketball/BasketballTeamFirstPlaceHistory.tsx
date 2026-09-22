@@ -5,6 +5,10 @@
 // is guaranteed to have registered them first.
 import "@/lib/chartjs-setup";
 
+import ChartEndLabels, {
+  END_LABEL_PADDING_RIGHT,
+} from "@/components/features/shared/ChartEndLabels";
+
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import {
@@ -13,7 +17,7 @@ import {
   getBasketballDateRange,
 } from "@/lib/chartDateRange";
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
-import type { Chart } from "chart.js";
+import type { Chart, ChartArea } from "chart.js";
 import {
   TooltipModel,
 } from "chart.js";
@@ -166,6 +170,10 @@ export default function BasketballTeamFirstPlaceHistory({
     return point ? point.first_place_no_ties : null;
   });
 
+  const lastFirstPlaceWithTies =
+    [...firstPlaceWithTiesData].reverse().find((v) => v !== null && v !== undefined) ?? null;
+  const lastFirstPlaceNoTies =
+    [...firstPlaceNoTiesData].reverse().find((v) => v !== null && v !== undefined) ?? null;
   const datasets = [
     {
       label: "First Place (with ties)",
@@ -199,6 +207,35 @@ export default function BasketballTeamFirstPlaceHistory({
     labels: chartLabels.map((l) => l.displayLabel),
     datasets,
   };
+
+  // Tracks the end-of-line marker with a ResizeObserver (not a one-shot
+  // timeout) so it stays aligned with the chart's actual current layout
+  // (PAGE_MODERNIZATION_GUIDE.md §8g).
+  const [chartArea, setChartArea] = useState<ChartArea | null>(null);
+
+  useEffect(() => {
+    const canvas = chartRef.current?.canvas;
+    if (!canvas) return;
+
+    const updateChartArea = () => {
+      const area = chartRef.current?.chartArea;
+      if (!area) return;
+      setChartArea((prev: ChartArea | null) =>
+        prev &&
+        prev.top === area.top &&
+        prev.right === area.right &&
+        prev.bottom === area.bottom
+          ? prev
+          : { ...area },
+      );
+    };
+
+    const observer = new ResizeObserver(updateChartArea);
+    observer.observe(canvas);
+    updateChartArea();
+
+    return () => observer.disconnect();
+  }, [data]);
 
   const options = {
     responsive: true,
@@ -299,7 +336,12 @@ export default function BasketballTeamFirstPlaceHistory({
       },
     },
     layout: {
-      padding: { top: 14 },
+      padding: {
+        top: 14,
+        right: isMobile
+          ? END_LABEL_PADDING_RIGHT.mobile
+          : END_LABEL_PADDING_RIGHT.desktop,
+      },
     },
   };
 
@@ -366,6 +408,28 @@ export default function BasketballTeamFirstPlaceHistory({
         </div>
       )}
       <Line ref={chartRef} data={chartData} options={options} />
+      <ChartEndLabels
+        chart={chartRef.current}
+        chartArea={chartArea}
+        isDark={isDark}
+        mobile={isMobile}
+        markers={[
+          {
+            value: lastFirstPlaceWithTies,
+            color: primaryColor,
+            text: lastFirstPlaceWithTies !== null
+                ? `${lastFirstPlaceWithTies.toFixed(0)}%`
+                : "",
+          },
+          {
+            value: lastFirstPlaceNoTies,
+            color: finalSecondaryColor,
+            text: lastFirstPlaceNoTies !== null
+                ? `${lastFirstPlaceNoTies.toFixed(0)}%`
+                : "",
+          },
+        ]}
+      />
     </div>
   );
 }

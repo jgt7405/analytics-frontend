@@ -2,8 +2,9 @@
 
 import { useResponsive } from "@/hooks/useResponsive";
 import { getCellColor } from "@/lib/color-utils";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import styles from "./TeamSeedProjections.module.css";
 
 // Define proper types
 interface WinSeedCountEntry {
@@ -18,16 +19,6 @@ interface WinSeedCountEntry {
 interface TeamSeedProjectionsProps {
   winSeedCounts: WinSeedCountEntry[];
   logoUrl?: string;
-}
-
-interface StylesConfig {
-  container: React.CSSProperties;
-  table: React.CSSProperties;
-  thead: React.CSSProperties;
-  headerCell: React.CSSProperties;
-  stickyHeaderCell: React.CSSProperties;
-  dataCell: React.CSSProperties;
-  stickyCell: React.CSSProperties;
 }
 
 interface DistributionData {
@@ -85,66 +76,6 @@ export default function TeamSeedProjections({
   logoUrl,
 }: TeamSeedProjectionsProps) {
   const { isMobile } = useResponsive();
-  const [styles, setStyles] = useState<StylesConfig>({
-    container: {},
-    table: {},
-    thead: {},
-    headerCell: {},
-    stickyHeaderCell: {},
-    dataCell: {},
-    stickyCell: {},
-  });
-
-  useEffect(() => {
-    setStyles({
-      container: {
-        overflowX: "auto",
-        position: "relative",
-        border: "1px solid #dee2e6",
-        width: isMobile ? "100%" : "fit-content",
-        maxWidth: "100%",
-      },
-      table: {
-        borderCollapse: "separate",
-        borderSpacing: 0,
-        width: "auto",
-        fontSize: isMobile ? "12px" : "14px",
-      },
-      thead: {
-        position: "sticky",
-        top: 0,
-        zIndex: 2,
-      },
-      headerCell: {
-        padding: isMobile ? "4px 2px" : "6px 4px",
-        textAlign: "center",
-        border: "1px solid #dee2e6",
-        backgroundColor: "white",
-        position: "sticky",
-        top: 0,
-        zIndex: 2,
-        fontWeight: "normal",
-      },
-      stickyHeaderCell: {
-        position: "sticky",
-        top: 0,
-        left: 0,
-        zIndex: 3,
-        backgroundColor: "white",
-      },
-      dataCell: {
-        padding: isMobile ? "3px 2px" : "4px 3px",
-        textAlign: "center",
-        border: "1px solid #dee2e6",
-      },
-      stickyCell: {
-        position: "sticky",
-        left: 0,
-        zIndex: 1,
-        backgroundColor: "white",
-      },
-    });
-  }, [isMobile]);
 
   const getStatusColor = (
     value: number,
@@ -483,16 +414,15 @@ export default function TeamSeedProjections({
           />
         </div>
       )}
-      <div style={styles.container}>
-        <table style={styles.table}>
+      <div className={styles.scrollViewport}>
+        <table className={styles.table}>
           {/* Rest of table code remains exactly the same */}
-          <thead style={styles.thead}>
+          <thead>
             <tr>
               <th
                 rowSpan={2}
-                style={{
-                  ...styles.headerCell,
-                  ...styles.stickyHeaderCell,
+                className={cn(styles.headerCell, styles.stickyHeaderCell)}
+                    style={{
                   width: winsColWidth,
                   minWidth: winsColWidth,
                   maxWidth: winsColWidth,
@@ -502,23 +432,23 @@ export default function TeamSeedProjections({
               </th>
 
               {seedColumns.length > 0 && (
-                <th colSpan={seedColumns.length} style={styles.headerCell}>
+                <th colSpan={seedColumns.length} className={styles.headerCell}>
                   Seed
                 </th>
               )}
 
-              <th colSpan={statusColumns.length} style={styles.headerCell}>
+              <th colSpan={statusColumns.length} className={styles.headerCell}>
                 NCAA Tourney Status
               </th>
 
-              <th colSpan={bidCategoryColumns.length} style={styles.headerCell}>
+              <th colSpan={bidCategoryColumns.length} className={styles.headerCell}>
                 Bid Category
               </th>
 
               <th
                 rowSpan={2}
-                style={{
-                  ...styles.headerCell,
+                className={styles.headerCell}
+                    style={{
                   width: totalColWidth,
                   minWidth: totalColWidth,
                   maxWidth: totalColWidth,
@@ -532,8 +462,8 @@ export default function TeamSeedProjections({
               {seedColumns.map((seed) => (
                 <th
                   key={`seed-${seed}`}
-                  style={{
-                    ...styles.headerCell,
+                  className={styles.headerCell}
+                    style={{
                     width: seedColWidth,
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
@@ -546,8 +476,8 @@ export default function TeamSeedProjections({
               {statusColumns.map((status) => (
                 <th
                   key={`status-${status}`}
-                  style={{
-                    ...styles.headerCell,
+                  className={styles.headerCell}
+                    style={{
                     width: statusColWidth,
                     minWidth: statusColWidth,
                     maxWidth: statusColWidth,
@@ -563,8 +493,8 @@ export default function TeamSeedProjections({
               {bidCategoryColumns.map((category) => (
                 <th
                   key={`bid-${category}`}
-                  style={{
-                    ...styles.headerCell,
+                  className={styles.headerCell}
+                    style={{
                     width: bidColWidth,
                     minWidth: bidColWidth,
                     maxWidth: bidColWidth,
@@ -587,9 +517,8 @@ export default function TeamSeedProjections({
               return (
                 <tr key={`win-${winsValue}`}>
                   <td
+                    className={cn(styles.dataCell, styles.stickyCell)}
                     style={{
-                      ...styles.dataCell,
-                      ...styles.stickyCell,
                       width: winsColWidth,
                       minWidth: winsColWidth,
                       maxWidth: winsColWidth,
@@ -603,8 +532,8 @@ export default function TeamSeedProjections({
                     return (
                       <td
                         key={`win-${winsValue}-seed-${seed}`}
-                        style={{
-                          ...styles.dataCell,
+                        className={styles.dataCell}
+                    style={{
                           ...getCellColor(pct),
                           width: seedColWidth,
                           minWidth: seedColWidth,
@@ -627,8 +556,8 @@ export default function TeamSeedProjections({
                     return (
                       <td
                         key={`win-${winsValue}-status-${status}`}
-                        style={{
-                          ...styles.dataCell,
+                        className={styles.dataCell}
+                    style={{
                           ...colorStyle,
                           width: statusColWidth,
                           minWidth: statusColWidth,
@@ -645,8 +574,8 @@ export default function TeamSeedProjections({
                     return (
                       <td
                         key={`win-${winsValue}-bid-${category}`}
-                        style={{
-                          ...styles.dataCell,
+                        className={styles.dataCell}
+                    style={{
                           ...getCellColor(pct),
                           width: bidColWidth,
                           minWidth: bidColWidth,
@@ -659,8 +588,8 @@ export default function TeamSeedProjections({
                   })}
 
                   <td
+                    className={styles.dataCell}
                     style={{
-                      ...styles.dataCell,
                       ...totalColorStyle,
                       width: totalColWidth,
                       minWidth: totalColWidth,
@@ -680,9 +609,8 @@ export default function TeamSeedProjections({
               }}
             >
               <td
-                style={{
-                  ...styles.dataCell,
-                  ...styles.stickyCell,
+                className={cn(styles.dataCell, styles.stickyCell)}
+                    style={{
                   width: winsColWidth,
                   minWidth: winsColWidth,
                   maxWidth: winsColWidth,
@@ -699,8 +627,8 @@ export default function TeamSeedProjections({
                 return (
                   <td
                     key={`total-seed-${seed}`}
+                    className={styles.dataCell}
                     style={{
-                      ...styles.dataCell,
                       ...colorStyle,
                       backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
                       width: seedColWidth,
@@ -724,8 +652,8 @@ export default function TeamSeedProjections({
                 return (
                   <td
                     key={`total-status-${status}`}
+                    className={styles.dataCell}
                     style={{
-                      ...styles.dataCell,
                       ...colorStyle,
                       backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
                       width: statusColWidth,
@@ -744,8 +672,8 @@ export default function TeamSeedProjections({
                 return (
                   <td
                     key={`total-bid-${category}`}
+                    className={styles.dataCell}
                     style={{
-                      ...styles.dataCell,
                       ...getCellColor(pct),
                       backgroundColor:
                         getCellColor(pct).backgroundColor || "#f8f9fa",
@@ -760,8 +688,8 @@ export default function TeamSeedProjections({
               })}
 
               <td
-                style={{
-                  ...styles.dataCell,
+                className={styles.dataCell}
+                    style={{
                   backgroundColor: "#f8f9fa",
                   width: totalColWidth,
                   minWidth: totalColWidth,

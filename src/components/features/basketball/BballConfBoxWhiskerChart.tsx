@@ -2,10 +2,14 @@
 
 import { BoxWhiskerChartSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useResponsive } from "@/hooks/useResponsive";
-import { components, layout } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+
+// PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
+// this bespoke file has no CSS module of its own.
+const CARD_CLASS =
+  "relative isolate border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
 
 interface ConferenceData {
   conference_name: string;
@@ -173,7 +177,7 @@ export default function BballConfBoxWhiskerChart({
 
   if (!conferenceData || conferenceData.length === 0) {
     return (
-      <div className={cn(layout.card, "p-8 text-center")}>
+      <div className={cn(CARD_CLASS, "p-8 text-center")}>
         <p className="text-gray-500 dark:text-gray-300">No conference data available</p>
       </div>
     );
@@ -181,7 +185,7 @@ export default function BballConfBoxWhiskerChart({
 
   if (validConferences.length === 0) {
     return (
-      <div className={cn(layout.card, "p-8 text-center")}>
+      <div className={cn(CARD_CLASS, "p-8 text-center")}>
         <p className="text-gray-500 dark:text-gray-300">No valid Net Rating data available</p>
       </div>
     );
@@ -214,11 +218,11 @@ export default function BballConfBoxWhiskerChart({
     10;
 
   return (
-    <div className={cn(components.table.container, "bg-white dark:bg-slate-900", className)}>
+    <div className={cn(CARD_CLASS, "overflow-x-auto", className)}>
       <div className="relative">
         {/* Fixed Y-axis outside scroll container */}
         <div
-          className="absolute left-0 top-0 bg-white dark:bg-slate-900 z-50"
+          className="absolute left-0 top-0 bg-white dark:bg-[#111827] z-50"
           style={{
             width: padding.left,
             height: chartHeight + logoHeight + padding.top + padding.bottom,

@@ -236,7 +236,7 @@ export default function BasketballTeamWinsBreakdown({
         <svg
           width={chartWidth - 15}
           height={chartHeight + 155}
-          className="border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-slate-900"
+          className="border border-slate-200/80 dark:border-slate-700/80 rounded-lg bg-white dark:bg-slate-800/60"
           viewBox={`-90 0 ${chartWidth - 25} ${chartHeight + 155}`}
         >
           <defs>

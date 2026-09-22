@@ -7,6 +7,11 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useMemo, useState } from "react";
 
+// PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
+// this bespoke file has no CSS module of its own.
+const CARD_CLASS =
+  "relative isolate border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+
 interface Team {
   team_name: string;
   team_id?: string;
@@ -525,15 +530,18 @@ function BballNonConfAnalysisTable({
   const headerHeight = isMobile ? 40 : 48;
 
   return (
-    <div style={{ marginBottom: "12px" }}>
-      {/* Table Container */}
+    <div className={`${CARD_CLASS} mb-3 p-2`}>
+      {/* Table Container. Keeps its own collapsed 1px borders rather than the
+          §5 border-spacing tile grid: every sticky offset below (top: -1,
+          left: expandColWidth - 1, ...) is measured against collapsed borders,
+          and §6 warns how easily those seals break. */}
       <div
         style={{
           overflowX: "auto",
           overflowY: "auto",
           maxHeight: "80vh",
           position: "relative",
-          backgroundColor: "#ffffff",
+          borderRadius: "1rem",
         }}
       >
         <table
@@ -556,7 +564,7 @@ function BballNonConfAnalysisTable({
                   left: -1,
                   zIndex: 32,
                   overflow: "hidden",
-                  backgroundColor: "#f3f4f6",
+                  backgroundColor: "#ffffff",
                   border: "1px solid var(--border-color)",
                   boxShadow: "inset -2px -2px 0 0 var(--border-color)",
                 }}
@@ -572,7 +580,7 @@ function BballNonConfAnalysisTable({
                   left: expandColWidth - 1,
                   zIndex: 32,
                   overflow: "hidden",
-                  backgroundColor: "#f3f4f6",
+                  backgroundColor: "#ffffff",
                   border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   boxShadow: "inset -2px 0 0 0 var(--border-color)",
@@ -594,7 +602,7 @@ function BballNonConfAnalysisTable({
                   zIndex: 31,
                   overflow: "hidden",
                   height: headerHeight,
-                  backgroundColor: "#f3f4f6",
+                  backgroundColor: "#ffffff",
                   border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   boxShadow: "inset 0 -2px 0 0 var(--border-color)",
@@ -615,7 +623,7 @@ function BballNonConfAnalysisTable({
                   zIndex: 31,
                   overflow: "hidden",
                   height: headerHeight,
-                  backgroundColor: "#f3f4f6",
+                  backgroundColor: "#ffffff",
                   border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   boxShadow: "inset 0 -2px 0 0 var(--border-color)",
@@ -636,7 +644,7 @@ function BballNonConfAnalysisTable({
                   zIndex: 31,
                   overflow: "hidden",
                   height: headerHeight,
-                  backgroundColor: "#f3f4f6",
+                  backgroundColor: "#ffffff",
                   border: "1px solid var(--border-color)",
                   borderLeft: "none",
                   boxShadow: "inset 0 -2px 0 0 var(--border-color)",

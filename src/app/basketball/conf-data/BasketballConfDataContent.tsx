@@ -18,6 +18,11 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
+// PAGE_MODERNIZATION_GUIDE.md §2 title tier - bold slate, not the old
+// gray/normal style.
+const SECTION_TITLE_CLASS =
+  "text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4";
+
 export default function BasketballConfDataContent({ initialData }: { initialData?: CombinedBasketballConfResponse }) {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
@@ -265,7 +270,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
 
               {/* Conference Net Rating Distribution Section */}
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
+                <h3 className={SECTION_TITLE_CLASS}>
                   Conference Net Rating Distribution
                 </h3>
                 <div className="netrtg-box-whisker-container">
@@ -393,7 +398,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
 
               {/* Non-Conference Opponent Analysis Section */}
               <div className="mb-8">
-                <h3 className="text-xl font-normal text-gray-600 dark:text-gray-300 mb-4">
+                <h3 className={SECTION_TITLE_CLASS}>
                   Non-Conference Opponent Analysis
                 </h3>
                 <div className="nonconf-analysis-table">

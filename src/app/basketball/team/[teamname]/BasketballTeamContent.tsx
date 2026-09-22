@@ -244,6 +244,7 @@ const SECTIONS: TeamSection<TeamData>[] = [
 
 const BASKETBALL_TEAM: TeamContentConfig<TeamData, History> = {
   sport: "basketball",
+  modernCards: true,
   pageId: "basketball-team",
   useTeamData: useBasketballTeamData,
   useHistoryData: useBasketballTeamAllHistory,

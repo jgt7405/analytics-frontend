@@ -5,6 +5,10 @@
 // is guaranteed to have registered them first.
 import "@/lib/chartjs-setup";
 
+import ChartEndLabels, {
+  END_LABEL_PADDING_RIGHT_WIDE,
+} from "@/components/features/shared/ChartEndLabels";
+
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import {
@@ -13,7 +17,7 @@ import {
   getBasketballDateRange,
 } from "@/lib/chartDateRange";
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
-import type { Chart } from "chart.js";
+import type { Chart, ChartArea } from "chart.js";
 import {
   Chart as ChartJS,
   type TooltipModel,
@@ -171,6 +175,10 @@ export default function BasketballTeamTournamentBidHistory({
       : null;
   });
 
+  const lastBid =
+    [...bidData].reverse().find((v) => v !== null && v !== undefined) ?? null;
+  const lastAvgSeed =
+    [...seedData].reverse().find((v) => v !== null && v !== undefined) ?? null;
   const chartData = {
     labels: chartLabels.map((l) => l.displayLabel),
     datasets: [
@@ -201,6 +209,35 @@ export default function BasketballTeamTournamentBidHistory({
       },
     ],
   };
+
+  // Tracks the end-of-line marker with a ResizeObserver (not a one-shot
+  // timeout) so it stays aligned with the chart's actual current layout
+  // (PAGE_MODERNIZATION_GUIDE.md §8g).
+  const [chartArea, setChartArea] = useState<ChartArea | null>(null);
+
+  useEffect(() => {
+    const canvas = chartRef.current?.canvas;
+    if (!canvas) return;
+
+    const updateChartArea = () => {
+      const area = chartRef.current?.chartArea;
+      if (!area) return;
+      setChartArea((prev: ChartArea | null) =>
+        prev &&
+        prev.top === area.top &&
+        prev.right === area.right &&
+        prev.bottom === area.bottom
+          ? prev
+          : { ...area },
+      );
+    };
+
+    const observer = new ResizeObserver(updateChartArea);
+    observer.observe(canvas);
+    updateChartArea();
+
+    return () => observer.disconnect();
+  }, [data]);
 
   const options = {
     responsive: true,
@@ -352,7 +389,12 @@ export default function BasketballTeamTournamentBidHistory({
       },
     },
     layout: {
-      padding: { top: 14 },
+      padding: {
+        top: 14,
+        right: isMobile
+          ? END_LABEL_PADDING_RIGHT_WIDE.mobile
+          : END_LABEL_PADDING_RIGHT_WIDE.desktop,
+      },
     },
   };
 
@@ -420,6 +462,26 @@ export default function BasketballTeamTournamentBidHistory({
         </div>
       )}
       <Line ref={chartRef} data={chartData} options={options} />
+      <ChartEndLabels
+        chart={chartRef.current}
+        chartArea={chartArea}
+        isDark={isDark}
+        mobile={isMobile}
+        markers={[
+          {
+            value: lastBid,
+            color: primaryColor,
+            scaleId: "y",
+            text: lastBid !== null ? `${lastBid.toFixed(0)}%` : "",
+          },
+          {
+            value: lastAvgSeed,
+            color: finalSecondaryColor,
+            scaleId: "y1",
+            text: lastAvgSeed !== null ? `#${lastAvgSeed.toFixed(1)}` : "",
+          },
+        ]}
+      />
     </div>
   );
 }

@@ -1,0 +1,89 @@
+/* Heat-tile grid for the team-page NCAA Seed Projections breakdown.
+   Mirrors FootballTeamSeedProjections.module.css (PAGE_MODERNIZATION_GUIDE.md
+   §5/§6): no .card/.cardHeader here, since the shared TeamContent scaffold
+   already supplies the card chrome. */
+
+.scrollViewport {
+  position: relative;
+  overflow: auto;
+  max-width: 100%;
+  /* No left padding: the sticky Wins column sits at left: 0 of this
+     container's content box (see PAGE_MODERNIZATION_GUIDE.md §6a). */
+  padding: 0 0.5rem 0.4rem 0;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollViewport::-webkit-scrollbar {
+  height: 0.5rem;
+}
+
+.scrollViewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollViewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+/* border-spacing: 1px is the §5 heat-tile grid - the card background shows
+   through as the gridline, instead of a 1px border drawn per cell. */
+.table {
+  width: max-content;
+  border-collapse: separate;
+  border-spacing: 1px;
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .table {
+    font-size: 0.85rem;
+  }
+}
+
+.headerCell {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border: 0;
+  padding: 0.3rem 0.25rem;
+  background: #ffffff;
+  box-shadow: 0 2px 0 0 #ffffff;
+  color: #334155;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-align: center;
+  isolation: isolate;
+}
+
+/* Higher tier than .stickyCell below, so the corner header doesn't get
+   painted over by a left-sticky body cell on scroll (§6c). */
+.stickyHeaderCell {
+  left: 0;
+  z-index: 30;
+}
+
+.dataCell {
+  border: 0;
+  border-radius: 0.3rem;
+  padding: 0.25rem 0.2rem;
+  color: #1f2937;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stickyCell {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: #ffffff;
+  box-shadow: 2px 0 0 0 #ffffff;
+  color: #475569;
+}

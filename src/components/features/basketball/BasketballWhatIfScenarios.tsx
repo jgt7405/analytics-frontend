@@ -1584,7 +1584,7 @@ export default function BasketballWhatIfScenarios() {
                   {hasCalculated &&
                     selectedDetailTeamId &&
                     displayBaseline.length > 0 && (
-                      <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
+                      <div className={cn(styles.card, "p-4 mt-3")}>
                         <WhatIfTeamSummary
                           baseline={
                             whatIfData?.current_projections_no_ties ?? []
@@ -1621,7 +1621,7 @@ export default function BasketballWhatIfScenarios() {
                 {hasCalculated &&
                   selectedDetailTeamId &&
                   displayBaseline.length > 0 && (
-                    <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 -mt-2 pt-0 border-t-0">
+                    <div className={cn(styles.card, "p-4 mt-3")}>
                       <WhatIfTeamSummary
                         baseline={whatIfData?.current_projections_no_ties ?? []}
                         whatif={whatIfData?.data_no_ties ?? []}

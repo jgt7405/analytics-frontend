@@ -12,6 +12,14 @@ import { saveCanvasImage } from "@/lib/save-image";
 import { Camera, Loader } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+// PAGE_MODERNIZATION_GUIDE.md §8a card shell / §2 heading tier, as Tailwind
+// constants since this bespoke file has no CSS module of its own.
+const CARD_CLASS =
+  "relative isolate border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+
+const SUB_TITLE_CLASS =
+  "text-base font-[650] tracking-[-0.01em] text-slate-700 dark:text-slate-300";
+
 const TEAL_COLOR = "rgb(0, 151, 178)";
 
 interface NextGameMetrics {
@@ -276,9 +284,9 @@ export default function NextGameImpact({
   const numTeams = teamMetrics?.num_teams ?? 16;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 mt-4">
+    <div className={`${CARD_CLASS} p-4 mt-4`}>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-base font-medium">Team Detail</h3>
+        <h3 className={SUB_TITLE_CLASS}>Team Detail</h3>
         <div className="flex items-center gap-2" data-no-screenshot>
           {game && teamMetrics && (
             <button

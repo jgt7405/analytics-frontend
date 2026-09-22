@@ -1,10 +1,14 @@
 "use client";
 
 import { useResponsive } from "@/hooks/useResponsive";
-import { layout } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+
+// PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
+// this bespoke file has no CSS module of its own.
+const CARD_CLASS =
+  "relative isolate border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
 
 interface ChartData {
   team_name: string;
@@ -491,7 +495,7 @@ export default function BballScatterplotChart({
   };
 
   return (
-    <div className={cn(layout.card, "p-6")} style={{ padding: 0 }}>
+    <div className={cn(CARD_CLASS, "p-6")} style={{ padding: 0 }}>
       {state.data.length === 0 && !state.isLoading && !state.error && (
         <>
           <h2 className="text-xl font-semibold mb-4 p-6">Scatterplot Chart</h2>

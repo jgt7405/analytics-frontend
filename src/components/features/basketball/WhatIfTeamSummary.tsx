@@ -364,7 +364,9 @@ export default function WhatIfTeamSummary({
   return (
     <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-medium">What If Summary</h4>
+        <h4 className="text-sm font-[650] tracking-[-0.01em] text-slate-700 dark:text-slate-300">
+          What If Summary
+        </h4>
         <div className="flex items-center gap-2" data-no-screenshot>
           <button
             onClick={async () => {
