@@ -87,7 +87,10 @@ export interface CWVGame {
   team: string;
   win_prob: number;
   date?: string;
-  status?: "W" | "L" | "scheduled";
+  status?: string;
+  opponent?: string;
+  opponent_logo?: string;
+  location?: string;
 }
 
 export interface CWVData {

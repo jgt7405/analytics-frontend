@@ -17,6 +17,11 @@ const BASKETBALL_CWV: CWVContentConfig<CWVData> = {
   tableTitle: "Conference Win Value (CWV)",
   useCWVData: useCWV,
   CWVTable,
+  explainerLines: [
+    "Conf Win Value (CWV) compares the actual wins to expected wins for a .500 team with that same schedule.",
+    "Games are ordered from lowest to highest win probability.",
+    "This only reflects past results, not future projections or predictions of final standings.",
+  ],
 };
 
 export default function BasketballCWVContent(props: {
