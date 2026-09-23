@@ -202,6 +202,10 @@ export default function BballConfBoxWhiskerChart({
   const teamSpacing = isMobile ? 15 : 35;
   const padding = { top: 20, right: 10, bottom: 10, left: 40 };
   const logoSize = isMobile ? 26 : 36;
+  // Rounded marks: caps/lines get pill ends (half their thickness), the
+  // Q1-Q3 box a softer corner.
+  const capRadius = lineThickness / 2;
+  const boxRadius = isMobile ? 5 : 6;
 
   const scale = (value: number) => {
     return (
@@ -326,6 +330,7 @@ export default function BballConfBoxWhiskerChart({
                         width: lineThickness,
                         backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - lineThickness) / 2,
+                        borderRadius: capRadius,
                       }}
                     />
                     {/* Top whisker */}
@@ -337,6 +342,7 @@ export default function BballConfBoxWhiskerChart({
                         height: lineThickness,
                         backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - whiskerWidth) / 2,
+                        borderRadius: capRadius,
                       }}
                     />
                     {/* Bottom whisker */}
@@ -348,6 +354,7 @@ export default function BballConfBoxWhiskerChart({
                         height: lineThickness,
                         backgroundColor: adjustColorIfWhite(rawSecondaryColor),
                         left: (boxWidth - whiskerWidth) / 2,
+                        borderRadius: capRadius,
                       }}
                     />
                     {/* Box (Q1 to Q3) */}
@@ -358,7 +365,8 @@ export default function BballConfBoxWhiskerChart({
                         height: scale(q1) - scale(q3),
                         width: boxWidth,
                         backgroundColor: primaryColor,
-                        border: `${lineThickness}px solid ${adjustColorIfWhite(rawSecondaryColor)}`,
+                        borderRadius: boxRadius,
+                        boxShadow: `inset 0 0 0 ${lineThickness}px ${adjustColorIfWhite(rawSecondaryColor)}`,
                       }}
                     />
                     {/* Median line */}
@@ -369,6 +377,7 @@ export default function BballConfBoxWhiskerChart({
                         width: boxWidth,
                         height: lineThickness,
                         backgroundColor: adjustColorIfWhite(rawSecondaryColor),
+                        borderRadius: capRadius,
                       }}
                     />
                     {/* Conference logo */}
