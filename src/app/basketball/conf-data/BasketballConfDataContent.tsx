@@ -270,9 +270,10 @@ export default function BasketballConfDataContent({ initialData }: { initialData
 
               {/* Conference Net Rating Distribution Section */}
               <div className="mb-8">
-                <h3 className={SECTION_TITLE_CLASS}>
-                  Conference Net Rating Distribution
-                </h3>
+                {/* No external h3 here - BballConfBoxWhiskerChart renders its
+                    own bold in-card title per §8a of
+                    PAGE_MODERNIZATION_GUIDE.md; an external heading would
+                    duplicate it (§3). */}
                 <div className="netrtg-box-whisker-container">
                   <Suspense fallback={<BoxWhiskerChartSkeleton />}>
                     {filteredConfData.length > 0 && (

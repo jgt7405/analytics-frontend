@@ -4,12 +4,8 @@ import { BoxWhiskerChartSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
-
-// PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
-// this bespoke file has no CSS module of its own.
-const CARD_CLASS =
-  "relative isolate border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import styles from "./BballConfBoxWhiskerChart.module.css";
 
 interface ConferenceData {
   conference_name: string;
@@ -30,6 +26,8 @@ interface ConferenceData {
 interface BballConfBoxWhiskerChartProps {
   conferenceData: ConferenceData[];
   className?: string;
+  /** Optional element rendered on the right of the in-card title row. */
+  headerRight?: ReactNode;
 }
 
 function ConferenceLogo({
@@ -74,6 +72,7 @@ function ConferenceLogo({
 export default function BballConfBoxWhiskerChart({
   conferenceData,
   className = "",
+  headerRight,
 }: BballConfBoxWhiskerChartProps) {
   const { isMobile } = useResponsive();
   const [mounted, setMounted] = useState(false);
@@ -177,16 +176,16 @@ export default function BballConfBoxWhiskerChart({
 
   if (!conferenceData || conferenceData.length === 0) {
     return (
-      <div className={cn(CARD_CLASS, "p-8 text-center")}>
-        <p className="text-gray-500 dark:text-gray-300">No conference data available</p>
+      <div className={cn(styles.card, "p-8 text-center", className)}>
+        <p className={styles.emptyState}>No conference data available</p>
       </div>
     );
   }
 
   if (validConferences.length === 0) {
     return (
-      <div className={cn(CARD_CLASS, "p-8 text-center")}>
-        <p className="text-gray-500 dark:text-gray-300">No valid Net Rating data available</p>
+      <div className={cn(styles.card, "p-8 text-center", className)}>
+        <p className={styles.emptyState}>No valid Net Rating data available</p>
       </div>
     );
   }
@@ -218,11 +217,17 @@ export default function BballConfBoxWhiskerChart({
     10;
 
   return (
-    <div className={cn(CARD_CLASS, "overflow-x-auto", className)}>
+    <div className={cn(styles.card, className)}>
+      <div className={styles.cardHeader}>
+        <div className={styles.titleGroup} data-screenshot-hide="true">
+          <h2 className={styles.title}>Conference Net Rating Distribution</h2>
+        </div>
+        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+      </div>
       <div className="relative">
         {/* Fixed Y-axis outside scroll container */}
         <div
-          className="absolute left-0 top-0 bg-white dark:bg-[#111827] z-50"
+          className={cn(styles.yAxisPane, "absolute left-0 top-0 z-50")}
           style={{
             width: padding.left,
             height: chartHeight + logoHeight + padding.top + padding.bottom,
@@ -240,7 +245,10 @@ export default function BballConfBoxWhiskerChart({
             {yAxisTicks.map((tick) => (
               <div
                 key={tick}
-                className="absolute w-full text-right pr-1 text-gray-500 dark:text-gray-300 font-medium flex items-center justify-end"
+                className={cn(
+                  styles.yAxisLabel,
+                  "absolute w-full text-right pr-1 flex items-center justify-end",
+                )}
                 style={{
                   top: `${scale(tick)}px`,
                   height: "1px",
@@ -255,7 +263,7 @@ export default function BballConfBoxWhiskerChart({
         </div>
 
         {/* Scrollable chart area */}
-        <div className="overflow-x-auto">
+        <div className={styles.scrollViewport}>
           <div
             className="relative"
             style={{
