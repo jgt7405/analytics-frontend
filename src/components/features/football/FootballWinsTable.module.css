@@ -222,6 +222,36 @@
   box-shadow: none;
 }
 
+/* Settled cells: a win total the team has already banked, or one they can
+   no longer reach. Both are blank in the distribution, so the glyph is what
+   tells them apart. See lib/winsReachability. */
+.achievedTile,
+.impossibleTile {
+  border-color: transparent;
+  box-shadow: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.achievedTile {
+  color: #16a34a;
+}
+
+.impossibleTile {
+  color: #94a3b8;
+}
+
+@media (prefers-color-scheme: dark) {
+  .achievedTile {
+    color: #4ade80;
+  }
+
+  .impossibleTile {
+    color: #64748b;
+  }
+}
+
 /* All summary rows (Average and the Curr Conf Record footer row) share
    one look - previously only the Average row got the #f1f5f9 background,
    leaving the footer row visibly lighter even though both are the same

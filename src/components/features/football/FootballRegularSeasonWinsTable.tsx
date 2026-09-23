@@ -3,6 +3,10 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
+import {
+  classifyWinTotal,
+  inferTotalGames,
+} from "@/lib/winsReachability";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
@@ -73,6 +77,19 @@ function FootballRegularSeasonWinsTable({
 
     return Array.from({ length: maxWins + 1 }, (_, index) => maxWins - index);
   }, [standings]);
+
+  // Season length, used to tell "can no longer reach this" apart from
+  // "possible but rounds to 0%". See lib/winsReachability.
+  const totalGames = useMemo(
+    () =>
+      inferTotalGames(
+        standings.map((team) => ({
+          losses: team.actual_total_losses ?? 0,
+          distribution: team.reg_wins_distribution,
+        })),
+      ),
+    [standings],
+  );
 
   const peakProbabilityByTeam = useMemo(
     () =>
@@ -186,9 +203,31 @@ function FootballRegularSeasonWinsTable({
                   );
                   const percentage = hasData ? distribution[winsKey] : 0;
                   const rounded = Math.round(percentage);
+                  const outcome = classifyWinTotal(
+                    wins,
+                    {
+                      actualWins: team.actual_total_wins ?? 0,
+                      actualLosses: team.actual_total_losses ?? 0,
+                    },
+                    totalGames,
+                  );
+                  // A settled cell is only marked when there is no
+                  // probability to show - late in the season the row for a
+                  // team's current win total still carries a real number,
+                  // and that number says more than a check would.
+                  const mark = hasData
+                    ? null
+                    : outcome === "achieved"
+                      ? "achieved"
+                      : outcome === "impossible"
+                        ? "impossible"
+                        : null;
                   const cellStyle = hasData
                     ? getWinCellColor(percentage)
-                    : { backgroundColor: "transparent", color: "transparent" };
+                    : {
+                        backgroundColor: "transparent",
+                        color: mark ? undefined : "transparent",
+                      };
                   const isPeak =
                     hasData &&
                     percentage > 0 &&
@@ -205,15 +244,29 @@ function FootballRegularSeasonWinsTable({
                           styles.heatTile,
                           isPeak && styles.peakTile,
                           !hasData && styles.emptyTile,
+                          mark === "achieved" && styles.achievedTile,
+                          mark === "impossible" && styles.impossibleTile,
                         )}
                         style={cellStyle}
                         title={
                           hasData
                             ? `${team.team_name}: ${rounded}% chance of ${wins} regular season wins`
-                            : `${team.team_name}: no data for ${wins} regular season wins`
+                            : mark === "achieved"
+                              ? `${team.team_name}: already has ${wins} regular season wins`
+                              : mark === "impossible"
+                                ? `${team.team_name}: can no longer reach ${wins} regular season wins`
+                                : `${team.team_name}: no data for ${wins} regular season wins`
                         }
                       >
-                        {hasData ? `${rounded}%` : ""}
+                        {hasData ? (
+                          `${rounded}%`
+                        ) : mark ? (
+                          <span aria-hidden="true">
+                            {mark === "achieved" ? "✓" : "✕"}
+                          </span>
+                        ) : (
+                          ""
+                        )}
                       </div>
                     </td>
                   );
