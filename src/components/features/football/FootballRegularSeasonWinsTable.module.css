@@ -199,6 +199,7 @@
 }
 
 .heatTile {
+  position: relative;
   display: flex;
   width: 100%;
   height: 100%;
@@ -229,31 +230,41 @@
 
 /* Settled cells: a win total the team has already banked, or one they can
    no longer reach. Both are blank in the distribution, so the glyph is what
-   tells them apart. See lib/winsReachability. */
+   tells them apart. Teal is the heat scale's own darkest shade (WINS_DARK
+   in the component), so the marks read as part of the table rather than as
+   a second palette. See lib/winsReachability. */
 .achievedTile,
 .impossibleTile {
   border-color: transparent;
   box-shadow: none;
+  color: rgb(24 98 123);
   font-size: 0.9rem;
   font-weight: 600;
   line-height: 1;
 }
 
-.achievedTile {
-  color: #16a34a;
+.impossibleTile {
+  opacity: 0.55;
 }
 
-.impossibleTile {
-  color: #94a3b8;
+/* The check on a cell that already shows a percentage. It rides in the
+   corner so the number keeps the middle, and takes the tile's own text
+   color - teal would disappear against the darker end of the heat scale,
+   where the percentage itself is white. */
+.markBadge {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.85;
 }
 
 @media (prefers-color-scheme: dark) {
-  .achievedTile {
-    color: #4ade80;
-  }
-
+  .achievedTile,
   .impossibleTile {
-    color: #64748b;
+    color: rgb(125 197 219);
   }
 }
 

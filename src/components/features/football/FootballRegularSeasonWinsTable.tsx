@@ -211,22 +211,18 @@ function FootballRegularSeasonWinsTable({
                     },
                     totalGames,
                   );
-                  // A settled cell is only marked when there is no
-                  // probability to show - late in the season the row for a
-                  // team's current win total still carries a real number,
-                  // and that number says more than a check would.
-                  const mark = hasData
-                    ? null
-                    : outcome === "achieved"
-                      ? "achieved"
-                      : outcome === "impossible"
-                        ? "impossible"
-                        : null;
+                  // A blank cell shows the glyph on its own. A cell that
+                  // already carries a probability keeps the number and gets
+                  // the check as a corner badge instead, so neither piece of
+                  // information crowds the other out.
+                  const mark = outcome === "open" ? null : outcome;
+                  const showGlyph = !hasData && mark !== null;
+                  const showBadge = hasData && mark === "achieved";
                   const cellStyle = hasData
                     ? getWinCellColor(percentage)
                     : {
                         backgroundColor: "transparent",
-                        color: mark ? undefined : "transparent",
+                        color: showGlyph ? undefined : "transparent",
                       };
                   const isPeak =
                     hasData &&
@@ -244,23 +240,35 @@ function FootballRegularSeasonWinsTable({
                           styles.heatTile,
                           isPeak && styles.peakTile,
                           !hasData && styles.emptyTile,
-                          mark === "achieved" && styles.achievedTile,
-                          mark === "impossible" && styles.impossibleTile,
+                          showGlyph && mark === "achieved" && styles.achievedTile,
+                          showGlyph && mark === "impossible" && styles.impossibleTile,
                         )}
                         style={cellStyle}
                         title={
-                          hasData
-                            ? `${team.team_name}: ${rounded}% chance of ${wins} regular season wins`
-                            : mark === "achieved"
-                              ? `${team.team_name}: already has ${wins} regular season wins`
-                              : mark === "impossible"
-                                ? `${team.team_name}: can no longer reach ${wins} regular season wins`
+                          mark === "achieved"
+                            ? hasData
+                              ? `${team.team_name}: already has ${wins} regular season wins; ${rounded}% chance of finishing there`
+                              : `${team.team_name}: already has ${wins} regular season wins`
+                            : mark === "impossible"
+                              ? `${team.team_name}: can no longer reach ${wins} regular season wins`
+                              : hasData
+                                ? `${team.team_name}: ${rounded}% chance of ${wins} regular season wins`
                                 : `${team.team_name}: no data for ${wins} regular season wins`
                         }
                       >
                         {hasData ? (
-                          `${rounded}%`
-                        ) : mark ? (
+                          <>
+                            {`${rounded}%`}
+                            {showBadge && (
+                              <span
+                                className={styles.markBadge}
+                                aria-hidden="true"
+                              >
+                                {"✓"}
+                              </span>
+                            )}
+                          </>
+                        ) : showGlyph ? (
                           <span aria-hidden="true">
                             {mark === "achieved" ? "✓" : "✕"}
                           </span>
