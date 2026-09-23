@@ -694,5 +694,10 @@ export interface BasketballCompositeRatingsResponse {
   teams: BasketballCompositeRatingTeam[];
   sources: BasketballCompositeRatingSource[];
   total_sources: number;
+  // last_updated is last_changed when known, else last_scraped. Both are null
+  // for rows written before the scrape started stamping dates.
+  last_updated: string | null;
+  last_changed: string | null;
+  last_scraped: string | null;
   error?: string;
 }

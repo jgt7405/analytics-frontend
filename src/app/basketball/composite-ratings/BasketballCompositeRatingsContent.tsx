@@ -12,12 +12,25 @@ export default function BasketballCompositeRatingsContent() {
   const sources = data?.sources ?? [];
   const totalSources = data?.total_sources ?? sources.length;
 
+  // Parsed as a plain local date: these are date-only strings, and letting the
+  // Date constructor read them as UTC shifts them a day back west of Greenwich.
+  function formatDate(value: string | null | undefined): string | null {
+    if (!value) return null;
+    const parsed = new Date(value + "T00:00:00");
+    return isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString();
+  }
+
+  const lastChanged = formatDate(data?.last_changed);
+  const lastScraped = formatDate(data?.last_scraped);
+  const headerDate = lastChanged ?? lastScraped;
+
   return (
     <ErrorBoundary level="page">
       <PageLayoutWrapper
         title="Composite Basketball Ratings"
         hideTitle
         isLoading={isLoading}
+        rightElement={headerDate ? `Updated: ${headerDate}` : undefined}
       >
         <div className="-mt-2 md:-mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
@@ -40,6 +53,19 @@ export default function BasketballCompositeRatingsContent() {
             calls NetRtg, and it drives the TWV baselines, game win probabilities,
             and NCAA tournament seeding.
           </div>
+
+          {lastScraped ? (
+            <div
+              className="mb-6 -mt-4 text-xs text-gray-500 dark:text-gray-400"
+              style={{ lineHeight: "1.3" }}
+            >
+              Ratings last changed {lastChanged ?? "—"}; last scraped{" "}
+              {lastScraped}. All three sources are scraped together and written
+              only if every one of them returns a full set of teams, so if the
+              scraped date stops advancing the table below is showing older
+              numbers.
+            </div>
+          ) : null}
 
           <BasketballCompositeRatingsTable
             teams={teams}

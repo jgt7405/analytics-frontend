@@ -160,9 +160,11 @@ export default function BasketballCompositeRatingsTable(
     [teams],
   );
 
-  // Sources with nothing in them yet (Torvik and EvanMiya do not publish until
-  // the season is close) are called out above the table instead of leaving the
-  // reader to wonder why three columns are all dashes.
+  // A source with no data anywhere is called out above the table rather than
+  // leaving the reader to wonder why its columns are all dashes. Deliberately
+  // does not say WHY it is empty: the sites do publish year-round, so an empty
+  // column means this snapshot predates them being picked up, not that the
+  // rating does not exist yet.
   const emptySourceLabels = useMemo(
     function () {
       return sources
@@ -287,7 +289,8 @@ export default function BasketballCompositeRatingsTable(
           {emptySourceLabels.length > 0
             ? " · " +
               emptySourceLabels.join(" and ") +
-              " not published yet; the composite is the remaining source" +
+              (emptySourceLabels.length === 1 ? " has" : " have") +
+              " no data in this snapshot; the composite is the remaining source" +
               (totalSources - emptySourceLabels.length === 1 ? "" : "s")
             : ""}
         </div>
