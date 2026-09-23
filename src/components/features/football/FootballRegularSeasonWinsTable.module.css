@@ -247,14 +247,15 @@
   opacity: 0.55;
 }
 
-/* The check on a cell that already shows a percentage. It rides in the
-   corner so the number keeps the middle, and takes the tile's own text
+/* The check on a cell that already shows a percentage. It sits against the
+   right edge so the number keeps the middle, and takes the tile's own text
    color - teal would disappear against the darker end of the heat scale,
    where the percentage itself is white. */
 .markBadge {
   position: absolute;
-  top: 1px;
+  top: 50%;
   right: 2px;
+  transform: translateY(-50%);
   font-size: 0.62rem;
   font-weight: 700;
   line-height: 1;
