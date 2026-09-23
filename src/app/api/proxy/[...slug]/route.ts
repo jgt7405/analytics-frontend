@@ -390,6 +390,9 @@ export async function GET(
           case "upcoming_games":
             backendPath = `/basketball/upcoming_games`;
             break;
+          case "composite_ratings":
+            backendPath = `/basketball/composite_ratings`;
+            break;
           default:
             return NextResponse.json(
               { error: "Unknown basketball endpoint" },

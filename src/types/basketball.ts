@@ -666,3 +666,33 @@ export interface Theme {
   borderRadius: Record<string, string>;
   shadows: Record<string, string>;
 }
+
+// Composite ratings (/basketball/composite-ratings).
+// Unlike the football composite, which averages z-scores, the basketball combo
+// anchors on KenPom and maps the other sources onto its scale - so each source
+// has a raw rating and a KenPom-scaled one, and combo_rating is already on the
+// NetRtg scale rather than needing a 0-100 display scaling.
+export interface BasketballCompositeRatingSource {
+  key: string;
+  label: string;
+  source_url: string | null;
+  has_adjusted: boolean;
+}
+
+export interface BasketballCompositeRatingTeam {
+  rank: number;
+  team_name: string;
+  conference: string;
+  combo_rating: number | null;
+  num_sources: number;
+  ratings: Record<string, number | null>;
+  adjusted_ratings: Record<string, number | null>;
+  ranks: Record<string, number | null>;
+}
+
+export interface BasketballCompositeRatingsResponse {
+  teams: BasketballCompositeRatingTeam[];
+  sources: BasketballCompositeRatingSource[];
+  total_sources: number;
+  error?: string;
+}
