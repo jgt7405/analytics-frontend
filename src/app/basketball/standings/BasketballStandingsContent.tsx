@@ -14,6 +14,7 @@ import StandingsTable from "@/components/features/basketball/StandingsTable";
 import StandingsTableNoTies from "@/components/features/basketball/StandingsTableNoTies";
 import { useBballStandingsHistory } from "@/hooks/useBballStandingsHistory";
 import { useStandings } from "@/hooks/useStandings";
+import { getBasketballSeasonLabel } from "@/lib/chartDateRange";
 import type { Standing, StandingsApiResponse } from "@/types/basketball";
 
 const KNOWN_CONFERENCES = [
@@ -49,42 +50,27 @@ const KNOWN_CONFERENCES = [
 const SIM_BLURB =
   "1,000 season simulations using composite ratings based on kenpom, barttorvik and evanmiya.";
 
-// Basketball seasons span the new year: label "2025-26", window 10/30–3/15.
+// Basketball seasons span the new year: label "2025-26", window 10/30–3/22.
+// The April boundary now lives in chartDateRange so every basketball page
+// derives the same label; prefer the standings timestamp, then the history
+// max date, then today.
 const computeCurrentSeason = (
   standingsData: Standing[] | undefined,
   historyMaxDate: string | undefined,
 ): string => {
-  const today = new Date();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
+  const firstTeam = standingsData?.[0] as
+    | (Standing & { updated_at?: string; version_date?: string })
+    | undefined;
+  const timestamp = firstTeam?.updated_at || firstTeam?.version_date;
 
-  if (standingsData && standingsData.length > 0) {
-    const firstTeam = standingsData[0] as Standing & {
-      updated_at?: string;
-      version_date?: string;
-    };
-    const timestamp = firstTeam?.updated_at || firstTeam?.version_date;
-    if (timestamp) {
-      const dataDate = new Date(timestamp);
-      const dataMonth = dataDate.getMonth() + 1;
-      const dataYear = dataDate.getFullYear();
-      // Data from April onward belongs to the season starting that fall.
-      if (dataMonth > 3 || dataMonth >= 10) {
-        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
-      }
+  if (timestamp) {
+    const dataDate = new Date(timestamp);
+    if (!isNaN(dataDate.getTime())) {
+      return getBasketballSeasonLabel(dataDate);
     }
   }
 
-  if (historyMaxDate) {
-    const [dataYear, dataMonth] = historyMaxDate.split("-").map(Number);
-    if (dataMonth >= 10 || dataMonth <= 3) {
-      return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
-    }
-  }
-
-  return month < 4
-    ? `${year - 1}-${year.toString().slice(-2)}`
-    : `${year}-${(year + 1).toString().slice(-2)}`;
+  return getBasketballSeasonLabel(historyMaxDate);
 };
 
 // Timeline/first-place item types come from the history hook's response.

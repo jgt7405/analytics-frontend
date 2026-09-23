@@ -3,6 +3,50 @@ export interface ChartDateRange {
   end: Date;
 }
 
+/**
+ * The one basketball season-boundary rule for the whole app.
+ *
+ * A basketball season spans two calendar years and its chart window runs
+ * 10/30 -> 3/22, so April is the natural cut: anything dated April or later
+ * belongs to the season that tips off that fall, anything in Jan-Mar belongs
+ * to the season that started the previous fall. Pass the latest date the
+ * page has data for (ISO `YYYY-MM-DD`, or a Date); omit it to use today.
+ *
+ * Four pages used to derive this independently and disagreed - conf-data,
+ * conf-tourney and team all rolled over in October, so through the entire
+ * off-season they labelled the finished season as current and their charts
+ * kept starting 10/30 of the *previous* year. Standings already used this
+ * April rule; everything now shares it.
+ */
+export function getBasketballSeasonLabel(latest?: string | Date | null): string {
+  let year: number;
+  let month: number;
+
+  if (typeof latest === "string" && latest.length >= 7) {
+    const [y, m] = latest.split("-").map(Number);
+    year = y;
+    month = m;
+  } else if (latest instanceof Date && !isNaN(latest.getTime())) {
+    year = latest.getFullYear();
+    month = latest.getMonth() + 1;
+  } else {
+    const today = new Date();
+    year = today.getFullYear();
+    month = today.getMonth() + 1;
+  }
+
+  const startYear = month <= 3 ? year - 1 : year;
+  return `${startYear}-${(startYear + 1).toString().slice(-2)}`;
+}
+
+/** Latest `date` in a timeline-ish array, as ISO `YYYY-MM-DD`. */
+export function getLatestDataDate(
+  data?: Array<{ date: string }> | null
+): string | undefined {
+  if (!data || data.length === 0) return undefined;
+  return data.reduce((max, d) => (d.date > max ? d.date : max), data[0].date);
+}
+
 function parseSeasonStartYear(season: string): number {
   const parts = season.split("-");
   return parseInt(parts[0], 10);
@@ -56,28 +100,9 @@ export function getBasketballDateRange(
   season?: string,
   data?: Array<{ date: string }>
 ): ChartDateRange {
-  let startYear: number;
-
-  if (season) {
-    startYear = parseSeasonStartYear(season);
-  } else {
-    const dataYear = getLatestDataYear(data);
-    if (dataYear) {
-      if (data && data.length > 0) {
-        const maxDate = data.reduce((max, d) => (d.date > max ? d.date : max), data[0].date);
-        const [, month] = maxDate.split("-").map(Number);
-        // If latest data is Jan-Mar (months 1-3), season started in prior year
-        startYear = month <= 3 ? dataYear - 1 : dataYear;
-      } else {
-        startYear = dataYear;
-      }
-    } else {
-      // Default based on current date
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      startYear = month <= 3 ? now.getFullYear() - 1 : now.getFullYear();
-    }
-  }
+  const startYear = parseSeasonStartYear(
+    season ?? getBasketballSeasonLabel(getLatestDataDate(data))
+  );
 
   return {
     start: new Date(startYear, 9, 30, 12, 0, 0),    // 10/30

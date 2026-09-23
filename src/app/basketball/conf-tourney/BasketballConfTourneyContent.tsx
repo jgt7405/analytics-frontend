@@ -10,6 +10,7 @@ import ConferenceTourneyTable from "@/components/features/basketball/ConferenceT
 import { BasketballTableSkeleton } from "@/components/ui/LoadingSkeleton";
 import { useBasketballConfTourneyHistory } from "@/hooks/useBasketballConfTourneyHistory";
 import { useConferenceTourney } from "@/hooks/useConferenceTourney";
+import { getBasketballSeasonLabel, getLatestDataDate } from "@/lib/chartDateRange";
 import type { ConfTourneyApiResponse } from "@/services/basketball-api";
 import dynamic from "next/dynamic";
 
@@ -29,28 +30,9 @@ type History = NonNullable<
 const SIM_BLURB =
   "1,000 season simulations using composite ratings based on kenpom, barttorvik and evanmiya.";
 
-// Basketball conference tournaments run in March; derive the season label
-// from the latest history date (Oct-Dec -> season starts that year;
-// Jan-Sep -> season started the prior year).
-const computeSeason = (history: History | null | undefined): string => {
-  if (history?.champion_data && history.champion_data.length > 0) {
-    const maxDate = history.champion_data.reduce(
-      (max: string, item) => (item.date > max ? item.date : max),
-      history.champion_data[0].date,
-    );
-    const [dataYear, dataMonth] = maxDate.split("-").map(Number);
-    if (dataMonth >= 10) {
-      return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
-    }
-    return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
-  }
-  const today = new Date();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
-  return month < 10
-    ? `${year - 1}-${year.toString().slice(-2)}`
-    : `${year}-${(year + 1).toString().slice(-2)}`;
-};
+// Season label from the shared April-boundary rule in chartDateRange.
+const computeSeason = (history: History | null | undefined): string =>
+  getBasketballSeasonLabel(getLatestDataDate(history?.champion_data));
 
 const BASKETBALL_CONF_TOURNEY: ConfChampContentConfig<TourneyData, History> = {
   pageId: "conf-tourney",

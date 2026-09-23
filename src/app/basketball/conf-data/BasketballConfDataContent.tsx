@@ -13,6 +13,7 @@ import {
   BoxWhiskerChartSkeleton,
 } from "@/components/ui/LoadingSkeleton";
 import { useBasketballConfData, type CombinedBasketballConfResponse } from "@/hooks/useBasketballConfData";
+import { getBasketballSeasonLabel, getLatestDataDate } from "@/lib/chartDateRange";
 import { useBasketballConfDataHistory } from "@/hooks/useBasketballConfDataHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
@@ -45,37 +46,12 @@ export default function BasketballConfDataContent({ initialData }: { initialData
   const conferenceData = confResponse?.conferenceData;
   const nonconfData = confResponse?.nonconfData;
 
-  // Calculate season from history data, similar to team page
-  const currentSeason = useMemo(() => {
-    if (historyData?.timeline_data && historyData.timeline_data.length > 0) {
-      const maxDate = historyData.timeline_data.reduce((max: string, item) =>
-        item.date > max ? item.date : max,
-        historyData.timeline_data[0].date
-      );
-      const [dataYear, dataMonth] = maxDate.split('-').map(Number);
-
-      // If data is April-Sep (past the 3/15 boundary), we're in off-season, use completed season
-      if (dataMonth >= 4 && dataMonth <= 9) {
-        return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
-      }
-      // If data is Jan-Mar, season started last year
-      if (dataMonth >= 1 && dataMonth <= 3) {
-        return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
-      }
-      // If data is Oct-Dec, season starts this year
-      if (dataMonth >= 10) {
-        return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
-      }
-    }
-
-    // Fallback: check current date
-    const today = new Date();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-
-    // Before October: use previous year season, October+: use current year season
-    return month < 10 ? `${year - 1}-${year.toString().slice(-2)}` : `${year}-${(year + 1).toString().slice(-2)}`;
-  }, [historyData]);
+  // Season label comes from the shared April-boundary rule in
+  // chartDateRange, so this page agrees with standings/conf-tourney/team.
+  const currentSeason = useMemo(
+    () => getBasketballSeasonLabel(getLatestDataDate(historyData?.timeline_data)),
+    [historyData?.timeline_data]
+  );
 
   // Debug logging
   useEffect(() => {

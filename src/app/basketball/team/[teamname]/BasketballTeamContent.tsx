@@ -15,6 +15,7 @@ import TeamSeedProjections from "@/components/features/basketball/TeamSeedProjec
 import TeamWinValues from "@/components/features/basketball/TeamWinValues";
 import { useBasketballTeamAllHistory } from "@/hooks/useBasketballTeamAllHistory";
 import { useBasketballTeamData, TeamData } from "@/hooks/useBasketballTeamData";
+import { getBasketballSeasonLabel, getLatestDataDate } from "@/lib/chartDateRange";
 import dynamic from "next/dynamic";
 
 const ChartSkeleton = () => (
@@ -56,28 +57,9 @@ const BasketballTeamTournamentProgressionHistory = dynamic(
 
 type History = ReturnType<typeof useBasketballTeamAllHistory>["data"];
 
-// Basketball season label from latest history date (Oct-Dec -> starts that
-// year; Jan-Sep -> started the prior year).
-const computeSeason = (historyData: History | null | undefined): string => {
-  if (historyData?.confWins?.data && historyData.confWins.data.length > 0) {
-    const maxDate = historyData.confWins.data.reduce(
-      (max: string, item: { date: string }) =>
-        item.date > max ? item.date : max,
-      historyData.confWins.data[0].date,
-    );
-    const [dataYear, dataMonth] = maxDate.split("-").map(Number);
-    if (dataMonth >= 10) {
-      return `${dataYear}-${(dataYear + 1).toString().slice(-2)}`;
-    }
-    return `${dataYear - 1}-${dataYear.toString().slice(-2)}`;
-  }
-  const today = new Date();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
-  return month < 10
-    ? `${year - 1}-${year.toString().slice(-2)}`
-    : `${year}-${(year + 1).toString().slice(-2)}`;
-};
+// Season label from the shared April-boundary rule in chartDateRange.
+const computeSeason = (historyData: History | null | undefined): string =>
+  getBasketballSeasonLabel(getLatestDataDate(historyData?.confWins?.data));
 
 const historySectionProps = (ctx: {
   teamInfo: {
