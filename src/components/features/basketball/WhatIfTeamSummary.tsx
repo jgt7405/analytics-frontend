@@ -436,7 +436,9 @@ export default function WhatIfTeamSummary({
                         }}
                       />
                     </span>
-                    <span className="text-[8px] text-gray-300">@</span>
+                    <span className="text-[8px] text-gray-300">
+                      {game.neutral_site ? "vs" : "@"}
+                    </span>
                     <span
                       className="rounded"
                       style={{

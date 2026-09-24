@@ -23,6 +23,7 @@ export interface WhatIfGame {
   home_probability: number;
   away_probability: number;
   conf_game: boolean;
+  neutral_site?: boolean;
   home_logo_url?: string;
   away_logo_url?: string;
   home_team_logo?: string;
@@ -170,6 +171,7 @@ interface BackendGame {
   home_probability: number;
   away_probability: number;
   conf_game: boolean;
+  neutral_site?: boolean;
   home_team_logo?: string;
   away_team_logo?: string;
   home_logo_url?: string;
@@ -242,6 +244,7 @@ const mapGame = (game: BackendGame): WhatIfGame => {
     home_probability: game.home_probability,
     away_probability: game.away_probability,
     conf_game: game.conf_game,
+    neutral_site: Boolean(game.neutral_site),
     home_logo_url: getLogoUrl(game.home_team_logo || game.home_logo_url),
     away_logo_url: getLogoUrl(game.away_team_logo || game.away_logo_url),
   };

@@ -54,6 +54,7 @@ interface NextGameImpactData {
     away_team_logo: string;
     home_probability: number | null;
     away_probability: number | null;
+    neutral_site?: boolean;
   } | null;
   current: Record<number, NextGameMetrics>;
   with_win: Record<number, NextGameMetrics>;
@@ -377,7 +378,9 @@ export default function NextGameImpact({
               />
               <span className="text-[11px] font-medium">{game.away_team}</span>
             </div>
-            <span className="text-[10px] text-gray-400">@</span>
+            <span className="text-[10px] text-gray-400">
+              {game.neutral_site ? "vs" : "@"}
+            </span>
             <div className="flex items-center gap-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

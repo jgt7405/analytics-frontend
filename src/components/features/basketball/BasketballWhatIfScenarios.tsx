@@ -352,7 +352,9 @@ function GameCard({
         onClick={() => onSelect(game.game_id, game.away_team_id)}
         isDark={isDark}
       />
-      <span className="text-[8px] text-gray-400">@</span>
+      <span className="text-[8px] text-gray-400">
+        {game.neutral_site ? "vs" : "@"}
+      </span>
       <TeamTile
         logoUrl={game.home_logo_url}
         teamName={game.home_team}
@@ -415,7 +417,9 @@ function SelectionLegend({
                   size={12}
                 />
               </span>
-              <span className="text-[8px] text-gray-300">@</span>
+              <span className="text-[8px] text-gray-300">
+                {game.neutral_site ? "vs" : "@"}
+              </span>
               <span
                 className="rounded"
                 style={{
@@ -1365,7 +1369,7 @@ export default function BasketballWhatIfScenarios() {
         return `<span style="display:inline-flex;align-items:center;gap:2px;padding:1px 2px;border:1px solid #d1d5db;border-radius:4px;margin:2px;">
           <span style="border:${awayWins ? "2px solid rgb(0,151,178)" : "2px solid transparent"};border-radius:4px;padding:1px;">
             <img src="${g.away_logo_url}" width="14" height="14" style="display:block;" /></span>
-          <span style="font-size:9px;color:#d1d5db;">@</span>
+          <span style="font-size:9px;color:#d1d5db;">${g.neutral_site ? "vs" : "@"}</span>
           <span style="border:${!awayWins ? "2px solid rgb(0,151,178)" : "2px solid transparent"};border-radius:4px;padding:1px;">
             <img src="${g.home_logo_url}" width="14" height="14" style="display:block;" /></span>
         </span>`;
