@@ -101,13 +101,19 @@ function NCAABracketTable({
     const firstFourOut = (data.first_four_out as NCAATeamWithConfLogo[]) || [];
     const nextFourOut = (data.next_four_out as NCAATeamWithConfLogo[]) || [];
 
-    // Sort tournament teams by seed then TWV
+    // Sort tournament teams by seed, then by overall standing - the order
+    // they were seeded in, so Seed Rtg % reads down each line - with TWV as
+    // the fallback for rows without one.
     const sortedTournament = [...tournament].sort((a, b) => {
       const seedA = a.seed ? parseInt(a.seed, 10) : 999;
       const seedB = b.seed ? parseInt(b.seed, 10) : 999;
 
       if (seedA !== seedB) {
         return seedA - seedB;
+      }
+
+      if (a.standing != null && b.standing != null && a.standing !== b.standing) {
+        return a.standing - b.standing;
       }
 
       return b.post_conf_tourney_twv_50 - a.post_conf_tourney_twv_50;
@@ -222,6 +228,9 @@ function NCAABracketTable({
                   </th>
                 ))}
                 <th scope="col">{prefix}Rtg</th>
+                <th className={styles.scoreHeader} scope="col">
+                  Seed Rtg %
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -325,6 +334,12 @@ function NCAABracketTable({
                     <td>
                       <span className={styles.statValue}>
                         {formatStat(team.rating)}
+                      </span>
+                    </td>
+
+                    <td className={styles.scoreCell}>
+                      <span className={styles.statValue}>
+                        {team.seed_score != null ? team.seed_score.toFixed(1) : "—"}
                       </span>
                     </td>
                   </tr>

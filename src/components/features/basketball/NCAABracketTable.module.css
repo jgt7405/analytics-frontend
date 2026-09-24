@@ -227,6 +227,12 @@
   text-align: center;
 }
 
+/* Seed Rtg %: a touch wider so the header fits on one or two lines. */
+.scoreHeader,
+.scoreCell {
+  --stat-col-width: 5.25rem;
+}
+
 /* The TWV that seeded the team (its tier's baseline). */
 .bodyRow td.seedTwvCell {
   background: rgb(0 151 178 / 0.13);
