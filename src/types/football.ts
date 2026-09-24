@@ -14,6 +14,13 @@ export interface FootballStanding {
   actual_conference_win_pct?: number;
   actual_total_wins: number;
   actual_total_losses: number;
+  // Regular season only (no conference championship game); null on
+  // archived seasons saved before the field existed
+  actual_reg_season_wins?: number | null;
+  actual_reg_season_losses?: number | null;
+  actual_reg_conf_wins?: number | null;
+  actual_reg_conf_losses?: number | null;
+  actual_reg_conf_win_pct?: number | null;
 
   // Projections
   avg_standing: number;

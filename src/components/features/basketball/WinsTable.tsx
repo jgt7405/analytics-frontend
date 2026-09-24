@@ -4,6 +4,10 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { getCellColor } from "@/lib/color-utils";
 import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
+import {
+  classifyWinTotal,
+  inferTotalGames,
+} from "@/lib/winsReachability";
 import { Standing } from "@/types/basketball";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
@@ -51,6 +55,19 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
 
     return Array.from({ length: maxWins + 1 }, (_, index) => maxWins - index);
   }, [standings]);
+
+  // Season length, used to tell "can no longer reach this" apart from
+  // "possible but never came up in the simulations". See lib/winsReachability.
+  const totalGames = useMemo(
+    () =>
+      inferTotalGames(
+        standings.map((team) => ({
+          losses: team.conference_losses ?? 0,
+          distribution: team.conf_wins_distribution,
+        })),
+      ),
+    [standings],
+  );
 
   // Basketball's win-distribution values are raw simulation counts (out of
   // total_scenarios), not pre-computed percentages like football's - convert
@@ -185,9 +202,27 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                   const percentage =
                     percentagesByTeam.get(team.team_name)?.[winsKey] ?? 0;
                   const rounded = Math.round(percentage);
-                  const cellStyle = hasData
-                    ? getCellColor(percentage)
-                    : { backgroundColor: "transparent", color: "transparent" };
+                  const showsNumber = hasData && percentage > 0;
+                  const outcome = classifyWinTotal(
+                    wins,
+                    {
+                      actualWins: team.conference_wins ?? 0,
+                      actualLosses: team.conference_losses ?? 0,
+                    },
+                    totalGames,
+                  );
+                  // A blank cell shows the glyph on its own. A cell that
+                  // already carries a probability keeps the number and gets
+                  // the check as a corner badge instead, so neither piece of
+                  // information crowds the other out.
+                  const mark = outcome === "open" ? null : outcome;
+                  const showGlyph = !showsNumber && mark !== null;
+                  const showBadge = showsNumber && mark === "achieved";
+                  const cellStyle = showGlyph
+                    ? { backgroundColor: "transparent" }
+                    : hasData
+                      ? getCellColor(percentage)
+                      : { backgroundColor: "transparent", color: "transparent" };
                   const isPeak =
                     hasData &&
                     percentage > 0 &&
@@ -203,16 +238,42 @@ function WinsTable({ standings, className, season }: WinsTableProps) {
                         className={cn(
                           styles.heatTile,
                           isPeak && styles.peakTile,
-                          !hasData && styles.emptyTile,
+                          (!hasData || showGlyph) && styles.emptyTile,
+                          showGlyph && mark === "achieved" && styles.achievedTile,
+                          showGlyph && mark === "impossible" && styles.impossibleTile,
                         )}
                         style={cellStyle}
                         title={
-                          hasData
-                            ? `${team.team_name}: ${rounded}% chance of ${wins} conference wins`
-                            : `${team.team_name}: no data for ${wins} conference wins`
+                          mark === "achieved"
+                            ? showsNumber
+                              ? `${team.team_name}: already has ${wins} conference wins; ${rounded}% chance of finishing there`
+                              : `${team.team_name}: already has ${wins} conference wins`
+                            : mark === "impossible"
+                              ? `${team.team_name}: can no longer reach ${wins} conference wins`
+                              : hasData
+                                ? `${team.team_name}: ${rounded}% chance of ${wins} conference wins`
+                                : `${team.team_name}: no data for ${wins} conference wins`
                         }
                       >
-                        {hasData && percentage > 0 ? `${rounded}%` : ""}
+                        {showsNumber ? (
+                          <>
+                            {`${rounded}%`}
+                            {showBadge && (
+                              <span
+                                className={styles.markBadge}
+                                aria-hidden="true"
+                              >
+                                {"✓"}
+                              </span>
+                            )}
+                          </>
+                        ) : showGlyph ? (
+                          <span aria-hidden="true">
+                            {mark === "achieved" ? "✓" : "✕"}
+                          </span>
+                        ) : (
+                          ""
+                        )}
                       </div>
                     </td>
                   );

@@ -203,6 +203,7 @@
 }
 
 .heatTile {
+  position: relative;
   display: flex;
   width: 100%;
   height: 100%;
@@ -229,6 +230,47 @@
 .emptyTile {
   border-color: transparent;
   box-shadow: none;
+}
+
+/* Settled cells: a win total the team has already banked, or one they can
+   no longer reach. Both are blank in the distribution, so the glyph is what
+   tells them apart. Teal is the heat scale's own darkest shade (getCellColor's
+   blue scheme), so the marks read as part of the table rather than as a
+   second palette. See lib/winsReachability. */
+.achievedTile,
+.impossibleTile {
+  border-color: transparent;
+  box-shadow: none;
+  color: rgb(24 98 123);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.impossibleTile {
+  opacity: 0.55;
+}
+
+/* The check on a cell that already shows a percentage. It sits against the
+   right edge so the number keeps the middle, and takes the tile's own text
+   color - teal would disappear against the darker end of the heat scale,
+   where the percentage itself is white. */
+.markBadge {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+@media (prefers-color-scheme: dark) {
+  .achievedTile,
+  .impossibleTile {
+    color: rgb(125 197 219);
+  }
 }
 
 /* All summary rows (Average and the Curr Conf Record footer row) share

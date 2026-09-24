@@ -4,6 +4,10 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { getCellColor } from "@/lib/color-utils";
 import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
+import {
+  classifyWinTotal,
+  inferTotalGames,
+} from "@/lib/winsReachability";
 import { Standing } from "@/types/basketball";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
@@ -13,6 +17,18 @@ interface BballRegSeasonWinsTableProps {
   standings: Standing[];
   className?: string;
   season?: string;
+}
+
+// [wins, losses] for the regular season only. Falls back to overall_record
+// for archived rows without reg_season_wins/losses (see regSeasonByTeam).
+function regSeasonRecord(team: Standing): [number, number] {
+  if (team.reg_season_wins != null && team.reg_season_losses != null) {
+    return [team.reg_season_wins, team.reg_season_losses];
+  }
+  const [wins, losses] = (team.overall_record ?? "0-0")
+    .split("-")
+    .map((part) => Number.parseInt(part, 10) || 0);
+  return [wins ?? 0, losses ?? 0];
 }
 
 function BballRegSeasonWinsTable({
@@ -53,6 +69,49 @@ function BballRegSeasonWinsTable({
     }
 
     return Array.from({ length: maxWins + 1 }, (_, index) => maxWins - index);
+  }, [standings]);
+
+  // Regular-season record and season length per team, for the settled-total
+  // marks (see lib/winsReachability). The record comes from reg_season_wins/
+  // losses, which leave out conference and NCAA tournament games just as
+  // reg_wins_distribution does. Archived seasons saved before those fields
+  // existed only have overall_record, which counts tournament games too (the
+  // 2025-26 archive has Arizona at 32-2 overall with the distribution settled
+  // on 29) - so once a team's distribution collapses to a single total it has
+  // already banked, that total IS its final regular-season win count and
+  // everything above it is out of reach. A single total above the current
+  // wins is not settled: it means the remaining games are near-certain (e.g.
+  // one non-D1 game left).
+  const regSeasonByTeam = useMemo(() => {
+    const parsed = standings.map((team) => {
+      const [wins, losses] = regSeasonRecord(team);
+      const keys = Object.keys(team.reg_wins_distribution ?? {}).map(Number);
+      const settledWins =
+        keys.length === 1 && keys[0] <= wins ? keys[0] : null;
+      return { team, wins, losses, settledWins };
+    });
+
+    const openTotalGames = inferTotalGames(
+      parsed
+        .filter(({ settledWins }) => settledWins === null)
+        .map(({ team, losses }) => ({
+          losses,
+          distribution: team.reg_wins_distribution,
+        })),
+    );
+
+    return new Map(
+      parsed.map(({ team, wins, losses, settledWins }) => [
+        team.team_name,
+        settledWins === null
+          ? { actualWins: wins, actualLosses: losses, totalGames: openTotalGames }
+          : {
+              actualWins: settledWins,
+              actualLosses: losses,
+              totalGames: settledWins + losses,
+            },
+      ]),
+    );
   }, [standings]);
 
   const peakProbabilityByTeam = useMemo(
@@ -167,9 +226,23 @@ function BballRegSeasonWinsTable({
                   );
                   const percentage = hasData ? distribution[winsKey] : 0;
                   const rounded = Math.round(percentage);
-                  const cellStyle = hasData
-                    ? getCellColor(percentage)
-                    : { backgroundColor: "transparent", color: "transparent" };
+                  const showsNumber = hasData && percentage > 0;
+                  const record = regSeasonByTeam.get(team.team_name);
+                  const outcome = record
+                    ? classifyWinTotal(wins, record, record.totalGames)
+                    : "open";
+                  // A blank cell shows the glyph on its own. A cell that
+                  // already carries a probability keeps the number and gets
+                  // the check as a corner badge instead, so neither piece of
+                  // information crowds the other out.
+                  const mark = outcome === "open" ? null : outcome;
+                  const showGlyph = !showsNumber && mark !== null;
+                  const showBadge = showsNumber && mark === "achieved";
+                  const cellStyle = showGlyph
+                    ? { backgroundColor: "transparent" }
+                    : hasData
+                      ? getCellColor(percentage)
+                      : { backgroundColor: "transparent", color: "transparent" };
                   const isPeak =
                     hasData &&
                     percentage > 0 &&
@@ -185,16 +258,42 @@ function BballRegSeasonWinsTable({
                         className={cn(
                           styles.heatTile,
                           isPeak && styles.peakTile,
-                          !hasData && styles.emptyTile,
+                          (!hasData || showGlyph) && styles.emptyTile,
+                          showGlyph && mark === "achieved" && styles.achievedTile,
+                          showGlyph && mark === "impossible" && styles.impossibleTile,
                         )}
                         style={cellStyle}
                         title={
-                          hasData
-                            ? `${team.team_name}: ${rounded}% chance of ${wins} regular season wins`
-                            : `${team.team_name}: no data for ${wins} regular season wins`
+                          mark === "achieved"
+                            ? showsNumber
+                              ? `${team.team_name}: already has ${wins} regular season wins; ${rounded}% chance of finishing there`
+                              : `${team.team_name}: already has ${wins} regular season wins`
+                            : mark === "impossible"
+                              ? `${team.team_name}: can no longer reach ${wins} regular season wins`
+                              : hasData
+                                ? `${team.team_name}: ${rounded}% chance of ${wins} regular season wins`
+                                : `${team.team_name}: no data for ${wins} regular season wins`
                         }
                       >
-                        {hasData && percentage > 0 ? `${rounded}%` : ""}
+                        {showsNumber ? (
+                          <>
+                            {`${rounded}%`}
+                            {showBadge && (
+                              <span
+                                className={styles.markBadge}
+                                aria-hidden="true"
+                              >
+                                {"✓"}
+                              </span>
+                            )}
+                          </>
+                        ) : showGlyph ? (
+                          <span aria-hidden="true">
+                            {mark === "achieved" ? "✓" : "✕"}
+                          </span>
+                        ) : (
+                          ""
+                        )}
                       </div>
                     </td>
                   );
@@ -253,7 +352,9 @@ function BballRegSeasonWinsTable({
                   className={styles.summaryValue}
                 >
                   <div className={styles.summaryChip}>
-                    {team.overall_record ?? "0-0"}
+                    {team.reg_season_wins != null && team.reg_season_losses != null
+                      ? `${team.reg_season_wins}-${team.reg_season_losses}`
+                      : (team.overall_record ?? "0-0")}
                   </div>
                 </td>
               ))}

@@ -15,6 +15,10 @@ export interface Standing {
   overall_record?: string;
   conference_wins: number;
   conference_losses: number;
+  // Regular season only (no conference/NCAA tournament games); null on
+  // archived seasons saved before the field existed
+  reg_season_wins?: number | null;
+  reg_season_losses?: number | null;
   record?: string;
 
   // Standings projections

@@ -7,6 +7,7 @@ import {
   classifyWinTotal,
   inferTotalGames,
 } from "@/lib/winsReachability";
+import { regSeasonRecord } from "@/lib/footballRecords";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
@@ -84,7 +85,7 @@ function FootballRegularSeasonWinsTable({
     () =>
       inferTotalGames(
         standings.map((team) => ({
-          losses: team.actual_total_losses ?? 0,
+          losses: regSeasonRecord(team).losses,
           distribution: team.reg_wins_distribution,
         })),
       ),
@@ -206,8 +207,8 @@ function FootballRegularSeasonWinsTable({
                   const outcome = classifyWinTotal(
                     wins,
                     {
-                      actualWins: team.actual_total_wins ?? 0,
-                      actualLosses: team.actual_total_losses ?? 0,
+                      actualWins: regSeasonRecord(team).wins,
+                      actualLosses: regSeasonRecord(team).losses,
                     },
                     totalGames,
                   );
@@ -333,7 +334,7 @@ function FootballRegularSeasonWinsTable({
                   className={styles.summaryValue}
                 >
                   <div className={styles.summaryChip}>
-                    {team.actual_total_wins ?? 0}-{team.actual_total_losses ?? 0}
+                    {regSeasonRecord(team).wins}-{regSeasonRecord(team).losses}
                   </div>
                 </td>
               ))}

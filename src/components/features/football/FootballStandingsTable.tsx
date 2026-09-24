@@ -3,6 +3,7 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
+import { regConfRecord } from "@/lib/footballRecords";
 import { FootballStanding } from "@/types/football";
 import { useRouter } from "next/navigation";
 import { memo, ReactNode, useCallback, useMemo } from "react";
@@ -252,15 +253,12 @@ function FootballStandingsTable({
                   className={styles.summaryValue}
                 >
                   <div className={styles.summaryChip}>
-                    {team.actual_conference_wins ?? 0}-
-                    {team.actual_conference_losses ?? 0}
                     {(() => {
-                      const wins = team.actual_conference_wins ?? 0;
-                      const losses = team.actual_conference_losses ?? 0;
+                      const { wins, losses, winPct } = regConfRecord(team);
                       const games = wins + losses;
-                      if (games === 0) return null;
-                      const pct = team.actual_conference_win_pct ?? wins / games;
-                      return ` (${pct.toFixed(3).replace(/^0/, "")})`;
+                      if (games === 0) return `${wins}-${losses}`;
+                      const pct = winPct ?? wins / games;
+                      return `${wins}-${losses} (${pct.toFixed(3).replace(/^0/, "")})`;
                     })()}
                   </div>
                 </td>
