@@ -2,17 +2,17 @@
 
 import TableActionButtons from "@/components/common/TableActionButtons";
 import TeamLogo from "@/components/ui/TeamLogo";
-import type { FootballSeasonHighlightGame } from "@/types/football";
+import type { SeasonHighlightGame } from "@/types/seasonHighlights";
 import { useMemo, useState } from "react";
 
 const LIMIT_OPTIONS = [10, 20, 50, 100, "All"] as const;
 
-interface FootballSeasonHighlightsTableProps {
+interface SeasonHighlightsTableProps {
   title: string;
   description: string;
   /** Column header for the win-probability value. */
   probLabel: string;
-  rows: FootballSeasonHighlightGame[];
+  rows: SeasonHighlightGame[];
   /** Default number of rows shown before the user expands. */
   defaultLimit?: number;
   /** Unique class name used both as the export target and a React key seed. */
@@ -21,7 +21,7 @@ interface FootballSeasonHighlightsTableProps {
   pageName: string;
 }
 
-export default function FootballSeasonHighlightsTable({
+export default function SeasonHighlightsTable({
   title,
   description,
   probLabel,
@@ -29,7 +29,7 @@ export default function FootballSeasonHighlightsTable({
   defaultLimit = 20,
   exportClassName,
   pageName,
-}: FootballSeasonHighlightsTableProps) {
+}: SeasonHighlightsTableProps) {
   const [limit, setLimit] = useState<number | "All">(defaultLimit);
 
   const visibleRows = limit === "All" ? rows : rows.slice(0, limit);

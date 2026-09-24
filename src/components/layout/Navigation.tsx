@@ -154,6 +154,11 @@ function NavigationContent() {
       basePath: "/basketball/whatif",
       description: "What If Conference Scenarios",
     },
+    {
+      name: "Season Info",
+      basePath: "/basketball/season-info",
+      description: "Biggest upsets, best wins, and worst losses this season",
+    },
   ];
 
   const footballNavItems = [

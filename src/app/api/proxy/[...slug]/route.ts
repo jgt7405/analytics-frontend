@@ -393,6 +393,9 @@ export async function GET(
           case "composite_ratings":
             backendPath = `/basketball/composite_ratings`;
             break;
+          case "season_highlights":
+            backendPath = `/basketball/season_highlights`;
+            break;
           default:
             return NextResponse.json(
               { error: "Unknown basketball endpoint" },

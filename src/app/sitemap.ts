@@ -150,6 +150,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.65,
     },
+    {
+      url: `${baseUrl}/basketball/season-info/`,
+      changeFrequency: 'daily',
+      priority: 0.6,
+    },
   ];
 
   // Fetch team pages from backend

@@ -5,9 +5,9 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import type {
-  FootballSeasonHighlightGame,
-  FootballSeasonHighlightsResponse,
-} from "@/types/football";
+  SeasonHighlightGame,
+  SeasonHighlightsResponse,
+} from "@/types/seasonHighlights";
 import { useEffect, useMemo, useState } from "react";
 
 const TITLE_CLASS =
@@ -15,12 +15,12 @@ const TITLE_CLASS =
 
 const ALL_TEAMS = "All Teams";
 
-type DivisionFilter = "all" | "power4" | "g6";
+type DivisionFilter = "all" | "power" | "nonPower";
 
 const DIVISION_OPTIONS: { value: DivisionFilter; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "power4", label: "Power 4" },
-  { value: "g6", label: "Group of 6" },
+  { value: "power", label: "Power" },
+  { value: "nonPower", label: "Non-Power" },
 ];
 
 type DateRangeFilter = "7" | "14" | "28" | "all";
@@ -35,30 +35,21 @@ const DATE_RANGE_OPTIONS: { value: DateRangeFilter; label: string }[] = [
 const PRIORITY_CONFERENCES = [
   "Atlantic Coast",
   "Big 12",
+  "Big East",
   "Big Ten",
-  "Independent",
   "Southeastern",
 ];
 
-// Manual overrides for this page only - Notre Dame (Independent) and UConn
-// (Big East, a non-football conference for it) don't carry a clean Power
-// 4 / Group of 6 label from team_conf_catg the way conference members do.
-const DIVISION_OVERRIDES: Record<string, DivisionFilter> = {
-  "notre dame": "power4",
-  uconn: "g6",
-  connecticut: "g6",
-};
-
-function getDivision(row: FootballSeasonHighlightGame): DivisionFilter {
-  const override = DIVISION_OVERRIDES[row.team.trim().toLowerCase()];
-  if (override) return override;
-  if (row.team_conf_catg === "Power 4") return "power4";
-  if (row.team_conf_catg === "Non Power 4") return "g6";
+// team_conf_catg from bball_team_schedule: the five conferences above are
+// "Power", everyone else "Non Power".
+function getDivision(row: SeasonHighlightGame): DivisionFilter {
+  if (row.team_conf_catg === "Power") return "power";
+  if (row.team_conf_catg === "Non Power") return "nonPower";
   return "all";
 }
 
-export default function FootballSeasonInfoContent() {
-  const [data, setData] = useState<FootballSeasonHighlightsResponse | null>(
+export default function BasketballSeasonInfoContent() {
+  const [data, setData] = useState<SeasonHighlightsResponse | null>(
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
@@ -72,9 +63,9 @@ export default function FootballSeasonInfoContent() {
 
     const load = async () => {
       try {
-        const response = await fetch("/api/proxy/football/season_highlights");
+        const response = await fetch("/api/proxy/basketball/season_highlights");
         if (!response.ok) throw new Error(`Request failed (${response.status})`);
-        const json = (await response.json()) as FootballSeasonHighlightsResponse;
+        const json = (await response.json()) as SeasonHighlightsResponse;
         if (!cancelled) setData(json);
       } catch (err) {
         console.error("Error loading season highlights:", err);
@@ -119,7 +110,7 @@ export default function FootballSeasonInfoContent() {
     return cutoff.getTime();
   }, [dateRangeFilter]);
 
-  const applyFilters = (rows: FootballSeasonHighlightGame[]) =>
+  const applyFilters = (rows: SeasonHighlightGame[]) =>
     rows.filter((row) => {
       if (divisionFilter !== "all" && getDivision(row) !== divisionFilter) {
         return false;
@@ -179,13 +170,13 @@ export default function FootballSeasonInfoContent() {
 
           <div>
             <label
-              htmlFor="season-info-conference"
+              htmlFor="bball-season-info-conference"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Conference:
             </label>
             <select
-              id="season-info-conference"
+              id="bball-season-info-conference"
               value={conferenceFilter}
               onChange={(e) => setConferenceFilter(e.target.value)}
               className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[rgb(0,151,178)]"
@@ -228,25 +219,25 @@ export default function FootballSeasonInfoContent() {
             probLabel="Win Prob"
             rows={applyFilters(data?.upsets ?? [])}
             exportClassName="season-highlights-upsets"
-            pageName="football-season-upsets"
+            pageName="basketball-season-upsets"
           />
 
           <SeasonHighlightsTable
             title="Best Wins"
-            description="Wins where the #12-rated team would have the lowest win probability if they played in that game."
-            probLabel="#12 Win Prob"
+            description="Wins where the #50-rated team would have the lowest win probability if they played in that game."
+            probLabel="#50 Win Prob"
             rows={applyFilters(data?.best_wins ?? [])}
             exportClassName="season-highlights-best-wins"
-            pageName="football-season-best-wins"
+            pageName="basketball-season-best-wins"
           />
 
           <SeasonHighlightsTable
             title="Worst Losses"
-            description="Losses where the #12-rated team would have the highest win probability if they played in that game."
-            probLabel="#12 Win Prob"
+            description="Losses where the #50-rated team would have the highest win probability if they played in that game."
+            probLabel="#50 Win Prob"
             rows={applyFilters(data?.worst_losses ?? [])}
             exportClassName="season-highlights-worst-losses"
-            pageName="football-season-worst-losses"
+            pageName="basketball-season-worst-losses"
           />
         </div>
       </ErrorBoundary>

@@ -327,32 +327,11 @@ export interface FootballTeamGame {
   opp_points?: number;
 }
 
-// A single game row for the Season Info highlight charts (biggest upsets,
-// best wins, worst losses). `win_prob` means different things per chart -
-// see FootballSeasonHighlightsContent for details - but the shape is shared.
-export interface FootballSeasonHighlightGame {
-  team: string;
-  team_logo: string;
-  team_color?: string;
-  opponent: string;
-  opponent_logo: string;
-  opponent_color?: string;
-  win_prob: number | null;
-  team_points: number | null;
-  opp_points: number | null;
-  date: string;
-  /** ISO (YYYY-MM-DD) form of `date`, for the date-range filter. */
-  date_iso: string | null;
-  location: string;
-  team_conf: string;
-  team_conf_catg: string;
-}
-
-export interface FootballSeasonHighlightsResponse {
-  upsets: FootballSeasonHighlightGame[];
-  best_wins: FootballSeasonHighlightGame[];
-  worst_losses: FootballSeasonHighlightGame[];
-}
+// Season Info rows - shared with basketball; see types/seasonHighlights.
+export type {
+  SeasonHighlightGame as FootballSeasonHighlightGame,
+  SeasonHighlightsResponse as FootballSeasonHighlightsResponse,
+} from "./seasonHighlights";
 
 export interface FootballTeamData {
   team_info: FootballTeamInfo;
