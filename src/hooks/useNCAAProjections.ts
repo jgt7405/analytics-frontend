@@ -20,9 +20,11 @@ export interface NCAATeam {
   // Baseline rank whose TWV seeded the team (30 = seeds 1-4 tier, 50 = 5-11,
   // 200 = 12-16); 50 for teams outside the field, null when unavailable.
   seed_twv_rank?: 30 | 50 | 200 | null;
-  // Seed Rtg %: the tier blend (65% TWV, 35% rating) the team was seeded on,
-  // 0-100 across the field. Null outside the field (selection is TWV 50 only).
-  seed_score?: number | null;
+  // Blend under each tier's formula, 65% TWV N + 35% rating, scaled 0-100
+  // over the teams shown. Null for seasons that predate TWV 30/200.
+  blend_30?: number | null;
+  blend_50?: number | null;
+  blend_200?: number | null;
   kenpom_rank?: number;
   netrtg?: number;
   logo_url: string;

@@ -25,7 +25,14 @@ const TWV_RANKS = [30, 50, 200] as const;
 type TwvRank = (typeof TWV_RANKS)[number];
 
 const twvValue = (team: NCAATeam, rank: TwvRank) =>
-  rank === 30 ? team.twv_30 : rank === 50 ? team.twv_50 : team.twv_200;
+  rank === 30
+    ? team.twv_30
+    : rank === 50
+      ? (team.twv_50 ?? team.post_conf_tourney_twv_50)
+      : team.twv_200;
+
+const blendValue = (team: NCAATeam, rank: TwvRank) =>
+  rank === 30 ? team.blend_30 : rank === 50 ? team.blend_50 : team.blend_200;
 
 const formatStat = (value: number | null | undefined) =>
   value != null ? value.toFixed(2) : "—";
@@ -78,10 +85,6 @@ function NCAABracketTable({
   const router = useRouter();
   const { data, loading, error } = useNCAAProjections(season, undefined, mode);
   const prefix = mode === "current" ? "" : "Proj ";
-  // Desktop shows every baseline with the one that seeded each team shaded;
-  // mobile keeps TWV_50 (the one comparable down the whole table) and notes
-  // the seeding TWV under it when it's a different baseline.
-  const twvColumns: readonly TwvRank[] = isMobile ? [50] : TWV_RANKS;
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
@@ -222,15 +225,20 @@ function NCAABracketTable({
                 <th className={styles.categoryHeader} scope="col">
                   Category
                 </th>
-                {twvColumns.map((rank) => (
+                {TWV_RANKS.map((rank) => (
                   <th key={rank} scope="col">
                     {prefix}TWV {rank}
+                    {rank === 50 && (
+                      <span className={styles.headerNote}>decides bid</span>
+                    )}
                   </th>
                 ))}
                 <th scope="col">{prefix}Rtg</th>
-                <th className={styles.scoreHeader} scope="col">
-                  Seed Rtg %
-                </th>
+                {TWV_RANKS.map((rank) => (
+                  <th key={`blend-${rank}`} scope="col">
+                    Blend {rank}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -300,36 +308,25 @@ function NCAABracketTable({
                       )}
                     </td>
 
-                    {twvColumns.map((rank) => {
-                      const value =
-                        rank === 50
-                          ? (team.twv_50 ?? team.post_conf_tourney_twv_50)
-                          : twvValue(team, rank);
-                      const seededHere = team.seed_twv_rank === rank;
-                      const tierRank = team.seed_twv_rank;
-                      const showTierNote =
-                        isMobile && tierRank != null && tierRank !== 50;
-                      return (
-                        <td
-                          key={rank}
-                          className={cn(seededHere && styles.seedTwvCell)}
-                          title={
-                            seededHere
-                              ? `Seeded on TWV ${rank}`
-                              : undefined
-                          }
-                        >
-                          <span className={styles.statValue}>
-                            {formatStat(value)}
-                          </span>
-                          {showTierNote && (
-                            <span className={styles.tierNote}>
-                              {tierRank}: {formatStat(twvValue(team, tierRank))}
-                            </span>
-                          )}
-                        </td>
-                      );
-                    })}
+                    {TWV_RANKS.map((rank) => (
+                      <td
+                        key={rank}
+                        className={cn(
+                          team.seed_twv_rank === rank && styles.seedTwvCell,
+                        )}
+                        title={
+                          team.seed_twv_rank === rank
+                            ? team.seed === "Out"
+                              ? "Selection is on TWV 50"
+                              : `Seeded on TWV ${rank}`
+                            : undefined
+                        }
+                      >
+                        <span className={styles.statValue}>
+                          {formatStat(twvValue(team, rank))}
+                        </span>
+                      </td>
+                    ))}
 
                     <td>
                       <span className={styles.statValue}>
@@ -337,11 +334,26 @@ function NCAABracketTable({
                       </span>
                     </td>
 
-                    <td className={styles.scoreCell}>
-                      <span className={styles.statValue}>
-                        {team.seed_score != null ? team.seed_score.toFixed(1) : "—"}
-                      </span>
-                    </td>
+                    {/* Blend N = 65% TWV N + 35% rating, 0-100. Shaded on the
+                        one that seeded the team; teams outside the field are
+                        picked on TWV 50 alone, so no blend is shaded. */}
+                    {TWV_RANKS.map((rank) => {
+                      const value = blendValue(team, rank);
+                      return (
+                        <td
+                          key={`blend-${rank}`}
+                          className={cn(
+                            team.seed !== "Out" &&
+                              team.seed_twv_rank === rank &&
+                              styles.seedTwvCell,
+                          )}
+                        >
+                          <span className={styles.statValue}>
+                            {value != null ? value.toFixed(1) : "—"}
+                          </span>
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}

@@ -227,12 +227,6 @@
   text-align: center;
 }
 
-/* Seed Rtg %: a touch wider so the header fits on one or two lines. */
-.scoreHeader,
-.scoreCell {
-  --stat-col-width: 5.25rem;
-}
-
 /* The TWV that seeded the team (its tier's baseline). */
 .bodyRow td.seedTwvCell {
   background: rgb(0 151 178 / 0.13);
@@ -244,15 +238,14 @@
   font-weight: 750;
 }
 
-/* Mobile: the seeding TWV, under TWV 50, when it's a different baseline. */
-.tierNote {
+/* Marks TWV 50 as the selection column. */
+.headerNote {
   display: block;
   margin-top: 0.1rem;
   color: #0e7490;
-  font-size: 0.58rem;
-  font-weight: 650;
-  line-height: 1;
-  white-space: nowrap;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 :global(.dark) .card {

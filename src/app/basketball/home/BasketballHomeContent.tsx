@@ -147,11 +147,10 @@ export default function BasketballHomeContent({ initialData }: { initialData?: N
                           : "Proj Rtg blends today's rating with how the team projects to play the rest of the season, weighted by games remaining."}
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        Seed Rtg % is the blend each team was seeded on — 65%
-                        its tier&apos;s TWV and 35% rating — scaled so the top
-                        team is 100% and the bottom is 0%. Seeds 12–16 are
-                        scored on TWV 200, so it steps up at the 12 line. Teams
-                        outside the field are picked on TWV 50 alone.
+                        Blend 30 / 50 / 200 = 65% that TWV + 35% rating, scaled
+                        so the top team is 100 and the bottom is 0. Each seed
+                        tier is ordered on its own blend; play-in pairs share a
+                        slot, so a pair can sit just out of blend order.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         <span
@@ -167,8 +166,8 @@ export default function BasketballHomeContent({ initialData }: { initialData?: N
                           }}
                         ></span>
                         <span>
-                          TWV used to seed the team
-                          {isMobile ? " (shown under TWV 50 when it's TWV 30 or 200)" : ""}
+                          TWV and blend used to seed the team (TWV 50 for
+                          teams outside the field)
                         </span>
                       </div>
                       <div style={{ marginTop: "6px" }}>
