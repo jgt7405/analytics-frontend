@@ -1,7 +1,11 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { NCAATeam, useNCAAProjections } from "@/hooks/useNCAAProjections";
+import {
+  NCAAProjectionsMode,
+  NCAATeam,
+  useNCAAProjections,
+} from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -21,11 +25,16 @@ interface ConferenceBidInfo {
 interface MultiBidLeaguesProps {
   className?: string;
   season?: string;
+  mode?: NCAAProjectionsMode;
 }
 
-function MultiBidLeagues({ className, season }: MultiBidLeaguesProps) {
+function MultiBidLeagues({
+  className,
+  season,
+  mode = "season",
+}: MultiBidLeaguesProps) {
   const { isMobile } = useResponsive();
-  const { data, loading, error } = useNCAAProjections(season);
+  const { data, loading, error } = useNCAAProjections(season, undefined, mode);
   const router = useRouter();
 
   // Navigation handler for team clicks

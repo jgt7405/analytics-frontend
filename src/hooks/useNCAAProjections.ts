@@ -10,6 +10,16 @@ export interface NCAATeam {
   standing?: number;
   category?: string;
   post_conf_tourney_twv_50: number;
+  // TWV vs the rank-30/50/200 baselines and the rating: projected
+  // (season-average) in season mode, completed games / today's rating in
+  // current mode. Null where a season predates the column.
+  twv_30?: number | null;
+  twv_50?: number | null;
+  twv_200?: number | null;
+  rating?: number | null;
+  // Baseline rank whose TWV seeded the team (30 = seeds 1-4 tier, 50 = 5-11,
+  // 200 = 12-16); 50 for teams outside the field, null when unavailable.
+  seed_twv_rank?: 30 | 50 | 200 | null;
   kenpom_rank?: number;
   netrtg?: number;
   logo_url: string;
@@ -23,8 +33,13 @@ export interface NCAAProjectionsResponse {
   next_four_out: NCAATeam[];
   total_auto_bids: number;
   total_at_large_bids: number;
+  mode?: NCAAProjectionsMode;
+  // False until games have been played - current TWV is all zeros before then.
+  current_available?: boolean;
   last_updated?: string;
 }
+
+export type NCAAProjectionsMode = "season" | "current";
 
 interface UseNCAAProjectionsReturn {
   data: NCAAProjectionsResponse | null;
@@ -33,15 +48,24 @@ interface UseNCAAProjectionsReturn {
   refetch: () => void;
 }
 
-export function useNCAAProjections(season?: string, initialData?: NCAAProjectionsResponse): UseNCAAProjectionsReturn {
-  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
+export function useNCAAProjections(
+  season?: string,
+  initialData?: NCAAProjectionsResponse,
+  mode: NCAAProjectionsMode = "season",
+): UseNCAAProjectionsReturn {
+  const params = new URLSearchParams();
+  if (season) params.set("season", season);
+  if (mode === "current") params.set("mode", "current");
+  const query = params.toString() ? `?${params.toString()}` : "";
+  // Server-rendered initial data is the season projection only
+  const seeded = mode === "season" ? initialData : undefined;
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["ncaa-projections", season],
-    initialData,
-    initialDataUpdatedAt: initialData ? 0 : undefined,
+    queryKey: ["ncaa-projections", season, mode],
+    initialData: seeded,
+    initialDataUpdatedAt: seeded ? 0 : undefined,
     queryFn: async () => {
       const response = await fetch(
-        `/api/proxy/basketball/ncaa-projections${seasonQuery}`,
+        `/api/proxy/basketball/ncaa-projections${query}`,
       );
       if (!response.ok) {
         throw new Error("Failed to fetch NCAA projections");

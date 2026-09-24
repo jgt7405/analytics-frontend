@@ -1,7 +1,11 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { NCAATeam, useNCAAProjections } from "@/hooks/useNCAAProjections";
+import {
+  NCAAProjectionsMode,
+  NCAATeam,
+  useNCAAProjections,
+} from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -11,7 +15,20 @@ import styles from "./NCAABracketTable.module.css";
 interface NCAABracketTableProps {
   className?: string;
   season?: string;
+  // Current Snapshot uses completed-game TWV and today's rating, so the
+  // columns drop the "Proj" prefix.
+  mode?: NCAAProjectionsMode;
 }
+
+// TWV_50 picks the field; each seeding tier then scores on its own baseline.
+const TWV_RANKS = [30, 50, 200] as const;
+type TwvRank = (typeof TWV_RANKS)[number];
+
+const twvValue = (team: NCAATeam, rank: TwvRank) =>
+  rank === 30 ? team.twv_30 : rank === 50 ? team.twv_50 : team.twv_200;
+
+const formatStat = (value: number | null | undefined) =>
+  value != null ? value.toFixed(2) : "—";
 
 // Extend NCAATeam interface to include conf_logo_url
 interface NCAATeamWithConfLogo extends NCAATeam {
@@ -52,10 +69,19 @@ const DEFAULT_CATEGORY_STYLE = {
 const getCategoryStyle = (category: string | undefined) =>
   (category && CATEGORY_STYLES[category]) || DEFAULT_CATEGORY_STYLE;
 
-function NCAABracketTable({ className, season }: NCAABracketTableProps) {
+function NCAABracketTable({
+  className,
+  season,
+  mode = "season",
+}: NCAABracketTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
-  const { data, loading, error } = useNCAAProjections(season);
+  const { data, loading, error } = useNCAAProjections(season, undefined, mode);
+  const prefix = mode === "current" ? "" : "Proj ";
+  // Desktop shows every baseline with the one that seeded each team shaded;
+  // mobile keeps TWV_50 (the one comparable down the whole table) and notes
+  // the seeding TWV under it when it's a different baseline.
+  const twvColumns: readonly TwvRank[] = isMobile ? [50] : TWV_RANKS;
 
   const navigateToTeam = useCallback(
     (teamName: string) => {
@@ -190,7 +216,12 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                 <th className={styles.categoryHeader} scope="col">
                   Category
                 </th>
-                <th scope="col">Proj TWV</th>
+                {twvColumns.map((rank) => (
+                  <th key={rank} scope="col">
+                    {prefix}TWV {rank}
+                  </th>
+                ))}
+                <th scope="col">{prefix}Rtg</th>
               </tr>
             </thead>
             <tbody>
@@ -260,9 +291,40 @@ function NCAABracketTable({ className, season }: NCAABracketTableProps) {
                       )}
                     </td>
 
+                    {twvColumns.map((rank) => {
+                      const value =
+                        rank === 50
+                          ? (team.twv_50 ?? team.post_conf_tourney_twv_50)
+                          : twvValue(team, rank);
+                      const seededHere = team.seed_twv_rank === rank;
+                      const tierRank = team.seed_twv_rank;
+                      const showTierNote =
+                        isMobile && tierRank != null && tierRank !== 50;
+                      return (
+                        <td
+                          key={rank}
+                          className={cn(seededHere && styles.seedTwvCell)}
+                          title={
+                            seededHere
+                              ? `Seeded on TWV ${rank}`
+                              : undefined
+                          }
+                        >
+                          <span className={styles.statValue}>
+                            {formatStat(value)}
+                          </span>
+                          {showTierNote && (
+                            <span className={styles.tierNote}>
+                              {tierRank}: {formatStat(twvValue(team, tierRank))}
+                            </span>
+                          )}
+                        </td>
+                      );
+                    })}
+
                     <td>
                       <span className={styles.statValue}>
-                        {team.post_conf_tourney_twv_50.toFixed(2)}
+                        {formatStat(team.rating)}
                       </span>
                     </td>
                   </tr>
