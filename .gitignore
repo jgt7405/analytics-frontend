@@ -47,3 +47,17 @@ next-env.d.ts
 # generated infographics
 /public/images/infographics/
 /scripts/generate-cfp-infographic.mjs
+
+# local logs
+*.log
+build_output.txt
+
+# next-pwa generated service worker (rebuilt on every production build)
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/fallback-*.js
+
+# baseline scratch output (committed summaries live in docs/baselines/)
+/.baseline/
