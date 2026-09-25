@@ -57,7 +57,7 @@ Shared by all routes (Next's figure): 94.2 kB.
 
 ### Lab data — Lighthouse against production
 
-Lighthouse 12, mobile preset (simulated slow 4G and a mid-range phone, so slower than the field numbers below), median of 3 runs per route, run from GitHub Actions ([run 36194545011](https://github.com/jgt7405/analytics-frontend/actions/runs/36194545011)). Full data: [`2026-09-25-lighthouse.json`](./2026-09-25-lighthouse.json). Re-run from the Actions tab → "Lighthouse baseline" → Run workflow.
+Lighthouse 12, mobile preset (simulated slow 4G and a mid-range phone, so slower than the field numbers below), median of 3 runs per route, run from GitHub Actions ([run 36194545011](https://github.com/jgt7405/analytics-frontend/actions/runs/36194545011)). Full data: [`2026-09-25-lighthouse.json`](./2026-09-25-lighthouse.json). Re-run from the Actions tab → "Production baseline" → Run workflow.
 
 | Route | Perf | A11y | SEO | LCP | TBT | CLS | JS transfer | `/api/proxy` calls | Requests |
 |---|---|---|---|---|---|---|---|---|---|
