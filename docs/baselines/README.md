@@ -56,7 +56,7 @@ Shared by all routes (Next's figure): 94.2 kB.
 
 ### Field data — Vercel Speed Insights, desktop
 
-Real visitors, P75, as shown in the Vercel dashboard on 2026-09-25 (dashboard's default date range, about 1.1K US visits). Mobile not yet captured.
+Real visitors, P75, as shown in the Vercel dashboard on 2026-09-25 (dashboard's default date range, about 1.1K US visits).
 
 | Metric | P75 |
 |---|---|
@@ -78,12 +78,33 @@ Per-route Real Experience Score (visits in brackets). The site overall is fast o
 
 Visit counts on the weak routes are small, so treat their scores as indicative. Visitors from Ireland (7 visits) scored 21; too few to draw conclusions, but distance from the US-hosted servers is one possible cause.
 
+### Field data — Vercel Speed Insights, mobile
+
+Same dashboard and date range, mobile selector; 1,058 events, almost all US.
+
+| Metric | P75 |
+|---|---|
+| Real Experience Score | 100 (Great) |
+| First Contentful Paint | 1.03 s |
+| Largest Contentful Paint | 1.24 s |
+| Interaction to Next Paint | 88 ms |
+| Cumulative Layout Shift | 0.06 |
+| First Input Delay | 28 ms |
+| Time to First Byte | 0.34 s |
+
+| Band | Routes |
+|---|---|
+| Poor (<50) | none |
+| Needs improvement (50–90) | `/football/twv` 85 (14) |
+| Great (>90) | `/football/wins` 100 (287), `/football/team/[teamname]` 100 (256), `/basketball/team/[teamname]` 100 (88), `/football/seed` 100 (77), `/basketball/home` 100 (62), `/football/schedule` 100 (57), `/football/whatif` 100 (53) |
+
+`/football/seed` scores 100 on mobile (77 visits) but 47 on desktop (36 visits), so its problem is desktop-specific, e.g. layout shift from the wider desktop table or chart, rather than data loading.
+
 ### Not yet recorded
 
 These need network access this cloud session doesn't have (the production site and the Railway backend are both blocked by its network policy):
 
 - **Lighthouse scores, lab Web Vitals and `/api/proxy` requests per page** for the 7 routes in `scripts/lighthouse-baseline.mjs`. Run `npm run baseline:lighthouse` from a machine that can reach the site, then commit the output as `docs/baselines/<date>-lighthouse.json` and add a table here.
-- **Field Core Web Vitals on mobile** from Vercel Speed Insights (switch the Desktop/Mobile selector).
 - **Proxy error and timeout rates** from Vercel logs.
 
 The script was checked against a local production build here, but with the backend unreachable every page renders its error state and retries its requests. Those numbers are not a valid baseline and were not recorded.
