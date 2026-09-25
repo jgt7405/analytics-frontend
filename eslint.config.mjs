@@ -40,9 +40,15 @@ const eslintConfig = [
   }),
 
   {
-    files: ["*.config.{js,mjs,ts}", "next.config.js"],
+    files: [
+      "*.config.{js,mjs,ts}",
+      "next.config.js",
+      "**/__tests__/**",
+      "**/*.test.{ts,tsx}",
+    ],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-var-requires": "off",
     },
   },
 

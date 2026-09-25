@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    let { name, email, phone, message } = body;
+    const { name, email, phone, message } = body;
 
     // Input validation
     if (!message || typeof message !== "string") {
