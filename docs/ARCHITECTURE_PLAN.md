@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **proposed — not started.** Revision 2 (2026-09-25): folds in feedback from an
+Status: **step 1 in progress** (verify commands and build/bundle baselines done; Lighthouse and field baselines pending, see `docs/baselines/README.md`). Revision 2 (2026-09-25): folds in feedback from an
 external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
 

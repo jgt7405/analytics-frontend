@@ -1,0 +1,317 @@
+[
+  {
+    "route": "/",
+    "pageKb": 92.4,
+    "totalKb": 133.3
+  },
+  {
+    "route": "/_not-found",
+    "pageKb": 92.4,
+    "totalKb": 133.3
+  },
+  {
+    "route": "/basketball/[season]/compare",
+    "pageKb": 122.1,
+    "totalKb": 155.8
+  },
+  {
+    "route": "/basketball/[season]/conf-data",
+    "pageKb": 217.6,
+    "totalKb": 241.8
+  },
+  {
+    "route": "/basketball/[season]/conf-tourney",
+    "pageKb": 157.1,
+    "totalKb": 181.3
+  },
+  {
+    "route": "/basketball/[season]/cwv",
+    "pageKb": 156.3,
+    "totalKb": 180.5
+  },
+  {
+    "route": "/basketball/[season]/home",
+    "pageKb": 136.5,
+    "totalKb": 160.8
+  },
+  {
+    "route": "/basketball/[season]/ncaa-tourney",
+    "pageKb": 155.4,
+    "totalKb": 179.7
+  },
+  {
+    "route": "/basketball/[season]/schedule",
+    "pageKb": 157.5,
+    "totalKb": 181.8
+  },
+  {
+    "route": "/basketball/[season]/seed",
+    "pageKb": 163.7,
+    "totalKb": 188
+  },
+  {
+    "route": "/basketball/[season]/standings",
+    "pageKb": 236.4,
+    "totalKb": 260.6
+  },
+  {
+    "route": "/basketball/[season]/team/[teamname]",
+    "pageKb": 224.5,
+    "totalKb": 244.6
+  },
+  {
+    "route": "/basketball/[season]/teams",
+    "pageKb": 117.1,
+    "totalKb": 150.8
+  },
+  {
+    "route": "/basketball/[season]/twv",
+    "pageKb": 154.6,
+    "totalKb": 178.9
+  },
+  {
+    "route": "/basketball/[season]/wins",
+    "pageKb": 148.3,
+    "totalKb": 172.5
+  },
+  {
+    "route": "/basketball/chart",
+    "pageKb": 120.5,
+    "totalKb": 154.2
+  },
+  {
+    "route": "/basketball/compare",
+    "pageKb": 121.8,
+    "totalKb": 155.3
+  },
+  {
+    "route": "/basketball/composite-ratings",
+    "pageKb": 117.4,
+    "totalKb": 146.4
+  },
+  {
+    "route": "/basketball/conf-data",
+    "pageKb": 217.6,
+    "totalKb": 241.7
+  },
+  {
+    "route": "/basketball/conf-tourney",
+    "pageKb": 157,
+    "totalKb": 181
+  },
+  {
+    "route": "/basketball/cwv",
+    "pageKb": 156.2,
+    "totalKb": 180.3
+  },
+  {
+    "route": "/basketball/game-preview",
+    "pageKb": 226.7,
+    "totalKb": 260.2
+  },
+  {
+    "route": "/basketball/home",
+    "pageKb": 127.2,
+    "totalKb": 151.2
+  },
+  {
+    "route": "/basketball/ncaa-tourney",
+    "pageKb": 155.3,
+    "totalKb": 179.4
+  },
+  {
+    "route": "/basketball/schedule",
+    "pageKb": 157.4,
+    "totalKb": 181.5
+  },
+  {
+    "route": "/basketball/season-info",
+    "pageKb": 126.5,
+    "totalKb": 155.2
+  },
+  {
+    "route": "/basketball/seed",
+    "pageKb": 163.6,
+    "totalKb": 187.7
+  },
+  {
+    "route": "/basketball/standings",
+    "pageKb": 236.3,
+    "totalKb": 260.4
+  },
+  {
+    "route": "/basketball/standings/[conf]",
+    "pageKb": 92.4,
+    "totalKb": 133.3
+  },
+  {
+    "route": "/basketball/team/[teamname]",
+    "pageKb": 224.4,
+    "totalKb": 244.3
+  },
+  {
+    "route": "/basketball/teams",
+    "pageKb": 126.2,
+    "totalKb": 150.6
+  },
+  {
+    "route": "/basketball/twv",
+    "pageKb": 154.5,
+    "totalKb": 178.6
+  },
+  {
+    "route": "/basketball/whatif",
+    "pageKb": 130.6,
+    "totalKb": 159.6
+  },
+  {
+    "route": "/basketball/wins",
+    "pageKb": 148.2,
+    "totalKb": 172.3
+  },
+  {
+    "route": "/football/[season]/cfp",
+    "pageKb": 155.6,
+    "totalKb": 179.8
+  },
+  {
+    "route": "/football/[season]/compare",
+    "pageKb": 114.9,
+    "totalKb": 148.6
+  },
+  {
+    "route": "/football/[season]/conf-champ",
+    "pageKb": 231.2,
+    "totalKb": 255.4
+  },
+  {
+    "route": "/football/[season]/conf-data",
+    "pageKb": 228.5,
+    "totalKb": 252.8
+  },
+  {
+    "route": "/football/[season]/cwv",
+    "pageKb": 156.3,
+    "totalKb": 180.5
+  },
+  {
+    "route": "/football/[season]/schedule",
+    "pageKb": 142.5,
+    "totalKb": 166.8
+  },
+  {
+    "route": "/football/[season]/seed",
+    "pageKb": 156.5,
+    "totalKb": 180.7
+  },
+  {
+    "route": "/football/[season]/standings",
+    "pageKb": 234.9,
+    "totalKb": 259.2
+  },
+  {
+    "route": "/football/[season]/team/[teamname]",
+    "pageKb": 226.8,
+    "totalKb": 255.9
+  },
+  {
+    "route": "/football/[season]/teams",
+    "pageKb": 117.1,
+    "totalKb": 150.8
+  },
+  {
+    "route": "/football/[season]/twv",
+    "pageKb": 138.1,
+    "totalKb": 162.3
+  },
+  {
+    "route": "/football/[season]/wins",
+    "pageKb": 148.2,
+    "totalKb": 172.4
+  },
+  {
+    "route": "/football/bowlpicks",
+    "pageKb": 124.7,
+    "totalKb": 153.8
+  },
+  {
+    "route": "/football/cfp",
+    "pageKb": 155.5,
+    "totalKb": 179.5
+  },
+  {
+    "route": "/football/compare",
+    "pageKb": 122.3,
+    "totalKb": 155.9
+  },
+  {
+    "route": "/football/composite-ratings",
+    "pageKb": 117.4,
+    "totalKb": 146.4
+  },
+  {
+    "route": "/football/conf-champ",
+    "pageKb": 231.1,
+    "totalKb": 255.2
+  },
+  {
+    "route": "/football/conf-data",
+    "pageKb": 228.3,
+    "totalKb": 252.4
+  },
+  {
+    "route": "/football/cwv",
+    "pageKb": 156.3,
+    "totalKb": 180.3
+  },
+  {
+    "route": "/football/home",
+    "pageKb": 144,
+    "totalKb": 159
+  },
+  {
+    "route": "/football/schedule",
+    "pageKb": 142.4,
+    "totalKb": 166.5
+  },
+  {
+    "route": "/football/season-info",
+    "pageKb": 126.6,
+    "totalKb": 155.2
+  },
+  {
+    "route": "/football/seed",
+    "pageKb": 156.4,
+    "totalKb": 180.5
+  },
+  {
+    "route": "/football/standings",
+    "pageKb": 234.9,
+    "totalKb": 258.9
+  },
+  {
+    "route": "/football/team/[teamname]",
+    "pageKb": 226.7,
+    "totalKb": 255.6
+  },
+  {
+    "route": "/football/teams",
+    "pageKb": 126.2,
+    "totalKb": 150.6
+  },
+  {
+    "route": "/football/twv",
+    "pageKb": 138,
+    "totalKb": 162.1
+  },
+  {
+    "route": "/football/whatif",
+    "pageKb": 164.8,
+    "totalKb": 188.8
+  },
+  {
+    "route": "/football/wins",
+    "pageKb": 148.1,
+    "totalKb": 172.2
+  }
+]
