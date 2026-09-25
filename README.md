@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JThom Analytics — frontend
 
-## Getting Started
+College basketball and football projections, standings, schedules and tournament odds at [www.jthomanalytics.com](https://www.jthomanalytics.com).
 
-First, run the development server:
+Next.js 14 (App Router) + React 18 + TypeScript + Tailwind + Chart.js, deployed on Vercel. Data comes from a separate Flask backend on Railway through this app's `/api/proxy` route.
+
+## Setup
+
+Requires Node 20.9 or newer (`.nvmrc` pins 22; with nvm: `nvm use`).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci          # install
+npm run dev     # http://localhost:3000, uses the production backend by default
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+To use a local backend, create `.env.local` with `BACKEND_API_URL=http://localhost:5000/api`. The contact form needs the `EMAIL_*` variables listed in `AGENTS.md`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run verify        # lint, type-check, unit tests (~30 s) — run before every commit
+npm run verify:full   # + production build, bundle budgets, browser smoke tests (~3 min)
+```
 
-## Learn More
+The same checks run on every pull request (`.github/workflows/ci.yml`). The first time you run the smoke tests outside a cloud agent session, install a browser with `npx playwright install chromium`.
 
-To learn more about Next.js, take a look at the following resources:
+## Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [`AGENTS.md`](./AGENTS.md): how the code is organized, conventions, commands, gotchas. Start here.
+- [`docs/architecture.md`](./docs/architecture.md): system overview and routing.
+- [`docs/data-flow.md`](./docs/data-flow.md): request path, caching, backend contract.
+- [`docs/testing.md`](./docs/testing.md): unit, smoke and production tests.
+- [`docs/ARCHITECTURE_PLAN.md`](./docs/ARCHITECTURE_PLAN.md): the ongoing refactor plan and its status.
+- [`docs/baselines/README.md`](./docs/baselines/README.md): performance and reliability measurements.
+- [`docs/PAGE_MODERNIZATION_GUIDE.md`](./docs/PAGE_MODERNIZATION_GUIDE.md): visual standard for tables and charts.
