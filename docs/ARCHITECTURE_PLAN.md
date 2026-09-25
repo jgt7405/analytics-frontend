@@ -1,7 +1,8 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **step 1 done** except proxy error rates from Vercel logs (see `docs/baselines/README.md`). Step 2 next. Revision 2 (2026-09-25): folds in feedback from an
-external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
+Status: **step 1 complete** (2026-09-25); step 2 next. Baselines are in `docs/baselines/README.md`.
+
+Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
 
 ## Guiding principles
@@ -44,6 +45,20 @@ codebase as of 2026-09-25.
    - Lighthouse scores and Core Web Vitals for a small representative set of routes (e.g. football wins, basketball standings, a team page, compare, game preview, an archive page), plus Speed Insights field data.
    - Backend request counts per page load, and render times for the heaviest pages.
    - Current error and timeout rates from the proxy, as far as logs allow.
+
+**Outcome (complete, 2026-09-25):**
+
+| Item | Result |
+|---|---|
+| Repeatable builds and tests | Logs, generated service-worker files and unused template SVGs removed from git and ignored. `npm ci`, `npm run build` and `npm test` pass on a clean checkout with the backend unreachable. |
+| ESLint CLI | `lint` now runs `eslint .`. The old `next lint` never ran: it stopped at an interactive setup prompt. The CLI found 23 errors, all fixed or configured: a real crash in `BowlPicksProjectionChart` (hooks called after early returns, so React threw once data loaded), `prefer-const` in the contact route, and `require()` in tests/config. 0 errors, 41 warnings remain. |
+| Verify commands | `npm run verify` (lint, type-check, tests; ~30 s) and `npm run verify:full` (plus production build and `npm run size`). Documented in `CLAUDE.md`. Playwright smoke/screenshot tests and bundle budgets moved to step 2: budgets need these baselines, and page tests need the step 4 fixtures to run without the backend. |
+| Build and bundle baselines | Build 80–81 s (cold, cloud container). Per-route gzipped JS for all 63 routes via `scripts/route-sizes.mjs`: 133–261 kB, median 179 kB. |
+| Lighthouse (lab) | 7 routes against production via `scripts/lighthouse-baseline.mjs`, run from the "Production baseline" GitHub workflow: performance 84–98, accessibility 96–100. Scores vary by up to 17 points between runs, so compare only across multiple runs. |
+| Field Web Vitals | Vercel Speed Insights: Real Experience Score 100 on desktop and mobile, P75 LCP 1.53 s / 1.24 s. Weak pages: `/football/seed` on desktop (47), `/football/compare` (59), `/football/twv` on mobile (85). |
+| Backend requests and proxy reliability | Proxy calls per page from Lighthouse (0 on `/football/wins/`, 10 on team pages). `scripts/proxy-probe.mjs`: 0 of 70 calls failed, CDN cache working (~25 ms cached, up to 572 ms uncached), and every browser call pays a trailing-slash redirect (fix added to step 3). |
+
+Other findings carried forward: 48 dependency vulnerabilities (step 2), the redirect fix (step 3), and the weak-page list (step 9).
 
 ## Step 2 — CI and agent setup
 

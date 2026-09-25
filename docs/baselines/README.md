@@ -10,7 +10,8 @@ Each performance PR should state its before/after against the most recent baseli
 | Lint, types, unit tests | `npm run verify` | Anywhere |
 | Production build + route sizes | `npm run verify:full` (or `npm run build && npm run size`) | Anywhere; no backend needed |
 | Route sizes as JSON | `npm run size -- --json > docs/baselines/<date>-route-sizes.json` | After a build |
-| Lighthouse, lab Web Vitals, requests per page | `npm run baseline:lighthouse` (defaults to the production site; `-- --base <url>` for another host, `-- --runs 5` for more runs) | Somewhere that can reach the site **and** its backend |
+| Lighthouse, lab Web Vitals, requests per page | `npm run baseline:lighthouse` (defaults to the production site; `-- --base <url>` for another host, `-- --runs 5` for more runs) | Somewhere that can reach the site **and** its backend. Easiest: GitHub → Actions → "Production baseline" → Run workflow |
+| Proxy reliability, cache and latency | `npm run baseline:proxy` (`-- --rounds 10` for more) | Same; also runs in the "Production baseline" workflow |
 | Field Core Web Vitals | Vercel dashboard → Speed Insights | Vercel |
 | Proxy error and timeout rates | Vercel dashboard → Logs, filter `/api/proxy` | Vercel |
 
@@ -122,9 +123,29 @@ Same dashboard and date range, mobile selector; 1,058 events, almost all US.
 
 `/football/seed` scores 100 on mobile (77 visits) but 47 on desktop (36 visits), so its problem is desktop-specific, e.g. layout shift from the wider desktop table or chart, rather than data loading.
 
-### Not yet recorded
+### Backend proxy — synthetic probe against production
 
-- **Proxy error and timeout rates** from Vercel logs (Logs tab, search `/api/proxy`, filter 4xx/5xx).
+`scripts/proxy-probe.mjs` from GitHub Actions ([run 36195612918](https://github.com/jgt7405/analytics-frontend/actions/runs/36195612918)): 14 representative `/api/proxy` endpoints, 5 rounds each, requested exactly as the site's client code does. Full data: [`2026-09-25-proxy-probe.json`](./2026-09-25-proxy-probe.json). Re-run with `npm run baseline:proxy` or the "Production baseline" workflow.
+
+| Result | Value |
+|---|---|
+| Failures / timeouts | **0 of 70** |
+| Vercel CDN cache | 57 of 70 served from cache (`HIT`); the 13 `MISS`es were each endpoint's first call (`/basketball_teams` was already cached) |
+| First (uncached) response | 62–572 ms; slowest `/ncaa_tourney/All_Teams` 572 ms, `/cwv/SEC` 421 ms, `/football_teams` 390 ms |
+| Cached response | median 16–33 ms per endpoint (median of medians 25 ms) |
+| Trailing-slash redirect | **70 of 70** calls were 308-redirected before the real request |
+
+Findings:
+- The proxy and backend were fully reliable during the probe, and the CDN's 5-minute cache works: after the first visitor, a cached response is ~25 ms from a US data center.
+- The uncached first hit is where the time goes (up to ~0.6 s), so the step 3 cache classes should keep reference data (team and conference lists) cached much longer than 5 minutes.
+- Every browser data call pays an extra redirect round trip because client code omits the trailing slash. From a data center that costs little; on a phone each extra round trip typically costs tens to hundreds of ms. Fix scheduled in step 3.
+- This is a synthetic check. Real-traffic error rates are in the Vercel logs (Logs tab, search `/api/proxy`, filter 4xx/5xx); looking there is optional.
+
+### Lighthouse variance
+
+A second Lighthouse run 13 minutes later (run 36195612918) moved some performance scores by up to 17 points with no code change: `/football/standings/` 98 → 81, `/football/team/Alabama/` 97 → 82, while the archive page's LCP improved 4.2 s → 2.7 s. Accessibility, SEO, request counts and JS transfer were stable. Lab performance scores from shared CI runners are noisy, so:
+- Compare performance only across multiple runs (use `--runs 5` or more for before/after claims).
+- In CI, gate on accessibility and on request/byte counts; keep the performance score as a warning (as the plan already says).
 
 ### Other observations
 
