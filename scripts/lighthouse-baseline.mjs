@@ -10,6 +10,11 @@
 //   npm run baseline:lighthouse -- --base http://localhost:3000
 //   npm run baseline:lighthouse -- --runs 5 --out .baseline/lighthouse.json
 //
+// CI gates (optional): exit non-zero when a route's accessibility score is
+// below --min-accessibility, and print a GitHub warning when performance is
+// below --warn-performance (lab performance is too noisy to gate on).
+//   npm run baseline:lighthouse -- --min-accessibility 90 --warn-performance 80
+//
 // Measure against a production build with a reachable backend. A local server
 // that cannot reach the backend only measures error states.
 //
@@ -39,6 +44,8 @@ function arg(name, fallback) {
 const base = arg("base", "https://www.jthomanalytics.com").replace(/\/$/, "");
 const runs = Number(arg("runs", "3"));
 const out = arg("out", ".baseline/lighthouse.json");
+const minAccessibility = Number(arg("min-accessibility", "0"));
+const warnPerformance = Number(arg("warn-performance", "0"));
 
 const PLAYWRIGHT_CHROMIUM = "/opt/pw-browsers/chromium";
 if (!process.env.CHROME_PATH && existsSync(PLAYWRIGHT_CHROMIUM)) {
@@ -77,6 +84,7 @@ const chrome = await chromeLauncher.launch({
 });
 
 const report = { base, runs, recordedAt: new Date().toISOString(), routes: {} };
+const failures = [];
 try {
   for (const route of ROUTES) {
     const results = [];
@@ -93,12 +101,21 @@ try {
       }
       results.push(summarize(result.lhr));
     }
-    if (results.length === 0) continue;
+    if (results.length === 0) {
+      failures.push(`${route}: Lighthouse could not load the page`);
+      continue;
+    }
     report.routes[route] = median(results);
     const m = report.routes[route];
     console.log(
       `${route.padEnd(28)} perf ${m.performance}  a11y ${m.accessibility}  LCP ${m.lcpMs}ms  TBT ${m.tbtMs}ms  CLS ${m.cls}  JS ${m.jsTransferKb}kB  proxy ${m.proxyRequests}`,
     );
+    if (m.accessibility < minAccessibility) {
+      failures.push(`${route}: accessibility ${m.accessibility} < ${minAccessibility}`);
+    }
+    if (m.performance < warnPerformance) {
+      console.log(`::warning::${route}: Lighthouse performance ${m.performance} < ${warnPerformance}`);
+    }
   }
 } finally {
   await chrome.kill();
@@ -107,3 +124,8 @@ try {
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
 console.log(`\nWrote ${out}`);
+
+if (minAccessibility && failures.length) {
+  console.error(`\nLighthouse gate failed:\n  ${failures.join("\n  ")}`);
+  process.exit(1);
+}

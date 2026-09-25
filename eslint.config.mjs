@@ -39,6 +39,88 @@ const eslintConfig = [
     },
   }),
 
+  // Architecture boundaries (docs/ARCHITECTURE_PLAN.md, step 2).
+  // Advisory: long files are a signal, not a rule; split them in step 7.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "max-lines": [
+        "warn",
+        { max: 600, skipBlankLines: true, skipComments: true },
+      ],
+    },
+  },
+  // Presentation components don't own network access: fetch data in pages,
+  // route handlers, hooks or src/services. Warning until step 4 moves the
+  // existing calls.
+  {
+    files: ["src/components/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-globals": [
+        "warn",
+        {
+          name: "fetch",
+          message:
+            "Components don't fetch directly. Use a hook in src/hooks or a method in src/services.",
+        },
+      ],
+    },
+  },
+  // Sports stay independent: shared code lives in shared folders
+  // (components/features/shared, components/common, lib, services).
+  {
+    files: [
+      "src/components/features/basketball/**",
+      "src/app/basketball/**",
+      "src/hooks/useBasketball*",
+      "src/hooks/useBball*",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/components/features/football/*",
+                "@/app/football/*",
+                "@/hooks/useFootball*",
+              ],
+              message:
+                "Basketball code must not import football code. Move shared logic to a shared folder.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      "src/components/features/football/**",
+      "src/app/football/**",
+      "src/hooks/useFootball*",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/components/features/basketball/*",
+                "@/app/basketball/*",
+                "@/hooks/useBasketball*",
+                "@/hooks/useBball*",
+              ],
+              message:
+                "Football code must not import basketball code. Move shared logic to a shared folder.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   {
     files: [
       "*.config.{js,mjs,ts}",

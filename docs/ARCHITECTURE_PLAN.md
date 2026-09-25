@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **step 1 complete** (2026-09-25); step 2 next. Baselines are in `docs/baselines/README.md`.
+Status: **steps 1 and 2 complete** (2026-09-25). Baselines are in `docs/baselines/README.md`. **Security note:** Next.js 14 has unpatched advisories (2 critical); consider doing step 5 next, before steps 3–4 (see step 5).
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -86,6 +86,21 @@ Other findings carried forward: 48 dependency vulnerabilities (step 2), the redi
    - `no-explicit-any` as an error for new or changed files only.
    - `no-console` only after the shared logger (step 3) is confirmed working in server and client bundles, with redaction rules.
 
+**Outcome (complete, 2026-09-25):**
+
+| Item | Result |
+|---|---|
+| CI | `.github/workflows/ci.yml` on every PR and push to `main`. *Verify* job: lint, strict lint on changed files, type-check, Jest, build, bundle budgets, Playwright smoke tests. *Lighthouse* job: the PR's own build against live data on 7 routes; fails below 90 accessibility, warns below 80 performance. |
+| Deferred from step 1 | Playwright smoke tests: all 33 current-season pages on desktop and mobile, failing on HTTP errors, a missing page shell or any uncaught JS error (`npm run test:e2e`). Bundle budgets per route from the baseline, +5% or 3 kB tolerance (`npm run size:check`). Screenshot tests and team/archive pages wait for step 4 fixtures. |
+| Live-backend check | `production-baseline.yml` now runs daily (11:17 UTC); the proxy probe's `--strict` mode fails on errors or empty/non-JSON bodies, and a failed run emails the owner. Response-shape checks are basic until step 4's schemas. |
+| Dependencies | 48 → 16 known vulnerabilities. `npm audit fix` for in-range updates; nodemailer 7 → 10 (contact form: SMTP/header injection and DoS advisories); Lighthouse 12 → 13 (dev only). The remaining 16 are in `next` (2 critical, several high), `eslint-config-next`, `typescript-eslint` and `next-pwa`, and need step 5. Dependabot opens weekly grouped updates; framework majors are excluded. |
+| Agent docs | `AGENTS.md` (tool-neutral rules); `CLAUDE.md` imports it; folder notes in `src/app`, `src/services`, `src/components/features`. |
+| Docs | `docs/architecture.md`, `docs/data-flow.md` (request path, all cache layers, backend contract), `docs/testing.md`. Root docs moved into `docs/`; the modernization guide kept its name (`docs/PAGE_MODERNIZATION_GUIDE.md`) because about 30 code comments cite it. README rewritten. |
+| Setup | `.nvmrc` (22) and `engines` `>=20.9.0`. SessionStart hook runs `npm ci` in cloud sessions only when needed. |
+| Skills | `add-endpoint`, `add-page`, `season-rollover`, `modernize-page`, `verify-visually` (with `scripts/screenshot.mjs`). |
+| Boundaries and lint | Basketball ↔ football imports are an ESLint error (no current violations). Direct `fetch` in components warns (16). Files over 600 lines warn (30). `no-explicit-any` is an error for changed files via `npm run lint:changed`. `no-console` waits for the step 3 logger. |
+| Fix to step 1 | The generated `public/sw.js` and `workbox-*.js` were still tracked (re-staged while splitting step 1 commits); now removed. No production effect. |
+
 ## Step 3 — Env config, shared request layer, cache classes
 
 1. **One validated env module** (`src/config/env.ts`) with a single server-only `BACKEND_API_URL`. Remove `NEXT_PUBLIC_BACKEND_URL` and the hard-coded URL in `sitemap.ts`.
@@ -118,6 +133,8 @@ Other findings carried forward: 48 dependency vulnerabilities (step 2), the redi
 8. **Backend contract ownership.** Document in `docs/data-flow.md` which side owns each response shape, how breaking changes to the Flask backend are announced, and how long old fields must keep working.
 
 ## Step 5 — Next.js 16 upgrade (isolated migration)
+
+**Consider doing this step next.** Step 2 found that Next.js 14 has no patched release for a series of advisories, including two critical (remote code execution via the Image Optimization API with AVIF, and on Windows-hosted servers) and several high-severity denial-of-service and SSRF issues; fixes exist only in 15.5.24+ and 16. Vercel's hosting mitigates some of them, but not all. Steps 3 and 4 don't depend on the framework version, so reordering costs little.
 
 Done before the route and caching work, because Next 16 changes exactly what those steps touch (async `params`/`searchParams`, the caching model, Turbopack as the default build tool). Doing route work on 14 and then redoing it on 16 would be double work.
 

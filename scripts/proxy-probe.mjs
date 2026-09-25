@@ -12,6 +12,11 @@
 // Usage:
 //   npm run baseline:proxy
 //   npm run baseline:proxy -- --base http://localhost:3000 --rounds 10 --out .baseline/proxy.json
+//   npm run baseline:proxy -- --strict   # exit non-zero on any failure or empty/malformed body
+//
+// Shape check: every body must be JSON with content (a non-empty array, or an
+// object with at least one key whose `data` array, if present, is non-empty).
+// Step 4 replaces this with the endpoint list's Zod schemas.
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
@@ -41,6 +46,7 @@ function arg(name, fallback) {
 const base = arg("base", "https://www.jthomanalytics.com").replace(/\/$/, "");
 const rounds = Number(arg("rounds", "5"));
 const out = arg("out", ".baseline/proxy-probe.json");
+const strict = process.argv.includes("--strict");
 const TIMEOUT_MS = 35000;
 
 async function probe(path) {
@@ -50,8 +56,9 @@ async function probe(path) {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    await res.arrayBuffer();
+    const text = await res.text();
     return {
+      shapeProblem: res.ok ? checkShape(text) : null,
       status: res.status,
       ms: Math.round(performance.now() - started),
       cache: res.headers.get("x-vercel-cache") ?? "n/a",
@@ -64,8 +71,23 @@ async function probe(path) {
       ms: Math.round(performance.now() - started),
       cache: "n/a",
       redirected: false,
+      shapeProblem: null,
     };
   }
+}
+
+function checkShape(text) {
+  let body;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    return "not JSON";
+  }
+  if (Array.isArray(body)) return body.length ? null : "empty array";
+  if (!body || typeof body !== "object") return "not an object or array";
+  if (Object.keys(body).length === 0) return "empty object";
+  if (Array.isArray(body.data) && body.data.length === 0) return "empty data array";
+  return null;
 }
 
 function percentile(values, p) {
@@ -95,6 +117,7 @@ for (const [endpoint, results] of Object.entries(samples)) {
     maxMs: Math.max(...times),
     cache,
     redirected: results.filter((r) => r.redirected).length,
+    shapeProblems: [...new Set(results.map((r) => r.shapeProblem).filter(Boolean))],
   };
 }
 
@@ -105,13 +128,14 @@ report.summary = {
   medianOfMediansMs: percentile(all.map((e) => e.medianMs), 50),
   slowestFirstMs: Math.max(...all.map((e) => e.firstMs)),
   redirected: all.reduce((sum, e) => sum + e.redirected, 0),
+  shapeProblems: all.filter((e) => e.shapeProblems.length).length,
 };
 
 const width = Math.max(...ENDPOINTS.map((e) => e.length));
 for (const [endpoint, e] of Object.entries(report.endpoints)) {
   const cache = Object.entries(e.cache).map(([k, v]) => `${k}:${v}`).join(" ");
   console.log(
-    `${endpoint.padEnd(width)}  ok ${e.ok}/${rounds}  first ${e.firstMs}ms  median ${e.medianMs}ms  max ${e.maxMs}ms  ${cache}${e.failed ? `  FAILED ${e.failureStatuses.join(",")}` : ""}`,
+    `${endpoint.padEnd(width)}  ok ${e.ok}/${rounds}  first ${e.firstMs}ms  median ${e.medianMs}ms  max ${e.maxMs}ms  ${cache}${e.failed ? `  FAILED ${e.failureStatuses.join(",")}` : ""}${e.shapeProblems.length ? `  SHAPE ${e.shapeProblems.join(",")}` : ""}`,
   );
 }
 console.log(`\n${report.summary.failed}/${report.summary.requests} requests failed`);
@@ -120,3 +144,10 @@ console.log(`${report.summary.redirected}/${report.summary.requests} requests we
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
 console.log(`Wrote ${out}`);
+
+if (strict && (report.summary.failed || report.summary.shapeProblems)) {
+  console.error(
+    `::error::Proxy probe: ${report.summary.failed} failed request(s), ${report.summary.shapeProblems} endpoint(s) with empty or malformed data`,
+  );
+  process.exit(1);
+}
