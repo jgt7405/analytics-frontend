@@ -34,14 +34,11 @@ export default function BasketballHomeContent({ initialData }: { initialData?: N
   const { isMobile } = useResponsive();
   const ncaaTableRef = useRef<HTMLDivElement>(null);
   const multiBidRef = useRef<HTMLDivElement>(null);
-  const [selectedMode, setMode] = useState<NCAAProjectionsMode>("season");
-  // The season projection drives the header date and whether a current
-  // snapshot exists yet; the tables fetch the selected mode themselves.
+  const [mode, setMode] = useState<NCAAProjectionsMode>("season");
+  const [showAllTeams, setShowAllTeams] = useState(false);
+  // The season projection drives the header date; the tables fetch the
+  // selected mode themselves.
   const { data, loading } = useNCAAProjections(undefined, initialData);
-  // Before any games are played current TWV is zero for everyone, so the
-  // snapshot would just be a ratings list - keep it off until then.
-  const currentAvailable = data?.current_available === true;
-  const mode: NCAAProjectionsMode = currentAvailable ? selectedMode : "season";
   const isCurrent = mode === "current";
 
   // Format the last updated timestamp
@@ -79,31 +76,25 @@ export default function BasketballHomeContent({ initialData }: { initialData?: N
           ["season", "Season Projection"],
           ["current", "Current Snapshot"],
         ] as [NCAAProjectionsMode, string][]
-      ).map(([value, label]) => {
-        const disabled = value === "current" && !currentAvailable;
-        return (
-          <button
-            key={value}
-            onClick={() => setMode(value)}
-            disabled={disabled}
-            title={disabled ? "Available once games have been played" : undefined}
-            className={`${sizeClasses} border rounded transition-colors ${
-              mode === value
-                ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
-                : disabled
-                  ? "bg-white border-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            {label}
-          </button>
-        );
-      })}
-      {!currentAvailable && (
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          Current snapshot starts once games are played
-        </span>
-      )}
+      ).map(([value, label]) => (
+        <button
+          key={value}
+          onClick={() => setMode(value)}
+          className={`${sizeClasses} border rounded transition-colors ${
+            mode === value
+              ? "bg-[rgb(0,151,178)] text-white border-[rgb(0,151,178)]"
+              : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+      <button
+        onClick={() => setShowAllTeams(!showAllTeams)}
+        className={`${sizeClasses} border rounded transition-colors bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100`}
+      >
+        {showAllTeams ? "Show Field Only" : "Show All Teams"}
+      </button>
     </div>
   );
 
@@ -124,7 +115,7 @@ export default function BasketballHomeContent({ initialData }: { initialData?: N
             <div className="mb-8">
               <div className="mb-3">{modeToggle}</div>
               <div className="ncaa-bracket-table min-h-[600px]" ref={ncaaTableRef}>
-                <NCAABracketTable mode={mode} />
+                <NCAABracketTable mode={mode} showAll={showAllTeams} />
               </div>
 
               <div className="mt-6">

@@ -18,6 +18,8 @@ interface NCAABracketTableProps {
   // Current Snapshot uses completed-game TWV and today's rating, so the
   // columns drop the "Proj" prefix.
   mode?: NCAAProjectionsMode;
+  // Also list every team outside the field and bubble, ranked on from 85
+  showAll?: boolean;
 }
 
 // TWV_50 picks the field; each seeding tier then scores on its own baseline.
@@ -80,6 +82,7 @@ function NCAABracketTable({
   className,
   season,
   mode = "season",
+  showAll = false,
 }: NCAABracketTableProps) {
   const { isMobile } = useResponsive();
   const router = useRouter();
@@ -140,9 +143,25 @@ function NCAABracketTable({
       }))
       .sort((a, b) => b.post_conf_tourney_twv_50 - a.post_conf_tourney_twv_50);
 
-    // Return tournament, then First 4 Out, then Next 4 Out
-    return [...sortedTournament, ...sortedFirst4Out, ...sortedNext4Out];
-  }, [data]);
+    // Everyone else, already ranked by the API (TWV 50, then rating); the
+    // rank sits in the seed column as on football/home.
+    const others = showAll
+      ? ((data.other_teams as NCAATeamWithConfLogo[]) || []).map((team) => ({
+          ...team,
+          category: "",
+          seed: team.standing != null ? String(team.standing) : "-",
+          isOther: true,
+        }))
+      : [];
+
+    // Tournament, then First 4 Out, then Next 4 Out, then (optionally) the rest
+    return [
+      ...sortedTournament,
+      ...sortedFirst4Out,
+      ...sortedNext4Out,
+      ...others,
+    ] as (NCAATeamWithConfLogo & { isOther?: boolean })[];
+  }, [data, showAll]);
 
   // Dark separator between seed groups and between tournament/out-of-tournament
   // sections - mirrors the football CFP bracket's isGroupBoundary logic but
@@ -153,6 +172,10 @@ function NCAABracketTable({
       const nextTeam = allTeams[index + 1];
 
       if (!nextTeam) return true; // last row overall
+
+      // The rest of D1: after the bubble, then every 10 ranks (as football)
+      if (nextTeam.isOther && !team.isOther) return true;
+      if (team.isOther) return team.standing != null && team.standing % 10 === 0;
 
       if (team.seed !== "Out" && nextTeam.seed === "Out") {
         return true; // last tournament team before out teams
@@ -316,7 +339,7 @@ function NCAABracketTable({
                         )}
                         title={
                           team.seed_twv_rank === rank
-                            ? team.seed === "Out"
+                            ? team.seed === "Out" || team.isOther
                               ? "Selection is on TWV 50"
                               : `Seeded on TWV ${rank}`
                             : undefined
@@ -344,6 +367,7 @@ function NCAABracketTable({
                           key={`blend-${rank}`}
                           className={cn(
                             team.seed !== "Out" &&
+                              !team.isOther &&
                               team.seed_twv_rank === rank &&
                               styles.seedTwvCell,
                           )}

@@ -36,6 +36,8 @@ export interface NCAAProjectionsResponse {
   tournament_teams: NCAATeam[];
   first_four_out: NCAATeam[];
   next_four_out: NCAATeam[];
+  // Everyone else, ranked from 85 by TWV 50 (rating breaks ties)
+  other_teams?: NCAATeam[];
   total_auto_bids: number;
   total_at_large_bids: number;
   mode?: NCAAProjectionsMode;
