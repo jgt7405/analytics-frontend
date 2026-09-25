@@ -1,0 +1,196 @@
+{
+  "base": "https://www.jthomanalytics.com",
+  "rounds": 5,
+  "recordedAt": "2026-09-25T22:18:14.823Z",
+  "source": "GitHub Actions run 36195612918 (ubuntu-latest), scripts/proxy-probe.mjs",
+  "endpoints": {
+    "/football_teams": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 390,
+      "medianMs": 31,
+      "maxMs": 390,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/football_conf_data": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 125,
+      "medianMs": 33,
+      "maxMs": 125,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/football/standings/SEC": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 177,
+      "medianMs": 17,
+      "maxMs": 177,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/football/cwv/Big_Ten": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 295,
+      "medianMs": 18,
+      "maxMs": 295,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/football/twv/Big_12": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 212,
+      "medianMs": 30,
+      "maxMs": 212,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/football/conf_champ/ACC": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 196,
+      "medianMs": 16,
+      "maxMs": 196,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/football_seed/SEC": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 290,
+      "medianMs": 18,
+      "maxMs": 290,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/cfp/All_Teams": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 221,
+      "medianMs": 25,
+      "maxMs": 221,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/basketball_teams": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 62,
+      "medianMs": 21,
+      "maxMs": 93,
+      "cache": {
+        "HIT": 5
+      },
+      "redirected": 5
+    },
+    "/unified_conference_data": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 124,
+      "medianMs": 26,
+      "maxMs": 124,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/standings/Big_12": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 343,
+      "medianMs": 22,
+      "maxMs": 343,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/cwv/SEC": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 421,
+      "medianMs": 27,
+      "maxMs": 421,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/seed/Big_Ten": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 328,
+      "medianMs": 22,
+      "maxMs": 328,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    },
+    "/ncaa_tourney/All_Teams": {
+      "ok": 5,
+      "failed": 0,
+      "failureStatuses": [],
+      "firstMs": 572,
+      "medianMs": 31,
+      "maxMs": 572,
+      "cache": {
+        "MISS": 1,
+        "HIT": 4
+      },
+      "redirected": 5
+    }
+  },
+  "summary": {
+    "requests": 70,
+    "failed": 0,
+    "medianOfMediansMs": 25,
+    "slowestFirstMs": 572,
+    "redirected": 70
+  }
+}

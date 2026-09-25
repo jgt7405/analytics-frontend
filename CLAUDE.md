@@ -15,7 +15,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **`npm start`** - Run production server (requires prior `npm run build`)
 
 ### Code Quality
-- **`npm run lint`** - Run ESLint (Next.js + TypeScript rules)
+- **`npm run verify`** - Lint + type-check + unit tests. Run before every commit; must pass.
+- **`npm run verify:full`** - `verify` plus production build and route bundle sizes (`npm run size`). Run before merging.
+- **`npm run lint`** - Run ESLint CLI (Next.js + TypeScript rules; `next lint` is not used)
 - **`npm run lint:fix`** - Auto-fix linting issues
 - **`npm run type-check`** - Run TypeScript type checking (strict mode enabled)
 - **`npm run analyze`** - Bundle analysis (runs build with Webpack Bundle Analyzer)
