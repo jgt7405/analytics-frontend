@@ -76,7 +76,7 @@ Per-route Real Experience Score (visits in brackets). The site overall is fast o
 | Needs improvement (50–90) | `/football/compare` 59 (8), `/basketball/seed` 75 (12), `/football/[season]/wins` 77 (8), `/football/cfp` 83 (17), `/basketball/teams` 87 (29), `/basketball/schedule` 87 (9) |
 | Great (>90) | `/football/team/[teamname]` 100 (265), `/football/wins` 99 (124), `/football/whatif` 100 (76), `/basketball/team/[teamname]` 99 (73), `/basketball/home` 100 (70), `/football/home` 100 (50), `/football/schedule` 100 (38) |
 
-Visit counts on the weak routes are small, so treat their scores as indicative. Visitors from Ireland (7) scored 21, which points at latency to the US-hosted backend rather than page weight.
+Visit counts on the weak routes are small, so treat their scores as indicative. Visitors from Ireland (7 visits) scored 21; too few to draw conclusions, but distance from the US-hosted servers is one possible cause.
 
 ### Not yet recorded
 
