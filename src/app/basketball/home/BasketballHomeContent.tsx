@@ -137,9 +137,13 @@ export default function BasketballHomeContent({ initialData }: { initialData?: N
                           : "NCAA tournament projections based on 1,000 season simulations using composite ratings."}
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        At-large bids go to the top 44 by TWV 50. Seeding uses
-                        three tiers, each 65% TWV and 35% rating: seeds 1–4 on
-                        TWV 30, seeds 5–11 on TWV 50, seeds 12–16 on TWV 200.
+                        <strong>How the field is set:</strong> The 44 at-large
+                        teams with the highest TWV 50 make the field, joining
+                        the 32 automatic bids. Teams are then seeded by a blend
+                        of 65% TWV and 35% rating. Seeds 1–4 use TWV 30, seeds
+                        5–11 use TWV 50, and seeds 12–16 use TWV 200. This
+                        provided the closest match to the actual field and
+                        seeds over the past 2 seasons.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         {isCurrent
