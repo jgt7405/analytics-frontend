@@ -61,3 +61,8 @@ build_output.txt
 
 # baseline scratch output (committed summaries live in docs/baselines/)
 /.baseline/
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/

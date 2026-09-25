@@ -15,8 +15,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
     "verify": "npm run lint && npm run type-check && jest --ci",
-    "verify:full": "npm run verify && npm run build && npm run size:check",
+    "verify:full": "npm run verify && npm run build && npm run size:check && npm run test:e2e",
     "size": "node scripts/route-sizes.mjs",
     "size:check": "node scripts/check-budgets.mjs",
     "baseline:lighthouse": "node scripts/lighthouse-baseline.mjs",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^14.2.18",
+    "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@types/jest": "^29.5.11",
