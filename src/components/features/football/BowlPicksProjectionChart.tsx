@@ -486,24 +486,6 @@ function BowlPicksProjectionChart() {
     return [Math.floor(bottom), Math.ceil(top)];
   }, [chartData, people]);
 
-  if (isLoading) {
-    return (
-      <div style={{ padding: "20px", textAlign: "center" }}>Loading...</div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ padding: "20px", textAlign: "center", color: "red" }}>
-        Error loading chart data
-      </div>
-    );
-  }
-
-  if (chartData.length === 0) {
-    return <div style={{ padding: "20px", textAlign: "center" }}>No data</div>;
-  }
-
   // Chart.js datasets for cumulative projections
   const datasetsPointsProjection = useMemo(() => {
     return people.map((person, index) => ({
@@ -605,6 +587,24 @@ function BowlPicksProjectionChart() {
       },
     };
   }, []);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>Loading...</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center", color: "red" }}>
+        Error loading chart data
+      </div>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return <div style={{ padding: "20px", textAlign: "center" }}>No data</div>;
+  }
 
   return (
     <div
