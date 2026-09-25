@@ -1,6 +1,7 @@
-name: Lighthouse baseline
+name: Production baseline
 
-# Measures the production site with scripts/lighthouse-baseline.mjs.
+# Measures the production site with scripts/lighthouse-baseline.mjs and
+# scripts/proxy-probe.mjs.
 # Runs when the script or this workflow changes, or on demand from the Actions tab.
 on:
   workflow_dispatch:
@@ -14,7 +15,8 @@ on:
   push:
     paths:
       - scripts/lighthouse-baseline.mjs
-      - .github/workflows/lighthouse-baseline.yml
+      - scripts/proxy-probe.mjs
+      - .github/workflows/production-baseline.yml
 
 permissions:
   contents: read
@@ -36,9 +38,17 @@ jobs:
             --base "${{ inputs.base || 'https://www.jthomanalytics.com' }}" \
             --runs "${{ inputs.runs || '3' }}" \
             --out lighthouse-baseline.json
+      - name: Probe the backend proxy
+        run: |
+          npm run baseline:proxy -- \
+            --base "${{ inputs.base || 'https://www.jthomanalytics.com' }}" \
+            --rounds 5 \
+            --out proxy-probe.json
       - name: Print results
-        run: cat lighthouse-baseline.json
+        run: cat lighthouse-baseline.json proxy-probe.json
       - uses: actions/upload-artifact@v4
         with:
-          name: lighthouse-baseline
-          path: lighthouse-baseline.json
+          name: production-baseline
+          path: |
+            lighthouse-baseline.json
+            proxy-probe.json

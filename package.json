@@ -18,6 +18,7 @@
     "verify:full": "npm run verify && npm run build && npm run size",
     "size": "node scripts/route-sizes.mjs",
     "baseline:lighthouse": "node scripts/lighthouse-baseline.mjs",
+    "baseline:proxy": "node scripts/proxy-probe.mjs",
     "analyze": "ANALYZE=true npm run build",
     "clean": "rm -rf .next dist node_modules/.cache || true",
     "clean:all": "rm -rf .next dist node_modules/.cache && npm cache clean --force"
