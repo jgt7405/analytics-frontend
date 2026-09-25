@@ -54,12 +54,36 @@ Across all 63 routes: min 133.3 kB, median 179.4 kB, max 260.6 kB (`totalKb`).
 
 Shared by all routes (Next's figure): 94.2 kB.
 
+### Field data — Vercel Speed Insights, desktop
+
+Real visitors, P75, as shown in the Vercel dashboard on 2026-09-25 (dashboard's default date range, about 1.1K US visits). Mobile not yet captured.
+
+| Metric | P75 |
+|---|---|
+| Real Experience Score | 100 (Great) |
+| First Contentful Paint | 1.38 s |
+| Largest Contentful Paint | 1.53 s |
+| Interaction to Next Paint | 72 ms |
+| Cumulative Layout Shift | 0.05 |
+| First Input Delay | 6 ms |
+| Time to First Byte | 0.54 s |
+
+Per-route Real Experience Score (visits in brackets). The site overall is fast on desktop; the weak spots are specific pages:
+
+| Band | Routes |
+|---|---|
+| Poor (<50) | `/football/seed` 47 (36) |
+| Needs improvement (50–90) | `/football/compare` 59 (8), `/basketball/seed` 75 (12), `/football/[season]/wins` 77 (8), `/football/cfp` 83 (17), `/basketball/teams` 87 (29), `/basketball/schedule` 87 (9) |
+| Great (>90) | `/football/team/[teamname]` 100 (265), `/football/wins` 99 (124), `/football/whatif` 100 (76), `/basketball/team/[teamname]` 99 (73), `/basketball/home` 100 (70), `/football/home` 100 (50), `/football/schedule` 100 (38) |
+
+Visit counts on the weak routes are small, so treat their scores as indicative. Visitors from Ireland (7) scored 21, which points at latency to the US-hosted backend rather than page weight.
+
 ### Not yet recorded
 
 These need network access this cloud session doesn't have (the production site and the Railway backend are both blocked by its network policy):
 
 - **Lighthouse scores, lab Web Vitals and `/api/proxy` requests per page** for the 7 routes in `scripts/lighthouse-baseline.mjs`. Run `npm run baseline:lighthouse` from a machine that can reach the site, then commit the output as `docs/baselines/<date>-lighthouse.json` and add a table here.
-- **Field Core Web Vitals** from Vercel Speed Insights (p75 LCP, INP and CLS for the same routes).
+- **Field Core Web Vitals on mobile** from Vercel Speed Insights (switch the Desktop/Mobile selector).
 - **Proxy error and timeout rates** from Vercel logs.
 
 The script was checked against a local production build here, but with the backend unreachable every page renders its error state and retries its requests. Those numbers are not a valid baseline and were not recorded.
