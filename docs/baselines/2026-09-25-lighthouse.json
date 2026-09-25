@@ -1,0 +1,15 @@
+{
+  "base": "https://www.jthomanalytics.com",
+  "runs": 3,
+  "recordedAt": "2026-09-25T22:01:54.147Z",
+  "source": "GitHub Actions run 36194545011 (ubuntu-latest), Lighthouse 12 mobile preset, median of 3 runs",
+  "routes": {
+    "/football/wins/": { "performance": 91, "accessibility": 96, "bestPractices": 100, "seo": 100, "lcpMs": 2723, "fcpMs": 924, "tbtMs": 258, "cls": 0, "jsTransferKb": 438.9, "proxyRequests": 0, "totalRequests": 88 },
+    "/football/standings/": { "performance": 98, "accessibility": 96, "bestPractices": 100, "seo": 100, "lcpMs": 2349, "fcpMs": 976, "tbtMs": 86, "cls": 0, "jsTransferKb": 506.1, "proxyRequests": 2, "totalRequests": 89 },
+    "/football/team/Alabama/": { "performance": 97, "accessibility": 96, "bestPractices": 100, "seo": 100, "lcpMs": 2045, "fcpMs": 921, "tbtMs": 150, "cls": 0, "jsTransferKb": 529.8, "proxyRequests": 10, "totalRequests": 122 },
+    "/football/2025-26/wins/": { "performance": 84, "accessibility": 100, "bestPractices": 96, "seo": 66, "lcpMs": 4157, "fcpMs": 921, "tbtMs": 95, "cls": 0.082, "jsTransferKb": 386.9, "proxyRequests": 2, "totalRequests": 62 },
+    "/basketball/standings/": { "performance": 98, "accessibility": 100, "bestPractices": 100, "seo": 100, "lcpMs": 2351, "fcpMs": 982, "tbtMs": 39, "cls": 0, "jsTransferKb": 501.4, "proxyRequests": 2, "totalRequests": 82 },
+    "/basketball/compare/": { "performance": 90, "accessibility": 98, "bestPractices": 100, "seo": 100, "lcpMs": 2359, "fcpMs": 919, "tbtMs": 341, "cls": 0.023, "jsTransferKb": 390.9, "proxyRequests": 2, "totalRequests": 235 },
+    "/basketball/game-preview/": { "performance": 98, "accessibility": 96, "bestPractices": 100, "seo": 100, "lcpMs": 2419, "fcpMs": 1069, "tbtMs": 26, "cls": 0.021, "jsTransferKb": 514.6, "proxyRequests": 2, "totalRequests": 65 }
+  }
+}

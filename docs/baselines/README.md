@@ -54,6 +54,28 @@ Across all 63 routes: min 133.3 kB, median 179.4 kB, max 260.6 kB (`totalKb`).
 
 Shared by all routes (Next's figure): 94.2 kB.
 
+### Lab data — Lighthouse against production
+
+Lighthouse 12, mobile preset (simulated slow 4G and a mid-range phone, so slower than the field numbers below), median of 3 runs per route, run from GitHub Actions ([run 36194545011](https://github.com/jgt7405/analytics-frontend/actions/runs/36194545011)). Full data: [`2026-09-25-lighthouse.json`](./2026-09-25-lighthouse.json). Re-run from the Actions tab → "Lighthouse baseline" → Run workflow.
+
+| Route | Perf | A11y | SEO | LCP | TBT | CLS | JS transfer | `/api/proxy` calls | Requests |
+|---|---|---|---|---|---|---|---|---|---|
+| `/football/wins/` | 91 | 96 | 100 | 2.72 s | 258 ms | 0 | 439 kB | 0 | 88 |
+| `/football/standings/` | 98 | 96 | 100 | 2.35 s | 86 ms | 0 | 506 kB | 2 | 89 |
+| `/football/team/Alabama/` | 97 | 96 | 100 | 2.05 s | 150 ms | 0 | 530 kB | 10 | 122 |
+| `/football/2025-26/wins/` (archive) | 84 | 100 | 66 | 4.16 s | 95 ms | 0.082 | 387 kB | 2 | 62 |
+| `/basketball/standings/` | 98 | 100 | 100 | 2.35 s | 39 ms | 0 | 501 kB | 2 | 82 |
+| `/basketball/compare/` | 90 | 98 | 100 | 2.36 s | 341 ms | 0.023 | 391 kB | 2 | 235 |
+| `/basketball/game-preview/` | 98 | 96 | 100 | 2.42 s | 26 ms | 0.021 | 515 kB | 2 | 65 |
+
+Best practices: 100 everywhere except the archive page (96).
+
+Notes:
+- `/football/wins/` makes no proxy calls: its default conference is server-rendered and handed to React Query as `initialData`. It's the model for step 9.
+- The archive page is the slowest (LCP 4.2 s) and the only one with layout shift. Its SEO score of 66 is expected, since archives are `noindex`. It renders entirely client-side (see the plan's findings).
+- The team page makes 10 proxy calls; `/basketball/compare/` makes 235 requests in total (likely team logos) and has the highest blocking time.
+- JS transfer (390–530 kB) is higher than the route-size table above because it also counts lazily loaded chunks and third-party scripts (Google Analytics, Vercel).
+
 ### Field data — Vercel Speed Insights, desktop
 
 Real visitors, P75, as shown in the Vercel dashboard on 2026-09-25 (dashboard's default date range, about 1.1K US visits).
@@ -102,9 +124,8 @@ Same dashboard and date range, mobile selector; 1,058 events, almost all US.
 
 ### Not yet recorded
 
-These need network access this cloud session doesn't have (the production site and the Railway backend are both blocked by its network policy):
+- **Proxy error and timeout rates** from Vercel logs (Logs tab, search `/api/proxy`, filter 4xx/5xx).
 
-- **Lighthouse scores, lab Web Vitals and `/api/proxy` requests per page** for the 7 routes in `scripts/lighthouse-baseline.mjs`. Run `npm run baseline:lighthouse` from a machine that can reach the site, then commit the output as `docs/baselines/<date>-lighthouse.json` and add a table here.
-- **Proxy error and timeout rates** from Vercel logs.
+### Other observations
 
-The script was checked against a local production build here, but with the backend unreachable every page renders its error state and retries its requests. Those numbers are not a valid baseline and were not recorded.
+- `npm ci` reports 48 known vulnerabilities in dependencies (2 low, 17 moderate, 28 high, 1 critical). To be triaged in step 2 alongside Dependabot/Renovate.
