@@ -48,11 +48,12 @@ codebase as of 2026-09-25.
 ## Step 2 — CI and agent setup
 
 1. **GitHub Actions.**
-   - `verify:full` on every PR.
-   - Bundle budgets per route, set from the step 1 baselines plus a tolerance (not an arbitrary global number).
+   - `verify:full` on every PR, extended with the two pieces deferred from step 1: Playwright smoke and screenshot tests, and bundle budgets.
+   - Bundle budgets per route, set from the step 1 baselines (`totalKb` from `npm run size`) plus a tolerance, not an arbitrary global number.
    - Lighthouse CI against a production build on the representative routes. Accessibility stays an error-level gate; performance starts as a warning until results are stable.
-   - A **scheduled check against the live backend** (e.g. daily) that calls every registered endpoint and validates the response shape, so test fixtures can't hide backend drift.
+   - A **scheduled check against the live backend** (e.g. daily) that calls every registered endpoint and validates the response shape, so test fixtures can't hide backend drift. Extend the existing `production-baseline.yml` workflow and `scripts/proxy-probe.mjs` rather than starting over.
    - Renovate or Dependabot, gated on CI.
+   - **Triage the 48 known dependency vulnerabilities** reported by `npm ci` (1 critical, 28 high), fixing what can be fixed without a framework upgrade and noting which ones wait for step 5.
 2. **Shared conventions in `AGENTS.md`**, readable by any tool. `CLAUDE.md` becomes a short file that imports `@AGENTS.md` and adds only Claude-specific notes.
 3. **Fix the docs.**
    - Correct the stale content (Chart.js, real env vars, real routes, actual data flow).
@@ -74,6 +75,7 @@ codebase as of 2026-09-25.
 
 1. **One validated env module** (`src/config/env.ts`) with a single server-only `BACKEND_API_URL`. Remove `NEXT_PUBLIC_BACKEND_URL` and the hard-coded URL in `sitemap.ts`.
 2. **One shared request layer** used by both server fetches and the client (via the proxy): timeout, error mapping, logging and retry rules live in one place. `server-api.ts` and `shared-request.ts` both build on it.
+   - It builds proxy URLs **with a trailing slash**. Today every browser call goes to `/api/proxy/...` without one, and `trailingSlash: true` answers each with a 308 redirect before the real request, adding a round trip to every data fetch (measured in step 1).
 3. **Named freshness classes**, assigned per endpoint:
 
    | Class | Examples | Freshness |
@@ -148,6 +150,13 @@ Done before the route and caching work, because Next 16 changes exactly what tho
 ## Step 9 — Measured performance work
 
 Each item is benchmarked against the step 1 baselines and kept only if it improves them.
+
+The step 1 baselines show the site is already fast for most visitors (Real Experience Score 100 on desktop and mobile, P75 LCP 1.2–1.5 s), so this step targets the specific weak pages rather than a site-wide push:
+
+- `/football/seed` on desktop (field score 47, while mobile scores 100, so the cause is desktop-specific).
+- Archive pages such as `/football/2025-26/wins/` (slowest in the lab at LCP 4.2 s, the only tested page with layout shift; fully client-rendered).
+- `/basketball/compare/` (235 requests per load, highest blocking time), `/football/compare` (desktop field score 59).
+- Team pages (10 proxy calls per load) and `/football/twv` on mobile (field score 85).
 
 1. **Static generation, benchmarked first.** Compare three options on SEO needs, build duration, request volume, staleness and runtime performance:
    1. Query-string routes (`?conf=`) with cached server data.
