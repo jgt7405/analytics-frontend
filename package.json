@@ -10,13 +10,15 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:changed": "node scripts/lint-changed.mjs",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "verify": "npm run lint && npm run type-check && jest --ci",
-    "verify:full": "npm run verify && npm run build && npm run size",
+    "verify:full": "npm run verify && npm run build && npm run size:check",
     "size": "node scripts/route-sizes.mjs",
+    "size:check": "node scripts/check-budgets.mjs",
     "baseline:lighthouse": "node scripts/lighthouse-baseline.mjs",
     "baseline:proxy": "node scripts/proxy-probe.mjs",
     "analyze": "ANALYZE=true npm run build",
@@ -72,7 +74,7 @@
     "webpack-bundle-analyzer": "^4.10.2"
   },
   "engines": {
-    "node": ">=18.17.0",
+    "node": ">=20.9.0",
     "npm": ">=9.0.0"
   },
   "browserslist": {
