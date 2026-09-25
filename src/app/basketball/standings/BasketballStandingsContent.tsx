@@ -50,7 +50,8 @@ const KNOWN_CONFERENCES = [
 const SIM_BLURB =
   "1,000 season simulations using composite ratings based on kenpom, barttorvik and evanmiya.";
 
-// Basketball seasons span the new year: label "2025-26", window 10/30–3/22.
+// Basketball seasons span the new year: label "2025-26", window 10/30 through
+// today (capped at 3/22).
 // The April boundary now lives in chartDateRange so every basketball page
 // derives the same label; prefer the standings timestamp, then the history
 // max date, then today.

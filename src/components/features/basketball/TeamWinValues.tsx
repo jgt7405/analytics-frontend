@@ -113,8 +113,12 @@ export default function TeamWinValues({
 
     gameWithDates.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
-    // Get date range based on season
-    const range = getBasketballDateRange(season, gameWithDates);
+    // Get date range based on season. Not clipped to the last game - this
+    // chart carries values forward day by day through today (and its game
+    // dates are M/D, not ISO).
+    const range = getBasketballDateRange(season, gameWithDates, {
+      clipToData: false,
+    });
     const startDate = range.start;
 
     // Use the earlier of today or season end date (don't show future)

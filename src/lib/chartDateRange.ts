@@ -98,16 +98,31 @@ export function getFootballDateRange(
 
 export function getBasketballDateRange(
   season?: string,
-  data?: Array<{ date: string }>
+  data?: Array<{ date: string }>,
+  { clipToData = true }: { clipToData?: boolean } = {}
 ): ChartDateRange {
   const startYear = parseSeasonStartYear(
     season ?? getBasketballSeasonLabel(getLatestDataDate(data))
   );
 
-  return {
-    start: new Date(startYear, 9, 30, 12, 0, 0),    // 10/30
-    end: new Date(startYear + 1, 2, 22, 12, 0, 0),  // 3/22 of next year
-  };
+  const start = new Date(startYear, 9, 30, 12, 0, 0); // 10/30
+  const seasonEnd = new Date(startYear + 1, 2, 22, 12, 0, 0); // 3/22 of next year
+  // Show the season through today, not the dates still to come - as football does
+  const today = new Date();
+  let end = today < seasonEnd ? today : seasonEnd;
+
+  // Stop at the latest data point when it falls short (e.g. today's pipeline
+  // run hasn't landed yet), so the line reaches the plot's right edge.
+  if (clipToData && data && data.length > 0) {
+    const [y, m, d] = getLatestDataDate(data)!.split("-").map(Number);
+    const latest = new Date(y, m - 1, d, 12, 0, 0);
+    if (latest < end && latest >= start) end = latest;
+  }
+
+  // Before 10/30 the axis is just the opening day
+  if (end < start) end = start;
+
+  return { start, end };
 }
 
 export function filterDataToRange<T extends { date: string }>(
