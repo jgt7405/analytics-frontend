@@ -23,10 +23,21 @@ Three layers, from fastest to slowest. None of the local layers needs the backen
 ## Smoke tests (Playwright)
 
 - Config: `playwright.config.ts`. Tests: `e2e/*.e2e.ts` (the `.e2e.ts` suffix keeps Jest from picking them up).
-- `e2e/smoke.e2e.ts` loads all 33 current-season pages on a desktop and a mobile viewport against `next start`, and fails on HTTP ≥ 400, a missing `#main-content`, or any uncaught page error. It passes with or without a reachable backend.
+- The app runs against a **fixture backend**, not the real one: `e2e/global-setup.ts` starts `e2e/fixture-server.ts` (port 3299), and `playwright.config.ts` points the app's `BACKEND_API_URL` at it. It answers with the curated fixtures in `fixtures/backend/` (below); endpoints without a fixture return 404, so error states are exercised too. `GET http://localhost:3299/__log` lists the backend URLs requested so far.
+- `e2e/smoke.e2e.ts` loads all 33 current-season pages, both current-season team pages and one archive page of each type, on a desktop and a mobile viewport against `next start`. It fails on HTTP ≥ 400, a missing `#main-content`, any uncaught page error, or a proxy call redirected for a missing trailing slash.
+- `e2e/fixtures.e2e.ts` checks real data renders (standings, the teams page's conference filter, team pages), that the empty-conference, missing-fields and preseason scenarios load without errors, and that archive pages ask the backend for their season.
 - Locally, cloud agent sessions use the preinstalled Chromium; elsewhere run `npx playwright install chromium` once. CI installs its own.
 - On CI failure, the Playwright report and traces are uploaded as the `playwright-report` artifact.
-- Not yet covered: team and archive pages (they need data to resolve) and screenshot comparisons. Both arrive with the step 4 fixtures (MSW), which will let tests render real-looking data offline.
+- Not yet covered: screenshot comparisons (step 7, where file splits need them; baselines must be generated on the CI runner to be stable).
+
+## Fixtures
+
+`fixtures/backend/`: small curated backend responses and the MSW handlers that serve them, shared by Jest and Playwright.
+
+- The JSON files are real backend responses: `scripts/generate-fixtures.py` runs the Flask routes against the backend's own test database fixtures (`npm run fixtures:generate`, with the backend checked out next to this repo). `basketball.team.json` is hand-written (its route uses a SQL JOIN the fake database doesn't support).
+- Scenarios are picked by the conference in the path: `Empty` (no teams), `Missing_Fields` (rows keep only `team_name` and `team_id`), `Preseason` (0-0 records, no distributions); `?season=` gives the archived variant.
+- `src/api/__tests__/fixtures.test.ts` (Jest, MSW `setupServer`): every scenario matches the response schemas, flows through the proxy and the server fetches, and passes the API client's validators.
+- To cover a new page with data, add its endpoint to `ROUTES` in the generator (or a hand-written JSON) and to `FIXTURES` in `fixtures/backend/index.ts`.
 
 ## Production checks
 
@@ -36,5 +47,5 @@ Three layers, from fastest to slowest. None of the local layers needs the backen
 
 ## Next
 
-- Step 4: MSW fixtures and screenshot tests (contract tests done in 4c).
+- Step 7: screenshot comparisons against the fixtures, generated on the CI runner.
 - Step 10: automated accessibility checks (axe) and keyboard/focus tests for tables, charts, selectors and modals.

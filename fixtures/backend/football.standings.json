@@ -1,0 +1,150 @@
+{
+ "conferences": [
+  "Southeastern"
+ ],
+ "data": [
+  {
+   "actual_conference_losses": 0,
+   "actual_conference_win_pct": 0,
+   "actual_conference_wins": 8,
+   "actual_reg_conf_losses": null,
+   "actual_reg_conf_win_pct": null,
+   "actual_reg_conf_wins": null,
+   "actual_reg_season_losses": null,
+   "actual_reg_season_wins": null,
+   "actual_total_losses": 0,
+   "actual_total_wins": 12,
+   "avg_reg_season_wins": 0,
+   "avg_sag12_reg_season_wins": 0,
+   "avg_standing": 1.4,
+   "conf_standing_no_ties_avg": 0.0,
+   "conf_wins_distribution": {
+    "7": 30.0,
+    "8": 70.0
+   },
+   "conf_wins_proj": 7.7,
+   "logo_url": "/images/team_logos/alabama.png",
+   "primary_color": "#9E1B32",
+   "reg_season_twv": 0,
+   "reg_wins_distribution": {
+    "12": 70.0
+   },
+   "secondary_color": "#FFFFFF",
+   "standing_dist_no_ties": {
+    "1": 60.0,
+    "2": 40.0
+   },
+   "standings_distribution": {
+    "1": 60.0,
+    "2": 40.0
+   },
+   "team_id": "101",
+   "team_name": "Alabama",
+   "total_scenarios": 1000,
+   "wins_conf_05": 0,
+   "wins_conf_25": 0,
+   "wins_conf_50": 0,
+   "wins_conf_75": 0,
+   "wins_conf_95": 0,
+   "wins_reg_05": 0,
+   "wins_reg_25": 0,
+   "wins_reg_50": 0,
+   "wins_reg_75": 0,
+   "wins_reg_95": 0
+  },
+  {
+   "actual_conference_losses": 1,
+   "actual_conference_win_pct": 0,
+   "actual_conference_wins": 7,
+   "actual_reg_conf_losses": null,
+   "actual_reg_conf_win_pct": null,
+   "actual_reg_conf_wins": null,
+   "actual_reg_season_losses": null,
+   "actual_reg_season_wins": null,
+   "actual_total_losses": 1,
+   "actual_total_wins": 11,
+   "avg_reg_season_wins": 0,
+   "avg_sag12_reg_season_wins": 0,
+   "avg_standing": 2.0,
+   "conf_standing_no_ties_avg": 0.0,
+   "conf_wins_distribution": {
+    "7": 60.0
+   },
+   "conf_wins_proj": 6.9,
+   "logo_url": "/images/team_logos/georgia.png",
+   "primary_color": "#9E1B32",
+   "reg_season_twv": 0,
+   "reg_wins_distribution": {
+    "11": 60.0
+   },
+   "secondary_color": "#FFFFFF",
+   "standing_dist_no_ties": {
+    "1": 30.0,
+    "2": 50.0
+   },
+   "standings_distribution": {
+    "1": 30.0,
+    "2": 50.0
+   },
+   "team_id": "102",
+   "team_name": "Georgia",
+   "total_scenarios": 1000,
+   "wins_conf_05": 0,
+   "wins_conf_25": 0,
+   "wins_conf_50": 0,
+   "wins_conf_75": 0,
+   "wins_conf_95": 0,
+   "wins_reg_05": 0,
+   "wins_reg_25": 0,
+   "wins_reg_50": 0,
+   "wins_reg_75": 0,
+   "wins_reg_95": 0
+  },
+  {
+   "actual_conference_losses": 2,
+   "actual_conference_win_pct": 0,
+   "actual_conference_wins": 6,
+   "actual_reg_conf_losses": null,
+   "actual_reg_conf_win_pct": null,
+   "actual_reg_conf_wins": null,
+   "actual_reg_season_losses": null,
+   "actual_reg_season_wins": null,
+   "actual_total_losses": 2,
+   "actual_total_wins": 10,
+   "avg_reg_season_wins": 0,
+   "avg_sag12_reg_season_wins": 0,
+   "avg_standing": 3.0,
+   "conf_standing_no_ties_avg": 0.0,
+   "conf_wins_distribution": {
+    "6": 100.0
+   },
+   "conf_wins_proj": 6.0,
+   "logo_url": "/images/team_logos/texas.png",
+   "primary_color": "#9E1B32",
+   "reg_season_twv": 0,
+   "reg_wins_distribution": {
+    "10": 100.0
+   },
+   "secondary_color": "#FFFFFF",
+   "standing_dist_no_ties": {
+    "3": 100.0
+   },
+   "standings_distribution": {
+    "3": 100.0
+   },
+   "team_id": "103",
+   "team_name": "Texas",
+   "total_scenarios": 1000,
+   "wins_conf_05": 0,
+   "wins_conf_25": 0,
+   "wins_conf_50": 0,
+   "wins_conf_75": 0,
+   "wins_conf_95": 0,
+   "wins_reg_05": 0,
+   "wins_reg_25": 0,
+   "wins_reg_50": 0,
+   "wins_reg_75": 0,
+   "wins_reg_95": 0
+  }
+ ]
+}

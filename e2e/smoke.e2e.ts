@@ -1,10 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 // Every current-season page, and every archive-season page type, must load
-// and render the site shell without an uncaught JavaScript error, whether or
-// not the backend is reachable (pages show their own error state when it
-// isn't). Current-season team pages need live data to resolve (they 404
-// without it), so they are covered once the step 4 fixtures exist.
+// and render the site shell without an uncaught JavaScript error. The app
+// runs against the fixture backend (e2e/fixture-server.ts): endpoints with a
+// fixture return data, the rest 404, so pages show their error states too.
 const ROUTES = [
   "/basketball/chart/",
   "/basketball/compare/",
@@ -39,6 +38,9 @@ const ROUTES = [
   "/football/twv/",
   "/football/whatif/",
   "/football/wins/",
+  // Current-season team pages resolve only with data (fixtures).
+  "/basketball/team/Duke/",
+  "/football/team/Alabama/",
   // Archive seasons (server wrappers since Next 16, or client pages using
   // useParams). One per page type.
   "/basketball/2024-25/compare/",
@@ -73,7 +75,7 @@ for (const route of ROUTES) {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
     // Data calls must hit /api/proxy/<path>/ directly; a 308 means a URL was
-    // built without the trailing slash (use proxyUrl() from src/lib).
+    // built without the trailing slash (build URLs with apiUrl() from src/api/urls).
     const redirectedProxyCalls: string[] = [];
     page.on("response", (response) => {
       if (response.url().includes("/api/proxy/") && response.status() === 308) {
