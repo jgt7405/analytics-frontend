@@ -49,8 +49,8 @@ Two repositories share one API: this site (Vercel) and the Flask backend `jgt740
 | Part of the contract | Owner | Where it is written down |
 |---|---|---|
 | Which paths exist, their methods, path parameters and query parameters | **Frontend** | `src/api/endpoints.ts`. The proxy forwards nothing else, so a backend route the list doesn't name is unreachable from the site |
-| Response bodies of every route (field names, types, nesting, units such as counts vs percentages) | **Backend** | Its route code. The frontend's copy is the TypeScript types in `src/types/` and next to the hooks and services |
-| POST request bodies (what-if selections, exports, uploads) | **Frontend** | The hooks and services that send them |
+| Response bodies of every route (field names, types, nesting, units such as counts vs percentages) | **Backend** | Its route code. The frontend's copy is the TypeScript types in `src/types/` and next to the hooks and services, plus Zod schemas for the shared conference-table envelope in `src/api/schemas.ts` |
+| POST request bodies (what-if selections, exports, uploads) | **Frontend** | Zod schemas in `src/api/schemas.ts`. The proxy forwards only the parsed body, so fields the site never sends don't reach the backend |
 | Conference and team names | **Backend data** | Full conference names as stored (`Southeastern`, not `SEC`); the backend maps short names on the way in (`normalize_conference_name`). Team names as in `bball_league_hierarchy_flat` / `football_team_decode` |
 | Seasons | Both | `YYYY-YY` (`2025-26`), checked by the proxy |
 | Cache lifetimes | **Frontend** | The `cacheClass` of each entry (`docs/decisions/cache-classes.md`) |
@@ -72,6 +72,7 @@ Changes are **additive first, removal last**:
 
 ### What catches drift
 
+- **Response schemas** (`src/api/schemas.ts`): the proxy checks responses that have one, currently the `{ data: [{ team_name, … }], conferences }` envelope of the ten conference-table endpoints. A mismatch logs `Backend response doesn't match its schema` (with the endpoint and first issues) in the Vercel logs, and the response is still served.
 - **Proxy contract tests** (`src/app/api/proxy/[...slug]/__tests__/contract.test.ts`): the frontend only builds and forwards requests the list allows.
 - **Backend route tests** (`tests/` in the backend, run with `pytest`): each route against fixture tables with the production column names, so a query that reads a renamed column fails.
 - **The daily "Production baseline" workflow** (`scripts/proxy-probe.mjs --strict`) calls representative endpoints on the live site. It fails if any errors or returns an empty or non-JSON body, and a failed run emails the repo owner.

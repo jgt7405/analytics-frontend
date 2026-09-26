@@ -11,6 +11,27 @@ jest.mock("server-only", () => ({}));
 import { NextRequest } from "next/server";
 import { ENDPOINTS, type Endpoint, type ParamRule, type QueryParam } from "@/api/endpoints";
 import { GET, POST } from "../route";
+import { REQUEST_SCHEMAS } from "@/api/schemas";
+
+// A valid body for each JSON POST endpoint (what the site sends).
+const selections = [{ game_id: 101, winner_team_id: 7 }];
+const BODIES: Record<string, unknown> = {
+  "basketball.whatIf": { conference: "Big_12", selections, lite: true },
+  "basketball.whatIfBaseline": { conference: "Big 12" },
+  "basketball.nextGameImpact": { conference: "Big 12", team_id: 7 },
+  "basketball.whatIfValidationCsv": { conference: "Big 12", selections },
+  "football.whatIf": { conference: "SEC", selections: [{ game_id: 5, winner_team_id: "12" }] },
+  "football.whatIfExport": {
+    conference: "SEC",
+    selections,
+    export_options: { include_all_scenarios: false, num_scenarios: 100, start_scenario: 1 },
+  },
+  "football.whatIfStructuredCsv": { conference: "SEC", selections },
+  "football.whatIfDownload": { conference: "SEC", selections },
+  "football.gameImpacts": { conference: "SEC", team_id: 12, days: 7 },
+};
+const bodyFor = (segments: string[]) =>
+  ENDPOINTS.find((e) => e.method === "POST" && e.proxyPaths.includes(segments.join("/")))?.key;
 
 const backendFetch = jest.fn();
 global.fetch = backendFetch as unknown as typeof fetch;
@@ -58,7 +79,10 @@ function call(method: string, segments: string[], query = "") {
     ...(method === "POST" &&
       (isUpload
         ? { body: formData }
-        : { body: JSON.stringify({}), headers: { "content-type": "application/json" } })),
+        : {
+            body: JSON.stringify(BODIES[bodyFor(segments) ?? ""] ?? {}),
+            headers: { "content-type": "application/json" },
+          })),
   });
   const handler = method === "GET" ? GET : POST;
   return handler(request, { params: Promise.resolve({ slug: segments }) });
@@ -137,6 +161,65 @@ describe.each(paramCases)("%s via /%s", (_key, pattern, name, endpoint) => {
   });
 });
 
+describe("POST bodies", () => {
+  const jsonPosts = ENDPOINTS.filter((e) => e.method === "POST" && e.body === "json");
+
+  it("has a request schema and a sample body for every JSON POST", () => {
+    for (const e of jsonPosts) {
+      expect({ key: e.key, schema: e.key in REQUEST_SCHEMAS }).toEqual({ key: e.key, schema: true });
+      expect({ key: e.key, body: e.key in BODIES }).toEqual({ key: e.key, body: true });
+    }
+  });
+
+  it.each(jsonPosts.map((e) => [e.key, e] as const))(
+    "%s rejects a malformed body without calling the backend",
+    async (_key, endpoint) => {
+      const request = new NextRequest(`http://localhost/api/proxy/${endpoint.proxyPaths[0]}/`, {
+        method: "POST",
+        body: JSON.stringify({ conference: "../x", selections: "all" }),
+        headers: { "content-type": "application/json" },
+      });
+      const res = await POST(request, {
+        params: Promise.resolve({ slug: endpoint.proxyPaths[0].split("/") }),
+      });
+      expect(res.status).toBe(400);
+      expect(backendFetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it("forwards only the fields the schema knows", async () => {
+    const request = new NextRequest("http://localhost/api/proxy/football/whatif/game-impacts/", {
+      method: "POST",
+      body: JSON.stringify({ conference: "SEC", team_id: 12, max_sims: 100000, force_live: true }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(request, {
+      params: Promise.resolve({ slug: ["football", "whatif", "game-impacts"] }),
+    });
+    expect(res.status).toBe(200);
+    const sent = JSON.parse((backendFetch.mock.calls[0][1] as RequestInit).body as string);
+    expect(sent).toEqual({ conference: "SEC", team_id: 12 });
+  });
+
+  it("rejects an upload without a file or over the size limit", async () => {
+    for (const formData of [new FormData(), (() => {
+      const f = new FormData();
+      f.set("file", new Blob(["x".repeat(2 * 1024 * 1024 + 1)]), "big.csv");
+      return f;
+    })()]) {
+      const request = new NextRequest("http://localhost/api/proxy/basketball/chart/upload/", {
+        method: "POST",
+        body: formData,
+      });
+      const res = await POST(request, {
+        params: Promise.resolve({ slug: ["basketball", "chart", "upload"] }),
+      });
+      expect(res.status).toBe(400);
+    }
+    expect(backendFetch).not.toHaveBeenCalled();
+  });
+});
+
 describe("unregistered paths", () => {
   it.each([
     [[""]],
@@ -149,6 +232,7 @@ describe("unregistered paths", () => {
     [["football", "team", "BYU", "history", "sagarin_rank"]],
     [["health"]],
     [["basketball", "whatif", "conferences"]],
+    [["football", "bowl-game-winner"]],
   ])("rejects %j", async (segments) => {
     for (const method of ["GET", "POST"]) {
       const res = await call(method, segments);

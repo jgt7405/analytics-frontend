@@ -8,6 +8,7 @@ import {
 } from "@/api/endpoints";
 import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
 import { logger } from "@/lib/logger";
+import { MAX_UPLOAD_BYTES, requestSchemaFor, responseSchemaFor } from "@/api/schemas";
 
 // Force Node.js runtime and disable static optimization
 export const runtime = "nodejs";
@@ -154,7 +155,51 @@ async function forwardGet(
 
   const parsed = parseJson(endpoint, await response.text());
   if (!parsed) return invalidJsonResponse();
+  checkResponseShape(endpoint, parsed.data);
   return NextResponse.json(parsed.data, { headers: cacheHeaders });
+}
+
+// The request body the backend receives: a JSON body parsed by the
+// endpoint's schema (only the parsed fields are forwarded), or the upload's
+// form data after checking the file.
+async function readPostBody(
+  endpoint: Endpoint,
+  request: NextRequest,
+): Promise<{ json?: unknown; formData?: FormData } | { error: string }> {
+  try {
+    if (endpoint.body === "formData") {
+      const formData = await request.formData();
+      const file = formData.get("file");
+      if (!(file instanceof Blob)) return { error: "No file provided" };
+      if (file.size > MAX_UPLOAD_BYTES) return { error: "File too large" };
+      return { formData };
+    }
+    const json: unknown = await request.json();
+    const schema = requestSchemaFor(endpoint.key);
+    if (!schema) return { error: "Unsupported request" };
+    const result = schema.safeParse(json);
+    if (!result.success) {
+      const issue = result.error.issues[0];
+      return { error: `Invalid request body: ${issue.path.join(".") || "body"} ${issue.message}` };
+    }
+    return { json: result.data };
+  } catch {
+    return { error: "Invalid request body" };
+  }
+}
+
+// Responses with a schema (the shared conference-table envelope) are checked
+// and a mismatch logged as backend drift; the response still goes out.
+function checkResponseShape(endpoint: Endpoint, data: unknown) {
+  const schema = responseSchemaFor(endpoint.key);
+  if (!schema) return;
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    logger.warn("Backend response doesn't match its schema", {
+      endpoint: endpoint.key,
+      issues: result.error.issues.slice(0, 3).map((i) => `${i.path.join(".")}: ${i.message}`),
+    });
+  }
 }
 
 async function forwardPost(
@@ -162,19 +207,18 @@ async function forwardPost(
   backendUrl: string,
   request: NextRequest,
 ): Promise<NextResponse> {
-  let init: RequestInit;
-  try {
-    init =
-      endpoint.body === "formData"
-        ? { method: "POST", body: await request.formData() }
-        : {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify(await request.json()),
-          };
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  const body = await readPostBody(endpoint, request);
+  if ("error" in body) {
+    return NextResponse.json({ error: body.error }, { status: 400 });
   }
+  const init: RequestInit =
+    body.formData !== undefined
+      ? { method: "POST", body: body.formData }
+      : {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body.json),
+        };
   const response = await fetch(backendUrl, {
     ...init,
     signal: AbortSignal.timeout(endpoint.timeoutMs),

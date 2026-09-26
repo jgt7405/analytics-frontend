@@ -205,7 +205,6 @@ export const ENDPOINTS = [
   post("whatIfStructuredCsv", "football", "football/whatif/structured-csv", 120 * S),
   post("whatIfDownload", "football", "football/whatif/download", 120 * S),
   post("gameImpacts", "football", "football/whatif/game-impacts", 240 * S),
-  post("bowlGameWinner", "football", "football/bowl-game-winner", 120 * S),
 ] as const satisfies readonly Endpoint[];
 
 /** Every endpoint key, e.g. "football.standings". */
