@@ -1,6 +1,7 @@
 import { FootballTWVApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 const fetchFootballTWV = async (
   conference: string,
@@ -24,8 +25,7 @@ export const useFootballTWV = (conference: string, season?: string, initialData?
     initialData,
     initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => fetchFootballTWV(conference, season),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     refetchOnWindowFocus: false,
   });
 };

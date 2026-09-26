@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface TimelineData {
   team_name: string;
@@ -52,7 +53,6 @@ export function useBballStandingsHistory(
       return response.json();
     },
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    ...queryCachePolicy("historical"),
   });
 }

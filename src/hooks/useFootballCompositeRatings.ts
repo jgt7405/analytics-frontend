@@ -1,6 +1,7 @@
 import { CompositeRatingDatesResponse, CompositeRatingsResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export function useFootballCompositeRatings(date?: string) {
   return useQuery<CompositeRatingsResponse>({
@@ -15,7 +16,8 @@ export function useFootballCompositeRatings(date?: string) {
       }
             return response.json();
         },
-    staleTime: 5 * 60 * 1000,
+    // A past date's ratings are frozen; the latest ones update daily.
+    ...queryCachePolicy(date ? "historical" : "currentStandings"),
     refetchOnWindowFocus: false,
   });
 }
@@ -30,7 +32,7 @@ export function useFootballCompositeRatingDates() {
             }
             return response.json();
     },
-    staleTime: 60 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     refetchOnWindowFocus: false,
   });
 }

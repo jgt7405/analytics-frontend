@@ -1,6 +1,7 @@
 // src/hooks/useFootballTeamAllHistory.ts
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface ConfWinsHistoryResponse {
   data: Array<{
@@ -100,8 +101,7 @@ export const useFootballTeamAllHistory = (
       };
     },
     enabled: !!teamName,
-    staleTime: 15 * 60 * 1000, // 15 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    ...queryCachePolicy("historical"),
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

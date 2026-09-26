@@ -1,13 +1,14 @@
 // src/hooks/useFootballTeams.ts
 import { api } from "@/services/api";
+import type { FootballTeamsApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useFootballTeams = (season?: string) => {
-  return useQuery<any, Error>({
+  return useQuery<FootballTeamsApiResponse, Error>({
     queryKey: ["football-teams", season],
     queryFn: () => api.getFootballTeams(season),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    ...queryCachePolicy("referenceData"),
     retry: 3,
   });
 };

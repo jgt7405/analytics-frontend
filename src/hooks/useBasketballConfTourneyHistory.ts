@@ -1,6 +1,7 @@
 // src/hooks/useBasketballConfTourneyHistory.ts
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface TeamHistoryData {
   team_name: string;
@@ -64,7 +65,7 @@ export const useBasketballConfTourneyHistory = (
       return response.json();
     },
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...queryCachePolicy("historical"),
     retry: 3,
   });
 };

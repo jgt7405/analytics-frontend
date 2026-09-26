@@ -2,6 +2,7 @@
 import { FootballScheduleResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 const fetchFootballSchedule = async (
   conference: string,
@@ -52,8 +53,7 @@ export const useFootballSchedule = (
     initialData,
     queryFn: () => fetchFootballSchedule(conference, season),
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    ...queryCachePolicy("currentStandings"),
     refetchOnWindowFocus: false,
   });
 };

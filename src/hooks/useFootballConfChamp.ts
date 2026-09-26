@@ -2,6 +2,7 @@
 import { api } from "@/services/api";
 import { FootballConfChampApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useFootballConfChamp = (
   conference: string,
@@ -13,8 +14,7 @@ export const useFootballConfChamp = (
     initialData,
     queryFn: () => api.getFootballConfChamp(conference, season),
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    ...queryCachePolicy("currentStandings"),
     retry: 3,
   });
 };

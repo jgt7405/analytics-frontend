@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface ConferencesResponse {
   success: boolean;
@@ -26,6 +27,6 @@ export function useBasketballWhatIfConferences(season?: string) {
       const data: ConferencesResponse = await response.json();
       return data.conferences;
     },
-    staleTime: 1000 * 60 * 60, // 1 hour
+    ...queryCachePolicy("referenceData"),
   });
 }

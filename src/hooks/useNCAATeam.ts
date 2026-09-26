@@ -2,6 +2,7 @@
 import { api } from "@/services/api";
 import type { NCAATeamApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useNCAATeam = (
   conference: string,
@@ -13,7 +14,7 @@ export const useNCAATeam = (
     initialData,
     queryFn: () => api.getNCAATourney(conference, season),
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     retry: 3,
   });
 };

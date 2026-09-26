@@ -1,6 +1,7 @@
 import { api } from "@/services/api";
 import { CWVApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useCWV = (
   conference: string,
@@ -12,7 +13,7 @@ export const useCWV = (
     initialData,
     queryFn: () => api.getCWV(conference, season),
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     retry: 3,
   });
 };

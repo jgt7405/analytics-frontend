@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND_API_URL } from "@/config/env";
+import { CACHE_POLICIES, cacheClassForBackendPath } from "@/lib/cache-policy";
 
 // Force Node.js runtime and disable static optimization
 export const runtime = "nodejs";
@@ -29,10 +30,27 @@ function getForwardedQueryString(request: NextRequest): string {
   return qs ? `?${qs}` : "";
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ slug: string[] }> },
-) {
+type RouteContext = { params: Promise<{ slug: string[] }> };
+
+// Cache headers that don't depend on the endpoint are applied here, so no
+// return path can miss them (src/lib/cache-policy.ts): error responses are
+// never cached, and POSTs are scenarios, never kept in a shared cache.
+export async function GET(request: NextRequest, context: RouteContext) {
+  const response = await handleGet(request, context);
+  if (!response.ok) response.headers.set("Cache-Control", "no-store");
+  return response;
+}
+
+export async function POST(request: NextRequest, context: RouteContext) {
+  const response = await handlePost(request, context);
+  response.headers.set(
+    "Cache-Control",
+    response.ok ? CACHE_POLICIES.scenario.cacheControl : "no-store",
+  );
+  return response;
+}
+
+async function handleGet(_request: NextRequest, { params }: RouteContext) {
   try {
     const { slug } = await params;
 
@@ -586,11 +604,13 @@ export async function GET(
       }
     }
 
-    // Return with edge caching enabled
+    // CDN caching per freshness class (src/lib/cache-policy.ts)
+    const cacheClass = cacheClassForBackendPath(
+      backendPath,
+      _request.nextUrl.searchParams.get("season"),
+    );
     return NextResponse.json(data, {
-      headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
-      },
+      headers: { "Cache-Control": CACHE_POLICIES[cacheClass].cacheControl },
     });
   } catch (error) {
     console.error("Proxy error:", error);
@@ -632,10 +652,7 @@ export async function GET(
  * - POST /api/proxy/basketball/whatif/validation-csv
  *   Downloads validation CSV for what-if scenarios
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string[] }> },
-) {
+async function handlePost(request: NextRequest, { params }: RouteContext) {
   try {
     const { slug } = await params;
 
@@ -925,11 +942,7 @@ export async function POST(
 
     console.log("✅ Returning successful response to client");
 
-    return NextResponse.json(data, {
-      headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
-      },
-    });
+    return NextResponse.json(data);
   } catch (error) {
     console.error("❌ POST PROXY ERROR:", error);
     console.error("❌ Error details:", {

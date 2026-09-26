@@ -1,6 +1,7 @@
 // src/hooks/useFootballTeam.ts
 import { api } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface FootballTeamInfo {
   team_name: string;
@@ -85,7 +86,7 @@ export const useFootballTeam = (
     initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => api.getFootballTeam(teamName, season),
     enabled: !!teamName,
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     retry: 3,
   });
 };

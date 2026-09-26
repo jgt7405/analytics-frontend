@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export interface ConferenceData {
   conference_name: string;
@@ -93,6 +94,6 @@ export function useBasketballConfData(season?: string, initialData?: CombinedBas
         nonconfData,
       };
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    ...queryCachePolicy("currentStandings"),
   });
 }
