@@ -3,8 +3,8 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { useMemo } from "react";
+import { useBasketballUpcomingGames } from "@/hooks/useBasketballUpcomingGames";
 
 interface BasketballTeamGame {
   date: string;
@@ -41,30 +41,12 @@ export default function BasketballTeamScheduleChart({
   navigateToTeam,
   teamName,
 }: BasketballTeamScheduleChartProps) {
-  const [upcomingGames, setUpcomingGames] = useState<UpcomingGameInfo[]>([]);
-
-  // Fetch upcoming games data for preview links
-  useEffect(() => {
-    const fetchUpcoming = async () => {
-      try {
-        const response = await fetch(proxyUrl("basketball/upcoming_games"));
-        if (!response.ok) return;
-        const data = await response.json();
-        setUpcomingGames(
-          (data.games || []).map((g: Record<string, unknown>) => ({
-            game_id: g.game_id as string,
-            is_next_game_for_both: g.is_next_game_for_both as boolean,
-            home_team: g.home_team as string,
-            away_team: g.away_team as string,
-            date_sort: g.date_sort as string,
-          })),
-        );
-      } catch {
-        // Silently fail - preview links just won't show
-      }
-    };
-    fetchUpcoming();
-  }, []);
+  // Upcoming games, for preview links. On failure the links just don't show.
+  const { data: upcomingData } = useBasketballUpcomingGames();
+  const upcomingGames: UpcomingGameInfo[] = useMemo(
+    () => upcomingData?.games ?? [],
+    [upcomingData],
+  );
 
   // Find the next unplayed game for this team
   const nextGameIndex = useMemo(() => {

@@ -25,8 +25,13 @@ const KNOWN_UNSERVED: Record<string, string> = {
 
 // Call sites whose path is a variable: the values it can take.
 const DYNAMIC: Record<string, string[]> = {
-  "${config.endpoint}${seasonQuery}": ["basketball_teams", "football_teams"],
+  // useTeamList
+  "${sport}_teams${seasonQuery}": [
+    "basketball_teams?season=2024-25",
+    "football_teams?season=2024-25",
+  ],
 };
+const usedDynamic = new Set<string>();
 
 // Placeholders for template expressions. A variable holding a query string
 // (`seasonQuery`, `query`) becomes a season query; anything else a path value.
@@ -53,7 +58,10 @@ function literalOf(node: ts.Expression, source: ts.SourceFile): string | null {
   if (ts.isStringLiteralLike(node)) return node.text;
   if (ts.isTemplateExpression(node)) {
     const raw = node.getText(source).slice(1, -1);
-    if (DYNAMIC[raw]) return null;
+    if (DYNAMIC[raw]) {
+      usedDynamic.add(raw);
+      return null;
+    }
     return (
       node.head.text +
       node.templateSpans
@@ -154,6 +162,10 @@ describe("backend URLs built by the site", () => {
     expect(sites.some((s) => s.where.startsWith("lib/server-api.ts"))).toBe(true);
     expect(sites.some((s) => s.where.startsWith("services/"))).toBe(true);
     expect(sites.some((s) => s.where.startsWith("hooks/"))).toBe(true);
+  });
+
+  it("lists only dynamic call sites that still exist", () => {
+    expect([...usedDynamic].sort()).toEqual(Object.keys(DYNAMIC).sort());
   });
 
   it("lists only unserved calls that still exist", () => {

@@ -1,8 +1,10 @@
 // src/components/features/football/BowlPicksProjectionChart.tsx
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import {
+  useFootballBowlPicks,
+  type BowlGameData,
+} from "@/hooks/useFootballBowlPicks";
 import { memo, useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import {
@@ -15,7 +17,6 @@ import {
   Tooltip as ChartTooltip,
   Legend,
 } from "chart.js";
-import { proxyUrl } from "@/lib/proxy-url";
 
 ChartJS.register(
   CategoryScale,
@@ -30,18 +31,6 @@ ChartJS.register(
 interface ChartDataPoint {
   gameNumber: number;
   [key: string]: number;
-}
-
-interface BowlGameData {
-  "#": string;
-  "Bowl Name": string;
-  "Team 1": string;
-  "Team 2": string;
-  Winner: string;
-  Date: string;
-  Time: string;
-  "TV Station": string;
-  [key: string]: string;
 }
 
 // Game dependencies for cascade logic
@@ -248,14 +237,7 @@ function BowlPicksProjectionChart() {
     data: bowlData,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: queryKeys.football.bowlPicks(),
-    queryFn: async () => {
-      const res = await fetch(proxyUrl("football/bowl-picks"));
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
-    },
-  });
+  } = useFootballBowlPicks();
 
   // Color palette for different people
   const colors = [

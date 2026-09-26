@@ -15,30 +15,19 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./TeamsContent.module.css";
-import { proxyUrl } from "@/lib/proxy-url";
+import { useTeamList, type TeamListRow } from "@/hooks/useTeamList";
 
 const cx = (...classes: Array<string | false | undefined>) =>
   classes.filter(Boolean).join(" ");
 
-export interface TeamsApiRow {
-  team_name: string;
-  team_id?: string;
-  conference: string;
-  logo_url: string;
-  primary_color?: string;
-  overall_record?: string;
-  conference_record?: string;
-  [key: string]: unknown;
-}
+export type TeamsApiRow = TeamListRow;
 
 export interface TeamsContentConfig {
   sport: "basketball" | "football";
   /** Tracking page id ("basketball-teams" | "football-teams"). */
   pageId: string;
-  /** Proxy endpoint name ("basketball_teams" | "football_teams"). */
-  endpoint: string;
   /** Bid column label ("NCAA Bid" | "Playoff Bid"). */
   bidLabel: string;
   /** Extract the bid percentage (0-100) from an API row. */
@@ -81,13 +70,6 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
     if (confParam) return decodeURIComponent(confParam);
     return preferences.defaultConference;
   });
-  const [availableConferences, setAvailableConferences] = useState<string[]>([
-    "All Teams",
-    preferences.defaultConference,
-  ]);
-  const [teamsData, setTeamsData] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     trackEvent({
@@ -100,77 +82,54 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
     });
   }, [selectedConference, season, config.pageId, trackEvent]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // One request per sport and season; switching conference filters locally.
+  const {
+    data: teamList,
+    isLoading: loading,
+    error: queryError,
+  } = useTeamList(config.sport, season);
+  const error = queryError ? "Failed to load teams data" : null;
+  const rows = teamList?.data;
 
-        const seasonQuery = season
-          ? `?season=${encodeURIComponent(season)}`
-          : "";
-        const response = await fetch(
-          proxyUrl(`${config.endpoint}${seasonQuery}`),
-        );
+  const availableConferences = useMemo(() => {
+    if (!Array.isArray(rows)) return ["All Teams", preferences.defaultConference];
+    const unique = Array.from(new Set(rows.map((team) => team.conference)))
+      .filter(Boolean)
+      .sort();
+    return ["All Teams", ...unique];
+  }, [rows, preferences.defaultConference]);
 
-        if (!response.ok) {
-          throw new Error("Failed to load teams data");
-        }
+  const { getBidPct } = config;
+  const teamsData: Team[] = useMemo(() => {
+    const all = Array.isArray(rows) ? rows : [];
+    const filtered =
+      selectedConference === "All Teams"
+        ? all
+        : all.filter((team) => team.conference === selectedConference);
 
-        const data: { data?: TeamsApiRow[] } = await response.json();
+    return filtered
+      .map((team) => {
+        const [totalWins, totalLosses] = team.overall_record
+          ?.split("-")
+          .map(Number) || [0, 0];
+        const [confWins, confLosses] = team.conference_record
+          ?.split("-")
+          .map(Number) || [0, 0];
 
-        if (data.data && Array.isArray(data.data)) {
-          const uniqueConferences = Array.from(
-            new Set(data.data.map((team) => team.conference)),
-          ).filter(Boolean) as string[];
-          setAvailableConferences(["All Teams", ...uniqueConferences.sort()]);
-        }
-
-        const filteredTeams =
-          selectedConference === "All Teams"
-            ? data.data || []
-            : (data.data || []).filter(
-                (team) => team.conference === selectedConference,
-              );
-
-        const transformedTeams: Team[] = filteredTeams.map((team) => {
-          const [totalWins, totalLosses] = team.overall_record
-            ?.split("-")
-            .map(Number) || [0, 0];
-          const [confWins, confLosses] = team.conference_record
-            ?.split("-")
-            .map(Number) || [0, 0];
-
-          return {
-            team_name: team.team_name,
-            logo_url: team.logo_url,
-            primary_color: team.primary_color,
-            conference: team.conference,
-            actual_conference_wins: confWins || 0,
-            actual_conference_losses: confLosses || 0,
-            actual_total_wins: totalWins || 0,
-            actual_total_losses: totalLosses || 0,
-            bid_pct: config.getBidPct(team),
-          };
-        });
-
-        setTeamsData(
-          transformedTeams.sort((a, b) =>
-            a.team_name.localeCompare(b.team_name),
-          ),
-        );
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load teams data",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedConference, season, config.endpoint]);
+        return {
+          team_name: team.team_name,
+          logo_url: team.logo_url,
+          primary_color: team.primary_color,
+          conference: team.conference,
+          actual_conference_wins: confWins || 0,
+          actual_conference_losses: confLosses || 0,
+          actual_total_wins: totalWins || 0,
+          actual_total_losses: totalLosses || 0,
+          bid_pct: getBidPct(team),
+        };
+      })
+      .sort((a, b) => a.team_name.localeCompare(b.team_name));
+  }, [rows, selectedConference, getBidPct]);
 
   const handleConferenceChange = (conference: string) => {
     setSelectedConference(conference);

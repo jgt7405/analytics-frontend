@@ -16,6 +16,8 @@ export const queryKeys = {
   basketball: {
     all: ["basketball"] as const,
     compositeRatings: () => ["basketball", "composite-ratings"] as const,
+    confChampAnalysis: (conference: string) =>
+      ["basketball", "conf-champ-analysis", conference] as const,
     confData: (season: Season) => ["basketball", "conf-data", season] as const,
     confDataHistory: (season: Season) =>
       ["basketball", "conf-data-history", season] as const,
@@ -43,8 +45,10 @@ export const queryKeys = {
       ["basketball", "team", teamName, season] as const,
     teamAllHistory: (teamName: string, season: Season) =>
       ["basketball", "team-all-history", teamName, season] as const,
+    teams: (season: Season) => ["basketball", "teams", season] as const,
     twv: (conference: string, season: Season) =>
       ["basketball", "twv", conference, season] as const,
+    upcomingGames: () => ["basketball", "upcoming-games"] as const,
   },
   football: {
     all: ["football"] as const,
@@ -76,7 +80,9 @@ export const queryKeys = {
       ["football", "team", teamName, season] as const,
     teamAllHistory: (teamName: string, season: Season) =>
       ["football", "team-all-history", teamName, season] as const,
-    teamLogos: () => ["football", "team-logos"] as const,
+    teamCfpHistory: (teamName: string) =>
+      ["football", "team-cfp-history", teamName] as const,
+    teams: (season: Season) => ["football", "teams", season] as const,
     twv: (conference: string, season: Season) =>
       ["football", "twv", conference, season] as const,
   },

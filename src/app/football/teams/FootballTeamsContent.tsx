@@ -10,7 +10,6 @@ import TeamsContent, {
 const FOOTBALL_TEAMS: TeamsContentConfig = {
   sport: "football",
   pageId: "football-teams",
-  endpoint: "football_teams",
   bidLabel: "Playoff Bid",
   // Backend sends cfp_bid_pct already as a 0-100 percentage.
   getBidPct: (row) =>

@@ -1,11 +1,10 @@
 // src/components/features/football/BowlPicksTable.tsx
 "use client";
 
+import { useFootballBowlPicks } from "@/hooks/useFootballBowlPicks";
+import { useTeamList } from "@/hooks/useTeamList";
 import TeamLogo from "@/components/ui/TeamLogo";
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
 import { memo, useMemo } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
 import { logger } from "@/lib/logger";
 
 interface BowlGame {
@@ -269,23 +268,9 @@ function BowlPicksTable() {
     data: bowlData,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: queryKeys.football.bowlPicks(),
-    queryFn: async () => {
-      const res = await fetch(proxyUrl("football/bowl-picks"));
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
-    },
-  });
+  } = useFootballBowlPicks();
 
-  const { data: logoData } = useQuery({
-    queryKey: queryKeys.football.teamLogos(),
-    queryFn: async () => {
-      const res = await fetch(proxyUrl("football/teams"));
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
-    },
-  });
+  const { data: logoData } = useTeamList("football");
 
   // Extract people names dynamically
   const people = useMemo(() => {
@@ -385,9 +370,7 @@ function BowlPicksTable() {
   const getLogoUrl = (team: string) => {
     if (!logoData?.data || !Array.isArray(logoData.data))
       return "/images/team_logos/default.png";
-    const teamData = logoData.data.find(
-      (t: { team_name: string; logo_url: string }) => t.team_name === team
-    );
+    const teamData = logoData.data.find((t) => t.team_name === team);
     return teamData?.logo_url || "/images/team_logos/default.png";
   };
 
