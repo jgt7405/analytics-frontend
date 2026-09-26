@@ -15,4 +15,4 @@ Browser-side clients for the backend, all going through `/api/proxy` (see `docs/
 5. **Types** — response types in `src/types/<sport>.ts` or next to the client method.
 6. **Tests** — extend `src/services/__tests__/api.integration.test.ts` with the expected URL.
 
-Keep the path consistent between the endpoint entry and the callers; `src/api/__tests__/endpoints.test.ts` checks that entries are well-formed.
+Keep the path consistent between the endpoint entry and the callers. Tests check it: `src/api/__tests__/endpoints.test.ts` (entries are well-formed), `src/app/api/proxy/[...slug]/__tests__/contract.test.ts` (the proxy accepts every entry on each path and rejects other methods, query parameters and bad values), and `src/api/__tests__/callers.test.ts` (scans the source: every URL built with `proxyUrl()`, the API clients or `server-api.ts` must match an entry).

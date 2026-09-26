@@ -17,6 +17,7 @@ Three layers, from fastest to slowest. None of the local layers needs the backen
   - `src/services/__tests__/api.integration.test.ts`: each method calls the right proxy URL, with season parameters and headers.
   - `src/hooks/__tests__/useStandings.test.ts`: the hook calls `api.getStandings`.
   - `src/lib/__tests__/screenshot-layout.test.ts`: image-export layout helper.
+  - Endpoint contract (step 4): `src/api/__tests__/endpoints.test.ts` (the list is well-formed; parameter and query rules), `src/app/api/proxy/[...slug]/__tests__/contract.test.ts` (for every entry and each of its paths: accepted and forwarded to the right backend URL; the other method, unlisted or malformed query parameters, bad path parameters and extra segments rejected without a backend request; known-unregistered paths 404), `src/app/api/proxy/[...slug]/__tests__/route.test.ts` (forwarding details: encoding, timeouts, CSV, cache headers) and `src/api/__tests__/callers.test.ts` (scans the source so every URL the site builds matches an entry).
 - The API tests log expected validation errors to the console; that noise is normal.
 
 ## Smoke tests (Playwright)
@@ -35,5 +36,5 @@ Three layers, from fastest to slowest. None of the local layers needs the backen
 
 ## Next
 
-- Step 4: MSW fixtures, contract tests for every registered endpoint, screenshot tests.
+- Step 4: MSW fixtures and screenshot tests (contract tests done in 4c).
 - Step 10: automated accessibility checks (axe) and keyboard/focus tests for tables, charts, selectors and modals.
