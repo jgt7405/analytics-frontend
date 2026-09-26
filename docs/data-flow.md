@@ -42,8 +42,36 @@ Every endpoint the proxy forwards is an entry in `src/api/endpoints.ts`: path sh
 
 ## Contract with the backend
 
-The backend owns response shapes. Until step 4 formalizes this with Zod schemas and contract tests:
+Two repositories share one API: this site (Vercel) and the Flask backend `jgt7405/jthom_prod_backend` (Railway). Railway and Vercel deploy independently, so for a while after any deploy the live site and the live backend can be one change apart, and returning visitors may run JavaScript from an older frontend deploy (service worker, open tabs). Every change has to work in that gap.
 
-- Frontend types for responses live in `src/types/` and in the service files. When the backend adds fields, add them there; when it removes or renames one, the frontend must change first (or in the same release).
-- The daily "Production baseline" workflow (`scripts/proxy-probe.mjs --strict`) fails if representative endpoints error or return empty or non-JSON bodies. A failed run emails the repo owner.
-- Backend changes that affect shape should be noted in the pull request that adapts the frontend.
+### Who owns what
+
+| Part of the contract | Owner | Where it is written down |
+|---|---|---|
+| Which paths exist, their methods, path parameters and query parameters | **Frontend** | `src/api/endpoints.ts`. The proxy forwards nothing else, so a backend route the list doesn't name is unreachable from the site |
+| Response bodies of every route (field names, types, nesting, units such as counts vs percentages) | **Backend** | Its route code. The frontend's copy is the TypeScript types in `src/types/` and next to the hooks and services |
+| POST request bodies (what-if selections, exports, uploads) | **Frontend** | The hooks and services that send them |
+| Conference and team names | **Backend data** | Full conference names as stored (`Southeastern`, not `SEC`); the backend maps short names on the way in (`normalize_conference_name`). Team names as in `bball_league_hierarchy_flat` / `football_team_decode` |
+| Seasons | Both | `YYYY-YY` (`2025-26`), checked by the proxy |
+| Cache lifetimes | **Frontend** | The `cacheClass` of each entry (`docs/decisions/cache-classes.md`) |
+
+### Changing a response shape (backend)
+
+Changes are **additive first, removal last**:
+
+1. **Adding a field** is always safe: deploy the backend, then use it in the frontend.
+2. **Renaming or changing a field**: add the new field *alongside* the old one, deploy the backend, switch the frontend to the new field, and only then remove the old one (step 4).
+3. **Removing a field** (or a route): only after the frontend has stopped reading it **and** that frontend has been live for at least **30 days**. Returning visitors can run cached JavaScript for that long. For a route, remove its entry from `src/api/endpoints.ts` first; the backend route goes 30 days later.
+4. **Archived seasons are frozen.** A shape change must keep working for every season in the archive pickers, or the frontend has to handle both shapes. The backend tests' fixtures (`conftest.py`) should cover an archived season whenever a change touches `?season=` handling.
+
+### Announcing a change
+
+- A backend pull request that changes a response shape says so in its title (`API:` prefix) and lists the fields added, renamed or removed, with the frontend pull request that adapts to it. The frontend pull request links back.
+- Merge order follows the steps above: backend first when adding, frontend first when removing.
+- A new endpoint lands in the backend first. The frontend then adds the entry, client code and types, using the `add-endpoint` skill.
+
+### What catches drift
+
+- **Proxy contract tests** (`src/app/api/proxy/[...slug]/__tests__/contract.test.ts`): the frontend only builds and forwards requests the list allows.
+- **Backend route tests** (`tests/` in the backend, run with `pytest`): each route against fixture tables with the production column names, so a query that reads a renamed column fails.
+- **The daily "Production baseline" workflow** (`scripts/proxy-probe.mjs --strict`) calls representative endpoints on the live site. It fails if any errors or returns an empty or non-JSON body, and a failed run emails the repo owner.
