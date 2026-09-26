@@ -1,26 +1,17 @@
-import { FlatCompat } from "@eslint/eslintrc";
-import js from "@eslint/js";
-
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-  recommendedConfig: js.configs.recommended,
-});
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
+import prettier from "eslint-config-prettier/flat";
 
 const eslintConfig = [
+  ...nextCoreWebVitals,
+  ...nextTypescript,
+  prettier,
+
   {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
-  },
-
-  ...compat.config({
-    extends: ["next/core-web-vitals", "next/typescript", "prettier"],
-    settings: {
-      react: {
-        version: "detect",
-      },
-    },
     rules: {
       // Temporarily disable the unescaped entities rule
-      "react/no-unescaped-entities": "off", // ✅ Add this line
+      "react/no-unescaped-entities": "off",
 
       // Make other rules warnings instead of errors
       "@typescript-eslint/no-explicit-any": "warn",
@@ -36,8 +27,19 @@ const eslintConfig = [
       "react-hooks/rules-of-hooks": "error",
       "@next/next/no-img-element": "warn",
       "@typescript-eslint/no-this-alias": "off",
+
+      // React Compiler rules added by eslint-plugin-react-hooks 7 (ESLint 9
+      // upgrade). They flag working code that the compiler can't optimize
+      // (~100 hits across ~60 files); advisory until components are
+      // reworked (plan steps 7-8).
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+      "react-hooks/static-components": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/purity": "warn",
     },
-  }),
+  },
 
   // Architecture boundaries (docs/ARCHITECTURE_PLAN.md, step 2).
   // Advisory: long files are a signal, not a rule; split them in step 7.
@@ -130,7 +132,6 @@ const eslintConfig = [
     ],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-var-requires": "off",
     },
   },
 
