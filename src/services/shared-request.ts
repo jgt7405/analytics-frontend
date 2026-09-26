@@ -5,46 +5,8 @@ import { monitoring } from "@/lib/unified-monitoring";
 import { ApiError, BasketballApiError } from "@/types/errors";
 import { proxyUrl } from "@/lib/proxy-url";
 import { logger } from "@/lib/logger";
+import { matchEndpoint } from "@/api/endpoints";
 
-
-interface HealthCheckResponse {
-  status: string;
-  timestamp: number;
-}
-
-// Endpoint validation lists
-const BASKETBALL_ENDPOINTS = [
-  "/standings/",
-  "/cwv/",
-  "/conf_schedule/",
-  "/twv/",
-  "/conf_tourney/",
-  "/seed/",
-  "/ncaa_tourney/",
-  "/team/",
-  "/unified_conference_data",
-  "/basketball_teams",
-  "/basketball/upcoming_games",
-];
-
-const FOOTBALL_ENDPOINTS = [
-  "/football_teams",
-  "/football_conf_data",
-  "/football/standings/",
-  "/football/cwv/",
-  "/football/conf_schedule/",
-  "/football/twv/",
-  "/football/conf_champ/",
-  "/football_seed/",
-  "/cfp/",
-  "/football_team/",
-];
-
-const ALL_VALID_ENDPOINTS = [
-  ...BASKETBALL_ENDPOINTS,
-  ...FOOTBALL_ENDPOINTS,
-  "/health",
-];
 
 export class BaseApiClient {
   protected createUserFriendlyError(
@@ -135,10 +97,13 @@ export class BaseApiClient {
     );
   }
 
+  // The proxy only forwards endpoints registered in src/api/endpoints.ts;
+  // flag an unregistered one here too, so the cause is visible in the
+  // browser console rather than only as a 404 or 400.
   protected validateEndpoint(endpoint: string): boolean {
-    return ALL_VALID_ENDPOINTS.some(
-      (valid) => endpoint.startsWith(valid) || endpoint === valid,
-    );
+    const path = endpoint.split("?")[0].replace(/^\/+|\/+$/g, "");
+    const segments = path.split("/").map((s) => decodeURIComponent(s));
+    return matchEndpoint("GET", segments).kind === "ok";
   }
 
   protected async request<T>(
@@ -151,7 +116,7 @@ export class BaseApiClient {
     retries = 3,
   ): Promise<T> {
     if (!this.validateEndpoint(endpoint)) {
-      logger.warn(`⚠️  Potentially invalid endpoint: ${endpoint}`);
+      logger.warn(`Unregistered endpoint (src/api/endpoints.ts): ${endpoint}`);
     }
 
     const startTime = Date.now();
@@ -236,26 +201,6 @@ export class BaseApiClient {
       }
     }
     throw new Error("Max retries exceeded");
-  }
-
-  async healthCheck(): Promise<HealthCheckResponse> {
-    const response = await fetch(proxyUrl(`health`), {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Health check failed: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    return {
-      status: data.status || "unknown",
-      timestamp: Date.now(),
-    };
   }
 
   async get<T>(

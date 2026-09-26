@@ -9,7 +9,6 @@ import {
   isValidParam,
   matchEndpoint,
 } from "../endpoints";
-import { cacheClassForBackendPath } from "@/lib/cache-policy";
 
 const paramNames = (path: string) =>
   path
@@ -66,15 +65,6 @@ describe("ENDPOINTS", () => {
         expect(e.body).toBeUndefined();
         expect(e.cacheClass).not.toBe("scenario");
       }
-    }
-  });
-
-  it("keeps the cache class each GET had before the list (step 3b)", () => {
-    for (const e of ENDPOINTS.filter((e) => e.method === "GET")) {
-      expect({ key: e.key, cacheClass: e.cacheClass }).toEqual({
-        key: e.key,
-        cacheClass: cacheClassForBackendPath(sample(e.backendPath)),
-      });
     }
   });
 

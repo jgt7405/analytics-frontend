@@ -28,18 +28,18 @@ Freshness is set per **class of data** in `src/lib/cache-policy.ts` (`live`, `cu
 | Layer | Where | Setting |
 |---|---|---|
 | React Query (browser memory) | each hook spreads `...queryCachePolicy("<class>")`; `QueryProvider.tsx` defaults to `currentStandings` | Fresh for 30 s (live) to 24 h (reference data). No refetch on window focus, no retry on 4xx |
-| Vercel CDN | proxy GET responses; class picked by `cacheClassForBackendPath()` from the backend path and `?season=` | `s-maxage` 30 s to 24 h per class. POSTs `private, no-store`. Errors `no-store`. Measured before classes: first call per URL is a MISS (up to ~0.6 s), then HITs at ~25 ms |
+| Vercel CDN | proxy GET responses; class from the endpoint's entry in `src/api/endpoints.ts`, `historical` for an archived `?season=` | `s-maxage` 30 s to 24 h per class. POSTs `private, no-store`. Errors `no-store`. Measured before classes: first call per URL is a MISS (up to ~0.6 s), then HITs at ~25 ms |
 | Next data cache (server) | `src/lib/server-api.ts`, `src/app/sitemap.ts` | `revalidate` per class, same lifetime as the CDN |
 | Proxy → backend | proxy route | `cache: "no-store"` (the CDN layer above does the caching) |
 | Service worker | `src/sw.ts` (Serwist) | Images cached 1 day (64 entries). Build JS/CSS precached. Pages and API data are never cached here |
 
 ## Logging
 
-The proxy writes one `info` line per request that reaches it (CDN hits never do): method, path, status, duration, cache class and Vercel's request ID (`x-vercel-id`, also returned to the browser). Backend failures add a `warn` line with the backend path and status. Find them in Vercel → Logs; each line is JSON from `src/lib/logger.ts`. Successful proxy responses also carry an `x-cache-class` header.
+The proxy writes one `info` line per request that reaches it (CDN hits never do): method, path, status, duration, endpoint key, cache class and Vercel's request ID (`x-vercel-id`, also returned to the browser). Backend failures add a `warn` line with the endpoint key and status. Find them in Vercel → Logs; each line is JSON from `src/lib/logger.ts`. Successful proxy responses also carry an `x-cache-class` header.
 
 ## Adding or changing an endpoint
 
-Today an endpoint must be registered in up to four places. `src/services/AGENTS.md` and the `add-endpoint` skill list them. Step 4 replaces the per-shape proxy branches with one typed endpoint list.
+Every endpoint the proxy forwards is an entry in `src/api/endpoints.ts`: path shape, method, a rule per path parameter, allowed query parameters (format-checked), timeout and cache class. Anything else is rejected before reaching the backend (404 unknown path, 405 wrong method, 400 bad parameter or query parameter). Responses carry `x-endpoint` (the entry's key) and `x-cache-class`. `src/services/AGENTS.md` and the `add-endpoint` skill list the remaining places a new endpoint touches.
 
 ## Contract with the backend
 
