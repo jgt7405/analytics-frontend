@@ -2,6 +2,7 @@
 // Add this to your existing what-if export UI component
 
 import React, { useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 /**
  * ExportOptionsModal - Modal component for configuring CSV export options
@@ -118,7 +119,7 @@ export const ExportOptionsModal = ({
         export_options: exportOptions,
       });
 
-      const response = await fetch("/api/proxy/football/whatif/export", {
+      const response = await fetch(proxyUrl("football/whatif/export"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

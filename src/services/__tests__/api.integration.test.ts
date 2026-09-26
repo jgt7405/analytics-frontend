@@ -30,20 +30,14 @@ describe('API Client Integration Tests', () => {
         json: async () => mockData,
       })
 
-      try {
-        await api.getStandings('ACC')
+      await api.getStandings('ACC').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/standings/ACC'),
-          expect.objectContaining({
-            headers: expect.any(Object),
-          })
-        )
-      } catch (error) {
-        // Validation errors are expected in test environment
-        // What matters is that fetch was called correctly
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/standings/ACC/'),
+        expect.objectContaining({
+          headers: expect.any(Object),
+        })
+      )
     })
 
     it('getCWV should call correct endpoint', async () => {
@@ -52,16 +46,12 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await api.getCWV('ACC')
+      await api.getCWV('ACC').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/cwv/ACC'),
-          expect.any(Object)
-        )
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/cwv/ACC/'),
+        expect.any(Object)
+      )
     })
 
     it('getSchedule should call correct endpoint', async () => {
@@ -70,16 +60,12 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await api.getSchedule('ACC')
+      await api.getSchedule('ACC').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/conf_schedule/ACC'),
-          expect.any(Object)
-        )
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/conf_schedule/ACC/'),
+        expect.any(Object)
+      )
     })
   })
 
@@ -90,16 +76,12 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await api.getFootballStandings('SEC')
+      await api.getFootballStandings('SEC').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/football/standings/SEC'),
-          expect.any(Object)
-        )
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/football/standings/SEC/'),
+        expect.any(Object)
+      )
     })
 
     it('getFootballCWV should call correct endpoint', async () => {
@@ -108,16 +90,12 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await api.getFootballCWV('SEC')
+      await api.getFootballCWV('SEC').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/football/cwv/SEC'),
-          expect.any(Object)
-        )
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/football/cwv/SEC/'),
+        expect.any(Object)
+      )
     })
 
     it('getCFP should call correct endpoint', async () => {
@@ -126,16 +104,12 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await api.getCFP('SEC')
+      await api.getCFP('SEC').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/cfp/SEC'),
-          expect.any(Object)
-        )
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/cfp/SEC/'),
+        expect.any(Object)
+      )
     })
   })
 
@@ -148,16 +122,12 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await getStandingsData('ACC')
+      await getStandingsData('ACC').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/standings/ACC'),
-          expect.any(Object)
-        )
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/standings/ACC/'),
+        expect.any(Object)
+      )
     })
 
     it('getCWVData should work as standalone function', async () => {
@@ -168,13 +138,9 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await getCWVData('ACC')
+      await getCWVData('ACC').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalled()
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalled()
     })
   })
 
@@ -185,16 +151,12 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await api.getStandings('ACC', '2023')
+      await api.getStandings('ACC', '2023').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('season=2023'),
-          expect.any(Object)
-        )
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/?season=2023'),
+        expect.any(Object)
+      )
     })
 
     it('should pass season parameter to football endpoints', async () => {
@@ -203,16 +165,12 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      try {
-        await api.getFootballStandings('SEC', '2023')
+      await api.getFootballStandings('SEC', '2023').catch(() => {})  // validation errors expected with mock data
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('season=2023'),
-          expect.any(Object)
-        )
-      } catch (error) {
-        expect(global.fetch).toHaveBeenCalled()
-      }
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/?season=2023'),
+        expect.any(Object)
+      )
     })
   })
 })

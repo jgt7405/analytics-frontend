@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 export interface NCAATeam {
   team_name: string;
@@ -72,7 +73,7 @@ export function useNCAAProjections(
     initialDataUpdatedAt: seeded ? 0 : undefined,
     queryFn: async () => {
       const response = await fetch(
-        `/api/proxy/basketball/ncaa-projections${query}`,
+        proxyUrl(`basketball/ncaa-projections${query}`),
       );
       if (!response.ok) {
         throw new Error("Failed to fetch NCAA projections");

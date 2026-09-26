@@ -1,6 +1,7 @@
 // src/hooks/useBasketballWhatIfConferences.ts - UPDATED
 
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface ConferencesResponse {
   success: boolean;
@@ -15,7 +16,7 @@ export function useBasketballWhatIfConferences(season?: string) {
       // Use dedicated endpoint that returns all 31 D1 conferences
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        `/api/proxy/basketball/whatif/conferences${seasonQuery}`,
+        proxyUrl(`basketball/whatif/conferences${seasonQuery}`),
       );
 
       if (!response.ok) {

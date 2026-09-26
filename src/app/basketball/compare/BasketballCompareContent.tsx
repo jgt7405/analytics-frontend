@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 // ============ MAIN PAGE COMPONENT ============
 
@@ -136,7 +137,7 @@ export default function BasketballCompareContent() {
     async (teamName: string): Promise<TeamData | null> => {
       try {
         const response = await fetch(
-          `/api/proxy/team/${encodeURIComponent(teamName)}`,
+          proxyUrl(`team/${encodeURIComponent(teamName)}`),
         );
         return await response.json();
       } catch (error) {
@@ -150,7 +151,7 @@ export default function BasketballCompareContent() {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const response = await fetch("/api/proxy/basketball_teams");
+        const response = await fetch(proxyUrl("basketball_teams"));
         const data = await response.json();
 
         if (data.data) {

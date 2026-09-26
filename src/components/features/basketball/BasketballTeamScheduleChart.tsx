@@ -4,6 +4,7 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface BasketballTeamGame {
   date: string;
@@ -46,7 +47,7 @@ export default function BasketballTeamScheduleChart({
   useEffect(() => {
     const fetchUpcoming = async () => {
       try {
-        const response = await fetch("/api/proxy/basketball/upcoming_games");
+        const response = await fetch(proxyUrl("basketball/upcoming_games"));
         if (!response.ok) return;
         const data = await response.json();
         setUpcomingGames(

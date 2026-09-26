@@ -1,6 +1,7 @@
 // src/hooks/useFootballSchedule.ts
 import { FootballScheduleResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 const fetchFootballSchedule = async (
   conference: string,
@@ -16,7 +17,7 @@ const fetchFootballSchedule = async (
 
   // Use the correct proxy endpoint with formatted conference name
   const response = await fetch(
-    `/api/proxy/football/conf_schedule/${formattedConf}${seasonQuery}`,
+    proxyUrl(`football/conf_schedule/${formattedConf}${seasonQuery}`),
   );
 
   if (!response.ok) {

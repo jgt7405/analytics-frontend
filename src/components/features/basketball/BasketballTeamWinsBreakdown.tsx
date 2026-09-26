@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface BasketballTeamGame {
   date: string;
@@ -97,7 +98,7 @@ export default function BasketballTeamWinsBreakdown({
       setLoading(true);
       try {
         const confFormatted = conference.replace(/\s+/g, "_");
-        const url = `/api/proxy/basketball/conf_champ_analysis/${confFormatted}`;
+        const url = proxyUrl(`basketball/conf_champ_analysis/${confFormatted}`);
 
         const response = await fetch(url);
 

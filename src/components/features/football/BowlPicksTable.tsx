@@ -4,6 +4,7 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useQuery } from "@tanstack/react-query";
 import { memo, useMemo } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface BowlGame {
   "#": string;
@@ -269,7 +270,7 @@ function BowlPicksTable() {
   } = useQuery({
     queryKey: ["bowl-picks"],
     queryFn: async () => {
-      const res = await fetch("/api/proxy/football/bowl-picks");
+      const res = await fetch(proxyUrl("football/bowl-picks"));
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },
@@ -278,7 +279,7 @@ function BowlPicksTable() {
   const { data: logoData } = useQuery({
     queryKey: ["team-logos"],
     queryFn: async () => {
-      const res = await fetch("/api/proxy/football/teams");
+      const res = await fetch(proxyUrl("football/teams"));
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },

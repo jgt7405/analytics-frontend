@@ -1,6 +1,7 @@
 // hooks/useBasketballWhatIf.ts
 
 import { useMutation } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 export interface GameSelection {
   game_id: number;
@@ -257,7 +258,7 @@ const calculateBasketballWhatIf = async (
   const { season, ...requestBody } = request;
   const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
 
-  const response = await fetch(`/api/proxy/basketball/whatif${seasonQuery}`, {
+  const response = await fetch(proxyUrl(`basketball/whatif${seasonQuery}`), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

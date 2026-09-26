@@ -64,7 +64,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 - Match the surrounding code: comment density, naming, idiom.
 
 **Things that will bite you:**
-- `trailingSlash: true`: internal links and fetches should end in `/`. Proxy calls without one get a 308 redirect first (fix planned in step 3).
+- `trailingSlash: true`: internal links should end in `/`. Build every backend proxy URL with `proxyUrl()` from `src/lib/proxy-url.ts` (e.g. ``proxyUrl(`twv/${conf}${seasonQuery}`)``), never by hand: a proxy URL without the trailing slash costs every visitor a 308 redirect round trip, and the smoke tests fail on it.
 - React hooks must run before any early `return` (a crash on the bowl picks page came from this).
 - `[season]` archive layouts set `robots: noindex`. Don't route current-season pages through `[season]`, or they drop out of search.
 - Seasons are hard-coded as `2025-26` in several files until plan step 6 adds a season config.
@@ -76,8 +76,8 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 
 | Variable | Used by | Notes |
 |---|---|---|
-| `BACKEND_API_URL` | `/api/proxy` | Defaults to the production Railway API. Set to e.g. `http://localhost:5000/api` for a local backend |
-| `NEXT_PUBLIC_BACKEND_URL` | `src/lib/server-api.ts` | Same default. Merged into `BACKEND_API_URL` in plan step 3 |
+| `BACKEND_API_URL` | `src/config/env.ts` (proxy, server-side fetches, sitemap) | Defaults to the production Railway API. Set to e.g. `http://localhost:5000/api` for a local backend. Server-only: import `BACKEND_API_URL` from `@/config/env`, never read `process.env` for it directly |
+| `NEXT_PUBLIC_BACKEND_URL` | `src/config/env.ts` | Deprecated fallback for `BACKEND_API_URL`; remove it from any environment that sets it |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_SECURE`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM` | `/api/contact` | Contact form SMTP. The form returns 500 without them |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Google Analytics | Optional |
 | `NEXT_PUBLIC_SITE_URL` | Metadata | Optional; defaults to the production URL |

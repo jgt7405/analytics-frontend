@@ -1,3 +1,4 @@
+import { proxyUrl } from "@/lib/proxy-url";
 // src/hooks/useFootballGameImpacts.ts
 export interface GameImpactOutcome {
   ccg_pct: number;
@@ -56,7 +57,7 @@ export async function fetchGameImpacts(
   req: GameImpactsRequest,
   signal?: AbortSignal,
 ): Promise<GameImpactsResponse> {
-  const response = await fetch("/api/proxy/football/whatif/game-impacts", {
+  const response = await fetch(proxyUrl("football/whatif/game-impacts"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),

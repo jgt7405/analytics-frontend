@@ -14,6 +14,7 @@ import {
   FootballTeamsApiResponse,
 } from "@/types/football";
 import { BasketballApiClient } from "./basketball-api";
+import { proxyUrl } from "@/lib/proxy-url";
 
 // Football-specific response interface (renamed from FootballTeamData to avoid collision with src/types/football.ts)
 interface FootballTeamDetailData {
@@ -70,7 +71,6 @@ interface FootballTeamDetailData {
   }>;
 }
 
-const API_BASE_URL = "/api/proxy";
 
 export class ApiClient extends BasketballApiClient {
   // Football API methods
@@ -274,7 +274,7 @@ export class ApiClient extends BasketballApiClient {
     const sanitizedTeamName = sanitizeInput(teamName);
     const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     const response = await fetch(
-      `${API_BASE_URL}/football_team/${encodeURIComponent(sanitizedTeamName)}${seasonQuery}`,
+      proxyUrl(`football_team/${encodeURIComponent(sanitizedTeamName)}${seasonQuery}`),
     );
 
     if (!response.ok) {

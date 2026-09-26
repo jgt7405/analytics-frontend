@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface ConfHistoryData {
   conference: string; // ← Note: "conference" not "conference_name"
@@ -23,7 +24,7 @@ export function useBasketballConfDataHistory(season?: string) {
     queryFn: async () => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        `/api/proxy/unified_conference_data/history${seasonQuery}`,
+        proxyUrl(`unified_conference_data/history${seasonQuery}`),
       );
       if (!response.ok) {
         throw new Error("Failed to fetch basketball conference data history");

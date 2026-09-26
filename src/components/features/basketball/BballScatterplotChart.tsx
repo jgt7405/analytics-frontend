@@ -4,6 +4,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
 // this bespoke file has no CSS module of its own.
@@ -439,7 +440,7 @@ export default function BballScatterplotChart({
     try {
       console.log("🚀 Sending request to /api/proxy/basketball/chart/upload");
 
-      const response = await fetch("/api/proxy/basketball/chart/upload", {
+      const response = await fetch(proxyUrl("basketball/chart/upload"), {
         method: "POST",
         body: formData,
       });

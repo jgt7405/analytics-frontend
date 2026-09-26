@@ -19,6 +19,7 @@ import type { Chart, ChartArea, TooltipModel } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface CFPHistoricalDataPoint {
   date: string;
@@ -109,7 +110,7 @@ export default function FootballTeamCFPBidHistory({
         setLoading(true);
 
         const response = await fetch(
-          `/api/proxy/football/cfp/${encodeURIComponent(teamName)}/history`
+          proxyUrl(`football/cfp/${encodeURIComponent(teamName)}/history`)
         );
 
         if (!response.ok) {

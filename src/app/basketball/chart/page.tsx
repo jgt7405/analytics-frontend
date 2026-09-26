@@ -11,6 +11,7 @@ import {
 import { saveCanvasImage } from "@/lib/save-image";
 import { Download, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 declare global {
   interface Window {
@@ -77,7 +78,7 @@ export default function BasketballChartPage() {
     try {
       setIsLoading(true);
 
-      const response = await fetch("/api/proxy/team_schedule");
+      const response = await fetch(proxyUrl("team_schedule"));
 
       if (!response.ok) {
         throw new Error(

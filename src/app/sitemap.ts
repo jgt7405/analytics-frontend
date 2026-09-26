@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next';
+import { BACKEND_API_URL } from '@/config/env';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.jthomanalytics.com';
@@ -163,7 +164,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     // Fetch basketball teams
     const basketballTeamsRes = await fetch(
-      'https://jthomprodbackend-production.up.railway.app/api/basketball_teams',
+      `${BACKEND_API_URL}/basketball_teams`,
       { next: { revalidate: 3600 } }
     );
 
@@ -191,7 +192,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const footballTeamsRes = await fetch(
-      'https://jthomprodbackend-production.up.railway.app/api/football_teams',
+      `${BACKEND_API_URL}/football_teams`,
       { next: { revalidate: 3600 } }
     );
 

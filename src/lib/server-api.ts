@@ -29,10 +29,9 @@ import type {
 import type { TeamData } from "@/hooks/useBasketballTeamData";
 import type { FootballTeamData } from "@/hooks/useFootballTeam";
 import type { PlayoffRankingsResponse } from "@/types/football";
+import { BACKEND_API_URL } from "@/config/env";
 
-const BACKEND =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "https://jthomprodbackend-production.up.railway.app/api";
+const BACKEND = BACKEND_API_URL;
 
 async function fetchJson<T>(path: string): Promise<T | undefined> {
   try {
