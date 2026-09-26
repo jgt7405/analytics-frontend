@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface TimelineData {
   team_name: string;
@@ -44,7 +45,7 @@ export function useBballStandingsHistory(
     queryFn: async () => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        `/api/proxy/standings/${conference.replace(" ", "_")}/history${seasonQuery}`,
+        proxyUrl(`standings/${conference.replace(" ", "_")}/history${seasonQuery}`),
       );
       if (!response.ok)
         throw new Error("Failed to fetch basketball standings history");

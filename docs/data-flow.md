@@ -9,12 +9,12 @@ Browser
   React component
     → hook in src/hooks/            (React Query: caching, retries, loading/error state)
     → method in src/services/       (basketball-api.ts / football-api.ts, built on shared-request.ts)
-    → fetch("/api/proxy/<path>")    (same origin, so no CORS; note: no trailing slash today → 308 first)
+    → fetch(proxyUrl("<path>"))     (src/lib/proxy-url.ts → /api/proxy/<path>/; same origin, no CORS, no redirect)
 Vercel
   src/app/api/proxy/[...slug]/route.ts
     → validates path segments, maps the URL shape to a backend path (one branch per shape)
     → forwards allowed query params: season, mode, date
-    → fetch(BACKEND_API_URL + path), 30 s timeout (5 min for POST exports)
+    → fetch(BACKEND_API_URL + path), 30 s timeout (5 min for POST exports); BACKEND_API_URL from src/config/env.ts
 Railway
   Flask backend /api/...
 ```

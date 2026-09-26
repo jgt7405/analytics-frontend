@@ -68,6 +68,26 @@ const eslintConfig = [
       ],
     },
   },
+  // Proxy URLs are built with proxyUrl() (src/lib/proxy-url.ts), which adds
+  // the trailing slash that avoids a 308 redirect on every data call.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/proxy-url.ts", "src/app/api/**", "**/__tests__/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/^\\x2Fapi\\x2Fproxy/]",
+          message: "Build proxy URLs with proxyUrl() from @/lib/proxy-url.",
+        },
+        {
+          selector: "TemplateLiteral > TemplateElement:first-child[value.raw=/^\\x2Fapi\\x2Fproxy/]",
+          message: "Build proxy URLs with proxyUrl() from @/lib/proxy-url.",
+        },
+      ],
+    },
+  },
+
   // Sports stay independent: shared code lives in shared folders
   // (components/features/shared, components/common, lib, services).
   {

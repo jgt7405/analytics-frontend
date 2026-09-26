@@ -2,6 +2,7 @@
 
 import { AllTeamCFPEntry, WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import { useMutation } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 export interface GameSelection {
   game_id: number;
@@ -103,7 +104,7 @@ const calculateWhatIf = async (
   const { season, ...requestBody } = request;
   const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
 
-  const response = await fetch(`/api/proxy/football/whatif${seasonQuery}`, {
+  const response = await fetch(proxyUrl(`football/whatif${seasonQuery}`), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

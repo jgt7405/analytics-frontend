@@ -1,3 +1,4 @@
+import { proxyUrl } from "@/lib/proxy-url";
 // File: src/components/common/csvDownload.ts
 // CSV download utility for what-if results with proper TypeScript types
 
@@ -29,7 +30,7 @@ export const downloadWhatIfAsCSV = async (
   try {
     console.log("📥 Downloading what-if CSV for", conference);
 
-    const response = await fetch("/api/proxy/football/whatif/export", {
+    const response = await fetch(proxyUrl("football/whatif/export"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

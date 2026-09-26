@@ -25,6 +25,7 @@ import {
 } from "@/hooks/useBasketballWhatIf";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./BasketballWhatIfScenarios.module.css";
+import { proxyUrl } from "@/lib/proxy-url";
 
 const TEAL_COLOR = "rgb(0, 151, 178)";
 
@@ -1196,7 +1197,7 @@ export default function BasketballWhatIfScenarios() {
   const fetchBaseline = useCallback(async (conf: string) => {
     setIsLoadingBaseline(true);
     try {
-      const res = await fetch("/api/proxy/basketball/whatif/baseline", {
+      const res = await fetch(proxyUrl("basketball/whatif/baseline"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ conference: conf }),
@@ -1337,7 +1338,7 @@ export default function BasketballWhatIfScenarios() {
       const selectionsArray = Array.from(gameSelections.entries()).map(
         ([game_id, winner_team_id]) => ({ game_id, winner_team_id }),
       );
-      const res = await fetch("/api/proxy/basketball/whatif/validation-csv", {
+      const res = await fetch(proxyUrl("basketball/whatif/validation-csv"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

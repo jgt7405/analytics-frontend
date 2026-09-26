@@ -3,6 +3,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { memo, useMemo, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface ScoreboardUser {
   name: string;
@@ -251,7 +252,7 @@ function BowlScoreboard() {
   } = useQuery({
     queryKey: ["bowl-picks"],
     queryFn: async () => {
-      const res = await fetch("/api/proxy/football/bowl-picks");
+      const res = await fetch(proxyUrl("football/bowl-picks"));
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 // Matches the gradient/border/shadow "card" look used across the
 // modernized Wins/Standings/CWV/etc. pages.
@@ -123,7 +124,7 @@ export default function FootballCompareContent() {
 
       try {
         const response = await fetch(
-          `/api/proxy/football_team/${encodeURIComponent(teamName)}`
+          proxyUrl(`football_team/${encodeURIComponent(teamName)}`)
         );
         const data = await response.json();
         setTeamDataCache((prev) => ({ ...prev, [teamName]: data }));
@@ -139,7 +140,7 @@ export default function FootballCompareContent() {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const response = await fetch("/api/proxy/football_teams");
+        const response = await fetch(proxyUrl("football_teams"));
         const data = await response.json();
 
         if (data.data) {

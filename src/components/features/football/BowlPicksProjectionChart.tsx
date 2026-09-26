@@ -14,6 +14,7 @@ import {
   Tooltip as ChartTooltip,
   Legend,
 } from "chart.js";
+import { proxyUrl } from "@/lib/proxy-url";
 
 ChartJS.register(
   CategoryScale,
@@ -249,7 +250,7 @@ function BowlPicksProjectionChart() {
   } = useQuery({
     queryKey: ["bowl-picks"],
     queryFn: async () => {
-      const res = await fetch("/api/proxy/football/bowl-picks");
+      const res = await fetch(proxyUrl("football/bowl-picks"));
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
     },

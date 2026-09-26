@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface WinSeedCountEntry {
   Wins: number;
@@ -72,7 +73,7 @@ export const useBasketballTeamData = (
         ? `?season=${encodeURIComponent(season)}`
         : "";
       const response = await fetch(
-        `/api/proxy/team/${encodeURIComponent(teamName)}${seasonQuery}`
+        proxyUrl(`team/${encodeURIComponent(teamName)}${seasonQuery}`)
       );
       if (!response.ok) throw new Error("Failed to load team data");
       return response.json();

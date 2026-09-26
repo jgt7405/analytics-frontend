@@ -3,8 +3,8 @@
 
 import { monitoring } from "@/lib/unified-monitoring";
 import { ApiError, BasketballApiError } from "@/types/errors";
+import { proxyUrl } from "@/lib/proxy-url";
 
-const API_BASE_URL = "/api/proxy";
 
 interface HealthCheckResponse {
   status: string;
@@ -154,7 +154,7 @@ export class BaseApiClient {
     }
 
     const startTime = Date.now();
-    const fullUrl = `${API_BASE_URL}${endpoint}`;
+    const fullUrl = proxyUrl(endpoint);
 
     console.log(`📄 Making API call to: ${fullUrl}`);
 
@@ -238,7 +238,7 @@ export class BaseApiClient {
   }
 
   async healthCheck(): Promise<HealthCheckResponse> {
-    const response = await fetch(`${API_BASE_URL}/health`, {
+    const response = await fetch(proxyUrl(`health`), {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -261,7 +261,7 @@ export class BaseApiClient {
     endpoint: string,
     params?: Record<string, string>,
   ): Promise<T> {
-    const fullUrl = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin);
+    const fullUrl = new URL(proxyUrl(endpoint), window.location.origin);
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -293,7 +293,7 @@ export class BaseApiClient {
   }
 
   async post<T>(endpoint: string, body: unknown): Promise<T> {
-    const fullUrl = `${API_BASE_URL}${endpoint}`;
+    const fullUrl = proxyUrl(endpoint);
     const startTime = Date.now();
 
     const response = await fetch(fullUrl, {

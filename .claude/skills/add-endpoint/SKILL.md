@@ -24,6 +24,6 @@ curl -s http://localhost:3100/api/proxy/<your/path>/ | head -c 300
 
 - Accepted by the proxy: the backend's data, or in a cloud session (backend blocked) `{"error":"Backend request failed: 403", ...}` naming your backend path.
 - Not registered: `404` with `Unknown ...` or `Invalid URL structure`. Fix step 1.
-- Note the trailing slash: without it you get a 308 redirect first.
+- Note the trailing slash: without it you get a 308 redirect first. In code, always build the URL with `proxyUrl()` (`src/lib/proxy-url.ts`); the smoke tests fail on redirected proxy calls.
 
 To check real data from a cloud session, add the path to `ENDPOINTS` in `scripts/proxy-probe.mjs` and run the "Production baseline" workflow after merging.

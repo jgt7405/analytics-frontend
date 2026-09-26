@@ -1,5 +1,6 @@
 // src/hooks/useBasketballSeedWinsData.ts
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 export interface SeedWinsTeam {
   team_name: string;
@@ -73,7 +74,7 @@ export const useBasketballSeedWinsData = (
 
       try {
         const response = await fetch(
-          `/api/proxy/basketball/conf_champ_analysis/${confFormatted}${seasonQuery}`,
+          proxyUrl(`basketball/conf_champ_analysis/${confFormatted}${seasonQuery}`),
         );
 
         if (!response.ok) {

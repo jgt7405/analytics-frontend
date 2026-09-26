@@ -11,6 +11,7 @@ import {
 import { saveCanvasImage } from "@/lib/save-image";
 import { Camera, Loader } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell / §2 heading tier, as Tailwind
 // constants since this bespoke file has no CSS module of its own.
@@ -207,7 +208,7 @@ export default function NextGameImpact({
     setFetchError(null);
     setImpactData(null);
 
-    fetch("/api/proxy/basketball/whatif/next-game-impact", {
+    fetch(proxyUrl("basketball/whatif/next-game-impact"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ conference, team_id: selectedTeamId }),

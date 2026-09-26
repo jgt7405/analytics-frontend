@@ -13,6 +13,7 @@ import { api } from "@/services/api";
 import { Download } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 // ─── Responsive Hook (inline) ────────────────────────────────────────────────
 
@@ -315,7 +316,7 @@ async function fetchConferenceStandings(
   try {
     const confFormatted = conference.replace(/ /g, "_");
     const response = await fetch(
-      `/api/proxy/standings/${confFormatted}`, // ← CORRECT endpoint (has conference_wins/losses)
+      proxyUrl(`standings/${confFormatted}`), // ← CORRECT endpoint (has conference_wins/losses)
     );
     if (!response.ok) return [];
     const json = await response.json();
@@ -340,7 +341,7 @@ async function fetchConfChampDataForTeam(
   try {
     const confFormatted = conference.replace(/\s+/g, "_");
     const response = await fetch(
-      `/api/proxy/basketball/conf_champ_analysis/${confFormatted}`,
+      proxyUrl(`basketball/conf_champ_analysis/${confFormatted}`),
     );
     if (!response.ok) return null;
     const result = await response.json();
@@ -2343,7 +2344,7 @@ function GamePreviewPageContent() {
     const loadGames = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch("/api/proxy/basketball/upcoming_games");
+        const response = await fetch(proxyUrl("basketball/upcoming_games"));
         if (!response.ok) throw new Error("Failed to fetch upcoming games");
         const data = await response.json();
         setUpcomingGames(data.games || []);
@@ -2432,7 +2433,7 @@ function GamePreviewPageContent() {
         ): Promise<NextGameImpactData | null> => {
           try {
             const resp = await fetch(
-              "/api/proxy/basketball/whatif/next-game-impact",
+              proxyUrl("basketball/whatif/next-game-impact"),
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

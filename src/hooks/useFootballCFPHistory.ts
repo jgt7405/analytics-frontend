@@ -1,5 +1,6 @@
 // src/hooks/useFootballCFPHistory.ts
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface TeamHistoryData {
   team_name: string;
@@ -69,7 +70,7 @@ export const useFootballCFPHistory = (conference: string, season?: string) => {
     queryKey: ["football-cfp-history", conference, season],
     queryFn: async () => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-      const response = await fetch(`/api/proxy/cfp/${conference}/history${seasonQuery}`);
+      const response = await fetch(proxyUrl(`cfp/${conference}/history${seasonQuery}`));
       if (!response.ok) {
         throw new Error("Failed to fetch CFP history");
       }

@@ -9,7 +9,7 @@ Browser-side clients for the backend, all going through `/api/proxy` (see `docs/
 ## Adding a backend endpoint (until step 4's endpoint list replaces this)
 
 1. **Proxy** — `src/app/api/proxy/[...slug]/route.ts`: add a branch or `case` that maps the incoming slug shape to the backend path. Validate any user-supplied segment with `validatePathSegment`. Unmatched shapes return 404, so skipping this step fails silently in the UI.
-2. **Client** — add a method to `basketball-api.ts` or `football-api.ts`: sanitize/validate inputs (`sanitizeInput`, `validateConference` from `@/lib/validation`), convert spaces to `_` for conference names, append `?season=` when given, then `this.request(path, validator)`. Add the path prefix to the endpoint list in `shared-request.ts`.
+2. **Client** — add a method to `basketball-api.ts` or `football-api.ts`: sanitize/validate inputs (`sanitizeInput`, `validateConference` from `@/lib/validation`), convert spaces to `_` for conference names, append `?season=` when given, then `this.request(path, validator)`. `request()` turns the path into a URL with `proxyUrl()`; code outside the services (hooks, components) must call `proxyUrl()` itself rather than writing `/api/proxy/...` by hand. Add the path prefix to the endpoint list in `shared-request.ts`.
 3. **Hook** — `src/hooks/use<Thing>.ts` with `useQuery`: a stable `queryKey` of `[resource, ...params]`, `enabled` guards, and an optional `initialData` parameter.
 4. **Server first paint (optional)** — add a helper in `src/lib/server-api.ts` returning the same shape, and pass its result from `page.tsx` as `initialData`.
 5. **Types** — response types in `src/types/<sport>.ts` or next to the client method.

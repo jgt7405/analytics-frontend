@@ -10,6 +10,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { downloadCompareChart } from "@/lib/download-compare-chart";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useCallback, useEffect, useState } from "react";
+import { proxyUrl } from "@/lib/proxy-url";
 
 interface Team {
   team_name: string;
@@ -106,7 +107,7 @@ export default function FootballCompareArchivePage() {
 
       try {
         const response = await fetch(
-          `/api/proxy/football_team/${encodeURIComponent(teamName)}?season=${season}`
+          proxyUrl(`football_team/${encodeURIComponent(teamName)}?season=${season}`)
         );
         const data = await response.json();
         setTeamDataCache((prev) => ({ ...prev, [teamName]: data }));
@@ -123,7 +124,7 @@ export default function FootballCompareArchivePage() {
     const loadInitialData = async () => {
       try {
         const response = await fetch(
-          `/api/proxy/football_teams?season=${season}`
+          proxyUrl(`football_teams?season=${season}`)
         );
         const data = await response.json();
 

@@ -17,6 +17,7 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "./TeamsContent.module.css";
+import { proxyUrl } from "@/lib/proxy-url";
 
 const cx = (...classes: Array<string | false | undefined>) =>
   classes.filter(Boolean).join(" ");
@@ -109,7 +110,7 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
           ? `?season=${encodeURIComponent(season)}`
           : "";
         const response = await fetch(
-          `/api/proxy/${config.endpoint}${seasonQuery}`,
+          proxyUrl(`${config.endpoint}${seasonQuery}`),
         );
 
         if (!response.ok) {

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { proxyUrl } from "@/lib/proxy-url";
 
 export interface ConferenceData {
   conference_name: string;
@@ -65,9 +66,9 @@ export function useBasketballConfData(season?: string, initialData?: CombinedBas
     queryFn: async () => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const [confResponse, nonconfResponse] = await Promise.all([
-        fetch(`/api/proxy/unified_conference_data${seasonQuery}`),
+        fetch(proxyUrl(`unified_conference_data${seasonQuery}`)),
         fetch(
-          `/api/proxy/basketball/nonconf_analysis/All_Teams${seasonQuery}`,
+          proxyUrl(`basketball/nonconf_analysis/All_Teams${seasonQuery}`),
         ),
       ]);
 

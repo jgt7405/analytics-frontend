@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { BACKEND_API_URL } from "@/config/env";
 
 // Force Node.js runtime and disable static optimization
 export const runtime = "nodejs";
@@ -35,11 +36,9 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    // Defaults to production; set BACKEND_API_URL in .env.local to point at a
-    // local backend (e.g. http://localhost:5000/api) for testing.
-    const BACKEND_BASE_URL =
-      process.env.BACKEND_API_URL ||
-      "https://jthomprodbackend-production.up.railway.app/api";
+    // Production by default; set BACKEND_API_URL (src/config/env.ts) to point
+    // at a local backend, e.g. http://localhost:5000/api.
+    const BACKEND_BASE_URL = BACKEND_API_URL;
 
     let backendPath = "";
 
@@ -647,11 +646,9 @@ export async function POST(
       request.headers.get("content-type"),
     );
 
-    // Defaults to production; set BACKEND_API_URL in .env.local to point at a
-    // local backend (e.g. http://localhost:5000/api) for testing.
-    const BACKEND_BASE_URL =
-      process.env.BACKEND_API_URL ||
-      "https://jthomprodbackend-production.up.railway.app/api";
+    // Production by default; set BACKEND_API_URL (src/config/env.ts) to point
+    // at a local backend, e.g. http://localhost:5000/api.
+    const BACKEND_BASE_URL = BACKEND_API_URL;
 
     let backendPath = "";
     let isFormData = false;

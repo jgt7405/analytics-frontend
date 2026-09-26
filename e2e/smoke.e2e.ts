@@ -72,6 +72,14 @@ for (const route of ROUTES) {
   test(`${route} renders without crashing`, async ({ page }) => {
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
+    // Data calls must hit /api/proxy/<path>/ directly; a 308 means a URL was
+    // built without the trailing slash (use proxyUrl() from src/lib).
+    const redirectedProxyCalls: string[] = [];
+    page.on("response", (response) => {
+      if (response.url().includes("/api/proxy/") && response.status() === 308) {
+        redirectedProxyCalls.push(response.url());
+      }
+    });
 
     const response = await page.goto(route, { waitUntil: "load" });
     expect(response?.status(), "HTTP status").toBeLessThan(400);
@@ -83,6 +91,7 @@ for (const route of ROUTES) {
     // goes idle.
     await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
     expect(pageErrors, "uncaught page errors").toEqual([]);
+    expect(redirectedProxyCalls, "proxy calls redirected for a missing trailing slash").toEqual([]);
   });
 }
 
