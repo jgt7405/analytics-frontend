@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1, 2, 3 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). **Step 4 in progress:** 4a (endpoint list) done; next 4b (proxy reads the list). Baselines are in `docs/baselines/README.md`.
+Status: **steps 1, 2, 3 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). **Step 4 in progress:** 4a (endpoint list, #23) and 4b (proxy reads the list) done; next 4c (contract tests). Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -145,7 +145,8 @@ Other findings carried forward: 48 dependency vulnerabilities (step 2), the redi
 
 | Part | What | Result |
 |---|---|---|
-| 4a | Typed endpoint list `src/api/endpoints.ts` | 56 endpoints (45 GET, 11 POST), one entry each with key, sport, method, proxy paths (plus older aliases), backend path, a rule per path parameter, allowed query parameters, timeout, cache class, body and response type, `passthroughEligible`. Pure matching helpers (`matchEndpoint`, `buildBackendPath`, `checkQuery`, `endpointForBackendPath`) for the proxy and server fetches. Unit tests prove every GET keeps the cache class step 3b gave it. Not yet used at runtime. Three shapes the proxy accepted are left out because the backend has no such route (they could only 404): `team_schedule`, `football/debug/*`, `football/team/*/history/sagarin_rank`. |
+| 4a (#23) | Typed endpoint list `src/api/endpoints.ts` | 56 endpoints (45 GET, 11 POST), one entry each with key, sport, method, proxy paths (plus older aliases), backend path, a rule per path parameter, allowed query parameters, timeout, cache class, body and response type, `passthroughEligible`. Pure matching helpers (`matchEndpoint`, `buildBackendPath`, `checkQuery`, `endpointForBackendPath`) for the proxy and server fetches. Unit tests prove every GET keeps the cache class step 3b gave it. Three shapes the proxy accepted are left out because the backend has no such route (they could only 404): `team_schedule`, `football/debug/*`, `football/team/*/history/sagarin_rank`. |
+| 4b | The proxy reads the list | The 866-line per-shape switch became a lookup (`src/app/api/proxy/[...slug]/route.ts`, 218 lines, no per-endpoint code). Unregistered paths get 404, wrong methods 405 with `Allow`, bad path or query parameters 400, none reaching the backend. Query parameters are per endpoint and format-checked (all three used to go to every endpoint unchecked). Responses carry `x-endpoint`. **Fixes team pages for names with `&`, `'` or parentheses** (Texas A&M, St. John's, Miami (OH)…), which got a 400 from the old segment regex; `.`/`..` segments are now refused. Server fetches take their cache lifetime from the same entries; `cacheClassForBackendPath` and the client's separate allowlist in `shared-request.ts` are gone. Two dead client methods calling unserved paths removed (`healthCheck`, `getFootballPlayoffs`). The chart page's "download team schedule" button calls `team_schedule`, which the backend never had; it failed before and still does. |
 
 ## Step 5 — Next.js 16 upgrade (isolated migration)
 
