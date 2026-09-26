@@ -18,7 +18,7 @@ import {
 import { BaseApiClient } from "./shared-request";
 
 // Basketball-specific response interfaces
-interface TWVApiResponse {
+export interface TWVApiResponse {
   data: Array<{
     team_name: string;
     team_id: string;

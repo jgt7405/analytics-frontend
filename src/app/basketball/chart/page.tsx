@@ -99,7 +99,7 @@ export default function BasketballChartPage() {
       const headers = Object.keys(data[0]);
       const csvContent = [
         headers.join(","),
-        ...data.map((row: Record<string, any>) =>
+        ...data.map((row: Record<string, unknown>) =>
           headers
             .map((header) => {
               const value = row[header];

@@ -12,6 +12,7 @@ import {
   FootballSeedApiResponse,
   FootballStandingsApiResponse,
   FootballTeamsApiResponse,
+  FootballTWVApiResponse,
 } from "@/types/football";
 import { BasketballApiClient } from "./basketball-api";
 import { proxyUrl } from "@/lib/proxy-url";
@@ -119,7 +120,7 @@ export class ApiClient extends BasketballApiClient {
   async getFootballTWV(
     conference: string,
     season?: string,
-  ): Promise<any> {
+  ): Promise<FootballTWVApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
@@ -130,7 +131,7 @@ export class ApiClient extends BasketballApiClient {
 
     return this.request(`/football/twv/${formattedConf}${seasonQuery}`, (data) => ({
       success: true,
-      data: data,
+      data: data as FootballTWVApiResponse,
       error: null,
     }));
   }

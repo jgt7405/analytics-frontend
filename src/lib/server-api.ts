@@ -16,6 +16,7 @@ import type {
 import type {
   SeedApiResponse,
   ConfTourneyApiResponse,
+  TWVApiResponse,
 } from "@/services/basketball-api";
 import type {
   FootballStandingsApiResponse,
@@ -25,9 +26,12 @@ import type {
   FootballCWVApiResponse,
   FootballScheduleResponse,
   FootballConferenceApiResponse,
+  FootballTWVApiResponse,
 } from "@/types/football";
 import type { TeamData } from "@/hooks/useBasketballTeamData";
 import type { FootballTeamData } from "@/hooks/useFootballTeam";
+import type { NCAAProjectionsResponse } from "@/hooks/useNCAAProjections";
+import type { CombinedBasketballConfResponse } from "@/hooks/useBasketballConfData";
 import type { PlayoffRankingsResponse } from "@/types/football";
 import { BACKEND_API_URL } from "@/config/env";
 
@@ -93,7 +97,7 @@ export const getFootballTeamServer = (teamName: string) =>
 
 // --- Basketball tournament projections (no conference param) ----------------
 export const getNCAAProjectionsServer = (season?: string) =>
-  fetchJson<any>(
+  fetchJson<NCAAProjectionsResponse>(
     `/basketball/ncaa-projections${season ? `?season=${encodeURIComponent(season)}` : ""}`,
   );
 
@@ -109,29 +113,28 @@ export const getFootballPlayoffRankingsServer = (season?: string) =>
 
 // --- Basketball TWV ---------------------------------------------------------
 export const getBasketballTWVServer = (c: string, s?: string) =>
-  fetchJson<any>(confPath("/twv", c, s));
+  fetchJson<TWVApiResponse>(confPath("/twv", c, s));
 
 // --- Football TWV -----------------------------------------------------------
 export const getFootballTWVServer = (c: string, s?: string) =>
-  fetchJson<any>(confPath("/football/twv", c, s));
+  fetchJson<FootballTWVApiResponse>(confPath("/football/twv", c, s));
 
 // --- Basketball conf-data (two parallel fetches combined) -------------------
-export interface BasketballConfDataServerResult {
-  conferenceData: { data: any[] };
-  nonconfData: { data: any[]; conferences: string[] };
-}
+export type BasketballConfDataServerResult = CombinedBasketballConfResponse;
 export const getBasketballConfDataServer = async (
   season?: string,
 ): Promise<BasketballConfDataServerResult | undefined> => {
   const q = season ? `?season=${encodeURIComponent(season)}` : "";
   const [conf, nonconf] = await Promise.all([
-    fetchJson<{ data: any[] }>(`/unified_conference_data${q}`),
-    fetchJson<{ data: any[]; conferences: string[] }>(
+    fetchJson<CombinedBasketballConfResponse["conferenceData"]>(
+      `/unified_conference_data${q}`,
+    ),
+    fetchJson<CombinedBasketballConfResponse["nonconfData"]>(
       `/basketball/nonconf_analysis/All_Teams${q}`,
     ),
   ]);
   if (!conf || !nonconf) return undefined;
-  nonconf.data?.sort((a: any, b: any) => b.total_twv_50 - a.total_twv_50);
+  nonconf.data?.sort((a, b) => b.total_twv_50 - a.total_twv_50);
   return { conferenceData: conf, nonconfData: nonconf };
 };
 
