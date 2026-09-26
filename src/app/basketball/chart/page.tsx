@@ -11,8 +11,8 @@ import {
 import { saveCanvasImage } from "@/lib/save-image";
 import { Download, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
 import { logger } from "@/lib/logger";
+import { fetchTeamScheduleCsv } from "@/services/team-schedule";
 
 declare global {
   interface Window {
@@ -78,61 +78,15 @@ export default function BasketballChartPage() {
   const handleDownloadTeamSchedule = async () => {
     try {
       setIsLoading(true);
-
-      const response = await fetch(proxyUrl("team_schedule"));
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch team schedule: ${response.statusText}`,
-        );
-      }
-
-      const jsonData = await response.json();
-
-      if (!jsonData.success || !jsonData.data || jsonData.data.length === 0) {
-        alert("No team schedule data available");
-        setIsLoading(false);
-        return;
-      }
-
-      // Convert JSON to CSV
-      const data = jsonData.data;
-      const headers = Object.keys(data[0]);
-      const csvContent = [
-        headers.join(","),
-        ...data.map((row: Record<string, unknown>) =>
-          headers
-            .map((header) => {
-              const value = row[header];
-              // Handle null/undefined
-              if (value === null || value === undefined) {
-                return "";
-              }
-              // Escape quotes and wrap in quotes if contains comma or quotes
-              const stringValue = String(value);
-              if (
-                stringValue.includes(",") ||
-                stringValue.includes('"') ||
-                stringValue.includes("\n")
-              ) {
-                return `"${stringValue.replace(/"/g, '""')}"`;
-              }
-              return stringValue;
-            })
-            .join(","),
-        ),
-      ].join("\n");
-
-      // Download file
-      const timestamp = new Date().toISOString().split("T")[0];
-      const filename = `bball_team_schedule_${timestamp}.csv`;
+      const { blob, filename } = await fetchTeamScheduleCsv();
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href =
-        "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+      link.href = url;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (error) {
       logger.error("Download failed:", error);
       alert(

@@ -108,7 +108,8 @@ describe.each(cases)("%s via /%s", (_key, pattern, endpoint) => {
     },
   );
 
-  it.each(endpoint.allowedQuery)("rejects a malformed %s", async (name) => {
+  // (An endpoint may allow no query parameters at all.)
+  if (endpoint.allowedQuery.length > 0) it.each(endpoint.allowedQuery)("rejects a malformed %s", async (name) => {
     const res = await call(endpoint.method, segments, `?${name}=x%2F..`);
     expect(res.status).toBe(400);
     expect(backendFetch).not.toHaveBeenCalled();
