@@ -3,39 +3,40 @@ import {
   cacheClassFor,
   queryCachePolicy,
 } from "../cache-policy";
-import { endpointForBackendPath } from "@/api/endpoints";
+import { endpointFor } from "@/api/urls";
+import type { EndpointKey } from "@/api/endpoints";
 
-const classFor = (backendPath: string, season?: string) =>
-  cacheClassFor(endpointForBackendPath(backendPath)!, season);
+const classFor = (key: EndpointKey, season?: string) =>
+  cacheClassFor(endpointFor(key), season);
 
 describe("cacheClassFor", () => {
   it.each([
-    ["/football/standings/SEC", undefined, "currentStandings"],
-    ["/standings/Big_12", undefined, "currentStandings"],
-    ["/football/standings/SEC/history", undefined, "historical"],
-    ["/football/team/BYU/history/conf_wins", undefined, "historical"],
-    ["/unified_conference_data/history", undefined, "historical"],
-    ["/football/all_future_games", undefined, "live"],
-    ["/basketball/upcoming_games", undefined, "live"],
-    ["/football/bowl-scoreboard", undefined, "live"],
-    ["/football_teams", undefined, "referenceData"],
-    ["/basketball_teams", undefined, "referenceData"],
-  ])("%s (season %s) is %s", (path, season, expected) => {
-    expect(classFor(path, season)).toBe(expected);
+    ["football.standings", undefined, "currentStandings"],
+    ["basketball.standings", undefined, "currentStandings"],
+    ["football.standingsHistory", undefined, "historical"],
+    ["football.teamConfWinsHistory", undefined, "historical"],
+    ["basketball.conferenceDataHistory", undefined, "historical"],
+    ["football.allFutureGames", undefined, "live"],
+    ["basketball.upcomingGames", undefined, "live"],
+    ["football.bowlScoreboard", undefined, "live"],
+    ["football.teams", undefined, "referenceData"],
+    ["basketball.teams", undefined, "referenceData"],
+  ] as const)("%s (season %s) is %s", (key, season, expected) => {
+    expect(classFor(key, season)).toBe(expected);
   });
 
   it("caches archived football seasons as historical", () => {
-    expect(classFor("/football/standings/SEC", "2025-26")).toBe("historical");
-    expect(classFor("/cfp/SEC", "2025-26")).toBe("historical");
+    expect(classFor("football.standings", "2025-26")).toBe("historical");
+    expect(classFor("football.cfp", "2025-26")).toBe("historical");
   });
 
   it("keeps the season basketball still serves as current at its own class", () => {
     // Current basketball pages pass ?season=2025-26 (next.config.js rewrite).
-    expect(classFor("/standings/Big_12", "2025-26")).toBe("currentStandings");
+    expect(classFor("basketball.standings", "2025-26")).toBe("currentStandings");
   });
 
   it("never shortens reference data for an archived season", () => {
-    expect(classFor("/football_teams", "2025-26")).toBe("referenceData");
+    expect(classFor("football.teams", "2025-26")).toBe("referenceData");
   });
 
   it("never caches scenarios, whatever the season", () => {

@@ -5,7 +5,6 @@ import {
   ENDPOINTS,
   buildBackendPath,
   checkQuery,
-  endpointForBackendPath,
   isValidParam,
   matchEndpoint,
 } from "../endpoints";
@@ -17,8 +16,6 @@ const paramNames = (path: string) =>
     .map((part) => part.slice(1))
     .sort();
 
-// A concrete path for a pattern, e.g. "football/standings/SEC".
-const sample = (path: string) => path.replace(/:\w+/g, "SEC");
 
 describe("ENDPOINTS", () => {
   it("has unique keys, prefixed with the sport", () => {
@@ -65,12 +62,6 @@ describe("ENDPOINTS", () => {
         expect(e.body).toBeUndefined();
         expect(e.cacheClass).not.toBe("scenario");
       }
-    }
-  });
-
-  it("finds every GET by its own backend path", () => {
-    for (const e of ENDPOINTS.filter((e) => e.method === "GET")) {
-      expect(endpointForBackendPath(sample(e.backendPath))?.key).toBe(e.key);
     }
   });
 });

@@ -1,7 +1,7 @@
 // src/hooks/useBasketballSeedWinsData.ts
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 import { logger } from "@/lib/logger";
 
@@ -73,11 +73,10 @@ export const useBasketballSeedWinsData = (
           ? "All_Teams"
           : conference.replace(/\s+/g, "_");
 
-      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
 
       try {
         const response = await fetch(
-          proxyUrl(`basketball/conf_champ_analysis/${confFormatted}${seasonQuery}`),
+          apiUrl("basketball.confChampAnalysis", { conference: confFormatted }, { season }),
         );
 
         if (!response.ok) {

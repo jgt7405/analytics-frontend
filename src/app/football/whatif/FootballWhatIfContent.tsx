@@ -25,7 +25,7 @@ import { Download } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 
 // Inject structured data for SEO
 function injectStructuredData() {
@@ -272,7 +272,7 @@ export default function FootballWhatIfContent() {
         })
       );
 
-      const response = await fetch(proxyUrl("football/whatif/download"), {
+      const response = await fetch(apiUrl("football.whatIfDownload"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

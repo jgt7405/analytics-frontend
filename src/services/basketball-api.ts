@@ -17,6 +17,7 @@ import {
 } from "@/types/basketball";
 import { BaseApiClient } from "./shared-request";
 import { logger } from "@/lib/logger";
+import { apiPath } from "@/api/urls";
 
 // Basketball-specific response interfaces
 export interface TWVApiResponse {
@@ -91,9 +92,8 @@ export class BasketballApiClient extends BaseApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
-      `🏀 Getting standings for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
+      `🏀 Getting standings for: ${sanitized} -> ${formattedConf}${season ? ` (${season})` : ""}`,
     );
 
     monitoring.trackEvent({
@@ -102,7 +102,7 @@ export class BasketballApiClient extends BaseApiClient {
     });
 
     return this.request(
-      `/standings/${formattedConf}${seasonQuery}`,
+      apiPath("basketball.standings", { conference: formattedConf }, { season }),
       validateStandings,
     );
   }
@@ -117,15 +117,14 @@ export class BasketballApiClient extends BaseApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    logger.debug(`🏀 Getting CWV for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
+    logger.debug(`🏀 Getting CWV for: ${sanitized} -> ${formattedConf}${season ? ` (${season})` : ""}`);
 
     monitoring.trackEvent({
       name: "cwv_requested",
       properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/cwv/${formattedConf}${seasonQuery}`, validateCWV);
+    return this.request(apiPath("basketball.cwv", { conference: formattedConf }, { season }), validateCWV);
   }
 
   async getSchedule(
@@ -138,9 +137,8 @@ export class BasketballApiClient extends BaseApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
-      `🏀 Getting schedule for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
+      `🏀 Getting schedule for: ${sanitized} -> ${formattedConf}${season ? ` (${season})` : ""}`,
     );
 
     monitoring.trackEvent({
@@ -149,7 +147,7 @@ export class BasketballApiClient extends BaseApiClient {
     });
 
     const rawResponse = await this.request(
-      `/conf_schedule/${formattedConf}${seasonQuery}`,
+      apiPath("basketball.confSchedule", { conference: formattedConf }, { season }),
       validateSchedule,
     );
 
@@ -169,15 +167,14 @@ export class BasketballApiClient extends BaseApiClient {
 
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    logger.debug(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
+    logger.debug(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}${season ? ` (${season})` : ""}`);
 
     monitoring.trackEvent({
       name: "twv_requested",
       properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/twv/${formattedConf}${seasonQuery}`, (data) => ({
+    return this.request(apiPath("basketball.twv", { conference: formattedConf }, { season }), (data) => ({
       success: true,
       data: data as TWVApiResponse,
       error: null,
@@ -194,9 +191,8 @@ export class BasketballApiClient extends BaseApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
-      `🏀 Getting conf tourney for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
+      `🏀 Getting conf tourney for: ${sanitized} -> ${formattedConf}${season ? ` (${season})` : ""}`,
     );
 
     monitoring.trackEvent({
@@ -204,7 +200,7 @@ export class BasketballApiClient extends BaseApiClient {
       properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/conf_tourney/${formattedConf}${seasonQuery}`, (data) => ({
+    return this.request(apiPath("basketball.confTourney", { conference: formattedConf }, { season }), (data) => ({
       success: true,
       data: data as ConfTourneyApiResponse,
       error: null,
@@ -221,9 +217,8 @@ export class BasketballApiClient extends BaseApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
-      `🏀 Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
+      `🏀 Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}${season ? ` (${season})` : ""}`,
     );
 
     monitoring.trackEvent({
@@ -231,7 +226,7 @@ export class BasketballApiClient extends BaseApiClient {
       properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/ncaa_tourney/${formattedConf}${seasonQuery}`, (data) => ({
+    return this.request(apiPath("basketball.ncaaTourney", { conference: formattedConf }, { season }), (data) => ({
       success: true,
       data: data as NCAATeamApiResponse,
       error: null,
@@ -248,15 +243,14 @@ export class BasketballApiClient extends BaseApiClient {
     }
 
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    logger.debug(`🏀 Getting seed data for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
+    logger.debug(`🏀 Getting seed data for: ${sanitized} -> ${formattedConf}${season ? ` (${season})` : ""}`);
 
     monitoring.trackEvent({
       name: "seed_requested",
       properties: { conference: formattedConf, season },
     });
 
-    return this.request(`/seed/${formattedConf}${seasonQuery}`, (data) => ({
+    return this.request(apiPath("basketball.seed", { conference: formattedConf }, { season }), (data) => ({
       success: true,
       data: data as SeedApiResponse,
       error: null,
@@ -264,10 +258,9 @@ export class BasketballApiClient extends BaseApiClient {
   }
 
   async getTeamData(teamName: string): Promise<TeamDataApiResponse> {
-    const encoded = encodeURIComponent(teamName);
-    logger.debug(`🏀 Getting team data for: ${teamName} -> ${encoded}`);
+    logger.debug(`🏀 Getting team data for: ${teamName}`);
 
-    return this.request(`/team/${encoded}`, (data) => ({
+    return this.request(apiPath("basketball.team", { team: teamName }), (data) => ({
       success: true,
       data: data as TeamDataApiResponse,
       error: null,
@@ -277,7 +270,7 @@ export class BasketballApiClient extends BaseApiClient {
   async getUnifiedConferenceData(): Promise<UnifiedConferenceDataResponse> {
     logger.debug(`🏀 Getting unified conference data`);
 
-    return this.request(`/unified_conference_data`, (data) => ({
+    return this.request(apiPath("basketball.conferenceData"), (data) => ({
       success: true,
       data: data as UnifiedConferenceDataResponse,
       error: null,

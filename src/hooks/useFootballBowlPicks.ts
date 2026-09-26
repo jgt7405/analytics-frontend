@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 // One row of the bowl picks sheet: fixed game columns plus one
@@ -22,7 +22,7 @@ export interface BowlPicksResponse {
 }
 
 const fetchBowlPicks = async (): Promise<BowlPicksResponse> => {
-  const response = await fetch(proxyUrl("football/bowl-picks"));
+  const response = await fetch(apiUrl("football.bowlPicks"));
   if (!response.ok) throw new Error(`Failed to fetch bowl picks: ${response.status}`);
   return response.json();
 };

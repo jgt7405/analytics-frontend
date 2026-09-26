@@ -9,7 +9,7 @@ import type {
   SeasonHighlightsResponse,
 } from "@/types/seasonHighlights";
 import { useEffect, useMemo, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 
 const TITLE_CLASS =
@@ -65,7 +65,7 @@ export default function BasketballSeasonInfoContent() {
 
     const load = async () => {
       try {
-        const response = await fetch(proxyUrl("basketball/season_highlights"));
+        const response = await fetch(apiUrl("basketball.seasonHighlights"));
         if (!response.ok) throw new Error(`Request failed (${response.status})`);
         const json = (await response.json()) as SeasonHighlightsResponse;
         if (!cancelled) setData(json);

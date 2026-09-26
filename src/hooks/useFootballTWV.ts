@@ -1,17 +1,16 @@
 import { FootballTWVApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 const fetchFootballTWV = async (
   conference: string,
   season?: string,
 ): Promise<FootballTWVApiResponse> => {
-  const encodedConference = encodeURIComponent(conference.replace(/\s+/g, "_"));
-  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-
-  const response = await fetch(proxyUrl(`football/twv/${encodedConference}${seasonQuery}`));
+  const response = await fetch(
+    apiUrl("football.twv", { conference: conference.replace(/\s+/g, "_") }, { season }),
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch football TWV data");

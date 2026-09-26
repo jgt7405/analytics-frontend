@@ -1,7 +1,7 @@
 import { CompositeRatingDatesResponse, CompositeRatingsResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 export function useFootballCompositeRatings(date?: string) {
@@ -9,8 +9,8 @@ export function useFootballCompositeRatings(date?: string) {
     queryKey: queryKeys.football.compositeRatings(date),
     queryFn: async () => {
       const endpoint = date
-        ? proxyUrl(`football/composite_ratings/history?date=${date}`)
-        : proxyUrl("football/composite_ratings");
+        ? apiUrl("football.compositeRatingsHistory", {}, { date })
+        : apiUrl("football.compositeRatings");
             const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error("Failed to fetch composite ratings");
@@ -27,7 +27,7 @@ export function useFootballCompositeRatingDates() {
   return useQuery<CompositeRatingDatesResponse>({
     queryKey: queryKeys.football.compositeRatingDates(),
     queryFn: async () => {
-      const response = await fetch(proxyUrl("football/composite_ratings/dates"));
+      const response = await fetch(apiUrl("football.compositeRatingsDates"));
       if (!response.ok) {
         throw new Error("Failed to fetch composite rating dates");
             }

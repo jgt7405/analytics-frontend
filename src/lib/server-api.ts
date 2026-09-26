@@ -35,30 +35,33 @@ import type { CombinedBasketballConfResponse } from "@/hooks/useBasketballConfDa
 import type { PlayoffRankingsResponse } from "@/types/football";
 import { BACKEND_API_URL } from "@/config/env";
 import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
-import { endpointForBackendPath } from "@/api/endpoints";
+import type { EndpointKey } from "@/api/endpoints";
+import { backendRequest, type EndpointParams, type EndpointQuery } from "@/api/urls";
 import { logger } from "@/lib/logger";
 
 const BACKEND = BACKEND_API_URL;
 
-// Server data cache lifetime follows the endpoint's freshness class, the same
-// one the proxy uses for the CDN (src/api/endpoints.ts, src/lib/cache-policy.ts).
-// Failed responses aren't cached by Next's data cache. A path missing from the
-// endpoint list is fetched uncached (and logged) rather than guessed at.
-function revalidateFor(path: string): number {
-  const url = new URL(path, "http://backend");
-  const endpoint = endpointForBackendPath(url.pathname);
-  if (!endpoint) {
-    logger.warn("Server fetch for an unregistered backend path", { path: url.pathname });
-    return 0;
-  }
-  return CACHE_POLICIES[cacheClassFor(endpoint, url.searchParams.get("season"))]
-    .revalidate;
-}
-
-async function fetchJson<T>(path: string): Promise<T | undefined> {
+// Fetches an endpoint from the backend directly, with the path, parameter
+// rules and cache lifetime of its entry in src/api/endpoints.ts: the same
+// freshness class the proxy uses for the CDN. Failed responses aren't cached
+// by Next's data cache. A parameter that breaks its rule (e.g. a team name
+// from the URL with a "/") returns undefined without calling the backend.
+async function fetchEndpoint<T>(
+  key: EndpointKey,
+  params: EndpointParams = {},
+  query: EndpointQuery = {},
+): Promise<T | undefined> {
+  let request: ReturnType<typeof backendRequest>;
   try {
-    const res = await fetch(`${BACKEND}${path}`, {
-      next: { revalidate: revalidateFor(path) },
+    request = backendRequest(key, params, query);
+  } catch (error) {
+    logger.warn("Server fetch skipped", { key, error: String(error) });
+    return undefined;
+  }
+  const cacheClass = cacheClassFor(request.endpoint, query.season);
+  try {
+    const res = await fetch(`${BACKEND}${request.path}`, {
+      next: { revalidate: CACHE_POLICIES[cacheClass].revalidate },
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return undefined;
@@ -68,99 +71,78 @@ async function fetchJson<T>(path: string): Promise<T | undefined> {
   }
 }
 
-// Build "/base/Conf_Name?season=" the same way the client API does.
-function confPath(base: string, conference: string, season?: string) {
-  const conf = conference.replace(/ /g, "_");
-  const q = season ? `?season=${encodeURIComponent(season)}` : "";
-  return `${base}/${conf}${q}`;
-}
+// Conference names travel with "_" for spaces, as the client sends them.
+const conf = (conference: string) => ({ conference: conference.replace(/ /g, "_") });
 
 // --- Basketball -------------------------------------------------------------
-export const getStandingsServer = (c: string, s?: string) =>
-  fetchJson<StandingsApiResponse>(confPath("/standings", c, s));
-export const getSeedServer = (c: string, s?: string) =>
-  fetchJson<SeedApiResponse>(confPath("/seed", c, s));
-export const getNCAATourneyServer = (c: string, s?: string) =>
-  fetchJson<NCAATeamApiResponse>(confPath("/ncaa_tourney", c, s));
-export const getConfTourneyServer = (c: string, s?: string) =>
-  fetchJson<ConfTourneyApiResponse>(confPath("/conf_tourney", c, s));
-export const getCWVServer = (c: string, s?: string) =>
-  fetchJson<CWVApiResponse>(confPath("/cwv", c, s));
-export const getScheduleServer = (c: string, s?: string) =>
-  fetchJson<ScheduleApiResponse>(confPath("/conf_schedule", c, s));
+export const getStandingsServer = (c: string, season?: string) =>
+  fetchEndpoint<StandingsApiResponse>("basketball.standings", conf(c), { season });
+export const getSeedServer = (c: string, season?: string) =>
+  fetchEndpoint<SeedApiResponse>("basketball.seed", conf(c), { season });
+export const getNCAATourneyServer = (c: string, season?: string) =>
+  fetchEndpoint<NCAATeamApiResponse>("basketball.ncaaTourney", conf(c), { season });
+export const getConfTourneyServer = (c: string, season?: string) =>
+  fetchEndpoint<ConfTourneyApiResponse>("basketball.confTourney", conf(c), { season });
+export const getCWVServer = (c: string, season?: string) =>
+  fetchEndpoint<CWVApiResponse>("basketball.cwv", conf(c), { season });
+export const getScheduleServer = (c: string, season?: string) =>
+  fetchEndpoint<ScheduleApiResponse>("basketball.confSchedule", conf(c), { season });
 export const getTeamDataServer = (teamName: string) =>
-  fetchJson<TeamData>(`/team/${encodeURIComponent(teamName)}`);
+  fetchEndpoint<TeamData>("basketball.team", { team: teamName });
 
 // --- Football ---------------------------------------------------------------
-export const getFootballStandingsServer = (c: string, s?: string) =>
-  fetchJson<FootballStandingsApiResponse>(confPath("/football/standings", c, s));
-export const getFootballCFPServer = (c: string, s?: string) =>
-  fetchJson<FootballCFPApiResponse>(confPath("/cfp", c, s));
-export const getFootballConfChampServer = (c: string, s?: string) =>
-  fetchJson<FootballConfChampApiResponse>(
-    confPath("/football/conf_champ", c, s),
-  );
-export const getFootballSeedServer = (c: string, s?: string) =>
-  fetchJson<FootballSeedApiResponse>(confPath("/football_seed", c, s));
-export const getFootballCWVServer = (c: string, s?: string) =>
-  fetchJson<FootballCWVApiResponse>(confPath("/football/cwv", c, s));
-export const getFootballScheduleServer = (c: string, s?: string) =>
-  fetchJson<FootballScheduleResponse>(
-    confPath("/football/conf_schedule", c, s),
-  );
+export const getFootballStandingsServer = (c: string, season?: string) =>
+  fetchEndpoint<FootballStandingsApiResponse>("football.standings", conf(c), { season });
+export const getFootballCFPServer = (c: string, season?: string) =>
+  fetchEndpoint<FootballCFPApiResponse>("football.cfp", conf(c), { season });
+export const getFootballConfChampServer = (c: string, season?: string) =>
+  fetchEndpoint<FootballConfChampApiResponse>("football.confChamp", conf(c), { season });
+export const getFootballSeedServer = (c: string, season?: string) =>
+  fetchEndpoint<FootballSeedApiResponse>("football.seed", conf(c), { season });
+export const getFootballCWVServer = (c: string, season?: string) =>
+  fetchEndpoint<FootballCWVApiResponse>("football.cwv", conf(c), { season });
+export const getFootballScheduleServer = (c: string, season?: string) =>
+  fetchEndpoint<FootballScheduleResponse>("football.confSchedule", conf(c), { season });
 export const getFootballTeamServer = (teamName: string) =>
-  fetchJson<FootballTeamData>(
-    `/football_team/${encodeURIComponent(teamName)}`,
-  );
+  fetchEndpoint<FootballTeamData>("football.team", { team: teamName });
 
 // --- Basketball tournament projections (no conference param) ----------------
 export const getNCAAProjectionsServer = (season?: string) =>
-  fetchJson<NCAAProjectionsResponse>(
-    `/basketball/ncaa-projections${season ? `?season=${encodeURIComponent(season)}` : ""}`,
-  );
+  fetchEndpoint<NCAAProjectionsResponse>("basketball.ncaaProjections", {}, { season });
 
-// --- Football playoff rankings (season mode, no conference param) -----------
-// Backend path is /football/playoff_rankings with NO trailing segment. The
-// client uses /All_Teams as a slug placeholder, which the endpoint list drops
-// (src/api/endpoints.ts); hitting the backend with /All_Teams 404s, so
-// the SSR initialData was always empty and the page rendered a loading skeleton.
+// --- Football playoff rankings (season mode) ---------------------------------
+// The backend path has no conference segment; the endpoint list maps the
+// client's /All_Teams placeholder away (src/api/endpoints.ts).
 export const getFootballPlayoffRankingsServer = (season?: string) =>
-  fetchJson<PlayoffRankingsResponse>(
-    `/football/playoff_rankings${season ? `?season=${encodeURIComponent(season)}` : ""}`,
-  );
+  fetchEndpoint<PlayoffRankingsResponse>("football.playoffRankings", {}, { season });
 
-// --- Basketball TWV ---------------------------------------------------------
-export const getBasketballTWVServer = (c: string, s?: string) =>
-  fetchJson<TWVApiResponse>(confPath("/twv", c, s));
-
-// --- Football TWV -----------------------------------------------------------
-export const getFootballTWVServer = (c: string, s?: string) =>
-  fetchJson<FootballTWVApiResponse>(confPath("/football/twv", c, s));
+// --- TWV --------------------------------------------------------------------
+export const getBasketballTWVServer = (c: string, season?: string) =>
+  fetchEndpoint<TWVApiResponse>("basketball.twv", conf(c), { season });
+export const getFootballTWVServer = (c: string, season?: string) =>
+  fetchEndpoint<FootballTWVApiResponse>("football.twv", conf(c), { season });
 
 // --- Basketball conf-data (two parallel fetches combined) -------------------
 export type BasketballConfDataServerResult = CombinedBasketballConfResponse;
 export const getBasketballConfDataServer = async (
   season?: string,
 ): Promise<BasketballConfDataServerResult | undefined> => {
-  const q = season ? `?season=${encodeURIComponent(season)}` : "";
-  const [conf, nonconf] = await Promise.all([
-    fetchJson<CombinedBasketballConfResponse["conferenceData"]>(
-      `/unified_conference_data${q}`,
+  const [conferenceData, nonconfData] = await Promise.all([
+    fetchEndpoint<CombinedBasketballConfResponse["conferenceData"]>(
+      "basketball.conferenceData", {}, { season },
     ),
-    fetchJson<CombinedBasketballConfResponse["nonconfData"]>(
-      `/basketball/nonconf_analysis/All_Teams${q}`,
+    fetchEndpoint<CombinedBasketballConfResponse["nonconfData"]>(
+      "basketball.nonconfAnalysis", { conference: "All_Teams" }, { season },
     ),
   ]);
-  if (!conf || !nonconf) return undefined;
-  nonconf.data?.sort((a, b) => b.total_twv_50 - a.total_twv_50);
-  return { conferenceData: conf, nonconfData: nonconf };
+  if (!conferenceData || !nonconfData) return undefined;
+  nonconfData.data?.sort((a, b) => b.total_twv_50 - a.total_twv_50);
+  return { conferenceData, nonconfData };
 };
 
 // --- Football conf-data -----------------------------------------------------
 export const getFootballConfDataServer = (season?: string) =>
-  fetchJson<FootballConferenceApiResponse>(
-    `/football_conf_data${season ? `?season=${encodeURIComponent(season)}` : ""}`,
-  );
+  fetchEndpoint<FootballConferenceApiResponse>("football.conferenceData", {}, { season });
 
 // --- Team lists (for the SSR crawlable team index on /teams hubs) -----------
 // The backend returns { data: [{ team_name, conference, ... }] }. We only need
@@ -170,6 +152,6 @@ export interface TeamListEntry {
   conference: string;
 }
 export const getBasketballTeamsServer = () =>
-  fetchJson<{ data: TeamListEntry[] }>("/basketball_teams");
+  fetchEndpoint<{ data: TeamListEntry[] }>("basketball.teams");
 export const getFootballTeamsServer = () =>
-  fetchJson<{ data: TeamListEntry[] }>("/football_teams");
+  fetchEndpoint<{ data: TeamListEntry[] }>("football.teams");

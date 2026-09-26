@@ -1,11 +1,11 @@
 // The chart page's "Download Team Schedule": every basketball team's current
 // schedule as a CSV file, built by the backend.
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 
 /** Fetches the CSV; throws on failure. The filename comes from the
  *  backend's Content-Disposition (it carries the date). */
 export async function fetchTeamScheduleCsv(): Promise<{ blob: Blob; filename: string }> {
-  const response = await fetch(proxyUrl("basketball/team_schedule/csv"));
+  const response = await fetch(apiUrl("basketball.teamScheduleCsv"));
   if (!response.ok) {
     throw new Error(`Failed to fetch team schedule: ${response.status}`);
   }

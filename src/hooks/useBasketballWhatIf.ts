@@ -1,7 +1,7 @@
 // hooks/useBasketballWhatIf.ts
 
 import { useMutation } from "@tanstack/react-query";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 
 export interface GameSelection {
@@ -257,9 +257,8 @@ const calculateBasketballWhatIf = async (
 ): Promise<WhatIfResponse> => {
   // Remove season from the request body sent to the API
   const { season, ...requestBody } = request;
-  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
 
-  const response = await fetch(proxyUrl(`basketball/whatif${seasonQuery}`), {
+  const response = await fetch(apiUrl("basketball.whatIf", {}, { season }), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -321,7 +320,7 @@ export const useBasketballWhatIf = () => {
 export const fetchBasketballWhatIfBaseline = async (
   conference: string,
 ): Promise<WhatIfResponse> => {
-  const res = await fetch(proxyUrl("basketball/whatif/baseline"), {
+  const res = await fetch(apiUrl("basketball.whatIfBaseline"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ conference }),
@@ -356,7 +355,7 @@ export const fetchBasketballWhatIfValidationCsv = async (
   conference: string,
   selections: { game_id: number; winner_team_id: number }[],
 ): Promise<Blob> => {
-  const res = await fetch(proxyUrl("basketball/whatif/validation-csv"), {
+  const res = await fetch(apiUrl("basketball.whatIfValidationCsv"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ conference, selections }),
