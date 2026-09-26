@@ -12,7 +12,7 @@ The full checklist lives in `src/services/AGENTS.md`; read it first. Summary of 
 3. `src/hooks/use<Thing>.ts`: `useQuery` with `queryKey: queryKeys.<sport>.<resource>(...params)` (add the entry to `src/lib/query-keys.ts` with every parameter the fetch uses; inline key arrays fail lint), `enabled` guard, optional `initialData`, and `...queryCachePolicy("<class>")` from `@/lib/cache-policy`. Pick the class from `docs/decisions/cache-classes.md`; it must match the entry's `cacheClass`, which the CDN and server fetches use.
 4. Optional: `src/lib/server-api.ts` helper plus `initialData` from `page.tsx` for server-rendered first paint.
 
-Then: response types in `src/types/`, and an expected-URL case in `src/services/__tests__/api.integration.test.ts`.
+Then: response types in `src/types/`, and an expected-URL case in `src/services/__tests__/api.integration.test.ts`. The contract tests pick up the new entry automatically, and `callers.test.ts` fails if a call site builds a URL no entry matches.
 
 ## Verify
 
