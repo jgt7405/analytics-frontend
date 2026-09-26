@@ -17,9 +17,9 @@ import {
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
 import type { Chart, ChartArea, TooltipModel } from "chart.js";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-import { proxyUrl } from "@/lib/proxy-url";
+import { useFootballTeamCFPHistory } from "@/hooks/useFootballTeamCFPHistory";
 
 interface CFPHistoricalDataPoint {
   date: string;
@@ -33,16 +33,10 @@ interface CFPHistoricalDataPoint {
   };
 }
 
-interface SeedDataPoint {
-  date: string;
-  team_name: string;
-  average_seed: number;
-  team_info: {
-    logo_url?: string;
-    primary_color?: string;
-    secondary_color?: string;
-  };
-}
+const parseDateCentralTime = (dateString: string) => {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
+};
 
 interface FootballTeamCFPBidHistoryProps {
   teamName: string;
@@ -65,9 +59,6 @@ export default function FootballTeamCFPBidHistory({
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
-  const [data, setData] = useState<CFPHistoricalDataPoint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [isDark, setIsDark] = useState(false);
 
@@ -97,84 +88,53 @@ export default function FootballTeamCFPBidHistory({
 
   const [chartArea, setChartArea] = useState<ChartArea | null>(null);
 
-  const parseDateCentralTime = (dateString: string) => {
-    const [year, month, day] = dateString.split("-").map(Number);
-    const centralDate = new Date(year, month - 1, day, 12, 0, 0);
-    return centralDate;
-  };
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  const {
+    data: history,
+    isLoading: loading,
+    error: queryError,
+  } = useFootballTeamCFPHistory(teamName);
+  const error = queryError ? queryError.message : null;
 
-        const response = await fetch(
-          proxyUrl(`football/cfp/${encodeURIComponent(teamName)}/history`)
-        );
+  // Merge bid % and average seed by date, trimmed to the season's window.
+  const data = useMemo<CFPHistoricalDataPoint[]>(() => {
+    if (!history) return [];
+    const dataByDate = new Map<string, CFPHistoricalDataPoint>();
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch CFP bid history");
-        }
+    (history.cfp_bid_data ?? []).forEach((point) => {
+      dataByDate.set(point.date, {
+        date: point.date,
+        cfp_bid_pct: point.cfp_bid_pct || 0,
+        average_seed: 0,
+        team_name: point.team_name,
+        team_info: point.team_info || {},
+      });
+    });
 
-        const result = await response.json();
-
-        const cfpBidData: CFPHistoricalDataPoint[] = result.cfp_bid_data || [];
-        const avgSeedData = result.average_seed_data || [];
-
-        // Create a map to merge the data by date
-        const dataByDate = new Map<string, CFPHistoricalDataPoint>();
-
-        // First, add all CFP bid data
-        cfpBidData.forEach((point) => {
-          dataByDate.set(point.date, {
-            date: point.date,
-            cfp_bid_pct: point.cfp_bid_pct || 0,
-            average_seed: 0,
-            team_name: point.team_name,
-            team_info: point.team_info || {},
-          });
+    (history.average_seed_data ?? []).forEach((point) => {
+      const existing = dataByDate.get(point.date);
+      if (existing) {
+        existing.average_seed = point.average_seed || 0;
+      } else {
+        dataByDate.set(point.date, {
+          date: point.date,
+          cfp_bid_pct: 0,
+          average_seed: point.average_seed || 0,
+          team_name: point.team_name,
+          team_info: point.team_info || {},
         });
-
-        // Then merge in the average seed data
-        avgSeedData.forEach((point: SeedDataPoint) => {
-          if (dataByDate.has(point.date)) {
-            const existingPoint = dataByDate.get(point.date)!;
-            existingPoint.average_seed = point.average_seed || 0;
-          } else {
-            dataByDate.set(point.date, {
-              date: point.date,
-              cfp_bid_pct: 0,
-              average_seed: point.average_seed || 0,
-              team_name: point.team_name,
-              team_info: point.team_info || {},
-            });
-          }
-        });
-
-        // Filter to season range and sort
-        const allData = Array.from(dataByDate.values());
-        const range = getFootballDateRange(displaySeason ?? season, allData);
-        const processedData = filterDataToRange(allData, range).sort((a, b) => {
-          const dateA = parseDateCentralTime(a.date);
-          const dateB = parseDateCentralTime(b.date);
-          return dateA.getTime() - dateB.getTime();
-        });
-
-        setData(processedData);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-        setData([]);
-      } finally {
-        setLoading(false);
       }
-    };
+    });
 
-    if (teamName) {
-      fetchData();
-    }
-  }, [teamName, season, displaySeason]);
+    const allData = Array.from(dataByDate.values());
+    const range = getFootballDateRange(displaySeason ?? season, allData);
+    return filterDataToRange(allData, range).sort(
+      (a, b) =>
+        parseDateCentralTime(a.date).getTime() -
+        parseDateCentralTime(b.date).getTime(),
+    );
+  }, [history, season, displaySeason]);
 
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||

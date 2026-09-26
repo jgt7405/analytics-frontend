@@ -1,8 +1,10 @@
 "use client";
 
+import {
+  useBasketballConfChampAnalysis,
+  type ConfChampAnalysisRow,
+} from "@/hooks/useBasketballConfChampAnalysis";
 import { useEffect, useMemo, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
-import { logger } from "@/lib/logger";
 
 interface BasketballTeamGame {
   date: string;
@@ -16,30 +18,7 @@ interface BasketballTeamGame {
   team_conf?: string;
 }
 
-interface ConfChampData {
-  team_name: string;
-  actual_total_wins?: number;
-  actual_total_losses?: number;
-  proj_losses?: number;
-  pct_prob_win_conf_tourney_game_1: number;
-  pct_prob_win_conf_tourney_game_2: number;
-  pct_prob_win_conf_tourney_game_3: number;
-  pct_prob_win_conf_tourney_game_4: number;
-  pct_prob_win_conf_tourney_game_5: number;
-  pct_prob_win_conf_tourney_game_6: number;
-  wins_for_bubble: number;
-  wins_for_1_seed: number;
-  wins_for_2_seed: number;
-  wins_for_3_seed: number;
-  wins_for_4_seed: number;
-  wins_for_5_seed: number;
-  wins_for_6_seed: number;
-  wins_for_7_seed: number;
-  wins_for_8_seed: number;
-  wins_for_9_seed: number;
-  wins_for_10_seed: number;
-  season_total_proj_wins_avg: number;
-}
+type ConfChampData = ConfChampAnalysisRow;
 
 interface BasketballTeamWinsBreakdownProps {
   schedule: BasketballTeamGame[];
@@ -68,10 +47,6 @@ export default function BasketballTeamWinsBreakdown({
   secondaryColor,
   logoUrl: _logoUrl,
 }: BasketballTeamWinsBreakdownProps) {
-  const [confChampData, setConfChampData] = useState<ConfChampData | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -94,39 +69,12 @@ export default function BasketballTeamWinsBreakdown({
     // Removed debug logging
   }, [schedule]);
 
-  useEffect(() => {
-    const fetchConfChampData = async () => {
-      setLoading(true);
-      try {
-        const confFormatted = conference.replace(/\s+/g, "_");
-        const url = proxyUrl(`basketball/conf_champ_analysis/${confFormatted}`);
-
-        const response = await fetch(url);
-
-        if (response.ok) {
-          const result = await response.json();
-
-          if (result.data && Array.isArray(result.data)) {
-            const teamData = result.data.find(
-              (t: ConfChampData) => t.team_name === teamName,
-            );
-
-            if (teamData) {
-              setConfChampData(teamData);
-            }
-          }
-        }
-      } catch (error) {
-        logger.error("[CONF_CHAMP] Fetch error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (teamName && conference) {
-      fetchConfChampData();
-    }
-  }, [teamName, conference]);
+  const { data: confChampResult, isLoading: loading } =
+    useBasketballConfChampAnalysis(teamName ? conference : "");
+  const confChampData: ConfChampData | null = useMemo(
+    () => confChampResult?.data?.find((t) => t.team_name === teamName) ?? null,
+    [confChampResult, teamName],
+  );
 
   const finalSecondaryColor = secondaryColor
     ? secondaryColor

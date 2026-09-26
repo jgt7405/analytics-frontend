@@ -1,10 +1,11 @@
 // src/components/features/football/BowlScoreboard.tsx
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
+import {
+  useFootballBowlPicks,
+  type BowlGameData,
+} from "@/hooks/useFootballBowlPicks";
 import { memo, useMemo, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
 
 interface ScoreboardUser {
   name: string;
@@ -20,18 +21,6 @@ interface ScoreboardUser {
 interface ColumnRange {
   min: number;
   max: number;
-}
-
-interface BowlGameData {
-  "#": string;
-  "Bowl Name": string;
-  "Team 1": string;
-  "Team 2": string;
-  Winner: string;
-  Date: string;
-  Time: string;
-  "TV Station": string;
-  [key: string]: string;
 }
 
 // Game dependencies for cascade logic
@@ -250,14 +239,7 @@ function BowlScoreboard() {
     data: bowlData,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: queryKeys.football.bowlPicks(),
-    queryFn: async () => {
-      const res = await fetch(proxyUrl("football/bowl-picks"));
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
-    },
-  });
+  } = useFootballBowlPicks();
 
   // Calculate scores from CSV data
   const scoreboard = useMemo(() => {

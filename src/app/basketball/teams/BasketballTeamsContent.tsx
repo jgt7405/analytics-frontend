@@ -11,7 +11,6 @@ const BASKETBALL_TEAMS: TeamsContentConfig = {
   sport: "basketball",
   hidePageTitle: true,
   pageId: "basketball-teams",
-  endpoint: "basketball_teams",
   bidLabel: "NCAA Bid",
   // Backend sends tournament_bid_pct as a 0-1 fraction.
   getBidPct: (row) =>
