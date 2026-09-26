@@ -26,6 +26,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./BasketballWhatIfScenarios.module.css";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 const TEAL_COLOR = "rgb(0, 151, 178)";
 
@@ -472,7 +473,7 @@ function ScreenshotBtn({
             chartTitle,
           );
         } catch (e) {
-          console.error("Screenshot failed:", e);
+          logger.error("Screenshot failed:", e);
         }
         setCapturing(false);
       }}
@@ -1238,7 +1239,7 @@ export default function BasketballWhatIfScenarios() {
 
       setWhatIfData(data as WhatIfResponse);
     } catch (e) {
-      console.error("Baseline fetch error:", e);
+      logger.error("Baseline fetch error:", e);
     } finally {
       setIsLoadingBaseline(false);
     }
@@ -1353,7 +1354,7 @@ export default function BasketballWhatIfScenarios() {
       a.download = `whatif_validation_${selectedConference.replace(/\s+/g, "_").toLowerCase()}.csv`;
       a.click();
     } catch (e) {
-      console.error("CSV download error:", e);
+      logger.error("CSV download error:", e);
     } finally {
       setIsDownloadingCSV(false);
     }

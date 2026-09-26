@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { BACKEND_API_URL } from '@/config/env';
 import { CACHE_POLICIES } from '@/lib/cache-policy';
+import { logger } from "@/lib/logger";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.jthomanalytics.com';
@@ -188,7 +189,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (error) {
-    console.warn('Could not fetch basketball teams for sitemap:', error);
+    logger.warn('Could not fetch basketball teams for sitemap:', error);
   }
 
   try {
@@ -216,7 +217,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (error) {
-    console.warn('Could not fetch football teams for sitemap:', error);
+    logger.warn('Could not fetch football teams for sitemap:', error);
   }
 
   return [...staticPages, ...teamPages];

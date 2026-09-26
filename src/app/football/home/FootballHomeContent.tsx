@@ -17,6 +17,7 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { PlayoffRankingsResponse } from "@/types/football";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { logger } from "@/lib/logger";
 
 const FootballConferenceBidsTable = dynamic(
   () =>
@@ -58,7 +59,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
         const year = date.getFullYear();
         return `${month}/${day}/${year}`;
       } catch (error) {
-        console.error("Error formatting date:", error);
+        logger.error("Error formatting date:", error);
       }
     }
 

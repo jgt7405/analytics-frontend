@@ -4,6 +4,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "./screenshot-layout";
+import { logger } from "@/lib/logger";
 
 interface ScreenshotOptions {
   pageTitle: string;
@@ -62,7 +63,7 @@ export async function createOptimizedScreenshot(
 
     return flattenOntoWhite(canvas);
   } catch (error) {
-    console.error("Screenshot creation failed:", error);
+    logger.error("Screenshot creation failed:", error);
     throw new Error(
       `Screenshot failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );

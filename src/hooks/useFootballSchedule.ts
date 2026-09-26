@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
+import { logger } from "@/lib/logger";
 
 const fetchFootballSchedule = async (
   conference: string,
@@ -13,7 +14,7 @@ const fetchFootballSchedule = async (
   const formattedConf = conference.replace(/\s+/g, "_");
   const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
 
-  console.log(
+  logger.debug(
     `🏈 Getting football schedule for: ${conference} -> ${formattedConf}`,
   );
 
@@ -31,12 +32,12 @@ const fetchFootballSchedule = async (
   const data = await response.json();
 
   // 🔍 ADD THESE DEBUG LOGS:
-  console.log("🔍 FRONTEND: Raw API response data:", data);
-  console.log("🔍 FRONTEND: Summary object:", data.summary);
+  logger.debug("🔍 FRONTEND: Raw API response data:", data);
+  logger.debug("🔍 FRONTEND: Summary object:", data.summary);
   if (data.summary && data.summary.Arizona) {
-    console.log("🔍 FRONTEND: Arizona summary:", data.summary.Arizona);
+    logger.debug("🔍 FRONTEND: Arizona summary:", data.summary.Arizona);
   }
-  console.log(
+  logger.debug(
     "🔍 FRONTEND: First few teams summary:",
     Object.entries(data.summary || {}).slice(0, 3),
   );

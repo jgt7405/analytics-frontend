@@ -4,6 +4,7 @@ import { FootballStandingsApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { queryCachePolicy } from "@/lib/cache-policy";
+import { logger } from "@/lib/logger";
 
 export const useFootballStandings = (
   conference: string,
@@ -14,13 +15,13 @@ export const useFootballStandings = (
     queryKey: queryKeys.football.standings(conference, season),
     initialData,
     queryFn: async () => {
-      console.log("Fetching football standings for:", conference, season);
+      logger.debug("Fetching football standings for:", conference, season);
       try {
         const result = await api.getFootballStandings(conference, season);
-        console.log("Football standings API success:", result);
+        logger.debug("Football standings API success:", result);
         return result;
       } catch (error) {
-        console.error("Football standings API error:", error);
+        logger.error("Football standings API error:", error);
         throw error;
       }
     },

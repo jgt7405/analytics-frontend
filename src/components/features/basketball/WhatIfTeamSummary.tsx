@@ -14,6 +14,7 @@ import {
 import { saveCanvasImage } from "@/lib/save-image";
 import { Camera, Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { logger } from "@/lib/logger";
 
 const TWV_BLUE = [24, 98, 123];
 const TWV_WHITE = [255, 255, 255];
@@ -380,7 +381,7 @@ export default function WhatIfTeamSummary({
                   blTeam.logo_url,
                 );
               } catch (e) {
-                console.error("Screenshot failed:", e);
+                logger.error("Screenshot failed:", e);
               }
               setCapturing(false);
             }}

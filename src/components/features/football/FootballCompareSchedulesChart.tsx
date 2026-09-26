@@ -2,6 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { logger } from "@/lib/logger";
 
 const GRAY_COLOR = "#9ca3af";
 
@@ -399,13 +400,13 @@ export default function FootballCompareSchedulesChart({
   }, [teamGames, MARGIN.top, PLOT_HEIGHT, getPercentilePosition]);
 
   useEffect(() => {
-    console.log("=== PERCENTILE DEBUG ===");
-    console.log("Comparison Dataset Size:", opponentComparisonDataset.length);
-    console.log("Team Games Size:", teamGames.length);
-    console.log("Positioned Games:", positionedGames.length);
+    logger.debug("=== PERCENTILE DEBUG ===");
+    logger.debug("Comparison Dataset Size:", opponentComparisonDataset.length);
+    logger.debug("Team Games Size:", teamGames.length);
+    logger.debug("Positioned Games:", positionedGames.length);
 
     positionedGames.forEach((game, index) => {
-      console.log(
+      logger.debug(
         `Game ${index}: Team ${teams[game.teamIndex]?.teamName} vs ${game.opponent} | ` +
           `Win Prob: ${(game.winProb * 100).toFixed(1)}% | ` +
           `Percentile Position: ${game.percentilePosition.toFixed(1)}% | ` +
@@ -416,11 +417,11 @@ export default function FootballCompareSchedulesChart({
     const allWinProbs = opponentComparisonDataset
       .map((g: AllScheduleGame) => g.winProb)
       .sort((a, b) => a - b);
-    console.log(
+    logger.debug(
       "All Win Probs (sorted):",
       allWinProbs.map((p) => (p * 100).toFixed(1))
     );
-    console.log(
+    logger.debug(
       "Increment calculation: 100 / (",
       allWinProbs.length,
       "- 1) =",

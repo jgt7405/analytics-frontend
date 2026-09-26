@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 // src/lib/chunk-error-handler.ts
 export function setupChunkErrorHandler() {
   if (typeof window === "undefined") return;
@@ -11,7 +12,7 @@ export function setupChunkErrorHandler() {
       window.location.reload();
     } else {
       // If we've already reloaded once, don't try again to avoid infinite loops
-      console.error("Chunk load error persisted after reload");
+      logger.error("Chunk load error persisted after reload");
       sessionStorage.removeItem("chunk-reload-attempted");
     }
   };

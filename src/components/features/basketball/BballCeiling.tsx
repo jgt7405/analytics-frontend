@@ -5,6 +5,7 @@ import type { SeedTeam } from "@/types/basketball";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./BballCeiling.module.css";
+import { logger } from "@/lib/logger";
 
 interface BballCeilingProps {
   seedData: SeedTeam[];
@@ -153,7 +154,7 @@ export default function BballCeiling({
   void _maxHeight;
 
   useEffect(() => {
-    console.log("📊 BballCeiling rendered - displaying component");
+    logger.debug("📊 BballCeiling rendered - displaying component");
   }, []);
 
   const [isMobile, setIsMobile] = useState(false);

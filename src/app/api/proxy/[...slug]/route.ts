@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND_API_URL } from "@/config/env";
 import { CACHE_POLICIES, cacheClassForBackendPath } from "@/lib/cache-policy";
+import { logger } from "@/lib/logger";
 
 // Force Node.js runtime and disable static optimization
 export const runtime = "nodejs";
@@ -36,18 +37,37 @@ type RouteContext = { params: Promise<{ slug: string[] }> };
 // return path can miss them (src/lib/cache-policy.ts): error responses are
 // never cached, and POSTs are scenarios, never kept in a shared cache.
 export async function GET(request: NextRequest, context: RouteContext) {
+  const started = Date.now();
   const response = await handleGet(request, context);
   if (!response.ok) response.headers.set("Cache-Control", "no-store");
+  logRequest(request, response, started);
   return response;
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
+  const started = Date.now();
   const response = await handlePost(request, context);
   response.headers.set(
     "Cache-Control",
     response.ok ? CACHE_POLICIES.scenario.cacheControl : "no-store",
   );
+  logRequest(request, response, started);
   return response;
+}
+
+// One line per proxied request (a CDN hit never reaches this function, so
+// every line is a cache miss). requestId is Vercel's x-vercel-id, which
+// Vercel also returns to the browser, so a user-reported request can be
+// found in the logs.
+function logRequest(request: NextRequest, response: Response, started: number) {
+  logger.info("proxy", {
+    method: request.method,
+    path: `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    status: response.status,
+    durationMs: Date.now() - started,
+    cacheClass: response.headers.get("x-cache-class"),
+    requestId: request.headers.get("x-vercel-id"),
+  });
 }
 
 async function handleGet(_request: NextRequest, { params }: RouteContext) {
@@ -59,8 +79,6 @@ async function handleGet(_request: NextRequest, { params }: RouteContext) {
     const BACKEND_BASE_URL = BACKEND_API_URL;
 
     let backendPath = "";
-
-    console.log("Proxy slug:", slug);
 
     // Handle single endpoint with no conference
     if (slug.length === 1) {
@@ -518,7 +536,6 @@ async function handleGet(_request: NextRequest, { params }: RouteContext) {
     // =========================================================================
     const seasonQuery = getForwardedQueryString(_request);
     const backendUrl = `${BACKEND_BASE_URL}${backendPath}${seasonQuery}`;
-    console.log("Backend URL:", backendUrl);
 
     const response = await fetch(backendUrl, {
       method: "GET",
@@ -534,9 +551,7 @@ async function handleGet(_request: NextRequest, { params }: RouteContext) {
     });
 
     if (!response.ok) {
-      console.error(
-        `Backend request failed: ${response.status} ${response.statusText} for ${backendUrl}`,
-      );
+      logger.warn("Backend request failed", { backendPath, status: response.status });
       return NextResponse.json(
         {
           error: `Backend request failed: ${response.status}`,
@@ -549,59 +564,19 @@ async function handleGet(_request: NextRequest, { params }: RouteContext) {
 
     // Get raw text first to ensure we're not losing data
     const responseText = await response.text();
-    console.log("🔗 PROXY: Response size:", responseText.length, "bytes");
 
     let data;
     try {
       data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("🔗 PROXY: JSON parse error:", parseError);
-      console.error(
-        "🔗 PROXY: Raw response preview:",
-        responseText.substring(0, 500),
-      );
+    } catch {
+      logger.error("Backend returned invalid JSON", {
+        backendPath,
+        preview: responseText.slice(0, 200),
+      });
       return NextResponse.json(
         { error: "Failed to parse backend response" },
         { status: 500 },
       );
-    }
-
-    // Enhanced debug logging for football_conf_data
-    if (backendPath.includes("football_conf_data")) {
-      console.log("🔗 PROXY: Successfully parsed JSON");
-      console.log("🔗 PROXY: Data structure:", {
-        hasData: !!data.data,
-        isArray: Array.isArray(data.data),
-        length: data.data?.length,
-        firstItemKeys: data.data?.[0]
-          ? Object.keys(data.data[0])
-          : "no first item",
-      });
-
-      if (data.data?.[0]) {
-        const firstItem = data.data[0];
-        console.log("🔗 PROXY: Sagarin fields check:", {
-          sagarin_min:
-            "sagarin_min" in firstItem ? firstItem.sagarin_min : "MISSING",
-          sagarin_max:
-            "sagarin_max" in firstItem ? firstItem.sagarin_max : "MISSING",
-          sagarin_median:
-            "sagarin_median" in firstItem
-              ? firstItem.sagarin_median
-              : "MISSING",
-          sagarin_q25:
-            "sagarin_q25" in firstItem ? firstItem.sagarin_q25 : "MISSING",
-          sagarin_q75:
-            "sagarin_q75" in firstItem ? firstItem.sagarin_q75 : "MISSING",
-        });
-
-        // Count total fields
-        console.log(
-          "🔗 PROXY: Total fields in first item:",
-          Object.keys(firstItem).length,
-        );
-        console.log("🔗 PROXY: All fields:", Object.keys(firstItem));
-      }
     }
 
     // CDN caching per freshness class (src/lib/cache-policy.ts)
@@ -610,10 +585,13 @@ async function handleGet(_request: NextRequest, { params }: RouteContext) {
       _request.nextUrl.searchParams.get("season"),
     );
     return NextResponse.json(data, {
-      headers: { "Cache-Control": CACHE_POLICIES[cacheClass].cacheControl },
+      headers: {
+        "Cache-Control": CACHE_POLICIES[cacheClass].cacheControl,
+        "x-cache-class": cacheClass,
+      },
     });
   } catch (error) {
-    console.error("Proxy error:", error);
+    logger.error("Proxy GET failed", error);
     return NextResponse.json(
       {
         error: "Internal proxy error",
@@ -656,13 +634,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
   try {
     const { slug } = await params;
 
-    console.log("🔵 POST PROXY CALLED");
-    console.log("🔵 Slug:", slug);
-    console.log(
-      "🔵 Request content-type:",
-      request.headers.get("content-type"),
-    );
-
     // Production by default; set BACKEND_API_URL (src/config/env.ts) to point
     // at a local backend, e.g. http://localhost:5000/api.
     const BACKEND_BASE_URL = BACKEND_API_URL;
@@ -679,7 +650,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
     ) {
       backendPath = `/basketball/chart/upload`;
       isFormData = true;
-      console.log("🎨 BASKETBALL CHART UPLOAD detected");
     }
     // ===== HANDLE BOWL PICKS ROUTES =====
     else if (
@@ -688,7 +658,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[1] === "bowl-game-winner"
     ) {
       backendPath = `/football/bowl-game-winner`;
-      console.log("🏈 FOOTBALL BOWL GAME WINNER detected");
     }
     // ===== HANDLE FOOTBALL WHAT-IF ROUTES =====
     else if (
@@ -697,7 +666,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[1] === "whatif"
     ) {
       backendPath = `/football/whatif`;
-      console.log("🤔 FOOTBALL WHAT-IF detected");
     } else if (
       slug.length === 3 &&
       slug[0] === "football" &&
@@ -705,7 +673,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[2] === "export"
     ) {
       backendPath = `/football/whatif/export`;
-      console.log("📥 FOOTBALL WHAT-IF EXPORT detected");
     } else if (
       slug.length === 3 &&
       slug[0] === "football" &&
@@ -713,7 +680,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[2] === "structured-csv"
     ) {
       backendPath = `/football/whatif/structured-csv`;
-      console.log("📥 FOOTBALL WHAT-IF STRUCTURED CSV detected");
     } else if (
       slug.length === 3 &&
       slug[0] === "football" &&
@@ -721,7 +687,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[2] === "download"
     ) {
       backendPath = `/football/whatif/download`;
-      console.log("📥 FOOTBALL WHAT-IF DOWNLOAD detected");
     } else if (
       slug.length === 3 &&
       slug[0] === "football" &&
@@ -729,7 +694,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[2] === "game-impacts"
     ) {
       backendPath = `/football/whatif/game-impacts`;
-      console.log("🎯 FOOTBALL WHAT-IF GAME-IMPACTS detected");
     }
 
     // ===== HANDLE BASKETBALL WHAT-IF BASELINE =====
@@ -740,7 +704,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[2] === "baseline"
     ) {
       backendPath = `/basketball/whatif/baseline`;
-      console.log("🏀 BASKETBALL WHAT-IF BASELINE detected");
     }
 
     // ===== HANDLE BASKETBALL WHAT-IF NEXT-GAME-IMPACT =====
@@ -751,7 +714,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[2] === "next-game-impact"
     ) {
       backendPath = `/basketball/whatif/next-game-impact`;
-      console.log("🏀 BASKETBALL WHAT-IF NEXT-GAME-IMPACT detected");
     }
 
     // ===== HANDLE BASKETBALL WHAT-IF VALIDATION CSV =====
@@ -762,7 +724,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[2] === "validation-csv"
     ) {
       backendPath = `/basketball/whatif/validation-csv`;
-      console.log("🏀 BASKETBALL WHAT-IF VALIDATION CSV detected");
     }
 
     // ===== HANDLE BASKETBALL WHAT-IF ROUTES =====
@@ -772,11 +733,10 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       slug[1] === "whatif"
     ) {
       backendPath = `/basketball/whatif`;
-      console.log("🏀 BASKETBALL WHAT-IF detected");
     }
     // ===== UNKNOWN ROUTE =====
     else {
-      console.error("❌ UNKNOWN POST ENDPOINT:", slug);
+      logger.warn("Unknown POST endpoint", { slug });
       return NextResponse.json(
         { error: "Unknown POST endpoint", slug: slug },
         { status: 404 },
@@ -788,30 +748,19 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
     // =========================================================================
     const seasonQuery = getForwardedQueryString(request);
     const backendUrl = `${BACKEND_BASE_URL}${backendPath}${seasonQuery}`;
-    console.log("🌐 Backend URL:", backendUrl);
 
     let fetchOptions: RequestInit;
 
     if (isFormData) {
-      console.log("📦 Processing as FormData");
       const formData = await request.formData();
-      console.log(
-        "📦 FormData entries:",
-        Array.from(formData.entries()).map(([k]) => k),
-      );
-      console.log("📦 FormData file:", formData.get("file"));
 
       fetchOptions = {
         method: "POST",
         body: formData,
         signal: AbortSignal.timeout(300000),
       };
-
-      console.log("📦 FormData fetch options prepared");
     } else {
-      console.log("📋 Processing as JSON");
       const body = await request.json();
-      console.log("📋 JSON body keys:", Object.keys(body));
 
       // Determine timeout based on endpoint
       let timeout = 120000; // 2 minutes default for whatif calculations
@@ -837,27 +786,18 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       };
     }
 
-    console.log("🚀 Making backend request...");
-
     // Make request to backend
     const response = await fetch(backendUrl, fetchOptions);
-
-    console.log("📡 Backend response received:", {
-      status: response.status,
-      statusText: response.statusText,
-      headers: {
-        contentType: response.headers.get("content-type"),
-      },
-    });
 
     // ===== HANDLE CSV RESPONSE (validation-csv endpoint returns CSV, not JSON) =====
     if (backendPath.includes("validation-csv")) {
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(
-          "❌ Validation CSV backend error:",
-          errorText.substring(0, 500),
-        );
+        logger.warn("Backend request failed", {
+          backendPath,
+          status: response.status,
+          preview: errorText.slice(0, 200),
+        });
         return NextResponse.json(
           {
             error: `Backend request failed: ${response.status}`,
@@ -867,7 +807,6 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
         );
       }
       const csvText = await response.text();
-      console.log("📄 Returning CSV response:", csvText.length, "bytes");
       return new NextResponse(csvText, {
         headers: {
           "Content-Type": "text/csv",
@@ -880,13 +819,12 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
 
     // ===== HANDLE JSON RESPONSES (all other endpoints) =====
     const responseText = await response.text();
-    console.log("📄 Backend raw response:", responseText.substring(0, 500));
 
     if (!response.ok) {
-      console.error("❌ Backend returned error:", {
+      logger.warn("Backend request failed", {
+        backendPath,
         status: response.status,
-        statusText: response.statusText,
-        body: responseText.substring(0, 500),
+        preview: responseText.slice(0, 200),
       });
 
       return NextResponse.json(
@@ -902,13 +840,11 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
     let data;
     try {
       data = JSON.parse(responseText);
-      console.log("✅ Successfully parsed JSON response:", {
-        success: data.success,
-        dataLength: data.data?.length,
+    } catch {
+      logger.error("Backend returned invalid JSON", {
+        backendPath,
+        preview: responseText.slice(0, 200),
       });
-    } catch (parseError) {
-      console.error("❌ JSON parse error:", parseError);
-      console.error("❌ Raw response:", responseText.substring(0, 500));
 
       return NextResponse.json(
         { error: "Failed to parse backend response" },
@@ -916,39 +852,9 @@ async function handlePost(request: NextRequest, { params }: RouteContext) {
       );
     }
 
-    // Log response based on endpoint type
-    if (backendPath.includes("chart")) {
-      console.log("🎨 PROXY POST: Chart upload completed:", {
-        success: data.success,
-        dataCount: data.data?.length || 0,
-      });
-    } else if (backendPath.includes("export")) {
-      console.log("🔍 PROXY POST: CSV export completed:", {
-        success: data.success,
-        csv_size: data.csv_data?.length || 0,
-        filename: data.filename,
-      });
-    } else if (backendPath.includes("bowl")) {
-      console.log("🏈 PROXY POST: Bowl game marked:", {
-        success: data.success,
-        message: data.message,
-      });
-    } else {
-      console.log("🔍 PROXY POST: What-If calculation completed:", {
-        teams: data.data?.length || 0,
-        calculation_time: data.metadata?.calculation_time || 0,
-      });
-    }
-
-    console.log("✅ Returning successful response to client");
-
     return NextResponse.json(data);
   } catch (error) {
-    console.error("❌ POST PROXY ERROR:", error);
-    console.error("❌ Error details:", {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : "No stack",
-    });
+    logger.error("Proxy POST failed", error);
 
     return NextResponse.json(
       {

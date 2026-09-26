@@ -12,6 +12,7 @@ import { saveCanvasImage } from "@/lib/save-image";
 import { Camera, Loader } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell / §2 heading tier, as Tailwind
 // constants since this bespoke file has no CSS module of its own.
@@ -226,7 +227,7 @@ export default function NextGameImpact({
       })
       .catch((e) => {
         if (controller.signal.aborted) return;
-        console.error("Next-game impact error:", e);
+        logger.error("Next-game impact error:", e);
         setImpactData(null);
         setFetchError(e instanceof Error ? e.message : "Failed to load");
         setIsLoading(false);
@@ -306,7 +307,7 @@ export default function NextGameImpact({
                     team?.logo_url,
                   );
                 } catch (e) {
-                  console.error("Screenshot failed:", e);
+                  logger.error("Screenshot failed:", e);
                 }
                 setCapturing(false);
               }}

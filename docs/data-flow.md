@@ -33,6 +33,10 @@ Freshness is set per **class of data** in `src/lib/cache-policy.ts` (`live`, `cu
 | Proxy → backend | proxy route | `cache: "no-store"` (the CDN layer above does the caching) |
 | Service worker | `src/sw.ts` (Serwist) | Images cached 1 day (64 entries). Build JS/CSS precached. Pages and API data are never cached here |
 
+## Logging
+
+The proxy writes one `info` line per request that reaches it (CDN hits never do): method, path, status, duration, cache class and Vercel's request ID (`x-vercel-id`, also returned to the browser). Backend failures add a `warn` line with the backend path and status. Find them in Vercel → Logs; each line is JSON from `src/lib/logger.ts`. Successful proxy responses also carry an `x-cache-class` header.
+
 ## Adding or changing an endpoint
 
 Today an endpoint must be registered in up to four places. `src/services/AGENTS.md` and the `add-endpoint` skill list them. Step 4 replaces the per-shape proxy branches with one typed endpoint list.

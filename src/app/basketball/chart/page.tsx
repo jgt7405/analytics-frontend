@@ -12,6 +12,7 @@ import { saveCanvasImage } from "@/lib/save-image";
 import { Download, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 declare global {
   interface Window {
@@ -40,7 +41,7 @@ export default function BasketballChartPage() {
       script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
       script.async = true;
       script.onload = () => setHtml2canvasLoaded(true);
-      script.onerror = () => console.error("Failed to load html2canvas");
+      script.onerror = () => logger.error("Failed to load html2canvas");
       document.body.appendChild(script);
       return () => {
         if (document.body.contains(script)) document.body.removeChild(script);
@@ -133,7 +134,7 @@ export default function BasketballChartPage() {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Download failed:", error);
+      logger.error("Download failed:", error);
       alert(
         `Failed to download: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -149,7 +150,7 @@ export default function BasketballChartPage() {
 
     try {
       setIsCapturing(true);
-      console.log("Screenshot started");
+      logger.debug("Screenshot started");
 
       // Get the chart element
       const targetElement = chartRef.current;
@@ -208,7 +209,7 @@ export default function BasketballChartPage() {
                 : `${window.location.origin}${path}`;
             }
           } catch (e) {
-            console.error("URL parse error:", e);
+            logger.error("URL parse error:", e);
           }
         }
 
@@ -216,7 +217,7 @@ export default function BasketballChartPage() {
           const base64 = await imageToBase64(originalUrl);
           imgEl.src = base64;
         } catch (e) {
-          console.error("Base64 conversion failed for:", originalUrl, e);
+          logger.error("Base64 conversion failed for:", originalUrl, e);
         }
       }
 
@@ -273,7 +274,7 @@ export default function BasketballChartPage() {
   `;
         logoSection.appendChild(logo);
       } catch (e) {
-        console.error("Failed to load logo:", e);
+        logger.error("Failed to load logo:", e);
       }
 
       // Add centered title
@@ -341,7 +342,7 @@ export default function BasketballChartPage() {
       // Wait for all elements to fully render
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      console.log("Starting html2canvas render...");
+      logger.debug("Starting html2canvas render...");
 
       // Convert to canvas with proper options
       const captureSize = getFullScreenshotDimensions(wrapper);
@@ -368,7 +369,7 @@ export default function BasketballChartPage() {
         ),
       ])) as HTMLCanvasElement;
 
-      console.log("Render complete, cleaning up...");
+      logger.debug("Render complete, cleaning up...");
 
       // Clean up
       document.body.removeChild(wrapper);
@@ -378,11 +379,11 @@ export default function BasketballChartPage() {
       const filename = `${chartTitle.replace(/\s+/g, "_")}_${timestamp}.png`;
       await saveCanvasImage(canvas, filename, chartTitle);
 
-      console.log("Download triggered");
+      logger.debug("Download triggered");
       setIsCapturing(false);
       setIsScreenshotModalOpen(false);
     } catch (error) {
-      console.error("Screenshot failed:", error);
+      logger.error("Screenshot failed:", error);
       alert(
         `Failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );

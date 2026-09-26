@@ -4,6 +4,7 @@
 import { monitoring } from "@/lib/unified-monitoring";
 import { ApiError, BasketballApiError } from "@/types/errors";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 
 interface HealthCheckResponse {
@@ -52,7 +53,7 @@ export class BaseApiClient {
   ): BasketballApiError {
     let apiError: ApiError;
 
-    console.error(`API Error Details:`, {
+    logger.error(`API Error Details:`, {
       error,
       endpoint,
       errorType: typeof error,
@@ -150,13 +151,13 @@ export class BaseApiClient {
     retries = 3,
   ): Promise<T> {
     if (!this.validateEndpoint(endpoint)) {
-      console.warn(`⚠️  Potentially invalid endpoint: ${endpoint}`);
+      logger.warn(`⚠️  Potentially invalid endpoint: ${endpoint}`);
     }
 
     const startTime = Date.now();
     const fullUrl = proxyUrl(endpoint);
 
-    console.log(`📄 Making API call to: ${fullUrl}`);
+    logger.debug(`📄 Making API call to: ${fullUrl}`);
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -175,7 +176,7 @@ export class BaseApiClient {
         monitoring.trackApiCall(endpoint, "GET", duration, response.status);
 
         if (!response.ok) {
-          console.error(`❌ API Error Details:`, {
+          logger.error(`❌ API Error Details:`, {
             status: response.status,
             statusText: response.statusText,
             url: response.url,
@@ -195,7 +196,7 @@ export class BaseApiClient {
         }
 
         const rawData = await response.json();
-        console.log(`✅ API Success for ${endpoint}:`, {
+        logger.debug(`✅ API Success for ${endpoint}:`, {
           status: response.status,
           dataKeys: Object.keys(rawData || {}),
         });
@@ -203,7 +204,7 @@ export class BaseApiClient {
         const validation = validator(rawData);
 
         if (!validation.success) {
-          console.error("❌ API validation failed:", validation.error);
+          logger.error("❌ API validation failed:", validation.error);
           throw new Error(
             `Validation failed: ${JSON.stringify(validation.error)}`,
           );
@@ -211,7 +212,7 @@ export class BaseApiClient {
 
         return validation.data!;
       } catch (error) {
-        console.error(`❌ API Request failed (attempt ${i + 1}/${retries}):`, {
+        logger.error(`❌ API Request failed (attempt ${i + 1}/${retries}):`, {
           endpoint,
           error: error instanceof Error ? error.message : String(error),
           fullUrl,

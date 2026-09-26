@@ -6,6 +6,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import tableStyles from "@/styles/components/tables.module.css";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 
 interface FootballTeam {
   team_name: string;
@@ -30,9 +31,9 @@ export default function FootballTeamsTable({
   const { isMobile } = useResponsive();
 
   // DEBUG LOGGING
-  console.log("🏈 FootballTeamsTable received data:", teamsData);
-  console.log("🏈 First team in component:", teamsData?.[0]);
-  console.log(
+  logger.debug("🏈 FootballTeamsTable received data:", teamsData);
+  logger.debug("🏈 First team in component:", teamsData?.[0]);
+  logger.debug(
     "🏈 Alabama in component:",
     teamsData?.find((t) => t.team_name === "Alabama")
   );

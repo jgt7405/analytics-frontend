@@ -14,6 +14,7 @@ import { Download } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 // ─── Responsive Hook (inline) ────────────────────────────────────────────────
 
@@ -2350,7 +2351,7 @@ function GamePreviewPageContent() {
         setUpcomingGames(data.games || []);
         setConferences(data.conferences || []);
       } catch (err) {
-        console.error("Failed to load upcoming games:", err);
+        logger.error("Failed to load upcoming games:", err);
         setError("Failed to load upcoming games. Please try again.");
       } finally {
         setIsLoading(false);
@@ -2479,7 +2480,7 @@ function GamePreviewPageContent() {
         setAwayConfChampData(awayConfChamp);
         setHomeConfChampData(homeConfChamp);
       } catch (err) {
-        console.error("Error loading preview:", err);
+        logger.error("Error loading preview:", err);
         setError("Failed to load team preview data.");
         setIsLoadingPreview(false);
       }

@@ -18,6 +18,7 @@ import { useBasketballConfDataHistory } from "@/hooks/useBasketballConfDataHisto
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { logger } from "@/lib/logger";
 
 // PAGE_MODERNIZATION_GUIDE.md §2 title tier - bold slate, not the old
 // gray/normal style.
@@ -55,25 +56,25 @@ export default function BasketballConfDataContent({ initialData }: { initialData
 
   // Debug logging
   useEffect(() => {
-    console.log("=== Basketball History Debug ===");
-    console.log("History Data:", historyData);
-    console.log("History Loading:", historyLoading);
-    console.log("History Error:", historyError);
-    console.log(
+    logger.debug("=== Basketball History Debug ===");
+    logger.debug("History Data:", historyData);
+    logger.debug("History Loading:", historyLoading);
+    logger.debug("History Error:", historyError);
+    logger.debug(
       "Has timeline_data:",
       historyData?.timeline_data ? "YES" : "NO"
     );
-    console.log("Timeline length:", historyData?.timeline_data?.length);
-    console.log("================================");
+    logger.debug("Timeline length:", historyData?.timeline_data?.length);
+    logger.debug("================================");
   }, [historyData, historyLoading, historyError]);
 
   // Debug logging for nonconf data
   useEffect(() => {
-    console.log("=== Basketball Non-Conf Debug ===");
-    console.log("Nonconf Data:", nonconfData);
-    console.log("Has data:", nonconfData?.data ? "YES" : "NO");
-    console.log("Data length:", nonconfData?.data?.length);
-    console.log("================================");
+    logger.debug("=== Basketball Non-Conf Debug ===");
+    logger.debug("Nonconf Data:", nonconfData);
+    logger.debug("Has data:", nonconfData?.data ? "YES" : "NO");
+    logger.debug("Data length:", nonconfData?.data?.length);
+    logger.debug("================================");
   }, [nonconfData]);
 
   useEffect(() => {

@@ -3,6 +3,7 @@
 
 import { X } from "lucide-react";
 import { useState } from "react";
+import { logger } from "@/lib/logger";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -68,7 +69,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
       }
     } catch (error) {
       setFormMessage("Error sending message. Please try again.");
-      console.error("Error submitting form:", error);
+      logger.error("Error submitting form:", error);
     } finally {
       setIsSubmittingForm(false);
     }
