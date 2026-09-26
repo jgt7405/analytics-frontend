@@ -69,7 +69,9 @@ const eslintConfig = [
     },
   },
   // Proxy URLs are built with proxyUrl() (src/lib/proxy-url.ts), which adds
-  // the trailing slash that avoids a 308 redirect on every data call.
+  // the trailing slash that avoids a 308 redirect on every data call. React
+  // Query keys come from queryKeys (src/lib/query-keys.ts). Both live in one
+  // block: a second no-restricted-syntax entry would replace this one.
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/lib/proxy-url.ts", "src/app/api/**", "**/__tests__/**"],
@@ -83,6 +85,10 @@ const eslintConfig = [
         {
           selector: "TemplateLiteral > TemplateElement:first-child[value.raw=/^\\x2Fapi\\x2Fproxy/]",
           message: "Build proxy URLs with proxyUrl() from @/lib/proxy-url.",
+        },
+        {
+          selector: "Property[key.name='queryKey'] > ArrayExpression",
+          message: "Use a key from queryKeys in @/lib/query-keys.",
         },
       ],
     },

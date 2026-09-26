@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -62,7 +63,7 @@ export const useBasketballTeamData = (
   initialData?: TeamData,
 ) => {
   return useQuery<TeamData, Error>({
-    queryKey: ["basketball-team-data", teamName, season],
+    queryKey: queryKeys.basketball.team(teamName, season),
     initialData,
     // The SSR initialData is served WITHOUT the heavy league-wide
     // all_schedule_data (~2MB) to keep the crawlable HTML light. Mark it

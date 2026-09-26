@@ -1,5 +1,6 @@
 // src/hooks/useBasketballSeedWinsData.ts
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -59,7 +60,7 @@ export const useBasketballSeedWinsData = (
   season?: string,
 ) => {
   return useQuery<SeedWinsResponse, Error>({
-    queryKey: ["basketball-seed-wins-data", conference, season],
+    queryKey: queryKeys.basketball.seedWins(conference, season),
     queryFn: async () => {
       if (!conference) {
         throw new Error("Conference is required");

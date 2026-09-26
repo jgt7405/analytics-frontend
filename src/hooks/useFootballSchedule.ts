@@ -1,6 +1,7 @@
 // src/hooks/useFootballSchedule.ts
 import { FootballScheduleResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -49,7 +50,7 @@ export const useFootballSchedule = (
   initialData?: FootballScheduleResponse,
 ) => {
   return useQuery({
-    queryKey: ["football-schedule", conference, season],
+    queryKey: queryKeys.football.schedule(conference, season),
     initialData,
     queryFn: () => fetchFootballSchedule(conference, season),
     enabled: !!conference,

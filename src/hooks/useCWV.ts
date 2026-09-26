@@ -1,6 +1,7 @@
 import { api } from "@/services/api";
 import { CWVApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useCWV = (
@@ -9,7 +10,7 @@ export const useCWV = (
   initialData?: CWVApiResponse,
 ) => {
   return useQuery<CWVApiResponse, Error>({
-    queryKey: ["cwv", conference, season],
+    queryKey: queryKeys.basketball.cwv(conference, season),
     initialData,
     queryFn: () => api.getCWV(conference, season),
     enabled: !!conference,

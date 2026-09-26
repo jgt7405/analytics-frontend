@@ -2,6 +2,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { memo, useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import {
@@ -248,7 +249,7 @@ function BowlPicksProjectionChart() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["bowl-picks"],
+    queryKey: queryKeys.football.bowlPicks(),
     queryFn: async () => {
       const res = await fetch(proxyUrl("football/bowl-picks"));
       if (!res.ok) throw new Error("Failed to fetch");

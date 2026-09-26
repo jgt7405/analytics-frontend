@@ -1,6 +1,7 @@
 import { api } from "@/services/api";
 import type { SeedApiResponse } from "@/services/basketball-api";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useSeed = (
@@ -9,7 +10,7 @@ export const useSeed = (
   initialData?: SeedApiResponse,
 ) => {
   return useQuery<SeedApiResponse, Error>({
-    queryKey: ["seed", conference, season],
+    queryKey: queryKeys.basketball.seed(conference, season),
     initialData,
     queryFn: () => api.getSeedData(conference, season),
     enabled: !!conference,

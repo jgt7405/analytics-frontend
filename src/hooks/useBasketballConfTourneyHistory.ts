@@ -1,5 +1,6 @@
 // src/hooks/useBasketballConfTourneyHistory.ts
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -53,7 +54,7 @@ export const useBasketballConfTourneyHistory = (
   season?: string,
 ) => {
   return useQuery<BasketballConfTourneyHistoryResponse, Error>({
-    queryKey: ["basketball-conf-tourney-history", conference, season],
+    queryKey: queryKeys.basketball.confTourneyHistory(conference, season),
     queryFn: async () => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(

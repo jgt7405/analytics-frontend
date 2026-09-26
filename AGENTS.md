@@ -65,6 +65,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 
 **Things that will bite you:**
 - `trailingSlash: true`: internal links should end in `/`. Build every backend proxy URL with `proxyUrl()` from `src/lib/proxy-url.ts` (e.g. ``proxyUrl(`twv/${conf}${seasonQuery}`)``), never by hand: a proxy URL without the trailing slash costs every visitor a 308 redirect round trip, and the smoke tests fail on it.
+- React Query keys come from `queryKeys` in `src/lib/query-keys.ts` (ESLint rejects inline `queryKey: [...]` arrays). A key must include every parameter its fetch uses, or different requests share one cache entry.
 - Cache lifetimes come from the freshness classes in `src/lib/cache-policy.ts` (`docs/decisions/cache-classes.md`). Don't write `staleTime`, `revalidate` or `s-maxage` numbers by hand: hooks spread `...queryCachePolicy("<class>")`, and the proxy and server fetches pick the class from the backend path. Error responses are never cached.
 - React hooks must run before any early `return` (a crash on the bowl picks page came from this).
 - `[season]` archive layouts set `robots: noindex`. Don't route current-season pages through `[season]`, or they drop out of search.

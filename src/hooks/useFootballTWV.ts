@@ -1,5 +1,6 @@
 import { FootballTWVApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -21,7 +22,7 @@ const fetchFootballTWV = async (
 
 export const useFootballTWV = (conference: string, season?: string, initialData?: FootballTWVApiResponse) => {
   return useQuery({
-    queryKey: ["football-twv", conference, season],
+    queryKey: queryKeys.football.twv(conference, season),
     initialData,
     initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => fetchFootballTWV(conference, season),

@@ -1,5 +1,6 @@
 // src/hooks/useBasketballTeamAllHistory.ts
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -52,7 +53,7 @@ export const useBasketballTeamAllHistory = (
   season?: string,
 ) => {
   return useQuery<BasketballTeamAllHistoryResponse, Error>({
-    queryKey: ["basketball-team-all-history", teamName, season],
+    queryKey: queryKeys.basketball.teamAllHistory(teamName, season),
     queryFn: async () => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       // Fetch both endpoints in parallel

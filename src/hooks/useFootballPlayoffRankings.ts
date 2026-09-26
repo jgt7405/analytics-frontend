@@ -1,5 +1,6 @@
 import { PlayoffRankingsResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -11,7 +12,7 @@ export function useFootballPlayoffRankings(
   initialData?: PlayoffRankingsResponse,
 ) {
   return useQuery<PlayoffRankingsResponse>({
-    queryKey: ["football-playoff-rankings", season, mode],
+    queryKey: queryKeys.football.playoffRankings(season, mode),
     initialData: mode === "season" && !season ? initialData : undefined,
     initialDataUpdatedAt: initialData && mode === "season" && !season ? 0 : undefined,
     queryFn: async () => {
