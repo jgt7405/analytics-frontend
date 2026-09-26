@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1, 2, 3 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). Next: step 4. Baselines are in `docs/baselines/README.md`.
+Status: **steps 1, 2, 3 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). **Step 4 in progress:** 4a (endpoint list) done; next 4b (proxy reads the list). Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -140,6 +140,12 @@ Other findings carried forward: 48 dependency vulnerabilities (step 2), the redi
 6. **Validate responses with Zod incrementally.** Start with POST inputs, endpoints known to change, and the shared response envelopes. Measure the cost before validating large historical or chart payloads in production.
 7. **Test fixtures.** Small, curated fixtures covering normal and edge cases (empty conference, missing fields, preseason, archived season), served by MSW in unit and Playwright tests. Not large raw captures. MSW proves frontend behavior; the scheduled live check (step 2) proves the backend contract still matches.
 8. **Backend contract ownership.** Document in `docs/data-flow.md` which side owns each response shape, how breaking changes to the Flask backend are announced, and how long old fields must keep working.
+
+**Outcome (in progress, 2026-09-26):**
+
+| Part | What | Result |
+|---|---|---|
+| 4a | Typed endpoint list `src/api/endpoints.ts` | 56 endpoints (45 GET, 11 POST), one entry each with key, sport, method, proxy paths (plus older aliases), backend path, a rule per path parameter, allowed query parameters, timeout, cache class, body and response type, `passthroughEligible`. Pure matching helpers (`matchEndpoint`, `buildBackendPath`, `checkQuery`, `endpointForBackendPath`) for the proxy and server fetches. Unit tests prove every GET keeps the cache class step 3b gave it. Not yet used at runtime. Three shapes the proxy accepted are left out because the backend has no such route (they could only 404): `team_schedule`, `football/debug/*`, `football/team/*/history/sagarin_rank`. |
 
 ## Step 5 — Next.js 16 upgrade (isolated migration)
 
