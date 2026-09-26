@@ -53,13 +53,12 @@ const eslintConfig = [
     },
   },
   // Presentation components don't own network access: fetch data in pages,
-  // route handlers, hooks or src/services. Warning until step 4 moves the
-  // existing calls.
+  // route handlers, hooks or src/services (step 4 moved the last calls).
   {
     files: ["src/components/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-globals": [
-        "warn",
+        "error",
         {
           name: "fetch",
           message:

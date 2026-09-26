@@ -10,8 +10,11 @@ import {
 } from "@/lib/screenshot-layout";
 import { saveCanvasImage } from "@/lib/save-image";
 import { Camera, Loader } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { useMemo, useRef, useState } from "react";
+import {
+  useBasketballNextGameImpact,
+  type NextGameMetrics,
+} from "@/hooks/useBasketballNextGameImpact";
 import { logger } from "@/lib/logger";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell / §2 heading tier, as Tailwind
@@ -24,46 +27,6 @@ const SUB_TITLE_CLASS =
 
 const TEAL_COLOR = "rgb(0, 151, 178)";
 
-interface NextGameMetrics {
-  first_seed_pct: number;
-  top4_pct: number;
-  top8_pct: number;
-  avg_seed: number;
-  avg_conf_wins: number;
-  num_teams: number;
-  [key: `seed_${number}_pct`]: number;
-  // NCAA tournament projection fields
-  tournament_bid_pct?: number;
-  average_seed?: number | null;
-  ncaa_seed_distribution?: Record<string, number>;
-}
-
-interface NextGameImpactData {
-  success: boolean;
-  team_id: number;
-  team_name: string;
-  opponent_id: number;
-  opponent_name: string;
-  is_home: boolean;
-  game: {
-    game_id: number;
-    date: string;
-    home_team: string;
-    away_team: string;
-    home_team_id: number;
-    away_team_id: number;
-    home_team_logo: string;
-    away_team_logo: string;
-    home_probability: number | null;
-    away_probability: number | null;
-    neutral_site?: boolean;
-  } | null;
-  current: Record<number, NextGameMetrics>;
-  with_win: Record<number, NextGameMetrics>;
-  with_loss: Record<number, NextGameMetrics>;
-  calculation_time: number;
-  error?: string;
-}
 
 function getLogoUrl(filename?: string): string | undefined {
   if (!filename) return undefined;
@@ -174,12 +137,8 @@ export default function NextGameImpact({
   selectedTeamId: number | null;
   onTeamChange: (id: number | null) => void;
 }) {
-  const [impactData, setImpactData] = useState<NextGameImpactData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Sort teams alphabetically for the dropdown (change 3)
   const sortedTeams = useMemo(
@@ -190,53 +149,14 @@ export default function NextGameImpact({
     [teams],
   );
 
-  // Reset data when conference changes
-  useEffect(() => {
-    setImpactData(null);
-  }, [conference]);
-
-  // Fetch impact data when team changes — cancels any in-flight request
-  useEffect(() => {
-    if (!selectedTeamId || !conference) return;
-
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setIsLoading(true);
-    setFetchError(null);
-    setImpactData(null);
-
-    fetch(proxyUrl("basketball/whatif/next-game-impact"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conference, team_id: selectedTeamId }),
-      signal: controller.signal,
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Impact fetch failed: ${res.status}`);
-        return res.json();
-      })
-      .then((data: NextGameImpactData) => {
-        if (!controller.signal.aborted) {
-          setImpactData(data);
-          setIsLoading(false);
-        }
-      })
-      .catch((e) => {
-        if (controller.signal.aborted) return;
-        logger.error("Next-game impact error:", e);
-        setImpactData(null);
-        setFetchError(e instanceof Error ? e.message : "Failed to load");
-        setIsLoading(false);
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, [selectedTeamId, conference]);
+  // Impact of the selected team's next game; changing team or conference
+  // cancels the request in flight.
+  const {
+    data: impactData,
+    isFetching: isLoading,
+    error,
+  } = useBasketballNextGameImpact(conference, selectedTeamId);
+  const fetchError = error ? error.message : null;
 
   if (!conference || teams.length === 0) return null;
 

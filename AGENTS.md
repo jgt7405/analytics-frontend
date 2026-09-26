@@ -52,7 +52,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 
 **Architecture** (enforced by ESLint where noted):
 - Basketball code never imports football code, or the reverse (error). Shared logic goes in `components/features/shared`, `components/common`, `lib` or `services`.
-- Presentation components don't call `fetch` (warning; existing cases are removed in plan step 4). Fetch in hooks, services, pages or route handlers.
+- Presentation components (`src/components/`) don't call `fetch` (error). Reads go in a React Query hook in `src/hooks`; POSTs, uploads and downloads in a hook's exported function or a `src/services` method. Pages and route handlers may fetch.
 - New backend endpoints are added in all of: the endpoint list (`src/api/endpoints.ts`, which the proxy reads), the client service, a hook, and (if server-rendered) `server-api.ts`. Use the `add-endpoint` skill or follow `src/services/AGENTS.md`.
 - Keep files under about 600 lines (warning). Split by responsibility, not by line count.
 

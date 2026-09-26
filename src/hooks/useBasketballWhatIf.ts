@@ -315,3 +315,52 @@ export const useBasketballWhatIf = () => {
     mutationFn: calculateBasketballWhatIf,
   });
 };
+// Lightweight baseline for a conference: pre-computed projections and the
+// remaining games, no simulations. Logos arrive as filenames and some teams
+// as `teamid`; both are normalized here.
+export const fetchBasketballWhatIfBaseline = async (
+  conference: string,
+): Promise<WhatIfResponse> => {
+  const res = await fetch(proxyUrl("basketball/whatif/baseline"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ conference }),
+  });
+  if (!res.ok) throw new Error(`Baseline fetch failed: ${res.status}`);
+  const data = await res.json();
+
+  const getLogoUrl = (filename?: string): string | undefined => {
+    if (!filename) return undefined;
+    if (filename.startsWith("http") || filename.startsWith("/")) return filename;
+    return `/images/team_logos/${filename}`;
+  };
+  if (data.games) {
+    data.games = data.games.map((g: Record<string, unknown>) => ({
+      ...g,
+      home_logo_url: getLogoUrl((g.home_team_logo || g.home_logo_url) as string | undefined),
+      away_logo_url: getLogoUrl((g.away_team_logo || g.away_logo_url) as string | undefined),
+    }));
+  }
+  const mapTeams = (teams: Record<string, unknown>[]) =>
+    teams?.map((t) => ({ ...t, team_id: t.team_id || t.teamid || 0 })) ?? [];
+  data.data_with_ties = mapTeams(data.data_with_ties);
+  data.data_no_ties = mapTeams(data.data_no_ties);
+  data.current_projections_with_ties = mapTeams(data.current_projections_with_ties);
+  data.current_projections_no_ties = mapTeams(data.current_projections_no_ties);
+
+  return data as WhatIfResponse;
+};
+
+/** The validation CSV for a conference and the user's game selections. */
+export const fetchBasketballWhatIfValidationCsv = async (
+  conference: string,
+  selections: { game_id: number; winner_team_id: number }[],
+): Promise<Blob> => {
+  const res = await fetch(proxyUrl("basketball/whatif/validation-csv"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ conference, selections }),
+  });
+  if (!res.ok) throw new Error(`CSV download failed: ${res.status}`);
+  return res.blob();
+};

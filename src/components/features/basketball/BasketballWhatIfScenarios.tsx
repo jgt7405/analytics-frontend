@@ -17,6 +17,8 @@ import NextGameImpact from "@/components/features/basketball/NextGameImpact";
 import WhatIfTeamSummary from "@/components/features/basketball/WhatIfTeamSummary";
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
 import {
+  fetchBasketballWhatIfBaseline,
+  fetchBasketballWhatIfValidationCsv,
   useBasketballWhatIf,
   type NcaaAllTeam,
   type WhatIfGame,
@@ -25,7 +27,6 @@ import {
 } from "@/hooks/useBasketballWhatIf";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./BasketballWhatIfScenarios.module.css";
-import { proxyUrl } from "@/lib/proxy-url";
 import { logger } from "@/lib/logger";
 
 const TEAL_COLOR = "rgb(0, 151, 178)";
@@ -1198,46 +1199,8 @@ export default function BasketballWhatIfScenarios() {
   const fetchBaseline = useCallback(async (conf: string) => {
     setIsLoadingBaseline(true);
     try {
-      const res = await fetch(proxyUrl("basketball/whatif/baseline"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conference: conf }),
-      });
-      if (!res.ok) throw new Error(`Baseline fetch failed: ${res.status}`);
-      const data = await res.json();
-
-      // Map game logos (backend returns filenames, frontend needs /images/team_logos/ paths)
-      const getLogoUrl = (filename?: string): string | undefined => {
-        if (!filename) return undefined;
-        if (filename.startsWith("http") || filename.startsWith("/"))
-          return filename;
-        return `/images/team_logos/${filename}`;
-      };
-      if (data.games) {
-        data.games = data.games.map((g: Record<string, unknown>) => ({
-          ...g,
-          home_logo_url: getLogoUrl(
-            (g.home_team_logo || g.home_logo_url) as string | undefined,
-          ),
-          away_logo_url: getLogoUrl(
-            (g.away_team_logo || g.away_logo_url) as string | undefined,
-          ),
-        }));
-      }
-      // Map team_id from teamid if needed
-      const mapTeams = (teams: Record<string, unknown>[]) =>
-        teams?.map((t) => ({ ...t, team_id: t.team_id || t.teamid || 0 })) ??
-        [];
-      data.data_with_ties = mapTeams(data.data_with_ties);
-      data.data_no_ties = mapTeams(data.data_no_ties);
-      data.current_projections_with_ties = mapTeams(
-        data.current_projections_with_ties,
-      );
-      data.current_projections_no_ties = mapTeams(
-        data.current_projections_no_ties,
-      );
-
-      setWhatIfData(data as WhatIfResponse);
+      const data = await fetchBasketballWhatIfBaseline(conf);
+      setWhatIfData(data);
     } catch (e) {
       logger.error("Baseline fetch error:", e);
     } finally {
@@ -1339,16 +1302,10 @@ export default function BasketballWhatIfScenarios() {
       const selectionsArray = Array.from(gameSelections.entries()).map(
         ([game_id, winner_team_id]) => ({ game_id, winner_team_id }),
       );
-      const res = await fetch(proxyUrl("basketball/whatif/validation-csv"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conference: selectedConference,
-          selections: selectionsArray,
-        }),
-      });
-      if (!res.ok) throw new Error(`CSV download failed: ${res.status}`);
-      const blob = await res.blob();
+      const blob = await fetchBasketballWhatIfValidationCsv(
+        selectedConference,
+        selectionsArray,
+      );
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `whatif_validation_${selectedConference.replace(/\s+/g, "_").toLowerCase()}.csv`;

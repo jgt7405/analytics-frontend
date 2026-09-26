@@ -1,6 +1,7 @@
 // src/components/layout/ContactModal.tsx
 "use client";
 
+import { sendContactMessage } from "@/services/contact";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { logger } from "@/lib/logger";
@@ -43,15 +44,9 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
     setFormMessage("");
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const result = await sendContactMessage(formData);
 
-      if (response.ok) {
+      if (result.ok) {
         setFormMessage("Thank you! Your message has been sent successfully.");
         setFormData({
           name: "",
@@ -64,8 +59,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
           setFormMessage("");
         }, 2000);
       } else {
-        const data = await response.json().catch(() => ({}));
-        setFormMessage(data.error || "Error sending message. Please try again.");
+        setFormMessage(result.error || "Error sending message. Please try again.");
       }
     } catch (error) {
       setFormMessage("Error sending message. Please try again.");
