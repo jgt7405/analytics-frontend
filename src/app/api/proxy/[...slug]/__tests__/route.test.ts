@@ -73,7 +73,7 @@ describe("proxy forwarding", () => {
 
   it("applies the endpoint's timeout", async () => {
     const timeout = jest.spyOn(AbortSignal, "timeout");
-    await call("POST", "football/whatif/game-impacts/", {});
+    await call("POST", "football/whatif/game-impacts/", { conference: "SEC", team_id: 12 });
     expect(timeout).toHaveBeenCalledWith(240_000);
     timeout.mockRestore();
   });
@@ -92,9 +92,32 @@ describe("proxy forwarding", () => {
     expect(await res.text()).toBe("team,opponent\nDuke,Virginia");
   });
 
+  it("passes a response that drifted from its schema through, and logs it", async () => {
+    const warn = jest.spyOn(console, "warn");
+    warn.mockClear();
+    backendFetch.mockResolvedValue(new Response(JSON.stringify({ rows: [] })));
+    const res = await call("GET", "football/standings/SEC/");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ rows: [] });
+    expect(JSON.stringify(warn.mock.calls)).toContain("doesn't match its schema");
+  });
+
+  it("doesn't log a response that matches its schema", async () => {
+    const warn = jest.spyOn(console, "warn");
+    warn.mockClear();
+    backendFetch.mockResolvedValue(
+      new Response(JSON.stringify({ data: [{ team_name: "Alabama", wins: 12 }], conferences: ["Southeastern"] })),
+    );
+    await call("GET", "football/standings/Southeastern/");
+    expect(JSON.stringify(warn.mock.calls)).not.toContain("schema");
+  });
+
   it("returns CSV for CSV endpoints", async () => {
     backendFetch.mockResolvedValue(new Response("a,b\n1,2"));
-    const res = await call("POST", "basketball/whatif/validation-csv/", {});
+    const res = await call("POST", "basketball/whatif/validation-csv/", {
+      conference: "Big 12",
+      selections: [],
+    });
     expect(res.headers.get("Content-Type")).toBe("text/csv");
     expect(await res.text()).toBe("a,b\n1,2");
   });
@@ -110,7 +133,7 @@ describe("proxy rejections (never reach the backend)", () => {
     ["GET", "football/standings/SEC/?mode=current", 400],
     ["GET", "football/standings/SEC/?season=bad", 400],
   ] as const)("%s %s → %i", async (method, path, status) => {
-    const res = await call(method, path, method === "POST" ? {} : undefined);
+    const res = await call(method, path, method === "POST" ? { conference: "SEC", selections: [] } : undefined);
     expect(res.status).toBe(status);
     expect(res.headers.get("Cache-Control")).toBe("no-store");
     expect(backendFetch).not.toHaveBeenCalled();

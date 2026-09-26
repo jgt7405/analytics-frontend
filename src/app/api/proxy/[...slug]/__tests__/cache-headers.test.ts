@@ -63,7 +63,7 @@ describe("proxy cache headers", () => {
     backendFetch.mockResolvedValue(new Response(JSON.stringify({ data: [] })));
     const req = new NextRequest("http://localhost/api/proxy/football/whatif/", {
       method: "POST",
-      body: JSON.stringify({ conference: "SEC" }),
+      body: JSON.stringify({ conference: "SEC", selections: [] }),
       headers: { "content-type": "application/json" },
     });
     const res = await POST(req, context(["football", "whatif"]));

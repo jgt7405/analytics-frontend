@@ -7,7 +7,7 @@ description: Wire a new Flask backend endpoint into the frontend (endpoint list 
 
 The full checklist lives in `src/services/AGENTS.md`; read it first. Summary of the places that must agree on the path:
 
-1. `src/api/endpoints.ts`: one `get(...)`/`post(...)` entry with the proxy path, backend path, a rule per `:param` (`segment`, `conference`, `team`), extra query parameters beyond `season`, and the cache class. The proxy reads only this list.
+1. `src/api/endpoints.ts`: one `get(...)`/`post(...)` entry with the proxy path, backend path, a rule per `:param` (`segment`, `conference`, `team`), extra query parameters beyond `season`, and the cache class. The proxy reads only this list. A JSON POST also needs its body schema in `src/api/schemas.ts` (`REQUEST_SCHEMAS`); a conference-table GET can add the shared envelope to `RESPONSE_SCHEMAS`.
 2. `src/services/basketball-api.ts` or `football-api.ts`: client method (sanitize and validate inputs, spaces → `_` in conference names), building the path with `apiPath("<key>", params, { season })` from `src/api/urls.ts`.
 3. `src/hooks/use<Thing>.ts`: `useQuery` with `queryKey: queryKeys.<sport>.<resource>(...params)` (add the entry to `src/lib/query-keys.ts` with every parameter the fetch uses; inline key arrays fail lint), `enabled` guard, optional `initialData`, and `...queryCachePolicy("<class>")` from `@/lib/cache-policy`. Pick the class from `docs/decisions/cache-classes.md`; it must match the entry's `cacheClass`, which the CDN and server fetches use.
 4. Optional: `src/lib/server-api.ts` helper plus `initialData` from `page.tsx` for server-rendered first paint.
