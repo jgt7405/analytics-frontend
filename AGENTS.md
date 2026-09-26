@@ -29,10 +29,10 @@ Every change, however small:
 | `npm run lint:changed` | Stricter lint (no `any`) on files changed vs `origin/main` |
 | `npm run build` / `npm start` | Production build (Turbopack) / serve it |
 | `npm run size` / `size:check` | Per-route JS sizes / compare against `scripts/bundle-budgets.json` |
-| `npm run test:e2e` | Playwright smoke tests against a production build (run `npm run build` first) |
+| `npm run test:e2e` | Playwright smoke and fixture tests against a production build (run `npm run build` first), served by the fixture backend in `fixtures/backend/` |
 | `npm run baseline:lighthouse` / `baseline:proxy` | Measure production (needs network access to the site) |
 
-The backend does not need to be reachable for `verify`, `build` or `test:e2e`. Pages render their error states without it.
+The backend does not need to be reachable for `verify`, `build` or `test:e2e`: tests use the curated fixtures in `fixtures/backend/` (see `docs/testing.md`), and pages render their error states for anything without a fixture.
 
 ## How a page is built
 
@@ -99,7 +99,8 @@ Never commit `.env*` files.
 | `src/services/` | API clients (`basketball-api.ts`, `football-api.ts`, `shared-request.ts`) |
 | `src/lib/` | Utilities: server fetching, chart helpers, image export, validation (Zod) |
 | `src/types/` | Response and domain types |
-| `e2e/` | Playwright smoke tests |
+| `e2e/` | Playwright smoke and fixture tests; `fixture-server.ts` is the backend they run against |
+| `fixtures/backend/` | Curated backend responses (normal, empty, missing fields, preseason, archived) and their MSW handlers |
 | `scripts/` | Measurement and CI helper scripts |
 | `docs/` | Plan, baselines, architecture, data flow, design guide, decision records |
 

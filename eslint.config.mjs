@@ -189,6 +189,8 @@ const eslintConfig = [
       ".turbo/**",
       "jest.setup.js",
       "public/**",
+      "test-results/**",
+      "playwright-report/**",
     ],
   },
 ];

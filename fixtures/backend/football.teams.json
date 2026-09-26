@@ -1,0 +1,37 @@
+{
+ "data": [
+  {
+   "average_seed": null,
+   "cfp_bid_pct": 0,
+   "conference": "Southeastern",
+   "conference_record": "8-0",
+   "logo_url": "/images/team_logos/alabama.png",
+   "overall_record": "12-0",
+   "primary_color": "#9E1B32",
+   "team_id": "Alabama",
+   "team_name": "Alabama"
+  },
+  {
+   "average_seed": null,
+   "cfp_bid_pct": 0,
+   "conference": "Southeastern",
+   "conference_record": "7-1",
+   "logo_url": "/images/team_logos/georgia.png",
+   "overall_record": "11-1",
+   "primary_color": "#9E1B32",
+   "team_id": "Georgia",
+   "team_name": "Georgia"
+  },
+  {
+   "average_seed": null,
+   "cfp_bid_pct": 0,
+   "conference": "Southeastern",
+   "conference_record": "6-2",
+   "logo_url": "/images/team_logos/texas.png",
+   "overall_record": "10-2",
+   "primary_color": "#9E1B32",
+   "team_id": "Texas",
+   "team_name": "Texas"
+  }
+ ]
+}

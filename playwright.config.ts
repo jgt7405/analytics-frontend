@@ -1,7 +1,10 @@
 import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+import { FIXTURE_BACKEND_URL } from "./e2e/fixture-server";
 
 // Browser smoke tests against a production build (`npm run build` first).
+// The app talks to a fixture backend (e2e/fixture-server.ts, started in
+// globalSetup) instead of the real one.
 // Cloud agent sessions ship a Chromium at /opt/pw-browsers/chromium; use it
 // when present so no browser download is needed. CI installs its own.
 const PREINSTALLED_CHROMIUM = "/opt/pw-browsers/chromium";
@@ -28,10 +31,13 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
+  globalSetup: "./e2e/global-setup.ts",
   webServer: {
     command: `npx next start -p ${PORT}`,
+    env: { BACKEND_API_URL: FIXTURE_BACKEND_URL },
     url: `http://localhost:${PORT}/robots.txt`,
-    reuseExistingServer: !process.env.CI,
+    // Always start a fresh server: a running one may point at another backend.
+    reuseExistingServer: false,
     timeout: 60_000,
   },
 });

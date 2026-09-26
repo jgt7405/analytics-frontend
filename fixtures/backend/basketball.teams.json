@@ -1,0 +1,48 @@
+{
+ "data": [
+  {
+   "average_seed": 1.4,
+   "conference": "Atlantic Coast",
+   "conference_record": "0-0",
+   "kenpom_rank": null,
+   "logo_url": "/images/team_logos/duke.png",
+   "overall_record": "0-0",
+   "team_id": "1",
+   "team_name": "Duke",
+   "tournament_bid_pct": 0
+  },
+  {
+   "average_seed": 2.9,
+   "conference": "Atlantic Coast",
+   "conference_record": "0-0",
+   "kenpom_rank": null,
+   "logo_url": "/images/team_logos/north_carolina.png",
+   "overall_record": "0-0",
+   "team_id": "2",
+   "team_name": "North Carolina",
+   "tournament_bid_pct": 0
+  },
+  {
+   "average_seed": 9.0,
+   "conference": "Atlantic Coast",
+   "conference_record": "0-0",
+   "kenpom_rank": null,
+   "logo_url": "/images/team_logos/wake_forest.png",
+   "overall_record": "0-0",
+   "team_id": "3",
+   "team_name": "Wake Forest",
+   "tournament_bid_pct": 0
+  },
+  {
+   "average_seed": 12.0,
+   "conference": "Atlantic Coast",
+   "conference_record": "0-0",
+   "kenpom_rank": null,
+   "logo_url": "/images/team_logos/virginia.png",
+   "overall_record": "0-0",
+   "team_id": "4",
+   "team_name": "Virginia",
+   "tournament_bid_pct": 0
+  }
+ ]
+}

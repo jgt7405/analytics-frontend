@@ -1,0 +1,31 @@
+{
+ "_note": "Hand-written from TeamData (src/hooks/useBasketballTeamData.ts): the backend's /team route uses a SQL JOIN the backend tests' fake database doesn't support.",
+ "all_schedule_data": [
+  {"team": "Duke", "opponent": "Virginia", "rk50_win_prob": 0.72, "team_conf": "Atlantic Coast", "status": "W"},
+  {"team": "Duke", "opponent": "North Carolina", "rk50_win_prob": 0.58, "team_conf": "Atlantic Coast", "status": "2026-02-07"}
+ ],
+ "schedule": [
+  {"date": "01/10", "opponent": "Virginia", "opponent_logo": "/images/team_logos/virginia.png", "location": "Home", "status": "W", "twv_50": 0.12, "cwv": 0.28, "kenpom_rank": 4, "opp_kp_rank": 38, "team_win_prob": 0.81, "rk50_win_prob": 0.72, "team_points": 78, "opp_points": 64},
+  {"date": "02/07", "opponent": "North Carolina", "opponent_logo": "/images/team_logos/north_carolina.png", "location": "Away", "status": "2026-02-07", "kenpom_rank": 4, "opp_kp_rank": 12, "team_win_prob": 0.55, "rk50_win_prob": 0.58}
+ ],
+ "team_info": {
+  "team_name": "Duke",
+  "team_id": "1",
+  "conference": "Atlantic Coast",
+  "logo_url": "/images/team_logos/duke.png",
+  "conf_logo_url": "/images/conf_logos/Atlantic_Coast.png",
+  "primary_color": "#003087",
+  "secondary_color": "#FFFFFF",
+  "overall_record": "14-2",
+  "conference_record": "5-0",
+  "tournament_bid_pct": 99.1,
+  "average_seed": 1.6,
+  "kenpom_rank": 4,
+  "seed_distribution": {"1": 52.0, "2": 38.0, "3": 9.1},
+  "win_seed_counts": [
+   {"Wins": 27, "Seed": "1", "Count": 310},
+   {"Wins": 25, "Seed": "2", "Count": 280},
+   {"Wins": 22, "Seed": "3", "Count": 91}
+  ]
+ }
+}
