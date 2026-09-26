@@ -1,6 +1,7 @@
 import { PlayoffRankingsResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export type PlayoffRankingsMode = "season" | "current";
 
@@ -27,7 +28,7 @@ export function useFootballPlayoffRankings(
       }
       return response.json();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...queryCachePolicy("currentStandings"),
     refetchOnWindowFocus: false,
   });
 }

@@ -1,5 +1,6 @@
 import { api } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface ConfHistoryData {
   conference_name: string;
@@ -24,7 +25,7 @@ export function useFootballConfDataHistory(season?: string) {
         `/football_conf_data/history${seasonQuery}`,
       );
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...queryCachePolicy("historical"),
     retry: 2,
   });
 }

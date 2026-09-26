@@ -1,6 +1,7 @@
 // hooks/useFootballTeamHistory.ts
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useFootballTeamHistory = (teamName: string, season?: string) => {
   return useQuery({
@@ -31,7 +32,7 @@ export const useFootballTeamHistory = (teamName: string, season?: string) => {
       };
     },
     enabled: !!teamName,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...queryCachePolicy("historical"),
     retry: 3,
   });
 };

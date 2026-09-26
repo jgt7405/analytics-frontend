@@ -1,6 +1,7 @@
 // src/hooks/useBasketballTeamAllHistory.ts
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface HistoricalDataPoint {
   date: string;
@@ -77,7 +78,7 @@ export const useBasketballTeamAllHistory = (
       };
     },
     enabled: !!teamName,
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("historical"),
     retry: 2,
   });
 };

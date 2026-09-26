@@ -74,7 +74,7 @@ interface TeamDataApiResponse {
   }>;
 }
 
-interface UnifiedConferenceDataResponse {
+export interface UnifiedConferenceDataResponse {
   conferences: string[];
   data: Record<string, unknown>;
 }

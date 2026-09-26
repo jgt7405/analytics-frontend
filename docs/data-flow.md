@@ -23,15 +23,15 @@ Server-rendered first paint skips the browser leg: `page.tsx` calls a helper in 
 
 ## Caching layers
 
-| Layer | Where | Setting today |
+Freshness is set per **class of data** in `src/lib/cache-policy.ts` (`live`, `currentStandings`, `historical`, `referenceData`, `scenario`). Which endpoint is in which class, and why: `docs/decisions/cache-classes.md`.
+
+| Layer | Where | Setting |
 |---|---|---|
-| React Query (browser memory) | `src/components/providers/QueryProvider.tsx`, per-hook overrides | `staleTime` 5 min, `gcTime` 10 min, no refetch on window focus, no retry on 4xx |
-| Vercel CDN | proxy GET responses | `Cache-Control: public, s-maxage=300, stale-while-revalidate=60`. Measured: first call per URL is a MISS (up to ~0.6 s), then HITs at ~25 ms |
-| Next data cache (server) | `src/lib/server-api.ts`, `src/app/sitemap.ts` | `revalidate: 3600` (1 hour) |
+| React Query (browser memory) | each hook spreads `...queryCachePolicy("<class>")`; `QueryProvider.tsx` defaults to `currentStandings` | Fresh for 30 s (live) to 24 h (reference data). No refetch on window focus, no retry on 4xx |
+| Vercel CDN | proxy GET responses; class picked by `cacheClassForBackendPath()` from the backend path and `?season=` | `s-maxage` 30 s to 24 h per class. POSTs `private, no-store`. Errors `no-store`. Measured before classes: first call per URL is a MISS (up to ~0.6 s), then HITs at ~25 ms |
+| Next data cache (server) | `src/lib/server-api.ts`, `src/app/sitemap.ts` | `revalidate` per class, same lifetime as the CDN |
 | Proxy → backend | proxy route | `cache: "no-store"` (the CDN layer above does the caching) |
 | Service worker | `src/sw.ts` (Serwist) | Images cached 1 day (64 entries). Build JS/CSS precached. Pages and API data are never cached here |
-
-The 5-minute and 1-hour settings disagree; step 3 replaces them with named freshness classes (live, current standings, historical, reference data, what-if scenario). Error responses are not cached by the CDN (no cache header on errors).
 
 ## Adding or changing an endpoint
 

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface ConfHistoryData {
   conference: string; // ← Note: "conference" not "conference_name"
@@ -31,6 +32,6 @@ export function useBasketballConfDataHistory(season?: string) {
       }
       return response.json();
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    ...queryCachePolicy("historical"),
   });
 }

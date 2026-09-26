@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface WinSeedCountEntry {
   Wins: number;
@@ -79,8 +80,7 @@ export const useBasketballTeamData = (
       return response.json();
     },
     enabled: !!teamName,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     retry: 2,
   });
 };

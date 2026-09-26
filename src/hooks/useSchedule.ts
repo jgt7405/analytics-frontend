@@ -1,6 +1,7 @@
 import { api } from "@/services/api";
 import { ScheduleApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useSchedule = (
   conference: string,
@@ -12,7 +13,7 @@ export const useSchedule = (
     initialData,
     queryFn: () => api.getSchedule(conference, season),
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     retry: 3,
   });
 };

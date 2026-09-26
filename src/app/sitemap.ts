@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { BACKEND_API_URL } from '@/config/env';
+import { CACHE_POLICIES } from '@/lib/cache-policy';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.jthomanalytics.com';
@@ -165,7 +166,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fetch basketball teams
     const basketballTeamsRes = await fetch(
       `${BACKEND_API_URL}/basketball_teams`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: CACHE_POLICIES.referenceData.revalidate } }
     );
 
     if (basketballTeamsRes.ok) {
@@ -193,7 +194,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const footballTeamsRes = await fetch(
       `${BACKEND_API_URL}/football_teams`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: CACHE_POLICIES.referenceData.revalidate } }
     );
 
     if (footballTeamsRes.ok) {

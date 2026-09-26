@@ -1,6 +1,7 @@
 import { BasketballCompositeRatingsResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export function useBasketballCompositeRatings() {
   return useQuery<BasketballCompositeRatingsResponse>({
@@ -12,7 +13,7 @@ export function useBasketballCompositeRatings() {
       }
       return response.json();
     },
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     refetchOnWindowFocus: false,
   });
 }

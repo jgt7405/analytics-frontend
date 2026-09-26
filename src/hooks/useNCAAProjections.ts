@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export interface NCAATeam {
   team_name: string;
@@ -80,8 +81,7 @@ export function useNCAAProjections(
       }
       return response.json() as Promise<NCAAProjectionsResponse>;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+    ...queryCachePolicy("currentStandings"),
   });
 
   return {

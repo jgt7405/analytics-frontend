@@ -164,3 +164,16 @@ A second Lighthouse run 13 minutes later (run 36195612918) moved some performanc
 Route sizes are measured with `scripts/route-sizes.mjs`, which reads Next 16's per-route client reference manifests (Next 14's `app-build-manifest.json` no longer exists), so compare the two columns as totals rather than to the exact kB. The increase is the framework runtime; route-specific code did not grow. Lighthouse in CI on the Next 16 PR (single run per route, same job as on Next 14) averaged 82 vs 78 across the 7 routes, within run-to-run noise.
 
 Field data after the upgrade: re-check Vercel Speed Insights a week after deploy and add it here.
+
+## 2026-09-26 — after step 3a (proxy URLs with trailing slash)
+
+Proxy probe against production from GitHub Actions ([run 36218172541](https://github.com/jgt7405/analytics-frontend/actions/runs/36218172541)), 16 endpoints × 5 rounds, now requested the way the client does after #19:
+
+| Result | Before (2026-09-25) | After |
+|---|---|---|
+| Trailing-slash redirects | 70 of 70 calls | **0 of 80** |
+| Failures | 0 | 0 |
+| Cached response, median of medians | 25 ms | 27 ms |
+| Slowest first (uncached) response | 572 ms | 566 ms (`/ncaa_tourney/All_Teams`) |
+
+`/football/standings/SEC/?season=2025-26` returned an empty `data` array, so the probe no longer includes it (see the step 3b PR).

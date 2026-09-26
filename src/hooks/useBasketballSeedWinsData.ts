@@ -1,6 +1,7 @@
 // src/hooks/useBasketballSeedWinsData.ts
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export interface SeedWinsTeam {
   team_name: string;
@@ -201,7 +202,7 @@ export const useBasketballSeedWinsData = (
       }
     },
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...queryCachePolicy("currentStandings"),
     retry: 2,
   });
 };

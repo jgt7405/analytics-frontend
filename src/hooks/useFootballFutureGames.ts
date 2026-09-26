@@ -1,6 +1,7 @@
 import { WhatIfGame } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface AllFutureGamesResponse {
   success: boolean;
@@ -19,8 +20,7 @@ export const useFootballFutureGames = (enabled: boolean = true) => {
     queryKey: ["football-all-future-games"],
     queryFn: fetchAllFutureGames,
     enabled,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    ...queryCachePolicy("live"),
     refetchOnWindowFocus: false,
   });
 };

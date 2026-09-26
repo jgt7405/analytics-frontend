@@ -1,6 +1,7 @@
 import { api } from "@/services/api";
 import { StandingsApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useStandings = (
   conference: string,
@@ -22,7 +23,7 @@ export const useStandings = (
       }
     },
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     retry: 3,
   });
 };

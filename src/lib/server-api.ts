@@ -34,13 +34,26 @@ import type { NCAAProjectionsResponse } from "@/hooks/useNCAAProjections";
 import type { CombinedBasketballConfResponse } from "@/hooks/useBasketballConfData";
 import type { PlayoffRankingsResponse } from "@/types/football";
 import { BACKEND_API_URL } from "@/config/env";
+import { CACHE_POLICIES, cacheClassForBackendPath } from "@/lib/cache-policy";
 
 const BACKEND = BACKEND_API_URL;
+
+// Server data cache lifetime follows the endpoint's freshness class, the same
+// one the proxy uses for the CDN (src/lib/cache-policy.ts). Failed responses
+// aren't cached by Next's data cache.
+function revalidateFor(path: string): number {
+  const url = new URL(path, "http://backend");
+  const cacheClass = cacheClassForBackendPath(
+    url.pathname,
+    url.searchParams.get("season"),
+  );
+  return CACHE_POLICIES[cacheClass].revalidate;
+}
 
 async function fetchJson<T>(path: string): Promise<T | undefined> {
   try {
     const res = await fetch(`${BACKEND}${path}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: revalidateFor(path) },
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return undefined;

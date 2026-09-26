@@ -1,6 +1,7 @@
 import { api } from "@/services/api";
 import type { ConfTourneyApiResponse } from "@/services/basketball-api";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useConferenceTourney = (
   conference: string,
@@ -12,7 +13,7 @@ export const useConferenceTourney = (
     initialData,
     queryFn: () => api.getConfTourney(conference, season),
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     retry: 3,
   });
 };

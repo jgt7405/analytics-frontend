@@ -1,6 +1,7 @@
 // src/hooks/useFootballCFPHistory.ts
 import { useQuery } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface TeamHistoryData {
   team_name: string;
@@ -77,7 +78,7 @@ export const useFootballCFPHistory = (conference: string, season?: string) => {
       return response.json();
     },
     enabled: !!conference,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...queryCachePolicy("historical"),
     retry: 3,
   });
 };

@@ -5,9 +5,9 @@
 // status codes, failures, response times and Vercel CDN cache results. It is a
 // synthetic check: real-traffic error rates live in the Vercel logs.
 //
-// Paths are requested exactly as the site's client code does (no trailing
-// slash), so the timings include the 308 trailing-slash redirect that
-// `trailingSlash: true` adds to every browser proxy call.
+// Paths are requested exactly as the site's client code does: with the
+// trailing slash `proxyUrl()` adds (src/lib/proxy-url.ts). A redirect means
+// that regressed; `--strict` fails on it.
 //
 // Usage:
 //   npm run baseline:proxy
@@ -36,7 +36,14 @@ const ENDPOINTS = [
   "/cwv/SEC",
   "/seed/Big_Ten",
   "/ncaa_tourney/All_Teams",
+  "/football/standings/SEC/history",
 ];
+
+// Same URL shape as proxyUrl(): slash after the path, before any query.
+function proxyPath(path) {
+  const [pathname, query] = path.split("?");
+  return `/api/proxy${pathname.replace(/\/+$/, "")}/${query ? `?${query}` : ""}`;
+}
 
 function arg(name, fallback) {
   const index = process.argv.indexOf(`--${name}`);
@@ -52,7 +59,7 @@ const TIMEOUT_MS = 35000;
 async function probe(path) {
   const started = performance.now();
   try {
-    const res = await fetch(`${base}/api/proxy${path}`, {
+    const res = await fetch(`${base}${proxyPath(path)}`, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -145,9 +152,10 @@ mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`);
 console.log(`Wrote ${out}`);
 
-if (strict && (report.summary.failed || report.summary.shapeProblems)) {
+const { failed, shapeProblems, redirected } = report.summary;
+if (strict && (failed || shapeProblems || redirected)) {
   console.error(
-    `::error::Proxy probe: ${report.summary.failed} failed request(s), ${report.summary.shapeProblems} endpoint(s) with empty or malformed data`,
+    `::error::Proxy probe: ${failed} failed request(s), ${shapeProblems} endpoint(s) with empty or malformed data, ${redirected} redirected request(s)`,
   );
   process.exit(1);
 }

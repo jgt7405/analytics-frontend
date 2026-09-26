@@ -1,11 +1,13 @@
 import { api } from "@/services/api";
+import type { UnifiedConferenceDataResponse } from "@/services/basketball-api";
 import { useQuery } from "@tanstack/react-query";
+import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useConferenceData = (season?: string) => {
-  return useQuery<any, Error>({
+  return useQuery<UnifiedConferenceDataResponse, Error>({
     queryKey: ["conference-data", season],
     queryFn: () => api.getUnifiedConferenceData(),
-    staleTime: 5 * 60 * 1000,
+    ...queryCachePolicy("currentStandings"),
     retry: 3,
   });
 };
