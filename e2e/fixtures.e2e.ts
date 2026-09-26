@@ -40,8 +40,9 @@ test("basketball standings render the fixture's teams", async ({ page }) => {
 test("the teams page lists a conference's teams from one team list", async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto("/football/teams/?conf=Southeastern");
-  await expect(page.locator('a[href="/football/team/Alabama/"]')).toBeVisible();
-  await expect(page.locator('a[href="/football/team/Texas/"]')).toBeVisible();
+  // The team cards (other links on the page may name the same teams).
+  await expect(page.getByRole("link", { name: /^Alabama logo/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Texas logo/ })).toBeVisible();
   await settle(page);
   expect(errors).toEqual([]);
 });
