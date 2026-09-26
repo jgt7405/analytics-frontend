@@ -29,7 +29,7 @@ Server-rendered first paint skips the browser leg: `page.tsx` calls a helper in 
 | Vercel CDN | proxy GET responses | `Cache-Control: public, s-maxage=300, stale-while-revalidate=60`. Measured: first call per URL is a MISS (up to ~0.6 s), then HITs at ~25 ms |
 | Next data cache (server) | `src/lib/server-api.ts`, `src/app/sitemap.ts` | `revalidate: 3600` (1 hour) |
 | Proxy → backend | proxy route | `cache: "no-store"` (the CDN layer above does the caching) |
-| Service worker | `next.config.js` (next-pwa) | Images cached 1 day. The API rule points at an old backend host and never matches |
+| Service worker | `src/sw.ts` (Serwist) | Images cached 1 day (64 entries). Build JS/CSS precached. Pages and API data are never cached here |
 
 The 5-minute and 1-hour settings disagree; step 3 replaces them with named freshness classes (live, current standings, historical, reference data, what-if scenario). Error responses are not cached by the CDN (no cache header on errors).
 

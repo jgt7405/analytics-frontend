@@ -6,7 +6,7 @@
     "dev": "next dev --hostname 0.0.0.0",
     "dev:clean": "rm -rf .next && npm cache clean --force && npm run dev",
     "dev:turbo": "next dev --turbopack --hostname 0.0.0.0",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -22,25 +22,27 @@
     "size:check": "node scripts/check-budgets.mjs",
     "baseline:lighthouse": "node scripts/lighthouse-baseline.mjs",
     "baseline:proxy": "node scripts/proxy-probe.mjs",
-    "analyze": "ANALYZE=true npm run build",
+    "analyze": "ANALYZE=true next build --webpack",
     "clean": "rm -rf .next dist node_modules/.cache || true",
     "clean:all": "rm -rf .next dist node_modules/.cache && npm cache clean --force"
   },
   "dependencies": {
+    "@serwist/turbopack": "^9.5.12",
     "@tanstack/react-query": "^5.59.20",
     "@tanstack/react-query-devtools": "^5.59.20",
     "@vercel/analytics": "^1.4.1",
     "@vercel/speed-insights": "^1.1.0",
     "chart.js": "^4.5.0",
     "clsx": "^2.1.1",
+    "esbuild": "^0.25.12",
     "lucide-react": "^0.460.0",
     "next": "^16.3.6",
-    "next-pwa": "^5.6.0",
     "nodemailer": "^10.0.10",
     "react": "^19.3.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.3.0",
     "react-hot-toast": "^2.4.1",
+    "serwist": "^9.5.12",
     "tailwind-merge": "^2.5.4",
     "zod": "^3.23.8"
   },
@@ -136,5 +138,10 @@
     "start_url": "/basketball/wins",
     "display": "standalone",
     "orientation": "portrait-primary"
+  },
+  "overrides": {
+    "@serwist/turbopack": {
+      "browserslist": "^4.29.1"
+    }
   }
 }

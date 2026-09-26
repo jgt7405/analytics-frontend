@@ -1,43 +1,6 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
 });
-
-// Conditional PWA setup
-const withPWA =
-  process.env.NODE_ENV === "production"
-    ? require("next-pwa")({
-        dest: "public",
-        disable: false,
-        register: true,
-        skipWaiting: true,
-        runtimeCaching: [
-          {
-            urlPattern:
-              /^https:\/\/analytics-backend-production\.up\.railway\.app\/api\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "api-cache",
-              expiration: {
-                maxEntries: 64,
-                maxAgeSeconds: 5 * 60,
-              },
-            },
-          },
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "image-cache",
-              expiration: {
-                maxEntries: 64,
-                maxAgeSeconds: 24 * 60 * 60,
-              },
-            },
-          },
-        ],
-      })
-    : (config) => config;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -54,6 +17,11 @@ const nextConfig = {
 
   // Universal settings
   poweredByHeader: false,
+
+  // The service worker (src/sw.ts) is bundled with esbuild by the Serwist
+  // route handler at src/app/serwist/[path]/route.ts; keep esbuild out of
+  // the server bundle (what @serwist/turbopack's withSerwist() does).
+  serverExternalPackages: ["esbuild", "esbuild-wasm"],
   reactStrictMode: true,
 
   // Experimental features
@@ -142,6 +110,10 @@ const nextConfig = {
       "teams", "compare", "conf-data", "conf-tourney", "ncaa-tourney", "seed",
     ];
     return [
+      // Serve the service worker at /sw.js, the URL returning visitors'
+      // browsers already have registered, so they update in place.
+      { source: "/sw.js", destination: "/serwist/sw.js" },
+      { source: "/sw.js.map", destination: "/serwist/sw.js.map" },
       ...seasonPages.map((page) => ({
         source: `/basketball/${page}/`,
         destination: `/basketball/2025-26/${page}/`,
@@ -156,4 +128,4 @@ const nextConfig = {
   trailingSlash: true,
 };
 
-module.exports = withPWA(withBundleAnalyzer(nextConfig));
+module.exports = withBundleAnalyzer(nextConfig);

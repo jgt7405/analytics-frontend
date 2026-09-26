@@ -8,7 +8,7 @@ A short map of how the site is put together. Rules for working in it are in `AGE
 - **Backend:** separate Flask app on Railway (`https://jthomprodbackend-production.up.railway.app/api`). The browser never calls it directly; everything goes through `/api/proxy` on this site.
 - **Other server routes:** `/api/contact` (contact form email via nodemailer and SMTP env vars), `sitemap.ts` (includes team pages fetched from the backend, refreshed hourly).
 - **Monitoring:** Vercel Analytics and Speed Insights, Google Analytics (optional env var). No error-tracking service.
-- **PWA:** `next-pwa` generates `public/sw.js` at build time (production only). It is webpack-only, so production builds use `next build --webpack`; its replacement is the next part of plan step 5.
+- **PWA:** a Serwist service worker (`src/sw.ts`), built by the route handler `src/app/serwist/[path]/route.ts` and served at `/sw.js`, registered in production by `SerwistProvider` (`src/components/providers/Providers.tsx`). It precaches the build's JS/CSS and icons (~1.2 MB) and caches images on first view for 24 h. It does not cache pages or API data.
 
 ## Routing
 

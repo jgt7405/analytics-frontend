@@ -52,7 +52,8 @@ next-env.d.ts
 *.log
 build_output.txt
 
-# next-pwa generated service worker (rebuilt on every production build)
+# Service worker files the old next-pwa build generated (now served by
+# src/app/serwist/[path]/route.ts); ignored so stale local copies never ship
 /public/sw.js
 /public/sw.js.map
 /public/workbox-*.js
