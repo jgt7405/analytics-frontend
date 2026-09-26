@@ -1,7 +1,7 @@
 import { PlayoffRankingsResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 export type PlayoffRankingsMode = "season" | "current";
@@ -16,13 +16,11 @@ export function useFootballPlayoffRankings(
     initialData: mode === "season" && !season ? initialData : undefined,
     initialDataUpdatedAt: initialData && mode === "season" && !season ? 0 : undefined,
     queryFn: async () => {
-      // Use proxy pattern consistent with other football hooks
-      const params = new URLSearchParams();
-      if (season) params.set("season", season);
-      if (mode === "current") params.set("mode", "current");
-      const query = params.toString() ? `?${params.toString()}` : "";
       const response = await fetch(
-        proxyUrl(`football/playoff_rankings/All_Teams${query}`),
+        apiUrl("football.playoffRankings", {}, {
+          season,
+          mode: mode === "current" ? "current" : undefined,
+        }),
       );
       if (!response.ok) {
         throw new Error("Failed to fetch playoff rankings");

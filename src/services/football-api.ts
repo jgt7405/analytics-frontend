@@ -14,8 +14,8 @@ import {
   FootballTWVApiResponse,
 } from "@/types/football";
 import { BasketballApiClient } from "./basketball-api";
-import { proxyUrl } from "@/lib/proxy-url";
 import { logger } from "@/lib/logger";
+import { apiPath, apiUrl } from "@/api/urls";
 
 // Football-specific response interface (renamed from FootballTeamData to avoid collision with src/types/football.ts)
 interface FootballTeamDetailData {
@@ -81,13 +81,12 @@ export class ApiClient extends BasketballApiClient {
   ): Promise<FootballStandingsApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
       `🏈 Getting football standings for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(
-      `/football/standings/${formattedConf}${seasonQuery}`,
+      apiPath("football.standings", { conference: formattedConf }, { season }),
       (data) => ({
         success: true,
         data: data as FootballStandingsApiResponse,
@@ -102,13 +101,12 @@ export class ApiClient extends BasketballApiClient {
   ): Promise<FootballScheduleResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
       `🏈 Getting football schedule for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(
-      `/football/conf_schedule/${formattedConf}${seasonQuery}`,
+      apiPath("football.confSchedule", { conference: formattedConf }, { season }),
       (data) => ({
         success: true,
         data: data as FootballScheduleResponse,
@@ -124,12 +122,11 @@ export class ApiClient extends BasketballApiClient {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
       `🏈 Getting football TWV for: ${sanitized} -> ${formattedConf}`,
     );
 
-    return this.request(`/football/twv/${formattedConf}${seasonQuery}`, (data) => ({
+    return this.request(apiPath("football.twv", { conference: formattedConf }, { season }), (data) => ({
       success: true,
       data: data as FootballTWVApiResponse,
       error: null,
@@ -142,13 +139,12 @@ export class ApiClient extends BasketballApiClient {
   ): Promise<FootballCWVApiResponse> {
     const sanitized = sanitizeInput(conference);
     const formattedConf = sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
       `🏈 Getting football CWV for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(
-      `/football/cwv/${formattedConf}${seasonQuery}`,
+      apiPath("football.cwv", { conference: formattedConf }, { season }),
       (data) => ({
         success: true,
         data: data as FootballCWVApiResponse,
@@ -164,13 +160,12 @@ export class ApiClient extends BasketballApiClient {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
       `🏈 Getting football conf champ for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(
-      `/football/conf_champ/${formattedConf}${seasonQuery}`,
+      apiPath("football.confChamp", { conference: formattedConf }, { season }),
       (data) => ({
         success: true,
         data: data as FootballConfChampApiResponse,
@@ -186,13 +181,12 @@ export class ApiClient extends BasketballApiClient {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(
       `🏈 Getting football seed for: ${sanitized} -> ${formattedConf}`,
     );
 
     return this.request(
-      `/football_seed/${formattedConf}${seasonQuery}`,
+      apiPath("football.seed", { conference: formattedConf }, { season }),
       (data) => ({
         success: true,
         data: data as FootballSeedApiResponse,
@@ -208,10 +202,9 @@ export class ApiClient extends BasketballApiClient {
     const sanitized = sanitizeInput(conference);
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(`🏈 Getting CFP data for: ${sanitized} -> ${formattedConf}`);
 
-    return this.request(`/cfp/${formattedConf}${seasonQuery}`, (data) => ({
+    return this.request(apiPath("football.cfp", { conference: formattedConf }, { season }), (data) => ({
       success: true,
       data: data as FootballCFPApiResponse,
       error: null,
@@ -221,10 +214,9 @@ export class ApiClient extends BasketballApiClient {
   async getFootballTeams(
     season?: string,
   ): Promise<FootballTeamsApiResponse> {
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug("🏈 API: About to call /football_teams");
     const result = await this.request(
-      `/football_teams${seasonQuery}`,
+      apiPath("football.teams", {}, { season }),
       (data) => {
         logger.debug("🏈 API: Raw response data:", data);
         return {
@@ -241,10 +233,9 @@ export class ApiClient extends BasketballApiClient {
   async getFootballConfData(
     season?: string,
   ): Promise<FootballConferenceApiResponse> {
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     logger.debug(`🏈 Getting football conference data`);
 
-    return this.request(`/football_conf_data${seasonQuery}`, (data) => ({
+    return this.request(apiPath("football.conferenceData", {}, { season }), (data) => ({
       success: true,
       data: data as FootballConferenceApiResponse,
       error: null,
@@ -256,9 +247,8 @@ export class ApiClient extends BasketballApiClient {
     season?: string,
   ): Promise<FootballTeamDetailData> {
     const sanitizedTeamName = sanitizeInput(teamName);
-    const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
     const response = await fetch(
-      proxyUrl(`football_team/${encodeURIComponent(sanitizedTeamName)}${seasonQuery}`),
+      apiUrl("football.team", { team: sanitizedTeamName }, { season }),
     );
 
     if (!response.ok) {
@@ -281,7 +271,7 @@ export class ApiClient extends BasketballApiClient {
       start_scenario: number;
     };
   }): Promise<{ success?: boolean; csv_data?: string; filename: string; error?: string }> {
-    const response = await fetch(proxyUrl("football/whatif/export"), {
+    const response = await fetch(apiUrl("football.whatIfExport"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),

@@ -13,7 +13,7 @@ import { api } from "@/services/api";
 import { Download } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 
 // ─── Responsive Hook (inline) ────────────────────────────────────────────────
@@ -317,7 +317,7 @@ async function fetchConferenceStandings(
   try {
     const confFormatted = conference.replace(/ /g, "_");
     const response = await fetch(
-      proxyUrl(`standings/${confFormatted}`), // ← CORRECT endpoint (has conference_wins/losses)
+      apiUrl("basketball.standings", { conference: confFormatted }), // ← CORRECT endpoint (has conference_wins/losses)
     );
     if (!response.ok) return [];
     const json = await response.json();
@@ -342,7 +342,7 @@ async function fetchConfChampDataForTeam(
   try {
     const confFormatted = conference.replace(/\s+/g, "_");
     const response = await fetch(
-      proxyUrl(`basketball/conf_champ_analysis/${confFormatted}`),
+      apiUrl("basketball.confChampAnalysis", { conference: confFormatted }),
     );
     if (!response.ok) return null;
     const result = await response.json();
@@ -2345,7 +2345,7 @@ function GamePreviewPageContent() {
     const loadGames = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(proxyUrl("basketball/upcoming_games"));
+        const response = await fetch(apiUrl("basketball.upcomingGames"));
         if (!response.ok) throw new Error("Failed to fetch upcoming games");
         const data = await response.json();
         setUpcomingGames(data.games || []);
@@ -2434,7 +2434,7 @@ function GamePreviewPageContent() {
         ): Promise<NextGameImpactData | null> => {
           try {
             const resp = await fetch(
-              proxyUrl("basketball/whatif/next-game-impact"),
+              apiUrl("basketball.nextGameImpact"),
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

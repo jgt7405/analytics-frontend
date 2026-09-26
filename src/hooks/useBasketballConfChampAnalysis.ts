@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 // One team's row from /basketball/conf_champ_analysis/<conference>: conference
@@ -38,7 +38,7 @@ const fetchConfChampAnalysis = async (
   conference: string,
 ): Promise<ConfChampAnalysisResponse> => {
   const confFormatted = conference.replace(/\s+/g, "_");
-  const response = await fetch(proxyUrl(`basketball/conf_champ_analysis/${confFormatted}`));
+  const response = await fetch(apiUrl("basketball.confChampAnalysis", { conference: confFormatted }));
   if (!response.ok) throw new Error(`Failed to fetch conference analysis: ${response.status}`);
   return response.json();
 };

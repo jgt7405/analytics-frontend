@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 // A team as listed by /basketball_teams and /football_teams. Sport-specific
@@ -23,8 +23,7 @@ const fetchTeamList = async (
   sport: "basketball" | "football",
   season: string | undefined,
 ): Promise<TeamListResponse> => {
-  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-  const response = await fetch(proxyUrl(`${sport}_teams${seasonQuery}`));
+  const response = await fetch(apiUrl(`${sport}.teams`, {}, { season }));
   if (!response.ok) throw new Error(`Failed to load ${sport} teams: ${response.status}`);
   return response.json();
 };

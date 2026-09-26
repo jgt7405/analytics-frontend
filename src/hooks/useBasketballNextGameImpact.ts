@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 export interface NextGameMetrics {
@@ -49,7 +49,7 @@ const fetchNextGameImpact = async (
   teamId: number,
   signal: AbortSignal,
 ): Promise<NextGameImpactData> => {
-  const res = await fetch(proxyUrl("basketball/whatif/next-game-impact"), {
+  const res = await fetch(apiUrl("basketball.nextGameImpact"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ conference, team_id: teamId }),

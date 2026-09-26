@@ -74,23 +74,34 @@ const eslintConfig = [
     ignores: ["**/__tests__/**"],
     rules: { "no-console": "error" },
   },
-  // Proxy URLs are built with proxyUrl() (src/lib/proxy-url.ts), which adds
-  // the trailing slash that avoids a 308 redirect on every data call. React
-  // Query keys come from queryKeys (src/lib/query-keys.ts). Both live in one
+  // Backend URLs are built from the endpoint list with apiUrl()/apiPath()
+  // (src/api/urls.ts), never by hand: that checks the key, parameters and
+  // query, and adds the trailing slash that avoids a 308 redirect. React
+  // Query keys come from queryKeys (src/lib/query-keys.ts). All in one
   // block: a second no-restricted-syntax entry would replace this one.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/lib/proxy-url.ts", "src/app/api/**", "**/__tests__/**"],
+    ignores: [
+      "src/lib/proxy-url.ts",
+      "src/api/urls.ts",
+      "src/services/shared-request.ts",
+      "src/app/api/**",
+      "**/__tests__/**",
+    ],
     rules: {
       "no-restricted-syntax": [
         "error",
         {
           selector: "Literal[value=/^\\x2Fapi\\x2Fproxy/]",
-          message: "Build proxy URLs with proxyUrl() from @/lib/proxy-url.",
+          message: "Build backend URLs with apiUrl() from @/api/urls.",
         },
         {
           selector: "TemplateLiteral > TemplateElement:first-child[value.raw=/^\\x2Fapi\\x2Fproxy/]",
-          message: "Build proxy URLs with proxyUrl() from @/lib/proxy-url.",
+          message: "Build backend URLs with apiUrl() from @/api/urls.",
+        },
+        {
+          selector: "ImportDeclaration[source.value='@/lib/proxy-url']",
+          message: "Build backend URLs with apiUrl() / apiPath() from @/api/urls.",
         },
         {
           selector: "Property[key.name='queryKey'] > ArrayExpression",

@@ -2,7 +2,7 @@
 import { FootballScheduleResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 import { logger } from "@/lib/logger";
 
@@ -12,7 +12,6 @@ const fetchFootballSchedule = async (
 ): Promise<FootballScheduleResponse> => {
   // ✅ FIXED: Format conference name like other football hooks
   const formattedConf = conference.replace(/\s+/g, "_");
-  const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
 
   logger.debug(
     `🏈 Getting football schedule for: ${conference} -> ${formattedConf}`,
@@ -20,7 +19,7 @@ const fetchFootballSchedule = async (
 
   // Use the correct proxy endpoint with formatted conference name
   const response = await fetch(
-    proxyUrl(`football/conf_schedule/${formattedConf}${seasonQuery}`),
+    apiUrl("football.confSchedule", { conference: formattedConf }, { season }),
   );
 
   if (!response.ok) {

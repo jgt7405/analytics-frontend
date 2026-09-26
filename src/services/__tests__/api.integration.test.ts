@@ -151,10 +151,10 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      await api.getStandings('ACC', '2023').catch(() => {})  // validation errors expected with mock data
+      await api.getStandings('ACC', '2024-25').catch(() => {})  // validation errors expected with mock data
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/?season=2023'),
+        expect.stringContaining('/?season=2024-25'),
         expect.any(Object)
       )
     })
@@ -165,10 +165,10 @@ describe('API Client Integration Tests', () => {
         json: async () => ({ data: [] }),
       })
 
-      await api.getFootballStandings('SEC', '2023').catch(() => {})  // validation errors expected with mock data
+      await api.getFootballStandings('SEC', '2024-25').catch(() => {})  // validation errors expected with mock data
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/?season=2023'),
+        expect.stringContaining('/?season=2024-25'),
         expect.any(Object)
       )
     })

@@ -84,9 +84,9 @@ export function isValidQueryValue(name: QueryParam, value: string): boolean {
 const S = 1000;
 const GET_TIMEOUT = 30 * S;
 
-function get(
-  key: string,
-  sport: Sport,
+function get<K extends string, S extends Sport>(
+  key: K,
+  sport: S,
   proxyPaths: readonly string[],
   backendPath: string,
   cacheClass: CacheClass,
@@ -95,7 +95,7 @@ function get(
     query?: readonly QueryParam[];
     response?: "json" | "csv";
   } = {},
-): Endpoint {
+): Endpoint & { key: `${S}.${K}` } {
   return {
     key: `${sport}.${key}`,
     sport,
@@ -111,13 +111,13 @@ function get(
   };
 }
 
-function post(
-  key: string,
-  sport: Sport,
+function post<K extends string, S extends Sport>(
+  key: K,
+  sport: S,
   path: string,
   timeoutMs: number,
   options: { body?: "json" | "formData"; response?: "json" | "csv" } = {},
-): Endpoint {
+): Endpoint & { key: `${S}.${K}` } {
   return {
     key: `${sport}.${key}`,
     sport,
@@ -141,7 +141,7 @@ const team = { team: "team" } as const;
 // Order matters only where two shapes of the same length could both match
 // (e.g. `standings/:conference/history` before `standings/json/:conference`);
 // the first match wins, and the contract tests check no route is shadowed.
-export const ENDPOINTS: readonly Endpoint[] = [
+export const ENDPOINTS = [
   // --- Basketball -----------------------------------------------------------
   get("teams", "basketball", ["basketball_teams", "teams", "basketball/teams"], "/basketball_teams", "referenceData"),
   get("conferenceData", "basketball", ["unified_conference_data", "basketball/conf-data"], "/unified_conference_data", "currentStandings"),
@@ -206,7 +206,10 @@ export const ENDPOINTS: readonly Endpoint[] = [
   post("whatIfDownload", "football", "football/whatif/download", 120 * S),
   post("gameImpacts", "football", "football/whatif/game-impacts", 240 * S),
   post("bowlGameWinner", "football", "football/bowl-game-winner", 120 * S),
-];
+] as const satisfies readonly Endpoint[];
+
+/** Every endpoint key, e.g. "football.standings". */
+export type EndpointKey = (typeof ENDPOINTS)[number]["key"];
 
 // --- Matching ---------------------------------------------------------------
 
@@ -296,19 +299,4 @@ export function checkQuery(
     query.set(name, value);
   }
   return { ok: true, query };
-}
-
-/** The GET endpoint serving a backend path (as sent to the Flask API, without
- *  the query string), e.g. for server-side fetches. */
-export function endpointForBackendPath(backendPath: string): Endpoint | undefined {
-  const segments = backendPath.replace(/^\/+|\/+$/g, "").split("/");
-  return ENDPOINTS.find(
-    (endpoint) =>
-      endpoint.method === "GET" &&
-      matchPattern(endpoint.backendPath.slice(1), segments) !== null,
-  );
-}
-
-export function endpointByKey(key: string): Endpoint | undefined {
-  return ENDPOINTS.find((endpoint) => endpoint.key === key);
 }

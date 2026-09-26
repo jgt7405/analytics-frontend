@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 export interface NCAATeam {
@@ -63,10 +63,6 @@ export function useNCAAProjections(
   initialData?: NCAAProjectionsResponse,
   mode: NCAAProjectionsMode = "season",
 ): UseNCAAProjectionsReturn {
-  const params = new URLSearchParams();
-  if (season) params.set("season", season);
-  if (mode === "current") params.set("mode", "current");
-  const query = params.toString() ? `?${params.toString()}` : "";
   // Server-rendered initial data is the season projection only
   const seeded = mode === "season" ? initialData : undefined;
   const { data, isLoading, error, refetch } = useQuery({
@@ -75,7 +71,10 @@ export function useNCAAProjections(
     initialDataUpdatedAt: seeded ? 0 : undefined,
     queryFn: async () => {
       const response = await fetch(
-        proxyUrl(`basketball/ncaa-projections${query}`),
+        apiUrl("basketball.ncaaProjections", {}, {
+          season,
+          mode: mode === "current" ? "current" : undefined,
+        }),
       );
       if (!response.ok) {
         throw new Error("Failed to fetch NCAA projections");

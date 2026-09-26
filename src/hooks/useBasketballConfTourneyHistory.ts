@@ -1,7 +1,7 @@
 // src/hooks/useBasketballConfTourneyHistory.ts
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface TeamHistoryData {
@@ -56,9 +56,8 @@ export const useBasketballConfTourneyHistory = (
   return useQuery<BasketballConfTourneyHistoryResponse, Error>({
     queryKey: queryKeys.basketball.confTourneyHistory(conference, season),
     queryFn: async () => {
-      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        proxyUrl(`conf_tourney/${conference}/history${seasonQuery}`),
+        apiUrl("basketball.confTourneyHistory", { conference }, { season }),
       );
       if (!response.ok) {
         throw new Error("Failed to fetch conference tournament history");

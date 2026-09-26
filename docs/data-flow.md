@@ -9,17 +9,16 @@ Browser
   React component
     → hook in src/hooks/            (React Query: caching, retries, loading/error state)
     → method in src/services/       (basketball-api.ts / football-api.ts, built on shared-request.ts)
-    → fetch(proxyUrl("<path>"))     (src/lib/proxy-url.ts → /api/proxy/<path>/; same origin, no CORS, no redirect)
+    → fetch(apiUrl("<key>", params, query))   (src/api/urls.ts → /api/proxy/<path>/; same origin, no CORS, no redirect)
 Vercel
   src/app/api/proxy/[...slug]/route.ts
-    → validates path segments, maps the URL shape to a backend path (one branch per shape)
-    → forwards allowed query params: season, mode, date
-    → fetch(BACKEND_API_URL + path), 30 s timeout (5 min for POST exports); BACKEND_API_URL from src/config/env.ts
+    → looks the path up in src/api/endpoints.ts; checks method, path parameters and query
+    → fetch(BACKEND_API_URL + backend path), with the entry's timeout (30 s GET; 1–5 min POST)
 Railway
   Flask backend /api/...
 ```
 
-Server-rendered first paint skips the browser leg: `page.tsx` calls a helper in `src/lib/server-api.ts`, which fetches the backend directly and passes the result to the client hook as React Query `initialData`. Today only some pages do this (e.g. `/football/wins/`, which makes zero browser data requests on load).
+Server-rendered first paint skips the browser leg: `page.tsx` calls a helper in `src/lib/server-api.ts`, which fetches the backend directly (`fetchEndpoint`, built from the same endpoint entries, parameters checked the same way) and passes the result to the client hook as React Query `initialData`. Today only some pages do this (e.g. `/football/wins/`, which makes zero browser data requests on load).
 
 ## Caching layers
 

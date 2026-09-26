@@ -9,7 +9,7 @@ import type {
   FootballSeasonHighlightsResponse,
 } from "@/types/football";
 import { useEffect, useMemo, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 
 const TITLE_CLASS =
@@ -74,7 +74,7 @@ export default function FootballSeasonInfoContent() {
 
     const load = async () => {
       try {
-        const response = await fetch(proxyUrl("football/season_highlights"));
+        const response = await fetch(apiUrl("football.seasonHighlights"));
         if (!response.ok) throw new Error(`Request failed (${response.status})`);
         const json = (await response.json()) as FootballSeasonHighlightsResponse;
         if (!cancelled) setData(json);

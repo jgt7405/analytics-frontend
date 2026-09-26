@@ -1,6 +1,6 @@
 // CSV upload for the scatterplot chart page (/basketball/chart). A module of
 // its own so the page doesn't load the whole API client for one call.
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 
 export interface ChartUploadResult<Point> {
   data?: Point[];
@@ -14,7 +14,7 @@ export interface ChartUploadResult<Point> {
 export async function uploadChartCsv<Point>(file: File): Promise<ChartUploadResult<Point>> {
   const formData = new FormData();
   formData.append("file", file);
-  const response = await fetch(proxyUrl("basketball/chart/upload"), {
+  const response = await fetch(apiUrl("basketball.chartUpload"), {
     method: "POST",
     body: formData,
   });

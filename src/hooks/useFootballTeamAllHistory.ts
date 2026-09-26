@@ -1,7 +1,7 @@
 // src/hooks/useFootballTeamAllHistory.ts
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface ConfWinsHistoryResponse {
@@ -79,13 +79,12 @@ export const useFootballTeamAllHistory = (
   return useQuery<AllHistoryData, Error>({
     queryKey: queryKeys.football.teamAllHistory(teamName, season),
     queryFn: async () => {
-      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const [confWinsResponse, cfpResponse] = await Promise.all([
         fetch(
-          proxyUrl(`football/team/${encodeURIComponent(teamName)}/history/conf_wins${seasonQuery}`),
+          apiUrl("football.teamConfWinsHistory", { team: teamName }, { season }),
         ),
         fetch(
-          proxyUrl(`football/cfp/${encodeURIComponent(teamName)}/history${seasonQuery}`),
+          apiUrl("football.cfpHistory", { team: teamName }, { season }),
         ),
       ]);
 

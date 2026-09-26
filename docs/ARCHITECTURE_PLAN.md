@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1, 2, 3 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). **Step 4: items 1, 2, 4 and 5 complete** (4a–4e, PRs #23–#27: endpoint list, proxy reads it, contract tests, no `fetch` in components); items 3 (client URL helpers), 6 (Zod), 7 (MSW fixtures) and 8 (contract ownership) not started. Baselines are in `docs/baselines/README.md`.
+Status: **steps 1, 2, 3 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). **Step 4 in progress:** items 1–5 complete (4a–4f, PRs #23–#28 and 4f); next items 8 (contract ownership), 6 (Zod) and 7 (fixtures). Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -141,7 +141,7 @@ Other findings carried forward: 48 dependency vulnerabilities (step 2), the redi
 7. **Test fixtures.** Small, curated fixtures covering normal and edge cases (empty conference, missing fields, preseason, archived season), served by MSW in unit and Playwright tests. Not large raw captures. MSW proves frontend behavior; the scheduled live check (step 2) proves the backend contract still matches.
 8. **Backend contract ownership.** Document in `docs/data-flow.md` which side owns each response shape, how breaking changes to the Flask backend are announced, and how long old fields must keep working.
 
-**Outcome (items 1, 2, 4, 5 complete, 2026-09-26), in five PRs:**
+**Outcome (in progress, 2026-09-26):**
 
 | Part | What | Result |
 |---|---|---|
@@ -151,6 +151,7 @@ Other findings carried forward: 48 dependency vulnerabilities (step 2), the redi
 | 4d (#26) | Component data reads into hooks | 9 of the 16 component `fetch()` calls (item 5; 33 at the time of the review, 16 by step 2). New hooks: `useFootballBowlPicks` (the bowl table, scoreboard and projection chart share one cached request, now with the `live` class instead of React Query's defaults), `useTeamList` (teams pages and bowl-pick logos; the teams page fetched the whole list again on every conference change and now filters locally), `useBasketballUpcomingGames`, `useBasketballConfChampAnalysis`, `useFootballTeamCFPHistory`. `RawProbabilityScheduleViewer` was deleted: nothing imported it and its route (`/api/basketball/debug/probability-schedule`) never existed. |
 | 4e (#27) | Component POSTs into hooks and services; the lint rule becomes an error | The other 7 calls. What-if baseline and validation CSV: `fetchBasketballWhatIfBaseline` / `fetchBasketballWhatIfValidationCsv` next to the what-if mutation in `useBasketballWhatIf.ts`. Next-game impact: `useBasketballNextGameImpact`, a query (the POST only reads), so React Query cancels the previous team's request, replacing a hand-rolled `AbortController`. Scatterplot upload: `src/services/chart-upload.ts` (its own module: importing the API client pushed `/basketball/chart` 22 kB over budget). Football what-if export: `api.exportWhatIfCsv`. Contact form: `src/services/contact.ts`. `csvDownload.ts` was deleted (nothing imported it). ESLint's no-`fetch`-in-components rule is now an **error**: 0 calls left (16 at step 2). |
 | Follow-up (#28) | Chart page "Download Team Schedule" works | The button called `team_schedule`, which the backend never served (noted in 4b/4c). The backend now has `GET /basketball/team_schedule/csv` (jthom_prod_backend), returning the schedule table as CSV, which stays well under Vercel's 4.5 MB response limit where JSON might not; the list gained `basketball.teamScheduleCsv`, the proxy passes CSV GETs through with their filename, and the page downloads via `src/services/team-schedule.ts`. `callers.test.ts` has no known-unserved calls left. |
+| 4f | URL helpers built from the list (item 3) | `src/api/urls.ts`: `apiUrl(key, params, query)` / `apiPath(...)` for the browser and `backendRequest(...)` for server fetches. Keys are a typed union (a misspelled key doesn't compile); a missing, unknown or invalid parameter, or a query parameter the endpoint doesn't take, throws. All 94 call sites moved (API clients, 26 hooks, 8 pages, `server-api.ts`); ESLint now rejects importing `proxyUrl` or writing `/api/proxy/…` outside the helpers, which retires the source-scanning `callers.test.ts` in favour of `urls.test.ts` (every entry's built URL is accepted by the proxy). **Server fetches now validate page parameters** before calling the backend: a team name from the URL like `..` or `a/b` used to go straight into the backend path; it is now refused without a request. `server-api.ts` no longer maps backend paths back to endpoints for its cache lifetime; it has the entry. Hooks stay hand-written, as planned. |
 
 ## Step 5 — Next.js 16 upgrade (isolated migration)
 

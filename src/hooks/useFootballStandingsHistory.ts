@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface TeamHistoryData {
@@ -53,9 +53,8 @@ export const useFootballStandingsHistory = (
   return useQuery<FootballStandingsHistoryResponse, Error>({
     queryKey: queryKeys.football.standingsHistory(conference, season),
     queryFn: async () => {
-      const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(
-        proxyUrl(`football/standings/${conference}/history${seasonQuery}`),
+        apiUrl("football.standingsHistory", { conference }, { season }),
       );
       if (!response.ok) {
         throw new Error("Failed to fetch standings history");

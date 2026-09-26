@@ -15,7 +15,7 @@ import {
 import { saveCanvasImage } from "@/lib/save-image";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 
 // ============ SPACING DEBUGGER COMPONENT ============
@@ -255,7 +255,7 @@ export default function ArchiveBasketballComparePage() {
     async (teamName: string): Promise<TeamData | null> => {
       try {
         const response = await fetch(
-          proxyUrl(`team/${encodeURIComponent(teamName)}?season=${season}`),
+          apiUrl("basketball.team", { team: teamName }, { season }),
         );
         return await response.json();
       } catch (error) {
@@ -270,7 +270,7 @@ export default function ArchiveBasketballComparePage() {
     const loadInitialData = async () => {
       try {
         // ✅ Compare page uses current season teams only (like teams page)
-        const response = await fetch(proxyUrl("basketball_teams"));
+        const response = await fetch(apiUrl("basketball.teams"));
         const data = await response.json();
 
         if (data.data) {

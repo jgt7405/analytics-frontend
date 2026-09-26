@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 // Fields of /basketball/upcoming_games used for game-preview links. The
@@ -19,7 +19,7 @@ export interface UpcomingGamesResponse {
 }
 
 const fetchUpcomingGames = async (): Promise<UpcomingGamesResponse> => {
-  const response = await fetch(proxyUrl("basketball/upcoming_games"));
+  const response = await fetch(apiUrl("basketball.upcomingGames"));
   if (!response.ok) throw new Error(`Failed to fetch upcoming games: ${response.status}`);
   return response.json();
 };

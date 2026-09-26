@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface WinSeedCountEntry {
@@ -71,11 +71,8 @@ export const useBasketballTeamData = (
     // which populates the charts that need all_schedule_data.
     initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {
-      const seasonQuery = season
-        ? `?season=${encodeURIComponent(season)}`
-        : "";
       const response = await fetch(
-        proxyUrl(`team/${encodeURIComponent(teamName)}${seasonQuery}`)
+        apiUrl("basketball.team", { team: teamName }, { season })
       );
       if (!response.ok) throw new Error("Failed to load team data");
       return response.json();

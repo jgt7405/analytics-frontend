@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { proxyUrl } from "@/lib/proxy-url";
+import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface TeamInfo {
@@ -30,7 +30,7 @@ export interface TeamCFPHistoryResponse {
 
 const fetchTeamCFPHistory = async (teamName: string): Promise<TeamCFPHistoryResponse> => {
   const response = await fetch(
-    proxyUrl(`football/cfp/${encodeURIComponent(teamName)}/history`),
+    apiUrl("football.cfpHistory", { team: teamName }),
   );
   if (!response.ok) throw new Error("Failed to fetch CFP bid history");
   return response.json();
