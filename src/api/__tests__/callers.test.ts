@@ -17,11 +17,7 @@ const SRC = path.join(__dirname, "../..");
 // Calls to paths the backend has never served, so they are deliberately not
 // registered. Each needs a decision (build the backend route, or remove the
 // call); remove the entry once it's made.
-const KNOWN_UNSERVED: Record<string, string> = {
-  // "Download team schedule" on the chart page: no /team-schedule route in
-  // the Flask backend.
-  team_schedule: "app/basketball/chart/page.tsx",
-};
+const KNOWN_UNSERVED: Record<string, string> = {};
 
 // Call sites whose path is a variable: the values it can take.
 const DYNAMIC: Record<string, string[]> = {

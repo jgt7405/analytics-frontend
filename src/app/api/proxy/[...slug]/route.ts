@@ -134,17 +134,27 @@ async function forwardGet(
     );
   }
 
-  const parsed = parseJson(endpoint, await response.text());
-  if (!parsed) return invalidJsonResponse();
-
   // CDN caching per freshness class (src/lib/cache-policy.ts)
   const cacheClass = cacheClassFor(endpoint, season);
-  return NextResponse.json(parsed.data, {
-    headers: {
-      "Cache-Control": CACHE_POLICIES[cacheClass].cacheControl,
-      "x-cache-class": cacheClass,
-    },
-  });
+  const cacheHeaders = {
+    "Cache-Control": CACHE_POLICIES[cacheClass].cacheControl,
+    "x-cache-class": cacheClass,
+  };
+
+  if (endpoint.response === "csv") {
+    return new NextResponse(await response.text(), {
+      headers: {
+        ...cacheHeaders,
+        "Content-Type": "text/csv",
+        "Content-Disposition":
+          response.headers.get("Content-Disposition") || 'attachment; filename="export.csv"',
+      },
+    });
+  }
+
+  const parsed = parseJson(endpoint, await response.text());
+  if (!parsed) return invalidJsonResponse();
+  return NextResponse.json(parsed.data, { headers: cacheHeaders });
 }
 
 async function forwardPost(

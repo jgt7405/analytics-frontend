@@ -78,6 +78,20 @@ describe("proxy forwarding", () => {
     timeout.mockRestore();
   });
 
+  it("passes a CSV GET through with its filename and cache class", async () => {
+    backendFetch.mockResolvedValue(
+      new Response("team,opponent\nDuke,Virginia", {
+        headers: { "Content-Disposition": 'attachment; filename="bball_team_schedule_2026-09-26.csv"' },
+      }),
+    );
+    const res = await call("GET", "basketball/team_schedule/csv/");
+    expect(backendUrl()).toBe(`${BACKEND}/basketball/team_schedule/csv`);
+    expect(res.headers.get("Content-Type")).toBe("text/csv");
+    expect(res.headers.get("Content-Disposition")).toContain("bball_team_schedule_2026-09-26.csv");
+    expect(res.headers.get("Cache-Control")).toMatch(/s-maxage=300/);
+    expect(await res.text()).toBe("team,opponent\nDuke,Virginia");
+  });
+
   it("returns CSV for CSV endpoints", async () => {
     backendFetch.mockResolvedValue(new Response("a,b\n1,2"));
     const res = await call("POST", "basketball/whatif/validation-csv/", {});

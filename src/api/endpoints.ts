@@ -93,6 +93,7 @@ function get(
   options: {
     params?: Record<string, ParamRule>;
     query?: readonly QueryParam[];
+    response?: "json" | "csv";
   } = {},
 ): Endpoint {
   return {
@@ -105,7 +106,7 @@ function get(
     allowedQuery: options.query ?? ["season"],
     timeoutMs: GET_TIMEOUT,
     cacheClass,
-    response: "json",
+    response: options.response ?? "json",
     passthroughEligible: true,
   };
 }
@@ -164,6 +165,8 @@ export const ENDPOINTS: readonly Endpoint[] = [
   get("upcomingGames", "basketball", ["basketball/upcoming_games"], "/basketball/upcoming_games", "live"),
   get("compositeRatings", "basketball", ["basketball/composite_ratings"], "/basketball/composite_ratings", "currentStandings"),
   get("seasonHighlights", "basketball", ["basketball/season_highlights"], "/basketball/season_highlights", "currentStandings"),
+  // Chart page's "Download Team Schedule": the whole schedule table as a file.
+  get("teamScheduleCsv", "basketball", ["basketball/team_schedule/csv"], "/basketball/team_schedule/csv", "currentStandings", { query: [], response: "csv" }),
 
   post("whatIf", "basketball", "basketball/whatif", 120 * S),
   post("whatIfBaseline", "basketball", "basketball/whatif/baseline", 60 * S),
