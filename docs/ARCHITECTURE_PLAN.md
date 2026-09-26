@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1 and 2 complete** (2026-09-25). Baselines are in `docs/baselines/README.md`. **Security note:** Next.js 14 has unpatched advisories (2 critical); consider doing step 5 next, before steps 3–4 (see step 5).
+Status: **steps 1, 2 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). Next: step 3. Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -147,6 +147,17 @@ Done before the route and caching work, because Next 16 changes exactly what tho
 5. **Upgrade React 18 → 19 and ESLint 8 → 9 (flat config only)** in their own PRs after Next 16 is stable, not in the same change.
 6. **Revisit caching** under the new framework model and map the step 3 cache classes onto it.
 7. **Rollback criteria:** the upgrade PR is reverted if `verify:full` fails, or if Core Web Vitals, bundle sizes or error rates regress beyond agreed thresholds against the step 1 baselines in the first days after deploy.
+
+**Outcome (complete, 2026-09-26), in four PRs:**
+
+| PR | Change | Result |
+|---|---|---|
+| 5a (#10) | Next.js 14.2 → 16.3.6 | Fixes all Next 14 advisories (2 critical). 30 route files moved to async `params`/`headers()`; archive-season wrappers became server components; `dynamic(..., { ssr: false })` moved into `*ClientOnly` client components; Suspense boundaries added where `missingSuspenseWithCSRBailout: false` had hidden their absence (game preview, football what-if). Shared runtime +35 kB gzipped per route (Next 16/React 19), route code unchanged; budgets re-baselined deliberately. Lighthouse in CI: average 78 → 82 across 7 routes (single runs, within noise). |
+| 5b (#12) | ESLint 8 → 9, `eslint-config-next` 16, native flat config | 0 errors. React Compiler rules from `eslint-plugin-react-hooks` 7 (~100 findings) are warnings until steps 7–8. |
+| 5c (#13) | React 18 → 19 | One type fix (nullable ref props). Browser bundles unchanged (Next 16 already shipped React 19 to the browser). |
+| 5d | `next-pwa` → Serwist (`@serwist/turbopack`); builds move to Turbopack | Same worker URL (`/sw.js`), same behavior (skipWaiting, clientsClaim, images cached 24 h), old caches cleaned up. Precache cut from 630 files (~21 MB, including all of `public/`) to 151 (~1.2 MB transfer). Production build 67 s → 31 s. `npm audit`: **0 known vulnerabilities** (48 before step 2). |
+
+Deferred: React Compiler lint findings (steps 7–8); six Dependabot PRs opened on 2026-09-25 need re-triage now that the framework majors moved.
 
 ## Step 6 — Canonical URLs and route migration (SEO and product migration)
 

@@ -149,4 +149,18 @@ A second Lighthouse run 13 minutes later (run 36195612918) moved some performanc
 
 ### Other observations
 
-- `npm ci` reports 48 known vulnerabilities in dependencies (2 low, 17 moderate, 28 high, 1 critical). To be triaged in step 2 alongside Dependabot/Renovate.
+- `npm ci` reported 48 known vulnerabilities in dependencies (2 low, 17 moderate, 28 high, 1 critical). Step 2 cut this to 16 and step 5 to 0.
+
+## 2026-09-26 — after step 5 (Next.js 16, React 19, Turbopack build)
+
+| Measure | Next 14 (2026-09-25) | Next 16, Turbopack (2026-09-26) |
+|---|---|---|
+| Production build (cloud container, cold) | 80 s | 31 s |
+| Shared JS runtime (gzipped) | 94 kB | 127 kB |
+| Route first-load JS, min / median / max | 133 / 179 / 261 kB | 165 / 207 / 276 kB ([data](./2026-09-26-route-sizes-turbopack.json)) |
+| Service worker precache | 630 files, ~21 MB (all of `public/`) | 151 files, ~1.2 MB transfer |
+| Known dependency vulnerabilities | 48 | 0 |
+
+Route sizes are measured with `scripts/route-sizes.mjs`, which reads Next 16's per-route client reference manifests (Next 14's `app-build-manifest.json` no longer exists), so compare the two columns as totals rather than to the exact kB. The increase is the framework runtime; route-specific code did not grow. Lighthouse in CI on the Next 16 PR (single run per route, same job as on Next 14) averaged 82 vs 78 across the 7 routes, within run-to-run noise.
+
+Field data after the upgrade: re-check Vercel Speed Insights a week after deploy and add it here.

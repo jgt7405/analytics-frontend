@@ -49,7 +49,9 @@ export function getRouteSizes() {
   const gzipCache = new Map();
   function gzipSize(file) {
     if (!gzipCache.has(file)) {
-      const contents = readFileSync(join(NEXT_DIR, decodeURIComponent(file)));
+      // Webpack builds list "static/chunks/..."; Turbopack "_next/static/...".
+      const relative = decodeURIComponent(file).replace(/^\/?_next\//, "");
+      const contents = readFileSync(join(NEXT_DIR, relative));
       gzipCache.set(file, gzipSync(contents).length);
     }
     return gzipCache.get(file);
