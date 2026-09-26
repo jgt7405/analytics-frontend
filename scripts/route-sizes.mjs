@@ -1,65 +1,82 @@
 #!/usr/bin/env node
 // Report the gzipped first-load JS size of every App Router route, using the
-// manifests from the last `next build`. Two columns:
-//   pageKb   - the page's own chunk list; tracks Next's "First Load JS" column.
-//   totalKb  - page plus every layout above it (header, providers, ...). This is
-//              what a browser actually downloads on a cold visit, and is the
-//              number budgets should use.
+// manifests from the last `next build` (Next 16 layout). Two columns:
+//   pageKb   - JS specific to the route: its client components and those of
+//              its layouts, excluding the shared framework runtime.
+//   totalKb  - pageKb plus the shared runtime (build-manifest rootMainFiles).
+//              This is what a browser downloads on a cold visit, and is the
+//              number budgets use.
 //
 // Usage:
 //   node scripts/route-sizes.mjs            # table to stdout
 //   node scripts/route-sizes.mjs --json     # JSON to stdout (for budgets/CI)
 
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { runInNewContext } from "node:vm";
 import { gzipSync } from "node:zlib";
 
 const NEXT_DIR = ".next";
-const manifestPath = join(NEXT_DIR, "app-build-manifest.json");
+const APP_DIR = join(NEXT_DIR, "server", "app");
+const MANIFEST_SUFFIX = "page_client-reference-manifest.js";
+
+function findManifests(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) return findManifests(full);
+    return entry.name === MANIFEST_SUFFIX ? [full] : [];
+  });
+}
+
+// Each manifest assigns globalThis.__RSC_MANIFEST[<route>/page] = {...}.
+function loadManifest(file) {
+  const sandbox = { globalThis: {} };
+  sandbox.globalThis.self = sandbox.globalThis;
+  runInNewContext(readFileSync(file, "utf8"), sandbox);
+  const [[key, manifest]] = Object.entries(sandbox.globalThis.__RSC_MANIFEST);
+  return { key, manifest };
+}
 
 // Gzipped JS per route from the last `next build`, sorted by route.
 export function getRouteSizes() {
-  if (!existsSync(manifestPath)) {
-    throw new Error(`Missing ${manifestPath}. Run \`npm run build\` first.`);
+  const buildManifestPath = join(NEXT_DIR, "build-manifest.json");
+  if (!existsSync(buildManifestPath) || !existsSync(APP_DIR)) {
+    throw new Error("Missing build output. Run `npm run build` first.");
   }
-
-  const { pages } = JSON.parse(readFileSync(manifestPath, "utf8"));
-  const layouts = Object.keys(pages).filter((key) => key.endsWith("/layout"));
+  const { rootMainFiles } = JSON.parse(readFileSync(buildManifestPath, "utf8"));
 
   const gzipCache = new Map();
   function gzipSize(file) {
     if (!gzipCache.has(file)) {
-      const contents = readFileSync(join(NEXT_DIR, file));
+      const contents = readFileSync(join(NEXT_DIR, decodeURIComponent(file)));
       gzipCache.set(file, gzipSync(contents).length);
     }
     return gzipCache.get(file);
   }
+  const sumKb = (files) =>
+    +([...files].reduce((sum, file) => sum + gzipSize(file), 0) / 1024).toFixed(1);
 
-  // A route loads its own page chunks plus every layout above it.
-  function layoutsFor(pageKey) {
-    const dir = pageKey.slice(0, -"/page".length) || "/";
-    return layouts.filter((layoutKey) => {
-      const layoutDir = layoutKey.slice(0, -"/layout".length);
-      return layoutDir === "" || dir === layoutDir || dir.startsWith(`${layoutDir}/`);
-    });
-  }
-
-  function sumKb(keys) {
-    const files = new Set(
-      keys.flatMap((key) => pages[key]).filter((file) => file.endsWith(".js")),
-    );
-    const bytes = [...files].reduce((sum, file) => sum + gzipSize(file), 0);
-    return +(bytes / 1024).toFixed(1);
-  }
-
-  return Object.keys(pages)
-    .filter((key) => key.endsWith("/page"))
-    .map((pageKey) => ({
-      route: pageKey.slice(0, -"/page".length) || "/",
-      pageKb: sumKb([pageKey]),
-      totalKb: sumKb([pageKey, ...layoutsFor(pageKey)]),
-    }))
+  const runtimeKb = sumKb(new Set(rootMainFiles));
+  return findManifests(APP_DIR)
+    .map(loadManifest)
+    .filter(({ key }) => key.endsWith("/page") && !key.startsWith("/_"))
+    .map(({ key, manifest }) => {
+      const pageFiles = new Set();
+      for (const mod of Object.values(manifest.clientModules)) {
+        for (const chunk of mod.chunks ?? []) {
+          if (typeof chunk === "string" && chunk.endsWith(".js") && !rootMainFiles.includes(chunk)) {
+            pageFiles.add(chunk);
+          }
+        }
+      }
+      const pageKb = sumKb(pageFiles);
+      return {
+        route: key.slice(0, -"/page".length) || "/",
+        pageKb,
+        totalKb: +(pageKb + runtimeKb).toFixed(1),
+      };
+    })
     .sort((a, b) => a.route.localeCompare(b.route));
 }
 
