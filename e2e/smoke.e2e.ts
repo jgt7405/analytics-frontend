@@ -78,8 +78,10 @@ for (const route of ROUTES) {
     await expect(page.locator("#main-content")).toBeVisible();
 
     // Give client data fetching a moment to settle so render errors that
-    // only appear after data (or an error) arrives are caught too.
-    await page.waitForLoadState("networkidle").catch(() => {});
+    // only appear after data (or an error) arrives are caught too. Capped:
+    // without a backend, React Query keeps retrying and the network never
+    // goes idle.
+    await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
     expect(pageErrors, "uncaught page errors").toEqual([]);
   });
 }
