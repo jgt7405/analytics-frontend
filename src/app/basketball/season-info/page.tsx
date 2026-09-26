@@ -1,10 +1,5 @@
 import { generatePageMetadata } from "@/app/metadata";
-import dynamic from "next/dynamic";
-
-const BasketballSeasonInfoContent = dynamic(
-  () => import("./BasketballSeasonInfoContent"),
-  { ssr: false }
-);
+import BasketballSeasonInfoContent from "./BasketballSeasonInfoContentClientOnly";
 
 export const metadata = generatePageMetadata({
   title: "College Basketball Season Info",

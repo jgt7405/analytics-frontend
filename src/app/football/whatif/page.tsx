@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import FootballWhatIfContent from "./FootballWhatIfContent";
 
 export const metadata: Metadata = {
@@ -26,6 +27,12 @@ export const metadata: Metadata = {
   },
 };
 
+// FootballWhatIfContent reads useSearchParams, which needs a Suspense boundary
+// on a statically rendered page (Next 16 fails the build without one).
 export default function FootballWhatIfPage() {
-  return <FootballWhatIfContent />;
+  return (
+    <Suspense fallback={null}>
+      <FootballWhatIfContent />
+    </Suspense>
+  );
 }

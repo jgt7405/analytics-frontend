@@ -1,14 +1,13 @@
-"use client";
-
 // Archive CWV page: same content component as the current-season page,
 // pointed at the archive season. (Previously a full drifted copy.)
 
 import FootballCWVContent from "@/app/football/cwv/FootballCWVContent";
 
-export default function ArchiveFootballCWVPage({
+export default async function ArchiveFootballCWVPage({
   params,
 }: {
-  params: { season: string };
+  params: Promise<{ season: string }>;
 }) {
-  return <FootballCWVContent season={params.season} />;
+  const { season } = await params;
+  return <FootballCWVContent season={season} />;
 }

@@ -1,6 +1,7 @@
 // src/app/basketball/[season]/compare/page.tsx
 "use client";
 
+import { useParams } from "next/navigation";
 import BasketballCompareSchedulesChart from "@/components/features/basketball/BasketballCompareSchedulesChart";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -250,12 +251,6 @@ interface SelectedTeam {
   }[];
 }
 
-interface ArchiveComparePageProps {
-  params: {
-    season: string;
-  };
-}
-
 const MAX_TEAMS = 10;
 const PRIORITY_CONFERENCES = [
   "Atlantic Coast",
@@ -265,11 +260,9 @@ const PRIORITY_CONFERENCES = [
   "Southeastern",
 ];
 
-export default function ArchiveBasketballComparePage({
-  params,
-}: ArchiveComparePageProps) {
+export default function ArchiveBasketballComparePage() {
   // ✅ Extract season from URL params
-  const season = params.season;
+  const { season } = useParams<{ season: string }>();
   const [availableConferences, setAvailableConferences] = useState<string[]>(
     [],
   );

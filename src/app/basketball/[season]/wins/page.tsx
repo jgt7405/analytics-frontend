@@ -1,15 +1,12 @@
-"use client";
-
 import BballWinsContent from "@/app/basketball/wins/BballWinsContent";
 
 interface ArchiveWinsPageProps {
-  params: {
-    season: string;
-  };
+  params: Promise<{ season: string }>;
 }
 
-export default function ArchiveWinsPage({
+export default async function ArchiveWinsPage({
   params,
 }: ArchiveWinsPageProps) {
-  return <BballWinsContent season={params.season} />;
+  const { season } = await params;
+  return <BballWinsContent season={season} />;
 }

@@ -1,6 +1,7 @@
 // src/app/basketball/[season]/conf-data/page.tsx
 "use client";
 
+import { useParams } from "next/navigation";
 import TableActionButtons from "@/components/common/TableActionButtons";
 import BballConfBidsHistoryChart from "@/components/features/basketball/BballConfBidsHistoryChart";
 import BballConfBoxWhiskerChart from "@/components/features/basketball/BballConfBoxWhiskerChart";
@@ -19,20 +20,12 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useMemo, useState } from "react";
 
-interface ArchiveConfDataPageProps {
-  params: {
-    season: string;
-  };
-}
-
-export default function ArchiveBasketballConfDataPage({
-  params,
-}: ArchiveConfDataPageProps) {
+export default function ArchiveBasketballConfDataPage() {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
 
   // ✅ Extract season from URL params
-  const season = params.season;
+  const { season } = useParams<{ season: string }>();
   const [showAll, setShowAll] = useState(false);
 
   // ✅ CRITICAL: Pass season to useBasketballConfData

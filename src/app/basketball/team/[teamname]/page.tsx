@@ -10,22 +10,24 @@ export const revalidate = 3600;
 export async function generateMetadata({
   params,
 }: {
-  params: { teamname: string };
+  params: Promise<{ teamname: string }>;
 }): Promise<Metadata> {
-  const teamName = decodeURIComponent(params.teamname).replace(/_/g, " ");
+  const { teamname } = await params;
+  const teamName = decodeURIComponent(teamname).replace(/_/g, " ");
   return generatePageMetadata({
     title: `${teamName} Basketball Analytics & Projections`,
     description: `${teamName} basketball analytics including schedule, tournament projections, standings history, win probabilities, and NCAA tournament seeding.`,
-    path: `/basketball/team/${params.teamname}/`,
+    path: `/basketball/team/${teamname}/`,
   });
 }
 
 export default async function BasketballTeamPage({
   params,
 }: {
-  params: { teamname: string };
+  params: Promise<{ teamname: string }>;
 }) {
-  const teamName = decodeURIComponent(params.teamname);
+  const { teamname } = await params;
+  const teamName = decodeURIComponent(teamname);
   // Legacy underscore slugs (e.g. /team/Sam_Houston) 404 against the backend,
   // which expects spaces. 301 them to the canonical encoded-space URL.
   if (teamName.includes("_")) {
@@ -45,7 +47,7 @@ export default async function BasketballTeamPage({
   const initialData = { ...fullData, all_schedule_data: undefined };
   return (
     <Suspense fallback={null}>
-      <BasketballTeamContent params={params} initialData={initialData} />
+      <BasketballTeamContent params={{ teamname }} initialData={initialData} />
     </Suspense>
   );
 }

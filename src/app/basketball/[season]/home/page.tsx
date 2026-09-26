@@ -1,5 +1,6 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import TableActionButtons from "@/components/common/TableActionButtons";
 import MultiBidLeagues from "@/components/features/basketball/MultiBidLeagues";
 import NCAABracketTable from "@/components/features/basketball/NCAABracketTable";
@@ -9,19 +10,11 @@ import { useNCAAProjections } from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
 import { Suspense, useMemo, useRef } from "react";
 
-interface ArchiveBasketballHomeProps {
-  params: {
-    season: string;
-  };
-}
-
-export default function ArchiveBasketballHome({
-  params,
-}: ArchiveBasketballHomeProps) {
+export default function ArchiveBasketballHome() {
   const { isMobile } = useResponsive();
   const ncaaTableRef = useRef<HTMLDivElement>(null);
   const multiBidRef = useRef<HTMLDivElement>(null);
-  const season = params.season;
+  const { season } = useParams<{ season: string }>();
   const { data } = useNCAAProjections(season);
 
   // Format the last updated timestamp

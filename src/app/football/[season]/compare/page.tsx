@@ -1,6 +1,7 @@
 // src/app/football/[season]/compare/page.tsx
 "use client";
 
+import { useParams } from "next/navigation";
 import FootballCompareSchedulesChart from "@/components/features/football/FootballCompareSchedulesChart";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -9,12 +10,6 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { downloadCompareChart } from "@/lib/download-compare-chart";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useCallback, useEffect, useState } from "react";
-
-interface FootballCompareArchivePageProps {
-  params: {
-    season: string;
-  };
-}
 
 interface Team {
   team_name: string;
@@ -88,9 +83,7 @@ interface SelectedTeam {
 
 const MAX_SELECTED_TEAMS = 12;
 
-export default function FootballCompareArchivePage({
-  params,
-}: FootballCompareArchivePageProps) {
+export default function FootballCompareArchivePage() {
   const { trackEvent } = useMonitoring();
   const [availableConferences, setAvailableConferences] = useState<string[]>(
     []
@@ -103,7 +96,7 @@ export default function FootballCompareArchivePage({
   }>({});
   const [loadingTeams, setLoadingTeams] = useState<Set<string>>(new Set());
 
-  const season = params.season;
+  const { season } = useParams<{ season: string }>();
 
   const loadTeamData = useCallback(
     async (teamName: string): Promise<TeamData | null> => {

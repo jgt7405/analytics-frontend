@@ -2,7 +2,7 @@
 
 College basketball and football projections, standings, schedules and tournament odds at [www.jthomanalytics.com](https://www.jthomanalytics.com).
 
-Next.js 14 (App Router) + React 18 + TypeScript + Tailwind + Chart.js, deployed on Vercel. Data comes from a separate Flask backend on Railway through this app's `/api/proxy` route.
+Next.js 16 (App Router) + React 18 + TypeScript + Tailwind + Chart.js, deployed on Vercel. Data comes from a separate Flask backend on Railway through this app's `/api/proxy` route.
 
 ## Setup
 
