@@ -31,6 +31,8 @@ export const queryKeys = {
       ["basketball", "ncaa-projections", season, mode] as const,
     ncaaTourney: (conference: string, season: Season) =>
       ["basketball", "ncaa-tourney", conference, season] as const,
+    nextGameImpact: (conference: string, teamId: number) =>
+      ["basketball", "next-game-impact", conference, teamId] as const,
     schedule: (conference: string, season: Season) =>
       ["basketball", "schedule", conference, season] as const,
     seed: (conference: string, season: Season) =>

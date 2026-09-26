@@ -267,6 +267,31 @@ export class ApiClient extends BasketballApiClient {
 
     return response.json();
   }
+
+  /**
+   * Exports what-if scenarios as CSV text (the backend builds the file).
+   * Throws with the backend's error message on failure.
+   */
+  async exportWhatIfCsv(request: {
+    conference: string;
+    selections: Array<{ game_id: number; winner_team_id: string | number }>;
+    export_options: {
+      include_all_scenarios: boolean;
+      num_scenarios: number;
+      start_scenario: number;
+    };
+  }): Promise<{ success?: boolean; csv_data?: string; filename: string; error?: string }> {
+    const response = await fetch(proxyUrl("football/whatif/export"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP Error: ${response.status}`);
+    }
+    return data;
+  }
 }
 
 // Create singleton instance

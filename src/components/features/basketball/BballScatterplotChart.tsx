@@ -4,7 +4,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { uploadChartCsv } from "@/services/chart-upload";
 import { logger } from "@/lib/logger";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
@@ -435,39 +435,8 @@ export default function BballScatterplotChart({
 
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      logger.debug("🚀 Sending request to /api/proxy/basketball/chart/upload");
-
-      const response = await fetch(proxyUrl("basketball/chart/upload"), {
-        method: "POST",
-        body: formData,
-      });
-
-      logger.debug("📡 Response received:", {
-        status: response.status,
-        statusText: response.statusText,
-      });
-
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        logger.error("❌ Response not OK");
-        let error;
-        try {
-          error = JSON.parse(responseText);
-          logger.error("❌ Parsed error:", error);
-        } catch {
-          logger.error("❌ Could not parse error response");
-          error = { error: responseText };
-        }
-        throw new Error(error.error || `HTTP ${response.status}`);
-      }
-
-      const result = JSON.parse(responseText);
-      logger.debug("✅ Success! Parsed result:", result);
+      const result = await uploadChartCsv<ChartData>(file);
 
       setState((prev) => ({
         ...prev,

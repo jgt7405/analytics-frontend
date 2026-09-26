@@ -2,7 +2,7 @@
 // Add this to your existing what-if export UI component
 
 import React, { useState } from "react";
-import { proxyUrl } from "@/lib/proxy-url";
+import { api } from "@/services/api";
 import { logger } from "@/lib/logger";
 
 /**
@@ -120,25 +120,12 @@ export const ExportOptionsModal = ({
         export_options: exportOptions,
       });
 
-      const response = await fetch(proxyUrl("football/whatif/export"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          conference: conference,
-          selections: selections,
-          export_options: exportOptions,
-        }),
+      const data = await api.exportWhatIfCsv({
+        conference,
+        selections,
+        export_options: exportOptions,
       });
-
-      logger.debug("Export response status:", response.status);
-      const data = await response.json();
       logger.debug("Export response data:", data);
-
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP Error: ${response.status}`);
-      }
 
       if (data.success && data.csv_data) {
         // Trigger download
