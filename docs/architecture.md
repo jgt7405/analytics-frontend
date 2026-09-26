@@ -4,11 +4,11 @@ A short map of how the site is put together. Rules for working in it are in `AGE
 
 ## Runtime
 
-- **Frontend:** Next.js 14 (App Router), React 18, TypeScript strict, Tailwind CSS, Chart.js via `react-chartjs-2`, TanStack React Query 5. Deployed on Vercel, which builds every push; `main` is production.
+- **Frontend:** Next.js 16 (App Router), React 18, TypeScript strict, Tailwind CSS, Chart.js via `react-chartjs-2`, TanStack React Query 5. Deployed on Vercel, which builds every push; `main` is production.
 - **Backend:** separate Flask app on Railway (`https://jthomprodbackend-production.up.railway.app/api`). The browser never calls it directly; everything goes through `/api/proxy` on this site.
 - **Other server routes:** `/api/contact` (contact form email via nodemailer and SMTP env vars), `sitemap.ts` (includes team pages fetched from the backend, refreshed hourly).
 - **Monitoring:** Vercel Analytics and Speed Insights, Google Analytics (optional env var). No error-tracking service.
-- **PWA:** `next-pwa` generates `public/sw.js` at build time (production only). Replacement planned with the Next 16 upgrade (step 5).
+- **PWA:** `next-pwa` generates `public/sw.js` at build time (production only). It is webpack-only, so production builds use `next build --webpack`; its replacement is the next part of plan step 5.
 
 ## Routing
 

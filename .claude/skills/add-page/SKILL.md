@@ -15,7 +15,7 @@ Pattern (see `AGENTS.md` → "How a page is built" and `src/app/AGENTS.md`). Cop
    - optional `initialData` via `src/lib/server-api.ts`
    - `<Suspense fallback={<Skeleton/>}>` around the Content
    - `export const dynamic = "force-dynamic"` if Content reads `useSearchParams`
-5. **Archive season** (if the page makes sense for past seasons): `src/app/<sport>/[season]/<page>/page.tsx` rendering the Content with `season={params.season}`.
+5. **Archive season** (if the page makes sense for past seasons): `src/app/<sport>/[season]/<page>/page.tsx`, an async server component: `const { season } = await params;` then render the Content with `season={season}` (`params` is a Promise in Next 16).
 6. **Navigation**: `src/components/layout/Navigation.tsx` (the sport's nav item list). **Sitemap**: `src/app/sitemap.ts`.
 7. **Tests**: add the route to `ROUTES` in `e2e/smoke.e2e.ts`.
 8. **Style**: follow `docs/PAGE_MODERNIZATION_GUIDE.md` (see the `modernize-page` skill).
