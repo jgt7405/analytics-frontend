@@ -34,20 +34,25 @@ import type { NCAAProjectionsResponse } from "@/hooks/useNCAAProjections";
 import type { CombinedBasketballConfResponse } from "@/hooks/useBasketballConfData";
 import type { PlayoffRankingsResponse } from "@/types/football";
 import { BACKEND_API_URL } from "@/config/env";
-import { CACHE_POLICIES, cacheClassForBackendPath } from "@/lib/cache-policy";
+import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
+import { endpointForBackendPath } from "@/api/endpoints";
+import { logger } from "@/lib/logger";
 
 const BACKEND = BACKEND_API_URL;
 
 // Server data cache lifetime follows the endpoint's freshness class, the same
-// one the proxy uses for the CDN (src/lib/cache-policy.ts). Failed responses
-// aren't cached by Next's data cache.
+// one the proxy uses for the CDN (src/api/endpoints.ts, src/lib/cache-policy.ts).
+// Failed responses aren't cached by Next's data cache. A path missing from the
+// endpoint list is fetched uncached (and logged) rather than guessed at.
 function revalidateFor(path: string): number {
   const url = new URL(path, "http://backend");
-  const cacheClass = cacheClassForBackendPath(
-    url.pathname,
-    url.searchParams.get("season"),
-  );
-  return CACHE_POLICIES[cacheClass].revalidate;
+  const endpoint = endpointForBackendPath(url.pathname);
+  if (!endpoint) {
+    logger.warn("Server fetch for an unregistered backend path", { path: url.pathname });
+    return 0;
+  }
+  return CACHE_POLICIES[cacheClassFor(endpoint, url.searchParams.get("season"))]
+    .revalidate;
 }
 
 async function fetchJson<T>(path: string): Promise<T | undefined> {
@@ -116,8 +121,8 @@ export const getNCAAProjectionsServer = (season?: string) =>
 
 // --- Football playoff rankings (season mode, no conference param) -----------
 // Backend path is /football/playoff_rankings with NO trailing segment. The
-// client uses /All_Teams as a slug placeholder, but the proxy strips it (see
-// api/proxy/[...slug]/route.ts); hitting the backend with /All_Teams 404s, so
+// client uses /All_Teams as a slug placeholder, which the endpoint list drops
+// (src/api/endpoints.ts); hitting the backend with /All_Teams 404s, so
 // the SSR initialData was always empty and the page rendered a loading skeleton.
 export const getFootballPlayoffRankingsServer = (season?: string) =>
   fetchJson<PlayoffRankingsResponse>(

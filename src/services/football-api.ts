@@ -7,7 +7,6 @@ import {
   FootballConfChampApiResponse,
   FootballConferenceApiResponse,
   FootballCWVApiResponse,
-  FootballPlayoffApiResponse,
   FootballScheduleResponse,
   FootballSeedApiResponse,
   FootballStandingsApiResponse,
@@ -156,23 +155,6 @@ export class ApiClient extends BasketballApiClient {
         error: null,
       }),
     );
-  }
-
-  async getFootballPlayoffs(
-    conference: string,
-  ): Promise<FootballPlayoffApiResponse> {
-    const sanitized = sanitizeInput(conference);
-    const formattedConf =
-      sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
-    logger.debug(
-      `🏈 Getting football playoffs for: ${sanitized} -> ${formattedConf}`,
-    );
-
-    return this.request(`/football/playoffs/${formattedConf}`, (data) => ({
-      success: true,
-      data: data as FootballPlayoffApiResponse,
-      error: null,
-    }));
   }
 
   async getFootballConfChamp(

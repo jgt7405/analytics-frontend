@@ -47,7 +47,6 @@ describe('API Service - Backward Compatibility', () => {
       getFootballStandings,
       getFootballTWV,
       getFootballCWV,
-      getFootballPlayoffs,
       getFootballCFP,
     } = require('../api')
 
@@ -55,7 +54,6 @@ describe('API Service - Backward Compatibility', () => {
     expect(typeof getFootballStandings).toBe('function')
     expect(getFootballTWV).toBeDefined()
     expect(getFootballCWV).toBeDefined()
-    expect(getFootballPlayoffs).toBeDefined()
     expect(getFootballCFP).toBeDefined()
   })
 
@@ -90,7 +88,6 @@ describe('API Service - Backward Compatibility', () => {
       'getFootballSchedule',
       'getFootballTWV',
       'getFootballCWV',
-      'getFootballPlayoffs',
       'getFootballConfChamp',
       'getFootballSeed',
       'getCFP',

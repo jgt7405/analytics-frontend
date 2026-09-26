@@ -6,6 +6,8 @@
 //   server    fetch `next.revalidate`          (src/lib/server-api.ts)
 //   CDN       Cache-Control on /api/proxy       (src/app/api/proxy/[...slug]/route.ts)
 //
+// Which class an endpoint belongs to is declared in src/api/endpoints.ts.
+//
 // Error responses are never cached, whatever the class.
 //
 // Imported by both server and client code: keep it free of runtime imports.
@@ -86,26 +88,17 @@ const ARCHIVED_SEASONS: Record<"basketball" | "football", readonly string[]> = {
   football: ["2025-26"],
 };
 
-const LIVE_PATHS = [
-  /^\/basketball\/upcoming_games/,
-  /^\/football\/(all_)?future_games/,
-  /^\/football\/bowl-(picks|scoreboard)/,
-  /^\/football\/debug\//,
-];
-const REFERENCE_PATHS = [/^\/(basketball|football)_teams$/];
-
 /**
- * Cache class for a GET to a backend path (as sent to the Flask API, without
- * the query string), e.g. `/football/standings/SEC`. POSTs are `scenario`.
+ * Cache class for a response: the endpoint's own class (src/api/endpoints.ts),
+ * except that a GET for an archived season is `historical`. Reference data
+ * and scenarios keep their class whatever the season.
  */
-export function cacheClassForBackendPath(
-  backendPath: string,
+export function cacheClassFor(
+  endpoint: { sport: "basketball" | "football"; cacheClass: CacheClass },
   season?: string | null,
 ): CacheClass {
-  if (REFERENCE_PATHS.some((re) => re.test(backendPath))) return "referenceData";
-  const sport = /^\/(football|cfp)/.test(backendPath) ? "football" : "basketball";
+  const { sport, cacheClass } = endpoint;
+  if (cacheClass === "referenceData" || cacheClass === "scenario") return cacheClass;
   if (season && ARCHIVED_SEASONS[sport].includes(season)) return "historical";
-  if (LIVE_PATHS.some((re) => re.test(backendPath))) return "live";
-  if (/\/history(\/|$)/.test(backendPath)) return "historical";
-  return "currentStandings";
+  return cacheClass;
 }

@@ -53,7 +53,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 **Architecture** (enforced by ESLint where noted):
 - Basketball code never imports football code, or the reverse (error). Shared logic goes in `components/features/shared`, `components/common`, `lib` or `services`.
 - Presentation components don't call `fetch` (warning; existing cases are removed in plan step 4). Fetch in hooks, services, pages or route handlers.
-- New backend endpoints are added in all of: the proxy route, the client service, a hook, and (if server-rendered) `server-api.ts`. Use the `add-endpoint` skill or follow `src/services/AGENTS.md`.
+- New backend endpoints are added in all of: the endpoint list (`src/api/endpoints.ts`, which the proxy reads), the client service, a hook, and (if server-rendered) `server-api.ts`. Use the `add-endpoint` skill or follow `src/services/AGENTS.md`.
 - Keep files under about 600 lines (warning). Split by responsibility, not by line count.
 
 **Code style:**
@@ -66,7 +66,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 **Things that will bite you:**
 - `trailingSlash: true`: internal links should end in `/`. Build every backend proxy URL with `proxyUrl()` from `src/lib/proxy-url.ts` (e.g. ``proxyUrl(`twv/${conf}${seasonQuery}`)``), never by hand: a proxy URL without the trailing slash costs every visitor a 308 redirect round trip, and the smoke tests fail on it.
 - React Query keys come from `queryKeys` in `src/lib/query-keys.ts` (ESLint rejects inline `queryKey: [...]` arrays). A key must include every parameter its fetch uses, or different requests share one cache entry.
-- Cache lifetimes come from the freshness classes in `src/lib/cache-policy.ts` (`docs/decisions/cache-classes.md`). Don't write `staleTime`, `revalidate` or `s-maxage` numbers by hand: hooks spread `...queryCachePolicy("<class>")`, and the proxy and server fetches pick the class from the backend path. Error responses are never cached.
+- Cache lifetimes come from the freshness classes in `src/lib/cache-policy.ts` (`docs/decisions/cache-classes.md`). Don't write `staleTime`, `revalidate` or `s-maxage` numbers by hand: hooks spread `...queryCachePolicy("<class>")`, and the proxy and server fetches take it from the endpoint's entry in `src/api/endpoints.ts`. Error responses are never cached.
 - Log with `logger` from `src/lib/logger.ts`, never `console.*` (ESLint `no-console` is an error in `src/`). `logger.debug` is silent in production; the server writes one JSON line per entry to the Vercel logs. Values under secret-looking keys and email addresses are redacted, so pass objects rather than building strings from secrets.
 - React hooks must run before any early `return` (a crash on the bowl picks page came from this).
 - `[season]` archive layouts set `robots: noindex`. Don't route current-season pages through `[season]`, or they drop out of search.
@@ -91,6 +91,7 @@ Never commit `.env*` files.
 
 | Path | Contents |
 |---|---|
+| `src/api/` | `endpoints.ts`: every backend endpoint the proxy forwards, with its validation rules and cache class |
 | `src/app/` | Routes. `api/proxy/[...slug]/route.ts` is the backend proxy; `api/contact` sends the contact form |
 | `src/components/features/{basketball,football,shared}/` | Page content, tables, charts |
 | `src/components/{common,layout,ui,providers}/` | Shared UI, header/nav, primitives, React Query provider |

@@ -1,10 +1,14 @@
 import {
   CACHE_POLICIES,
-  cacheClassForBackendPath,
+  cacheClassFor,
   queryCachePolicy,
 } from "../cache-policy";
+import { endpointForBackendPath } from "@/api/endpoints";
 
-describe("cacheClassForBackendPath", () => {
+const classFor = (backendPath: string, season?: string) =>
+  cacheClassFor(endpointForBackendPath(backendPath)!, season);
+
+describe("cacheClassFor", () => {
   it.each([
     ["/football/standings/SEC", undefined, "currentStandings"],
     ["/standings/Big_12", undefined, "currentStandings"],
@@ -17,27 +21,25 @@ describe("cacheClassForBackendPath", () => {
     ["/football_teams", undefined, "referenceData"],
     ["/basketball_teams", undefined, "referenceData"],
   ])("%s (season %s) is %s", (path, season, expected) => {
-    expect(cacheClassForBackendPath(path, season)).toBe(expected);
+    expect(classFor(path, season)).toBe(expected);
   });
 
   it("caches archived football seasons as historical", () => {
-    expect(cacheClassForBackendPath("/football/standings/SEC", "2025-26")).toBe(
-      "historical",
-    );
-    expect(cacheClassForBackendPath("/cfp/SEC", "2025-26")).toBe("historical");
+    expect(classFor("/football/standings/SEC", "2025-26")).toBe("historical");
+    expect(classFor("/cfp/SEC", "2025-26")).toBe("historical");
   });
 
   it("keeps the season basketball still serves as current at its own class", () => {
     // Current basketball pages pass ?season=2025-26 (next.config.js rewrite).
-    expect(cacheClassForBackendPath("/standings/Big_12", "2025-26")).toBe(
-      "currentStandings",
-    );
+    expect(classFor("/standings/Big_12", "2025-26")).toBe("currentStandings");
   });
 
   it("never shortens reference data for an archived season", () => {
-    expect(cacheClassForBackendPath("/football_teams", "2025-26")).toBe(
-      "referenceData",
-    );
+    expect(classFor("/football_teams", "2025-26")).toBe("referenceData");
+  });
+
+  it("never caches scenarios, whatever the season", () => {
+    expect(cacheClassFor({ sport: "football", cacheClass: "scenario" }, "2025-26")).toBe("scenario");
   });
 });
 

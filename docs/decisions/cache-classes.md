@@ -38,7 +38,7 @@ The rules:
 - Server-rendered first paint is no older than the same class on the CDN.
 - Hooks that pass `initialDataUpdatedAt: 0` still refetch on mount even when the server data is fresh. Removing that refetch is part of step 9 (server rendering), once first-paint freshness is measured.
 - The bowl picks and scoreboard queries live inside components, so they use the provider default (`currentStandings`) in the browser, while the CDN treats them as `live`. Step 4 moves them into hooks with the `live` class.
-- Step 4's endpoint list replaces the path patterns in `cacheClassForBackendPath` with an explicit `cacheClass` per endpoint.
+- Step 4b: the path patterns (`cacheClassForBackendPath`) were replaced by an explicit `cacheClass` per entry in `src/api/endpoints.ts`, applied by `cacheClassFor()`. Every endpoint kept its class.
 
 ## How to check it
 

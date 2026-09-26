@@ -28,8 +28,6 @@ export const getFootballTWV = (conference: string, season?: string) =>
   api.getFootballTWV(conference, season);
 export const getFootballCWV = (conference: string, season?: string) =>
   api.getFootballCWV(conference, season);
-export const getFootballPlayoffs = (conference: string) =>
-  api.getFootballPlayoffs(conference);
 export const getFootballCFP = (conference: string, season?: string) =>
   api.getCFP(conference, season);
 
