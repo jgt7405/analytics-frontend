@@ -1,14 +1,12 @@
-"use client";
 import FootballWinsContent from "@/app/football/wins/FootballWinsContent";
 
 interface ArchiveFootballWinsPageProps {
-  params: {
-    season: string;
-  };
+  params: Promise<{ season: string }>;
 }
 
-export default function ArchivedFootballWinsPage({
+export default async function ArchivedFootballWinsPage({
   params,
 }: ArchiveFootballWinsPageProps) {
-  return <FootballWinsContent season={params.season} />;
+  const { season } = await params;
+  return <FootballWinsContent season={season} />;
 }

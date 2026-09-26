@@ -12,7 +12,7 @@ import { getCellColor } from "@/lib/color-utils";
 import { api } from "@/services/api";
 import { Download } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ─── Responsive Hook (inline) ────────────────────────────────────────────────
 
@@ -2299,7 +2299,7 @@ async function generatePDF(
 
 // ─── Main Page Component ─────────────────────────────────────────────────────
 
-export default function GamePreviewPage() {
+function GamePreviewPageContent() {
   const [upcomingGames, setUpcomingGames] = useState<UpcomingGame[]>([]);
   const [conferences, setConferences] = useState<string[]>([]);
   const [selectedGame, setSelectedGame] = useState<UpcomingGame | null>(null);
@@ -3891,5 +3891,15 @@ export default function GamePreviewPage() {
         </div>
       </ErrorBoundary>
     </PageLayoutWrapper>
+  );
+}
+
+// useSearchParams (?game=) needs a Suspense boundary; without one Next 16
+// fails the build (Next 14 silently client-rendered the whole page instead).
+export default function GamePreviewPage() {
+  return (
+    <Suspense fallback={null}>
+      <GamePreviewPageContent />
+    </Suspense>
   );
 }

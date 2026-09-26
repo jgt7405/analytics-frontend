@@ -9,9 +9,9 @@ import { headers } from "next/headers";
 
 const MOBILE_UA = /Mobi|Android|iPhone|iPod|IEMobile|BlackBerry|Opera Mini/i;
 
-export function detectMobileFromHeaders(): boolean {
+export async function detectMobileFromHeaders(): Promise<boolean> {
   try {
-    const ua = headers().get("user-agent") || "";
+    const ua = (await headers()).get("user-agent") || "";
     return MOBILE_UA.test(ua);
   } catch {
     // headers() unavailable (e.g. static context) — fall back to desktop,

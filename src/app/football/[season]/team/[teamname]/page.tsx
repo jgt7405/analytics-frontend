@@ -1,19 +1,18 @@
-"use client";
-
 // Archive team page: same content component as the current-season page,
 // pointed at the archive season. (Previously an 892-line drifted copy.)
 
 import FootballTeamContent from "@/app/football/team/[teamname]/FootballTeamContent";
 
-export default function ArchiveFootballTeamPage({
+export default async function ArchiveFootballTeamPage({
   params,
 }: {
-  params: { teamname: string; season: string };
+  params: Promise<{ teamname: string; season: string }>;
 }) {
+  const { teamname, season } = await params;
   return (
     <FootballTeamContent
-      params={{ teamname: params.teamname }}
-      season={params.season}
+      params={{ teamname }}
+      season={season}
     />
   );
 }

@@ -1,10 +1,5 @@
 import { generatePageMetadata } from "@/app/metadata";
-import dynamic from "next/dynamic";
-
-const FootballCompareContent = dynamic(
-  () => import("./FootballCompareContent"),
-  { ssr: false }
-);
+import FootballCompareContent from "./FootballCompareContentClientOnly";
 
 export const metadata = generatePageMetadata({
   title: "Compare College Football Teams",

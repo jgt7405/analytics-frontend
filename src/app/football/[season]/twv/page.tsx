@@ -1,14 +1,13 @@
-"use client";
-
 // Archive TWV page: same content component as the current-season page,
 // pointed at the archive season. (Previously a full drifted copy.)
 
 import FootballTWVContent from "@/app/football/twv/FootballTWVContent";
 
-export default function ArchiveFootballTWVPage({
+export default async function ArchiveFootballTWVPage({
   params,
 }: {
-  params: { season: string };
+  params: Promise<{ season: string }>;
 }) {
-  return <FootballTWVContent season={params.season} />;
+  const { season } = await params;
+  return <FootballTWVContent season={season} />;
 }

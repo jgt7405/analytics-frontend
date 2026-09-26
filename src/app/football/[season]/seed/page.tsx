@@ -1,14 +1,13 @@
-"use client";
-
 // Archive seed page: same content component as the current-season page,
 // pointed at the archive season. (Previously a full drifted copy.)
 
 import FootballSeedContent from "@/app/football/seed/FootballSeedContent";
 
-export default function ArchiveFootballSeedPage({
+export default async function ArchiveFootballSeedPage({
   params,
 }: {
-  params: { season: string };
+  params: Promise<{ season: string }>;
 }) {
-  return <FootballSeedContent season={params.season} />;
+  const { season } = await params;
+  return <FootballSeedContent season={season} />;
 }

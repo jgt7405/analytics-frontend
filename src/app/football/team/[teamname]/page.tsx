@@ -10,22 +10,24 @@ export const revalidate = 3600;
 export async function generateMetadata({
   params,
 }: {
-  params: { teamname: string };
+  params: Promise<{ teamname: string }>;
 }): Promise<Metadata> {
-  const teamName = decodeURIComponent(params.teamname).replace(/_/g, " ");
+  const { teamname } = await params;
+  const teamName = decodeURIComponent(teamname).replace(/_/g, " ");
   return generatePageMetadata({
     title: `${teamName} Football Analytics & Projections`,
     description: `${teamName} football analytics including schedule, CFP projections, standings history, win probabilities, and advanced team statistics.`,
-    path: `/football/team/${params.teamname}/`,
+    path: `/football/team/${teamname}/`,
   });
 }
 
 export default async function FootballTeamPage({
   params,
 }: {
-  params: { teamname: string };
+  params: Promise<{ teamname: string }>;
 }) {
-  const teamName = decodeURIComponent(params.teamname);
+  const { teamname } = await params;
+  const teamName = decodeURIComponent(teamname);
   // Legacy underscore slugs 404 against the backend (it expects spaces);
   // 301 them to the canonical encoded-space URL.
   if (teamName.includes("_")) {
@@ -43,7 +45,7 @@ export default async function FootballTeamPage({
   const initialData = { ...fullData, all_schedule_data: undefined };
   return (
     <Suspense fallback={null}>
-      <FootballTeamContent params={params} initialData={initialData} />
+      <FootballTeamContent params={{ teamname }} initialData={initialData} />
     </Suspense>
   );
 }

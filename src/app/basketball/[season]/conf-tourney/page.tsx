@@ -1,14 +1,13 @@
-"use client";
-
 // Archive conf-tourney page: same content component as the current-season
 // page, pointed at the archive season. (Previously a full drifted copy.)
 
 import BasketballConfTourneyContent from "@/app/basketball/conf-tourney/BasketballConfTourneyContent";
 
-export default function ArchiveConfTourneyPage({
+export default async function ArchiveConfTourneyPage({
   params,
 }: {
-  params: { season: string };
+  params: Promise<{ season: string }>;
 }) {
-  return <BasketballConfTourneyContent season={params.season} />;
+  const { season } = await params;
+  return <BasketballConfTourneyContent season={season} />;
 }

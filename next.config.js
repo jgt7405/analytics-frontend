@@ -41,35 +41,6 @@ const withPWA =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Development optimizations
-  ...(process.env.NODE_ENV === "development" && {
-    webpack: (config, { dev, isServer }) => {
-      if (dev && !isServer) {
-        config.output = {
-          ...config.output,
-          chunkLoadTimeout: 600000,
-        };
-        config.watchOptions = {
-          poll: 1000,
-          aggregateTimeout: 300,
-          ignored: ["**/node_modules", "**/.git", "**/.next"],
-        };
-        config.resolve.fallback = {
-          ...config.resolve.fallback,
-          fs: false,
-          path: false,
-          os: false,
-        };
-        config.resolve.symlinks = false;
-        config.cache = {
-          type: "filesystem",
-          cacheDirectory: require("path").resolve(".next/cache/webpack"),
-        };
-      }
-      return config;
-    },
-  }),
-
   // Production optimizations.
   // NOTE: We intentionally do NOT override splitChunks here. The previous
   // override forced all of node_modules into a single ~288 kB "vendors" chunk
@@ -90,11 +61,7 @@ const nextConfig = {
     optimizePackageImports: ["lucide-react", "chart.js", "react-chartjs-2"],
     optimizeCss: process.env.NODE_ENV === "production",
     webpackBuildWorker: true,
-    missingSuspenseWithCSRBailout: false,
   },
-
-  // Middleware options (moved out of experimental in Next.js 14.2)
-  skipMiddlewareUrlNormalize: true,
 
   images: {
     formats: ["image/avif", "image/webp"],
@@ -142,18 +109,6 @@ const nextConfig = {
           {
             key: "Referrer-Policy",
             value: "origin-when-cross-origin",
-          },
-        ],
-      },
-      {
-        source: "/_next/static/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value:
-              process.env.NODE_ENV === "production"
-                ? "public, max-age=31536000, immutable"
-                : "no-store, max-age=0",
           },
         ],
       },

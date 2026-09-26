@@ -16,7 +16,7 @@ export const metadata = generatePageMetadata({
 
 export default async function FootballHomePage() {
   const initialData = await getFootballPlayoffRankingsServer();
-  const initialIsMobile = detectMobileFromHeaders();
+  const initialIsMobile = await detectMobileFromHeaders();
   return (
     <ResponsiveProvider initialIsMobile={initialIsMobile}>
       <Suspense fallback={null}>

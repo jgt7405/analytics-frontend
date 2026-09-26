@@ -1,6 +1,7 @@
 // src/app/football/[season]/conf_data/page.tsx
 "use client";
 
+import { useParams } from "next/navigation";
 import TableActionButtons from "@/components/common/TableActionButtons";
 import ConferenceSagarinBoxWhiskerChart from "@/components/features/football/ConferenceSagarinBoxWhiskerChart";
 import FootballConfBidsHistoryChart from "@/components/features/football/FootballConfBidsHistoryChart";
@@ -18,19 +19,11 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useMemo } from "react";
 
-interface FootballConfDataArchivePageProps {
-  params: {
-    season: string;
-  };
-}
-
-export default function FootballConfDataArchivePage({
-  params,
-}: FootballConfDataArchivePageProps) {
+export default function FootballConfDataArchivePage() {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
 
-  const season = params.season;
+  const { season } = useParams<{ season: string }>();
 
   const {
     data: confResponse,
