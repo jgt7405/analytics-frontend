@@ -42,6 +42,6 @@ The rules:
 
 ## How to check it
 
-- In production: the "Production baseline" workflow's proxy probe prints each endpoint's `Cache-Control` and `x-vercel-cache` result.
+- In production: the "Production baseline" workflow's proxy probe prints each endpoint's `x-vercel-cache` result (HIT/MISS/STALE). Vercel strips `s-maxage` and `stale-while-revalidate` before responding (clients see `Cache-Control: public`), so the lifetimes themselves are checked by the tests below, not in production.
 - Locally: `src/lib/__tests__/cache-policy.test.ts` (classification and consistency across layers) and `src/app/api/proxy/[...slug]/__tests__/cache-headers.test.ts` (headers on success, error, unknown endpoint and POST).
 - Rollback trigger (plan, "Rollback"): stale data visible beyond a class's window, or backend request volume rising unexpectedly. To roll back, revert the PR; the old values were a flat 5 min (CDN, browser) and 1 h (server).

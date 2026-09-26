@@ -7,9 +7,7 @@
 //
 // Paths are requested exactly as the site's client code does: with the
 // trailing slash `proxyUrl()` adds (src/lib/proxy-url.ts). A redirect means
-// that regressed; `--strict` fails on it. Each endpoint's Cache-Control is
-// recorded so the freshness classes (src/lib/cache-policy.ts) can be checked
-// against production.
+// that regressed; `--strict` fails on it.
 //
 // Usage:
 //   npm run baseline:proxy
@@ -39,7 +37,6 @@ const ENDPOINTS = [
   "/seed/Big_Ten",
   "/ncaa_tourney/All_Teams",
   "/football/standings/SEC/history",
-  "/football/standings/SEC?season=2025-26",
 ];
 
 // Same URL shape as proxyUrl(): slash after the path, before any query.
@@ -72,7 +69,6 @@ async function probe(path) {
       status: res.status,
       ms: Math.round(performance.now() - started),
       cache: res.headers.get("x-vercel-cache") ?? "n/a",
-      cacheControl: res.headers.get("cache-control"),
       redirected: res.redirected,
     };
   } catch (error) {
@@ -81,7 +77,6 @@ async function probe(path) {
       status: timedOut ? "timeout" : "network-error",
       ms: Math.round(performance.now() - started),
       cache: "n/a",
-      cacheControl: null,
       redirected: false,
       shapeProblem: null,
     };
@@ -128,7 +123,6 @@ for (const [endpoint, results] of Object.entries(samples)) {
     medianMs: percentile(times, 50),
     maxMs: Math.max(...times),
     cache,
-    cacheControl: results.find((r) => r.cacheControl && r.status === 200)?.cacheControl ?? null,
     redirected: results.filter((r) => r.redirected).length,
     shapeProblems: [...new Set(results.map((r) => r.shapeProblem).filter(Boolean))],
   };
@@ -148,7 +142,7 @@ const width = Math.max(...ENDPOINTS.map((e) => e.length));
 for (const [endpoint, e] of Object.entries(report.endpoints)) {
   const cache = Object.entries(e.cache).map(([k, v]) => `${k}:${v}`).join(" ");
   console.log(
-    `${endpoint.padEnd(width)}  ok ${e.ok}/${rounds}  first ${e.firstMs}ms  median ${e.medianMs}ms  max ${e.maxMs}ms  ${cache}  [${e.cacheControl ?? "no cache-control"}]${e.failed ? `  FAILED ${e.failureStatuses.join(",")}` : ""}${e.shapeProblems.length ? `  SHAPE ${e.shapeProblems.join(",")}` : ""}`,
+    `${endpoint.padEnd(width)}  ok ${e.ok}/${rounds}  first ${e.firstMs}ms  median ${e.medianMs}ms  max ${e.maxMs}ms  ${cache}${e.failed ? `  FAILED ${e.failureStatuses.join(",")}` : ""}${e.shapeProblems.length ? `  SHAPE ${e.shapeProblems.join(",")}` : ""}`,
   );
 }
 console.log(`\n${report.summary.failed}/${report.summary.requests} requests failed`);
