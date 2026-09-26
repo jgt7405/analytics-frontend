@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -50,7 +51,7 @@ export const useFootballStandingsHistory = (
   season?: string,
 ) => {
   return useQuery<FootballStandingsHistoryResponse, Error>({
-    queryKey: ["football-standings-history", conference, season],
+    queryKey: queryKeys.football.standingsHistory(conference, season),
     queryFn: async () => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       const response = await fetch(

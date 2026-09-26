@@ -1,5 +1,6 @@
 import { WhatIfGame } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -17,7 +18,7 @@ const fetchAllFutureGames = async (): Promise<AllFutureGamesResponse> => {
 
 export const useFootballFutureGames = (enabled: boolean = true) => {
   return useQuery({
-    queryKey: ["football-all-future-games"],
+    queryKey: queryKeys.football.allFutureGames(),
     queryFn: fetchAllFutureGames,
     enabled,
     ...queryCachePolicy("live"),

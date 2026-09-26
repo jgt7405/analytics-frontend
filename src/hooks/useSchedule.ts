@@ -1,6 +1,7 @@
 import { api } from "@/services/api";
 import { ScheduleApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useSchedule = (
@@ -9,7 +10,7 @@ export const useSchedule = (
   initialData?: ScheduleApiResponse,
 ) => {
   return useQuery<ScheduleApiResponse, Error>({
-    queryKey: ["schedule", conference, season],
+    queryKey: queryKeys.basketball.schedule(conference, season),
     initialData,
     queryFn: () => api.getSchedule(conference, season),
     enabled: !!conference,

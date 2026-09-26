@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -69,7 +70,7 @@ export function useNCAAProjections(
   // Server-rendered initial data is the season projection only
   const seeded = mode === "season" ? initialData : undefined;
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["ncaa-projections", season, mode],
+    queryKey: queryKeys.basketball.ncaaProjections(season, mode),
     initialData: seeded,
     initialDataUpdatedAt: seeded ? 0 : undefined,
     queryFn: async () => {

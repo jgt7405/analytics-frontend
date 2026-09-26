@@ -1,6 +1,7 @@
 // src/hooks/useFootballTeam.ts
 import { api } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface FootballTeamInfo {
@@ -78,7 +79,7 @@ export const useFootballTeam = (
   initialData?: FootballTeamData,
 ) => {
   return useQuery<FootballTeamData, Error>({
-    queryKey: ["football-team", teamName, season],
+    queryKey: queryKeys.football.team(teamName, season),
     initialData,
     // SSR initialData omits the heavy league-wide all_schedule_data; mark it
     // immediately stale so the client refetches the full dataset on mount to

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
@@ -61,7 +62,7 @@ export interface CombinedBasketballConfResponse {
 
 export function useBasketballConfData(season?: string, initialData?: CombinedBasketballConfResponse) {
   return useQuery<CombinedBasketballConfResponse>({
-    queryKey: ["basketball-conf-data", season],
+    queryKey: queryKeys.basketball.confData(season),
     initialData,
     initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {

@@ -2,6 +2,7 @@
 import { api } from "@/services/api";
 import { FootballStandingsApiResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 export const useFootballStandings = (
@@ -10,7 +11,7 @@ export const useFootballStandings = (
   initialData?: FootballStandingsApiResponse,
 ) => {
   return useQuery<FootballStandingsApiResponse, Error>({
-    queryKey: ["football-standings", conference, season],
+    queryKey: queryKeys.football.standings(conference, season),
     initialData,
     queryFn: async () => {
       console.log("Fetching football standings for:", conference, season);

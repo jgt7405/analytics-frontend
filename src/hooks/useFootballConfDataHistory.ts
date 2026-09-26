@@ -1,5 +1,6 @@
 import { api } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
 interface ConfHistoryData {
@@ -18,7 +19,7 @@ interface FootballConfHistoryResponse {
 
 export function useFootballConfDataHistory(season?: string) {
   return useQuery({
-    queryKey: ["football-conf-data-history", season],
+    queryKey: queryKeys.football.confDataHistory(season),
     queryFn: async (): Promise<FootballConfHistoryResponse> => {
       const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
       return api.get<FootballConfHistoryResponse>(

@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1, 2 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). **Step 3 in progress:** 3a (env config, proxy URLs) and 3b (cache classes) done; next 3c (query-key factory), then 3d (logger). Baselines are in `docs/baselines/README.md`.
+Status: **steps 1, 2 and 5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security). **Step 3 in progress:** 3a (env config, proxy URLs), 3b (cache classes) and 3c (query keys) done; next 3d (logger). Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -125,7 +125,8 @@ Other findings carried forward: 48 dependency vulnerabilities (step 2), the redi
 | Part | What | Result |
 |---|---|---|
 | 3a (#19) | `src/config/env.ts` (server-only `BACKEND_API_URL`; `NEXT_PUBLIC_BACKEND_URL` kept as a deprecated fallback); `proxyUrl()` for every proxy URL | The 308 redirect before every browser data call is gone (63 call sites; ESLint blocks hand-built `/api/proxy` strings; smoke tests fail on any proxy 308). Integration tests that could never fail now assert URLs. The shared request layer (item 2) is deferred to step 4's endpoint list, which replaces both request paths. |
-| 3b | Freshness classes in `src/lib/cache-policy.ts`, decided in `docs/decisions/cache-classes.md` | One setting per class for React Query, server fetches and the CDN (was 5 min / 1 h / 5 min, disagreeing). Team lists are now cached 24 h and history 1 h; live games 30 s. Server first paint is no longer up to an hour older than the CDN. Errors and POSTs are `no-store`. The proxy probe now calls URLs the way the client does (trailing slash) and fails on redirects; its first run on production after #19 found 0 redirects in 80 calls (was 70 of 70). |
+| 3b (#20) | Freshness classes in `src/lib/cache-policy.ts`, decided in `docs/decisions/cache-classes.md` | One setting per class for React Query, server fetches and the CDN (was 5 min / 1 h / 5 min, disagreeing). Team lists are now cached 24 h and history 1 h; live games 30 s. Server first paint is no longer up to an hour older than the CDN. Errors and POSTs are `no-store`. The proxy probe now calls URLs the way the client does (trailing slash) and fails on redirects; its first run on production after #19 found 0 redirects in 80 calls (was 70 of 70). |
+| 3c | Query-key factory `src/lib/query-keys.ts` | All 36 queries (hooks and the three bowl components) take keys from `queryKeys.<sport>.<resource>(...)`; every key starts with its sport so one sport can be invalidated at once. ESLint rejects inline key arrays; a unit test checks keys are unique and sport-prefixed. Five hooks nothing imported were deleted (`useConferenceData`, whose key had a season its fetch ignored; `useFootballTeams`; `useFootballCFPHistory`; `useFootballTeamHistory`, a duplicate of `useFootballTeamAllHistory` under another key; `useBasketballWhatIfConferences`). |
 
 ## Step 4 — Minimal typed endpoint list and route tests
 
