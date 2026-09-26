@@ -451,7 +451,7 @@ function ScreenshotBtn({
   selectionHtml,
   chartTitle,
 }: {
-  targetRef: React.RefObject<HTMLDivElement>;
+  targetRef: React.RefObject<HTMLDivElement | null>;
   filename: string;
   selectionHtml: string | null;
   chartTitle?: string;
@@ -524,7 +524,7 @@ function ProbabilityTable({
   whatif: WhatIfTeamResult[];
   probFn: (t: WhatIfTeamResult) => number;
   hasCalculated: boolean;
-  screenshotRef: React.RefObject<HTMLDivElement>;
+  screenshotRef: React.RefObject<HTMLDivElement | null>;
   screenshotFilename: string;
   selectionHtml: string | null;
   isDark: boolean;
@@ -769,7 +769,7 @@ function FullStandingsTable({
   whatif: WhatIfTeamResult[];
   numTeams: number;
   label: string;
-  screenshotRef: React.RefObject<HTMLDivElement>;
+  screenshotRef: React.RefObject<HTMLDivElement | null>;
   selectionHtml: string | null;
 }) {
   const [sortKey, setSortKey] = useState<string>("avg");
