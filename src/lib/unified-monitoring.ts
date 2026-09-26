@@ -1,4 +1,7 @@
-// Unified monitoring service - Production stub
+// Unified monitoring service - Production stub. Events and errors go to the
+// shared logger, whose level filter decides what prints.
+import { logger } from "@/lib/logger";
+
 interface PerformanceMetric {
   name: string;
   duration: number;
@@ -21,16 +24,11 @@ export const monitoring = {
   },
 
   trackEvent: (event: Omit<MonitoringEvent, "timestamp">): void => {
-    // Only log in development
-    if (process.env.NODE_ENV === "development") {
-      console.log("📊 Event:", event.name, event.properties);
-    }
+    logger.debug(`Event: ${event.name}`, event.properties);
   },
 
   trackError: (error: Error, context?: Record<string, unknown>): void => {
-    if (process.env.NODE_ENV === "development") {
-      console.error("🚨 Error:", error.message, context);
-    }
+    logger.error(error.message, error, context);
   },
 
   trackApiCall: (

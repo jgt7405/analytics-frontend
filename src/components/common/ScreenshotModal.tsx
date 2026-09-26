@@ -8,6 +8,7 @@ import {
 } from "@/lib/screenshot-layout";
 import { saveCanvasImage } from "@/lib/save-image";
 import { useState } from "react";
+import { logger } from "@/lib/logger";
 
 interface ScreenshotOption {
   id: string;
@@ -101,7 +102,7 @@ export default function ScreenshotModal({
     const images = targetElement.querySelectorAll("img");
     const imageMap = new Map<HTMLImageElement, string>();
 
-    console.log("Converting images to base64...");
+    logger.debug("Converting images to base64...");
     for (const img of Array.from(images)) {
       const imgEl = img as HTMLImageElement;
       let originalUrl = imgEl.src;
@@ -116,7 +117,7 @@ export default function ScreenshotModal({
               : `${window.location.origin}${path}`;
           }
         } catch (e) {
-          console.error("URL parse error:", e);
+          logger.error("URL parse error:", e);
         }
       }
 
@@ -124,7 +125,7 @@ export default function ScreenshotModal({
         const base64 = await imageToBase64(originalUrl);
         imageMap.set(imgEl, base64);
       } catch (e) {
-        console.error("Base64 conversion failed for:", originalUrl, e);
+        logger.error("Base64 conversion failed for:", originalUrl, e);
       }
     }
 
@@ -132,7 +133,7 @@ export default function ScreenshotModal({
     const svgImages = targetElement.querySelectorAll("svg image");
     const svgImageMap = new Map<SVGImageElement, string>();
 
-    console.log("Converting SVG images to base64...");
+    logger.debug("Converting SVG images to base64...");
     for (const svgImg of Array.from(svgImages)) {
       const svgImgEl = svgImg as SVGImageElement;
       let originalUrl =
@@ -151,7 +152,7 @@ export default function ScreenshotModal({
                 : `${window.location.origin}${path}`;
             }
           } catch (e) {
-            console.error("URL parse error:", e);
+            logger.error("URL parse error:", e);
           }
         }
 
@@ -159,7 +160,7 @@ export default function ScreenshotModal({
           const base64 = await imageToBase64(originalUrl);
           svgImageMap.set(svgImgEl, base64);
         } catch (e) {
-          console.error(
+          logger.error(
             "Base64 conversion failed for SVG image:",
             originalUrl,
             e,
@@ -168,7 +169,7 @@ export default function ScreenshotModal({
       }
     }
 
-    console.log("Images converted, creating clone...");
+    logger.debug("Images converted, creating clone...");
 
     // Use intrinsic and scroll dimensions so off-screen rows/columns are part
     // of the export instead of inheriting the current viewport crop.
@@ -182,7 +183,7 @@ export default function ScreenshotModal({
     const originalCanvases = targetElement.querySelectorAll("canvas");
     const clonedCanvases = clone.querySelectorAll("canvas");
     originalCanvases.forEach((originalCanvas, index) => {
-      console.log("Cloning canvas...");
+      logger.debug("Cloning canvas...");
       const tempCanvas = document.createElement("canvas");
       tempCanvas.width = originalCanvas.width;
       tempCanvas.height = originalCanvas.height;
@@ -270,36 +271,36 @@ export default function ScreenshotModal({
     label: string,
   ) => {
     const selectors = Array.isArray(selector) ? selector : [selector];
-    console.log("Screenshot started for selector(s):", selectors);
+    logger.debug("Screenshot started for selector(s):", selectors);
 
     setIsCapturing(true);
 
     try {
       await loadHtml2Canvas();
     } catch (error) {
-      console.error("Failed to load html2canvas:", error);
+      logger.error("Failed to load html2canvas:", error);
       alert("Failed to load screenshot library. Please try again.");
       setIsCapturing(false);
       return;
     }
 
     if (typeof window.html2canvas !== "function") {
-      console.error("html2canvas not loaded");
+      logger.error("html2canvas not loaded");
       alert("Screenshot library not loaded.");
       setIsCapturing(false);
       return;
     }
 
-    console.log("html2canvas is loaded");
+    logger.debug("html2canvas is loaded");
 
     try {
-      console.log("Looking for elements:", selectors);
+      logger.debug("Looking for elements:", selectors);
       const targetElements = selectors.map((sel) => document.querySelector(sel));
       const missing = selectors.filter((_, i) => !targetElements[i]);
       if (missing.length > 0) {
         throw new Error(`Element(s) not found: ${missing.join(", ")}`);
       }
-      console.log("Elements found:", targetElements);
+      logger.debug("Elements found:", targetElements);
 
       const processed = await Promise.all(
         targetElements.map((el) => buildProcessedClone(el as Element)),
@@ -310,7 +311,7 @@ export default function ScreenshotModal({
       const actualWidth =
         Math.max(...processed.map((p) => p.width), 660) + 100;
 
-      console.log("Creating wrapper...");
+      logger.debug("Creating wrapper...");
       // Create wrapper
       const wrapper = document.createElement("div");
       wrapper.style.cssText = `position: fixed; left: -9999px; top: 0; background-color: white; padding: 24px 50px; width: ${actualWidth}px; z-index: -1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;`;
@@ -366,7 +367,7 @@ export default function ScreenshotModal({
       document.body.appendChild(wrapper);
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      console.log("Starting html2canvas render...");
+      logger.debug("Starting html2canvas render...");
 
       // Add timeout to html2canvas
       const captureSize = getFullScreenshotDimensions(wrapper);
@@ -396,7 +397,7 @@ export default function ScreenshotModal({
         timeoutPromise,
       ])) as HTMLCanvasElement;
 
-      console.log("Render complete, cleaning up...");
+      logger.debug("Render complete, cleaning up...");
       document.body.removeChild(wrapper);
 
       const filename = teamName
@@ -404,11 +405,11 @@ export default function ScreenshotModal({
         : `${label.replace(/\s+/g, "_")}.png`;
       await saveCanvasImage(canvas, filename, label);
 
-      console.log("Download triggered");
+      logger.debug("Download triggered");
       setIsCapturing(false);
       onClose();
     } catch (error) {
-      console.error("Screenshot failed:", error);
+      logger.error("Screenshot failed:", error);
       alert(`Failed: ${error instanceof Error ? error.message : "Unknown"}`);
       setIsCapturing(false);
     }

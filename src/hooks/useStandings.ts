@@ -3,6 +3,7 @@ import { StandingsApiResponse } from "@/types/basketball";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { queryCachePolicy } from "@/lib/cache-policy";
+import { logger } from "@/lib/logger";
 
 export const useStandings = (
   conference: string,
@@ -13,13 +14,13 @@ export const useStandings = (
     queryKey: queryKeys.basketball.standings(conference, season),
     initialData,
     queryFn: async () => {
-      console.log("Fetching standings for:", conference, season);
+      logger.debug("Fetching standings for:", conference, season);
       try {
         const result = await api.getStandings(conference, season);  // ✅ FIXED: Added season
-        console.log("Standings API success:", result);
+        logger.debug("Standings API success:", result);
         return result;
       } catch (error) {
-        console.error("Standings API error:", error);
+        logger.error("Standings API error:", error);
         throw error;
       }
     },

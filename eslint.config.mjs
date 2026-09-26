@@ -68,6 +68,13 @@ const eslintConfig = [
       ],
     },
   },
+  // Logging goes through src/lib/logger.ts (levels per environment,
+  // redaction), not console.* directly.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["**/__tests__/**"],
+    rules: { "no-console": "error" },
+  },
   // Proxy URLs are built with proxyUrl() (src/lib/proxy-url.ts), which adds
   // the trailing slash that avoids a 308 redirect on every data call. React
   // Query keys come from queryKeys (src/lib/query-keys.ts). Both live in one

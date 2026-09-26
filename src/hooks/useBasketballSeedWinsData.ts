@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { proxyUrl } from "@/lib/proxy-url";
 import { queryCachePolicy } from "@/lib/cache-policy";
+import { logger } from "@/lib/logger";
 
 export interface SeedWinsTeam {
   team_name: string;
@@ -81,7 +82,7 @@ export const useBasketballSeedWinsData = (
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`[SeedWinsData] API Error - ${confFormatted}:`, {
+          logger.error(`[SeedWinsData] API Error - ${confFormatted}:`, {
             status: response.status,
             statusText: response.statusText,
             body: errorText,
@@ -94,7 +95,7 @@ export const useBasketballSeedWinsData = (
         const result = await response.json();
 
         if (!result.data || !Array.isArray(result.data)) {
-          console.error("[SeedWinsData] Invalid response format:", result);
+          logger.error("[SeedWinsData] Invalid response format:", result);
           throw new Error("Invalid response format: expected data array");
         }
 
@@ -186,7 +187,7 @@ export const useBasketballSeedWinsData = (
           },
         );
 
-        console.log(
+        logger.debug(
           `[SeedWinsData] Successfully loaded ${mappedData.length} teams for ${conference}`,
         );
 
@@ -195,7 +196,7 @@ export const useBasketballSeedWinsData = (
           conference: conference,
         };
       } catch (error) {
-        console.error(
+        logger.error(
           `[SeedWinsData] Error fetching for ${conference}:`,
           error,
         );

@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./BballSeedWinsAndProbability.module.css";
+import { logger } from "@/lib/logger";
 
 interface ConfChampData extends SeedWinsTeam {
   wins_probabilities?: Record<string, number>;
@@ -215,24 +216,24 @@ export default function BballSeedWinsAndProbability({
     };
 
     if (!confChampData || confChampData.length === 0) {
-      console.log("DEBUG: confChampData is empty");
+      logger.debug("DEBUG: confChampData is empty");
       return { winsGrouped, probGrouped };
     }
 
-    console.log(
+    logger.debug(
       `DEBUG: Processing ${confChampData.length} teams, selectedSeed=${selectedSeed}`,
     );
 
     confChampData.forEach((team: ConfChampData) => {
       if (!team.wins_required_info) {
-        console.warn(`Missing wins_required_info for ${team.team_name}`);
+        logger.warn(`Missing wins_required_info for ${team.team_name}`);
         return;
       }
 
       const requiredInfo = team.wins_required_info[selectedSeed];
 
       if (!requiredInfo) {
-        console.warn(
+        logger.warn(
           `No wins_required_info for ${team.team_name}, seed ${selectedSeed}`,
         );
         return;

@@ -11,6 +11,7 @@ import { downloadCompareChart } from "@/lib/download-compare-chart";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useCallback, useEffect, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 interface Team {
   team_name: string;
@@ -113,7 +114,7 @@ export default function FootballCompareArchivePage() {
         setTeamDataCache((prev) => ({ ...prev, [teamName]: data }));
         return data;
       } catch (error) {
-        console.error("Error loading team data:", error);
+        logger.error("Error loading team data:", error);
         return null;
       }
     },
@@ -148,7 +149,7 @@ export default function FootballCompareArchivePage() {
           },
         });
       } catch (error) {
-        console.error("Error loading initial data:", error);
+        logger.error("Error loading initial data:", error);
       } finally {
         setIsLoadingInitial(false);
       }
@@ -227,7 +228,7 @@ export default function FootballCompareArchivePage() {
         filename: `football-compare-${season}-${new Date().toISOString().split("T")[0]}`,
       });
     } catch (error) {
-      console.error("Download error:", error);
+      logger.error("Download error:", error);
       alert("Failed to download chart. Please try again.");
     }
   };

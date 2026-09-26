@@ -11,6 +11,7 @@ import {
 import { useResponsive } from "@/hooks/useResponsive";
 import dynamic from "next/dynamic";
 import { useMemo, useRef, useState } from "react";
+import { logger } from "@/lib/logger";
 
 const NCAABracketTable = dynamic(
   () => import("@/components/features/basketball/NCAABracketTable"),
@@ -51,7 +52,7 @@ export default function BasketballHomeContent({ initialData }: { initialData?: N
         const year = date.getFullYear();
         return `${month}/${day}/${year}`;
       } catch (error) {
-        console.error("Error formatting date:", error);
+        logger.error("Error formatting date:", error);
       }
     }
 

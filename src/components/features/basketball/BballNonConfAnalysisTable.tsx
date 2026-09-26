@@ -6,6 +6,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { memo, useCallback, useMemo, useState } from "react";
+import { logger } from "@/lib/logger";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
 // this bespoke file has no CSS module of its own.
@@ -1101,7 +1102,7 @@ function BballNonConfAnalysisTable({
                           flexShrink: 0,
                         }}
                         onError={(e) => {
-                          console.warn(
+                          logger.warn(
                             `Failed to load conference logo: ${row.conf_logo_url}`
                           );
                           (e.target as HTMLImageElement).style.display = "none";
@@ -1194,7 +1195,7 @@ function BballNonConfAnalysisTable({
                   >
                     {(() => {
                       const value = row.power_twv_50 / (row.teams?.length || 1);
-                      console.log("Power Conf TWV Debug:", {
+                      logger.debug("Power Conf TWV Debug:", {
                         conference: row.team_conf,
                         rawValue: row.power_twv_50,
                         teamCount: row.teams?.length || 1,

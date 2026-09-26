@@ -4,6 +4,7 @@ import { AlertTriangle, Home, RefreshCw } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { Component, ReactNode } from "react";
 import { Button } from "./Button";
+import { logger } from "@/lib/logger";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -36,7 +37,7 @@ export class ErrorBoundary extends Component<
 
     // Log error in development
     if (process.env.NODE_ENV === "development") {
-      console.error("Error caught by boundary:", error, errorInfo);
+      logger.error("Error caught by boundary:", error, errorInfo);
     }
   }
 

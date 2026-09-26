@@ -16,6 +16,7 @@ import {
   StandingsApiResponse,
 } from "@/types/basketball";
 import { BaseApiClient } from "./shared-request";
+import { logger } from "@/lib/logger";
 
 // Basketball-specific response interfaces
 export interface TWVApiResponse {
@@ -91,7 +92,7 @@ export class BasketballApiClient extends BaseApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    console.log(
+    logger.debug(
       `🏀 Getting standings for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
     );
 
@@ -117,7 +118,7 @@ export class BasketballApiClient extends BaseApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    console.log(`🏀 Getting CWV for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
+    logger.debug(`🏀 Getting CWV for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
 
     monitoring.trackEvent({
       name: "cwv_requested",
@@ -138,7 +139,7 @@ export class BasketballApiClient extends BaseApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    console.log(
+    logger.debug(
       `🏀 Getting schedule for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
     );
 
@@ -169,7 +170,7 @@ export class BasketballApiClient extends BaseApiClient {
     const formattedConf =
       sanitized === "All Teams" ? "All_Teams" : sanitized.replace(/ /g, "_");
     const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    console.log(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
+    logger.debug(`🏀 Getting TWV for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
 
     monitoring.trackEvent({
       name: "twv_requested",
@@ -194,7 +195,7 @@ export class BasketballApiClient extends BaseApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    console.log(
+    logger.debug(
       `🏀 Getting conf tourney for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
     );
 
@@ -221,7 +222,7 @@ export class BasketballApiClient extends BaseApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    console.log(
+    logger.debug(
       `🏀 Getting NCAA tourney rounds for: ${sanitized} -> ${formattedConf}${seasonQuery}`,
     );
 
@@ -248,7 +249,7 @@ export class BasketballApiClient extends BaseApiClient {
 
     const formattedConf = sanitized.replace(/ /g, "_");
     const seasonQuery = season ? `?season=${encodeURIComponent(season)}` : "";
-    console.log(`🏀 Getting seed data for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
+    logger.debug(`🏀 Getting seed data for: ${sanitized} -> ${formattedConf}${seasonQuery}`);
 
     monitoring.trackEvent({
       name: "seed_requested",
@@ -264,7 +265,7 @@ export class BasketballApiClient extends BaseApiClient {
 
   async getTeamData(teamName: string): Promise<TeamDataApiResponse> {
     const encoded = encodeURIComponent(teamName);
-    console.log(`🏀 Getting team data for: ${teamName} -> ${encoded}`);
+    logger.debug(`🏀 Getting team data for: ${teamName} -> ${encoded}`);
 
     return this.request(`/team/${encoded}`, (data) => ({
       success: true,
@@ -274,7 +275,7 @@ export class BasketballApiClient extends BaseApiClient {
   }
 
   async getUnifiedConferenceData(): Promise<UnifiedConferenceDataResponse> {
-    console.log(`🏀 Getting unified conference data`);
+    logger.debug(`🏀 Getting unified conference data`);
 
     return this.request(`/unified_conference_data`, (data) => ({
       success: true,

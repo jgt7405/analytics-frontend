@@ -3,6 +3,7 @@ import {
   getFullScreenshotDimensions,
 } from "@/lib/screenshot-layout";
 import { saveCanvasImage } from "@/lib/save-image";
+import { logger } from "@/lib/logger";
 
 declare global {
   interface Window {
@@ -189,7 +190,7 @@ export async function captureAndSaveElement({
           img.src = await toDataUri(img.src);
           await img.decode().catch(() => {});
         } catch (err) {
-          console.warn("Export: could not inline <img>", img.src, err);
+          logger.warn("Export: could not inline <img>", img.src, err);
         }
       }),
     );
@@ -220,7 +221,7 @@ export async function captureAndSaveElement({
             new Promise<void>((resolve) => setTimeout(resolve, 150)),
           ]);
         } catch (err) {
-          console.warn("Export: could not inline <image>", src, err);
+          logger.warn("Export: could not inline <image>", src, err);
         }
       }),
     );

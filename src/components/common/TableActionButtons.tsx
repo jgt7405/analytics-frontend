@@ -11,6 +11,7 @@ import {
 import { saveImageBlob } from "@/lib/save-image";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { logger } from "@/lib/logger";
 
 declare global {
   interface Window {
@@ -82,11 +83,11 @@ export default function TableActionButtons({
         return;
       }
 
-      console.log(`🔍 SCREENSHOT DEBUG: contentSelector="${contentSelector}"`);
+      logger.debug(`🔍 SCREENSHOT DEBUG: contentSelector="${contentSelector}"`);
       const targetElement = document.querySelector(contentSelector);
-      console.log(`🔍 SCREENSHOT DEBUG: targetElement found=`, !!targetElement);
+      logger.debug(`🔍 SCREENSHOT DEBUG: targetElement found=`, !!targetElement);
       if (targetElement) {
-        console.log(
+        logger.debug(
           `🔍 SCREENSHOT DEBUG: targetElement HTML=`,
           targetElement.innerHTML.substring(0, 200),
         );
@@ -109,7 +110,7 @@ export default function TableActionButtons({
         ) !== null || contentSelector.includes("seed-wins");
       let actualWidth;
 
-      console.log(
+      logger.debug(
         `🔍 SCREENSHOT DEBUG: Found table=`,
         !!table,
         `, isLineChart=`,
@@ -119,7 +120,7 @@ export default function TableActionButtons({
       if (table) {
         // scrollWidth includes columns outside the current viewport.
         let tableWidth = getFullContentWidth(table);
-        console.log(`🔍 SCREENSHOT DEBUG: table.offsetWidth=${tableWidth}`);
+        logger.debug(`🔍 SCREENSHOT DEBUG: table.offsetWidth=${tableWidth}`);
 
         // Check the rightmost cell position to ensure we capture full table width
         const cells = table.querySelectorAll("th, td");
@@ -127,13 +128,13 @@ export default function TableActionButtons({
           const lastCell = cells[cells.length - 1] as HTMLElement;
           const lastCellRight = lastCell.offsetLeft + lastCell.offsetWidth;
           tableWidth = Math.max(tableWidth, lastCellRight);
-          console.log(
+          logger.debug(
             `🔍 SCREENSHOT DEBUG: lastCellRight=${lastCellRight}, final tableWidth=${tableWidth}`,
           );
         }
 
         actualWidth = Math.max(tableWidth, MIN_EXPORT_CONTENT_WIDTH) + 40;
-        console.log(`📊 TABLE SCREENSHOT: actualWidth set to ${actualWidth}`);
+        logger.debug(`📊 TABLE SCREENSHOT: actualWidth set to ${actualWidth}`);
       } else if (contentSelector.includes("standings-progression")) {
         // For standings progression table (flex-based layout)
         // Measure the flex container width after removing constraints
@@ -142,7 +143,7 @@ export default function TableActionButtons({
         );
         if (flexContainer) {
           const containerWidth = (flexContainer as HTMLElement).offsetWidth;
-          console.log(
+          logger.debug(
             `🔍 SCREENSHOT DEBUG: Standings progression flex container width=${containerWidth}`,
           );
           actualWidth =
@@ -158,7 +159,7 @@ export default function TableActionButtons({
               MIN_EXPORT_CONTENT_WIDTH,
             ) + 40;
         }
-        console.log(
+        logger.debug(
           `📊 STANDINGS PROGRESSION SCREENSHOT: actualWidth set to ${actualWidth}`,
         );
       } else if (isSeedWinsComponent) {
@@ -478,9 +479,9 @@ export default function TableActionButtons({
           "important",
         );
       }
-      console.log("ÃƒÂ¢Ã‚ÂÃ‚Â³ Taking screenshot of component as displayed...");
+      logger.debug("ÃƒÂ¢Ã‚ÂÃ‚Â³ Taking screenshot of component as displayed...");
       await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log("ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Screenshot captured");
+      logger.debug("ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Screenshot captured");
 
       const captureSize = getFullScreenshotDimensions(wrapper);
       // Render at the display's own pixel density (min 2x), but keep the
@@ -522,7 +523,7 @@ export default function TableActionButtons({
 
       await saveImageBlob(blob, filename, pageTitle || "Analytics");
     } catch (error) {
-      console.error("Download failed:", error);
+      logger.error("Download failed:", error);
       toast.error(
         `Screenshot failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
@@ -575,7 +576,7 @@ export default function TableActionButtons({
         window.open(twitterUrl, "_blank", "width=550,height=420");
       }
     } catch (error: unknown) {
-      console.error("Share failed:", error);
+      logger.error("Share failed:", error);
       try {
         const fallbackUrl = `${window.location.origin}${pathname || window.location.pathname}`;
         await navigator.clipboard.writeText(fallbackUrl);

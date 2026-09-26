@@ -1,6 +1,7 @@
 // Create hooks/useUrlStateManager.ts
 
 import { useCallback, useEffect, useState } from "react";
+import { logger } from "@/lib/logger";
 
 interface UrlStateConfig {
   key: string;
@@ -39,7 +40,7 @@ class UrlStateManager {
   setValue(key: string, value: string, config: UrlStateConfig): void {
     // Validate value
     if (config.validate && !config.validate(value)) {
-      console.warn(`Invalid value for ${key}: ${value}`);
+      logger.warn(`Invalid value for ${key}: ${value}`);
       return;
     }
 

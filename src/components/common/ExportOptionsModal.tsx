@@ -3,6 +3,7 @@
 
 import React, { useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 /**
  * ExportOptionsModal - Modal component for configuring CSV export options
@@ -113,7 +114,7 @@ export const ExportOptionsModal = ({
             start_scenario: startScenario,
           };
 
-      console.log("Export request:", {
+      logger.debug("Export request:", {
         conference,
         selections,
         export_options: exportOptions,
@@ -131,9 +132,9 @@ export const ExportOptionsModal = ({
         }),
       });
 
-      console.log("Export response status:", response.status);
+      logger.debug("Export response status:", response.status);
       const data = await response.json();
-      console.log("Export response data:", data);
+      logger.debug("Export response data:", data);
 
       if (!response.ok) {
         throw new Error(data.error || `HTTP Error: ${response.status}`);
@@ -160,7 +161,7 @@ export const ExportOptionsModal = ({
         throw new Error("Invalid response from server");
       }
     } catch (err) {
-      console.error("Export error:", err);
+      logger.error("Export error:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Failed to export CSV";
       setError(errorMessage);
@@ -489,11 +490,11 @@ export const useExportModal = () => {
   return {
     isOpen,
     openModal: () => {
-      console.log("Opening export modal");
+      logger.debug("Opening export modal");
       setIsOpen(true);
     },
     closeModal: () => {
-      console.log("Closing export modal");
+      logger.debug("Closing export modal");
       setIsOpen(false);
     },
     toggleModal: () => setIsOpen(!isOpen),

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { memo, useMemo } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 interface BowlGame {
   "#": string;
@@ -67,7 +68,7 @@ const isTeamAdvanced = (
   const indent = "  ".repeat(depth);
 
   if (!GAME_DEPENDENCIES[gameNumber]) {
-    console.log(
+    logger.debug(
       `${indent}[ADVANCE Game ${gameNumber}] No dependencies, returning TRUE`
     );
     return true; // No dependencies, team is "advanced" for direct games
@@ -76,7 +77,7 @@ const isTeamAdvanced = (
   const dependencies = GAME_DEPENDENCIES[gameNumber];
   const normalizedPredicted = predictedTeam.toLowerCase().trim();
 
-  console.log(
+  logger.debug(
     `${indent}[ADVANCE Game ${gameNumber}] Checking "${predictedTeam}" through deps: [${dependencies.join(", ")}]`
   );
 
@@ -84,7 +85,7 @@ const isTeamAdvanced = (
   for (const depGameNum of dependencies) {
     const depGame = allGames[depGameNum - 1];
     if (!depGame) {
-      console.log(`${indent}  [DEP ${depGameNum}] Not found, skip`);
+      logger.debug(`${indent}  [DEP ${depGameNum}] Not found, skip`);
       continue;
     }
 
@@ -92,7 +93,7 @@ const isTeamAdvanced = (
     const team2 = resolveTeamReference(depGame["Team 2"], allGames);
     const winner = depGame.Winner;
 
-    console.log(
+    logger.debug(
       `${indent}  [DEP ${depGameNum}] ${team1} vs ${team2}, Winner: "${winner}"`
     );
 
@@ -106,12 +107,12 @@ const isTeamAdvanced = (
           normalizedPredicted === normalizedTeam1 ||
           normalizedPredicted === normalizedTeam2
         ) {
-          console.log(
+          logger.debug(
             `${indent}    "${predictedTeam}" is in this incomplete game`
           );
           continue;
         } else {
-          console.log(
+          logger.debug(
             `${indent}    "${predictedTeam}" not in game, checking recursively...`
           );
           const couldAdvanceThroughDep = isTeamAdvanced(
@@ -121,7 +122,7 @@ const isTeamAdvanced = (
             depth + 2
           );
           if (couldAdvanceThroughDep === false) {
-            console.log(`${indent}    Recursive returned FALSE`);
+            logger.debug(`${indent}    Recursive returned FALSE`);
             return false;
           }
           continue;
@@ -130,7 +131,7 @@ const isTeamAdvanced = (
         // team1 or team2 are null (couldn't resolve game references)
         // This means the dependency game references other games that aren't complete
         // But we still need to check if our team could be eliminated via that chain
-        console.log(
+        logger.debug(
           `${indent}    Teams unresolved (game refs), checking if team could be eliminated...`
         );
         const couldAdvanceThroughDep = isTeamAdvanced(
@@ -140,7 +141,7 @@ const isTeamAdvanced = (
           depth + 2
         );
         if (couldAdvanceThroughDep === false) {
-          console.log(`${indent}    Team eliminated in dependency chain`);
+          logger.debug(`${indent}    Team eliminated in dependency chain`);
           return false;
         }
         // If null or true, continue checking other dependencies
@@ -158,14 +159,14 @@ const isTeamAdvanced = (
         normalizedPredicted === normalizedTeam1 ||
         normalizedPredicted === normalizedTeam2
       ) {
-        console.log(`${indent}    "${predictedTeam}" was in this game`);
+        logger.debug(`${indent}    "${predictedTeam}" was in this game`);
         if (normalizedWinner !== normalizedPredicted) {
-          console.log(`${indent}    LOST to ${winner}, ELIMINATING`);
+          logger.debug(`${indent}    LOST to ${winner}, ELIMINATING`);
           return false;
         }
-        console.log(`${indent}    WON this game`);
+        logger.debug(`${indent}    WON this game`);
       } else {
-        console.log(
+        logger.debug(
           `${indent}    "${predictedTeam}" not in game, checking recursively...`
         );
         const couldAdvanceThroughDep = isTeamAdvanced(
@@ -175,14 +176,14 @@ const isTeamAdvanced = (
           depth + 2
         );
         if (couldAdvanceThroughDep === false) {
-          console.log(`${indent}    Recursive returned FALSE`);
+          logger.debug(`${indent}    Recursive returned FALSE`);
           return false;
         }
       }
     }
   }
 
-  console.log(
+  logger.debug(
     `${indent}[ADVANCE Game ${gameNumber}] All checks OK, returning TRUE`
   );
   return true;
@@ -204,7 +205,7 @@ const isPredictionCorrectWithCascade = (
   const game = allGames[gameNumber - 1];
   if (!game) return null;
 
-  console.log(
+  logger.debug(
     `[CASCADE CHECK] Game ${gameNumber}: Team1="${game["Team 1"]}", Team2="${game["Team 2"]}", Predicted="${predictedWinner}", Winner="${actualWinner}"`
   );
 
@@ -212,17 +213,17 @@ const isPredictionCorrectWithCascade = (
 
   // First, check if team is eliminated by a dependency REGARDLESS of whether this game is completed
   const isAdvanced = isTeamAdvanced(predictedWinner, gameNumber, allGames);
-  console.log(`[CASCADE] isTeamAdvanced result: ${isAdvanced}`);
+  logger.debug(`[CASCADE] isTeamAdvanced result: ${isAdvanced}`);
 
   if (isAdvanced === false) {
     // Team is definitely eliminated - they lost in a dependency game
-    console.log(`[CASCADE] Team ELIMINATED in dependency, returning FALSE`);
+    logger.debug(`[CASCADE] Team ELIMINATED in dependency, returning FALSE`);
     return false;
   }
 
   // Game not completed yet
   if (!actualWinner || actualWinner.trim() === "") {
-    console.log(`[CASCADE] Game not completed yet, returning NULL`);
+    logger.debug(`[CASCADE] Game not completed yet, returning NULL`);
     return null;
   }
 
@@ -231,18 +232,18 @@ const isPredictionCorrectWithCascade = (
   const team1 = resolveTeamReference(game["Team 1"], allGames);
   const team2 = resolveTeamReference(game["Team 2"], allGames);
 
-  console.log(`[CASCADE] After resolve: team1="${team1}", team2="${team2}"`);
+  logger.debug(`[CASCADE] After resolve: team1="${team1}", team2="${team2}"`);
 
   // Check if predicted team is actually in this game
   if (!team1 || !team2) {
-    console.log(`[CASCADE] Could not resolve teams`);
+    logger.debug(`[CASCADE] Could not resolve teams`);
     return null;
   }
 
   const normalizedTeam1 = team1.toLowerCase().trim();
   const normalizedTeam2 = team2.toLowerCase().trim();
 
-  console.log(
+  logger.debug(
     `[CASCADE] Checking if "${normalizedPredicted}" matches "${normalizedTeam1}" or "${normalizedTeam2}"`
   );
 
@@ -252,14 +253,14 @@ const isPredictionCorrectWithCascade = (
     normalizedPredicted !== normalizedTeam2
   ) {
     // Predicted team is NOT in this game - wrong pick
-    console.log(`[CASCADE] Team not in this game, returning FALSE`);
+    logger.debug(`[CASCADE] Team not in this game, returning FALSE`);
     return false;
   }
 
   // Predicted team IS in the game - check if they won
   const normalizedActual = actualWinner.toLowerCase().trim();
   const result = normalizedActual === normalizedPredicted;
-  console.log(`[CASCADE] Team IN game. Did they win? ${result}`);
+  logger.debug(`[CASCADE] Team IN game. Did they win? ${result}`);
   return result;
 };
 

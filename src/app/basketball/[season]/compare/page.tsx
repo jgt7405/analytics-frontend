@@ -16,6 +16,7 @@ import { saveCanvasImage } from "@/lib/save-image";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 // ============ SPACING DEBUGGER COMPONENT ============
 interface SpacingInfo {
@@ -75,49 +76,6 @@ function SpacingDebugger() {
     });
 
     setSpacingData(spacing);
-
-    // Log to console
-    console.clear();
-    console.log(
-      "%c=== BASKETBALL COMPARE PAGE SPACING DEBUG ===",
-      "color: #0097b2; font-weight: bold; font-size: 14px",
-    );
-    console.log(
-      "%cPress Ctrl+Shift+D to toggle this debug panel",
-      "color: #666; font-size: 12px",
-    );
-    console.table(spacing);
-
-    console.log(
-      "\n%c=== GAP CALCULATIONS ===",
-      "color: #0097b2; font-weight: bold",
-    );
-    for (let i = 0; i < spacing.length - 1; i++) {
-      const current = spacing[i];
-      const next = spacing[i + 1];
-      const gap = next.offsetTop - (current.offsetTop + current.offsetHeight);
-      console.log(
-        `%cGap between "${current.elementName}" and "${next.elementName}": ${Math.round(gap)}px`,
-        gap > 0 ? "color: #ff6b6b" : "color: #51cf66",
-      );
-    }
-
-    console.log(
-      "\n%c=== INDIVIDUAL ELEMENT DETAILS ===",
-      "color: #0097b2; font-weight: bold",
-    );
-    spacing.forEach((s) => {
-      console.log(
-        `%c${s.elementName}`,
-        "color: #0097b2; font-weight: bold; font-size: 12px",
-      );
-      console.log(
-        `  Height: ${s.height}px | MT: ${s.marginTop} | MB: ${s.marginBottom}`,
-      );
-      console.log(
-        `  PT: ${s.paddingTop} | PB: ${s.paddingBottom} | Total: ${s.totalHeight}px`,
-      );
-    });
   }, [debugVisible]);
 
   return (
@@ -301,7 +259,7 @@ export default function ArchiveBasketballComparePage() {
         );
         return await response.json();
       } catch (error) {
-        console.error("Error loading team data:", error);
+        logger.error("Error loading team data:", error);
         return null;
       }
     },
@@ -335,7 +293,7 @@ export default function ArchiveBasketballComparePage() {
           setAvailableConferences(sorted);
         }
       } catch (error) {
-        console.error("Error loading initial data:", error);
+        logger.error("Error loading initial data:", error);
       } finally {
         setIsLoadingInitial(false);
       }
@@ -445,7 +403,7 @@ export default function ArchiveBasketballComparePage() {
             reader.readAsDataURL(blob);
           });
         } catch (error) {
-          console.warn(`Failed to load image: ${url}`, error);
+          logger.warn(`Failed to load image: ${url}`, error);
           return url; // Fallback to original URL
         }
       };
@@ -529,7 +487,7 @@ export default function ArchiveBasketballComparePage() {
               const base64 = await imageToBase64(img.src);
               img.src = base64;
             } catch (error) {
-              console.warn(`Failed to convert image to base64:`, error);
+              logger.warn(`Failed to convert image to base64:`, error);
             }
           })(),
         );
@@ -571,7 +529,7 @@ export default function ArchiveBasketballComparePage() {
         "Basketball Comparison",
       );
     } catch (error) {
-      console.error("Download error:", error);
+      logger.error("Download error:", error);
       alert("Failed to download chart. Please try again.");
     }
   };

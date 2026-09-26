@@ -11,6 +11,7 @@ import { RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 // Matches the gradient/border/shadow "card" look used across the
 // modernized Wins/Standings/CWV/etc. pages.
@@ -130,7 +131,7 @@ export default function FootballCompareContent() {
         setTeamDataCache((prev) => ({ ...prev, [teamName]: data }));
         return data;
       } catch (error) {
-        console.error("Error loading team data:", error);
+        logger.error("Error loading team data:", error);
         return null;
       }
     },
@@ -164,7 +165,7 @@ export default function FootballCompareContent() {
           setAvailableConferences(sortedConferences);
         }
       } catch (error) {
-        console.error("Error loading initial data:", error);
+        logger.error("Error loading initial data:", error);
       } finally {
         setIsLoadingInitial(false);
       }
@@ -283,7 +284,7 @@ export default function FootballCompareContent() {
         filename: `football-compare-${new Date().toISOString().split("T")[0]}`,
       });
     } catch (error) {
-      console.error("Download error:", error);
+      logger.error("Download error:", error);
       alert("Failed to download chart. Please try again.");
     }
   };

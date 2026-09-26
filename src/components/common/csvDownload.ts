@@ -1,4 +1,5 @@
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 // File: src/components/common/csvDownload.ts
 // CSV download utility for what-if results with proper TypeScript types
 
@@ -28,7 +29,7 @@ export const downloadWhatIfAsCSV = async (
   selections: GameSelection[]
 ): Promise<void> => {
   try {
-    console.log("📥 Downloading what-if CSV for", conference);
+    logger.debug("📥 Downloading what-if CSV for", conference);
 
     const response = await fetch(proxyUrl("football/whatif/export"), {
       method: "POST",
@@ -70,9 +71,9 @@ export const downloadWhatIfAsCSV = async (
     // Cleanup
     URL.revokeObjectURL(url);
 
-    console.log("✓ CSV downloaded:", data.filename);
+    logger.debug("✓ CSV downloaded:", data.filename);
   } catch (error) {
-    console.error("Error downloading CSV:", error);
+    logger.error("Error downloading CSV:", error);
     throw error;
   }
 };
@@ -139,5 +140,5 @@ export const downloadWhatIfFromDisplayedData = (
   document.body.removeChild(link);
 
   URL.revokeObjectURL(url);
-  console.log("✓ CSV downloaded from displayed data");
+  logger.debug("✓ CSV downloaded from displayed data");
 };

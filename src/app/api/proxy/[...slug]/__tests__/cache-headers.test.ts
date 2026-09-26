@@ -21,8 +21,9 @@ function get(path: string) {
 
 beforeEach(() => {
   backendFetch.mockReset();
-  jest.spyOn(console, "log").mockImplementation(() => {});
-  jest.spyOn(console, "error").mockImplementation(() => {});
+  for (const level of ["info", "warn", "error"] as const) {
+    jest.spyOn(console, level).mockImplementation(() => {});
+  }
 });
 
 describe("proxy cache headers", () => {

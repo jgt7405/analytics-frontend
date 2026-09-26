@@ -16,6 +16,7 @@ import { RotateCcw } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 // ============ MAIN PAGE COMPONENT ============
 
@@ -141,7 +142,7 @@ export default function BasketballCompareContent() {
         );
         return await response.json();
       } catch (error) {
-        console.error("Error loading team data:", error);
+        logger.error("Error loading team data:", error);
         return null;
       }
     },
@@ -174,7 +175,7 @@ export default function BasketballCompareContent() {
           setAvailableConferences(sorted);
         }
       } catch (error) {
-        console.error("Error loading initial data:", error);
+        logger.error("Error loading initial data:", error);
       } finally {
         setIsLoadingInitial(false);
       }
@@ -284,7 +285,7 @@ export default function BasketballCompareContent() {
             reader.readAsDataURL(blob);
           });
         } catch (error) {
-          console.warn(`Failed to load image: ${url}`, error);
+          logger.warn(`Failed to load image: ${url}`, error);
           return url; // Fallback to original URL
         }
       };
@@ -368,7 +369,7 @@ export default function BasketballCompareContent() {
               const base64 = await imageToBase64(img.src);
               img.src = base64;
             } catch (error) {
-              console.warn(`Failed to convert image to base64:`, error);
+              logger.warn(`Failed to convert image to base64:`, error);
             }
           })(),
         );
@@ -410,7 +411,7 @@ export default function BasketballCompareContent() {
         "Basketball Comparison",
       );
     } catch (error) {
-      console.error("Download error:", error);
+      logger.error("Download error:", error);
       alert("Failed to download chart. Please try again.");
     }
   };

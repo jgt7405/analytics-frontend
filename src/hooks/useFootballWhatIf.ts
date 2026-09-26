@@ -3,6 +3,7 @@
 import { AllTeamCFPEntry, WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import { useMutation } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 export interface GameSelection {
   game_id: number;
@@ -98,7 +99,7 @@ const mapTeamResult = (team: BackendTeamResult): WhatIfTeamResult => ({
 const calculateWhatIf = async (
   request: WhatIfRequest,
 ): Promise<WhatIfResponse> => {
-  console.log("📤 Sending what-if request:", request);
+  logger.debug("📤 Sending what-if request:", request);
 
   // Remove season from request body, pass as query param instead
   const { season, ...requestBody } = request;
@@ -114,12 +115,12 @@ const calculateWhatIf = async (
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("❌ What-if API error:", errorData);
+    logger.error("❌ What-if API error:", errorData);
     throw new Error(errorData.error || "Failed to calculate what-if scenarios");
   }
 
   const data: BackendWhatIfResponse = await response.json();
-  console.log("📥 Received what-if response:", {
+  logger.debug("📥 Received what-if response:", {
     success: data.success,
     teams: data.data?.length || 0,
     games: data.games?.length || 0,
@@ -145,7 +146,7 @@ const calculateWhatIf = async (
     },
   };
 
-  console.log("✅ Mapped what-if data:", {
+  logger.debug("✅ Mapped what-if data:", {
     teams: mappedData.data.length,
     games: mappedData.games.length,
     current_projections: mappedData.current_projections.length,

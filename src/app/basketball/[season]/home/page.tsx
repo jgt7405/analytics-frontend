@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useNCAAProjections } from "@/hooks/useNCAAProjections";
 import { useResponsive } from "@/hooks/useResponsive";
 import { Suspense, useMemo, useRef } from "react";
+import { logger } from "@/lib/logger";
 
 export default function ArchiveBasketballHome() {
   const { isMobile } = useResponsive();
@@ -27,7 +28,7 @@ export default function ArchiveBasketballHome() {
         const year = date.getFullYear();
         return `${month}/${day}/${year}`;
       } catch (error) {
-        console.error("Error formatting date:", error);
+        logger.error("Error formatting date:", error);
       }
     }
 

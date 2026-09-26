@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
 // this bespoke file has no CSS module of its own.
@@ -422,11 +423,11 @@ export default function BballScatterplotChart({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
-      console.log("❌ No file selected");
+      logger.debug("❌ No file selected");
       return;
     }
 
-    console.log("📄 File selected:", {
+    logger.debug("📄 File selected:", {
       name: file.name,
       size: file.size,
       type: file.type,
@@ -438,14 +439,14 @@ export default function BballScatterplotChart({
     formData.append("file", file);
 
     try {
-      console.log("🚀 Sending request to /api/proxy/basketball/chart/upload");
+      logger.debug("🚀 Sending request to /api/proxy/basketball/chart/upload");
 
       const response = await fetch(proxyUrl("basketball/chart/upload"), {
         method: "POST",
         body: formData,
       });
 
-      console.log("📡 Response received:", {
+      logger.debug("📡 Response received:", {
         status: response.status,
         statusText: response.statusText,
       });
@@ -453,20 +454,20 @@ export default function BballScatterplotChart({
       const responseText = await response.text();
 
       if (!response.ok) {
-        console.error("❌ Response not OK");
+        logger.error("❌ Response not OK");
         let error;
         try {
           error = JSON.parse(responseText);
-          console.error("❌ Parsed error:", error);
+          logger.error("❌ Parsed error:", error);
         } catch {
-          console.error("❌ Could not parse error response");
+          logger.error("❌ Could not parse error response");
           error = { error: responseText };
         }
         throw new Error(error.error || `HTTP ${response.status}`);
       }
 
       const result = JSON.parse(responseText);
-      console.log("✅ Success! Parsed result:", result);
+      logger.debug("✅ Success! Parsed result:", result);
 
       setState((prev) => ({
         ...prev,
@@ -484,9 +485,9 @@ export default function BballScatterplotChart({
         yLabel: result.y_label || "Y Axis",
       }));
 
-      console.log("✅ State updated with", result.data?.length || 0, "teams");
+      logger.debug("✅ State updated with", result.data?.length || 0, "teams");
     } catch (error) {
-      console.error("❌ Fetch error:", error);
+      logger.error("❌ Fetch error:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Upload failed",

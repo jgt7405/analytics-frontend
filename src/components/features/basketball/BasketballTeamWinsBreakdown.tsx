@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 interface BasketballTeamGame {
   date: string;
@@ -116,7 +117,7 @@ export default function BasketballTeamWinsBreakdown({
           }
         }
       } catch (error) {
-        console.error("[CONF_CHAMP] Fetch error:", error);
+        logger.error("[CONF_CHAMP] Fetch error:", error);
       } finally {
         setLoading(false);
       }

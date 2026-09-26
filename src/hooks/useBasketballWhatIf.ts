@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { proxyUrl } from "@/lib/proxy-url";
+import { logger } from "@/lib/logger";
 
 export interface GameSelection {
   game_id: number;
@@ -276,7 +277,7 @@ const calculateBasketballWhatIf = async (
       error: string;
     }
     const errorData = (await response.json()) as ErrorResponse;
-    console.error("Basketball what-if API error:", errorData);
+    logger.error("Basketball what-if API error:", errorData);
     throw new Error(
       errorData.error || "Failed to calculate basketball what-if scenarios",
     );

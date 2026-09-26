@@ -1,6 +1,7 @@
 // src/hooks/useUserPreferences.ts
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useMonitoring } from "@/lib/unified-monitoring";
+import { logger } from "@/lib/logger";
 
 export interface UserPreferences {
   defaultConference: string;
@@ -93,7 +94,7 @@ export function useUserPreferences() {
           properties: { preference: "import", value: "json" },
         });
       } catch (error) {
-        console.error("Failed to import preferences:", error);
+        logger.error("Failed to import preferences:", error);
       }
     };
     reader.readAsText(file);
