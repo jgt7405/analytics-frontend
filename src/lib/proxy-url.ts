@@ -1,6 +1,6 @@
 // Builds a URL for the backend proxy route (src/app/api/proxy/[...slug]).
 //
-// `trailingSlash: true` in next.config.js makes Next answer any
+// `trailingSlash: true` in next.config.ts makes Next answer any
 // /api/proxy/<path> without a trailing slash with a 308 redirect, so every
 // browser data call used to pay an extra round trip (docs/baselines/README.md,
 // proxy probe). Build every proxy URL through this helper instead of by hand.

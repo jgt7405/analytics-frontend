@@ -9,7 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.jthomanalytics.com';
 
   // Seasonless pages from src/config/sports.ts (docs/decisions/url-policy.md).
-  // NOTE: "/" is intentionally omitted — it redirects (see next.config.js
+  // NOTE: "/" is intentionally omitted — it redirects (see next.config.ts
   // redirects), so listing it produced a "Page with redirect" in Search
   // Console. Archive-season pages are noindex and never listed.
   const staticPages: MetadataRoute.Sitemap = SPORT_IDS.flatMap((sport) =>

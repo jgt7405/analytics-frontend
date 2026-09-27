@@ -46,7 +46,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 
 - Data: `src/hooks/use*.ts` (React Query) → `src/services/{basketball,football}-api.ts` → `/api/proxy/...` → Railway backend. See `docs/data-flow.md`.
 - Server-rendered first paint: `src/lib/server-api.ts` fetches the default conference on the server and passes it as `initialData` (see `src/app/football/wins/page.tsx`). Pages that do this make no browser data requests on load.
-- Seasons and pages come from `src/config/seasons.ts` (current and archived season per sport) and `src/config/sports.ts` (each sport's pages: nav tab, archive version, indexed, sitemap). URL rules: `docs/decisions/url-policy.md`. The TEMPORARY basketball rewrites in `next.config.js` never fire and are removed in plan step 6c.
+- Seasons and pages come from `src/config/seasons.ts` (current and archived season per sport) and `src/config/sports.ts` (each sport's pages: nav tab, archive version, indexed, sitemap). URL rules: `docs/decisions/url-policy.md`: the current season at seasonless URLs (`/<sport>/<current-season>/...` 307-redirects there, from `next.config.ts`), archived seasons at `/<sport>/<season>/...` (noindex), any other season 404 (checked in `[season]/layout.tsx`).
 
 ## Rules
 
@@ -71,7 +71,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 - React hooks must run before any early `return` (a crash on the bowl picks page came from this).
 - `[season]` archive layouts set `robots: noindex`. Don't route current-season pages through `[season]`, or they drop out of search.
 - Never hard-code a season. Read it from `src/config/seasons.ts`; season rollover is a change to that file (`season-rollover` skill).
-- The service worker is `src/sw.ts` (Serwist). It is bundled by the route `src/app/serwist/[path]/route.ts` and exposed at `/sw.js` by a rewrite in `next.config.js`; keep that URL, returning visitors' browsers have it registered. It precaches only `.next/static` JS/CSS plus icons and caches images on first view. Never cache API data in it.
+- The service worker is `src/sw.ts` (Serwist). It is bundled by the route `src/app/serwist/[path]/route.ts` and exposed at `/sw.js` by a rewrite in `next.config.ts`; keep that URL, returning visitors' browsers have it registered. It precaches only `.next/static` JS/CSS plus icons and caches images on first view. Never cache API data in it.
 - Dev and production builds both use Turbopack (the Next 16 default). Don't add a custom `webpack` config; only `npm run analyze` uses webpack (bundle analyzer).
 - Next 16: `params` and `searchParams` in pages, layouts and `generateMetadata` are Promises (`const { season } = await params`); client components use `useParams()`. `headers()`/`cookies()` are async. `useSearchParams()` on a statically rendered page needs a `<Suspense>` boundary or the build fails. `dynamic(..., { ssr: false })` only works inside a client component.
 

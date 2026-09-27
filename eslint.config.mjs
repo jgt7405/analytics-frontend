@@ -169,7 +169,6 @@ const eslintConfig = [
   {
     files: [
       "*.config.{js,mjs,ts}",
-      "next.config.js",
       "**/__tests__/**",
       "**/*.test.{ts,tsx}",
     ],
