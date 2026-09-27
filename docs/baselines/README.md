@@ -181,7 +181,15 @@ Proxy probe against production from GitHub Actions ([run 36218172541](https://gi
 
 ## 2026-09-27 — Search Console, before step 6d (route migration)
 
-Google Search Console → Pages, "Why pages aren't indexed", last updated **2026-09-20**. That predates 6c (per-page canonicals, archive metadata), so it describes the site before any step 6 change. Recorded by the owner. Not captured: the Indexed / Not indexed totals, Performance → Pages and the Sitemaps row; Search Console keeps about three months of history for these, so the after-check reads the pre-6d values from its charts.
+Google Search Console → Pages, "Why pages aren't indexed", last updated **2026-09-20**. That predates 6c (per-page canonicals, archive metadata), so it describes the site before any step 6 change. Recorded by the owner (screenshots, 2026-09-27).
+
+| All known pages | Pages |
+|---|---|
+| Indexed | **484** |
+| Not indexed | **947** (10 reasons) |
+| Total | 1,431 (about 1.2K in early July; the rise came in late August and early September) |
+
+Not captured: Performance → Pages and the Sitemaps row. Search Console keeps their history (Performance 16 months), so the after-check reads the pre-6d values from there.
 
 | Reason | Source | Validation | Pages | Expected effect of step 6 |
 |---|---|---|---|---|
