@@ -1,9 +1,12 @@
-const withBundleAnalyzer = require("@next/bundle-analyzer")({
+import bundleAnalyzer from "@next/bundle-analyzer";
+import type { NextConfig } from "next";
+import { SEASONS, SPORT_IDS } from "./src/config/seasons";
+
+const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
   // Production optimizations.
   // NOTE: We intentionally do NOT override splitChunks here. The previous
   // override forced all of node_modules into a single ~288 kB "vendors" chunk
@@ -99,33 +102,28 @@ const nextConfig = {
         destination: "/football/wins/",
         permanent: true,
       },
+      // The current season has no season in its URLs
+      // (docs/decisions/url-policy.md): /football/2026-27/wins/ is the same
+      // page as /football/wins/. Temporary (307), because at rollover the
+      // same URL becomes an archive page. Query strings are kept.
+      ...SPORT_IDS.map((sport) => ({
+        source: `/${sport}/${SEASONS[sport].current}/:path*`,
+        destination: `/${sport}/:path*/`,
+        permanent: false,
+      })),
     ];
   },
 
-  // TEMPORARY: Show 2025-26 season content on base basketball pages.
-  // To revert, delete this rewrites() block.
   async rewrites() {
-    const seasonPages = [
-      "home", "wins", "standings", "schedule", "cwv", "twv",
-      "teams", "compare", "conf-data", "conf-tourney", "ncaa-tourney", "seed",
-    ];
     return [
       // Serve the service worker at /sw.js, the URL returning visitors'
       // browsers already have registered, so they update in place.
       { source: "/sw.js", destination: "/serwist/sw.js" },
       { source: "/sw.js.map", destination: "/serwist/sw.js.map" },
-      ...seasonPages.map((page) => ({
-        source: `/basketball/${page}/`,
-        destination: `/basketball/2025-26/${page}/`,
-      })),
-      // NOTE: Do NOT rewrite /basketball/team/:teamname/ to the [season] route.
-      // The [season] layout sets robots:{index:false}, which would make every
-      // basketball team page noindex. The base /basketball/team/[teamname] route
-      // already renders current-season data (mirrors football), so let it serve.
     ];
   },
 
   trailingSlash: true,
 };
 
-module.exports = withBundleAnalyzer(nextConfig);
+export default withBundleAnalyzer(nextConfig);

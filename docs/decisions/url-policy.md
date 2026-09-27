@@ -1,6 +1,6 @@
 # Decision: public URL policy (current season, archives, canonical URLs)
 
-Date: 2026-09-27. Plan step 6 (`docs/ARCHITECTURE_PLAN.md`). Status: **accepted** (owner, 2026-09-27, with the seasons below). Implemented in `src/config/seasons.ts`, `src/config/sports.ts`, `next.config.js` (redirects) and page metadata.
+Date: 2026-09-27. Plan step 6 (`docs/ARCHITECTURE_PLAN.md`). Status: **accepted** (owner, 2026-09-27, with the seasons below). Implemented in `src/config/seasons.ts`, `src/config/sports.ts`, `next.config.ts` (redirects), `src/app/<sport>/[season]/layout.tsx` (404 for unlisted seasons) and page metadata.
 
 ## Context
 

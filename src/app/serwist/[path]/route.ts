@@ -1,5 +1,5 @@
 // Builds and serves the service worker (src/sw.ts) at /serwist/sw.js; a
-// rewrite in next.config.js exposes it at /sw.js. Prerendered at build time.
+// rewrite in next.config.ts exposes it at /sw.js. Prerendered at build time.
 import { createSerwistRoute } from "@serwist/turbopack";
 
 export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
