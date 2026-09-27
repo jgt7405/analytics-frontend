@@ -14,6 +14,7 @@ Each performance PR should state its before/after against the most recent baseli
 | Proxy reliability, cache and latency | `npm run baseline:proxy` (`-- --rounds 10` for more) | Same; also runs in the "Production baseline" workflow |
 | Field Core Web Vitals | Vercel dashboard → Speed Insights | Vercel |
 | Proxy error and timeout rates | Vercel dashboard → Logs, filter `/api/proxy` | Vercel |
+| Indexing (step 6) | Search Console → Pages → "Why pages aren't indexed"; Performance → Pages (3 months); Sitemaps | Search Console, by the owner |
 
 Build times depend on the machine; compare only numbers taken on the same kind of machine.
 
@@ -177,3 +178,22 @@ Proxy probe against production from GitHub Actions ([run 36218172541](https://gi
 | Slowest first (uncached) response | 572 ms | 566 ms (`/ncaa_tourney/All_Teams`) |
 
 `/football/standings/SEC/?season=2025-26` returned an empty `data` array, so the probe no longer includes it (see the step 3b PR).
+
+## 2026-09-27 — Search Console, before step 6d (route migration)
+
+Google Search Console → Pages, "Why pages aren't indexed", last updated **2026-09-20**. That predates 6c (per-page canonicals, archive metadata), so it describes the site before any step 6 change. Recorded by the owner. Not captured: the Indexed / Not indexed totals, Performance → Pages and the Sitemaps row; Search Console keeps about three months of history for these, so the after-check reads the pre-6d values from its charts.
+
+| Reason | Source | Validation | Pages | Expected effect of step 6 |
+|---|---|---|---|---|
+| Alternate page with proper canonical tag | Website | Failed | 415 | Mostly `?conf=` views canonicalizing to their page. Working as intended; stays |
+| Duplicate without user-selected canonical | Website | Failed | 134 | Should fall: archive pages and `/basketball/game-preview/` had no canonical until 6c |
+| Page with redirect | Website | Not started | 178 | May rise slightly (current-season URLs now 307); these are not errors |
+| Not found (404) | Website | Not started | 14 | May rise if Google has unlisted-season URLs (they now 404 on purpose) |
+| Soft 404 | Website | Not started | 4 | Should fall: unknown-season pages rendered an empty page with 200 |
+| Crawled – currently not indexed | Google systems | Not started | 145 | |
+| Excluded by 'noindex' tag | Website | Passed | 11 | Archive pages; may rise as Google recrawls them |
+| Redirect error | Website | Passed | 3 | Should stay at or near 0: every step 6 redirect is one hop |
+| Discovered – currently not indexed | Google systems | Passed | 41 | |
+| Duplicate, Google chose different canonical than user | Google systems | Passed | 2 | |
+
+Re-check about two weeks after 6d deploys (plan step 6, rollback criteria).
