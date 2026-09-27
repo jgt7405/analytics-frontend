@@ -2,163 +2,23 @@ import { MetadataRoute } from 'next';
 import { BACKEND_API_URL } from '@/config/env';
 import { CACHE_POLICIES } from '@/lib/cache-policy';
 import { logger } from "@/lib/logger";
+import { SPORT_IDS } from "@/config/seasons";
+import { SPORTS, sportPagePath } from "@/config/sports";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.jthomanalytics.com';
 
-  // Static main pages with priorities.
-  // NOTE: "/" is intentionally omitted — it 308-redirects to /football/wins/
-  // (see next.config.js redirects), so listing it produced a "Page with
-  // redirect" in Search Console. The redirect target is listed below instead.
-  const staticPages: MetadataRoute.Sitemap = [
-    // Football pages
-    {
-      url: `${baseUrl}/football/wins/`,
-      changeFrequency: 'daily',
-      priority: 0.95,
-    },
-    {
-      url: `${baseUrl}/football/standings/`,
-      changeFrequency: 'daily',
-      priority: 0.95,
-    },
-    {
-      url: `${baseUrl}/football/cfp/`,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/football/seed/`,
-      changeFrequency: 'daily',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/football/schedule/`,
-      changeFrequency: 'daily',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/football/teams/`,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/football/compare/`,
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/football/cwv/`,
-      changeFrequency: 'daily',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/football/conf-data/`,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/football/conf-champ/`,
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/football/whatif/`,
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/football/home/`,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/football/twv/`,
-      changeFrequency: 'weekly',
-      priority: 0.65,
-    },
-    {
-      url: `${baseUrl}/football/season-info/`,
-      changeFrequency: 'daily',
-      priority: 0.6,
-    },
-    // Basketball pages
-    {
-      url: `${baseUrl}/basketball/wins/`,
-      changeFrequency: 'daily',
-      priority: 0.95,
-    },
-    {
-      url: `${baseUrl}/basketball/standings/`,
-      changeFrequency: 'daily',
-      priority: 0.95,
-    },
-    {
-      url: `${baseUrl}/basketball/ncaa-tourney/`,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/basketball/seed/`,
-      changeFrequency: 'daily',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/basketball/schedule/`,
-      changeFrequency: 'daily',
-      priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/basketball/teams/`,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/basketball/compare/`,
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/basketball/cwv/`,
-      changeFrequency: 'daily',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/basketball/conf-data/`,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/basketball/conf-tourney/`,
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/basketball/whatif/`,
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/basketball/home/`,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/basketball/twv/`,
-      changeFrequency: 'weekly',
-      priority: 0.65,
-    },
-    {
-      url: `${baseUrl}/basketball/game-preview/`,
-      changeFrequency: 'weekly',
-      priority: 0.65,
-    },
-    {
-      url: `${baseUrl}/basketball/season-info/`,
-      changeFrequency: 'daily',
-      priority: 0.6,
-    },
-  ];
+  // Seasonless pages from src/config/sports.ts (docs/decisions/url-policy.md).
+  // NOTE: "/" is intentionally omitted — it redirects (see next.config.js
+  // redirects), so listing it produced a "Page with redirect" in Search
+  // Console. Archive-season pages are noindex and never listed.
+  const staticPages: MetadataRoute.Sitemap = SPORT_IDS.flatMap((sport) =>
+    SPORTS[sport].pages.flatMap((page) =>
+      page.indexed && page.sitemap
+        ? [{ url: `${baseUrl}${sportPagePath(sport, page.slug)}`, ...page.sitemap }]
+        : [],
+    ),
+  );
 
   // Fetch team pages from backend
   const teamPages: MetadataRoute.Sitemap = [];

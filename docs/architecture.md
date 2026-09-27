@@ -15,7 +15,7 @@ A short map of how the site is put together. Rules for working in it are in `AGE
 | URL | Source | Notes |
 |---|---|---|
 | `/` | `next.config.js` redirect | Permanent redirect to `/football/wins/` (made temporary in step 6) |
-| `/football/<page>/`, `/basketball/<page>/` | `src/app/<sport>/<page>/page.tsx` | Current season. Basketball pages are rewritten to the `2025-26` archive routes by `next.config.js` (temporary) |
+| `/football/<page>/`, `/basketball/<page>/` | `src/app/<sport>/<page>/page.tsx` | Current season. Which season is current: `src/config/seasons.ts` |
 | `/<sport>/<season>/<page>/` | `src/app/<sport>/[season]/<page>/page.tsx` | Archived seasons, `noindex`, client-rendered |
 | `/<sport>/team/<name>/` | `src/app/<sport>/team/[teamname]/page.tsx` | Team pages |
 | `/api/proxy/...` | `src/app/api/proxy/[...slug]/route.ts` | Backend proxy (GET and a few POSTs: what-if, exports, chart upload) |

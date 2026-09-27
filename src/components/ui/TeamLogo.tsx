@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
+import { sportAndSeasonFromPath } from "@/config/seasons";
 
 interface TeamLogoProps {
   logoUrl: string;
@@ -22,18 +23,15 @@ interface TeamLogoProps {
 
 // Derive the team-page path from the current route so the logo links to the
 // right sport (and archive season, when on an archived page).
-// e.g. /football/2025-26/standings -> /football/2025-26/team/<name>
+// e.g. /football/2025-26/standings/ -> /football/2025-26/team/<name>/
 export function teamPagePathFromRoute(
   pathname: string | null | undefined,
   teamName: string,
 ): string | null {
-  if (!pathname) return null;
-  const segs = pathname.split("/").filter(Boolean);
-  const sport = segs[0];
-  if (sport !== "football" && sport !== "basketball") return null;
-  const seasonSeg = segs[1] && /^\d{4}-\d{2}$/.test(segs[1]) ? segs[1] : null;
-  const base = seasonSeg ? `/${sport}/${seasonSeg}` : `/${sport}`;
-  return `${base}/team/${encodeURIComponent(teamName)}`;
+  const route = sportAndSeasonFromPath(pathname);
+  if (!route) return null;
+  const base = route.season ? `/${route.sport}/${route.season}` : `/${route.sport}`;
+  return `${base}/team/${encodeURIComponent(teamName)}/`;
 }
 
 export default function TeamLogo({

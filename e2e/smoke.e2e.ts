@@ -1,74 +1,28 @@
 import { expect, test } from "@playwright/test";
+import { SPORT_IDS, archivedSeasons, type Sport } from "../src/config/seasons";
+import { SPORTS, sportPagePath } from "../src/config/sports";
 
-// Every current-season page, and every archive-season page type, must load
-// and render the site shell without an uncaught JavaScript error. The app
-// runs against the fixture backend (e2e/fixture-server.ts): endpoints with a
-// fixture return data, the rest 404, so pages show their error states too.
-const ROUTES = [
-  "/basketball/chart/",
-  "/basketball/compare/",
-  "/basketball/composite-ratings/",
-  "/basketball/conf-data/",
-  "/basketball/conf-tourney/",
-  "/basketball/cwv/",
-  "/basketball/game-preview/",
-  "/basketball/home/",
-  "/basketball/ncaa-tourney/",
-  "/basketball/schedule/",
-  "/basketball/season-info/",
-  "/basketball/seed/",
-  "/basketball/standings/",
-  "/basketball/teams/",
-  "/basketball/twv/",
-  "/basketball/whatif/",
-  "/basketball/wins/",
-  "/football/bowlpicks/",
-  "/football/cfp/",
-  "/football/compare/",
-  "/football/composite-ratings/",
-  "/football/conf-champ/",
-  "/football/conf-data/",
-  "/football/cwv/",
-  "/football/home/",
-  "/football/schedule/",
-  "/football/season-info/",
-  "/football/seed/",
-  "/football/standings/",
-  "/football/teams/",
-  "/football/twv/",
-  "/football/whatif/",
-  "/football/wins/",
-  // Current-season team pages resolve only with data (fixtures).
-  "/basketball/team/Duke/",
-  "/football/team/Alabama/",
-  // Archive seasons (server wrappers since Next 16, or client pages using
-  // useParams). One per page type.
-  "/basketball/2024-25/compare/",
-  "/basketball/2024-25/conf-data/",
-  "/basketball/2024-25/conf-tourney/",
-  "/basketball/2024-25/cwv/",
-  "/basketball/2024-25/home/",
-  "/basketball/2024-25/ncaa-tourney/",
-  "/basketball/2024-25/schedule/",
-  "/basketball/2024-25/seed/",
-  "/basketball/2024-25/standings/",
-  "/basketball/2024-25/team/Duke/",
-  "/basketball/2024-25/teams/",
-  "/basketball/2024-25/twv/",
-  "/basketball/2024-25/wins/",
-  "/football/2025-26/cfp/",
-  "/football/2025-26/compare/",
-  "/football/2025-26/conf-champ/",
-  "/football/2025-26/conf-data/",
-  "/football/2025-26/cwv/",
-  "/football/2025-26/schedule/",
-  "/football/2025-26/seed/",
-  "/football/2025-26/standings/",
-  "/football/2025-26/team/Alabama/",
-  "/football/2025-26/teams/",
-  "/football/2025-26/twv/",
-  "/football/2025-26/wins/",
-];
+// Every page in src/config/sports.ts, current season and (where the page has
+// one) its archive version for each archived season in src/config/seasons.ts,
+// must load and render the site shell without an uncaught JavaScript error.
+// The app runs against the fixture backend (e2e/fixture-server.ts): endpoints
+// with a fixture return data, the rest 404, so pages show their error states
+// too. Team pages resolve only with data, so they use teams with fixtures.
+const FIXTURE_TEAM: Record<Sport, string> = { basketball: "Duke", football: "Alabama" };
+
+const ROUTES = SPORT_IDS.flatMap((sport) => {
+  const path = (slug: string, season: string | null) =>
+    slug === "team"
+      ? `/${sport}${season ? `/${season}` : ""}/team/${FIXTURE_TEAM[sport]}/`
+      : sportPagePath(sport, slug, season);
+  const pages = SPORTS[sport].pages;
+  return [
+    ...pages.map((page) => path(page.slug, null)),
+    ...archivedSeasons(sport).flatMap((season) =>
+      pages.filter((page) => page.archive).map((page) => path(page.slug, season)),
+    ),
+  ];
+});
 
 for (const route of ROUTES) {
   test(`${route} renders without crashing`, async ({ page }) => {
