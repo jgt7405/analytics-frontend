@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security; step 4 in the PRs listed under its outcome). **Step 6 in progress**: 6a (URL policy) done; next 6b (season and sport config). Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–5 complete** (2026-09-26; step 5 was done ahead of 3–4 for security; step 4 in the PRs listed under its outcome). **Step 6 in progress**: 6a (URL policy) and 6b (season and sport config) done; next 6c (page metadata), then 6d (route migration) after a Search Console baseline. Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -205,6 +205,7 @@ Deferred: React Compiler lint findings (steps 7–8); six Dependabot PRs opened 
 | Part | What | Result |
 |---|---|---|
 | 6a (#33) | URL policy decision record (item 1) | `docs/decisions/url-policy.md`, accepted by the owner. Current season at seasonless URLs; archives at `/<sport>/<season>/<page>/`, `noindex` with their own metadata; current-only pages and tools listed; a URL naming the current season 307s to the seasonless page, unknown seasons 404, `/` becomes 307. Seasons per the owner: **2026-27 current for both sports, 2025-26 the one archive of each**. Found that the TEMPORARY basketball rewrites never fired (array-form rewrites run after static pages; checked on a production build), so removing them changes no response. |
+| 6b (#34) | Season and sport config (item 2) | `src/config/seasons.ts` (current and archived seasons per sport, home sport) and `src/config/sports.ts` (each sport's pages: nav tab, archive version, indexed, sitemap entry). Navigation, the sitemap, the archived-season cache rule and the smoke-test route list read them; a unit test checks the config against the route folders. No URL changes (sitemap: same 29 pages). Archive-mode nav no longer links current-only pages to a 404. Basketball 2025-26 is now cached as `historical`. `season-rollover` is a config change. |
 
 ## Step 7 — Split oversized files without changing behavior
 
