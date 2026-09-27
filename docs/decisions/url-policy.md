@@ -1,12 +1,12 @@
 # Decision: public URL policy (current season, archives, canonical URLs)
 
-Date: 2026-09-27. Plan step 6 (`docs/ARCHITECTURE_PLAN.md`). Status: **proposed**, awaiting the owner's approval. Implemented in `src/config/seasons.ts`, `src/config/sports.ts`, `next.config.js` (redirects) and page metadata.
+Date: 2026-09-27. Plan step 6 (`docs/ARCHITECTURE_PLAN.md`). Status: **accepted** (owner, 2026-09-27, with the seasons below). Implemented in `src/config/seasons.ts`, `src/config/sports.ts`, `next.config.js` (redirects) and page metadata.
 
 ## Context
 
 - Every page exists at a **seasonless URL** (`/basketball/wins/`), which renders whatever season the backend treats as current. Most sports pages also exist at a **season-qualified URL** (`/basketball/[season]/wins/`), which passes `?season=` to the backend. The `[season]` layouts set `robots: noindex, follow`.
 - `next.config.js` has a block marked TEMPORARY that rewrites twelve seasonless basketball URLs to `/basketball/2025-26/...`. **It never fires.** Array-form rewrites run after static pages, and every one of those twelve URLs is a static page, so the page itself is served. Checked on a production build (2026-09-27): `/basketball/wins/` returns `index, follow` and canonical `https://www.jthomanalytics.com/basketball/wins/`; `/basketball/2025-26/wins/` returns `noindex, follow`. Removing the block changes no response.
-- The current season is hard-coded: basketball `2025-26` (still current; 2026-27 starts in November), football `2026-27` (2025-26 is listed as archived in `src/lib/cache-policy.ts`). Nothing lists which archive seasons exist, so `[season]` accepts any segment: `/football/banana/wins/` renders an archive page whose data requests the proxy rejects.
+- The current season is implicit (whatever the backend returns without `?season=`) and `2025-26` is hard-coded in several files. Per the owner (2026-09-27), **2026-27 is current for both sports and each has one archived season, 2025-26**. `src/lib/cache-policy.ts` still treats basketball 2025-26 as current. Nothing lists which archive seasons exist, so `[season]` accepts any segment: `/football/banana/wins/` renders an archive page whose data requests the proxy rejects.
 - `/` is a **permanent** (308) redirect to `/football/wins/`. Browsers cache it, so pointing it at basketball in winter doesn't reach returning visitors.
 - Canonical metadata is on most seasonless pages (`generatePageMetadata`, self-referential, no query string). Missing: `/basketball/game-preview/` (a `"use client"` page with no metadata, yet listed in the sitemap), the archive pages (no title, description or canonical of their own), `/basketball/chart/` and `/football/bowlpicks/` (noindex tools).
 - The sitemap is a hand-written list of 29 URLs plus team pages from the backend.
@@ -40,13 +40,13 @@ Seasons are written `YYYY-YY` in URLs, as in `?season=`. The current season neve
 
 ### 3. Seasons come from one config
 
-`src/config/seasons.ts` holds, per sport, `currentSeason` and `archivedSeasons` (seasons the backend has data for, newest first). Initially: basketball current `2025-26`, archived none; football current `2026-27`, archived `2025-26`. `ARCHIVED_SEASONS` in `cache-policy.ts` reads from it. Season rollover becomes: move the old season into `archivedSeasons`, set `currentSeason`, deploy.
+`src/config/seasons.ts` holds, per sport, `currentSeason` and `archivedSeasons` (seasons the backend has data for, newest first). Initially, for both sports: current `2026-27`, archived `2025-26`. `ARCHIVED_SEASONS` in `cache-policy.ts` reads from it. Season rollover becomes: move the old season into `archivedSeasons`, set `currentSeason`, deploy.
 
 ### 4. Redirects
 
 | From | To | Status | Why this status |
 |---|---|---|---|
-| `/<sport>/<currentSeason>/<page>/`, e.g. `/basketball/2025-26/wins/` today | `/<sport>/<page>/` | **307** | Duplicate of the canonical page while the season is current, but at rollover the same URL becomes a real archive page, so browsers must not cache the redirect. Generated from the config |
+| `/<sport>/<currentSeason>/<page>/`, e.g. `/basketball/2026-27/wins/` today | `/<sport>/<page>/` | **307** | Duplicate of the canonical page while the season is current, but at rollover the same URL becomes a real archive page, so browsers must not cache the redirect. Generated from the config |
 | `/<sport>/<season>/<page>/` for a season not in the config, or a page with no archive version | none: **404** | — | Not a page. Validated in the `[season]` layout from the config |
 | `/` | `/<homeSport>/wins/` (`homeSport` in `seasons.ts`, football today; switched by hand when the owner wants the other sport on the front page) | **307** (was 308) | So it can change sport without browsers keeping the old target |
 | Existing legacy redirects: `/basketball/standings/<Conf_Name>/`, underscore team slugs, missing trailing slash | unchanged | 308 | Already in place; kept |
@@ -68,8 +68,8 @@ Generated from `src/config/sports.ts`: every indexed seasonless page of each spo
 
 ## Consequences
 
-- No indexed URL changes. The only responses that change are: `/basketball/2025-26/*` (noindex duplicates of current pages) now 307 to the seasonless page; unknown seasons and archive URLs for current-only pages 404 instead of rendering a broken page; `/` becomes 307.
-- At basketball's rollover (November 2026), `/basketball/2025-26/*` stops redirecting and serves the archive, and `/basketball/2026-27/*` starts redirecting. Neither is cached by browsers.
+- No indexed URL changes. The only responses that change are: `/<sport>/2026-27/*` (nothing links there; it would duplicate the current page) now 307s to the seasonless page; unknown seasons and archive URLs for current-only pages 404 instead of rendering a broken page; `/` becomes 307. `/basketball/2025-26/*` and `/football/2025-26/*` keep serving the archive.
+- At the next rollover, `/<sport>/2026-27/*` stops redirecting and serves the archive, and `/<sport>/2027-28/*` starts redirecting. Neither is cached by browsers.
 - A wrong `archivedSeasons` entry shows an archive page with errors; a missing one 404s archive links for that season. The `season-rollover` skill checks both against the backend.
 - Search Console is checked before the route PR and again after (see the plan's step 6 outcome).
 
