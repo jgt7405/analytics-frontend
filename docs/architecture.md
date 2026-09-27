@@ -14,7 +14,7 @@ A short map of how the site is put together. Rules for working in it are in `AGE
 
 | URL | Source | Notes |
 |---|---|---|
-| `/` | `next.config.ts` redirect | Permanent redirect to `/football/wins/` (made temporary in step 6e) |
+| `/` | `next.config.ts` redirect | Temporary (307) redirect to `/<HOME_SPORT>/wins/` (`src/config/seasons.ts`; football today) |
 | `/football/<page>/`, `/basketball/<page>/` | `src/app/<sport>/<page>/page.tsx` | Current season. Which season is current: `src/config/seasons.ts` |
 | `/<sport>/<season>/<page>/` | `src/app/<sport>/[season]/<page>/page.tsx` | Archived seasons, `noindex`, client-rendered |
 | `/<sport>/<current-season>/...` | `next.config.ts` redirect | 307 to the seasonless URL, query kept. Seasons not in `src/config/seasons.ts` are 404 (`[season]/layout.tsx`) |

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { SPORT_IDS, archivedSeasons, currentSeason } from "../src/config/seasons";
+import { HOME_SPORT, SPORT_IDS, archivedSeasons, currentSeason } from "../src/config/seasons";
 
 // URL policy (docs/decisions/url-policy.md): the current season has no season
 // in its URLs, archived seasons in the config have archive pages, and any
@@ -44,4 +44,10 @@ test("archive URL of a current-only page is a 404", async ({ request }) => {
 test("seasonless basketball pages are served directly (no rewrite, no redirect)", async ({ request }) => {
   const response = await request.get("/basketball/wins/", { maxRedirects: 0 });
   expect(response.status()).toBe(200);
+});
+
+test("/ is a temporary (307) redirect to the home sport", async ({ request }) => {
+  const response = await request.get("/", { maxRedirects: 0 });
+  expect(response.status()).toBe(307);
+  expect(response.headers()["location"]).toBe(`/${HOME_SPORT}/wins/`);
 });

@@ -1,6 +1,7 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
-import { SEASONS, SPORT_IDS } from "./src/config/seasons";
+import { HOME_SPORT, SEASONS, SPORT_IDS } from "./src/config/seasons";
+import { sportPagePath } from "./src/config/sports";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -97,10 +98,13 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      // The front page shows HOME_SPORT (src/config/seasons.ts). Temporary
+      // (307) so switching sports reaches returning visitors: browsers cache
+      // a permanent redirect.
       {
         source: "/",
-        destination: "/football/wins/",
-        permanent: true,
+        destination: sportPagePath(HOME_SPORT, "wins"),
+        permanent: false,
       },
       // The current season has no season in its URLs
       // (docs/decisions/url-policy.md): /football/2026-27/wins/ is the same
