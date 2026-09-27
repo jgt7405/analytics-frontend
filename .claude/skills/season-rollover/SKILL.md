@@ -5,16 +5,12 @@ description: Move basketball or football to a new season (make the new season cu
 
 # Season rollover
 
-Until plan step 6 adds `src/config/seasons.ts`, the current season is hard-coded. This is the manual procedure; after step 6 it becomes a one-line config change and this skill should be rewritten.
+Seasons live in `src/config/seasons.ts`; URL rules in `docs/decisions/url-policy.md`. A rollover is a change to that file, checked against the backend.
 
-1. **Find every hard-coded season**:
-   ```bash
-   grep -rn "2025-26\|2025-2026" src next.config.js
-   ```
-   Today this finds `next.config.js` (the TEMPORARY basketball rewrites to `/basketball/2025-26/...`), `Navigation.tsx` (archive season patterns and lists), `TeamLogo.tsx`, `StandingsContent.tsx`, `BballRegSeasonWinsTable.tsx`, and the basketball seed/standings Content files. Read each use before changing it; some are labels, some are defaults, some are archive lists.
-2. **Decide with the owner** which sport and season, and whether the old season's URLs (`/<sport>/<old-season>/<page>/`) must keep working. They should: they're linked and bookmarked.
-3. **Backend**: confirm the backend serves the new season by default and the old one via `?season=` before switching the frontend. The "Production baseline" workflow's proxy probe is a quick check.
-4. **Update** the defaults and archive lists found in step 1. Add the old season to any archive season picker. Add the finished season to `ARCHIVED_SEASONS` in `src/lib/cache-policy.ts` (its data is then cached as `historical`); never list the season that is becoming current.
-5. **Redirects**: `next.config.js` rewrites/redirects must not send current-season pages through `[season]` routes (those are `noindex`). The `/` redirect decides which sport the home page shows; it is currently `permanent`, which browsers cache, so changing its target may not reach returning visitors until step 6 makes it temporary.
-6. **Verify**: `npm run verify:full`; screenshot the current and archive versions of a few pages (`verify-visually`); check the sitemap (`/sitemap.xml`).
-7. **Record** the change in `docs/ARCHITECTURE_PLAN.md` step 6 notes if anything here was surprising.
+1. **Decide with the owner** which sport and season, and when. The old season's pages move to `/<sport>/<old-season>/<page>/` (noindex); the seasonless URLs show the new season.
+2. **Backend first**: confirm the backend serves the new season by default (no `?season=`) and the old one via `?season=<old>`. The "Production baseline" workflow's proxy probe is a quick check; archived seasons must actually have data, since an archive page with no data shows only errors.
+3. **Edit `src/config/seasons.ts`** for that sport: put the old `current` at the front of `archived`, set `current` to the new season. Never list the current season in `archived` (its data would be cached as `historical`, up to an hour stale; the config test fails on it).
+4. **Front page**: if the owner wants the other sport on `/`, change `HOME_SPORT` in the same file.
+5. **Look for stragglers**: `grep -rn "<old-season>" src next.config.js`. Expect only comments, test data and data-derived labels; anything that decides behaviour should read the config instead.
+6. **Verify**: `npm run verify:full` (the smoke tests cover every archive page of every archived season from the config); screenshot a current and an archive page (`verify-visually`); check `/sitemap.xml` lists only seasonless pages.
+7. **Record** anything surprising in `docs/ARCHITECTURE_PLAN.md` step 6 notes.

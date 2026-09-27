@@ -10,7 +10,10 @@
 //
 // Error responses are never cached, whatever the class.
 //
-// Imported by both server and client code: keep it free of runtime imports.
+// Imported by both server and client code: import only dependency-free
+// modules (src/config/seasons.ts).
+
+import { isArchivedSeason } from "@/config/seasons";
 
 export type CacheClass =
   | "live"
@@ -78,19 +81,10 @@ export function queryCachePolicy(cacheClass: CacheClass) {
   return { staleTime, gcTime };
 }
 
-// Seasons whose data no longer changes, per sport, as passed in `?season=`.
-// Requests for them are cached as `historical`. Leaving a finished season out
-// only costs cache hits; listing the current one would serve stale data, so
-// update this at season rollover (until step 6's season config replaces it).
-// Basketball 2025-26 is still served as the current season (next.config.js).
-const ARCHIVED_SEASONS: Record<"basketball" | "football", readonly string[]> = {
-  basketball: [],
-  football: ["2025-26"],
-};
-
 /**
  * Cache class for a response: the endpoint's own class (src/api/endpoints.ts),
- * except that a GET for an archived season is `historical`. Reference data
+ * except that a GET for an archived season (`archived` in src/config/seasons.ts)
+ * is `historical`: that data no longer changes. Reference data
  * and scenarios keep their class whatever the season.
  */
 export function cacheClassFor(
@@ -99,6 +93,6 @@ export function cacheClassFor(
 ): CacheClass {
   const { sport, cacheClass } = endpoint;
   if (cacheClass === "referenceData" || cacheClass === "scenario") return cacheClass;
-  if (season && ARCHIVED_SEASONS[sport].includes(season)) return "historical";
+  if (isArchivedSeason(sport, season)) return "historical";
   return cacheClass;
 }

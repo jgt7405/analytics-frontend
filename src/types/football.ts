@@ -548,12 +548,9 @@ export const CFP_ROUNDS = [
   "CFP_Champion",
 ] as const;
 
-export const FOOTBALL_SEASONS = ["2024", "2023", "2022"] as const;
-
 // Type unions
 export type FootballConferenceType = (typeof FOOTBALL_CONFERENCES)[number];
 export type CFPRound = (typeof CFP_ROUNDS)[number];
-export type FootballSeason = (typeof FOOTBALL_SEASONS)[number];
 
 // Legacy type aliases for backward compatibility
 export type FootballStandingsTeam = FootballStanding;

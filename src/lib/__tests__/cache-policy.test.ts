@@ -5,6 +5,7 @@ import {
 } from "../cache-policy";
 import { endpointFor } from "@/api/urls";
 import type { EndpointKey } from "@/api/endpoints";
+import { currentSeason } from "@/config/seasons";
 
 const classFor = (key: EndpointKey, season?: string) =>
   cacheClassFor(endpointFor(key), season);
@@ -25,14 +26,16 @@ describe("cacheClassFor", () => {
     expect(classFor(key, season)).toBe(expected);
   });
 
-  it("caches archived football seasons as historical", () => {
+  it("caches archived seasons (src/config/seasons.ts) as historical", () => {
     expect(classFor("football.standings", "2025-26")).toBe("historical");
     expect(classFor("football.cfp", "2025-26")).toBe("historical");
+    expect(classFor("basketball.standings", "2025-26")).toBe("historical");
   });
 
-  it("keeps the season basketball still serves as current at its own class", () => {
-    // Current basketball pages pass ?season=2025-26 (next.config.js rewrite).
-    expect(classFor("basketball.standings", "2025-26")).toBe("currentStandings");
+  it("keeps the current season and unlisted seasons at the endpoint's own class", () => {
+    expect(classFor("basketball.standings", currentSeason("basketball"))).toBe("currentStandings");
+    expect(classFor("football.standings", currentSeason("football"))).toBe("currentStandings");
+    expect(classFor("football.standings", "1999-00")).toBe("currentStandings");
   });
 
   it("never shortens reference data for an archived season", () => {

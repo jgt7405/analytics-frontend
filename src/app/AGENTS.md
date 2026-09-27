@@ -6,6 +6,6 @@
 - `api/proxy/[...slug]/route.ts`: backend proxy. `api/contact/route.ts`: contact form email.
 - `sitemap.ts`, `layout.tsx` (root layout: header, providers, analytics), `not-found.tsx`.
 
-Adding a page: use the `add-page` skill. Every new current-season route should also be added to `e2e/smoke.e2e.ts` and the navigation (`src/components/layout/Navigation.tsx`).
+Adding a page: use the `add-page` skill. Every new route is added to `src/config/sports.ts`, which feeds the navigation, the sitemap and the smoke tests (`e2e/smoke.e2e.ts`); a unit test fails if a route folder is missing from it.
 
 Gotchas: `params`/`searchParams` props are Promises (Next 16); pages whose tree reads `useSearchParams` (e.g. `?conf=`) need `export const dynamic = "force-dynamic"` or a `<Suspense>` boundary, or the build fails; `dynamic(..., { ssr: false })` must live in a client component (see `*ClientOnly.tsx`); URLs end in `/`; don't route current-season pages through `[season]` (noindex).

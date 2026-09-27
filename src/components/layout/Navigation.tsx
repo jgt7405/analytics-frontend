@@ -7,6 +7,8 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { isArchivedSeason, sportAndSeasonFromPath, type Sport } from "@/config/seasons";
+import { navPages, sportPagePath } from "@/config/sports";
 import ContactModal from "./ContactModal";
 import { useLogoAnimation } from "./LogoAnimationContext";
 
@@ -21,49 +23,28 @@ function NavigationContent() {
   const lastItemRef = useRef<HTMLButtonElement>(null);
 
   const isFootball = pathname.startsWith("/football");
+  const sport: Sport = isFootball ? "football" : "basketball";
   const isTeamPage = pathname.includes("/team/");
 
-  // Detect archive mode and extract season from pathname
-  // Archive patterns: /football/2025-26/wins, /basketball/2025-26/standings, /basketball/2025-26/team/BYU
-  const archiveSeasonMatch = pathname.match(
-    /\/(football|basketball)\/(\d{4}-\d{2})\//
-  );
-  const isArchiveMode = !!archiveSeasonMatch;
-  const archiveSeason = archiveSeasonMatch ? archiveSeasonMatch[2] : null;
-  const archiveSport = archiveSeasonMatch ? archiveSeasonMatch[1] : null;
+  // Archive mode: /football/2025-26/wins/, /basketball/2025-26/team/BYU/.
+  // Nav links then stay in that season (src/config/sports.ts decides which
+  // pages have an archive version; the rest link to the current season).
+  const archiveSeason = sportAndSeasonFromPath(pathname)?.season ?? null;
 
-  // Helper function to add conference to URL following all rules
-  // Normalize pathname by stripping archive season and trailing slash for active state comparison
+  // Pathname without the archive season or trailing slash, for the active tab.
   const getBasePath = useCallback(() => {
-    let path = pathname;
-
-    if (isArchiveMode && archiveSeason && archiveSport) {
-      // /basketball/2025-26/wins/ → /basketball/wins
-      path = path.replace(
-        new RegExp(`^/${archiveSport}/${archiveSeason}`),
-        `/${archiveSport}`
-      );
-    }
-
-    // Remove trailing slash for consistent comparison
-    return path.replace(/\/$/, '');
-  }, [pathname, isArchiveMode, archiveSeason, archiveSport]);
+    const path = archiveSeason
+      ? pathname.replace(`/${sport}/${archiveSeason}`, `/${sport}`)
+      : pathname;
+    return path.replace(/\/$/, "");
+  }, [pathname, sport, archiveSeason]);
 
   const addConferenceToUrl = useCallback(
-    (basePath: string) => {
+    (path: string) => {
       // Rule 4: If on team page, use team's conference
       const teamConf = searchParams.get("teamConf");
       if (teamConf && isTeamPage) {
-        // If in archive mode, inject season into the path before returning
-        if (isArchiveMode && archiveSeason && archiveSport) {
-          const baseSportPattern = new RegExp(`^/${archiveSport}`);
-          const archiveBasePath = basePath.replace(
-            baseSportPattern,
-            `/${archiveSport}/${archiveSeason}`
-          );
-          return `${archiveBasePath}?conf=${teamConf}`;
-        }
-        return `${basePath}?conf=${teamConf}`;
+        return `${path}?conf=${teamConf}`;
       }
 
       // Rule 3: Preserve current conf (but use Big 12 if All Teams)
@@ -71,185 +52,28 @@ function NavigationContent() {
       const confToUse =
         currentConf && currentConf !== "All Teams" ? currentConf : "Big 12";
 
-      // If in archive mode, inject season into basePath
-      if (isArchiveMode && archiveSeason && archiveSport) {
-        // Convert basePath from /sport/page to /sport/season/page
-        const baseSportPattern = new RegExp(`^/${archiveSport}`);
-        const archiveBasePath = basePath.replace(
-          baseSportPattern,
-          `/${archiveSport}/${archiveSeason}`
-        );
-        return `${archiveBasePath}?conf=${confToUse}`;
-      }
-
-      // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIXED: Don't encode - Link href will handle encoding automatically
-      return `${basePath}?conf=${confToUse}`;
+      // Don't encode - Link href will handle encoding automatically
+      return `${path}?conf=${confToUse}`;
     },
-    [searchParams, isTeamPage, isArchiveMode, archiveSeason, archiveSport],
+    [searchParams, isTeamPage],
   );
 
-  const basketballNavItems = [
-    {
-      name: "Home",
-      basePath: "/basketball/home",
-      description: "Basketball home",
-    },
-    {
-      name: "Wins",
-      basePath: "/basketball/wins",
-      description: "Conference wins distribution",
-    },
-    {
-      name: "Standings",
-      basePath: "/basketball/standings",
-      description: "Projected standings",
-    },
-    {
-      name: "CWV",
-      basePath: "/basketball/cwv",
-      description: "Conference win value analysis",
-    },
-    {
-      name: "Schedule",
-      basePath: "/basketball/schedule",
-      description: "Team schedules and results",
-    },
-    {
-      name: "TWV",
-      basePath: "/basketball/twv",
-      description: "True win value analysis",
-    },
-    {
-      name: "Conf Tourney",
-      basePath: "/basketball/conf-tourney",
-      description: "Conference tournament projections",
-    },
-    {
-      name: "Seed",
-      basePath: "/basketball/seed",
-      description: "NCAA tournament seed projections",
-    },
-    {
-      name: "NCAA Tourney",
-      basePath: "/basketball/ncaa-tourney",
-      description: "NCAA tournament round projections",
-    },
-    {
-      name: "Conf Data",
-      basePath: "/basketball/conf-data",
-      description: "Conference bid projections",
-    },
-    {
-      name: "Teams",
-      basePath: "/basketball/teams",
-      description: "Teams directory",
-    },
-    {
-      name: "Compare",
-      basePath: "/basketball/compare",
-      description: "Compare teams side by side",
-    },
-    {
-      name: "What If",
-      basePath: "/basketball/whatif",
-      description: "What If Conference Scenarios",
-    },
-    {
-      name: "Season Info",
-      basePath: "/basketball/season-info",
-      description: "Biggest upsets, best wins, and worst losses this season",
-    },
-  ];
-
-  const footballNavItems = [
-    {
-      name: "Home",
-      basePath: "/football/home",
-      description: "College Football Playoff projections",
-    },
-    {
-      name: "Wins",
-      basePath: "/football/wins",
-      description: "Conference wins distribution",
-    },
-    {
-      name: "Standings",
-      basePath: "/football/standings",
-      description: "Projected standings",
-    },
-    {
-      name: "CWV",
-      basePath: "/football/cwv",
-      description: "Conference win value analysis",
-    },
-    {
-      name: "Schedule",
-      basePath: "/football/schedule",
-      description: "Team schedules and results",
-    },
-    {
-      name: "TWV",
-      basePath: "/football/twv",
-      description: "True win value analysis",
-    },
-    {
-      name: "Conf Champ",
-      basePath: "/football/conf-champ",
-      description: "Conference championship projections",
-    },
-    {
-      name: "What If",
-      basePath: "/football/whatif",
-      description: "What If Conference Championship Scenarios",
-    },
-    {
-      name: "Seed",
-      basePath: "/football/seed",
-      description: "CFP seed projections",
-    },
-    {
-      name: "CFP",
-      basePath: "/football/cfp",
-      description: "College Football Playoff projections",
-    },
-    {
-      name: "Conf Data",
-      basePath: "/football/conf-data",
-      description: "Conference CFP bid projections",
-    },
-    {
-      name: "Teams",
-      basePath: "/football/teams",
-      description: "Football teams directory",
-    },
-    {
-      name: "Compare",
-      basePath: "/football/compare",
-      description: "Compare teams side by side",
-    },
-    {
-      name: "Season Info",
-      basePath: "/football/season-info",
-      description: "Biggest upsets, best wins, and worst losses this season",
-    },
-  ];
-
-  const navItems = isFootball ? footballNavItems : basketballNavItems;
+  const navItems = navPages(sport).map((page) => ({
+    name: page.navLabel,
+    description: page.navDescription ?? page.navLabel,
+    basePath: `/${sport}/${page.slug}`,
+    path: sportPagePath(sport, page.slug, archiveSeason),
+  }));
 
   // Helper for sport switching links
   // Rule 2: Always use Big 12 when switching sports
-  // But if in archive mode, switch to the OTHER sport's archive (same season)
+  // In archive mode, switch to the other sport's archive of the same season
+  // when it has one, otherwise to its current season.
   const getSportSwitchUrl = useCallback(() => {
-    if (isArchiveMode && archiveSeason) {
-      // Switch sports but stay in archive with same season
-      const targetSport = isFootball ? "basketball" : "football";
-      return `/${targetSport}/${archiveSeason}/wins?conf=Big 12`;
-    }
-    // Normal mode: switch to current season
-    return isFootball
-      ? `/basketball/wins?conf=Big 12`
-      : `/football/wins?conf=Big 12`;
-  }, [isFootball, isArchiveMode, archiveSeason]);
+    const targetSport: Sport = isFootball ? "basketball" : "football";
+    const season = isArchivedSeason(targetSport, archiveSeason) ? archiveSeason : null;
+    return `${sportPagePath(targetSport, "wins", season)}?conf=Big 12`;
+  }, [isFootball, archiveSeason]);
 
   // Trigger the logo fly-out animation, then navigate to the other sport.
   // Falls back to the Link's default navigation when the animation is
@@ -342,7 +166,7 @@ function NavigationContent() {
           const isActive = basePath === item.basePath;
           const words = item.name.split(" ");
           const isMultiWord = words.length > 1;
-          const href = addConferenceToUrl(item.basePath);
+          const href = addConferenceToUrl(item.path);
           return (
             <Link
               key={item.basePath}
@@ -420,7 +244,7 @@ function NavigationContent() {
               const basePath = getBasePath();
               const isActive = basePath === item.basePath;
               const isFirst = index === 0;
-              const href = addConferenceToUrl(item.basePath);
+              const href = addConferenceToUrl(item.path);
 
               return (
                 <Link
