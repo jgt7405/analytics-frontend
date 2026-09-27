@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { SPORT_IDS, archivedSeasons, type Sport } from "../src/config/seasons";
-import { SPORTS, sportPagePath } from "../src/config/sports";
+import { SPORT_IDS, archivedSeasons, sportAndSeasonFromPath, type Sport } from "../src/config/seasons";
+import { SPORTS, sportPage, sportPagePath } from "../src/config/sports";
 
 // Every page in src/config/sports.ts, current season and (where the page has
 // one) its archive version for each archived season in src/config/seasons.ts,
@@ -24,6 +24,14 @@ const ROUTES = SPORT_IDS.flatMap((sport) => {
   ];
 });
 
+const SITE_URL = "https://www.jthomanalytics.com";
+
+function expectedRobots(route: string): string {
+  const { sport, season } = sportAndSeasonFromPath(route)!;
+  const slug = route.split("/").filter(Boolean)[season ? 2 : 1];
+  return season || !sportPage(sport, slug)?.indexed ? "noindex, follow" : "index, follow";
+}
+
 for (const route of ROUTES) {
   test(`${route} renders without crashing`, async ({ page }) => {
     const pageErrors: string[] = [];
@@ -40,6 +48,16 @@ for (const route of ROUTES) {
     const response = await page.goto(route, { waitUntil: "load" });
     expect(response?.status(), "HTTP status").toBeLessThan(400);
     await expect(page.locator("#main-content")).toBeVisible();
+
+    // One self-referential canonical; archive and unindexed pages noindex
+    // (docs/decisions/url-policy.md).
+    const canonical = page.locator('link[rel="canonical"]');
+    await expect(canonical).toHaveCount(1);
+    await expect(canonical).toHaveAttribute("href", `${SITE_URL}${route}`);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      expectedRobots(route),
+    );
 
     // Give client data fetching a moment to settle so render errors that
     // only appear after data (or an error) arrives are caught too. Capped:

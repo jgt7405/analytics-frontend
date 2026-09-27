@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { generatePageMetadata } from "@/app/metadata";
+import { teamPageMetadata } from "@/app/metadata";
 import { getTeamDataServer } from "@/lib/server-api";
 import BasketballTeamContent from "./BasketballTeamContent";
 
@@ -13,12 +13,7 @@ export async function generateMetadata({
   params: Promise<{ teamname: string }>;
 }): Promise<Metadata> {
   const { teamname } = await params;
-  const teamName = decodeURIComponent(teamname).replace(/_/g, " ");
-  return generatePageMetadata({
-    title: `${teamName} Basketball Analytics & Projections`,
-    description: `${teamName} basketball analytics including schedule, tournament projections, standings history, win probabilities, and NCAA tournament seeding.`,
-    path: `/basketball/team/${teamname}/`,
-  });
+  return teamPageMetadata("basketball", teamname);
 }
 
 export default async function BasketballTeamPage({

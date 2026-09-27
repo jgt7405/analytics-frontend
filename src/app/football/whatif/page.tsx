@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { sportPageMetadata } from "@/app/metadata";
 import { Suspense } from "react";
 import FootballWhatIfContent from "./FootballWhatIfContent";
 
+// Title, description and canonical from src/config/sports.ts; this page adds
+// keywords and its own social-card copy.
 export const metadata: Metadata = {
-  title: "College Football What-If Simulator | CFP Impact Calculator",
-  description: "Simulate game outcomes and instantly see how they impact standings, seeding, and CFP playoff chances. Interactive college football prediction tool.",
+  ...sportPageMetadata("football", "whatif"),
   keywords: [
     "CFP simulator",
     "football what-if scenarios",
@@ -16,14 +18,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "College Football What-If Simulator",
     description: "Simulate game outcomes and see the instant impact on CFP seeding and playoff odds",
-    url: "https://www.jthomanalytics.com/football/whatif/",
+    url: "/football/whatif/",
   },
   twitter: {
     title: "College Football What-If Simulator",
     description: "Simulate game outcomes to see CFP impact",
-  },
-  alternates: {
-    canonical: "https://www.jthomanalytics.com/football/whatif/",
   },
 };
 

@@ -1,13 +1,15 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { sportPageMetadata } from "@/app/metadata";
 import { getFootballCFPServer } from "@/lib/server-api";
 import FootballCFPContent from "./FootballCFPContent";
 
 export const dynamic = "force-dynamic";
 
+// Title, description and canonical from src/config/sports.ts; this page adds
+// keywords and its own social-card copy.
 export const metadata: Metadata = {
-  title: "College Football Playoff Projections | CFP Bracket Predictions",
-  description: "Live CFP playoff projections and bracket predictions updated daily. See team-by-team odds for each round based on 1,000 season simulations and advanced analytics.",
+  ...sportPageMetadata("football", "cfp"),
   keywords: [
     "CFP projections",
     "College Football Playoff predictions",
@@ -18,14 +20,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "CFP Playoff Projections",
     description: "Live College Football Playoff projections and bracket predictions",
-    url: "https://www.jthomanalytics.com/football/cfp/",
+    url: "/football/cfp/",
   },
   twitter: {
     title: "CFP Playoff Projections",
     description: "Live CFP bracket predictions updated daily",
-  },
-  alternates: {
-    canonical: "https://www.jthomanalytics.com/football/cfp/",
   },
 };
 
