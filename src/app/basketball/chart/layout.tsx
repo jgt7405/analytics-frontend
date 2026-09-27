@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import { sportPageMetadata } from "@/app/metadata";
 
-export const metadata: Metadata = {
-  robots: { index: false, follow: true },
-};
+// Not indexed (src/config/sports.ts: indexed: false), so sportPageMetadata
+// sets robots noindex, follow.
+export const metadata = sportPageMetadata("basketball", "chart");
 
 export default function ChartLayout({
   children,

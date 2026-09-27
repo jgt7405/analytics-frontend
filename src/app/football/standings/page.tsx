@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { generatePageMetadata } from "@/app/metadata";
+import { sportPageMetadata } from "@/app/metadata";
 import { getFootballStandingsServer } from "@/lib/server-api";
 import { ResponsiveProvider } from "@/components/providers/ResponsiveProvider";
 import { detectMobileFromHeaders } from "@/lib/server-device";
@@ -9,11 +9,7 @@ import FootballStandingsContent from "./FootballStandingsContent";
 // server-side and the canonical URL ships real standings content.
 export const dynamic = "force-dynamic";
 
-export const metadata = generatePageMetadata({
-  title: "College Football Conference Standings",
-  description: "Projected conference standings from simulations using multiple rating models. View standings with ties and championship seeding.",
-  path: "/football/standings/",
-});
+export const metadata = sportPageMetadata("football", "standings");
 
 export default async function FootballStandingsPage() {
   const initialData = await getFootballStandingsServer("Big 12");

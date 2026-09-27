@@ -1,4 +1,6 @@
 import { Metadata } from "next";
+import type { Sport } from "@/config/seasons";
+import { SPORTS, sportPage, sportPagePath } from "@/config/sports";
 
 export const baseMetadata: Metadata = {
   metadataBase: new URL(
@@ -100,5 +102,60 @@ export function generatePageMetadata({
     alternates: {
       canonical: path,
     },
+  };
+}
+
+const ARCHIVE_ROBOTS = { index: false, follow: true } as const;
+
+/**
+ * Metadata for a page in src/config/sports.ts, for the current season or an
+ * archived one (docs/decisions/url-policy.md). Every page gets a
+ * self-referential canonical; archive pages add the season to the title and
+ * are `noindex`, as are pages the config marks unindexed.
+ */
+export function sportPageMetadata(sport: Sport, slug: string, season?: string | null): Metadata {
+  const page = sportPage(sport, slug);
+  if (!page?.title || !page.description) {
+    throw new Error(`No title/description for ${sport}/${slug} in src/config/sports.ts`);
+  }
+  if (!season) {
+    const metadata = generatePageMetadata({
+      title: page.title,
+      description: page.description,
+      path: sportPagePath(sport, slug),
+    });
+    return page.indexed ? metadata : { ...metadata, robots: ARCHIVE_ROBOTS };
+  }
+  return {
+    ...generatePageMetadata({
+      title: `${season} ${page.title}`,
+      description: `${season} season archive. ${page.description}`,
+      path: sportPagePath(sport, slug, season),
+    }),
+    robots: ARCHIVE_ROBOTS,
+  };
+}
+
+/** Metadata for a team page, current season or archived (`noindex`). */
+export function teamPageMetadata(
+  sport: Sport,
+  teamSlug: string,
+  season?: string | null,
+): Metadata {
+  const teamName = decodeURIComponent(teamSlug).replace(/_/g, " ");
+  const description =
+    sport === "football"
+      ? `${teamName} football analytics including schedule, CFP projections, standings history, win probabilities, and advanced team statistics.`
+      : `${teamName} basketball analytics including schedule, tournament projections, standings history, win probabilities, and NCAA tournament seeding.`;
+  const path = `/${sport}${season ? `/${season}` : ""}/team/${teamSlug}/`;
+  const title = `${teamName} ${SPORTS[sport].label} Analytics & Projections`;
+  if (!season) return generatePageMetadata({ title, description, path });
+  return {
+    ...generatePageMetadata({
+      title: `${season} ${title}`,
+      description: `${season} season archive. ${description}`,
+      path,
+    }),
+    robots: ARCHIVE_ROBOTS,
   };
 }

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { generatePageMetadata } from "@/app/metadata";
+import { sportPageMetadata } from "@/app/metadata";
 import { getFootballStandingsServer } from "@/lib/server-api";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import {
@@ -12,11 +12,7 @@ import FootballWinsContent from "./FootballWinsContent";
 // server-side and the canonical URL ships real table content.
 export const dynamic = "force-dynamic";
 
-export const metadata = generatePageMetadata({
-  title: "College Football Win Projections",
-  description: "Track projected wins for FBS teams with advanced analytics and probability calculations from multiple rating models.",
-  path: "/football/wins/",
-});
+export const metadata = sportPageMetadata("football", "wins");
 
 function WinsPageSkeleton() {
   return (

@@ -3,6 +3,17 @@
 // copy of the standings implementation.)
 
 import BasketballStandingsContent from "@/app/basketball/standings/BasketballStandingsContent";
+import type { Metadata } from "next";
+import { sportPageMetadata } from "@/app/metadata";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ season: string }>;
+}): Promise<Metadata> {
+  const { season } = await params;
+  return sportPageMetadata("basketball", "standings", season);
+}
 
 export default async function ArchiveStandingsPage({
   params,

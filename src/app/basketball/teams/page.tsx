@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { generatePageMetadata } from "@/app/metadata";
+import { sportPageMetadata } from "@/app/metadata";
 import { getBasketballTeamsServer } from "@/lib/server-api";
 import TeamLinkIndex from "@/components/seo/TeamLinkIndex";
 import BasketballTeamsContent from "./BasketballTeamsContent";
@@ -8,11 +8,7 @@ import BasketballTeamsContent from "./BasketballTeamsContent";
 // every team page a crawlable internal link from this hub (see TeamLinkIndex).
 export const revalidate = 3600;
 
-export const metadata = generatePageMetadata({
-  title: "College Basketball Teams",
-  description: "Browse all Division I college basketball teams with stats, records, and tournament projections.",
-  path: "/basketball/teams/",
-});
+export const metadata = sportPageMetadata("basketball", "teams");
 
 export default async function BasketballTeamsPage() {
   const teamsRes = await getBasketballTeamsServer();

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { generatePageMetadata } from "@/app/metadata";
+import { sportPageMetadata } from "@/app/metadata";
 import { getStandingsServer } from "@/lib/server-api";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import {
@@ -13,11 +13,7 @@ import BballWinsContent from "./BballWinsContent";
 // the canonical URL ships real table content for crawlers.
 export const dynamic = "force-dynamic";
 
-export const metadata = generatePageMetadata({
-  title: "College Basketball Win Projections",
-  description: "Track projected wins for NCAA Division I basketball teams with advanced analytics and probability calculations.",
-  path: "/basketball/wins/",
-});
+export const metadata = sportPageMetadata("basketball", "wins");
 
 function WinsPageSkeleton() {
   return (
