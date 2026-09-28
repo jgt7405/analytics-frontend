@@ -30,6 +30,8 @@ const VISUAL_ROUTES: VisualRoute[] = [
   { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
   // football compare-schedules
   { path: "/football/compare/", name: "football-compare-Alabama", setup: selectTeam("Alabama") },
+  // BasketballWhatIfScenarios: the Big 12 baseline (fixture), before any pick
+  { path: "/basketball/whatif/" },
   // nonconf-analysis, with the Atlantic Coast teams expanded
   {
     path: "/basketball/conf-data/",

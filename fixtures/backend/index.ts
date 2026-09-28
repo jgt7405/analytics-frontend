@@ -12,8 +12,9 @@
 //   "Preseason"             every record 0-0, no distributions
 //   ?season=<archived>      normal rows, conferences marked "(archive)"
 //
-// Endpoints without a fixture answer 404, so pages still show their error
-// states for everything else.
+// POST endpoints with a fixture answer it for any request body. Endpoints
+// without a fixture answer 404, so pages still show their error states for
+// everything else.
 
 import { http, HttpResponse, type HttpHandler } from "msw";
 import { ENDPOINTS, type EndpointKey } from "../../src/api/endpoints";
@@ -23,6 +24,7 @@ import basketballNonconfAnalysis from "./basketball.nonconfAnalysis.json";
 import basketballStandings from "./basketball.standings.json";
 import basketballTeam from "./basketball.team.json";
 import basketballTeams from "./basketball.teams.json";
+import basketballWhatIfBaseline from "./basketball.whatIfBaseline.json";
 import footballStandings from "./football.standings.json";
 import footballTeam from "./football.team.json";
 import footballTeams from "./football.teams.json";
@@ -37,6 +39,7 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "basketball.standings": basketballStandings,
   "basketball.team": basketballTeam,
   "basketball.teams": basketballTeams,
+  "basketball.whatIfBaseline": basketballWhatIfBaseline,
   "football.standings": footballStandings,
   "football.team": footballTeam,
   "football.teams": footballTeams,
@@ -101,10 +104,12 @@ const pattern = (path: string) => path.replace(/^\/?/, "/");
 export const requestLog: string[] = [];
 
 function handlersFor(base: string, pathOf: (key: EndpointKey) => string[]): HttpHandler[] {
-  return ENDPOINTS.filter((e) => e.method === "GET" && FIXTURES[e.key as EndpointKey]).flatMap(
+  return ENDPOINTS.filter((e) => FIXTURES[e.key as EndpointKey]).flatMap(
     (endpoint) =>
       pathOf(endpoint.key as EndpointKey).map((path) =>
-        http.get(`${base}${pattern(path)}`, ({ request, params }) => {
+        // POST fixtures (what-if baselines) answer the same body whatever
+        // the request body says.
+        http[endpoint.method === "POST" ? "post" : "get"](`${base}${pattern(path)}`, ({ request, params }) => {
           const url = new URL(request.url);
           requestLog.push(`${url.pathname}${url.search}`);
           const scenario = scenarioFor(
