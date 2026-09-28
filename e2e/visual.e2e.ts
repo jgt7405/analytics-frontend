@@ -30,6 +30,8 @@ const VISUAL_ROUTES: VisualRoute[] = [
   { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
   // football compare-schedules
   { path: "/football/compare/", name: "football-compare-Alabama", setup: selectTeam("Alabama") },
+  // BasketballWhatIfScenarios: the Big 12 baseline (fixture), before any pick
+  { path: "/basketball/whatif/" },
   // nonconf-analysis, with the Atlantic Coast teams expanded
   {
     path: "/basketball/conf-data/",
@@ -155,6 +157,11 @@ for (const route of VISUAL_ROUTES) {
     // Loading skeletons (chart placeholders, table shimmers) use
     // animate-pulse; the page is done when none is left.
     await expect(page.locator(".animate-pulse")).toHaveCount(0, { timeout: 30_000 });
+    // Every image loaded (or failed): a logo still in flight in the
+    // reference shot showed up as a difference (Pac-12 on conf-data).
+    await page.waitForFunction(() => Array.from(document.images).every((img) => img.complete), undefined, {
+      timeout: 30_000,
+    });
     await page.waitForTimeout(1_500);
     await expect(page).toHaveScreenshot(shotName(route), {
       animations: "disabled",

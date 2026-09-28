@@ -1,6 +1,6 @@
 "use client";
 
-import BasketballWhatIfScenarios from "@/components/features/basketball/BasketballWhatIfScenarios";
+import BasketballWhatIfScenarios from "@/components/features/basketball/whatif";
 import Footer from "@/components/layout/Footer";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Suspense } from "react";
