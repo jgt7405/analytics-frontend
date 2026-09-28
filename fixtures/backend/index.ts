@@ -25,9 +25,11 @@ import basketballStandings from "./basketball.standings.json";
 import basketballTeam from "./basketball.team.json";
 import basketballTeams from "./basketball.teams.json";
 import basketballWhatIfBaseline from "./basketball.whatIfBaseline.json";
+import footballConferenceData from "./football.conferenceData.json";
 import footballStandings from "./football.standings.json";
 import footballTeam from "./football.team.json";
 import footballTeams from "./football.teams.json";
+import footballWhatIf from "./football.whatIf.json";
 
 type Json = Record<string, unknown>;
 type Row = Record<string, unknown>;
@@ -40,9 +42,11 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "basketball.team": basketballTeam,
   "basketball.teams": basketballTeams,
   "basketball.whatIfBaseline": basketballWhatIfBaseline,
+  "football.conferenceData": footballConferenceData,
   "football.standings": footballStandings,
   "football.team": footballTeam,
   "football.teams": footballTeams,
+  "football.whatIf": footballWhatIf,
 };
 
 export type Scenario = "normal" | "empty" | "missingFields" | "preseason" | "archived";

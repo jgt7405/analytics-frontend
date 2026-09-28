@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { sportPageMetadata } from "@/app/metadata";
 import { Suspense } from "react";
-import FootballWhatIfContent from "./FootballWhatIfContent";
+import FootballWhatIfContent from "@/components/features/football/whatif";
 
 // Title, description and canonical from src/config/sports.ts; this page adds
 // keywords and its own social-card copy.

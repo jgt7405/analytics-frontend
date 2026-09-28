@@ -154,6 +154,22 @@ const calculateWhatIf = async (
   return mappedData;
 };
 
+/**
+ * CSV of the what-if scenario (POST /football/whatif/download). Returns the
+ * backend's JSON: { success, csv_data, filename } or { error }.
+ */
+export async function fetchFootballWhatIfDownload(conference: string, selections: GameSelection[]) {
+  const response = await fetch(apiUrl("football.whatIfDownload"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      conference,
+      selections,
+    }),
+  });
+  return response.json();
+}
+
 export const useFootballWhatIf = () => {
   return useMutation<WhatIfResponse, Error, WhatIfRequest>({
     mutationFn: calculateWhatIf,
