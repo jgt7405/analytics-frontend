@@ -80,3 +80,30 @@ jobs:
           name: lighthouse-ci
           path: lighthouse-ci.json
           retention-days: 14
+
+  visual:
+    name: Visual (screenshots vs base branch)
+    # Pull requests only: compares this build with a build of the base commit,
+    # both rendered here against the fixtures (scripts/visual-compare.mjs).
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the base commit is checked out into a worktree
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Compare screenshots with the base commit
+        run: npm run visual:compare -- --base ${{ github.event.pull_request.base.sha }}
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: visual-diff
+          path: test-results/
+          retention-days: 7

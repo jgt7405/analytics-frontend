@@ -62,6 +62,8 @@ build_output.txt
 
 # baseline scratch output (committed summaries live in docs/baselines/)
 /.baseline/
+# screenshot comparison output (scripts/visual-compare.mjs)
+/.visual/
 
 # Playwright
 /test-results/

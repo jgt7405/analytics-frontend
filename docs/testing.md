@@ -1,11 +1,12 @@
 # Testing
 
-Three layers, from fastest to slowest. None of the local layers needs the backend.
+Four layers, from fastest to slowest. None of the local layers needs the backend.
 
 | Layer | Command | Runs in CI | What it catches |
 |---|---|---|---|
 | Unit (Jest) | `npm test` (`jest --ci` in `verify`) | Every PR | API client exports and URLs, hook wiring, pure helpers |
 | Smoke (Playwright) | `npm run test:e2e` after `npm run build` | Every PR | A page that 404s, loses its layout shell, or throws an uncaught JavaScript error |
+| Screenshot comparison (Playwright) | `npm run visual:compare` | Every PR (`Visual` job) | Any pixel change on the pages in `e2e/visual.e2e.ts`, compared with the base branch. For behavior-preserving refactors (step 7) |
 | Production | `npm run baseline:lighthouse`, `npm run baseline:proxy` | Daily, and on demand | Accessibility regressions, slow pages, backend outages or empty responses |
 
 ## Unit tests (Jest)
@@ -28,7 +29,14 @@ Three layers, from fastest to slowest. None of the local layers needs the backen
 - `e2e/fixtures.e2e.ts` checks real data renders (standings, the teams page's conference filter, team pages), that the empty-conference, missing-fields and preseason scenarios load without errors, and that archive pages ask the backend for their season.
 - Locally, cloud agent sessions use the preinstalled Chromium; elsewhere run `npx playwright install chromium` once. CI installs its own.
 - On CI failure, the Playwright report and traces are uploaded as the `playwright-report` artifact.
-- Not yet covered: screenshot comparisons (step 7, where file splits need them; baselines must be generated on the CI runner to be stable).
+
+## Screenshot comparison (Playwright)
+
+- `npm run visual:compare` (`scripts/visual-compare.mjs`): checks the base ref (default `origin/main`; CI passes the PR's base commit) out into a temporary worktree, installs and builds it, and takes full-page shots of the routes in `e2e/visual.e2e.ts` on desktop and mobile. Then it builds this checkout and compares: any differing pixel fails. `--skip-head-build` reuses an existing build of this checkout.
+- Both sides use this checkout's tests and fixtures and render on the same machine, so the reference shots are generated in the same run and never committed (fonts and anti-aliasing differ between machines).
+- On failure the expected, actual and diff images are in `test-results/` (CI uploads them as the `visual-diff` artifact).
+- `e2e/visual.e2e.ts` is skipped by `npm run test:e2e`; it only runs through the script.
+- Before splitting a file (plan step 7), add the pages that render it to `VISUAL_ROUTES`, with fixtures so they show data rather than error states. A PR that is supposed to change how a page looks will fail this check; say so in the PR.
 
 ## Fixtures
 
@@ -47,5 +55,5 @@ Three layers, from fastest to slowest. None of the local layers needs the backen
 
 ## Next
 
-- Step 7: screenshot comparisons against the fixtures, generated on the CI runner.
+- Step 7: fixtures for the pages whose files are split (game preview, what-if, compare, conference data), so the screenshot comparison covers them with data.
 - Step 10: automated accessibility checks (axe) and keyboard/focus tests for tables, charts, selectors and modals.
