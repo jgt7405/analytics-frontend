@@ -8,7 +8,7 @@ import TeamContent, {
   TeamSection,
 } from "@/components/features/shared/TeamContent";
 import BasketballTeamScheduleChart from "@/components/features/basketball/BasketballTeamScheduleChart";
-import BasketballTeamScheduleDifficulty from "@/components/features/basketball/BasketballTeamScheduleDifficulty";
+import BasketballTeamScheduleDifficulty from "@/components/features/basketball/team-schedule-difficulty";
 import BasketballTeamWinsBreakdown from "@/components/features/basketball/BasketballTeamWinsBreakdown";
 import TeamSchedule from "@/components/features/basketball/TeamSchedule";
 import TeamSeedProjections from "@/components/features/basketball/TeamSeedProjections";
