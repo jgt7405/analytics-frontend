@@ -181,27 +181,161 @@ Proxy probe against production from GitHub Actions ([run 36218172541](https://gi
 
 ## 2026-09-27 — Search Console, before step 6d (route migration)
 
-Google Search Console → Pages, "Why pages aren't indexed", last updated **2026-09-20**. That predates 6c (per-page canonicals, archive metadata), so it describes the site before any step 6 change. Recorded by the owner (screenshots, 2026-09-27).
+Google Search Console → Pages, "Why pages aren't indexed", last updated **2026-09-20**. That predates 6c (per-page canonicals, archive metadata), so it describes the site before any step 6 change. Totals recorded by the owner (screenshots, 2026-09-27); per-URL exports, Performance and Sitemaps added 2026-09-28 (desktop exports, summarized below; the raw exports are not committed). Live responses were checked against production on 2026-09-28, after 6d and 6e deployed.
 
 | All known pages | Pages |
 |---|---|
-| Indexed | **484** |
+| Indexed | **484** (peak 502 on 2026-08-28; 496 → 490 → 484 through September) |
 | Not indexed | **947** (10 reasons) |
 | Total | 1,431 (about 1.2K in early July; the rise came in late August and early September) |
 
-Not captured: Performance → Pages and the Sitemaps row. Search Console keeps their history (Performance 16 months), so the after-check reads the pre-6d values from there.
-
 | Reason | Source | Validation | Pages | Expected effect of step 6 |
 |---|---|---|---|---|
-| Alternate page with proper canonical tag | Website | Failed | 415 | Mostly `?conf=` views canonicalizing to their page. Working as intended; stays |
-| Duplicate without user-selected canonical | Website | Failed | 134 | Should fall: archive pages and `/basketball/game-preview/` had no canonical until 6c |
-| Page with redirect | Website | Not started | 178 | May rise slightly (current-season URLs now 307); these are not errors |
-| Not found (404) | Website | Not started | 14 | May rise if Google has unlisted-season URLs (they now 404 on purpose) |
-| Soft 404 | Website | Not started | 4 | Should fall: unknown-season pages rendered an empty page with 200 |
-| Crawled – currently not indexed | Google systems | Not started | 145 | |
+| Alternate page with proper canonical tag | Website | Failed | 415 | `?conf=` views canonicalizing to their page. Working as intended; unchanged by step 6 |
+| Duplicate without user-selected canonical | Website | Failed | 134 | None. Contains no archive or season URLs (see patterns below); the cause is team pages and `?conf=` views, which step 6 didn't change |
+| Page with redirect | Website | Not started | 178 | Unchanged. Trailing slash, `www` and legacy redirects; all resolve. No season URLs among them |
+| Not found (404) | Website | Not started | 14 | Unchanged. No season URLs among them |
+| Soft 404 | Website | Not started | 4 | Should fall as Google recrawls: the four team URLs now serve real pages |
+| Crawled – currently not indexed | Google systems | Not started | 145 | Unchanged |
 | Excluded by 'noindex' tag | Website | Passed | 11 | Archive pages; may rise as Google recrawls them |
 | Redirect error | Website | Passed | 3 | Should stay at or near 0: every step 6 redirect is one hop |
-| Discovered – currently not indexed | Google systems | Passed | 41 | |
-| Duplicate, Google chose different canonical than user | Google systems | Passed | 2 | |
+| Discovered – currently not indexed | Google systems | Passed | 41 | Not exported |
+| Duplicate, Google chose different canonical than user | Google systems | Passed | 2 | Not exported |
 
-Re-check about two weeks after 6d deploys (plan step 6, rollback criteria).
+### URL patterns per reason
+
+No exported list, and no page in Performance, contains a `/<sport>/2026-27/` URL, an unlisted season or an archive (`/<sport>/2025-26/`) URL. Google knew none of the URLs whose response 6d changed. The only changed response it knew is `/` (308 → 307, same target).
+
+**Duplicate without user-selected canonical (134)**
+
+| Pattern | URLs | Live on 2026-09-28 |
+|---|---|---|
+| Current team pages (31 basketball, 14 football) | 45 | 200, self-canonical, `index, follow`, server-rendered text. **Should be indexed.** 11 were recrawled 09-08 to 09-17 and failed validation |
+| `?conf=` views (4 without trailing slash) | 88 | 200, canonical to the page. Intended |
+| `/basketball/wins/` (crawled 2026-08-10) | 1 | 200, self-canonical. **Should be indexed** |
+| Old `?conference=…&active_tab=` form, one garbled `?conf=` | 2 | Serve the page, canonical to it |
+
+URL Inspection of `/basketball/team/Nebraska/` (crawled 2026-09-17, smartphone): user-declared canonical **None**, Google-selected canonical **`https://www.747live.bet/`** (an unrelated betting site). The live test on 2026-09-28 says "Page can be indexed". Our HTML declares the canonical inside a clean `<head>`, and no client code changes it.
+
+**Alternate page with proper canonical tag (415)**
+
+| Pattern | URLs | Live |
+|---|---|---|
+| `?conf=` views (5 without trailing slash) | 392 | Canonical to the page. Intended |
+| Team pages with `?teamConf=` / `?conf=` (some double-encoded, `Big%252012`, from old links; no current code builds `teamConf`) | 7 | Canonical strips the query |
+| Underscore or slashless team slugs | 11 | Redirect (308) to the encoded-space URL |
+| Old `?conference=…&active_tab=` form | 5 | Serve the page, canonical to it |
+
+**Page with redirect (178)**
+
+| Pattern | URLs | Live |
+|---|---|---|
+| Slashless `?conf=` views and pages | 101 | 308 to the trailing-slash URL |
+| Slashless, `?teamConf=` or underscore team pages on `www` | 42 | 308, one or two hops |
+| Non-`www` pages (26 team pages, 1 other) | 27 | 308 to `www`, then as above |
+| `/` on `www`, apex and `http`, and `/?conference=…&active_tab=` | 8 | 308 to `https://www`, then 307 (was 308) to `/football/wins/`, query kept |
+
+**Not found (404) (14)**
+
+| Pattern | URLs | Live |
+|---|---|---|
+| Non-`www` underscore team slugs (crawled May–June) | 4 | Now 200 via two 308s |
+| Old `/_next/static/` CSS/JS from previous deployments | 7 | 404. Harmless |
+| `/Oklahoma`, `/Texas Tech` (team name at the root) | 2 | 404. No internal link produces them |
+| `/football/team/Southeast Missouri State/` | 1 | 404: an FCS school, no football team page |
+
+**Soft 404 (4):** team pages Duquesne (non-`www`, slashless), Alabama and Utah State (`?teamConf=`), North Carolina A&T, crawled May–June. All now 200 with content.
+
+**Crawled – currently not indexed (145)**
+
+| Pattern | URLs | Live |
+|---|---|---|
+| Old `/_next/static/` CSS files | 65 | Not meant to be indexed |
+| Team pages: 14 non-`www` (Feb–Jun), 9 slashless or `?teamConf=`, 13 current URLs crawled Jun–Sep | 36 | 200, self-canonical. The 13 current ones should be indexed |
+| `?conf=` views and slashless pages | 40 | Intended |
+| `/?conference=…`, `http` apex home | 4 | Redirect |
+
+### Indexed pages against the sitemap
+
+Live sitemap on 2026-09-28: 534 URLs (31 pages, 365 basketball teams, 138 football teams). 533 return 200; **`/basketball/team/West%20Florida/` returns 404** (in the backend's team list, but the team page doesn't find it). Search Console's two submitted sitemaps (`www` and apex, both read 2026-09-21) each show 531 discovered.
+
+| | Count |
+|---|---|
+| Indexed (export) | 484 |
+| Indexed and in the sitemap | 425 |
+| Indexed, not in the sitemap | 59: 52 `?conf=` / `?game=` views, 7 team URL variants |
+| **In the sitemap, not indexed** | **109**: 73 basketball teams, 20 football teams, 16 pages |
+
+The 16 unindexed sitemap pages: basketball `wins`, `standings`, `conf-tourney`, `conf-data`, `compare`, `season-info`, `game-preview`, `composite-ratings`; football `cwv`, `schedule`, `twv`, `conf-champ`, `teams`, `compare`, `season-info`, `composite-ratings`. For 12 of them Google has indexed one or more `?conf=` views instead (for example `/football/schedule/?conf=Big 12`), even though those views declare the page as canonical. Only `/basketball/wins/` appears in an exported reason list; the rest are probably under "Discovered – currently not indexed" or "Duplicate, Google chose different canonical", which weren't exported.
+
+### Performance — Search results, last 3 months (2026-06-26 to 2026-09-25, web)
+
+All before 6d. **182 clicks, 5,954 impressions** (desktop 94 / 3,618, average position 17.8; mobile 87 / 2,220, 9.6; tablet 1 / 116). 427 pages and 331 queries with impressions.
+
+Top pages by clicks:
+
+| Page | Clicks | Impressions | Position |
+|---|---|---|---|
+| `/football/wins/` | 70 | 406 | 4.8 |
+| `/football/home/` | 20 | 439 | 8.2 |
+| `/football/whatif/` | 17 | 94 | 4.2 |
+| `/football/cfp/` | 16 | 279 | 11.3 |
+| `/football/compare/?conf=Big 12` | 4 | 87 | 11.9 |
+| `/football/team/Rutgers/` | 3 | 331 | 9.1 |
+| `/basketball/home/` | 3 | 206 | 6.6 |
+| `/football/home/?conf=Pac-12` | 2 | 74 | 7.9 |
+| `/football/whatif/?conf=Big 12` | 2 | 70 | 8.2 |
+
+Top pages by impressions (beyond those above):
+
+| Page | Clicks | Impressions | Position |
+|---|---|---|---|
+| `/football/teams/?conf=Big 12` | 0 | 452 | 34.9 |
+| `/football/team/Central Michigan/` | 0 | 257 | 16.7 |
+| `/basketball/seed/` | 1 | 207 | 10.7 |
+| `/football/team/Northwestern/` | 1 | 201 | 8.4 |
+| `/basketball/team/Duquesne/` | 0 | 114 | 19.9 |
+| `/football/team/Old Dominion/` | 1 | 106 | 24.2 |
+| `/football/team/Ohio/` | 1 | 104 | 37.3 |
+| `/basketball/whatif/` | 0 | 87 | 6.4 |
+
+By pattern:
+
+| Pattern | Pages | Clicks | Impressions |
+|---|---|---|---|
+| Football team pages | 117 | 29 | 2,302 |
+| Basketball team pages (8 of them non-`www`) | 241 | 12 | 1,487 |
+| Football `home`, `wins`, `whatif`, `cfp` (incl. `?conf=`) | 14 | 127 | 1,436 |
+| Other pages and `?conf=` views | 53 | 14 | 1,473 |
+| `/` (`www` and apex) | 2 | 1 | 24 |
+| Archive, `2026-27` or unknown-season URLs | 0 | 0 | 0 |
+
+Top queries: "jthom analytics" 32 clicks / 63 impressions, "cfp projections" 16 / 376, "jthom" 11 / 70, "cfp simulator" 9 / 55, "rutgers football standings" 1 / 259.
+
+**No top-traffic page is affected by a step 6 redirect or 404.** `/` changed from 308 to 307 with the same target.
+
+### Re-check around 2026-10-11
+
+Same exports, desktop, saved outside the repos (only summaries go here):
+
+1. Indexing → Pages, **All known pages** → Export → Download CSV (totals and reasons).
+2. Same page, click each reason row → Export → Download CSV: Duplicate without user-selected canonical, Page with redirect, Not found (404), Soft 404, Crawled – currently not indexed, Alternate page with proper canonical tag; also Discovered – currently not indexed, Excluded by 'noindex' tag, Redirect error.
+3. Pages → **View data about indexed pages** → Export.
+4. Performance → Search results → Date → Custom **2026-09-27 to 2026-10-10** → Export; and **Compare** that range with 2026-09-13 to 2026-09-26 (the two weeks before) → Export.
+5. Indexing → Sitemaps: screenshot (last read, discovered pages).
+6. URL Inspection: `/basketball/team/Nebraska/`, `/basketball/wins/`, `/football/2025-26/wins/`: screenshot the Page indexing panel.
+
+What should move:
+
+| Number | Now | Expected | Roll back (plan step 6, item 4) if |
+|---|---|---|---|
+| Not found (404) | 14 | ≤ 20; any new rows should be unlisted-season URLs only | A current page or team URL appears |
+| Redirect error | 3 | 0–3 | Any `/<sport>/2026-27/` URL appears |
+| Page with redirect | 178 | About the same; may gain `/<sport>/2026-27/` URLs if Google finds any | — |
+| Soft 404 | 4 | ≤ 4 | — |
+| Excluded by 'noindex' | 11 | May rise (archive pages recrawled) | A seasonless page appears |
+| Indexed | 484 | ≥ 484 | Falls below about 460 |
+| Clicks, 2 weeks after vs before, pages step 6 touched (`/`, archive, season URLs) | `/` 1 click in 3 months | No meaningful change | — |
+| Clicks, 2 weeks after vs before, `/football/wins/`, `/football/home/`, `/football/whatif/`, `/football/cfp/` | 123 of 182 in 3 months | Seasonal swings only (football season in progress) | Down more than 30% while impressions hold |
+
+Search Console reports lag by several days; if "Last updated" on the Pages report is before 2026-10-04, wait and re-export.
