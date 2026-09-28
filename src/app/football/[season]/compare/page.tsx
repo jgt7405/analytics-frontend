@@ -2,7 +2,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import FootballCompareSchedulesChart from "@/components/features/football/FootballCompareSchedulesChart";
+import FootballCompareSchedulesChart from "@/components/features/football/compare-schedules";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
