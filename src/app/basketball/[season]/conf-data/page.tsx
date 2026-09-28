@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import TableActionButtons from "@/components/common/TableActionButtons";
 import BballConfBidsHistoryChart from "@/components/features/basketball/BballConfBidsHistoryChart";
 import BballConfBoxWhiskerChart from "@/components/features/basketball/BballConfBoxWhiskerChart";
-import BballNonConfAnalysisTable from "@/components/features/basketball/BballNonConfAnalysisTable";
+import BballNonConfAnalysisTable from "@/components/features/basketball/nonconf-analysis";
 import ConferenceBidsTable from "@/components/features/basketball/ConferenceBidsTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";

@@ -26,10 +26,18 @@ const VISUAL_ROUTES: VisualRoute[] = [
   { path: "/football/team/Alabama/" },
   { path: "/basketball/standings/" },
   { path: "/football/standings/" },
-  // BasketballCompareSchedulesChart (drawn once a team is picked)
+  // basketball compare-schedules (drawn once a team is picked)
   { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
-  // FootballCompareSchedulesChart
+  // football compare-schedules
   { path: "/football/compare/", name: "football-compare-Alabama", setup: selectTeam("Alabama") },
+  // nonconf-analysis, with the Atlantic Coast teams expanded
+  {
+    path: "/basketball/conf-data/",
+    name: "basketball-conf-data-ACC",
+    setup: async (page) => {
+      await page.locator("table").last().locator("tr", { hasText: "Atlantic Coast" }).locator("td").first().click();
+    },
+  },
 ];
 
 const shotName = ({ path, name }: VisualRoute) =>
