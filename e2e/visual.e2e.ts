@@ -30,23 +30,31 @@ const EMPTY = JSON.stringify({ data: [] });
 
 async function answerMissingFixturesEmpty(page: Page) {
   await page.route("**/api/proxy/**", async (route) => {
-    const response = await route.fetch();
-    if (response.status() === 404) {
-      await route.fulfill({ status: 200, contentType: "application/json", body: EMPTY });
-    } else {
-      await route.fulfill({ response });
+    try {
+      const response = await route.fetch();
+      if (response.status() === 404) {
+        await route.fulfill({ status: 200, contentType: "application/json", body: EMPTY });
+      } else {
+        await route.fulfill({ response });
+      }
+    } catch {
+      // The page navigated (reload) while this request was in flight.
     }
   });
 }
 
-/** Tracks /api/proxy requests from the moment it is created. */
+// A request still pending after this long is abandoned (the proxy's own
+// backend timeouts are shorter), not something to wait for.
+const ABANDONED_MS = 20_000;
+
+/** Tracks /api/proxy requests of the current document. */
 function trackDataRequests(page: Page) {
-  const pending = new Set<Request>();
+  const pending = new Map<Request, number>();
   let last = Date.now();
   const isData = (request: Request) => request.url().includes("/api/proxy/");
   page.on("request", (request) => {
     if (!isData(request)) return;
-    pending.add(request);
+    pending.set(request, Date.now());
     last = Date.now();
   });
   const done = (request: Request) => {
@@ -58,12 +66,23 @@ function trackDataRequests(page: Page) {
   page.on("response", (response) => done(response.request()));
   page.on("requestfinished", done);
   page.on("requestfailed", done);
+  // Requests of a document the page navigated away from never finish.
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) pending.clear();
+  });
+  const active = () => {
+    const now = Date.now();
+    for (const [request, started] of pending) {
+      if (now - started > ABANDONED_MS) pending.delete(request);
+    }
+    return pending.size;
+  };
   return {
     /** No data request pending, and none started for `quietMs`. */
     async idle(quietMs = 1_500, timeout = 60_000) {
       const deadline = Date.now() + timeout;
       while (Date.now() < deadline) {
-        if (pending.size === 0 && Date.now() - last >= quietMs) return;
+        if (active() === 0 && Date.now() - last >= quietMs) return;
         await page.waitForTimeout(100);
       }
     },
