@@ -1,6 +1,6 @@
 "use client";
 
-import BasketballCompareSchedulesChart from "@/components/features/basketball/BasketballCompareSchedulesChart";
+import BasketballCompareSchedulesChart from "@/components/features/basketball/compare-schedules";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
