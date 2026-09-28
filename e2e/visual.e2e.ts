@@ -7,16 +7,33 @@ import { expect, test, type Page, type Request } from "@playwright/test";
 //
 // Routes: the pages that render the files step 7 splits, with fixture data.
 // Add a page here (and its fixtures) before splitting a file it renders.
-const VISUAL_ROUTES = [
-  // BasketballTeamWinsBreakdown, BasketballTeamScheduleDifficulty
-  "/basketball/team/Duke/",
-  // FootballTeamScheduleDifficulty
-  "/football/team/Alabama/",
-  "/basketball/standings/",
-  "/football/standings/",
+// `setup` runs after the page has settled, for views reached by clicking;
+// give those routes a `name` so their shot doesn't clash with the plain page.
+interface VisualRoute {
+  path: string;
+  name?: string;
+  setup?: (page: Page) => Promise<void>;
+}
+
+const selectTeam = (team: string) => async (page: Page) => {
+  await page.locator(`button[title="${team}"]`).first().click();
+};
+
+const VISUAL_ROUTES: VisualRoute[] = [
+  // team-wins-breakdown, team-schedule-difficulty (basketball)
+  { path: "/basketball/team/Duke/" },
+  // team-schedule-difficulty (football)
+  { path: "/football/team/Alabama/" },
+  { path: "/basketball/standings/" },
+  { path: "/football/standings/" },
+  // BasketballCompareSchedulesChart (drawn once a team is picked)
+  { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
+  // FootballCompareSchedulesChart
+  { path: "/football/compare/", name: "football-compare-Alabama", setup: selectTeam("Alabama") },
 ];
 
-const shotName = (route: string) => `${route.split("/").filter(Boolean).join("-")}.png`;
+const shotName = ({ path, name }: VisualRoute) =>
+  `${name ?? path.split("/").filter(Boolean).join("-")}.png`;
 
 // Timing makes screenshots flaky unless every page reaches its final state
 // before the shot:
@@ -102,18 +119,22 @@ const SHOT_HEIGHT = 5_000;
 test.describe.configure({ timeout: 120_000 });
 
 for (const route of VISUAL_ROUTES) {
-  test(`${route} looks the same as on the base branch`, async ({ page }) => {
+  test(`${route.name ?? route.path} looks the same as on the base branch`, async ({ page }) => {
     await page.setViewportSize({ width: page.viewportSize()!.width, height: SHOT_HEIGHT });
     await answerMissingFixturesEmpty(page);
     // The site's fonts use `font-display: optional`: a font that isn't ready
     // within ~100 ms is skipped for that page load, which happens at random
     // under test load. Load the page once so fonts and logos are cached,
     // then reload and take the shot from the warm cache.
-    await page.goto(route, { waitUntil: "load" });
+    await page.goto(route.path, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     const data = trackDataRequests(page);
     await page.reload({ waitUntil: "load" });
     await data.idle();
+    if (route.setup) {
+      await route.setup(page);
+      await data.idle();
+    }
     // Charts can mount late (their code loads on demand) and Chart.js
     // animates for 1 s, which "animations: disabled" doesn't stop (canvas).
     await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
