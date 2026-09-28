@@ -24,7 +24,8 @@ const shotName = (route: string) => `${route.split("/").filter(Boolean).join("-"
 //   times, 1-4 s apart), so a shot could show "Loading…" or the error state.
 //   Here those endpoints answer at once with an empty 200 instead, so
 //   nothing retries and both sides get the same answer.
-// - Some sections mount (and fetch) only when scrolled into view.
+// - Some sections mount (and fetch) only when scrolled into view, and
+//   charts re-lay out when the viewport changes (see fitViewportToPage).
 // - Fonts use `font-display: optional` (see below).
 const EMPTY = JSON.stringify({ data: [] });
 
@@ -89,21 +90,22 @@ function trackDataRequests(page: Page) {
   };
 }
 
-/** Scroll to the bottom until the page stops growing, then back to the top. */
-async function revealLazySections(page: Page, data: ReturnType<typeof trackDataRequests>) {
-  let height = 0;
+/**
+ * Make the viewport as tall as the page before the shot. Otherwise the
+ * full-page screenshot resizes it mid-capture, which re-lays out responsive
+ * charts and mounts sections that load only when scrolled into view. Here
+ * that happens first, and their data settles, until the height is stable.
+ */
+async function fitViewportToPage(page: Page, data: ReturnType<typeof trackDataRequests>) {
+  const width = page.viewportSize()!.width;
+  let height = page.viewportSize()!.height;
   for (let i = 0; i < 10; i++) {
-    const next = await page.evaluate(() => document.documentElement.scrollHeight);
-    if (next === height) break;
-    height = next;
-    for (let y = 0; y <= height; y += 400) {
-      await page.evaluate((top) => window.scrollTo(0, top), y);
-      await page.waitForTimeout(50);
-    }
+    const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    if (pageHeight === height) return;
+    height = pageHeight;
+    await page.setViewportSize({ width, height });
     await data.idle();
   }
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await data.idle();
 }
 
 test.describe.configure({ timeout: 120_000 });
@@ -120,12 +122,14 @@ for (const route of VISUAL_ROUTES) {
     const data = trackDataRequests(page);
     await page.reload({ waitUntil: "load" });
     await data.idle();
-    await revealLazySections(page, data);
+    await fitViewportToPage(page, data);
     await expect(page).toHaveScreenshot(shotName(route), {
       fullPage: true,
       animations: "disabled",
       caret: "hide",
-      maxDiffPixels: 0,
+      // Anti-aliasing noise in charts is a few pixels; a real change is
+      // hundreds (a one-word label change: ~440).
+      maxDiffPixels: 20,
       timeout: 90_000,
     });
   });

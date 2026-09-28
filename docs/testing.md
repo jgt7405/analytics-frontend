@@ -6,7 +6,7 @@ Four layers, from fastest to slowest. None of the local layers needs the backend
 |---|---|---|---|
 | Unit (Jest) | `npm test` (`jest --ci` in `verify`) | Every PR | API client exports and URLs, hook wiring, pure helpers |
 | Smoke (Playwright) | `npm run test:e2e` after `npm run build` | Every PR | A page that 404s, loses its layout shell, or throws an uncaught JavaScript error |
-| Screenshot comparison (Playwright) | `npm run visual:compare` | Every PR (`Visual` job) | Any pixel change on the pages in `e2e/visual.e2e.ts`, compared with the base branch. For behavior-preserving refactors (step 7) |
+| Screenshot comparison (Playwright) | `npm run visual:compare` | Every PR (`Visual` job) | Any visible change on the pages in `e2e/visual.e2e.ts`, compared with the base branch. For behavior-preserving refactors (step 7) |
 | Production | `npm run baseline:lighthouse`, `npm run baseline:proxy` | Daily, and on demand | Accessibility regressions, slow pages, backend outages or empty responses |
 
 ## Unit tests (Jest)
@@ -32,7 +32,7 @@ Four layers, from fastest to slowest. None of the local layers needs the backend
 
 ## Screenshot comparison (Playwright)
 
-- `npm run visual:compare` (`scripts/visual-compare.mjs`): checks the base ref (default `origin/main`; CI passes the PR's base commit) out into a temporary worktree, installs and builds it, and takes full-page shots of the routes in `e2e/visual.e2e.ts` on desktop and mobile. Then it builds this checkout and compares: any differing pixel fails. `--skip-head-build` reuses an existing build of this checkout.
+- `npm run visual:compare` (`scripts/visual-compare.mjs`): checks the base ref (default `origin/main`; CI passes the PR's base commit) out into a temporary worktree, installs and builds it, and takes full-page shots of the routes in `e2e/visual.e2e.ts` on desktop and mobile. Then it builds this checkout and compares: more than 20 differing pixels per page fails (chart anti-aliasing varies by a few pixels; a one-word change is ~440). `--skip-head-build` reuses an existing build of this checkout.
 - Both sides use this checkout's tests and fixtures and render on the same machine, so the reference shots are generated in the same run and never committed (fonts and anti-aliasing differ between machines).
 - On failure the expected, actual and diff images are in `test-results/` (CI uploads them as the `visual-diff` artifact).
 - `e2e/visual.e2e.ts` is skipped by `npm run test:e2e`; it only runs through the script.
