@@ -127,6 +127,10 @@ function trackDataRequests(page: Page) {
 const SHOT_HEIGHT = 5_000;
 
 test.describe.configure({ timeout: 120_000 });
+// No service worker: the site's registers on the first load and takes over
+// the reload, and a code chunk requested while it activates sometimes never
+// arrived (a chart stuck on its loading skeleton in CI).
+test.use({ serviceWorkers: "block" });
 
 for (const route of VISUAL_ROUTES) {
   test(`${route.name ?? route.path} looks the same as on the base branch`, async ({ page }) => {
