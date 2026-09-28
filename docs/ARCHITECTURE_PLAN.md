@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28). Next: step 7. Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). Next: step 7. Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -212,7 +212,7 @@ Deferred: React Compiler lint findings (steps 7–8); six Dependabot PRs opened 
 
 Still open: re-check Search Console about two weeks after 6d (around 2026-10-11) against the baseline in `docs/baselines/README.md`; roll back per item 4 if crawl errors or organic traffic to affected pages drop. Keep the 6d redirects at least a full season.
 
-Search Console review (2026-09-28, per-URL exports from before 6d, summarized in `docs/baselines/README.md`): Google knew none of the URLs whose response 6d changed (no `2026-27`, unknown-season or archive URLs in any report or in Performance), and no top-traffic page is affected. It did find problems step 6 didn't cause: 109 sitemap URLs not indexed (93 team pages, 16 pages including `/basketball/wins/`), with Google choosing an unrelated site as canonical for at least one team page, and `?conf=` views indexed in place of their page; plus one sitemap team page that 404s (West Florida). Fixes are proposed to the owner one PR each.
+Search Console review (2026-09-28, per-URL exports from before 6d, summarized in `docs/baselines/README.md`): Google knew none of the URLs whose response 6d changed (no `2026-27`, unknown-season or archive URLs in any report or in Performance), and no top-traffic page is affected. It did find problems step 6 didn't cause: 109 sitemap URLs not indexed (93 team pages, 16 pages including `/basketball/wins/`), with Google choosing an unrelated site as canonical for at least one team page, and `?conf=` views indexed in place of their page; plus one sitemap team page that 404s (West Florida). Fixes, one PR each: the baseline itself (#39); West Florida's team page (backend jthom_prod_backend #9: a team missing from `bball_league_hierarchy_flat` got a null logo and a 500; now `default.png`); team URLs whose name has a period now 308 to the trailing slash instead of serving 200 without it (#40, `src/proxy.ts`, smoke-tested). Left to the owner in Search Console: request indexing for top team and main pages, validate "Duplicate without user-selected canonical", remove the duplicate apex sitemap. Main pages losing to their `?conf=` views is left to step 9 (conference URLs).
 
 ## Step 7 — Split oversized files without changing behavior
 
