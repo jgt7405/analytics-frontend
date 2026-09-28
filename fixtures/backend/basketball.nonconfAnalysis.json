@@ -1,0 +1,178 @@
+{
+ "_note": "Hand-written: production has no non-conference rows before games are played. Shape from BballNonConfAnalysisTable's types and app/api/basketball/analysis.py (win % as a percentage, one decimal); conference totals are the sums of the teams'.",
+ "conferences": [
+  "Atlantic Coast",
+  "Big Ten",
+  "Ivy League"
+ ],
+ "data": [
+  {
+   "team_conf": "Atlantic Coast",
+   "conf_logo_url": "/images/conf_logos/Atlantic_Coast.png",
+   "conf_primary_color": "#013CA6",
+   "conf_secondary_color": "#A5A9AB",
+   "teams": [
+    {
+     "team_name": "Duke",
+     "logo_url": "/images/team_logos/duke.png",
+     "power_record": "3-1",
+     "power_win_pct": 75.0,
+     "power_twv_50": 0.8,
+     "nonpower_record": "7-0",
+     "nonpower_win_pct": 100.0,
+     "nonpower_twv_50": 0.4,
+     "total_record": "10-1",
+     "total_win_pct": 90.9,
+     "total_twv_50": 1.2
+    },
+    {
+     "team_name": "North Carolina",
+     "logo_url": "/images/team_logos/north_carolina.png",
+     "power_record": "2-2",
+     "power_win_pct": 50.0,
+     "power_twv_50": -0.3,
+     "nonpower_record": "6-1",
+     "nonpower_win_pct": 85.7,
+     "nonpower_twv_50": -0.2,
+     "total_record": "8-3",
+     "total_win_pct": 72.7,
+     "total_twv_50": -0.5
+    },
+    {
+     "team_name": "Virginia",
+     "logo_url": "/images/team_logos/virginia.png",
+     "power_record": "1-2",
+     "power_win_pct": 33.3,
+     "power_twv_50": 0.1,
+     "nonpower_record": "7-1",
+     "nonpower_win_pct": 87.5,
+     "nonpower_twv_50": 0.3,
+     "total_record": "8-3",
+     "total_win_pct": 72.7,
+     "total_twv_50": 0.4
+    }
+   ],
+   "power_record": "6-5",
+   "power_win_pct": 54.5,
+   "power_twv_50": 0.6,
+   "nonpower_record": "20-2",
+   "nonpower_win_pct": 90.9,
+   "nonpower_twv_50": 0.5,
+   "total_record": "26-7",
+   "total_win_pct": 78.8,
+   "total_twv_50": 1.1
+  },
+  {
+   "team_conf": "Big Ten",
+   "conf_logo_url": "/images/conf_logos/Big_Ten.png",
+   "conf_primary_color": "#0088CE",
+   "conf_secondary_color": "#FFFFFF",
+   "teams": [
+    {
+     "team_name": "Michigan",
+     "logo_url": "/images/team_logos/michigan.png",
+     "power_record": "4-1",
+     "power_win_pct": 80.0,
+     "power_twv_50": 1.2,
+     "nonpower_record": "6-0",
+     "nonpower_win_pct": 100.0,
+     "nonpower_twv_50": 0.2,
+     "total_record": "10-1",
+     "total_win_pct": 90.9,
+     "total_twv_50": 1.4
+    },
+    {
+     "team_name": "Purdue",
+     "logo_url": "/images/team_logos/purdue.png",
+     "power_record": "2-3",
+     "power_win_pct": 40.0,
+     "power_twv_50": -0.6,
+     "nonpower_record": "7-0",
+     "nonpower_win_pct": 100.0,
+     "nonpower_twv_50": 0.1,
+     "total_record": "9-3",
+     "total_win_pct": 75.0,
+     "total_twv_50": -0.5
+    },
+    {
+     "team_name": "Illinois",
+     "logo_url": "/images/team_logos/illinois.png",
+     "power_record": "3-2",
+     "power_win_pct": 60.0,
+     "power_twv_50": 0.4,
+     "nonpower_record": "5-2",
+     "nonpower_win_pct": 71.4,
+     "nonpower_twv_50": -0.9,
+     "total_record": "8-4",
+     "total_win_pct": 66.7,
+     "total_twv_50": -0.5
+    }
+   ],
+   "power_record": "9-6",
+   "power_win_pct": 60.0,
+   "power_twv_50": 1.0,
+   "nonpower_record": "18-2",
+   "nonpower_win_pct": 90.0,
+   "nonpower_twv_50": -0.6,
+   "total_record": "27-8",
+   "total_win_pct": 77.1,
+   "total_twv_50": 0.4
+  },
+  {
+   "team_conf": "Ivy League",
+   "conf_logo_url": "/images/conf_logos/Ivy_League.png",
+   "conf_primary_color": "#003F2D",
+   "conf_secondary_color": "#FFFFFF",
+   "teams": [
+    {
+     "team_name": "Yale",
+     "logo_url": "/images/team_logos/yale.png",
+     "power_record": "0-2",
+     "power_win_pct": 0.0,
+     "power_twv_50": 0.2,
+     "nonpower_record": "8-2",
+     "nonpower_win_pct": 80.0,
+     "nonpower_twv_50": 0.6,
+     "total_record": "8-4",
+     "total_win_pct": 66.7,
+     "total_twv_50": 0.8
+    },
+    {
+     "team_name": "Princeton",
+     "logo_url": "/images/team_logos/princeton.png",
+     "power_record": "1-1",
+     "power_win_pct": 50.0,
+     "power_twv_50": 0.9,
+     "nonpower_record": "6-3",
+     "nonpower_win_pct": 66.7,
+     "nonpower_twv_50": -0.4,
+     "total_record": "7-4",
+     "total_win_pct": 63.6,
+     "total_twv_50": 0.5
+    },
+    {
+     "team_name": "Harvard",
+     "logo_url": "/images/team_logos/harvard.png",
+     "power_record": "0-3",
+     "power_win_pct": 0.0,
+     "power_twv_50": -0.5,
+     "nonpower_record": "5-4",
+     "nonpower_win_pct": 55.6,
+     "nonpower_twv_50": -1.1,
+     "total_record": "5-7",
+     "total_win_pct": 41.7,
+     "total_twv_50": -1.6
+    }
+   ],
+   "power_record": "1-6",
+   "power_win_pct": 14.3,
+   "power_twv_50": 0.6,
+   "nonpower_record": "19-9",
+   "nonpower_win_pct": 67.9,
+   "nonpower_twv_50": -0.9,
+   "total_record": "20-15",
+   "total_win_pct": 57.1,
+   "total_twv_50": -0.3
+  }
+ ]
+}

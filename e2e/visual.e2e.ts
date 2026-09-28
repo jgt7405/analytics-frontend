@@ -26,10 +26,20 @@ const VISUAL_ROUTES: VisualRoute[] = [
   { path: "/football/team/Alabama/" },
   { path: "/basketball/standings/" },
   { path: "/football/standings/" },
-  // BasketballCompareSchedulesChart (drawn once a team is picked)
+  // basketball compare-schedules (drawn once a team is picked)
   { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
-  // FootballCompareSchedulesChart
+  // football compare-schedules
   { path: "/football/compare/", name: "football-compare-Alabama", setup: selectTeam("Alabama") },
+  // nonconf-analysis, with the Atlantic Coast teams expanded
+  {
+    path: "/basketball/conf-data/",
+    name: "basketball-conf-data-ACC",
+    setup: async (page) => {
+      // By the logo: phones hide the conference name.
+      const row = page.locator("table").last().locator("tr", { has: page.locator('img[alt="Atlantic Coast"]') });
+      await row.locator("td").first().click();
+    },
+  },
 ];
 
 const shotName = ({ path, name }: VisualRoute) =>
@@ -117,6 +127,10 @@ function trackDataRequests(page: Page) {
 const SHOT_HEIGHT = 5_000;
 
 test.describe.configure({ timeout: 120_000 });
+// No service worker: the site's registers on the first load and takes over
+// the reload, and a code chunk requested while it activates sometimes never
+// arrived (a chart stuck on its loading skeleton in CI).
+test.use({ serviceWorkers: "block" });
 
 for (const route of VISUAL_ROUTES) {
   test(`${route.name ?? route.path} looks the same as on the base branch`, async ({ page }) => {
