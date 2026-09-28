@@ -9,7 +9,7 @@ import TeamContent, {
 } from "@/components/features/shared/TeamContent";
 import FootballTeamSchedule from "@/components/features/football/FootballTeamSchedule";
 import FootballTeamScheduleChart from "@/components/features/football/FootballTeamScheduleChart";
-import FootballTeamScheduleDifficulty from "@/components/features/football/FootballTeamScheduleDifficulty";
+import FootballTeamScheduleDifficulty from "@/components/features/football/team-schedule-difficulty";
 import FootballTeamSeedProjections from "@/components/features/football/FootballTeamSeedProjections";
 import FootballTeamWinValues from "@/components/features/football/FootballTeamWinValues";
 import { useFootballTeam, FootballTeamData } from "@/hooks/useFootballTeam";
