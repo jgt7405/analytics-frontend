@@ -17,6 +17,7 @@
 
 import { http, HttpResponse, type HttpHandler } from "msw";
 import { ENDPOINTS, type EndpointKey } from "../../src/api/endpoints";
+import basketballConfChampAnalysis from "./basketball.confChampAnalysis.json";
 import basketballStandings from "./basketball.standings.json";
 import basketballTeam from "./basketball.team.json";
 import basketballTeams from "./basketball.teams.json";
@@ -28,6 +29,7 @@ type Json = Record<string, unknown>;
 type Row = Record<string, unknown>;
 
 export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
+  "basketball.confChampAnalysis": basketballConfChampAnalysis,
   "basketball.standings": basketballStandings,
   "basketball.team": basketballTeam,
   "basketball.teams": basketballTeams,

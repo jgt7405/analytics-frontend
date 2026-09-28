@@ -2,7 +2,7 @@
 "use client";
 
 import BasketballTeamScheduleDifficulty from "@/components/features/basketball/team-schedule-difficulty";
-import BasketballTeamWinsBreakdown from "@/components/features/basketball/BasketballTeamWinsBreakdown";
+import BasketballTeamWinsBreakdown from "@/components/features/basketball/team-wins-breakdown";
 import TeamWinValues from "@/components/features/basketball/TeamWinValues";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
