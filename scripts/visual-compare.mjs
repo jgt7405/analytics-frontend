@@ -55,7 +55,7 @@ try {
   run(`git worktree add --detach "${baseDir}" ${baseRef}`);
   run("npm ci --no-audit --no-fund", { cwd: baseDir });
   run("npm run build", { cwd: baseDir });
-  run("npx playwright test e2e/visual.e2e.ts --update-snapshots", {
+  run("npx playwright test e2e/visual.e2e.ts --workers=1 --update-snapshots", {
     env: { VISUAL_SNAPSHOT_DIR: snapshotDir, E2E_APP_DIR: baseDir },
   });
 } finally {
@@ -63,7 +63,7 @@ try {
 }
 
 if (!skipHeadBuild) run("npm run build");
-run("npx playwright test e2e/visual.e2e.ts", {
+run("npx playwright test e2e/visual.e2e.ts --workers=1", {
   env: { VISUAL_SNAPSHOT_DIR: snapshotDir },
 });
 console.log(`\nScreenshots match ${baseRef}.`);

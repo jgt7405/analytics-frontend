@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page, type Request } from "@playwright/test";
 
 // Screenshot comparison for behavior-preserving refactors (plan step 7).
 // Run with `npm run visual:compare` (scripts/visual-compare.mjs), never on
@@ -18,15 +18,90 @@ const VISUAL_ROUTES = [
 
 const shotName = (route: string) => `${route.split("/").filter(Boolean).join("-")}.png`;
 
-// Endpoints without a fixture 404, and React Query retries them with backoff
-// before showing the error state, so a page can take ~30 s to settle.
+// Timing makes screenshots flaky unless every page reaches its final state
+// before the shot:
+// - Endpoints without a fixture 404, and some hooks retry them (up to 3
+//   times, 1-4 s apart), so a shot could show "Loading…" or the error state.
+//   Here those endpoints answer at once with an empty 200 instead, so
+//   nothing retries and both sides get the same answer.
+// - Some sections mount (and fetch) only when scrolled into view.
+// - Fonts use `font-display: optional` (see below).
+const EMPTY = JSON.stringify({ data: [] });
+
+async function answerMissingFixturesEmpty(page: Page) {
+  await page.route("**/api/proxy/**", async (route) => {
+    const response = await route.fetch();
+    if (response.status() === 404) {
+      await route.fulfill({ status: 200, contentType: "application/json", body: EMPTY });
+    } else {
+      await route.fulfill({ response });
+    }
+  });
+}
+
+/** Tracks /api/proxy requests from the moment it is created. */
+function trackDataRequests(page: Page) {
+  const pending = new Set<Request>();
+  let last = Date.now();
+  const isData = (request: Request) => request.url().includes("/api/proxy/");
+  page.on("request", (request) => {
+    if (!isData(request)) return;
+    pending.add(request);
+    last = Date.now();
+  });
+  const done = (request: Request) => {
+    if (!pending.delete(request)) return;
+    last = Date.now();
+  };
+  // A response counts as done: "requestfinished" only fires once the page
+  // has read the body, which it may never do for an error response.
+  page.on("response", (response) => done(response.request()));
+  page.on("requestfinished", done);
+  page.on("requestfailed", done);
+  return {
+    /** No data request pending, and none started for `quietMs`. */
+    async idle(quietMs = 1_500, timeout = 60_000) {
+      const deadline = Date.now() + timeout;
+      while (Date.now() < deadline) {
+        if (pending.size === 0 && Date.now() - last >= quietMs) return;
+        await page.waitForTimeout(100);
+      }
+    },
+  };
+}
+
+/** Scroll to the bottom until the page stops growing, then back to the top. */
+async function revealLazySections(page: Page, data: ReturnType<typeof trackDataRequests>) {
+  let height = 0;
+  for (let i = 0; i < 10; i++) {
+    const next = await page.evaluate(() => document.documentElement.scrollHeight);
+    if (next === height) break;
+    height = next;
+    for (let y = 0; y <= height; y += 400) {
+      await page.evaluate((top) => window.scrollTo(0, top), y);
+      await page.waitForTimeout(50);
+    }
+    await data.idle();
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await data.idle();
+}
+
 test.describe.configure({ timeout: 120_000 });
 
 for (const route of VISUAL_ROUTES) {
   test(`${route} looks the same as on the base branch`, async ({ page }) => {
+    await answerMissingFixturesEmpty(page);
+    // The site's fonts use `font-display: optional`: a font that isn't ready
+    // within ~100 ms is skipped for that page load, which happens at random
+    // under test load. Load the page once so fonts and logos are cached,
+    // then reload and take the shot from the warm cache.
     await page.goto(route, { waitUntil: "load" });
-    // Capped: endpoints without a fixture 404 and React Query retries them.
-    await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => {});
+    await page.evaluate(() => document.fonts.ready);
+    const data = trackDataRequests(page);
+    await page.reload({ waitUntil: "load" });
+    await data.idle();
+    await revealLazySections(page, data);
     await expect(page).toHaveScreenshot(shotName(route), {
       fullPage: true,
       animations: "disabled",
