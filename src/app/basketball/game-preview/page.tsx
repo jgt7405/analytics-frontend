@@ -1,7 +1,7 @@
 // src/app/basketball/game-preview/page.tsx
 "use client";
 
-import BasketballTeamScheduleDifficulty from "@/components/features/basketball/BasketballTeamScheduleDifficulty";
+import BasketballTeamScheduleDifficulty from "@/components/features/basketball/team-schedule-difficulty";
 import BasketballTeamWinsBreakdown from "@/components/features/basketball/BasketballTeamWinsBreakdown";
 import TeamWinValues from "@/components/features/basketball/TeamWinValues";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
