@@ -35,7 +35,9 @@ const VISUAL_ROUTES: VisualRoute[] = [
     path: "/basketball/conf-data/",
     name: "basketball-conf-data-ACC",
     setup: async (page) => {
-      await page.locator("table").last().locator("tr", { hasText: "Atlantic Coast" }).locator("td").first().click();
+      // By the logo: phones hide the conference name.
+      const row = page.locator("table").last().locator("tr", { has: page.locator('img[alt="Atlantic Coast"]') });
+      await row.locator("td").first().click();
     },
   },
 ];
