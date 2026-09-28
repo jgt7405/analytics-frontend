@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). Step 7 in progress (7a–7d done; see its outcome). Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). Step 7 in progress (7a–7f done; see its outcome). Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -228,8 +228,10 @@ Search Console review (2026-09-28, per-URL exports from before 6d, summarized in
 | 7b (#43) | `BasketballTeamScheduleDifficulty` (958 lines) | `features/basketball/team-schedule-difficulty/`: `types`, `constants`, `data` (pure maths, 12 unit tests), `FilterGroup`, `DifficultyChart`, `StatsSummary`, `index`. Screenshots identical. |
 | 7c (#45) | `FootballTeamScheduleDifficulty` (996 lines) | `features/football/team-schedule-difficulty/`, same shape plus `GameTooltip` (was defined inside render); 11 unit tests. Kept separate from basketball: they have drifted (threshold split, location filter, 4 vs 2 logo columns); merging is step 8. Screenshots identical. |
 | 7d (#46) | `BasketballTeamWinsBreakdown` (1,515 lines) | `features/basketball/team-wins-breakdown/`: `data` (9 unit tests), `SeedRegions`, `WinsBar`, `ProjectedWinsMarker`, `GameRow` (the win and remaining-game rows were two ~190-line copies), `ColumnHeaders`, `ChartFooter`, `index`. New fixture `basketball.confChampAnalysis` (production ACC response) so the Duke page is compared with the seed map drawn. Screenshots identical. |
+| 7e (#47) | `BasketballCompareSchedulesChart` (1,240 lines) | `features/basketball/compare-schedules/`: `data` (10 unit tests), `FilterGroup`, `PercentileGrid`, `TeamColumn` (was the inner `renderTeamColumn`), `HighProbSection`, `GameTooltip`, `Legend`, `index`. Visual routes can now run `setup` steps; both compare pages are shot with a team picked. #47 also carried the 7c/7d rows of this table. Screenshots identical. |
+| 7f (#48) | `FootballCompareSchedulesChart` (920 lines) | `features/football/compare-schedules/`, reusing `football/team-schedule-difficulty/FilterGroup` (identical markup); a `logger.debug` dump effect removed; 8 unit tests. Screenshots identical. |
 
-Next: the files whose pages first need fixtures (compare-schedules charts, non-conference table, what-if, game preview); add each page to `VISUAL_ROUTES` with its fixtures before splitting. Then item 3 (resize hooks).
+Next: the files whose pages first need fixtures (non-conference table, what-if, game preview); add each page to `VISUAL_ROUTES` with its fixtures before splitting. Then item 3 (resize hooks).
 
 ## Step 8 — Merge proven duplicates behind shared building blocks
 
