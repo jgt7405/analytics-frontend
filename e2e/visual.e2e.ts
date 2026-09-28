@@ -25,7 +25,8 @@ const shotName = (route: string) => `${route.split("/").filter(Boolean).join("-"
 //   Here those endpoints answer at once with an empty 200 instead, so
 //   nothing retries and both sides get the same answer.
 // - Some sections mount (and fetch) only when scrolled into view, and
-//   charts re-lay out when the viewport changes (see fitViewportToPage).
+//   charts re-lay out when the viewport changes (see SHOT_HEIGHT).
+// - Chart.js animates on the canvas.
 // - Fonts use `font-display: optional` (see below).
 const EMPTY = JSON.stringify({ data: [] });
 
@@ -90,28 +91,19 @@ function trackDataRequests(page: Page) {
   };
 }
 
-/**
- * Make the viewport as tall as the page before the shot. Otherwise the
- * full-page screenshot resizes it mid-capture, which re-lays out responsive
- * charts and mounts sections that load only when scrolled into view. Here
- * that happens first, and their data settles, until the height is stable.
- */
-async function fitViewportToPage(page: Page, data: ReturnType<typeof trackDataRequests>) {
-  const width = page.viewportSize()!.width;
-  let height = page.viewportSize()!.height;
-  for (let i = 0; i < 10; i++) {
-    const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
-    if (pageHeight === height) return;
-    height = pageHeight;
-    await page.setViewportSize({ width, height });
-    await data.idle();
-  }
-}
+// Every page is shot in one tall viewport, set before it loads, instead of
+// a full-page screenshot: that resizes the viewport mid-capture, which
+// re-lays out responsive charts (Chart.js sometimes comes back blank) and
+// mounts sections that load only when scrolled into view. With nothing
+// ever resized, every section is in view from the first render. Taller
+// than any page here (longest ~3,500 px on mobile); the rest is blank.
+const SHOT_HEIGHT = 5_000;
 
 test.describe.configure({ timeout: 120_000 });
 
 for (const route of VISUAL_ROUTES) {
   test(`${route} looks the same as on the base branch`, async ({ page }) => {
+    await page.setViewportSize({ width: page.viewportSize()!.width, height: SHOT_HEIGHT });
     await answerMissingFixturesEmpty(page);
     // The site's fonts use `font-display: optional`: a font that isn't ready
     // within ~100 ms is skipped for that page load, which happens at random
@@ -122,9 +114,14 @@ for (const route of VISUAL_ROUTES) {
     const data = trackDataRequests(page);
     await page.reload({ waitUntil: "load" });
     await data.idle();
-    await fitViewportToPage(page, data);
+    // Charts can mount late (their code loads on demand) and Chart.js
+    // animates for 1 s, which "animations: disabled" doesn't stop (canvas).
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+    // Loading skeletons (chart placeholders, table shimmers) use
+    // animate-pulse; the page is done when none is left.
+    await expect(page.locator(".animate-pulse")).toHaveCount(0, { timeout: 30_000 });
+    await page.waitForTimeout(1_500);
     await expect(page).toHaveScreenshot(shotName(route), {
-      fullPage: true,
       animations: "disabled",
       caret: "hide",
       // Anti-aliasing noise in charts is a few pixels; a real change is
