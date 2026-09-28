@@ -15,9 +15,17 @@ const executablePath =
 
 const PORT = Number(process.env.E2E_PORT ?? 3200);
 
+// Screenshot comparisons (e2e/visual.e2e.ts) run only through
+// scripts/visual-compare.mjs: it sets VISUAL_SNAPSHOT_DIR, takes the
+// reference shots from a build of the base branch (E2E_APP_DIR), then
+// compares this build against them. Nothing is committed.
+const VISUAL_SNAPSHOT_DIR = process.env.VISUAL_SNAPSHOT_DIR;
+
 export default defineConfig({
   testDir: "e2e",
   testMatch: "**/*.e2e.ts",
+  testIgnore: VISUAL_SNAPSHOT_DIR ? undefined : "**/visual.e2e.ts",
+  snapshotPathTemplate: `${VISUAL_SNAPSHOT_DIR ?? ".visual/snapshots"}/{projectName}/{arg}{ext}`,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -34,6 +42,9 @@ export default defineConfig({
   globalSetup: "./e2e/global-setup.ts",
   webServer: {
     command: `npx next start -p ${PORT}`,
+    // The app to serve: this checkout, or the base build during a
+    // screenshot comparison.
+    cwd: process.env.E2E_APP_DIR,
     env: { BACKEND_API_URL: FIXTURE_BACKEND_URL },
     url: `http://localhost:${PORT}/robots.txt`,
     // Always start a fresh server: a running one may point at another backend.

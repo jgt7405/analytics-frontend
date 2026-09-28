@@ -17,6 +17,7 @@ Every change, however small:
 3. One concern per pull request. Framework upgrades, URL changes and component merges never share a PR.
 4. CI (`.github/workflows/ci.yml`) is green before merging.
 5. Performance changes state before/after numbers against `docs/baselines/`.
+6. Refactors meant to change nothing visible (splitting files, plan step 7): `npm run visual:compare` passes, with the affected pages listed in `e2e/visual.e2e.ts`. CI runs it on every PR (`Visual` job).
 
 ## Commands
 
@@ -30,6 +31,7 @@ Every change, however small:
 | `npm run build` / `npm start` | Production build (Turbopack) / serve it |
 | `npm run size` / `size:check` | Per-route JS sizes / compare against `scripts/bundle-budgets.json` |
 | `npm run test:e2e` | Playwright smoke and fixture tests against a production build (run `npm run build` first), served by the fixture backend in `fixtures/backend/` |
+| `npm run visual:compare` | Screenshots of the pages in `e2e/visual.e2e.ts`, this build against a build of `origin/main` (`--base <ref>`), same machine and fixtures; more than 20 differing pixels per page fails (`docs/testing.md`) |
 | `npm run baseline:lighthouse` / `baseline:proxy` | Measure production (needs network access to the site) |
 
 The backend does not need to be reachable for `verify`, `build` or `test:e2e`: tests use the curated fixtures in `fixtures/backend/` (see `docs/testing.md`), and pages render their error states for anything without a fixture.
