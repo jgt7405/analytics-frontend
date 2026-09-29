@@ -3,13 +3,14 @@ import { readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import sharp from "sharp";
 
-// Screenshot comparison for behavior-preserving refactors (plan step 7).
+// Screenshot comparison for behavior-preserving refactors (plan steps 7-8).
 // Run with `npm run visual:compare` (scripts/visual-compare.mjs), never on
 // its own: the reference shots are taken from a build of the base branch in
 // the same run, against the same fixtures, so they match pixel for pixel.
 //
-// Routes: the pages that render the files step 7 splits, with fixture data.
-// Add a page here (and its fixtures) before splitting a file it renders.
+// Routes: the pages that render the files steps 7-8 split or merge, with
+// fixture data. Add a page here (and its fixtures) before changing a file it
+// renders.
 // `setup` runs after the page has settled, for views reached by clicking;
 // give those routes a `name` so their shot doesn't clash with the plain page.
 interface VisualRoute {
@@ -29,6 +30,10 @@ const VISUAL_ROUTES: VisualRoute[] = [
   { path: "/football/team/Alabama/" },
   { path: "/basketball/standings/" },
   { path: "/football/standings/" },
+  // standings history and first-place charts (fixtures dated in 2025-26, so
+  // the archive page's axis doesn't move with today's date)
+  { path: "/basketball/2025-26/standings/" },
+  { path: "/football/2025-26/standings/" },
   // basketball compare-schedules (drawn once a team is picked)
   { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
   // football compare-schedules

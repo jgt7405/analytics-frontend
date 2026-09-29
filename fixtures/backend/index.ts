@@ -23,12 +23,14 @@ import basketballConferenceData from "./basketball.conferenceData.json";
 import basketballNextGameImpact from "./basketball.nextGameImpact.json";
 import basketballNonconfAnalysis from "./basketball.nonconfAnalysis.json";
 import basketballStandings from "./basketball.standings.json";
+import basketballStandingsHistory from "./basketball.standingsHistory.json";
 import basketballTeam from "./basketball.team.json";
 import basketballTeams from "./basketball.teams.json";
 import basketballUpcomingGames from "./basketball.upcomingGames.json";
 import basketballWhatIfBaseline from "./basketball.whatIfBaseline.json";
 import footballConferenceData from "./football.conferenceData.json";
 import footballStandings from "./football.standings.json";
+import footballStandingsHistory from "./football.standingsHistory.json";
 import footballTeam from "./football.team.json";
 import footballTeams from "./football.teams.json";
 import footballWhatIf from "./football.whatIf.json";
@@ -42,12 +44,14 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "basketball.nextGameImpact": basketballNextGameImpact,
   "basketball.nonconfAnalysis": basketballNonconfAnalysis,
   "basketball.standings": basketballStandings,
+  "basketball.standingsHistory": basketballStandingsHistory,
   "basketball.team": basketballTeam,
   "basketball.teams": basketballTeams,
   "basketball.upcomingGames": basketballUpcomingGames,
   "basketball.whatIfBaseline": basketballWhatIfBaseline,
   "football.conferenceData": footballConferenceData,
   "football.standings": footballStandings,
+  "football.standingsHistory": footballStandingsHistory,
   "football.team": footballTeam,
   "football.teams": footballTeams,
   "football.whatIf": footballWhatIf,
