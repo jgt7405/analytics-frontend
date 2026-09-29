@@ -101,7 +101,30 @@ const IMAGE_TYPES: Record<string, string> = {
   ".gif": "image/gif",
 };
 
+// Logos some charts load straight from public/ (`unoptimized` images, not
+// /_next/image) are sent the same way, scaled to at most this width: a
+// 1,000+ px original shown at 20-28 px was sometimes not yet painted in the
+// shot (Mountain West on the basketball conf-data page, mobile). 128 px
+// still covers a 28 px logo at the phone's 2.625 pixel ratio.
+const DIRECT_IMAGE_WIDTH = 128;
+
 async function serveImagesUnoptimized(page: Page) {
+  await page.route("**/images/**", async (route) => {
+    const { pathname } = new URL(route.request().url());
+    const extension = extname(pathname).toLowerCase();
+    const scalable = [".png", ".jpg", ".jpeg", ".webp"].includes(extension);
+    if (!pathname.startsWith("/images/") || !scalable) return route.fallback();
+    try {
+      const file = await readFile(join(PUBLIC_DIR, decodeURIComponent(pathname)));
+      const body = await sharp(file)
+        .resize({ width: DIRECT_IMAGE_WIDTH, withoutEnlargement: true })
+        .png()
+        .toBuffer();
+      await route.fulfill({ status: 200, contentType: "image/png", body });
+    } catch {
+      await route.fallback();
+    }
+  });
   await page.route("**/_next/image**", async (route) => {
     const params = new URL(route.request().url()).searchParams;
     const source = params.get("url") ?? "";
@@ -119,6 +142,27 @@ async function serveImagesUnoptimized(page: Page) {
       await route.fulfill({ status: 200, contentType: scalable ? "image/png" : type, body });
     } catch {
       await route.continue();
+    }
+  });
+}
+
+// The site's font is `font-display: optional`: a render that doesn't have it
+// within ~100 ms uses the fallback font for good. That still happened now
+// and then despite the warm reload below (a whole shot in the fallback
+// font), and html2canvas exports render a copy of the page in a new frame,
+// which often missed it (text wrapped differently in the saved image). Here
+// the CSS asks to wait for the font instead, so every render uses it.
+async function waitForWebFonts(page: Page) {
+  await page.route("**/_next/static/**/*.css", async (route) => {
+    try {
+      const response = await route.fetch();
+      const css = (await response.text()).replace(
+        /font-display:optional/g,
+        "font-display:block",
+      );
+      await route.fulfill({ response, body: css });
+    } catch {
+      // The page navigated (reload) while this request was in flight.
     }
   });
 }
@@ -238,6 +282,7 @@ for (const route of VISUAL_ROUTES) {
     await page.setViewportSize({ width: page.viewportSize()!.width, height: SHOT_HEIGHT });
     await answerMissingFixturesEmpty(page);
     await serveImagesUnoptimized(page);
+    await waitForWebFonts(page);
     // The site's fonts use `font-display: optional`: a font that isn't ready
     // within ~100 ms is skipped for that page load, which happens at random
     // under test load. Load the page once so fonts and logos are cached,
@@ -313,6 +358,20 @@ for (const route of VISUAL_ROUTES) {
       console.warn(`[visual] ${route.path}: reloaded images that had no data: ${reloaded.join(", ")}`);
     }
     await page.waitForTimeout(1_500);
+    // Pages are 20-30 px taller than SHOT_HEIGHT, so they can scroll, and a
+    // shot now and then came out scrolled by 2 px (everything below the
+    // sticky header shifted; ~77,000 differing pixels). Shoot from the top.
+    const scrolled = await page.evaluate(async () => {
+      const y = window.scrollY;
+      window.scrollTo(0, 0);
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      );
+      return y;
+    });
+    if (scrolled !== 0) {
+      console.warn(`[visual] ${route.path}: page was scrolled by ${scrolled} px; scrolled back to the top`);
+    }
     await expect(page)
       .toHaveScreenshot(shotName(route), {
         animations: "disabled",
