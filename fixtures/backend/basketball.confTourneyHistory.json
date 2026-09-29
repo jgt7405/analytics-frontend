@@ -1,0 +1,408 @@
+{
+ "_note": "Hand-written in the shape of /conf_tourney/<conference>/history for the screenshot comparison: the backend tests' fake database has no history tables. The teams of basketball.standings.json, straight lines between fixed start and end values, dates inside the 2025-26 season (shot on the archive page). Only champion_data is drawn; the other rounds are empty.",
+ "champion_data": [
+  {
+   "team_name": "Duke",
+   "date": "2025-11-03",
+   "champion_pct": 40.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2025-11-03",
+   "champion_pct": 25.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2025-11-03",
+   "champion_pct": 20.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2025-11-03",
+   "champion_pct": 15.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2025-11-17",
+   "champion_pct": 40.9,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2025-11-17",
+   "champion_pct": 24.4,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2025-11-17",
+   "champion_pct": 21.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2025-11-17",
+   "champion_pct": 13.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2025-12-01",
+   "champion_pct": 41.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2025-12-01",
+   "champion_pct": 23.9,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2025-12-01",
+   "champion_pct": 22.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2025-12-01",
+   "champion_pct": 12.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2025-12-15",
+   "champion_pct": 42.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2025-12-15",
+   "champion_pct": 23.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2025-12-15",
+   "champion_pct": 23.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2025-12-15",
+   "champion_pct": 11.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2025-12-29",
+   "champion_pct": 43.6,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2025-12-29",
+   "champion_pct": 22.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2025-12-29",
+   "champion_pct": 24.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2025-12-29",
+   "champion_pct": 9.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2026-01-12",
+   "champion_pct": 44.4,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2026-01-12",
+   "champion_pct": 22.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2026-01-12",
+   "champion_pct": 25.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2026-01-12",
+   "champion_pct": 8.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2026-01-26",
+   "champion_pct": 45.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2026-01-26",
+   "champion_pct": 21.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2026-01-26",
+   "champion_pct": 26.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2026-01-26",
+   "champion_pct": 7.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2026-02-09",
+   "champion_pct": 46.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2026-02-09",
+   "champion_pct": 21.1,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2026-02-09",
+   "champion_pct": 27.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2026-02-09",
+   "champion_pct": 5.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2026-02-23",
+   "champion_pct": 47.1,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2026-02-23",
+   "champion_pct": 20.6,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2026-02-23",
+   "champion_pct": 28.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2026-02-23",
+   "champion_pct": 4.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Duke",
+   "date": "2026-03-09",
+   "champion_pct": 48.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/duke.png",
+    "primary_color": "#003087",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "North Carolina",
+   "date": "2026-03-09",
+   "champion_pct": 20.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/north_carolina.png",
+    "primary_color": "#7BAFD4",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Virginia",
+   "date": "2026-03-09",
+   "champion_pct": 29.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/virginia.png",
+    "primary_color": "#232D4B",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Wake Forest",
+   "date": "2026-03-09",
+   "champion_pct": 3.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/wake_forest.png",
+    "primary_color": "#9E7E38",
+    "secondary_color": "#FFFFFF"
+   }
+  }
+ ],
+ "finals_data": [],
+ "semifinals_data": [],
+ "quarterfinals_data": []
+}

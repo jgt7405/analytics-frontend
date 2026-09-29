@@ -18,11 +18,16 @@ import { Line } from "react-chartjs-2";
 import { HISTORY_CARD_CLASS } from "../history-chart/card";
 import { createHoverLensPlugin } from "../history-chart/hoverLens";
 import { useIsDark } from "../history-chart/useIsDark";
-import { layoutEndLogos, tooltipRows } from "./data";
+import {
+  layoutEndLogos,
+  layoutEndLogosCascade,
+  tooltipRows,
+  valueOf,
+} from "./data";
 import type {
-  FirstPlaceData,
-  FirstPlaceHistoryChartProps,
-  FirstPlaceTheme,
+  ProbabilityHistoryChartProps,
+  ProbabilityRow,
+  ProbabilityTheme,
   TeamDataPoint,
   TeamInfo,
 } from "./types";
@@ -32,18 +37,21 @@ interface ChartDimensions {
   canvas: HTMLCanvasElement;
 }
 
-// First place probability history, shared by basketball and football. The
-// sport adapters (BballFirstPlaceHistoryChart, FootballFirstPlaceChart) pass
-// a theme with what differs.
-export default function FirstPlaceHistoryChart({
-  firstPlaceData,
+// Team probability history (first place, conference champion, championship
+// game), shared by basketball and football. The adapters
+// (BballFirstPlaceHistoryChart, FootballFirstPlaceChart,
+// BasketballConfChampionHistoryChart, FootballConfChampionHistoryChart,
+// FootballChampGameHistoryChart) pass their rows and a theme with what
+// differs.
+export default function ProbabilityHistoryChart({
+  rows,
   season,
   headerRight,
   theme,
-}: FirstPlaceHistoryChartProps & { theme: FirstPlaceTheme }) {
-  const { tooltipId, lensPluginId, formatPct } = theme;
-  const hoverLensPlugin = useMemo(
-    () => createHoverLensPlugin(lensPluginId),
+}: ProbabilityHistoryChartProps & { theme: ProbabilityTheme }) {
+  const { tooltipId, lensPluginId, formatPct, valueKey } = theme;
+  const chartPlugins = useMemo(
+    () => (lensPluginId ? [createHoverLensPlugin(lensPluginId)] : []),
     [lensPluginId],
   );
   const { isMobile } = useResponsive();
@@ -57,7 +65,7 @@ export default function FirstPlaceHistoryChart({
 
   useEffect(() => {
     setSelectedTeams(new Set());
-  }, [firstPlaceData]);
+  }, [rows]);
 
   useEffect(() => {
     return () => {
@@ -95,14 +103,14 @@ export default function FirstPlaceHistoryChart({
     updateDimensions();
 
     return () => observer.disconnect();
-  }, [firstPlaceData]);
+  }, [rows]);
 
-  const range = theme.dateRange(season, firstPlaceData);
-  const filteredFirstPlaceData = filterDataToRange(firstPlaceData, range);
+  const range = theme.dateRange(season, rows);
+  const filteredRows = filterDataToRange(rows, range);
 
   // Deduplicate by team and date, keeping earliest version_id
-  const dataByTeamAndDate = new Map<string, FirstPlaceData>();
-  filteredFirstPlaceData.forEach((item: FirstPlaceData) => {
+  const dataByTeamAndDate = new Map<string, ProbabilityRow>();
+  filteredRows.forEach((item: ProbabilityRow) => {
     const key = `${item.team_name}-${item.date}`;
     if (
       !dataByTeamAndDate.has(key) ||
@@ -114,9 +122,7 @@ export default function FirstPlaceHistoryChart({
     }
   });
 
-  const allDatesFromData = [
-    ...new Set(filteredFirstPlaceData.map((d) => d.date)),
-  ].sort();
+  const allDatesFromData = [...new Set(filteredRows.map((d) => d.date))].sort();
   const chartLabels = buildChartLabels(allDatesFromData, range, theme.sport);
   const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
 
@@ -133,7 +139,7 @@ export default function FirstPlaceHistoryChart({
     if (dataIndex !== undefined) {
       teamData[item.team_name].data.push({
         x: chartLabels[dataIndex].displayLabel,
-        y: item.first_place_pct,
+        y: valueOf(item, valueKey),
       });
     }
   });
@@ -240,16 +246,15 @@ export default function FirstPlaceHistoryChart({
           const { tooltip: tooltipModel, chart } = args;
 
           let heading = "";
-          let rows: TooltipRow[] = [];
+          let lines: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
             heading = chartLabels[dataIndex]?.displayLabel ?? "";
-            rows = tooltipRows(
-              theme.tooltipRows,
+            lines = tooltipRows(
+              theme,
               chartLabels[dataIndex] ?? {},
-              filteredFirstPlaceData,
+              filteredRows,
               teamData,
-              formatPct,
             );
           }
 
@@ -257,7 +262,7 @@ export default function FirstPlaceHistoryChart({
             id: tooltipId,
             isDark,
             heading,
-            rows,
+            rows: lines,
             verticalOffset: 0,
           });
         },
@@ -281,7 +286,7 @@ export default function FirstPlaceHistoryChart({
       y: {
         title: {
           display: true,
-          text: "First Place Probability (%)",
+          text: theme.yAxisLabel,
           color: isDark ? "#cbd5e1" : "#334155",
           font: {
             weight: 600,
@@ -336,7 +341,9 @@ export default function FirstPlaceHistoryChart({
         ? teamsForLogos
         : allTeamsSorted.filter((t) => selectedTeams.has(t.team_name));
 
-    return layoutEndLogos(
+    const layout =
+      theme.logoLayout === "cascade" ? layoutEndLogosCascade : layoutEndLogos;
+    return layout(
       visibleTeams,
       (pct) => getChartJsYPosition(pct) || 0,
       { top: chartTop, bottom: chartBottom },
@@ -351,7 +358,7 @@ export default function FirstPlaceHistoryChart({
         data-screenshot-hide="true"
       >
         <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
-          First Place Probability History
+          {theme.title}
           <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
             (Over Time)
           </span>
@@ -361,12 +368,21 @@ export default function FirstPlaceHistoryChart({
     </div>
   );
 
-  if (filteredFirstPlaceData.length === 0) {
+  if (filteredRows.length === 0) {
+    if (theme.emptyState === "bare") {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500 dark:text-gray-300">
+            {theme.emptyText}
+          </div>
+        </div>
+      );
+    }
     return theme.emptyState === "compact" ? (
       <div className={HISTORY_CARD_CLASS} style={{ isolation: "isolate" }}>
         {header}
         <div className="flex items-center justify-center px-4 pb-6 text-gray-500 dark:text-gray-300">
-          No first place probability data available
+          {theme.emptyText}
         </div>
       </div>
     ) : (
@@ -374,7 +390,7 @@ export default function FirstPlaceHistoryChart({
         {header}
         <div className="flex h-64 items-center justify-center px-4 pb-5">
           <div className="text-gray-500 dark:text-gray-300">
-            No first place probability data available
+            {theme.emptyText}
           </div>
         </div>
       </div>
@@ -397,7 +413,7 @@ export default function FirstPlaceHistoryChart({
             ref={chartRef}
             data={chartData}
             options={options}
-            plugins={[hoverLensPlugin]}
+            plugins={chartPlugins}
             role="img"
             aria-label={theme.ariaLabel}
           />
@@ -541,7 +557,7 @@ export default function FirstPlaceHistoryChart({
                 key={team.team_name}
                 type="button"
                 aria-pressed={isSelected}
-                aria-label={`${team.team_name}, final first place probability ${formatPct(team.final_pct)}. Select to emphasize this team.`}
+                aria-label={`${team.team_name}, final ${theme.chipValueName} ${formatPct(team.final_pct)}. Select to emphasize this team.`}
                 onClick={() => handleTeamClick(team.team_name)}
                 style={{
                   boxShadow: `inset 0 0 0 1px ${

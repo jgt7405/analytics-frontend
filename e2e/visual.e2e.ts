@@ -37,6 +37,10 @@ const VISUAL_ROUTES: VisualRoute[] = [
   // conference bids history charts (fixtures dated in 2025-26, as above)
   { path: "/basketball/2025-26/conf-data/" },
   { path: "/football/2025-26/conf-data/" },
+  // team probability history charts: conference champion (both sports) and
+  // championship game (football), fixtures dated in 2025-26 as above
+  { path: "/basketball/2025-26/conf-tourney/" },
+  { path: "/football/2025-26/conf-champ/" },
   // basketball compare-schedules (drawn once a team is picked)
   { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
   // football compare-schedules
