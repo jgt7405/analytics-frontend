@@ -20,10 +20,12 @@ import { http, HttpResponse, type HttpHandler } from "msw";
 import { ENDPOINTS, type EndpointKey } from "../../src/api/endpoints";
 import basketballConfChampAnalysis from "./basketball.confChampAnalysis.json";
 import basketballConferenceData from "./basketball.conferenceData.json";
+import basketballNextGameImpact from "./basketball.nextGameImpact.json";
 import basketballNonconfAnalysis from "./basketball.nonconfAnalysis.json";
 import basketballStandings from "./basketball.standings.json";
 import basketballTeam from "./basketball.team.json";
 import basketballTeams from "./basketball.teams.json";
+import basketballUpcomingGames from "./basketball.upcomingGames.json";
 import basketballWhatIfBaseline from "./basketball.whatIfBaseline.json";
 import footballConferenceData from "./football.conferenceData.json";
 import footballStandings from "./football.standings.json";
@@ -37,10 +39,12 @@ type Row = Record<string, unknown>;
 export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "basketball.confChampAnalysis": basketballConfChampAnalysis,
   "basketball.conferenceData": basketballConferenceData,
+  "basketball.nextGameImpact": basketballNextGameImpact,
   "basketball.nonconfAnalysis": basketballNonconfAnalysis,
   "basketball.standings": basketballStandings,
   "basketball.team": basketballTeam,
   "basketball.teams": basketballTeams,
+  "basketball.upcomingGames": basketballUpcomingGames,
   "basketball.whatIfBaseline": basketballWhatIfBaseline,
   "football.conferenceData": footballConferenceData,
   "football.standings": footballStandings,
