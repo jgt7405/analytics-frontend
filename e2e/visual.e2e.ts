@@ -1,5 +1,5 @@
-import { expect, test, type Page, type Request } from "@playwright/test";
-import { readFile } from "node:fs/promises";
+import { expect, test, type Page, type Request, type TestInfo } from "@playwright/test";
+import { access, readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import sharp from "sharp";
 
@@ -195,6 +195,41 @@ test.describe.configure({ timeout: 180_000 });
 // arrived (a chart stuck on its loading skeleton in CI).
 test.use({ serviceWorkers: "block" });
 
+// Where a failed shot differs, logged to the job output: agent sessions
+// can't always download the `visual-diff` artifact. Reads Playwright's diff
+// image (differing pixels drawn in red) and names the elements at the
+// centre of the changed area.
+async function reportDifference(page: Page, testInfo: TestInfo, name: string) {
+  const diffPath = testInfo.outputPath(name.replace(/\.png$/, "-diff.png"));
+  if (!(await access(diffPath).then(() => true, () => false))) return;
+  const { data, info } = await sharp(diffPath).raw().toBuffer({ resolveWithObject: true });
+  let [left, top, right, bottom, count] = [Infinity, Infinity, -1, -1, 0];
+  for (let y = 0; y < info.height; y++) {
+    for (let x = 0; x < info.width; x++) {
+      const i = (y * info.width + x) * info.channels;
+      if (data[i] > 200 && data[i + 1] < 80 && data[i + 2] < 80) {
+        count++;
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y);
+      }
+    }
+  }
+  if (count === 0) return;
+  const elements = await page.evaluate(
+    ([x, y]) =>
+      document.elementsFromPoint(x, y).slice(0, 4).map((el) => {
+        const label = el.getAttribute("alt") ?? el.getAttribute("aria-label") ?? el.textContent ?? "";
+        return `<${el.tagName.toLowerCase()} class="${String(el.getAttribute("class") ?? "").slice(0, 60)}"> ${label.trim().slice(0, 60)}`;
+      }),
+    [(left + right) / 2, (top + bottom) / 2],
+  );
+  console.warn(
+    `[visual] ${name}: ${count} red diff pixels in x ${left}-${right}, y ${top}-${bottom}; at its centre: ${elements.join(" | ")}`,
+  );
+}
+
 for (const route of VISUAL_ROUTES) {
   test(`${route.name ?? route.path} looks the same as on the base branch`, async ({ page }) => {
     await page.setViewportSize({ width: page.viewportSize()!.width, height: SHOT_HEIGHT });
@@ -275,13 +310,18 @@ for (const route of VISUAL_ROUTES) {
       console.warn(`[visual] ${route.path}: reloaded images that had no data: ${reloaded.join(", ")}`);
     }
     await page.waitForTimeout(1_500);
-    await expect(page).toHaveScreenshot(shotName(route), {
-      animations: "disabled",
-      caret: "hide",
-      // Anti-aliasing noise in charts is a few pixels; a real change is
-      // hundreds (a one-word label change: ~440).
-      maxDiffPixels: 20,
-      timeout: 90_000,
-    });
+    await expect(page)
+      .toHaveScreenshot(shotName(route), {
+        animations: "disabled",
+        caret: "hide",
+        // Anti-aliasing noise in charts is a few pixels; a real change is
+        // hundreds (a one-word label change: ~440).
+        maxDiffPixels: 20,
+        timeout: 90_000,
+      })
+      .catch(async (error: unknown) => {
+        await reportDifference(page, test.info(), shotName(route)).catch(() => {});
+        throw error;
+      });
   });
 }
