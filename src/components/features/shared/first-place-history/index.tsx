@@ -15,17 +15,16 @@ import { ChartArea, Chart as ChartJS, TooltipModel } from "chart.js";
 import { RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
-import EndMarkers from "./EndMarkers";
 import { HISTORY_CARD_CLASS } from "../history-chart/card";
 import { createHoverLensPlugin } from "../history-chart/hoverLens";
 import { useIsDark } from "../history-chart/useIsDark";
+import { layoutEndLogos, tooltipRows } from "./data";
 import type {
-  LogoPosition,
-  StandingsHistoryChartProps,
-  StandingsHistoryTheme,
+  FirstPlaceData,
+  FirstPlaceHistoryChartProps,
+  FirstPlaceTheme,
   TeamDataPoint,
   TeamInfo,
-  TimelineData,
 } from "./types";
 
 interface ChartDimensions {
@@ -33,17 +32,16 @@ interface ChartDimensions {
   canvas: HTMLCanvasElement;
 }
 
-// Conference rankings history, shared by basketball and football. The sport
-// adapters (BballStandingsHistoryChart, FootballStandingsHistoryChart) pass a
-// theme with the few things that differ.
-export default function StandingsHistoryChart({
-  timelineData,
-  conferenceSize,
+// First place probability history, shared by basketball and football. The
+// sport adapters (BballFirstPlaceHistoryChart, FootballFirstPlaceChart) pass
+// a theme with what differs.
+export default function FirstPlaceHistoryChart({
+  firstPlaceData,
   season,
   headerRight,
   theme,
-}: StandingsHistoryChartProps & { theme: StandingsHistoryTheme }) {
-  const { tooltipId, lensPluginId } = theme;
+}: FirstPlaceHistoryChartProps & { theme: FirstPlaceTheme }) {
+  const { tooltipId, lensPluginId, formatPct } = theme;
   const hoverLensPlugin = useMemo(
     () => createHoverLensPlugin(lensPluginId),
     [lensPluginId],
@@ -59,7 +57,7 @@ export default function StandingsHistoryChart({
 
   useEffect(() => {
     setSelectedTeams(new Set());
-  }, [timelineData]);
+  }, [firstPlaceData]);
 
   useEffect(() => {
     return () => {
@@ -97,14 +95,14 @@ export default function StandingsHistoryChart({
     updateDimensions();
 
     return () => observer.disconnect();
-  }, [timelineData, conferenceSize]);
+  }, [firstPlaceData]);
 
-  const range = theme.dateRange(season, timelineData);
-  const filteredTimelineData = filterDataToRange(timelineData, range);
+  const range = theme.dateRange(season, firstPlaceData);
+  const filteredFirstPlaceData = filterDataToRange(firstPlaceData, range);
 
   // Deduplicate by team and date, keeping earliest version_id
-  const dataByTeamAndDate = new Map<string, TimelineData>();
-  filteredTimelineData.forEach((item: TimelineData) => {
+  const dataByTeamAndDate = new Map<string, FirstPlaceData>();
+  filteredFirstPlaceData.forEach((item: FirstPlaceData) => {
     const key = `${item.team_name}-${item.date}`;
     if (
       !dataByTeamAndDate.has(key) ||
@@ -117,7 +115,7 @@ export default function StandingsHistoryChart({
   });
 
   const allDatesFromData = [
-    ...new Set(filteredTimelineData.map((d) => d.date)),
+    ...new Set(filteredFirstPlaceData.map((d) => d.date)),
   ].sort();
   const chartLabels = buildChartLabels(allDatesFromData, range, theme.sport);
   const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
@@ -135,31 +133,37 @@ export default function StandingsHistoryChart({
     if (dataIndex !== undefined) {
       teamData[item.team_name].data.push({
         x: chartLabels[dataIndex].displayLabel,
-        y: item.avg_standing,
+        y: item.first_place_pct,
       });
     }
   });
 
-  const dates = chartLabels.map((l) => l.displayLabel);
+  const displayLabels = chartLabels.map((l) => l.displayLabel);
 
-  const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime(),
-  );
-  const lastDate = allDates[allDates.length - 1];
-  const finalStandings = filteredTimelineData
-    .filter((item) => item.date === lastDate)
-    .sort((a, b) => a.avg_standing - b.avg_standing);
+  const teamsForLogos = Object.entries(teamData)
+    .map(([teamName, team]) => {
+      const finalPct = team.data[team.data.length - 1]?.y || 0;
+      return {
+        team_name: teamName,
+        final_pct: finalPct,
+        team_info: team.team_info,
+        should_show: finalPct >= 3,
+      };
+    })
+    .filter((team) => team.should_show)
+    .sort((a, b) => b.final_pct - a.final_pct);
 
-  // All teams sorted by final standing for bottom logos
-  const allTeamsSorted = finalStandings.map((item) => {
-    const points = teamData[item.team_name]?.data || [];
-    const lastPoint = points[points.length - 1];
-    return {
-      team_name: item.team_name,
-      avg_standing: lastPoint?.y ?? item.avg_standing,
-      team_info: item.team_info,
-    };
-  });
+  // All teams sorted by final percentage for bottom logos
+  const allTeamsSorted = Object.entries(teamData)
+    .map(([teamName, team]) => {
+      const finalPct = team.data[team.data.length - 1]?.y || 0;
+      return {
+        team_name: teamName,
+        final_pct: finalPct,
+        team_info: team.team_info,
+      };
+    })
+    .sort((a, b) => b.final_pct - a.final_pct);
 
   const clearSelectedTeams = () => setSelectedTeams(new Set());
 
@@ -188,7 +192,6 @@ export default function StandingsHistoryChart({
   };
 
   const datasets = Object.entries(teamData).map(([teamName, team]) => {
-    // Show team if no teams are selected OR this team is in the selected set
     const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
     const color = isSelected
       ? team.team_info.primary_color || "#000000"
@@ -204,13 +207,22 @@ export default function StandingsHistoryChart({
       pointRadius: 0,
       pointHoverRadius: 0,
       tension: 0.1,
+      fill: false,
     };
   });
 
   const chartData = {
-    labels: dates,
+    labels: displayLabels,
     datasets,
   };
+
+  const yAxisMax = (() => {
+    const allValues = Object.values(teamData).flatMap((team) =>
+      team.data.map((d: TeamDataPoint) => d.y),
+    );
+    const maxValue = allValues.length > 0 ? Math.max(...allValues) : 0;
+    return Math.max(20, Math.ceil(maxValue / 10) * 10);
+  })();
 
   const options = {
     responsive: true,
@@ -231,18 +243,14 @@ export default function StandingsHistoryChart({
           let rows: TooltipRow[] = [];
           if (tooltipModel.body) {
             const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const isoDate = chartLabels[dataIndex]?.isoDate;
             heading = chartLabels[dataIndex]?.displayLabel ?? "";
-            rows = filteredTimelineData
-              .filter((item) => item.date === isoDate)
-              .sort((a, b) => a.avg_standing - b.avg_standing)
-              .map((item, index) => ({
-                label: `${index + 1}. ${item.team_name}`,
-                value: item.avg_standing.toFixed(1),
-                color: item.team_info.primary_color || "#000000",
-                logoUrl:
-                  item.team_info.logo_url || "/images/team_logos/default.png",
-              }));
+            rows = tooltipRows(
+              theme.tooltipRows,
+              chartLabels[dataIndex] ?? {},
+              filteredFirstPlaceData,
+              teamData,
+              formatPct,
+            );
           }
 
           renderExternalTooltip(chart, tooltipModel, {
@@ -273,26 +281,22 @@ export default function StandingsHistoryChart({
       y: {
         title: {
           display: true,
-          text: "Average Standing",
+          text: "First Place Probability (%)",
           color: isDark ? "#cbd5e1" : "#334155",
           font: {
             weight: 600,
             size: isMobile ? 13 : 15,
           },
         },
-        reverse: true,
-        min: 1,
-        max: conferenceSize,
+        min: 0,
+        max: yAxisMax,
         ticks: {
-          stepSize: 1,
           color: isDark ? "#94a3b8" : "#475569",
           font: {
             weight: 600,
             size: isMobile ? 13 : 15,
           },
-          callback: function (value: string | number) {
-            return Number(value);
-          },
+          callback: (value: string | number) => `${value}%`,
         },
         grid: {
           color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
@@ -301,7 +305,7 @@ export default function StandingsHistoryChart({
       },
     },
     layout: {
-      padding: { left: 10, right: 76, top: 14 },
+      padding: { left: 10, right: theme.rightPadding, top: 14 },
     },
     animation: {
       duration: 750,
@@ -310,83 +314,79 @@ export default function StandingsHistoryChart({
 
   const chartHeight = isMobile ? 420 : 560;
 
-  const getChartJsYPosition = (standing: number) => {
+  const getChartJsYPosition = (percentage: number) => {
     if (!chartDimensions?.chartArea) return null;
     const { top, bottom } = chartDimensions.chartArea;
-    return top + ((standing - 1) / (conferenceSize - 1)) * (bottom - top);
+    return top + ((yAxisMax - percentage) / yAxisMax) * (bottom - top);
   };
 
-  const getAdjustedLogoPositions = (): LogoPosition[] => {
+  const getAdjustedLogoPositions = () => {
     if (!chartDimensions) return [];
-
-    const minSpacing = isMobile ? 21 : 25;
+    const minSpacing = isMobile
+      ? theme.logoSpacing.mobile
+      : theme.logoSpacing.desktop;
     const chartTop = chartDimensions.chartArea.top;
     const chartBottom = chartDimensions.chartArea.bottom - 15;
 
-    // Show logos for teams that are either all teams OR selected teams
+    // Show logos for teams that are either:
+    // 1. Above threshold AND (no selection OR in selection)
+    // 2. Below threshold but IN selection
     const visibleTeams =
       selectedTeams.size === 0
-        ? finalStandings
-        : finalStandings.filter((team) => selectedTeams.has(team.team_name));
+        ? teamsForLogos
+        : allTeamsSorted.filter((t) => selectedTeams.has(t.team_name));
 
-    const positions = visibleTeams.map((team) => {
-      const teamDataPoint = teamData[team.team_name];
-      const lastPoint = teamDataPoint?.data[teamDataPoint.data.length - 1];
-      const idealY =
-        getChartJsYPosition(lastPoint?.y || team.avg_standing) || 0;
-
-      return {
-        team,
-        idealY,
-        adjustedY: idealY,
-      };
-    });
-
-    // If only one team visible, don't adjust - use ideal position
-    if (positions.length === 1) {
-      return positions;
-    }
-
-    positions.sort((a, b) => a.team.avg_standing - b.team.avg_standing);
-
-    for (let i = 1; i < positions.length; i++) {
-      const currentPos = positions[i];
-      const prevPos = positions[i - 1];
-
-      if (currentPos.adjustedY - prevPos.adjustedY < minSpacing) {
-        currentPos.adjustedY = prevPos.adjustedY + minSpacing;
-      }
-
-      if (currentPos.adjustedY > chartBottom) {
-        currentPos.adjustedY = chartBottom;
-      }
-      if (currentPos.adjustedY < chartTop) {
-        currentPos.adjustedY = chartTop;
-      }
-    }
-
-    return positions;
+    return layoutEndLogos(
+      visibleTeams,
+      (pct) => getChartJsYPosition(pct) || 0,
+      { top: chartTop, bottom: chartBottom },
+      minSpacing,
+    );
   };
+
+  const header = (
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 px-[1.35rem] pb-4 pt-5">
+      <div
+        className="flex min-w-0 items-center gap-3"
+        data-screenshot-hide="true"
+      >
+        <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+          First Place Probability History
+          <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
+            (Over Time)
+          </span>
+        </h2>
+      </div>
+      {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+    </div>
+  );
+
+  if (filteredFirstPlaceData.length === 0) {
+    return theme.emptyState === "compact" ? (
+      <div className={HISTORY_CARD_CLASS} style={{ isolation: "isolate" }}>
+        {header}
+        <div className="flex items-center justify-center px-4 pb-6 text-gray-500 dark:text-gray-300">
+          No first place probability data available
+        </div>
+      </div>
+    ) : (
+      <div className={HISTORY_CARD_CLASS}>
+        {header}
+        <div className="flex h-64 items-center justify-center px-4 pb-5">
+          <div className="text-gray-500 dark:text-gray-300">
+            No first place probability data available
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       className={HISTORY_CARD_CLASS}
       style={{ zIndex: 10, isolation: "isolate" }}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 px-[1.35rem] pb-4 pt-5">
-        <div
-          className="flex min-w-0 items-center gap-3"
-          data-screenshot-hide="true"
-        >
-          <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
-            Conference Rankings History
-            <span className="block text-xs font-normal text-gray-500 dark:text-gray-300 sm:inline sm:ml-1.5 sm:text-sm">
-              (Over Time)
-            </span>
-          </h2>
-        </div>
-        {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
-      </div>
+      {header}
 
       <div className="px-3 pb-2 sm:px-4">
         <div
@@ -399,19 +399,119 @@ export default function StandingsHistoryChart({
             options={options}
             plugins={[hoverLensPlugin]}
             role="img"
-            aria-label="Conference rankings history showing every team's average standing over time. Hover a date to see all teams ranked for that date."
+            aria-label={theme.ariaLabel}
           />
 
           {chartDimensions && (
-            <EndMarkers
-              positions={getAdjustedLogoPositions()}
-              chartArea={chartDimensions.chartArea}
-              teamData={teamData}
-              selectedTeams={selectedTeams}
-              isDark={isDark}
-              isMobile={isMobile}
-              endLabelClassName={theme.endLabelClassName}
-            />
+            <div
+              className="pointer-events-none absolute left-0 top-0"
+              style={{ width: "100%", height: "100%" }}
+            >
+              {getAdjustedLogoPositions().map(({ team, idealY, adjustedY }) => {
+                const isSelected =
+                  selectedTeams.size === 0 || selectedTeams.has(team.team_name);
+                const teamColor = isSelected
+                  ? team.team_info.primary_color || "#94a3b8"
+                  : "#d1d5db";
+
+                return (
+                  <div key={`end-${team.team_name}`}>
+                    <svg
+                      className="absolute left-0 top-0"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <line
+                        x1={chartDimensions.chartArea.right}
+                        y1={idealY}
+                        x2={chartDimensions.chartArea.right + 6}
+                        y2={adjustedY}
+                        stroke={teamColor}
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                        opacity="0.7"
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="8"
+                        fill={teamColor}
+                        opacity={isDark ? "0.24" : "0.18"}
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="4.25"
+                        fill={isDark ? "#0f172a" : "#ffffff"}
+                        stroke={teamColor}
+                        strokeWidth="2.5"
+                        style={{
+                          filter: `drop-shadow(0 0 3px ${teamColor})`,
+                        }}
+                      />
+                      <circle
+                        cx={chartDimensions.chartArea.right}
+                        cy={idealY}
+                        r="1.75"
+                        fill={teamColor}
+                      />
+                    </svg>
+                  </div>
+                );
+              })}
+
+              <div className="absolute inset-0">
+                {getAdjustedLogoPositions().map(({ team, adjustedY }) => {
+                  const isSelected =
+                    selectedTeams.size === 0 ||
+                    selectedTeams.has(team.team_name);
+
+                  return (
+                    <div
+                      key={`logo-${team.team_name}`}
+                      className="absolute flex items-center"
+                      style={{
+                        left: `${chartDimensions.chartArea.right + 8}px`,
+                        top: `${adjustedY - 10}px`,
+                        zIndex: 10,
+                        opacity: isSelected ? 1 : 0.3,
+                      }}
+                    >
+                      <div
+                        style={{
+                          filter: isSelected ? "none" : "grayscale(100%)",
+                        }}
+                      >
+                        <TeamLogo
+                          logoUrl={
+                            team.team_info.logo_url ||
+                            "/images/team_logos/default.png"
+                          }
+                          teamName={team.team_name}
+                          size={isMobile ? 18 : 20}
+                        />
+                      </div>
+                      <span
+                        className={`${theme.endLabelClassName} text-left text-xs font-medium leading-none tabular-nums`}
+                        style={{
+                          color: isSelected
+                            ? team.team_info.primary_color || "#000000"
+                            : "#d1d5db",
+                          alignSelf: "stretch",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        {formatPct(team.final_pct)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -441,11 +541,9 @@ export default function StandingsHistoryChart({
                 key={team.team_name}
                 type="button"
                 aria-pressed={isSelected}
-                aria-label={`${team.team_name}, final standing ${team.avg_standing.toFixed(1)}. Select to emphasize this team.`}
+                aria-label={`${team.team_name}, final first place probability ${formatPct(team.final_pct)}. Select to emphasize this team.`}
                 onClick={() => handleTeamClick(team.team_name)}
                 style={{
-                  // Inset box-shadow instead of a real `border` - see the
-                  // CARD_CLASS comment above for why.
                   boxShadow: `inset 0 0 0 1px ${
                     team.team_info.primary_color ||
                     (isDark ? "#475569" : "#cbd5e1")
@@ -472,7 +570,7 @@ export default function StandingsHistoryChart({
                       : "#9ca3af",
                   }}
                 >
-                  {team.avg_standing.toFixed(1)}
+                  {formatPct(team.final_pct)}
                 </span>
               </button>
             );
