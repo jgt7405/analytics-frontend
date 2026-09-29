@@ -34,6 +34,9 @@ const VISUAL_ROUTES: VisualRoute[] = [
   // the archive page's axis doesn't move with today's date)
   { path: "/basketball/2025-26/standings/" },
   { path: "/football/2025-26/standings/" },
+  // conference bids history charts (fixtures dated in 2025-26, as above)
+  { path: "/basketball/2025-26/conf-data/" },
+  { path: "/football/2025-26/conf-data/" },
   // basketball compare-schedules (drawn once a team is picked)
   { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
   // football compare-schedules

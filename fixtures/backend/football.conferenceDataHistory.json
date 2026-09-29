@@ -1,0 +1,884 @@
+{
+ "_note": "Hand-written in the shape of /football_conf_data/history for the screenshot comparison: the backend tests' fake database has no history tables. Straight lines between fixed start and end values, dates inside the 2025-26 season (shot on the archive page, so the axis doesn't move with today's date). Includes an FCS row (the chart drops it), a later-version duplicate of Southeastern's last point (avg_bids 9.9; the chart keeps the earlier version) and Sun Belt under the 0.3-bid logo threshold.",
+ "timeline_data": [
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-08-30",
+   "avg_bids": 3.6,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-08-30",
+   "avg_bids": 3.9,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-08-30",
+   "avg_bids": 1.6,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-08-30",
+   "avg_bids": 1.4,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-08-30",
+   "avg_bids": 0.6,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-08-30",
+   "avg_bids": 0.4,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-08-30",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-09-06",
+   "avg_bids": 3.64,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-09-06",
+   "avg_bids": 3.86,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-09-06",
+   "avg_bids": 1.63,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-09-06",
+   "avg_bids": 1.38,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-09-06",
+   "avg_bids": 0.59,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-09-06",
+   "avg_bids": 0.38,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-09-06",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-09-13",
+   "avg_bids": 3.68,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-09-13",
+   "avg_bids": 3.82,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-09-13",
+   "avg_bids": 1.66,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-09-13",
+   "avg_bids": 1.35,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-09-13",
+   "avg_bids": 0.58,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-09-13",
+   "avg_bids": 0.37,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-09-13",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-09-20",
+   "avg_bids": 3.72,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-09-20",
+   "avg_bids": 3.78,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-09-20",
+   "avg_bids": 1.69,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-09-20",
+   "avg_bids": 1.33,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-09-20",
+   "avg_bids": 0.58,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-09-20",
+   "avg_bids": 0.35,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-09-20",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-09-27",
+   "avg_bids": 3.75,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-09-27",
+   "avg_bids": 3.75,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-09-27",
+   "avg_bids": 1.72,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-09-27",
+   "avg_bids": 1.31,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-09-27",
+   "avg_bids": 0.57,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-09-27",
+   "avg_bids": 0.34,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-09-27",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-10-04",
+   "avg_bids": 3.79,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-10-04",
+   "avg_bids": 3.71,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-10-04",
+   "avg_bids": 1.75,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-10-04",
+   "avg_bids": 1.28,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-10-04",
+   "avg_bids": 0.56,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-10-04",
+   "avg_bids": 0.32,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-10-04",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-10-11",
+   "avg_bids": 3.83,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-10-11",
+   "avg_bids": 3.67,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-10-11",
+   "avg_bids": 1.78,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-10-11",
+   "avg_bids": 1.26,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-10-11",
+   "avg_bids": 0.55,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-10-11",
+   "avg_bids": 0.31,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-10-11",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-10-18",
+   "avg_bids": 3.87,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-10-18",
+   "avg_bids": 3.63,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-10-18",
+   "avg_bids": 1.82,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-10-18",
+   "avg_bids": 1.24,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-10-18",
+   "avg_bids": 0.55,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-10-18",
+   "avg_bids": 0.29,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-10-18",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-10-25",
+   "avg_bids": 3.91,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-10-25",
+   "avg_bids": 3.59,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-10-25",
+   "avg_bids": 1.85,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-10-25",
+   "avg_bids": 1.22,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-10-25",
+   "avg_bids": 0.54,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-10-25",
+   "avg_bids": 0.28,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-10-25",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-11-01",
+   "avg_bids": 3.95,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-11-01",
+   "avg_bids": 3.55,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-11-01",
+   "avg_bids": 1.88,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-11-01",
+   "avg_bids": 1.19,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-11-01",
+   "avg_bids": 0.53,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-11-01",
+   "avg_bids": 0.26,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-11-01",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-11-08",
+   "avg_bids": 3.98,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-11-08",
+   "avg_bids": 3.52,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-11-08",
+   "avg_bids": 1.91,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-11-08",
+   "avg_bids": 1.17,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-11-08",
+   "avg_bids": 0.52,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-11-08",
+   "avg_bids": 0.25,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-11-08",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-11-15",
+   "avg_bids": 4.02,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-11-15",
+   "avg_bids": 3.48,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-11-15",
+   "avg_bids": 1.94,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-11-15",
+   "avg_bids": 1.15,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-11-15",
+   "avg_bids": 0.52,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-11-15",
+   "avg_bids": 0.23,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-11-15",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-11-22",
+   "avg_bids": 4.06,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-11-22",
+   "avg_bids": 3.44,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-11-22",
+   "avg_bids": 1.97,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-11-22",
+   "avg_bids": 1.12,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-11-22",
+   "avg_bids": 0.51,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-11-22",
+   "avg_bids": 0.22,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-11-22",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-11-29",
+   "avg_bids": 4.1,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   },
+   "version_id": "2025-11-29-a"
+  },
+  {
+   "conference_name": "Big Ten",
+   "date": "2025-11-29",
+   "avg_bids": 3.4,
+   "conf_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference_name": "Big 12",
+   "date": "2025-11-29",
+   "avg_bids": 2.0,
+   "conf_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference_name": "Atlantic Coast",
+   "date": "2025-11-29",
+   "avg_bids": 1.1,
+   "conf_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference_name": "American Athletic",
+   "date": "2025-11-29",
+   "avg_bids": 0.5,
+   "conf_info": {
+    "primary_color": "#FF0D00",
+    "logo_url": "/images/conf_logos/American_Athletic.png"
+   }
+  },
+  {
+   "conference_name": "Sun Belt",
+   "date": "2025-11-29",
+   "avg_bids": 0.2,
+   "conf_info": {
+    "primary_color": "#0A2240",
+    "logo_url": "/images/conf_logos/Sun_Belt.png"
+   }
+  },
+  {
+   "conference_name": "FCS",
+   "date": "2025-11-29",
+   "avg_bids": 0.3,
+   "conf_info": {
+    "primary_color": "#777777"
+   }
+  },
+  {
+   "conference_name": "Southeastern",
+   "date": "2025-11-29",
+   "avg_bids": 9.9,
+   "conf_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   },
+   "version_id": "2025-11-29-b"
+  }
+ ]
+}

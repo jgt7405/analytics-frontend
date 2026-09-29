@@ -1,0 +1,725 @@
+{
+ "_note": "Hand-written in the shape of /unified_conference_data/history for the screenshot comparison: the backend tests' fake database has no history tables. Straight lines between fixed start and end values, dates inside the 2025-26 season (shot on the archive page, so the axis doesn't move with today's date). Missouri Valley ends under the 1.1-bid logo threshold.",
+ "timeline_data": [
+  {
+   "conference": "Southeastern",
+   "date": "2025-11-03",
+   "avg_bids": 8.2,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2025-11-03",
+   "avg_bids": 8.8,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2025-11-03",
+   "avg_bids": 7.1,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2025-11-03",
+   "avg_bids": 5.4,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2025-11-03",
+   "avg_bids": 3.9,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2025-11-03",
+   "avg_bids": 1.6,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2025-11-03",
+   "avg_bids": 1.9,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2025-11-03",
+   "avg_bids": 1.2,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2025-11-17",
+   "avg_bids": 8.33,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2025-11-17",
+   "avg_bids": 8.72,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2025-11-17",
+   "avg_bids": 7.16,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2025-11-17",
+   "avg_bids": 5.31,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2025-11-17",
+   "avg_bids": 3.96,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2025-11-17",
+   "avg_bids": 1.63,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2025-11-17",
+   "avg_bids": 1.82,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2025-11-17",
+   "avg_bids": 1.18,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2025-12-01",
+   "avg_bids": 8.47,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2025-12-01",
+   "avg_bids": 8.64,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2025-12-01",
+   "avg_bids": 7.21,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2025-12-01",
+   "avg_bids": 5.22,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2025-12-01",
+   "avg_bids": 4.01,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2025-12-01",
+   "avg_bids": 1.67,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2025-12-01",
+   "avg_bids": 1.74,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2025-12-01",
+   "avg_bids": 1.16,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2025-12-15",
+   "avg_bids": 8.6,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2025-12-15",
+   "avg_bids": 8.57,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2025-12-15",
+   "avg_bids": 7.27,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2025-12-15",
+   "avg_bids": 5.13,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2025-12-15",
+   "avg_bids": 4.07,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2025-12-15",
+   "avg_bids": 1.7,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2025-12-15",
+   "avg_bids": 1.67,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2025-12-15",
+   "avg_bids": 1.13,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2025-12-29",
+   "avg_bids": 8.73,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2025-12-29",
+   "avg_bids": 8.49,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2025-12-29",
+   "avg_bids": 7.32,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2025-12-29",
+   "avg_bids": 5.04,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2025-12-29",
+   "avg_bids": 4.12,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2025-12-29",
+   "avg_bids": 1.73,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2025-12-29",
+   "avg_bids": 1.59,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2025-12-29",
+   "avg_bids": 1.11,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2026-01-12",
+   "avg_bids": 8.87,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2026-01-12",
+   "avg_bids": 8.41,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2026-01-12",
+   "avg_bids": 7.38,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2026-01-12",
+   "avg_bids": 4.96,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2026-01-12",
+   "avg_bids": 4.18,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2026-01-12",
+   "avg_bids": 1.77,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2026-01-12",
+   "avg_bids": 1.51,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2026-01-12",
+   "avg_bids": 1.09,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2026-01-26",
+   "avg_bids": 9.0,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2026-01-26",
+   "avg_bids": 8.33,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2026-01-26",
+   "avg_bids": 7.43,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2026-01-26",
+   "avg_bids": 4.87,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2026-01-26",
+   "avg_bids": 4.23,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2026-01-26",
+   "avg_bids": 1.8,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2026-01-26",
+   "avg_bids": 1.43,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2026-01-26",
+   "avg_bids": 1.07,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2026-02-09",
+   "avg_bids": 9.13,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2026-02-09",
+   "avg_bids": 8.26,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2026-02-09",
+   "avg_bids": 7.49,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2026-02-09",
+   "avg_bids": 4.78,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2026-02-09",
+   "avg_bids": 4.29,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2026-02-09",
+   "avg_bids": 1.83,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2026-02-09",
+   "avg_bids": 1.36,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2026-02-09",
+   "avg_bids": 1.04,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2026-02-23",
+   "avg_bids": 9.27,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2026-02-23",
+   "avg_bids": 8.18,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2026-02-23",
+   "avg_bids": 7.54,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2026-02-23",
+   "avg_bids": 4.69,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2026-02-23",
+   "avg_bids": 4.34,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2026-02-23",
+   "avg_bids": 1.87,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2026-02-23",
+   "avg_bids": 1.28,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2026-02-23",
+   "avg_bids": 1.02,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  },
+  {
+   "conference": "Southeastern",
+   "date": "2026-03-09",
+   "avg_bids": 9.4,
+   "conference_info": {
+    "primary_color": "#22356B",
+    "logo_url": "/images/conf_logos/Southeastern.png"
+   }
+  },
+  {
+   "conference": "Big Ten",
+   "date": "2026-03-09",
+   "avg_bids": 8.1,
+   "conference_info": {
+    "primary_color": "#0088CE",
+    "logo_url": "/images/conf_logos/Big_Ten.png"
+   }
+  },
+  {
+   "conference": "Big 12",
+   "date": "2026-03-09",
+   "avg_bids": 7.6,
+   "conference_info": {
+    "primary_color": "#C41230",
+    "logo_url": "/images/conf_logos/Big_12.png"
+   }
+  },
+  {
+   "conference": "Atlantic Coast",
+   "date": "2026-03-09",
+   "avg_bids": 4.6,
+   "conference_info": {
+    "primary_color": "#013CA6",
+    "logo_url": "/images/conf_logos/Atlantic_Coast.png"
+   }
+  },
+  {
+   "conference": "Big East",
+   "date": "2026-03-09",
+   "avg_bids": 4.4,
+   "conference_info": {
+    "primary_color": "#ED1A39",
+    "logo_url": "/images/conf_logos/Big_East.png"
+   }
+  },
+  {
+   "conference": "West Coast",
+   "date": "2026-03-09",
+   "avg_bids": 1.9,
+   "conference_info": {
+    "primary_color": "#25CAD2",
+    "logo_url": "/images/conf_logos/West_Coast.png"
+   }
+  },
+  {
+   "conference": "Mountain West",
+   "date": "2026-03-09",
+   "avg_bids": 1.2,
+   "conference_info": {
+    "primary_color": "#4F2D7F",
+    "logo_url": "/images/conf_logos/Mountain_West.png"
+   }
+  },
+  {
+   "conference": "Missouri Valley",
+   "date": "2026-03-09",
+   "avg_bids": 1.0,
+   "conference_info": {
+    "primary_color": "#003976",
+    "logo_url": "/images/conf_logos/Missouri_Valley.png"
+   }
+  }
+ ]
+}
