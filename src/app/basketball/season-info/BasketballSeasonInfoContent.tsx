@@ -89,7 +89,11 @@ export default function BasketballSeasonInfoContent() {
     if (!data) return [];
     const all = [...data.upsets, ...data.best_wins, ...data.worst_losses];
     const unique = Array.from(
-      new Set(all.map((row) => row.team_conf).filter(Boolean)),
+      new Set(
+        [...(data.conferences ?? []), ...all.map((row) => row.team_conf)].filter(
+          Boolean,
+        ),
+      ),
     );
     return unique.sort((a, b) => {
       const aIndex = PRIORITY_CONFERENCES.indexOf(a);

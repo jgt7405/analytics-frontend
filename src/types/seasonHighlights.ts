@@ -22,4 +22,7 @@ export interface SeasonHighlightsResponse {
   upsets: SeasonHighlightGame[];
   best_wins: SeasonHighlightGame[];
   worst_losses: SeasonHighlightGame[];
+  /** Every conference on the schedule, so the filter is complete before any
+   *  games have been played (older responses may omit it). */
+  conferences?: string[];
 }
