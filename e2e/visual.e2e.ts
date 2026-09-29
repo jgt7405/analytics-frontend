@@ -128,7 +128,7 @@ function trackDataRequests(page: Page) {
 // than any page here (longest ~3,500 px on mobile); the rest is blank.
 const SHOT_HEIGHT = 5_000;
 
-test.describe.configure({ timeout: 120_000 });
+test.describe.configure({ timeout: 180_000 });
 // No service worker: the site's registers on the first load and takes over
 // the reload, and a code chunk requested while it activates sometimes never
 // arrived (a chart stuck on its loading skeleton in CI).
@@ -144,21 +144,39 @@ for (const route of VISUAL_ROUTES) {
     // then reload and take the shot from the warm cache.
     await page.goto(route.path, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
-    const data = trackDataRequests(page);
-    await page.reload({ waitUntil: "load" });
-    await data.idle();
-    if (route.setup) {
-      await route.setup(page);
+    // A chart's code chunk occasionally never arrives in CI, leaving its
+    // loading skeleton up; one more reload has always cleared it.
+    for (let attempt = 1; ; attempt++) {
+      const data = trackDataRequests(page);
+      await page.reload({ waitUntil: "load" });
       await data.idle();
+      if (route.setup) {
+        await route.setup(page);
+        await data.idle();
+      }
+      // Charts can mount late (their code loads on demand) and Chart.js
+      // animates for 1 s, which "animations: disabled" doesn't stop (canvas).
+      await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+      // Loading skeletons (chart placeholders, table shimmers) use
+      // animate-pulse; the page is done when none is left.
+      const skeletons = page.locator(".animate-pulse");
+      if (attempt === 2) {
+        await expect(skeletons).toHaveCount(0, { timeout: 30_000 });
+        break;
+      }
+      const cleared = await expect(skeletons)
+        .toHaveCount(0, { timeout: 30_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (cleared) break;
     }
-    // Charts can mount late (their code loads on demand) and Chart.js
-    // animates for 1 s, which "animations: disabled" doesn't stop (canvas).
-    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
-    // Loading skeletons (chart placeholders, table shimmers) use
-    // animate-pulse; the page is done when none is left.
-    await expect(page.locator(".animate-pulse")).toHaveCount(0, { timeout: 30_000 });
     // Every image loaded (or failed): a logo still in flight in the
-    // reference shot showed up as a difference (Pac-12 on conf-data).
+    // reference shot showed up as a difference (Pac-12 on conf-data). Lazy
+    // images the browser would defer (outside its load margin) are made
+    // eager first, or they never finish.
+    await page.evaluate(() => {
+      for (const img of Array.from(document.images)) img.loading = "eager";
+    });
     await page.waitForFunction(() => Array.from(document.images).every((img) => img.complete), undefined, {
       timeout: 30_000,
     });
