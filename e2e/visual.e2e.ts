@@ -1,4 +1,7 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import { extname, join, resolve } from "node:path";
+import sharp from "sharp";
 
 // Screenshot comparison for behavior-preserving refactors (plan step 7).
 // Run with `npm run visual:compare` (scripts/visual-compare.mjs), never on
@@ -35,7 +38,17 @@ const VISUAL_ROUTES: VisualRoute[] = [
   // FootballWhatIfContent: the Big 12 before any pick (fixture)
   { path: "/football/whatif/" },
   // game preview with a game picked (fixture: upcoming games, both teams' data)
-  { path: "/basketball/game-preview/?game=fixture-1", name: "basketball-game-preview" },
+  {
+    path: "/basketball/game-preview/?game=fixture-1",
+    name: "basketball-game-preview",
+    setup: async (page) => {
+      // The page sometimes drops `?game=` while the games load (a race
+      // between its auto-select and URL-sync effects; see the plan's step 7
+      // notes), leaving nothing picked. Pick the game in the picker then.
+      const picker = page.locator("select", { has: page.locator('option[value="fixture-1"]') });
+      if ((await picker.inputValue()) !== "fixture-1") await picker.selectOption("fixture-1");
+    },
+  },
   // nonconf-analysis, with the Atlantic Coast teams expanded
   {
     path: "/basketball/conf-data/",
@@ -62,6 +75,45 @@ const shotName = ({ path, name }: VisualRoute) =>
 // - Chart.js animates on the canvas.
 // - Fonts use `font-display: optional` (see below).
 const EMPTY = JSON.stringify({ data: [] });
+
+// Logos go through Next's image optimizer (/_next/image), which in CI
+// sometimes didn't answer within 30 s on one side, so a logo was missing
+// from one shot. Here the test does the optimizer's job instead: the file
+// from public/ of the build being shot (E2E_APP_DIR for the base branch),
+// scaled down to the requested width with sharp (which Next itself uses).
+// Scaling matters: some logos are 1,280-3,840 px wide, and Chrome sometimes
+// hadn't painted such a large image, shown at 28 px, when the shot was taken.
+const PUBLIC_DIR = resolve(process.env.E2E_APP_DIR ?? ".", "public");
+const IMAGE_TYPES: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".gif": "image/gif",
+};
+
+async function serveImagesUnoptimized(page: Page) {
+  await page.route("**/_next/image**", async (route) => {
+    const params = new URL(route.request().url()).searchParams;
+    const source = params.get("url") ?? "";
+    const width = Number(params.get("w"));
+    const extension = extname(source).toLowerCase();
+    const type = IMAGE_TYPES[extension];
+    if (!source.startsWith("/") || !type) return route.continue();
+    try {
+      const file = await readFile(join(PUBLIC_DIR, source));
+      // SVG and GIF go out as they are, as the optimizer does.
+      const scalable = width > 0 && extension !== ".svg" && extension !== ".gif";
+      const body = scalable
+        ? await sharp(file).resize({ width, withoutEnlargement: true }).png().toBuffer()
+        : file;
+      await route.fulfill({ status: 200, contentType: scalable ? "image/png" : type, body });
+    } catch {
+      await route.continue();
+    }
+  });
+}
 
 async function answerMissingFixturesEmpty(page: Page) {
   await page.route("**/api/proxy/**", async (route) => {
@@ -142,6 +194,7 @@ for (const route of VISUAL_ROUTES) {
   test(`${route.name ?? route.path} looks the same as on the base branch`, async ({ page }) => {
     await page.setViewportSize({ width: page.viewportSize()!.width, height: SHOT_HEIGHT });
     await answerMissingFixturesEmpty(page);
+    await serveImagesUnoptimized(page);
     // The site's fonts use `font-display: optional`: a font that isn't ready
     // within ~100 ms is skipped for that page load, which happens at random
     // under test load. Load the page once so fonts and logos are cached,
@@ -196,6 +249,26 @@ for (const route of VISUAL_ROUTES) {
         );
         console.warn(`[visual] ${route.path}: images still loading after 30 s: ${stuck.join(", ")}`);
       });
+    // "complete" is also true for an image that ended without data (the
+    // Big South logo once, locally): load those once more, then wait for
+    // every image to be decoded so it is painted in the shot.
+    const reloaded = await page.evaluate(async () => {
+      const empty = Array.from(document.images).filter(
+        (img) => img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src),
+      );
+      for (const img of empty) {
+        const { src, srcset } = img;
+        img.removeAttribute("srcset");
+        img.src = "";
+        if (srcset) img.srcset = srcset;
+        img.src = src;
+      }
+      await Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => {})));
+      return empty.map((img) => img.currentSrc || img.src);
+    });
+    if (reloaded.length > 0) {
+      console.warn(`[visual] ${route.path}: reloaded images that had no data: ${reloaded.join(", ")}`);
+    }
     await page.waitForTimeout(1_500);
     await expect(page).toHaveScreenshot(shotName(route), {
       animations: "disabled",
