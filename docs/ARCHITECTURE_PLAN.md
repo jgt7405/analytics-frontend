@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). Step 8 is next. Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). **Step 8 in progress** (8a merged 2026-09-29, #62; FirstPlace pair next). Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -251,6 +251,14 @@ Found while splitting, deliberately not fixed here (behavior-preserving scope; e
 3. **Don't force sport-specific rules into shared abstractions** just to reduce line count. Pairs that differ substantially (e.g. schedule difficulty, compare schedules, where over half the lines differ) stay separate unless a clear shared core emerges.
 4. **Consolidate export code:** `export-image`, `save-image`, `optimized-screenshot`, `download-compare-chart` and `screenshot-layout` into one export module.
 5. **Rollback criteria:** any visual difference not explicitly intended blocks the PR; a chart merge is reverted if a sport-specific regression appears after deploy.
+
+**Outcome so far:**
+
+| Part | What | Result |
+|---|---|---|
+| 8a (#62) | Standings history charts (`BballStandingsHistoryChart`, `FootballStandingsHistoryChart`; 63 of ~700 lines differed, mostly comments) | Shell in `features/shared/standings-history/`: `index` (chart), `EndMarkers` (end-of-line dots, logos, values; §8g), `hoverLens` (plugin built with an id), `types`. Each sport keeps a ~20-line adapter passing a `StandingsHistoryTheme`: date-range function, tooltip and lens ids (unchanged), and the end-label class (football's values sit 3px higher; kept per sport, unifying it would be a visible change). New hand-shaped fixtures `basketball.standingsHistory` and `football.standingsHistory` (2025-26 dates, `timeline_data` and `first_place_data`); `/basketball/2025-26/standings/` and `/football/2025-26/standings/` added to the visual routes, since the axis runs to today and the archive season keeps it fixed. Before this, the standings shots compared empty history charts. Screenshots identical. |
+
+Measured differences for the next pairs: FirstPlace 185 lines, ConfBids 192, ConfChampion 317. Within one sport the standings and first-place charts differ by 265 lines, so there is no single generic history chart yet: shared pieces (card class, hover lens, end markers) move to a common folder once a second pair shows they are identical. Football's ConfChampion chart is closer to its own ChampGame chart (58 lines) than to basketball's ConfChampion, so that pair may stay separate (item 3).
 
 ## Step 9 — Measured performance work
 

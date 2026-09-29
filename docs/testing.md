@@ -55,5 +55,5 @@ Four layers, from fastest to slowest. None of the local layers needs the backend
 
 ## Next
 
-- Step 7: fixtures for the pages whose files are split (game preview, what-if, compare, conference data), so the screenshot comparison covers them with data.
+- Step 8: before merging a basketball/football pair, add the pages that render it to `VISUAL_ROUTES` with fixtures for both sports (the standings history fixtures from 8a already cover the first-place charts).
 - Step 10: automated accessibility checks (axe) and keyboard/focus tests for tables, charts, selectors and modals.
