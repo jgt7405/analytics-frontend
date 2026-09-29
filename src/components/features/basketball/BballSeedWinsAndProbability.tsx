@@ -4,10 +4,11 @@ import {
   useBasketballSeedWinsData,
   type SeedWinsTeam,
 } from "@/hooks/useBasketballSeedWinsData";
+import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import styles from "./BballSeedWinsAndProbability.module.css";
 import { logger } from "@/lib/logger";
 
@@ -169,7 +170,7 @@ export default function BballSeedWinsAndProbability({
 }: BballSeedWinsAndProbabilityProps) {
   void _maxHeight;
 
-  const [isMobile, setIsMobile] = useState(false);
+  const { isMobile } = useResponsive();
   const [selectedSeed, setSelectedSeed] = useState<SeedLevel>("11");
   const router = useRouter();
 
@@ -178,13 +179,6 @@ export default function BballSeedWinsAndProbability({
     isLoading,
     error,
   } = useBasketballSeedWinsData(conference);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   const logoSize = isMobile ? 24 : 28;
   const gapBetweenLogos = 2;

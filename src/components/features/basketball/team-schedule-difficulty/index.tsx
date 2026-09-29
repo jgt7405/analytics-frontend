@@ -5,6 +5,7 @@
 // probability of a 50th-rated team. Filters on top, chart (DifficultyChart),
 // summary below (StatsSummary). The calculations are in data.ts.
 
+import { useResponsive } from "@/hooks/useResponsive";
 import { useMemo, useState } from "react";
 import {
   CHART_WIDTH_DESKTOP,
@@ -55,8 +56,9 @@ export default function BasketballTeamScheduleDifficulty({
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("all");
 
-  // Detect mobile
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
+  // Phone layout at 768 px and below (useResponsive's isMobile is < 768).
+  const { width, isHydrated } = useResponsive();
+  const isMobile = isHydrated && width <= 768;
   const CHART_WIDTH = isMobile ? CHART_WIDTH_MOBILE : CHART_WIDTH_DESKTOP;
 
   const teamGames = useMemo(

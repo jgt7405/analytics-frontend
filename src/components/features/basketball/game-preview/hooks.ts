@@ -1,16 +1,10 @@
 // Screen-size hook used by the game preview.
 
-import { useEffect, useState } from "react";
+import { useResponsive } from "@/hooks/useResponsive";
 
-// ─── Responsive Hook (inline) ────────────────────────────────────────────────
-
+/** Phone layout at 768 px and below (useResponsive's isMobile is < 768);
+ *  false until hydrated, as before. */
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return isMobile;
+  const { width, isHydrated } = useResponsive();
+  return isHydrated && width <= 768;
 }

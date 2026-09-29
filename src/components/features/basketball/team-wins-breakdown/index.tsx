@@ -6,7 +6,8 @@
 // in this order, later ones on top; the calculations are in data.ts.
 
 import { useBasketballConfChampAnalysis } from "@/hooks/useBasketballConfChampAnalysis";
-import { useEffect, useMemo, useState } from "react";
+import { useResponsive } from "@/hooks/useResponsive";
+import { useMemo } from "react";
 import ChartFooter from "./ChartFooter";
 import ColumnHeaders from "./ColumnHeaders";
 import { LEFT_AXIS_PADDING, PADDING } from "./constants";
@@ -41,12 +42,6 @@ export default function BasketballTeamWinsBreakdown({
   secondaryColor,
   logoUrl: _logoUrl,
 }: BasketballTeamWinsBreakdownProps) {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   const confLogoUrl = useMemo(() => confLogoPath(conference), [conference]);
 
   const { data: confChampResult, isLoading: loading } = useBasketballConfChampAnalysis(
@@ -69,7 +64,8 @@ export default function BasketballTeamWinsBreakdown({
     [schedule, confChampGames],
   );
 
-  const isMobile = isClient && typeof window !== "undefined" && window.innerWidth < 768;
+  const { isMobile: isMobileWidth, isHydrated } = useResponsive();
+  const isMobile = isHydrated && isMobileWidth;
   const maxGames = completedWins.length + remainingGames.length;
   const layout = computeLayout(isMobile, totalWins, maxGames);
   const { chartWidth, chartHeight, chartAreaTop, barX, barWidth, barBottomY, chartAreaHeight } = layout;
