@@ -35,6 +35,7 @@ Four layers, from fastest to slowest. None of the local layers needs the backend
 - `npm run visual:compare` (`scripts/visual-compare.mjs`): checks the base ref (default `origin/main`; CI passes the PR's base commit) out into a temporary worktree, installs and builds it, and takes full-page shots of the routes in `e2e/visual.e2e.ts` on desktop and mobile. Then it builds this checkout and compares: more than 20 differing pixels per page fails (chart anti-aliasing varies by a few pixels; a one-word change is ~440). `--skip-head-build` reuses an existing build of this checkout.
 - Both sides use this checkout's tests and fixtures and render on the same machine, so the reference shots are generated in the same run and never committed (fonts and anti-aliasing differ between machines).
 - On failure the expected, actual and diff images are in `test-results/` (CI uploads them as the `visual-diff` artifact).
+- A failed shot also logs a `[visual]` line with the bounding box of the differing pixels and the elements at its centre, so the job log alone says where a page changed.
 - `e2e/visual.e2e.ts` is skipped by `npm run test:e2e`; it only runs through the script.
 - Before splitting a file (plan step 7), add the pages that render it to `VISUAL_ROUTES`, with fixtures so they show data rather than error states. A PR that is supposed to change how a page looks will fail this check; say so in the PR.
 
