@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). Step 7 in progress (7a–7f done; see its outcome). Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#57; see its outcome). Step 8 is next. Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -220,7 +220,7 @@ Search Console review (2026-09-28, per-URL exports from before 6d, summarized in
 2. **Behavior-preserving only.** No visual or logic changes in these PRs. Each PR is verified with Playwright screenshot comparisons of the affected routes against fixtures.
 3. Replace the 16 hand-rolled resize hooks with `useResponsive` as files are split.
 
-**Outcome so far (in progress):**
+**Outcome (complete 2026-09-29):**
 
 | Part | What | Result |
 |---|---|---|
@@ -230,8 +230,18 @@ Search Console review (2026-09-28, per-URL exports from before 6d, summarized in
 | 7d (#46) | `BasketballTeamWinsBreakdown` (1,515 lines) | `features/basketball/team-wins-breakdown/`: `data` (9 unit tests), `SeedRegions`, `WinsBar`, `ProjectedWinsMarker`, `GameRow` (the win and remaining-game rows were two ~190-line copies), `ColumnHeaders`, `ChartFooter`, `index`. New fixture `basketball.confChampAnalysis` (production ACC response) so the Duke page is compared with the seed map drawn. Screenshots identical. |
 | 7e (#47) | `BasketballCompareSchedulesChart` (1,240 lines) | `features/basketball/compare-schedules/`: `data` (10 unit tests), `FilterGroup`, `PercentileGrid`, `TeamColumn` (was the inner `renderTeamColumn`), `HighProbSection`, `GameTooltip`, `Legend`, `index`. Visual routes can now run `setup` steps; both compare pages are shot with a team picked. #47 also carried the 7c/7d rows of this table. Screenshots identical. |
 | 7f (#48) | `FootballCompareSchedulesChart` (920 lines) | `features/football/compare-schedules/`, reusing `football/team-schedule-difficulty/FilterGroup` (identical markup); a `logger.debug` dump effect removed; 8 unit tests. Screenshots identical. |
+| 7g (#50) | `BballNonConfAnalysisTable` (1,684 lines) | `features/basketball/nonconf-analysis/`: `data` (unit-tested), `HeaderRows`, `Rows`, `index`. New fixtures `basketball.conferenceData` and `basketball.nonconfAnalysis`; `/basketball/conf-data/` is shot with the ACC row opened (picked by logo, since mobile hides the name). Screenshots identical. |
+| 7h (#51) | `BasketballWhatIfScenarios` (1,774 lines) | `features/basketball/whatif/`: `ProbabilityTable`, `FullStandingsTable`, `ResultsPanel`, `TeamFilterDropdown`, `index`; its CSS module moved in. Fixture `basketball.whatIfBaseline` (trimmed production response); the fixture backend now serves POST endpoints. Screenshots identical. |
+| 7i (#52) | `FootballWhatIfContent` (1,123 lines) | `features/football/whatif/`: `data`, `structuredData`, `GameTile`, `SelectionSummary`, `ResultsCard`, `index`; the page imports the folder. The CSV download fetch moved into `useFootballWhatIf` (components may not call `fetch`). Fixtures `football.whatIf` and `football.conferenceData`. Screenshots identical. |
+| #53, #54 | Screenshot harness | Images load eagerly and are waited for (a lazy logo sometimes never started); one reload if a skeleton stays up; an image that never finishes is logged instead of failing the run; service workers blocked. |
+| 7j (#55) | Game preview page (3,907 lines in `page.tsx`) | `page.tsx` is now a Suspense wrapper around `features/basketball/game-preview/`: `hooks`, `metrics`, `narratives/*`, `sections/*`, `pdf`; types in `src/types/gamePreview.ts`, fetches in `src/services/game-preview.ts`. Fixtures `basketball.upcomingGames` and `basketball.nextGameImpact`; shot at `?game=fixture-1`. Screenshots identical. |
+| 7k (#56) | Game preview component (1,617 lines after 7j) | Split by PDF page: `pages/HeaderPage`, `pages/ImpactPage`, `pages/SchedulePage`; `index.tsx` is 533 lines. Screenshots identical. |
+| 7l (#57) | Item 3: resize hooks | The remaining width checks (the three `Bball*` seed/ceiling charts, game preview, both schedule-difficulty charts, wins breakdown) use `useResponsive`, each keeping its own cutoff (`< 768` or `<= 768`) and the desktop layout until hydrated. Earlier parts replaced the rest as their files were split. No `window` resize listeners remain outside `useResponsive`; what is left is `ResizeObserver`s that measure a chart's own box and `innerWidth` reads that keep hover tooltips on screen. Screenshots identical. |
 
-Next: the files whose pages first need fixtures (non-conference table, what-if, game preview); add each page to `VISUAL_ROUTES` with its fixtures before splitting. Then item 3 (resize hooks).
+Found while splitting, deliberately not fixed here (behavior-preserving scope; each needs its own PR with the owner's OK):
+
+- **Game preview picker is empty in production.** The page filters `/basketball/upcoming_games` by `is_next_game_for_both` and selects by `game_id`, and the backend sends neither, so it shows "0 upcoming". The visual fixture is hand-shaped with both fields.
+- **Game preview `?game=` race.** When the games load, the URL-sync effect still sees no selection and strips `game` from the URL in the same commit as the auto-select, so a shared link can open with nothing selected. CI's Visual job caught this once on the base build of #57 (a re-run passed); fix it with the picker bug.
 
 ## Step 8 — Merge proven duplicates behind shared building blocks
 
