@@ -1,6 +1,7 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
+import sharp from "sharp";
 
 // Screenshot comparison for behavior-preserving refactors (plan step 7).
 // Run with `npm run visual:compare` (scripts/visual-compare.mjs), never on
@@ -77,8 +78,11 @@ const EMPTY = JSON.stringify({ data: [] });
 
 // Logos go through Next's image optimizer (/_next/image), which in CI
 // sometimes didn't answer within 30 s on one side, so a logo was missing
-// from one shot. Both sides get the original file from public/ instead,
-// read from the build being shot (E2E_APP_DIR for the base branch).
+// from one shot. Here the test does the optimizer's job instead: the file
+// from public/ of the build being shot (E2E_APP_DIR for the base branch),
+// scaled down to the requested width with sharp (which Next itself uses).
+// Scaling matters: some logos are 1,280-3,840 px wide, and Chrome sometimes
+// hadn't painted such a large image, shown at 28 px, when the shot was taken.
 const PUBLIC_DIR = resolve(process.env.E2E_APP_DIR ?? ".", "public");
 const IMAGE_TYPES: Record<string, string> = {
   ".png": "image/png",
@@ -91,12 +95,20 @@ const IMAGE_TYPES: Record<string, string> = {
 
 async function serveImagesUnoptimized(page: Page) {
   await page.route("**/_next/image**", async (route) => {
-    const source = new URL(route.request().url()).searchParams.get("url") ?? "";
-    const type = IMAGE_TYPES[extname(source).toLowerCase()];
+    const params = new URL(route.request().url()).searchParams;
+    const source = params.get("url") ?? "";
+    const width = Number(params.get("w"));
+    const extension = extname(source).toLowerCase();
+    const type = IMAGE_TYPES[extension];
     if (!source.startsWith("/") || !type) return route.continue();
     try {
-      const body = await readFile(join(PUBLIC_DIR, source));
-      await route.fulfill({ status: 200, contentType: type, body });
+      const file = await readFile(join(PUBLIC_DIR, source));
+      // SVG and GIF go out as they are, as the optimizer does.
+      const scalable = width > 0 && extension !== ".svg" && extension !== ".gif";
+      const body = scalable
+        ? await sharp(file).resize({ width, withoutEnlargement: true }).png().toBuffer()
+        : file;
+      await route.fulfill({ status: 200, contentType: scalable ? "image/png" : type, body });
     } catch {
       await route.continue();
     }
