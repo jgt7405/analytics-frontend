@@ -1,5 +1,6 @@
 "use client";
 
+import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import type { SeedTeam } from "@/types/basketball";
 import { useEffect, useMemo, useState } from "react";
@@ -106,15 +107,8 @@ export default function BballSeedCeilingFloor({
   seedData,
   maxHeight = 700,
 }: BballSeedCeilingFloorProps) {
-  const [isMobile, setIsMobile] = useState(false);
+  const { isMobile } = useResponsive();
   const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);

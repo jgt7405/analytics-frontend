@@ -1,9 +1,10 @@
 "use client";
 
+import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import type { SeedTeam } from "@/types/basketball";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import styles from "./BballCeiling.module.css";
 import { logger } from "@/lib/logger";
 
@@ -157,14 +158,7 @@ export default function BballCeiling({
     logger.debug("📊 BballCeiling rendered - displaying component");
   }, []);
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const { isMobile } = useResponsive();
 
   const logoSize = isMobile ? 24 : 28;
   const gapBetweenLogos = 2;

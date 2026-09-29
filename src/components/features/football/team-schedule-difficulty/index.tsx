@@ -6,6 +6,7 @@
 // (DifficultyChart) with a hover tooltip (GameTooltip), summary below
 // (StatsSummary). The calculations are in data.ts.
 
+import { useResponsive } from "@/hooks/useResponsive";
 import { useMemo, useState } from "react";
 import {
   CHART_WIDTH_DESKTOP,
@@ -57,8 +58,9 @@ export default function FootballTeamScheduleDifficulty({
   const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-  // Detect mobile
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 768;
+  // Phone layout at 768 px and below (useResponsive's isMobile is < 768).
+  const { width, isHydrated } = useResponsive();
+  const isMobile = isHydrated && width <= 768;
   const CHART_WIDTH = isMobile ? CHART_WIDTH_MOBILE : CHART_WIDTH_DESKTOP;
 
   const teamGames = useMemo(
