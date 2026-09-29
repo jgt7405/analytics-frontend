@@ -34,6 +34,8 @@ const VISUAL_ROUTES: VisualRoute[] = [
   { path: "/basketball/whatif/" },
   // FootballWhatIfContent: the Big 12 before any pick (fixture)
   { path: "/football/whatif/" },
+  // game preview with a game picked (fixture: upcoming games, both teams' data)
+  { path: "/basketball/game-preview/?game=fixture-1", name: "basketball-game-preview" },
   // nonconf-analysis, with the Atlantic Coast teams expanded
   {
     path: "/basketball/conf-data/",
