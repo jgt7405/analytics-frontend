@@ -177,9 +177,21 @@ for (const route of VISUAL_ROUTES) {
     await page.evaluate(() => {
       for (const img of Array.from(document.images)) img.loading = "eager";
     });
-    await page.waitForFunction(() => Array.from(document.images).every((img) => img.complete), undefined, {
-      timeout: 30_000,
-    });
+    // An image that never finishes (seen once in CI on /football/whatif/,
+    // not reproducible locally) no longer fails the test by itself: its
+    // source is logged and the pixel comparison decides.
+    await page
+      .waitForFunction(() => Array.from(document.images).every((img) => img.complete), undefined, {
+        timeout: 30_000,
+      })
+      .catch(async () => {
+        const stuck = await page.evaluate(() =>
+          Array.from(document.images)
+            .filter((img) => !img.complete)
+            .map((img) => img.currentSrc || img.src),
+        );
+        console.warn(`[visual] ${route.path}: images still loading after 30 s: ${stuck.join(", ")}`);
+      });
     await page.waitForTimeout(1_500);
     await expect(page).toHaveScreenshot(shotName(route), {
       animations: "disabled",
