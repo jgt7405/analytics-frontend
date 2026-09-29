@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#57; see its outcome). Step 8 is next. Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). Step 8 is next. Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -237,11 +237,12 @@ Search Console review (2026-09-28, per-URL exports from before 6d, summarized in
 | 7j (#55) | Game preview page (3,907 lines in `page.tsx`) | `page.tsx` is now a Suspense wrapper around `features/basketball/game-preview/`: `hooks`, `metrics`, `narratives/*`, `sections/*`, `pdf`; types in `src/types/gamePreview.ts`, fetches in `src/services/game-preview.ts`. Fixtures `basketball.upcomingGames` and `basketball.nextGameImpact`; shot at `?game=fixture-1`. Screenshots identical. |
 | 7k (#56) | Game preview component (1,617 lines after 7j) | Split by PDF page: `pages/HeaderPage`, `pages/ImpactPage`, `pages/SchedulePage`; `index.tsx` is 533 lines. Screenshots identical. |
 | 7l (#57) | Item 3: resize hooks | The remaining width checks (the three `Bball*` seed/ceiling charts, game preview, both schedule-difficulty charts, wins breakdown) use `useResponsive`, each keeping its own cutoff (`< 768` or `<= 768`) and the desktop layout until hydrated. Earlier parts replaced the rest as their files were split. No `window` resize listeners remain outside `useResponsive`; what is left is `ResizeObserver`s that measure a chart's own box and `innerWidth` reads that keep hover tooltips on screen. Screenshots identical. |
+| #59 | Screenshot harness | `/_next/image` requests are answered by the test itself: the file from the shot build's `public/`, scaled to the requested width with sharp. In CI the optimizer sometimes didn't answer a logo within 30 s, and unscaled originals (up to 3,840 px, shown at 28 px) were sometimes not yet painted (Big South on conf-data mobile: 3 of 6 local repeats failed, 8 of 8 passed once scaled). Images that finish without data are loaded once more, and all are decoded before the shot. The game-preview route picks `fixture-1` in the picker when the page's URL race (below) drops it. |
 
 Found while splitting, deliberately not fixed here (behavior-preserving scope; each needs its own PR with the owner's OK):
 
 - **Game preview picker is empty in production.** The page filters `/basketball/upcoming_games` by `is_next_game_for_both` and selects by `game_id`, and the backend sends neither, so it shows "0 upcoming". The visual fixture is hand-shaped with both fields.
-- **Game preview `?game=` race.** When the games load, the URL-sync effect still sees no selection and strips `game` from the URL in the same commit as the auto-select, so a shared link can open with nothing selected. CI's Visual job caught this once on the base build of #57 (a re-run passed); fix it with the picker bug.
+- **Game preview `?game=` race.** When the games load, the URL-sync effect still sees no selection and strips `game` from the URL in the same commit as the auto-select, so a shared link can open with nothing selected. CI's Visual job hit it on the base build of #57 and #58; since #59 the screenshot test picks the game itself when this happens, so the harness no longer depends on it. Fix it with the picker bug.
 
 ## Step 8 — Merge proven duplicates behind shared building blocks
 
