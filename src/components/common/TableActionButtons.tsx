@@ -8,19 +8,11 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
+import { ensureHtml2Canvas } from "@/lib/export/capture";
 import { saveImageBlob } from "@/lib/export/save";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { logger } from "@/lib/logger";
-
-declare global {
-  interface Window {
-    html2canvas?: (
-      element: HTMLElement,
-      options?: object,
-    ) => Promise<HTMLCanvasElement>;
-  }
-}
 
 export interface TableActionButtonsProps {
   contentSelector: string;
@@ -55,28 +47,12 @@ export default function TableActionButtons({
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
 
-  const loadHtml2Canvas = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      if (typeof window.html2canvas === "function") {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load html2canvas"));
-      document.body.appendChild(script);
-    });
-  };
-
   const handleDownload = async () => {
     if (downloading || disabled) return;
 
     try {
       setDownloading(true);
-      await loadHtml2Canvas();
+      await ensureHtml2Canvas();
 
       if (typeof window.html2canvas !== "function") {
         toast.error("Screenshot library not loaded. Please try again.");
