@@ -236,8 +236,8 @@ export async function captureAndSaveElement({
       backgroundColor: "#ffffff",
       logging: false,
       // NOTE: foreignObjectRendering was tried here to fix font fidelity
-      // (see optimized-screenshot.ts) but produced a blank/black canvas on
-      // some mobile browsers - a known html2canvas/WebKit incompatibility.
+      // but produced a blank/black canvas on some mobile browsers - a
+      // known html2canvas/WebKit incompatibility.
       // Reverted; the font-matching issue needs a different fix (e.g.
       // inlining the resolved @font-face as a data URI in the clone) that
       // doesn't depend on foreignObjectRendering.
