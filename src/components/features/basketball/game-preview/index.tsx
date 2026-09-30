@@ -23,9 +23,8 @@ import type {
   UpcomingGame,
 } from "@/types/gamePreview";
 import { Download } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useIsMobile } from "./hooks";
+import { useGameInUrl, useIsMobile } from "./hooks";
 import { computeConfPosition, computeMetrics } from "./metrics";
 import { generatePDF } from "./pdf";
 import HeaderPage from "./pages/HeaderPage";
@@ -65,7 +64,6 @@ export default function GamePreviewPageContent() {
     useState<ConfChampData | null>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const searchParams = useSearchParams();
 
   const twoColGrid: React.CSSProperties = {
     display: "grid",
@@ -91,32 +89,7 @@ export default function GamePreviewPageContent() {
     loadGames();
   }, []);
 
-  // Auto-select game from URL query parameter
-  useEffect(() => {
-    if (upcomingGames.length === 0) return;
-    const gameParam = searchParams.get("game");
-    if (gameParam && !selectedGame) {
-      const match = upcomingGames.find((g) => g.game_id === gameParam);
-      if (match) {
-        setSelectedGame(match);
-      }
-    }
-  }, [upcomingGames, searchParams, selectedGame]);
-
-  // Sync selected game to URL for shareability (only after games have loaded)
-  useEffect(() => {
-    if (upcomingGames.length === 0) return; // Don't touch URL until games are loaded
-    const params = new URLSearchParams(searchParams.toString());
-    if (selectedGame) {
-      params.set("game", selectedGame.game_id);
-    } else {
-      params.delete("game");
-    }
-    const newUrl = params.toString()
-      ? `${window.location.pathname}?${params.toString()}`
-      : window.location.pathname;
-    window.history.replaceState({}, "", newUrl);
-  }, [selectedGame, searchParams, upcomingGames]);
+  useGameInUrl(upcomingGames, selectedGame, setSelectedGame);
 
   useEffect(() => {
     if (!selectedGame) {
