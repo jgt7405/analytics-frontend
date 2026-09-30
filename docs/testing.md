@@ -36,6 +36,7 @@ Four layers, from fastest to slowest. None of the local layers needs the backend
 - Both sides use this checkout's tests and fixtures and render on the same machine, so the reference shots are generated in the same run and never committed (fonts and anti-aliasing differ between machines).
 - On failure the expected, actual and diff images are in `test-results/` (CI uploads them as the `visual-diff` artifact).
 - A failed shot also logs a `[visual]` line with the bounding box of the differing pixels and the elements at its centre, so the job log alone says where a page changed.
+- The same run compares image exports: `DOWNLOAD_ROUTES` click a Download or Screenshot button (desktop only; phones use the share sheet) and compare the saved PNG with the base branch's, with the same 20-pixel tolerance. html2canvas is served from `node_modules` instead of its CDN. Covered: `TableActionButtons` (a table and a history chart), both compare pages, the basketball what-if tables and the team page's `ScreenshotModal`. Not covered: the game preview PDF, `/basketball/chart/`, and `NextGameImpact` / `WhatIfTeamSummary` (they need a what-if calculation, which has no fixture). Add a route here before changing export code.
 - `e2e/visual.e2e.ts` is skipped by `npm run test:e2e`; it only runs through the script.
 - Before splitting a file (plan step 7), add the pages that render it to `VISUAL_ROUTES`, with fixtures so they show data rather than error states. A PR that is supposed to change how a page looks will fail this check; say so in the PR.
 

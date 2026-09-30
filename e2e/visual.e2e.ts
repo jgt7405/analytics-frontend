@@ -69,6 +69,45 @@ const VISUAL_ROUTES: VisualRoute[] = [
   },
 ];
 
+// Image exports (Download / Screenshot buttons), compared as files: the
+// page shots can't see what a button saves. Desktop only: phones take the
+// native share sheet instead of a download. `trigger` clicks through to the
+// download. Not covered: the game preview PDF, the /basketball/chart/
+// upload page, and NextGameImpact / WhatIfTeamSummary (they appear only
+// after a what-if calculation, which has no fixture).
+interface DownloadRoute extends VisualRoute {
+  name: string;
+  trigger: (page: Page) => Promise<void>;
+}
+
+const clickButton = (name: string, nth = 0) => async (page: Page) => {
+  await page.getByRole("button", { name, exact: true }).nth(nth).click();
+};
+const clickScreenshot = (nth = 0) => async (page: Page) => {
+  await page.locator('button[title="Download screenshot"]').nth(nth).click();
+};
+
+const DOWNLOAD_ROUTES: DownloadRoute[] = [
+  // TableActionButtons: a table, and a history chart (third section)
+  { path: "/football/standings/", name: "download-football-standings-table", trigger: clickButton("Download table as image") },
+  { path: "/basketball/2025-26/standings/", name: "download-basketball-standings-history", trigger: clickButton("Download table as image", 2) },
+  // compare pages (basketball: its own capture; football: download-compare-chart)
+  { path: "/basketball/compare/", name: "download-basketball-compare-Duke", setup: selectTeam("Duke"), trigger: clickButton("Download Chart") },
+  { path: "/football/compare/", name: "download-football-compare-Alabama", setup: selectTeam("Alabama"), trigger: clickButton("Download Chart") },
+  // basketball what-if tables (whatif/screenshot.ts)
+  { path: "/basketball/whatif/", name: "download-basketball-whatif", trigger: clickScreenshot() },
+  // team page: Download opens ScreenshotModal; take its first option
+  {
+    path: "/basketball/team/Duke/",
+    name: "download-basketball-team-Duke",
+    trigger: async (page) => {
+      await clickButton("Download")(page);
+      await page.getByText("Select Component to Screenshot").waitFor();
+      await page.locator("div.space-y-2 > button").first().click();
+    },
+  },
+];
+
 const shotName = ({ path, name }: VisualRoute) =>
   `${name ?? path.split("/").filter(Boolean).join("-")}.png`;
 
@@ -277,101 +316,107 @@ async function reportDifference(page: Page, testInfo: TestInfo, name: string) {
   );
 }
 
+// Loads the route and waits until it has reached its final state (data
+// loaded, charts drawn, images decoded) before a shot or a download.
+async function settlePage(page: Page, route: VisualRoute) {
+  await page.setViewportSize({ width: page.viewportSize()!.width, height: SHOT_HEIGHT });
+  await answerMissingFixturesEmpty(page);
+  await serveImagesUnoptimized(page);
+  await waitForWebFonts(page);
+  // The site's fonts use `font-display: optional`: a font that isn't ready
+  // within ~100 ms is skipped for that page load, which happens at random
+  // under test load. Load the page once so fonts and logos are cached,
+  // then reload and take the shot from the warm cache.
+  await page.goto(route.path, { waitUntil: "load" });
+  await page.evaluate(() => document.fonts.ready);
+  // A chart's code chunk occasionally never arrives in CI, leaving its
+  // loading skeleton up; one more reload has always cleared it.
+  for (let attempt = 1; ; attempt++) {
+    const data = trackDataRequests(page);
+    await page.reload({ waitUntil: "load" });
+    await data.idle();
+    if (route.setup) {
+      await route.setup(page);
+      await data.idle();
+    }
+    // Charts can mount late (their code loads on demand) and Chart.js
+    // animates for 1 s, which "animations: disabled" doesn't stop (canvas).
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+    // Loading skeletons (chart placeholders, table shimmers) use
+    // animate-pulse; the page is done when none is left.
+    const skeletons = page.locator(".animate-pulse");
+    if (attempt === 2) {
+      await expect(skeletons).toHaveCount(0, { timeout: 30_000 });
+      break;
+    }
+    const cleared = await expect(skeletons)
+      .toHaveCount(0, { timeout: 30_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (cleared) break;
+  }
+  // Every image loaded (or failed): a logo still in flight in the
+  // reference shot showed up as a difference (Pac-12 on conf-data). Lazy
+  // images the browser would defer (outside its load margin) are made
+  // eager first, or they never finish.
+  await page.evaluate(() => {
+    for (const img of Array.from(document.images)) img.loading = "eager";
+  });
+  // An image that never finishes (seen once in CI on /football/whatif/,
+  // not reproducible locally) no longer fails the test by itself: its
+  // source is logged and the pixel comparison decides.
+  await page
+    .waitForFunction(() => Array.from(document.images).every((img) => img.complete), undefined, {
+      timeout: 30_000,
+    })
+    .catch(async () => {
+      const stuck = await page.evaluate(() =>
+        Array.from(document.images)
+          .filter((img) => !img.complete)
+          .map((img) => img.currentSrc || img.src),
+      );
+      console.warn(`[visual] ${route.path}: images still loading after 30 s: ${stuck.join(", ")}`);
+    });
+  // "complete" is also true for an image that ended without data (the
+  // Big South logo once, locally): load those once more, then wait for
+  // every image to be decoded so it is painted in the shot.
+  const reloaded = await page.evaluate(async () => {
+    const empty = Array.from(document.images).filter(
+      (img) => img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src),
+    );
+    for (const img of empty) {
+      const { src, srcset } = img;
+      img.removeAttribute("srcset");
+      img.src = "";
+      if (srcset) img.srcset = srcset;
+      img.src = src;
+    }
+    await Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => {})));
+    return empty.map((img) => img.currentSrc || img.src);
+  });
+  if (reloaded.length > 0) {
+    console.warn(`[visual] ${route.path}: reloaded images that had no data: ${reloaded.join(", ")}`);
+  }
+  await page.waitForTimeout(1_500);
+  // Pages are 20-30 px taller than SHOT_HEIGHT, so they can scroll, and a
+  // shot now and then came out scrolled by 2 px (everything below the
+  // sticky header shifted; ~77,000 differing pixels). Shoot from the top.
+  const scrolled = await page.evaluate(async () => {
+    const y = window.scrollY;
+    window.scrollTo(0, 0);
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    );
+    return y;
+  });
+  if (scrolled !== 0) {
+    console.warn(`[visual] ${route.path}: page was scrolled by ${scrolled} px; scrolled back to the top`);
+  }
+}
+
 for (const route of VISUAL_ROUTES) {
   test(`${route.name ?? route.path} looks the same as on the base branch`, async ({ page }) => {
-    await page.setViewportSize({ width: page.viewportSize()!.width, height: SHOT_HEIGHT });
-    await answerMissingFixturesEmpty(page);
-    await serveImagesUnoptimized(page);
-    await waitForWebFonts(page);
-    // The site's fonts use `font-display: optional`: a font that isn't ready
-    // within ~100 ms is skipped for that page load, which happens at random
-    // under test load. Load the page once so fonts and logos are cached,
-    // then reload and take the shot from the warm cache.
-    await page.goto(route.path, { waitUntil: "load" });
-    await page.evaluate(() => document.fonts.ready);
-    // A chart's code chunk occasionally never arrives in CI, leaving its
-    // loading skeleton up; one more reload has always cleared it.
-    for (let attempt = 1; ; attempt++) {
-      const data = trackDataRequests(page);
-      await page.reload({ waitUntil: "load" });
-      await data.idle();
-      if (route.setup) {
-        await route.setup(page);
-        await data.idle();
-      }
-      // Charts can mount late (their code loads on demand) and Chart.js
-      // animates for 1 s, which "animations: disabled" doesn't stop (canvas).
-      await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
-      // Loading skeletons (chart placeholders, table shimmers) use
-      // animate-pulse; the page is done when none is left.
-      const skeletons = page.locator(".animate-pulse");
-      if (attempt === 2) {
-        await expect(skeletons).toHaveCount(0, { timeout: 30_000 });
-        break;
-      }
-      const cleared = await expect(skeletons)
-        .toHaveCount(0, { timeout: 30_000 })
-        .then(() => true)
-        .catch(() => false);
-      if (cleared) break;
-    }
-    // Every image loaded (or failed): a logo still in flight in the
-    // reference shot showed up as a difference (Pac-12 on conf-data). Lazy
-    // images the browser would defer (outside its load margin) are made
-    // eager first, or they never finish.
-    await page.evaluate(() => {
-      for (const img of Array.from(document.images)) img.loading = "eager";
-    });
-    // An image that never finishes (seen once in CI on /football/whatif/,
-    // not reproducible locally) no longer fails the test by itself: its
-    // source is logged and the pixel comparison decides.
-    await page
-      .waitForFunction(() => Array.from(document.images).every((img) => img.complete), undefined, {
-        timeout: 30_000,
-      })
-      .catch(async () => {
-        const stuck = await page.evaluate(() =>
-          Array.from(document.images)
-            .filter((img) => !img.complete)
-            .map((img) => img.currentSrc || img.src),
-        );
-        console.warn(`[visual] ${route.path}: images still loading after 30 s: ${stuck.join(", ")}`);
-      });
-    // "complete" is also true for an image that ended without data (the
-    // Big South logo once, locally): load those once more, then wait for
-    // every image to be decoded so it is painted in the shot.
-    const reloaded = await page.evaluate(async () => {
-      const empty = Array.from(document.images).filter(
-        (img) => img.complete && img.naturalWidth === 0 && (img.currentSrc || img.src),
-      );
-      for (const img of empty) {
-        const { src, srcset } = img;
-        img.removeAttribute("srcset");
-        img.src = "";
-        if (srcset) img.srcset = srcset;
-        img.src = src;
-      }
-      await Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => {})));
-      return empty.map((img) => img.currentSrc || img.src);
-    });
-    if (reloaded.length > 0) {
-      console.warn(`[visual] ${route.path}: reloaded images that had no data: ${reloaded.join(", ")}`);
-    }
-    await page.waitForTimeout(1_500);
-    // Pages are 20-30 px taller than SHOT_HEIGHT, so they can scroll, and a
-    // shot now and then came out scrolled by 2 px (everything below the
-    // sticky header shifted; ~77,000 differing pixels). Shoot from the top.
-    const scrolled = await page.evaluate(async () => {
-      const y = window.scrollY;
-      window.scrollTo(0, 0);
-      await new Promise((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(resolve)),
-      );
-      return y;
-    });
-    if (scrolled !== 0) {
-      console.warn(`[visual] ${route.path}: page was scrolled by ${scrolled} px; scrolled back to the top`);
-    }
+    await settlePage(page, route);
     await expect(page)
       .toHaveScreenshot(shotName(route), {
         animations: "disabled",
@@ -385,5 +430,25 @@ for (const route of VISUAL_ROUTES) {
         await reportDifference(page, test.info(), shotName(route)).catch(() => {});
         throw error;
       });
+  });
+}
+
+// html2canvas comes from its CDN on every export path; serve the copy in
+// node_modules instead, so both sides use the same code without the network.
+const HTML2CANVAS = resolve("node_modules/html2canvas/dist/html2canvas.min.js");
+
+for (const route of DOWNLOAD_ROUTES) {
+  test(`${route.name} saves the same image as on the base branch`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "phones share instead of downloading");
+    await page.route("https://html2canvas.hertzen.com/**", async (r) =>
+      r.fulfill({ status: 200, contentType: "text/javascript", body: await readFile(HTML2CANVAS) }),
+    );
+    await settlePage(page, route);
+    const [download] = await Promise.all([
+      page.waitForEvent("download", { timeout: 60_000 }),
+      route.trigger(page),
+    ]);
+    const image = await readFile((await download.path())!);
+    expect(image).toMatchSnapshot(`${route.name}.png`, { maxDiffPixels: 20 });
   });
 }
