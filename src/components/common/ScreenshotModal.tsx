@@ -6,6 +6,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
+import { ensureHtml2Canvas } from "@/lib/export/capture";
 import { saveCanvasImage } from "@/lib/export/save";
 import { useState } from "react";
 import { logger } from "@/lib/logger";
@@ -28,15 +29,6 @@ interface ScreenshotModalProps {
   teamLogoUrl?: string;
 }
 
-declare global {
-  interface Window {
-    html2canvas?: (
-      element: HTMLElement,
-      options?: object,
-    ) => Promise<HTMLCanvasElement>;
-  }
-}
-
 export default function ScreenshotModal({
   isOpen,
   onClose,
@@ -45,23 +37,6 @@ export default function ScreenshotModal({
   teamLogoUrl,
 }: ScreenshotModalProps) {
   const [isCapturing, setIsCapturing] = useState(false);
-
-  const loadHtml2Canvas = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      if (typeof window.html2canvas === "function") {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () =>
-        reject(new Error("Failed to load screenshot library"));
-      document.body.appendChild(script);
-    });
-  };
 
   if (!isOpen) return null;
 
@@ -276,7 +251,7 @@ export default function ScreenshotModal({
     setIsCapturing(true);
 
     try {
-      await loadHtml2Canvas();
+      await ensureHtml2Canvas();
     } catch (error) {
       logger.error("Failed to load html2canvas:", error);
       alert("Failed to load screenshot library. Please try again.");

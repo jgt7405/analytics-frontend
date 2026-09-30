@@ -1,5 +1,6 @@
 // PNG export of a what-if table (html2canvas, loaded on first use).
 
+import { ensureHtml2Canvas } from "@/lib/export/capture";
 import { saveCanvasImage } from "@/lib/export/save";
 import { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } from "@/lib/export/layout";
 
@@ -11,17 +12,8 @@ export async function captureScreenshot(
   chartTitle?: string,
 ) {
   if (typeof window === "undefined") return;
-  let html2canvas = window.html2canvas;
-  if (!html2canvas) {
-    await new Promise<void>((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error("Failed to load html2canvas"));
-      document.body.appendChild(s);
-    });
-    html2canvas = window.html2canvas;
-  }
+  await ensureHtml2Canvas();
+  const html2canvas = window.html2canvas;
   if (!html2canvas) return;
 
   const clone = element.cloneNode(true) as HTMLElement;
@@ -98,13 +90,4 @@ export async function captureScreenshot(
   document.body.removeChild(wrapper);
 
   await saveCanvasImage(canvas, filename, "Basketball What-If Scenarios");
-}
-
-declare global {
-  interface Window {
-    html2canvas?: (
-      element: HTMLElement,
-      options?: object,
-    ) => Promise<HTMLCanvasElement>;
-  }
 }
