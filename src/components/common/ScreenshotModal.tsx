@@ -5,8 +5,8 @@ import {
   expandExportClone,
   getFullContentWidth,
   getFullScreenshotDimensions,
-} from "@/lib/screenshot-layout";
-import { saveCanvasImage } from "@/lib/save-image";
+} from "@/lib/export/layout";
+import { saveCanvasImage } from "@/lib/export/save";
 import { useState } from "react";
 import { logger } from "@/lib/logger";
 

@@ -1,4 +1,4 @@
-import { captureAndSaveElement } from "@/lib/export-image";
+import { captureAndSaveElement } from "@/lib/export/capture";
 
 interface DownloadCompareChartOptions {
   /** id of the element wrapping the comparison chart */

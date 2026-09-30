@@ -95,7 +95,7 @@ const DOWNLOAD_ROUTES: DownloadRoute[] = [
   // TableActionButtons: a table, and a history chart (third section)
   { path: "/football/standings/", name: "download-football-standings-table", trigger: clickButton("Download table as image") },
   { path: "/basketball/2025-26/standings/", name: "download-basketball-standings-history", trigger: clickButton("Download table as image", 2) },
-  // compare pages (basketball: its own capture; football: download-compare-chart)
+  // compare pages (basketball: its own capture; football: `lib/export/compare-chart`)
   { path: "/basketball/compare/", name: "download-basketball-compare-Duke", setup: selectTeam("Duke"), trigger: clickButton("Download Chart") },
   { path: "/football/compare/", name: "download-football-compare-Alabama", setup: selectTeam("Alabama"), trigger: clickButton("Download Chart") },
   // basketball what-if tables (whatif/screenshot.ts)
