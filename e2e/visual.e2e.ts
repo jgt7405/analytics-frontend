@@ -97,6 +97,7 @@ const DOWNLOAD_ROUTES: DownloadRoute[] = [
   { path: "/basketball/2025-26/standings/", name: "download-basketball-standings-history", trigger: clickButton("Download table as image", 2) },
   // compare pages (basketball: its own capture; football: `lib/export/compare-chart`)
   { path: "/basketball/compare/", name: "download-basketball-compare-Duke", setup: selectTeam("Duke"), trigger: clickButton("Download Chart") },
+  { path: "/basketball/2025-26/compare/", name: "download-basketball-2025-26-compare-Duke", setup: selectTeam("Duke"), trigger: clickButton("Download Chart") },
   { path: "/football/compare/", name: "download-football-compare-Alabama", setup: selectTeam("Alabama"), trigger: clickButton("Download Chart") },
   // basketball what-if tables (whatif/screenshot.ts)
   { path: "/basketball/whatif/", name: "download-basketball-whatif", trigger: clickScreenshot() },
