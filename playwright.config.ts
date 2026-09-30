@@ -21,6 +21,14 @@ const PORT = Number(process.env.E2E_PORT ?? 3200);
 // compares this build against them. Nothing is committed.
 const VISUAL_SNAPSHOT_DIR = process.env.VISUAL_SNAPSHOT_DIR;
 
+// For those comparisons, glyphs are placed on whole pixels. With subpixel
+// positioning, the same build drew chart labels (and some table text) in
+// one of two ways from load to load, from identical canvas calls, most
+// likely depending on which rendering of a glyph Chrome cached first: 220
+// differing pixels on the football conf-champ page (mobile) in 4 of 10
+// loads. With this flag, 10 of 10 loads were identical.
+const browserArgs = VISUAL_SNAPSHOT_DIR ? ["--disable-font-subpixel-positioning"] : [];
+
 export default defineConfig({
   testDir: "e2e",
   testMatch: "**/*.e2e.ts",
@@ -33,7 +41,7 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
-    launchOptions: { executablePath },
+    launchOptions: { executablePath, args: browserArgs },
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
