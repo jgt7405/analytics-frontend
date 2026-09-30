@@ -21,6 +21,7 @@ import { ENDPOINTS, type EndpointKey } from "../../src/api/endpoints";
 import basketballConfChampAnalysis from "./basketball.confChampAnalysis.json";
 import basketballConferenceData from "./basketball.conferenceData.json";
 import basketballConferenceDataHistory from "./basketball.conferenceDataHistory.json";
+import basketballConfTourneyHistory from "./basketball.confTourneyHistory.json";
 import basketballNextGameImpact from "./basketball.nextGameImpact.json";
 import basketballNonconfAnalysis from "./basketball.nonconfAnalysis.json";
 import basketballStandings from "./basketball.standings.json";
@@ -44,6 +45,7 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "basketball.confChampAnalysis": basketballConfChampAnalysis,
   "basketball.conferenceData": basketballConferenceData,
   "basketball.conferenceDataHistory": basketballConferenceDataHistory,
+  "basketball.confTourneyHistory": basketballConfTourneyHistory,
   "basketball.nextGameImpact": basketballNextGameImpact,
   "basketball.nonconfAnalysis": basketballNonconfAnalysis,
   "basketball.standings": basketballStandings,

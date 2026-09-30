@@ -1,5 +1,5 @@
 {
- "_note": "Hand-written in the shape of football/standings/<conference>/history for the screenshot comparison: the backend tests' fake database has no history tables. The same teams as football.standings.json, straight lines between fixed start and end values, dates inside the 2025-26 season (shot on the archive page, so the chart's axis doesn't move with today's date).",
+ "_note": "Hand-written in the shape of football/standings/<conference>/history for the screenshot comparison: the backend tests' fake database has no history tables. The same teams as football.standings.json, straight lines between fixed start and end values, dates inside the 2025-26 season (shot on the archive page, so the chart's axis doesn't move with today's date). champ_game_data (Alabama and Georgia both end near the top, so the conference-champ chart fans their logos out) and champion_data feed /football/conf-champ/.",
  "timeline_data": [
   {
    "team_name": "Alabama",
@@ -837,6 +837,850 @@
    "team_name": "Texas",
    "date": "2025-11-29",
    "first_place_pct": 12.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  }
+ ],
+ "champ_game_data": [
+  {
+   "team_name": "Alabama",
+   "date": "2025-08-30",
+   "champ_game_pct": 60.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-08-30",
+   "champ_game_pct": 70.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-08-30",
+   "champ_game_pct": 40.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-09-06",
+   "champ_game_pct": 62.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-09-06",
+   "champ_game_pct": 71.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-09-06",
+   "champ_game_pct": 37.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-09-13",
+   "champ_game_pct": 65.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-09-13",
+   "champ_game_pct": 73.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-09-13",
+   "champ_game_pct": 35.4,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-09-20",
+   "champ_game_pct": 68.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-09-20",
+   "champ_game_pct": 75.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-09-20",
+   "champ_game_pct": 33.1,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-09-27",
+   "champ_game_pct": 71.1,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-09-27",
+   "champ_game_pct": 77.4,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-09-27",
+   "champ_game_pct": 30.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-10-04",
+   "champ_game_pct": 73.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-10-04",
+   "champ_game_pct": 79.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-10-04",
+   "champ_game_pct": 28.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-10-11",
+   "champ_game_pct": 76.6,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-10-11",
+   "champ_game_pct": 81.1,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-10-11",
+   "champ_game_pct": 26.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-10-18",
+   "champ_game_pct": 79.4,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-10-18",
+   "champ_game_pct": 82.9,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-10-18",
+   "champ_game_pct": 23.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-10-25",
+   "champ_game_pct": 82.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-10-25",
+   "champ_game_pct": 84.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-10-25",
+   "champ_game_pct": 21.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-01",
+   "champ_game_pct": 84.9,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-01",
+   "champ_game_pct": 86.6,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-01",
+   "champ_game_pct": 19.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-08",
+   "champ_game_pct": 87.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-08",
+   "champ_game_pct": 88.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-08",
+   "champ_game_pct": 16.9,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-15",
+   "champ_game_pct": 90.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-15",
+   "champ_game_pct": 90.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-15",
+   "champ_game_pct": 14.6,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-22",
+   "champ_game_pct": 93.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-22",
+   "champ_game_pct": 92.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-22",
+   "champ_game_pct": 12.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-29",
+   "champ_game_pct": 96.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-29",
+   "champ_game_pct": 94.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-29",
+   "champ_game_pct": 10.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  }
+ ],
+ "champion_data": [
+  {
+   "team_name": "Alabama",
+   "date": "2025-08-30",
+   "champion_pct": 35.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-08-30",
+   "champion_pct": 45.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-08-30",
+   "champion_pct": 20.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-09-06",
+   "champion_pct": 36.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-09-06",
+   "champion_pct": 43.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-09-06",
+   "champion_pct": 19.4,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-09-13",
+   "champion_pct": 38.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-09-13",
+   "champion_pct": 42.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-09-13",
+   "champion_pct": 18.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-09-20",
+   "champion_pct": 40.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-09-20",
+   "champion_pct": 41.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-09-20",
+   "champion_pct": 18.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-09-27",
+   "champion_pct": 42.1,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-09-27",
+   "champion_pct": 40.4,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-09-27",
+   "champion_pct": 17.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-10-04",
+   "champion_pct": 43.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-10-04",
+   "champion_pct": 39.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-10-04",
+   "champion_pct": 16.9,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-10-11",
+   "champion_pct": 45.6,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-10-11",
+   "champion_pct": 38.1,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-10-11",
+   "champion_pct": 16.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-10-18",
+   "champion_pct": 47.4,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-10-18",
+   "champion_pct": 36.9,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-10-18",
+   "champion_pct": 15.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-10-25",
+   "champion_pct": 49.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-10-25",
+   "champion_pct": 35.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-10-25",
+   "champion_pct": 15.1,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-01",
+   "champion_pct": 50.9,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-01",
+   "champion_pct": 34.6,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-01",
+   "champion_pct": 14.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-08",
+   "champion_pct": 52.7,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-08",
+   "champion_pct": 33.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-08",
+   "champion_pct": 13.8,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-15",
+   "champion_pct": 54.5,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-15",
+   "champion_pct": 32.3,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-15",
+   "champion_pct": 13.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-22",
+   "champion_pct": 56.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-22",
+   "champion_pct": 31.2,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-22",
+   "champion_pct": 12.6,
+   "team_info": {
+    "logo_url": "/images/team_logos/texas.png",
+    "primary_color": "#BF5700",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Alabama",
+   "date": "2025-11-29",
+   "champion_pct": 58.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/alabama.png",
+    "primary_color": "#9E1B32",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Georgia",
+   "date": "2025-11-29",
+   "champion_pct": 30.0,
+   "team_info": {
+    "logo_url": "/images/team_logos/georgia.png",
+    "primary_color": "#BA0C2F",
+    "secondary_color": "#FFFFFF"
+   }
+  },
+  {
+   "team_name": "Texas",
+   "date": "2025-11-29",
+   "champion_pct": 12.0,
    "team_info": {
     "logo_url": "/images/team_logos/texas.png",
     "primary_color": "#BF5700",
