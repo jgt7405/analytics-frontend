@@ -1,8 +1,8 @@
 import {
   expandExportClone,
   getFullScreenshotDimensions,
-} from "@/lib/screenshot-layout";
-import { saveCanvasImage } from "@/lib/save-image";
+} from "@/lib/export/layout";
+import { saveCanvasImage } from "@/lib/export/save";
 import { logger } from "@/lib/logger";
 
 declare global {

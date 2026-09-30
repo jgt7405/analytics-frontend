@@ -11,8 +11,8 @@ import {
   expandExportClone,
   getFullContentWidth,
   getFullScreenshotDimensions,
-} from "@/lib/screenshot-layout";
-import { saveCanvasImage } from "@/lib/save-image";
+} from "@/lib/export/layout";
+import { saveCanvasImage } from "@/lib/export/save";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiUrl } from "@/api/urls";

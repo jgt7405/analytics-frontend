@@ -8,5 +8,5 @@ Conventions:
 - Charts: Chart.js through `react-chartjs-2`; tooltips via `src/lib/chartTooltip.ts`; date ranges via `src/lib/chartDateRange.ts`.
 - Data comes in through props or hooks. Don't call `fetch` here (ESLint warning).
 - Screen size: use `useResponsive` (`src/hooks/useResponsive.ts`), not a new resize listener.
-- Image/CSV export: `components/common/TableActionButtons` and `src/lib/export-image.ts`.
+- Image/CSV export: `components/common/TableActionButtons` and `src/lib/export/`.
 - Hooks before early returns. Files past ~600 lines should be split by section.

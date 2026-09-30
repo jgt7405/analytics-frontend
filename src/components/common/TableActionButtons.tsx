@@ -7,8 +7,8 @@ import {
   expandExportClone,
   getFullContentWidth,
   getFullScreenshotDimensions,
-} from "@/lib/screenshot-layout";
-import { saveImageBlob } from "@/lib/save-image";
+} from "@/lib/export/layout";
+import { saveImageBlob } from "@/lib/export/save";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { logger } from "@/lib/logger";

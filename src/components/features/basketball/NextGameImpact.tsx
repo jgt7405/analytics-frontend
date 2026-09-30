@@ -7,8 +7,8 @@ import {
   expandExportClone,
   getFullContentWidth,
   getFullScreenshotDimensions,
-} from "@/lib/screenshot-layout";
-import { saveCanvasImage } from "@/lib/save-image";
+} from "@/lib/export/layout";
+import { saveCanvasImage } from "@/lib/export/save";
 import { Camera, Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {

@@ -1,7 +1,7 @@
 // PNG export of a what-if table (html2canvas, loaded on first use).
 
-import { saveCanvasImage } from "@/lib/save-image";
-import { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } from "@/lib/screenshot-layout";
+import { saveCanvasImage } from "@/lib/export/save";
+import { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } from "@/lib/export/layout";
 
 // – Screenshot helper –
 export async function captureScreenshot(

@@ -2,7 +2,7 @@ import {
   expandExportClone,
   getFullContentWidth,
   getFullScreenshotDimensions,
-} from "../screenshot-layout";
+} from "../layout";
 
 function setLayout(
   element: HTMLElement,
