@@ -79,9 +79,36 @@ function median(results) {
   return sorted[Math.floor(sorted.length / 2)];
 }
 
-const chrome = await chromeLauncher.launch({
-  chromeFlags: ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage"],
-});
+const launchChrome = () =>
+  chromeLauncher.launch({
+    chromeFlags: ["--headless=new", "--no-sandbox", "--disable-dev-shm-usage"],
+  });
+
+let chrome = await launchChrome();
+
+// Headless Chrome occasionally drops its debugging connection mid-audit
+// (ECONNREFUSED on its port), which would otherwise abort the whole gate.
+// Relaunch it and retry the audit once; a second failure counts as a failed run.
+async function audit(url) {
+  const options = {
+    output: "json",
+    logLevel: "error",
+    onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
+  };
+  try {
+    return await lighthouse(url, { ...options, port: chrome.port });
+  } catch (error) {
+    console.error(`${url}: ${error.message}; relaunching Chrome and retrying`);
+    await Promise.resolve(chrome.kill()).catch(() => {});
+    chrome = await launchChrome();
+    try {
+      return await lighthouse(url, { ...options, port: chrome.port });
+    } catch (retryError) {
+      console.error(`${url}: ${retryError.message}`);
+      return null;
+    }
+  }
+}
 
 const report = { base, runs, recordedAt: new Date().toISOString(), routes: {} };
 const failures = [];
@@ -89,12 +116,8 @@ try {
   for (const route of ROUTES) {
     const results = [];
     for (let i = 0; i < runs; i++) {
-      const result = await lighthouse(`${base}${route}`, {
-        port: chrome.port,
-        output: "json",
-        logLevel: "error",
-        onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
-      });
+      const result = await audit(`${base}${route}`);
+      if (!result) continue;
       if (result.lhr.runtimeError) {
         console.error(`${route}: ${result.lhr.runtimeError.message}`);
         continue;
