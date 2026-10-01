@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { uploadChartCsv } from "@/services/chart-upload";
+import { effectiveInterval, niceInterval, ticksFor } from "./scatterplotAxis";
 import { logger } from "@/lib/logger";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
@@ -367,35 +368,19 @@ export default function BballScatterplotChart({
     return processedLogos;
   }, [state.data, scales, settings.collisionDetection, settings.logoSize]);
 
-  // Generate ticks based on custom interval
-  const generateTicksFromInterval = (
-    min: number,
-    max: number,
-    interval: number
-  ) => {
-    if (interval <= 0) return [];
-
-    const ticks: number[] = [];
-    const start = Math.ceil(min / interval) * interval;
-    const end = Math.floor(max / interval) * interval;
-
-    for (let i = start; i <= end + interval * 0.0001; i += interval) {
-      ticks.push(Number(i.toFixed(10)));
-    }
-
-    return ticks;
-  };
+  // Ticks at the chosen interval, or a readable one if that would crowd the
+  // axis (see scatterplotAxis.ts)
+  const xInterval = effectiveInterval(scales.xMin, scales.xMax, settings.xInterval);
+  const yInterval = effectiveInterval(scales.yMin, scales.yMax, settings.yInterval);
 
   const xTicks = useMemo(
-    () =>
-      generateTicksFromInterval(scales.xMin, scales.xMax, settings.xInterval),
-    [scales.xMin, scales.xMax, settings.xInterval]
+    () => ticksFor(scales.xMin, scales.xMax, xInterval),
+    [scales.xMin, scales.xMax, xInterval]
   );
 
   const yTicks = useMemo(
-    () =>
-      generateTicksFromInterval(scales.yMin, scales.yMax, settings.yInterval),
-    [scales.yMin, scales.yMax, settings.yInterval]
+    () => ticksFor(scales.yMin, scales.yMax, yInterval),
+    [scales.yMin, scales.yMax, yInterval]
   );
 
   const getDecimalPlaces = (interval: number) => {
@@ -405,8 +390,8 @@ export default function BballScatterplotChart({
     return 3;
   };
 
-  const xDecimalPlaces = getDecimalPlaces(settings.xInterval);
-  const yDecimalPlaces = getDecimalPlaces(settings.yInterval);
+  const xDecimalPlaces = getDecimalPlaces(xInterval);
+  const yDecimalPlaces = getDecimalPlaces(yInterval);
 
   const formatValue = (
     value: number,
@@ -447,11 +432,24 @@ export default function BballScatterplotChart({
         isLoading: false,
       }));
 
+      // Start the axes at a readable tick interval for this data (the same
+      // padded range the scales use when no min/max is set).
+      const points = result.data || [];
+      const paddedInterval = (values: number[]) => {
+        if (values.length === 0) return 0.1;
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const padding = (max - min) * 0.1 || 1;
+        return niceInterval(min - padding, max + padding);
+      };
+
       setSettings((prev) => ({
         ...prev,
         chartTitle: result.chart_title || "Scatterplot",
         xLabel: result.x_label || "X Axis",
         yLabel: result.y_label || "Y Axis",
+        xInterval: paddedInterval(points.map((d) => d.x_value)),
+        yInterval: paddedInterval(points.map((d) => d.y_value)),
       }));
 
       logger.debug("✅ State updated with", result.data?.length || 0, "teams");
