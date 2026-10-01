@@ -1,9 +1,16 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). **Step 8 in progress** (history charts done: 8a–8d, #62, #64, #66, #69, 2026-09-29/30; export code (item 4) in `src/lib/export/` with one html2canvas loader, #74–#82, 2026-09-30/10-01; only the game preview PDF keeps its own loader, pending the owner's choice of a PDF check). Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). **Step 8 complete** (2026-10-01: history charts 8a–8d, #62–#69; export code in `src/lib/export/` with one html2canvas loader, #74–#82; the game preview PDF keeps its own loader and stays unchecked, owner's decision). Next: step 9. Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
+
+## Where to pick up (2026-10-01)
+
+- **Next: step 9.** Start by re-measuring the weak pages listed there (Lighthouse via the "Production baseline" workflow, since agent sessions can't reach production; `npm run size` for bundles) and propose the first change with its expected before/after, before writing code. Each item is kept only if it beats the step 1 baselines.
+- **Open from step 6:** the Search Console re-check around 2026-10-11 against `docs/baselines/README.md` (record a summary only; the owner does the clicks, so give tap-by-tap steps).
+- **Owner decisions on record:** the game preview PDF stays unchecked with its own loader; the scatterplot stays wider than a phone screen; per-sport presentation differences kept in the chart themes are visible changes that need the owner's OK.
+- **Nothing open:** no PRs, branches or check-ins pending. The umbrella repo (`jthom-analytics-umbrella`) points at current `main` of both submodules.
 
 ## Guiding principles
 
@@ -271,10 +278,11 @@ Found while splitting, deliberately not fixed here (behavior-preserving scope; e
 | #81 | Download checks | `NextGameImpact`, `WhatIfTeamSummary` (after a calculation, answered by the baseline fixture) and `/basketball/chart/` (a CSV upload answered by the hand-written `basketball.chartUpload` fixture); #80 added the archive compare page. Only the game preview PDF is unchecked (it is a PDF, not a PNG). Noticed, not changed: the chart export's axis tick labels overlap into an unreadable band (a visible fix for its own PR). |
 | #77 | Game preview `?game=` race | See "Found while splitting" under step 7. |
 | #79 | Screenshot harness | Sticky elements are made static before page shots (nothing is scrolled, so none moves): sticky header text was sometimes drawn 1 px lower on mobile (`basketball-conf-data-ACC`, 1 of 25 loads; 0 of 50 with this). |
+| #84 | Chart page axis ticks (owner-approved visible fix) | `/basketball/chart/` defaulted to a tick every 0.1, about 340 overlapping labels per axis on ratings data. The interval now comes from the data (about 6 ticks, steps of 1/2/5), the settings show it, and an interval over 40 ticks is replaced when drawn (`basketball/scatterplotAxis.ts`, 12 tests). Visual failed only on `download-basketball-chart`, as intended; merged with the owner's OK. Not changed (owner: no): the scatterplot is wider than a phone screen. |
 
 All four near-copy groups are merged. Within one sport the standings and first-place charts differ by 265 lines, so there is no single generic history chart: shared pieces live in `features/shared/history-chart/` (card, hover lens, dark-mode hook). Presentation settings that drifted between sports (percent format, tooltip rows, padding, logo spacing, end-label offsets) are kept per sport in the themes; unifying any of them is a visible change for its own PR, with the owner's OK.
 
-Item 4 (export code), as agreed with the owner: download checks first (#71, #81), then delete the unused `optimized-screenshot.ts` (#74), move the rest into `src/lib/export/` (#76) and give the call sites one html2canvas loader, a few per PR (#78, #80, #82). Left: the game preview PDF (`game-preview/pdf.ts`), which has no check because it produces a PDF; it stays as is until the owner chooses whether to add a page-image comparison for it.
+Item 4 (export code), as agreed with the owner: download checks first (#71, #81), then delete the unused `optimized-screenshot.ts` (#74), move the rest into `src/lib/export/` (#76) and give the call sites one html2canvas loader, a few per PR (#78, #80, #82). Left as is, by the owner's decision (2026-10-01): the game preview PDF (`game-preview/pdf.ts`) keeps its own loader and has no check.
 
 ## Step 9 — Measured performance work
 
