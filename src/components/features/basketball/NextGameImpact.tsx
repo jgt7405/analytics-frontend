@@ -8,6 +8,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
+import { ensureHtml2Canvas } from "@/lib/export/capture";
 import { saveCanvasImage } from "@/lib/export/save";
 import { Camera, Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
@@ -41,22 +42,8 @@ async function captureScreenshot(
   teamLogoUrl?: string,
 ) {
   if (typeof window === "undefined") return;
-  let html2canvas = (window as unknown as Record<string, unknown>)
-    .html2canvas as
-    | ((el: HTMLElement, opts?: object) => Promise<HTMLCanvasElement>)
-    | undefined;
-  if (!html2canvas) {
-    await new Promise<void>((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error("Failed to load html2canvas"));
-      document.body.appendChild(s);
-    });
-    html2canvas = (window as unknown as Record<string, unknown>).html2canvas as
-      | ((el: HTMLElement, opts?: object) => Promise<HTMLCanvasElement>)
-      | undefined;
-  }
+  await ensureHtml2Canvas();
+  const html2canvas = window.html2canvas;
   if (!html2canvas) return;
   const clone = element.cloneNode(true) as HTMLElement;
   expandExportClone(element, clone);
