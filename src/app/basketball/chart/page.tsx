@@ -8,20 +8,12 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
+import { ensureHtml2Canvas } from "@/lib/export/capture";
 import { saveCanvasImage } from "@/lib/export/save";
 import { Download, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { logger } from "@/lib/logger";
 import { fetchTeamScheduleCsv } from "@/services/team-schedule";
-
-declare global {
-  interface Window {
-    html2canvas?: (
-      element: HTMLElement,
-      options?: object,
-    ) => Promise<HTMLCanvasElement>;
-  }
-}
 
 export default function BasketballChartPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,24 +23,17 @@ export default function BasketballChartPage() {
   const [chartTitle, setChartTitle] = useState("Custom Scatterplot");
   const chartRef = useRef<HTMLDivElement>(null);
 
-  // Load html2canvas
+  // Load html2canvas up front, so the modal can say when it's ready
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      typeof window.html2canvas !== "function"
-    ) {
-      const script = document.createElement("script");
-      script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-      script.async = true;
-      script.onload = () => setHtml2canvasLoaded(true);
-      script.onerror = () => logger.error("Failed to load html2canvas");
-      document.body.appendChild(script);
-      return () => {
-        if (document.body.contains(script)) document.body.removeChild(script);
-      };
-    } else if (typeof window.html2canvas === "function") {
-      setHtml2canvasLoaded(true);
-    }
+    let active = true;
+    ensureHtml2Canvas()
+      .then(() => {
+        if (active) setHtml2canvasLoaded(true);
+      })
+      .catch(() => logger.error("Failed to load html2canvas"));
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Convert image URL to base64
