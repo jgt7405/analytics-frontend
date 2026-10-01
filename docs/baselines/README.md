@@ -339,3 +339,32 @@ What should move:
 | Clicks, 2 weeks after vs before, `/football/wins/`, `/football/home/`, `/football/whatif/`, `/football/cfp/` | 123 of 182 in 3 months | Seasonal swings only (football season in progress) | Down more than 30% while impressions hold |
 
 Search Console reports lag by several days; if "Last updated" on the Pages report is before 2026-10-04, wait and re-export.
+
+## 2026-10-01 — before step 9
+
+Production after steps 1–8. Lighthouse from GitHub Actions, mobile preset, median of 3 runs per route per day: the daily runs of 09-28 ([36466503010](https://github.com/jgt7405/analytics-frontend/actions/runs/36466503010)), 09-29 ([36601146762](https://github.com/jgt7405/analytics-frontend/actions/runs/36601146762)) and 09-30 ([36747181898](https://github.com/jgt7405/analytics-frontend/actions/runs/36747181898)), and the 10-01 run that added the new pages and desktop ([36903419423](https://github.com/jgt7405/analytics-frontend/actions/runs/36903419423), #86). Ranges are across those days.
+
+| Route | Perf (09-25 → now) | LCP | TBT | CLS | `/api/proxy` calls | Requests |
+|---|---|---|---|---|---|---|
+| `/football/wins/` | 91 → 72–89 | 2.7 → 2.9–4.4 s | 258 → 178–457 ms | **0 → 0.09–0.10** | 0 | 88 → 104 |
+| `/football/standings/` | 98 → 71–78 | 2.4 → 2.8–3.1 s | 86 → 712–1,230 ms | 0 | 2 → 1 | 89 → 98 |
+| `/football/team/Alabama/` | 97 → 65–91 | 2.1 → 2.2–4.7 s | 150 → 323–866 ms | 0 | **10 → 3–4** | 122 → 136–139 |
+| `/football/2025-26/wins/` (archive) | 84 → 65–73 | 4.2 → 2.8–4.4 s | 95 → 489–798 ms | 0.08 → 0–0.21 | 2 → 1 | 62 → 120 |
+| `/basketball/standings/` | 98 → 67–90 | 2.4 → 3.0–5.7 s | 39 → 264–536 ms | 0 | 2 → 1 | 82 → 102 |
+| `/basketball/compare/` | 90 → 82–85 | 2.4 → 2.7–3.1 s | 341 → 477–527 ms | 0.023 | 2 → 1 | 235 → 260 |
+| `/basketball/game-preview/` | 98 → 86–90 | 2.4 → 2.9–3.0 s | 26 → 220–308 ms | 0.021 | 2 → 1 | 65 → 87 |
+| `/football/seed/` (new, 10-01) | 87 | 2.9 s | 194 ms | 0.147 | 0 | 96 |
+| `/football/compare/` (new) | 92 | 2.7 s | 231 ms | 0.017 | 1 | 94 |
+| `/football/twv/` (new) | 95 | 2.2 s | 204 ms | 0.002 | 1 | 97 |
+
+Desktop preset (new, 10-01): `/football/seed/` 100 (LCP 0.51 s, TBT 0, CLS 0), `/football/compare/` 100 (0.61 s, 9 ms, 0.009), `/football/wins/` 100 (0.59 s, 0, 0.041).
+
+Request types on 10-01: every page makes 44–49 `Fetch` requests while only 0–1 go to `/api/proxy`; images are 22 on most pages, 38 on the archive page and 183 on `/basketball/compare/` (team logos).
+
+Notes:
+- The same route moves up to 25 performance points and 2.5 s of LCP between days with no deploy in between, and blocking time is higher on every route than on 09-25. Treat single-day performance and TBT as noise; compare medians over several days or `--runs 5`.
+- Stable across all four days: fewer proxy calls (steps 3–4), layout shift on `/football/wins/` that wasn't there on 09-25, and 10–58 more requests per page, mostly `Fetch`.
+- The desktop lab doesn't reproduce `/football/seed`'s field score of 47 (36 visits).
+- Backend proxy, same runs: 0 failures and 0 redirects in 75 calls a day; cached responses 13–36 ms median; slowest uncached `/ncaa_tourney/All_Teams` 0.7–0.9 s.
+
+Route sizes (`npm run size`, cloud container): min / median / max 167 / 213 / 284 kB first-load JS, against 165 / 207 / 276 kB on 09-26 (after Next 16). The largest increases are 7–9 kB (`/basketball/game-preview` 276 → 284 kB, `teams`, `standings`, `whatif`, `wins`).
