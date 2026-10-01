@@ -1,6 +1,5 @@
 "use client";
 
-import { BoxWhiskerChartSkeleton } from "@/components/ui/LoadingSkeleton";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { formatTeamName } from "@/lib/formatTeamName";
@@ -120,10 +119,6 @@ export default function FootballBoxWhiskerChart({
     );
   }
 
-  if (!mounted) {
-    return <BoxWhiskerChartSkeleton />;
-  }
-
   const chartHeight = isMobile ? 300 : 400;
   // Footer below the plot: average value, then logo, then team name.
   const avgRowHeight = isMobile ? 18 : 22;
@@ -169,21 +164,46 @@ export default function FootballBoxWhiskerChart({
 
   const hoveredTeam = hovered ? sortedTeams[hovered.index] : null;
 
+  const header = (
+    <div className={styles.cardHeader}>
+      <div className={styles.titleGroup} data-screenshot-hide="true">
+        <h2 id="football-box-whisker-title" className={styles.title}>
+          Projected Conference Wins Distribution
+        </h2>
+      </div>
+      {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
+    </div>
+  );
+
+  // Before mount (server render and first client render) the card is drawn
+  // at the chart's final size, so nothing below it moves when the chart
+  // appears (step 9: this was the page's layout shift).
+  if (!mounted) {
+    return (
+      <section
+        className={cn(styles.card, "box-whisker-container")}
+        aria-labelledby="football-box-whisker-title"
+        aria-busy="true"
+      >
+        {header}
+        <div className={styles.scrollViewport}>
+          <div
+            className="animate-pulse rounded bg-gray-100 dark:bg-slate-800"
+            style={{
+              height: chartHeight + footerHeight + padding.top + padding.bottom,
+            }}
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       className={cn(styles.card, "box-whisker-container")}
       aria-labelledby="football-box-whisker-title"
     >
-      <div className={styles.cardHeader}>
-        <div className={styles.titleGroup} data-screenshot-hide="true">
-          <h2 id="football-box-whisker-title" className={styles.title}>
-            Projected Conference Wins Distribution
-          </h2>
-        </div>
-        {headerRight && (
-          <div data-screenshot-hide="true">{headerRight}</div>
-        )}
-      </div>
+      {header}
 
       <div
         className={styles.scrollViewport}
