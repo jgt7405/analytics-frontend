@@ -4,7 +4,13 @@ import { expect, test } from "@playwright/test";
 // (layout-shift entries without recent input). Pages listed here drew their
 // first paint at the final layout as of plan step 9; a new shift above the
 // threshold means something renders at one size and then another.
-const PAGES = ["/football/wins/", "/football/2025-26/wins/"];
+const PAGES = [
+  "/football/wins/",
+  "/football/2025-26/wins/",
+  "/basketball/wins/",
+  // Not /basketball/<season>/wins/ yet: it still loads its data in the
+  // browser (the archive pilot, #87, is football only so far).
+];
 const MAX_CLS = 0.01;
 
 for (const path of PAGES) {

@@ -6,6 +6,8 @@ import {
   BasketballTableSkeleton,
   BoxWhiskerChartSkeleton,
 } from "@/components/ui/LoadingSkeleton";
+import { ResponsiveProvider } from "@/components/providers/ResponsiveProvider";
+import { detectMobileFromHeaders } from "@/lib/server-device";
 import BballWinsContent from "./BballWinsContent";
 
 // Render per-request: the content component reads useSearchParams (?conf=), which
@@ -33,10 +35,17 @@ function WinsPageSkeleton() {
 
 export default async function BballWinsPage() {
   // Server-render the default conference so the canonical URL ships real content.
-  const initialData = await getStandingsServer("Big 12");
+  // The device comes from the User-Agent so the first paint has the mobile
+  // layout (no shift after hydration; step 9).
+  const [initialData, initialIsMobile] = await Promise.all([
+    getStandingsServer("Big 12"),
+    detectMobileFromHeaders(),
+  ]);
   return (
-    <Suspense fallback={<WinsPageSkeleton />}>
-      <BballWinsContent initialData={initialData} />
-    </Suspense>
+    <ResponsiveProvider initialIsMobile={initialIsMobile}>
+      <Suspense fallback={<WinsPageSkeleton />}>
+        <BballWinsContent initialData={initialData} />
+      </Suspense>
+    </ResponsiveProvider>
   );
 }
