@@ -91,6 +91,43 @@ const clickScreenshot = (nth = 0) => async (page: Page) => {
   await page.locator('button[title="Download screenshot"]').nth(nth).click();
 };
 
+// Basketball what-if "Team Detail" card (desktop copy): Next Game Impact for
+// the picked team, then the What If Summary once a calculation has run. The
+// page opens on the Big 12; game picks are buttons named "<team> <pct>%".
+const teamDetailCard = (page: Page) =>
+  page.locator('h3:text-is("Team Detail"):visible').locator("xpath=../..");
+const pickDetailTeam = async (page: Page, team: string) => {
+  await teamDetailCard(page).locator("select").selectOption({ label: team });
+};
+// The next-game fixture is Duke's (ACC, team 26); the what-if fixture lists
+// the Big 12. Serve Duke's metrics under Arizona's id (247) for this check.
+const nextGameImpactAsArizona = async (page: Page) => {
+  await page.route("**/api/proxy/basketball/whatif/next-game-impact/**", async (route) => {
+    const response = await route.fetch();
+    const body = (await response.json()) as Record<string, Record<string, unknown>>;
+    for (const key of ["current", "with_win", "with_loss"]) {
+      if (body[key]?.["26"]) body[key]["247"] = body[key]["26"];
+    }
+    await route.fulfill({ response, json: body });
+  });
+};
+const calculateWhatIf = async (page: Page) => {
+  await page.getByRole("button", { name: / \d+%$/ }).first().click();
+  await page.getByRole("button", { name: /^Calculate \(/ }).click();
+  await expect(page.getByRole("button", { name: /^Calculate \(/ })).toBeEnabled();
+};
+
+// Row 1: title, x label, y label; then team, x, y (see /basketball/chart/).
+const CHART_CSV = [
+  "Offense vs Defense,Offensive Rating,Defensive Rating",
+  "Duke,121.4,92.8",
+  "North Carolina,117.2,97.5",
+  "Kansas,115.8,94.1",
+  "Houston,112.9,88.6",
+  "Arizona,119.3,96.2",
+  "Gonzaga,120.1,99.4",
+].join("\n");
+
 const DOWNLOAD_ROUTES: DownloadRoute[] = [
   // TableActionButtons: a table, and a history chart (third section)
   { path: "/football/standings/", name: "download-football-standings-table", trigger: clickButton("Download table as image") },
@@ -101,6 +138,49 @@ const DOWNLOAD_ROUTES: DownloadRoute[] = [
   { path: "/football/compare/", name: "download-football-compare-Alabama", setup: selectTeam("Alabama"), trigger: clickButton("Download Chart") },
   // basketball what-if tables (whatif/screenshot.ts)
   { path: "/basketball/whatif/", name: "download-basketball-whatif", trigger: clickScreenshot() },
+  // custom scatterplot (basketball/chart), drawn from an uploaded CSV
+  {
+    path: "/basketball/chart/",
+    name: "download-basketball-chart",
+    setup: async (page) => {
+      await page.locator('input[type="file"]').setInputFiles({
+        name: "chart.csv",
+        mimeType: "text/csv",
+        buffer: Buffer.from(CHART_CSV),
+      });
+    },
+    trigger: async (page) => {
+      await clickButton("Download Chart")(page);
+      await clickButton("Download as PNG")(page);
+    },
+  },
+  // NextGameImpact and WhatIfTeamSummary (basketball what-if, Team Detail)
+  {
+    path: "/basketball/whatif/",
+    name: "download-basketball-whatif-next-game-impact",
+    setup: async (page) => {
+      await nextGameImpactAsArizona(page);
+      await pickDetailTeam(page, "Arizona");
+    },
+    trigger: async (page) => {
+      await teamDetailCard(page).locator('button[title="Download screenshot"]').click();
+    },
+  },
+  {
+    path: "/basketball/whatif/",
+    name: "download-basketball-whatif-team-summary",
+    setup: async (page) => {
+      await calculateWhatIf(page);
+      await pickDetailTeam(page, "Arizona");
+    },
+    trigger: async (page) => {
+      await page
+        .locator('h4:text-is("What If Summary"):visible')
+        .locator("xpath=../..")
+        .locator('button[title="Download screenshot"]')
+        .click();
+    },
+  },
   // team page: Download opens ScreenshotModal; take its first option
   {
     path: "/basketball/team/Duke/",

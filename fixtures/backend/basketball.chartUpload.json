@@ -1,0 +1,57 @@
+{
+  "_note": "Hand-written: what POST /basketball/chart/upload returns for the CSV in e2e/visual.e2e.ts (CHART_CSV). Served for any request body.",
+  "success": true,
+  "data": [
+    {
+      "team_name": "Duke",
+      "x_value": 121.4,
+      "y_value": 92.8,
+      "logo_url": "/images/team_logos/duke.png",
+      "primary_color": "#003087",
+      "secondary_color": "#ffffff"
+    },
+    {
+      "team_name": "North Carolina",
+      "x_value": 117.2,
+      "y_value": 97.5,
+      "logo_url": "/images/team_logos/north_carolina.png",
+      "primary_color": "#7BAFD4",
+      "secondary_color": "#ffffff"
+    },
+    {
+      "team_name": "Kansas",
+      "x_value": 115.8,
+      "y_value": 94.1,
+      "logo_url": "/images/team_logos/kansas.png",
+      "primary_color": "#0051BA",
+      "secondary_color": "#E8000D"
+    },
+    {
+      "team_name": "Houston",
+      "x_value": 112.9,
+      "y_value": 88.6,
+      "logo_url": "/images/team_logos/houston.png",
+      "primary_color": "#C8102E",
+      "secondary_color": "#ffffff"
+    },
+    {
+      "team_name": "Arizona",
+      "x_value": 119.3,
+      "y_value": 96.2,
+      "logo_url": "/images/team_logos/arizona.png",
+      "primary_color": "#CC0033",
+      "secondary_color": "#003366"
+    },
+    {
+      "team_name": "Gonzaga",
+      "x_value": 120.1,
+      "y_value": 99.4,
+      "logo_url": "/images/team_logos/gonzaga.png",
+      "primary_color": "#041E42",
+      "secondary_color": "#C8102E"
+    }
+  ],
+  "x_label": "Offensive Rating",
+  "y_label": "Defensive Rating",
+  "chart_title": "Offense vs Defense"
+}
