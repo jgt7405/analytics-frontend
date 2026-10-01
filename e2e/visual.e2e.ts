@@ -421,11 +421,11 @@ async function settlePage(page: Page, route: VisualRoute) {
 // Sticky elements (table headers and first columns, the site header) are
 // drawn on layers of their own, and text on such a layer was sometimes
 // placed 1 px lower at the phone's 2.625 pixel ratio: the sticky "Power Conf
-// Opponents" header on basketball conf-data (~300 px; 1 of 25 loads, none
-// of 50 with this). The
-// shot is taken from the top with nothing scrolled, so no sticky element is
-// stuck and making them static moves nothing; it only takes them off their
-// layers. Page shots only: exports neutralize sticky cells themselves.
+// Opponents" header on basketball conf-data (~300 px; 1 of 25 loads, none of
+// 50 with this). The shot is taken from the top with nothing scrolled, so no
+// sticky element is stuck and making them static moves nothing; it only
+// takes them off their layers. Page shots only: exports neutralize sticky
+// cells themselves.
 async function unstickForShot(page: Page) {
   const stuck = await page.evaluate(() => {
     let count = 0;
