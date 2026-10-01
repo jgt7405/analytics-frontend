@@ -1,6 +1,6 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). **Step 8 in progress** (history charts done: 8a–8d, #62, #64, #66, #69, 2026-09-29/30; export consolidation (item 4) under way, #74 first). Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). **Step 8 in progress** (history charts done: 8a–8d, #62, #64, #66, #69, 2026-09-29/30; export code (item 4) in `src/lib/export/` with one html2canvas loader, #74–#82, 2026-09-30/10-01; only the game preview PDF keeps its own loader, pending the owner's choice of a PDF check). Baselines are in `docs/baselines/README.md`.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
@@ -241,8 +241,8 @@ Search Console review (2026-09-28, per-URL exports from before 6d, summarized in
 
 Found while splitting, deliberately not fixed here (behavior-preserving scope; each needs its own PR with the owner's OK):
 
-- **Game preview picker is empty in production.** The page filters `/basketball/upcoming_games` by `is_next_game_for_both` and selects by `game_id`, and the backend sends neither, so it shows "0 upcoming". The visual fixture is hand-shaped with both fields.
-- **Game preview `?game=` race.** When the games load, the URL-sync effect still sees no selection and strips `game` from the URL in the same commit as the auto-select, so a shared link can open with nothing selected. CI's Visual job hit it on the base build of #57 and #58; since #59 the screenshot test picks the game itself when this happens, so the harness no longer depends on it. Fix it with the picker bug.
+- **Game preview picker is empty in production.** The page filters `/basketball/upcoming_games` by `is_next_game_for_both` and selects by `game_id`, and the backend sends neither, so it shows "0 upcoming". The visual fixture is hand-shaped with both fields. **Fixed** in backend #11 (both fields added); games show in production (owner, 2026-10-01).
+- **Game preview `?game=` race.** When the games load, the URL-sync effect still sees no selection and strips `game` from the URL in the same commit as the auto-select, so a shared link can open with nothing selected. CI's Visual job hit it on the base build of #57 and #58; since #59 the screenshot test picks the game itself when this happens, so the harness no longer depends on it. **Fixed** in #77: the URL is read once, during render, and written back only after that, so `?game=` survives the load and clearing the dropdown no longer snaps back to the URL's game (5 unit tests; the two race tests fail on the old code).
 
 ## Step 8 — Merge proven duplicates behind shared building blocks
 
@@ -265,10 +265,16 @@ Found while splitting, deliberately not fixed here (behavior-preserving scope; e
 | #71 | Download checks (before item 4) | `DOWNLOAD_ROUTES`: 6 checks click a Download or Screenshot button and compare the saved PNG with the base branch's (desktop; html2canvas served from `node_modules`). Covers `TableActionButtons`, both compare pages, the what-if tables and `ScreenshotModal`; not the game preview PDF, `/basketball/chart/`, `NextGameImpact` or `WhatIfTeamSummary`. |
 | #72 | Lighthouse gate | Relaunches Chrome and retries a page once when Lighthouse loses its connection (`ECONNREFUSED` on the debugging port aborted the whole gate before any audit). |
 | #73 | Screenshot harness | Comparisons run Chrome with `--disable-font-subpixel-positioning`. The same build drew canvas text in one of two ways from identical calls (conf-champ mobile, 220 px, 4 of 10 loads); with the flag 10 of 10 were identical. A rarer flake remains: the sticky "Power Conf Opponents" header text on `basketball-conf-data-ACC` (mobile) sometimes 1 px lower (1 of 3 full repeats), under investigation. |
+| #74 | Item 4: dead code | `src/lib/optimized-screenshot.ts` deleted (509 lines, no importers). |
+| #76 | Item 4: one export module | `export-image`, `save-image`, `screenshot-layout` and `download-compare-chart` moved to `src/lib/export/` (`capture`, `save`, `layout`, `compare-chart`); renames and import lines only. |
+| #78, #80, #82 | Item 4: one html2canvas loader | Eight call sites drop their own copy of the CDN loader for `ensureHtml2Canvas()` from `capture.ts`: `TableActionButtons`, `ScreenshotModal`, the what-if screenshot, both basketball compare pages, `NextGameImpact`, `WhatIfTeamSummary` and `/basketball/chart/` (which still preloads it). Each batch verified by the download checks; duplicate `window.html2canvas` declarations removed. |
+| #81 | Download checks | `NextGameImpact`, `WhatIfTeamSummary` (after a calculation, answered by the baseline fixture) and `/basketball/chart/` (a CSV upload answered by the hand-written `basketball.chartUpload` fixture); #80 added the archive compare page. Only the game preview PDF is unchecked (it is a PDF, not a PNG). Noticed, not changed: the chart export's axis tick labels overlap into an unreadable band (a visible fix for its own PR). |
+| #77 | Game preview `?game=` race | See "Found while splitting" under step 7. |
+| #79 | Screenshot harness | Sticky elements are made static before page shots (nothing is scrolled, so none moves): sticky header text was sometimes drawn 1 px lower on mobile (`basketball-conf-data-ACC`, 1 of 25 loads; 0 of 50 with this). |
 
 All four near-copy groups are merged. Within one sport the standings and first-place charts differ by 265 lines, so there is no single generic history chart: shared pieces live in `features/shared/history-chart/` (card, hover lens, dark-mode hook). Presentation settings that drifted between sports (percent format, tooltip rows, padding, logo spacing, end-label offsets) are kept per sport in the themes; unifying any of them is a visible change for its own PR, with the owner's OK.
 
-Item 4 (export code), as agreed with the owner: download checks first (#71), then delete the unused `optimized-screenshot.ts` (#74), then move `export-image`, `save-image`, `download-compare-chart` and `screenshot-layout` into `src/lib/export/` and migrate the call sites a few per PR, each verified by the download checks.
+Item 4 (export code), as agreed with the owner: download checks first (#71, #81), then delete the unused `optimized-screenshot.ts` (#74), move the rest into `src/lib/export/` (#76) and give the call sites one html2canvas loader, a few per PR (#78, #80, #82). Left: the game preview PDF (`game-preview/pdf.ts`), which has no check because it produces a PDF; it stays as is until the owner chooses whether to add a page-image comparison for it.
 
 ## Step 9 — Measured performance work
 
