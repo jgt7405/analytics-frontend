@@ -168,9 +168,9 @@ export default function WinsContent<TTeam>({
     selectedConference,
     season,
     // initialData was server-fetched for the default conference of the
-    // current season only; apply it just for that combination so the
-    // canonical URL ships real content.
-    selectedConference === "Big 12" && !season ? initialData : undefined,
+    // page's season (current or archive); apply it just for that conference
+    // so the first paint ships real content.
+    selectedConference === "Big 12" ? initialData : undefined,
   );
 
   useEffect(() => {
