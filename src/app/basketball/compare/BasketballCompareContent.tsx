@@ -10,6 +10,7 @@ import {
   getFullContentWidth,
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
+import { ensureHtml2Canvas } from "@/lib/export/capture";
 import { saveCanvasImage } from "@/lib/export/save";
 import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
@@ -258,20 +259,7 @@ export default function BasketballCompareContent() {
     if (!chartElement) return;
 
     try {
-      // Load html2canvas from CDN if not already loaded
-      if (!window.html2canvas) {
-        const script = document.createElement("script");
-        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          document.body.appendChild(script);
-        });
-      }
-
-      if (!window.html2canvas) {
-        throw new Error("Failed to load html2canvas");
-      }
+      await ensureHtml2Canvas();
 
       // Helper function to convert image URL to base64
       const imageToBase64 = async (url: string): Promise<string> => {
