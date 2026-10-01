@@ -5,6 +5,13 @@ Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
 
+## Where to pick up (2026-10-01)
+
+- **Next: step 9.** Start by re-measuring the weak pages listed there (Lighthouse via the "Production baseline" workflow, since agent sessions can't reach production; `npm run size` for bundles) and propose the first change with its expected before/after, before writing code. Each item is kept only if it beats the step 1 baselines.
+- **Open from step 6:** the Search Console re-check around 2026-10-11 against `docs/baselines/README.md` (record a summary only; the owner does the clicks, so give tap-by-tap steps).
+- **Owner decisions on record:** the game preview PDF stays unchecked with its own loader; the scatterplot stays wider than a phone screen; per-sport presentation differences kept in the chart themes are visible changes that need the owner's OK.
+- **Nothing open:** no PRs, branches or check-ins pending. The umbrella repo (`jthom-analytics-umbrella`) points at current `main` of both submodules.
+
 ## Guiding principles
 
 1. **Measure before optimizing.** No performance change ships without a recorded baseline and a before/after number.
