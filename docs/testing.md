@@ -59,5 +59,5 @@ Four layers, from fastest to slowest. None of the local layers needs the backend
 
 ## Next
 
-- The game preview PDF is the one export without a check (a PDF, not a PNG). Comparing it would mean rendering its pages to images first; owner's call before its loader moves to `ensureHtml2Canvas`.
+- The game preview PDF is the one export without a check (a PDF, not a PNG); the owner chose to leave it unchecked (2026-10-01).
 - Step 10: automated accessibility checks (axe) and keyboard/focus tests for tables, charts, selectors and modals.
