@@ -9,6 +9,12 @@
 //   npm run baseline:lighthouse                                # production site
 //   npm run baseline:lighthouse -- --base http://localhost:3000
 //   npm run baseline:lighthouse -- --runs 5 --out .baseline/lighthouse.json
+//   npm run baseline:lighthouse -- --add-routes /football/seed/,/football/twv/
+//   npm run baseline:lighthouse -- --preset desktop --routes /football/seed/
+//
+// --routes replaces the default route list, --add-routes appends to it (both
+// comma-separated). --preset desktop uses Lighthouse's desktop config (no
+// throttled phone); the default is the mobile preset.
 //
 // CI gates (optional): exit non-zero when a route's accessibility score is
 // below --min-accessibility, and print a GitHub warning when performance is
@@ -25,8 +31,9 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import * as chromeLauncher from "chrome-launcher";
 import lighthouse from "lighthouse";
+import desktopConfig from "lighthouse/core/config/desktop-config.js";
 
-const ROUTES = [
+const DEFAULT_ROUTES = [
   "/football/wins/",
   "/football/standings/",
   "/football/team/Alabama/",
@@ -39,6 +46,18 @@ const ROUTES = [
 function arg(name, fallback) {
   const index = process.argv.indexOf(`--${name}`);
   return index === -1 ? fallback : process.argv[index + 1];
+}
+
+const list = (value) =>
+  value ? value.split(",").map((r) => r.trim()).filter(Boolean) : [];
+const ROUTES = [
+  ...(list(arg("routes")).length ? list(arg("routes")) : DEFAULT_ROUTES),
+  ...list(arg("add-routes")),
+];
+const preset = arg("preset", "mobile");
+if (preset !== "mobile" && preset !== "desktop") {
+  console.error(`--preset must be mobile or desktop, not ${preset}`);
+  process.exit(1);
 }
 
 const base = arg("base", "https://www.jthomanalytics.com").replace(/\/$/, "");
@@ -71,7 +90,22 @@ function summarize(lhr) {
     jsTransferKb: +(jsBytes / 1024).toFixed(1),
     proxyRequests: requests.filter((r) => r.url.includes("/api/proxy/")).length,
     totalRequests: requests.length,
+    // Where the requests come from, to attribute changes in totalRequests.
+    requestsByType: countBy(requests, (r) => r.resourceType ?? "Other"),
+    requestsByHost: countBy(requests, (r) => {
+      try {
+        return new URL(r.url).host;
+      } catch {
+        return "other";
+      }
+    }),
   };
+}
+
+function countBy(items, key) {
+  const counts = {};
+  for (const item of items) counts[key(item)] = (counts[key(item)] ?? 0) + 1;
+  return Object.fromEntries(Object.entries(counts).sort((a, b) => b[1] - a[1]));
 }
 
 function median(results) {
@@ -89,6 +123,8 @@ let chrome = await launchChrome();
 // Headless Chrome occasionally drops its debugging connection mid-audit
 // (ECONNREFUSED on its port), which would otherwise abort the whole gate.
 // Relaunch it and retry the audit once; a second failure counts as a failed run.
+const config = preset === "desktop" ? desktopConfig : undefined;
+
 async function audit(url) {
   const options = {
     output: "json",
@@ -96,13 +132,13 @@ async function audit(url) {
     onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
   };
   try {
-    return await lighthouse(url, { ...options, port: chrome.port });
+    return await lighthouse(url, { ...options, port: chrome.port }, config);
   } catch (error) {
     console.error(`${url}: ${error.message}; relaunching Chrome and retrying`);
     await Promise.resolve(chrome.kill()).catch(() => {});
     chrome = await launchChrome();
     try {
-      return await lighthouse(url, { ...options, port: chrome.port });
+      return await lighthouse(url, { ...options, port: chrome.port }, config);
     } catch (retryError) {
       console.error(`${url}: ${retryError.message}`);
       return null;
@@ -110,7 +146,7 @@ async function audit(url) {
   }
 }
 
-const report = { base, runs, recordedAt: new Date().toISOString(), routes: {} };
+const report = { base, preset, runs, recordedAt: new Date().toISOString(), routes: {} };
 const failures = [];
 try {
   for (const route of ROUTES) {

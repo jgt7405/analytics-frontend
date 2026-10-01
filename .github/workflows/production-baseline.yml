@@ -27,7 +27,7 @@ permissions:
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -40,7 +40,18 @@ jobs:
           npm run baseline:lighthouse -- \
             --base "${{ inputs.base || 'https://www.jthomanalytics.com' }}" \
             --runs "${{ inputs.runs || '3' }}" \
+            --add-routes /football/seed/,/football/compare/,/football/twv/ \
             --out lighthouse-baseline.json
+      # The field data's weak desktop pages (docs/baselines/README.md), with
+      # /football/wins/ as the reference page.
+      - name: Run Lighthouse (desktop)
+        run: |
+          npm run baseline:lighthouse -- \
+            --base "${{ inputs.base || 'https://www.jthomanalytics.com' }}" \
+            --runs "${{ inputs.runs || '3' }}" \
+            --preset desktop \
+            --routes /football/seed/,/football/compare/,/football/wins/ \
+            --out lighthouse-desktop.json
       - name: Probe the backend proxy
         run: |
           npm run baseline:proxy -- \
@@ -50,11 +61,12 @@ jobs:
             --out proxy-probe.json
       - name: Print results
         if: always()
-        run: cat lighthouse-baseline.json proxy-probe.json || true
+        run: cat lighthouse-baseline.json lighthouse-desktop.json proxy-probe.json || true
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: production-baseline
           path: |
             lighthouse-baseline.json
+            lighthouse-desktop.json
             proxy-probe.json

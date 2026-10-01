@@ -10,7 +10,7 @@ Each performance PR should state its before/after against the most recent baseli
 | Lint, types, unit tests | `npm run verify` | Anywhere |
 | Production build + route sizes | `npm run verify:full` (or `npm run build && npm run size`) | Anywhere; no backend needed |
 | Route sizes as JSON | `npm run size -- --json > docs/baselines/<date>-route-sizes.json` | After a build |
-| Lighthouse, lab Web Vitals, requests per page | `npm run baseline:lighthouse` (defaults to the production site; `-- --base <url>` for another host, `-- --runs 5` for more runs) | Somewhere that can reach the site **and** its backend. Easiest: GitHub → Actions → "Production baseline" → Run workflow |
+| Lighthouse, lab Web Vitals, requests per page | `npm run baseline:lighthouse` (defaults to the production site; `-- --base <url>` for another host, `-- --runs 5` for more runs, `-- --add-routes /a/,/b/` or `-- --routes /a/` for other pages, `-- --preset desktop` for desktop) | Somewhere that can reach the site **and** its backend. Easiest: GitHub → Actions → "Production baseline" → Run workflow (also runs daily; measures the default pages plus `/football/seed/`, `/football/compare/`, `/football/twv/` on mobile, and the seed, compare and wins pages on desktop) |
 | Proxy reliability, cache and latency | `npm run baseline:proxy` (`-- --rounds 10` for more) | Same; also runs in the "Production baseline" workflow |
 | Field Core Web Vitals | Vercel dashboard → Speed Insights | Vercel |
 | Proxy error and timeout rates | Vercel dashboard → Logs, filter `/api/proxy` | Vercel |
