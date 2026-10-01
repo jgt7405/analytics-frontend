@@ -18,6 +18,7 @@
 
 import { http, HttpResponse, type HttpHandler } from "msw";
 import { ENDPOINTS, type EndpointKey } from "../../src/api/endpoints";
+import basketballChartUpload from "./basketball.chartUpload.json";
 import basketballConfChampAnalysis from "./basketball.confChampAnalysis.json";
 import basketballConferenceData from "./basketball.conferenceData.json";
 import basketballConferenceDataHistory from "./basketball.conferenceDataHistory.json";
@@ -42,6 +43,7 @@ type Json = Record<string, unknown>;
 type Row = Record<string, unknown>;
 
 export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
+  "basketball.chartUpload": basketballChartUpload,
   "basketball.confChampAnalysis": basketballConfChampAnalysis,
   "basketball.conferenceData": basketballConferenceData,
   "basketball.conferenceDataHistory": basketballConferenceDataHistory,
@@ -53,6 +55,9 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "basketball.team": basketballTeam,
   "basketball.teams": basketballTeams,
   "basketball.upcomingGames": basketballUpcomingGames,
+  // A calculation returns the same shape as the baseline; the screenshot
+  // checks only need one to land (WhatIfTeamSummary renders after it).
+  "basketball.whatIf": basketballWhatIfBaseline,
   "basketball.whatIfBaseline": basketballWhatIfBaseline,
   "football.conferenceData": footballConferenceData,
   "football.conferenceDataHistory": footballConferenceDataHistory,
