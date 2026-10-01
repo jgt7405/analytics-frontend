@@ -6,6 +6,8 @@ import {
   BasketballTableSkeleton,
   BoxWhiskerChartSkeleton,
 } from "@/components/ui/LoadingSkeleton";
+import { ResponsiveProvider } from "@/components/providers/ResponsiveProvider";
+import { detectMobileFromHeaders } from "@/lib/server-device";
 import FootballWinsContent from "./FootballWinsContent";
 
 // See note in basketball/wins/page.tsx: dynamic render so useSearchParams resolves
@@ -31,10 +33,15 @@ function WinsPageSkeleton() {
 }
 
 export default async function FootballWinsPage() {
-  const initialData = await getFootballStandingsServer("Big 12");
+  const [initialData, initialIsMobile] = await Promise.all([
+    getFootballStandingsServer("Big 12"),
+    detectMobileFromHeaders(),
+  ]);
   return (
-    <Suspense fallback={<WinsPageSkeleton />}>
-      <FootballWinsContent initialData={initialData} />
-    </Suspense>
+    <ResponsiveProvider initialIsMobile={initialIsMobile}>
+      <Suspense fallback={<WinsPageSkeleton />}>
+        <FootballWinsContent initialData={initialData} />
+      </Suspense>
+    </ResponsiveProvider>
   );
 }
