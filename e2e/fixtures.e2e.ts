@@ -84,3 +84,14 @@ test("an archive page asks the backend for its season", async ({ page }) => {
     "/api/football/standings/Southeastern?season=2025-26",
   );
 });
+
+test("the football archive wins page server-renders its default conference", async ({ request }) => {
+  // The table is in the HTML, so the first paint needs no browser data request
+  // (step 9 archive pilot, like the current-season page).
+  const response = await request.get("/football/2025-26/wins/");
+  expect(response.status()).toBe(200);
+  expect(await response.text()).toContain("Alabama");
+  expect(await requestedBackendUrls()).toContain(
+    "/api/football/standings/Big_12?season=2025-26",
+  );
+});
