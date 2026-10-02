@@ -7,6 +7,7 @@ import {
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
 import { ensureHtml2Canvas } from "@/lib/export/capture";
+import { setInlinedSrc } from "@/lib/export/inline";
 import { saveCanvasImage } from "@/lib/export/save";
 import { useState } from "react";
 import { logger } from "@/lib/logger";
@@ -178,7 +179,7 @@ export default function ScreenshotModal({
       const originalImg = originalImagesArray[index] as HTMLImageElement;
       const base64 = imageMap.get(originalImg);
       if (base64) {
-        (clonedImg as HTMLImageElement).src = base64;
+        setInlinedSrc(clonedImg as HTMLImageElement, base64);
       }
     });
 
