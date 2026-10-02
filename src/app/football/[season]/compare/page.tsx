@@ -12,6 +12,7 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
+import { resizedLogoSrc } from "@/lib/logo-src";
 
 interface Team {
   team_name: string;
@@ -294,7 +295,7 @@ export default function FootballCompareArchivePage() {
                             title={team.team_name}
                           >
                             <img
-                              src={team.logo_url}
+                              src={resizedLogoSrc(team.logo_url, 32)}
                               alt={team.team_name}
                               className="h-8 w-8 object-contain"
                             />
@@ -349,7 +350,7 @@ export default function FootballCompareArchivePage() {
                       {index + 1}
                     </span>
                     <img
-                      src={team.teamLogo}
+                      src={resizedLogoSrc(team.teamLogo, 24)}
                       alt={team.teamName}
                       className="h-6 w-6 object-contain"
                     />
