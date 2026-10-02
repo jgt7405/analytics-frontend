@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Request, type TestInfo } from "@playwright/test";
-import { access, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import sharp from "sharp";
 
@@ -367,6 +367,71 @@ function trackDataRequests(page: Page) {
 const SHOT_HEIGHT = 5_000;
 
 test.describe.configure({ timeout: 180_000 });
+
+// In CI the diff images only reach the uploaded artifact, which agent
+// sessions can't download. On a failed comparison, log where the pixels
+// differ and a small before/after crop (base64 PNG between the
+// VISUAL-DIFF markers: expected on the left, actual on the right). Set
+// VISUAL_DIFF_LOG=1 to get the same locally.
+test.afterEach(async ({}, testInfo) => {
+  if (!(process.env.CI || process.env.VISUAL_DIFF_LOG) || testInfo.status === testInfo.expectedStatus) return;
+  const files = await readdir(testInfo.outputDir).catch(() => [] as string[]);
+  for (const expectedName of files.filter((f) => f.endsWith("-expected.png"))) {
+    const actualName = expectedName.replace(/-expected\.png$/, "-actual.png");
+    if (!files.includes(actualName)) continue;
+    await logDiff(
+      join(testInfo.outputDir, expectedName),
+      join(testInfo.outputDir, actualName),
+    ).catch((error) => console.warn(`[visual-diff] ${expectedName}: ${error}`));
+  }
+});
+
+async function logDiff(expectedPath: string, actualPath: string) {
+  const load = (path: string) =>
+    sharp(path).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const [a, b] = await Promise.all([load(expectedPath), load(actualPath)]);
+  const name = expectedPath.split("/").pop()!.replace(/-expected\.png$/, "");
+  const { width, height } = a.info;
+  if (width !== b.info.width || height !== b.info.height) {
+    console.log(`[visual-diff] ${name}: size ${width}x${height} vs ${b.info.width}x${b.info.height}`);
+    return;
+  }
+  let count = 0;
+  let [left, top, right, bottom] = [width, height, -1, -1];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      if (a.data[i] === b.data[i] && a.data[i + 1] === b.data[i + 1] && a.data[i + 2] === b.data[i + 2]) continue;
+      count++;
+      [left, top, right, bottom] = [Math.min(left, x), Math.min(top, y), Math.max(right, x), Math.max(bottom, y)];
+    }
+  }
+  console.log(`[visual-diff] ${name}: ${count} px differ, box x ${left}-${right}, y ${top}-${bottom} of ${width}x${height}`);
+  if (count === 0) return;
+  // The box plus a 20 px margin, at most 360x240 per side after scaling.
+  const region = {
+    left: Math.max(0, left - 20),
+    top: Math.max(0, top - 20),
+    width: Math.min(width, right + 21) - Math.max(0, left - 20),
+    height: Math.min(height, bottom + 21) - Math.max(0, top - 20),
+  };
+  const scale = Math.min(1, 360 / region.width, 240 / region.height);
+  const side = { width: Math.max(1, Math.round(region.width * scale)), height: Math.max(1, Math.round(region.height * scale)) };
+  const crop = (path: string) => sharp(path).extract(region).resize(side).png().toBuffer();
+  const [before, after] = await Promise.all([crop(expectedPath), crop(actualPath)]);
+  const pair = await sharp({
+    create: { width: side.width * 2 + 4, height: side.height, channels: 4, background: "#ff00ff" },
+  })
+    .composite([
+      { input: before, left: 0, top: 0 },
+      { input: after, left: side.width + 4, top: 0 },
+    ])
+    .png()
+    .toBuffer();
+  console.log(`VISUAL-DIFF-BEGIN ${name} scale ${scale.toFixed(2)}`);
+  console.log(pair.toString("base64").match(/.{1,1000}/g)!.join("\n"));
+  console.log(`VISUAL-DIFF-END ${name}`);
+}
 // No service worker: the site's registers on the first load and takes over
 // the reload, and a code chunk requested while it activates sometimes never
 // arrived (a chart stuck on its loading skeleton in CI).
