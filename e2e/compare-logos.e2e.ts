@@ -3,7 +3,11 @@ import { expect, test } from "@playwright/test";
 // The compare pages' team picker shows every team's logo at 32 px. The logo
 // files are ~500 px wide (median 30 kB), so they go through the image
 // optimizer (plan step 9): about 1 kB each instead of the original file.
-for (const path of ["/basketball/compare/", "/basketball/2025-26/compare/"]) {
+for (const path of [
+  "/basketball/compare/",
+  "/basketball/2025-26/compare/",
+  "/football/compare/",
+]) {
   test(`${path} loads team logos resized`, async ({ page }) => {
     await page.goto(path);
     const logos = page.locator("button[title] img");
