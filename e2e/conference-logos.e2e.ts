@@ -20,3 +20,17 @@ for (const path of ["/football/team/Alabama/", "/basketball/2025-26/conf-data/"]
     expect(originals).toEqual([]);
   });
 }
+
+// The team page shows the conference logo at a fixed height and its own
+// width (ACC is 3.4:1), so the file asked for must be at least that wide.
+test("/basketball/team/Duke/ asks for a conference logo as wide as it is shown", async ({ page }) => {
+  await page.goto("/basketball/team/Duke/");
+  const logo = page.locator('img[src*="conf_logos"]:visible').first();
+  await expect(logo).toHaveJSProperty("complete", true);
+  const { requested, needed } = await logo.evaluate((img: HTMLImageElement) => ({
+    requested: Number(new URL(img.currentSrc).searchParams.get("w")),
+    needed: Math.ceil(img.getBoundingClientRect().width * window.devicePixelRatio),
+  }));
+  expect(needed).toBeGreaterThan(100);
+  expect(requested).toBeGreaterThanOrEqual(needed);
+});
