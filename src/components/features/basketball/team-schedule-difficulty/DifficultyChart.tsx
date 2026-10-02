@@ -14,6 +14,7 @@ import {
   TOP_SECTION_HEIGHT,
   TOTAL_CHART_HEIGHT,
 } from "./constants";
+import { resizedLogoSrc } from "@/lib/logo-src";
 import { difficultyRank } from "./data";
 import type { AllScheduleGame, HighProbRecord, Percentile, PositionedGame } from "./types";
 
@@ -158,7 +159,10 @@ export default function DifficultyChart({
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={game.opponent_logo || "/images/team_logos/default.png"}
+                      src={resizedLogoSrc(
+                        game.opponent_logo || "/images/team_logos/default.png",
+                        24,
+                      )}
                       alt={game.opponent}
                       style={{
                         width: "24px",

@@ -5,6 +5,7 @@
 // win-probability, location and game-number cells.
 
 import { LOGO_SIZE } from "./constants";
+import { resizedLogoSrc } from "@/lib/logo-src";
 import { locationStyle, winProbCellStyle } from "./data";
 import type { LogoPosition } from "./types";
 
@@ -41,7 +42,11 @@ export default function GameRow({ position, barX, lineColor }: GameRowProps) {
         y={yPosition - LOGO_SIZE / 2}
         width={LOGO_SIZE}
         height={LOGO_SIZE}
-        href={game.opponent_logo ? game.opponent_logo : "/images/team_logos/default.png"}
+        // Drawn at LOGO_SIZE in an SVG that can scale up; 32 px keeps it sharp.
+        href={resizedLogoSrc(
+          game.opponent_logo || "/images/team_logos/default.png",
+          32,
+        )}
         style={{
           border: `2px solid ${lineColor}`,
           borderRadius: "4px",

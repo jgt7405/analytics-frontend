@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { SeedTeam } from "@/types/basketball";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./BballSeedCeilingFloor.module.css";
+import { resizedLogoSrc } from "@/lib/logo-src";
 
 interface BballSeedCeilingFloorProps {
   seedData: SeedTeam[];
@@ -253,7 +254,7 @@ export default function BballSeedCeilingFloor({
                   {/* Team logo */}
                   {team.logo_url && (
                     <image
-                      href={team.logo_url}
+                      href={resizedLogoSrc(team.logo_url, 28)}
                       x={logoX}
                       y={yPos - logoSize / 2}
                       width={logoSize}
@@ -334,7 +335,7 @@ export default function BballSeedCeilingFloor({
                     {/* Team logo */}
                     {team.logo_url && (
                       <image
-                        href={team.logo_url}
+                        href={resizedLogoSrc(team.logo_url, 28)}
                         x={logoX}
                         y={yPos - logoSize / 2}
                         width={logoSize}

@@ -8,6 +8,7 @@ import { teamPagePathFromRoute } from "@/components/ui/TeamLogo";
 import { usePathname, useRouter } from "next/navigation";
 import { CHART_HEIGHT, MARGIN, PLOT_HEIGHT } from "./constants";
 import type { Percentile, PositionedGame } from "./types";
+import { resizedLogoSrc } from "@/lib/logo-src";
 
 interface DifficultyChartProps {
   chartWidth: number;
@@ -142,7 +143,7 @@ export default function DifficultyChart({
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={game.opponent_logo}
+                      src={resizedLogoSrc(game.opponent_logo, 32)}
                       alt={game.opponent}
                       style={{
                         width: "32px",
