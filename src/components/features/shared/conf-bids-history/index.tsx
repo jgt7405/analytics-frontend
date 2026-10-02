@@ -511,7 +511,6 @@ export default function ConfBidsHistoryChart({
                           width={20}
                           height={20}
                           className="object-contain"
-                          unoptimized
                           style={{
                             filter: isSelected ? "none" : "grayscale(100%)",
                           }}

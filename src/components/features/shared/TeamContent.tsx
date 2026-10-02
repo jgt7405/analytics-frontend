@@ -422,7 +422,6 @@ export default function TeamContent<TData, THistory>({
         width={size}
         height={size}
         className={`${size > 32 ? "h-12" : "h-8"} w-auto object-contain`}
-        unoptimized
         onError={(e) => {
           e.currentTarget.style.display = "none";
         }}
