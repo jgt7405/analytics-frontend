@@ -25,7 +25,7 @@ function Header() {
     >
       <LogoAnimationProvider>
         <div className="header-content flex items-center justify-between w-full px-4 py-0 md:justify-start md:gap-8">
-          <Link href={logoLink} className="logo-link flex-shrink-0">
+          <Link href={logoLink} prefetch={false} className="logo-link flex-shrink-0">
             <AnimatedLogo />
           </Link>
           <Navigation />

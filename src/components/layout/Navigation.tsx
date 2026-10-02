@@ -169,6 +169,7 @@ function NavigationContent() {
           const href = addConferenceToUrl(item.path);
           return (
             <Link
+              prefetch={false}
               key={item.basePath}
               href={href}
               className={cn(
@@ -194,6 +195,7 @@ function NavigationContent() {
         })}
 
         <Link
+          prefetch={false}
           href={getSportSwitchUrl()}
           onClick={handleSportSwitch}
           className={cn(
@@ -248,6 +250,7 @@ function NavigationContent() {
 
               return (
                 <Link
+                  prefetch={false}
                   key={item.basePath}
                   href={href}
                   ref={isFirst ? firstItemRef : undefined}
@@ -293,6 +296,7 @@ function NavigationContent() {
             </button>
 
             <Link
+              prefetch={false}
               href={getSportSwitchUrl()}
               className={cn(
                 navStyles.tabButton,
