@@ -2,6 +2,7 @@ import {
   expandExportClone,
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
+import { setInlinedSrc } from "@/lib/export/inline";
 import { saveCanvasImage } from "@/lib/export/save";
 import { logger } from "@/lib/logger";
 
@@ -187,7 +188,7 @@ export async function captureAndSaveElement({
     await Promise.all(
       htmlImages.map(async (img) => {
         try {
-          img.src = await toDataUri(img.src);
+          setInlinedSrc(img, await toDataUri(img.src));
           await img.decode().catch(() => {});
         } catch (err) {
           logger.warn("Export: could not inline <img>", img.src, err);
