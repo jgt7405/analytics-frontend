@@ -9,6 +9,7 @@ import {
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
 import { ensureHtml2Canvas } from "@/lib/export/capture";
+import { setInlinedSrc } from "@/lib/export/inline";
 import { saveCanvasImage } from "@/lib/export/save";
 import { Download, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -154,7 +155,7 @@ export default function BasketballChartPage() {
 
         try {
           const base64 = await imageToBase64(originalUrl);
-          imgEl.src = base64;
+          setInlinedSrc(imgEl, base64);
         } catch (e) {
           logger.error("Base64 conversion failed for:", originalUrl, e);
         }

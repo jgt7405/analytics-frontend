@@ -1043,6 +1043,7 @@ export default function BballScatterplotChart({
                     alt={team.team_name}
                     title={team.team_name}
                     fill
+                    sizes={`${settings.logoSize}px`}
                     style={{
                       opacity: hoveredTeam === team.team_name ? 1 : 0.8,
                       transition: "opacity 0.2s, filter 0.2s",
@@ -1054,7 +1055,6 @@ export default function BballScatterplotChart({
                       border: "none",
                       outline: "none",
                     }}
-                    unoptimized
                   />
                 )}
               </div>
