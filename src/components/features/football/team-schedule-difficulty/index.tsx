@@ -26,6 +26,7 @@ import {
   positionGames,
   similarDifficulty,
 } from "./data";
+import { resizedLogoSrc } from "@/lib/logo-src";
 import DifficultyChart from "./DifficultyChart";
 import FilterGroup from "./FilterGroup";
 import GameTooltip from "./GameTooltip";
@@ -110,7 +111,7 @@ export default function FootballTeamScheduleDifficulty({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={_logoUrl}
+            src={resizedLogoSrc(_logoUrl, 32)}
             alt="Team logo"
             style={{
               width: isMobile ? "24px" : "32px",

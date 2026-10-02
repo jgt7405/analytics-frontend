@@ -7,6 +7,7 @@
 
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMemo, useState } from "react";
+import { resizedLogoSrc } from "@/lib/logo-src";
 import {
   CHART_WIDTH_DESKTOP,
   CHART_WIDTH_MOBILE,
@@ -97,7 +98,7 @@ export default function BasketballTeamScheduleDifficulty({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={_logoUrl}
+              src={resizedLogoSrc(_logoUrl, 32)}
               alt="Team logo"
               style={{
                 width: isMobile ? "24px" : "32px",
