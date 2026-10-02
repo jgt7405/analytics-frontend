@@ -6,6 +6,7 @@
 
 import { CHART_HEIGHT, COLUMN_WIDTH, GRAY_COLOR, MARGIN, PLOT_HEIGHT, SVG_FONT_FAMILY, TOP_SECTION_HEIGHT } from "./constants";
 import type { PositionedGame, TeamSchedule, TeamStats } from "./types";
+import { resizedLogoSrc } from "@/lib/logo-src";
 
 interface TeamColumnProps {
   team: TeamSchedule;
@@ -49,7 +50,7 @@ export default function TeamColumn({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={team.teamLogo}
+          src={resizedLogoSrc(team.teamLogo, 36)}
           alt={team.teamName}
           style={{
             width: "36px",
@@ -153,7 +154,7 @@ export default function TeamColumn({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={game.opponentLogo}
+                  src={resizedLogoSrc(game.opponentLogo, 18)}
                   alt={game.opponent}
                   style={{
                     width: "18px",

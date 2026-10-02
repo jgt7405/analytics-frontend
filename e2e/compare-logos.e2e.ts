@@ -20,3 +20,25 @@ for (const path of [
     for (const src of srcs) expect(new URL(src, page.url()).pathname).toMatch(/^\/_next\/image\/?$/);
   });
 }
+
+// Picking a team draws its schedule (compare-schedules' TeamColumn): the
+// team's logo and every opponent's, with plain <img>. They use
+// resizedLogoSrc, so no original logo file is downloaded.
+for (const [path, team] of [
+  ["/basketball/compare/", "Duke"],
+  ["/football/compare/", "Alabama"],
+]) {
+  test(`${path} schedule columns load no full-size logo`, async ({ page }) => {
+    const originals: string[] = [];
+    page.on("request", (request) => {
+      const { pathname } = new URL(request.url());
+      if (/^\/images\/(team|conf)_logos\//.test(pathname)) originals.push(pathname);
+    });
+    await page.goto(path);
+    await page.locator(`button[title="${team}"]`).first().click();
+    const opponentLogos = page.locator('img[src*="team_logos"]');
+    await expect(opponentLogos.nth(3)).toBeAttached();
+    await page.waitForTimeout(2000);
+    expect(originals).toEqual([]);
+  });
+}
