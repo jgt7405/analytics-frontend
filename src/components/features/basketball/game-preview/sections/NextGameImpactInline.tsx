@@ -6,6 +6,7 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { getCellColor } from "@/lib/color-utils";
 import { type NextGameImpactData, type NextGameMetrics, type TeamInfo } from "@/types/gamePreview";
 import { TEAL, getLogoUrl, ordinal } from "../metrics";
+import { resizedLogoSrc } from "@/lib/logo-src";
 
 // ─── Next Game Impact Inline Component ───────────────────────────────────────
 
@@ -80,7 +81,7 @@ export function NextGameImpactInline({
         <div className="flex items-center gap-0.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={getLogoUrl(game.away_team_logo)}
+            src={resizedLogoSrc(getLogoUrl(game.away_team_logo), 16)}
             alt={game.away_team}
             className="w-4 h-4 object-contain"
             onError={(e) => {
@@ -93,7 +94,7 @@ export function NextGameImpactInline({
         <div className="flex items-center gap-0.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={getLogoUrl(game.home_team_logo)}
+            src={resizedLogoSrc(getLogoUrl(game.home_team_logo), 16)}
             alt={game.home_team}
             className="w-4 h-4 object-contain"
             onError={(e) => {
