@@ -1,5 +1,7 @@
 "use client";
 
+import { resizedLogoSrc } from "@/lib/logo-src";
+
 // Team logo and check-mark icons.
 
 
@@ -17,7 +19,7 @@ export function TeamLogo({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src}
+      src={resizedLogoSrc(src, size)}
       alt={alt}
       width={size}
       height={size}

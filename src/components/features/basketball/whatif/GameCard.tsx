@@ -5,6 +5,7 @@
 import { type WhatIfGame } from "@/hooks/useBasketballWhatIf";
 import { TEAL_COLOR } from "./helpers";
 import { CheckIcon } from "./icons";
+import { resizedLogoSrc } from "@/lib/logo-src";
 
 function TeamTile({
   logoUrl,
@@ -47,7 +48,7 @@ function TeamTile({
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={logoUrl}
+            src={resizedLogoSrc(logoUrl, 24)}
             alt={teamName}
             className="w-6 h-6 object-contain"
             onError={(e) => {
