@@ -7,6 +7,7 @@ for (const path of [
   "/basketball/compare/",
   "/basketball/2025-26/compare/",
   "/football/compare/",
+  "/football/2025-26/compare/",
 ]) {
   test(`${path} loads team logos resized`, async ({ page }) => {
     await page.goto(path);
