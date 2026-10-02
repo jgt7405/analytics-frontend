@@ -25,12 +25,20 @@ for (const path of ["/football/team/Alabama/", "/basketball/2025-26/conf-data/"]
 // width (ACC is 3.4:1), so the file asked for must be at least that wide.
 test("/basketball/team/Duke/ asks for a conference logo as wide as it is shown", async ({ page }) => {
   await page.goto("/basketball/team/Duke/");
-  const logo = page.locator('img[src*="conf_logos"]:visible').first();
-  await expect(logo).toHaveJSProperty("complete", true);
-  const { requested, needed } = await logo.evaluate((img: HTMLImageElement) => ({
-    requested: Number(new URL(img.currentSrc).searchParams.get("w")),
-    needed: Math.ceil(img.getBoundingClientRect().width * window.devicePixelRatio),
-  }));
-  expect(needed).toBeGreaterThan(100);
+  // The header swaps its phone and desktop layouts after hydration, so the
+  // logo first found can be replaced or not yet laid out: measure until a
+  // loaded logo has its final width.
+  const measure = () =>
+    page
+      .locator('img[src*="conf_logos"]:visible')
+      .first()
+      .evaluate((img: HTMLImageElement) => ({
+        requested: img.complete && img.currentSrc ? Number(new URL(img.currentSrc).searchParams.get("w")) : 0,
+        needed: Math.ceil(img.getBoundingClientRect().width * window.devicePixelRatio),
+      }))
+      .catch(() => ({ requested: 0, needed: 0 }));
+  await expect.poll(async () => (await measure()).needed).toBeGreaterThan(100);
+  await expect.poll(async () => (await measure()).requested).toBeGreaterThan(0);
+  const { requested, needed } = await measure();
   expect(requested).toBeGreaterThanOrEqual(needed);
 });
