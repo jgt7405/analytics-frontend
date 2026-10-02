@@ -618,7 +618,7 @@ export default function ArchiveBasketballComparePage() {
                                   alt={team.team_name}
                                   fill
                                   className="object-contain p-1"
-                                  unoptimized
+                                  sizes="40px"
                                 />
                                 {isSelected && (
                                   <div className="absolute top-0 right-0 w-3 h-3 bg-[rgb(0,151,178)] rounded-full flex items-center justify-center">
@@ -683,7 +683,7 @@ export default function ArchiveBasketballComparePage() {
                           alt={team.team_name}
                           fill
                           className="object-contain"
-                          unoptimized
+                          sizes="24px"
                         />
                       </div>
                       <div className="flex-1 text-left">
@@ -734,7 +734,7 @@ export default function ArchiveBasketballComparePage() {
                         alt={team.teamName}
                         fill
                         className="object-contain"
-                        unoptimized
+                        sizes="16px"
                       />
                     </div>
                     <span className="text-gray-700 dark:text-gray-200">
