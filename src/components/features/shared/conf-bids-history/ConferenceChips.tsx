@@ -75,7 +75,6 @@ export default function ConferenceChips({
                   width={isMobile ? 24 : 28}
                   height={isMobile ? 24 : 28}
                   className="object-contain"
-                  unoptimized
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = "none";

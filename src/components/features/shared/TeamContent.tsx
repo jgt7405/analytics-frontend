@@ -421,8 +421,10 @@ export default function TeamContent<TData, THistory>({
         alt={`${teamInfo.conference} logo`}
         width={size}
         height={size}
+        // Shown `size` px tall at its own width: the widest conference logo
+        // (Conference USA) is 4.7:1, so ask the optimizer for that width.
+        sizes={`${Math.ceil(size * 4.7)}px`}
         className={`${size > 32 ? "h-12" : "h-8"} w-auto object-contain`}
-        unoptimized
         onError={(e) => {
           e.currentTarget.style.display = "none";
         }}
