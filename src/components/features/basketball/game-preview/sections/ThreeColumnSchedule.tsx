@@ -4,6 +4,7 @@
 
 import { type TeamGameData } from "@/types/gamePreview";
 import { TEAL, getLogoUrl } from "../metrics";
+import { resizedLogoSrc } from "@/lib/logo-src";
 
 // ─── 3-Column Schedule Strip (Away | Neutral | Home) ─────────────────────────
 
@@ -125,7 +126,7 @@ export function ThreeColumnSchedule({
                     {g.opponent_logo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={getLogoUrl(g.opponent_logo)}
+                        src={resizedLogoSrc(getLogoUrl(g.opponent_logo), LOGO_SIZE)}
                         alt={g.opponent}
                         style={{
                           width: LOGO_SIZE,
@@ -140,7 +141,7 @@ export function ThreeColumnSchedule({
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src="/images/team_logos/default.png"
+                        src={resizedLogoSrc("/images/team_logos/default.png", LOGO_SIZE)}
                         alt={g.opponent}
                         style={{
                           width: LOGO_SIZE,
