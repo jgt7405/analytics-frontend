@@ -92,6 +92,9 @@ function summarize(lhr) {
     totalRequests: requests.length,
     // Where the requests come from, to attribute changes in totalRequests.
     requestsByType: countBy(requests, (r) => r.resourceType ?? "Other"),
+    // Bytes over the wire per request type (kB), so changes that shrink
+    // files rather than drop requests (such as resized logos) show up.
+    kbByType: kbBy(requests, (r) => r.resourceType ?? "Other"),
     requestsByHost: countBy(requests, (r) => {
       try {
         return new URL(r.url).host;
@@ -106,6 +109,16 @@ function countBy(items, key) {
   const counts = {};
   for (const item of items) counts[key(item)] = (counts[key(item)] ?? 0) + 1;
   return Object.fromEntries(Object.entries(counts).sort((a, b) => b[1] - a[1]));
+}
+
+function kbBy(items, key) {
+  const bytes = {};
+  for (const item of items) bytes[key(item)] = (bytes[key(item)] ?? 0) + (item.transferSize ?? 0);
+  return Object.fromEntries(
+    Object.entries(bytes)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => [k, +(v / 1024).toFixed(1)]),
+  );
 }
 
 function median(results) {
@@ -167,7 +180,7 @@ try {
     report.routes[route] = median(results);
     const m = report.routes[route];
     console.log(
-      `${route.padEnd(28)} perf ${m.performance}  a11y ${m.accessibility}  LCP ${m.lcpMs}ms  TBT ${m.tbtMs}ms  CLS ${m.cls}  JS ${m.jsTransferKb}kB  proxy ${m.proxyRequests}`,
+      `${route.padEnd(28)} perf ${m.performance}  a11y ${m.accessibility}  LCP ${m.lcpMs}ms  TBT ${m.tbtMs}ms  CLS ${m.cls}  JS ${m.jsTransferKb}kB  img ${m.kbByType.Image ?? 0}kB  proxy ${m.proxyRequests}`,
     );
     if (m.accessibility < minAccessibility) {
       failures.push(`${route}: accessibility ${m.accessibility} < ${minAccessibility}`);
