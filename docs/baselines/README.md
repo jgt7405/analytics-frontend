@@ -368,3 +368,18 @@ Notes:
 - Backend proxy, same runs: 0 failures and 0 redirects in 75 calls a day; cached responses 13–36 ms median; slowest uncached `/ncaa_tourney/All_Teams` 0.7–0.9 s.
 
 Route sizes (`npm run size`, cloud container): min / median / max 167 / 213 / 284 kB first-load JS, against 165 / 207 / 276 kB on 09-26 (after Next 16). The largest increases are 7–9 kB (`/basketball/game-preview` 276 → 284 kB, `teams`, `standings`, `whatif`, `wins`).
+
+## 2026-10-03 — step 9 verdicts
+
+Production, Lighthouse from GitHub Actions, mobile preset unless noted, median of 3 runs per route: the 10-01 run just before #87 deployed ([36907786539](https://github.com/jgt7405/analytics-frontend/actions/runs/36907786539)), and the daily runs of 10-02 ([37035558457](https://github.com/jgt7405/analytics-frontend/actions/runs/37035558457)) and 10-03 ([37132229785](https://github.com/jgt7405/analytics-frontend/actions/runs/37132229785)). Image bytes come from the 10-03 run on #125's branch ([37155148996](https://github.com/jgt7405/analytics-frontend/actions/runs/37155148996)), the first that records them.
+
+| What | 10-01 (before) | 10-02 | 10-03 | Verdict |
+|---|---|---|---|---|
+| Archive pilot (#87), `/football/2025-26/wins/` | perf 68, LCP 4.44 s, CLS 0.006, proxy 1, 120 requests (09-28 to 10-01: perf 65–73, LCP 2.8–4.4 s, CLS 0–0.21) | perf 90, LCP 2.34 s, CLS 0, proxy 0, 53 requests | perf 91, LCP 2.94 s, CLS 0, proxy 0, 55 requests | **Kept**; extended page by page (#126 first) |
+| Layout shift, football wins (#89) | `/football/wins/` CLS 0.098 mobile, 0.041 desktop | 0 / 0 | 0.006 / 0 | **Kept** |
+| Layout shift, `/basketball/wins/` (#91) | not in the daily route list | — | — | No production number yet |
+| Header prefetch (#93) | 44–51 `Fetch` requests per load, 87–259 requests | 1–5 `Fetch`, 32–206 requests | 1–4 `Fetch`, 33–206 requests | **Kept**: about half the requests per page |
+| Logo resizing (#95–#114) | bytes not recorded; #95 estimated ~6–7 MB of logos per `/basketball/compare/` visit | — | `/basketball/compare/` 183 images, 516 kB; `/football/compare/` 143 images, 408 kB (272 kB desktop); other pages ~100 kB of images | **Kept**: ~2.8 kB per logo against ~30 kB originals |
+
+Still weak: `/football/seed/` mobile CLS 0.147 on every run; both compare pages' mobile LCP 2.6–5.0 s and TBT up to 1.2 s. Two "after" runs only, and lab performance scores swing up to 25 points between days, so the per-route verdicts rest on the large, consistent changes (proxy calls, requests, CLS) more than on single performance scores.
+
