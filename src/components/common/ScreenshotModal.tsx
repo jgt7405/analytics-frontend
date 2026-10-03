@@ -9,7 +9,8 @@ import {
 import { ensureHtml2Canvas } from "@/lib/export/capture";
 import { setInlinedSrc } from "@/lib/export/inline";
 import { saveCanvasImage } from "@/lib/export/save";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useDialog } from "@/hooks/useDialog";
 import { logger } from "@/lib/logger";
 
 interface ScreenshotOption {
@@ -38,6 +39,9 @@ export default function ScreenshotModal({
   teamLogoUrl,
 }: ScreenshotModalProps) {
   const [isCapturing, setIsCapturing] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  // Escape does nothing mid-capture, like the backdrop and buttons.
+  useDialog(dialogRef, isOpen, onClose, { canClose: !isCapturing });
 
   if (!isOpen) return null;
 
@@ -397,13 +401,24 @@ export default function ScreenshotModal({
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={!isCapturing ? onClose : undefined}
       />
-      <div className="relative bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="screenshot-dialog-title"
+        tabIndex={-1}
+        className="relative bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6 outline-none"
+      >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2
+            id="screenshot-dialog-title"
+            className="text-xl font-semibold text-gray-900 dark:text-gray-100"
+          >
             Select Component to Screenshot
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="text-gray-400 hover:text-gray-600 dark:text-gray-300"
             disabled={isCapturing}
           >

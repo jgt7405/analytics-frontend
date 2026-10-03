@@ -2,6 +2,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import navStyles from "@/styles/components/navigation.module.css";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -9,12 +10,17 @@ import type { MouseEvent as ReactMouseEvent } from "react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { isArchivedSeason, sportAndSeasonFromPath, type Sport } from "@/config/seasons";
 import { navPages, sportPagePath } from "@/config/sports";
-import ContactModal from "./ContactModal";
 import { useLogoAnimation } from "./LogoAnimationContext";
+
+// Loaded when first opened, so it stays out of every page's first load.
+const ContactModal = dynamic(() => import("./ContactModal"), { ssr: false });
 
 function NavigationContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  // Stays mounted after the first open so a half-typed message survives closing.
+  const [contactLoaded, setContactLoaded] = useState(false);
+  if (isContactModalOpen && !contactLoaded) setContactLoaded(true);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -315,10 +321,9 @@ function NavigationContent() {
           </nav>
         </div>
       </div>
-      <ContactModal
-        isOpen={isContactModalOpen}
-        onClose={() => setIsContactModalOpen(false)}
-      />
+      {contactLoaded && (
+        <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
+      )}
     </div>
   );
 }

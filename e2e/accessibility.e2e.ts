@@ -204,4 +204,61 @@ test.describe("keyboard and focus", () => {
       }
     });
   }
+  // Dialogs: opened from the keyboard, focus moves in and stays in, Escape
+  // closes, and focus returns to the button that opened them.
+  const dialogs = [
+    {
+      name: "the contact dialog",
+      path: "/football/standings/",
+      opener: (page: Page) => page.locator("footer").getByRole("button", { name: "Contact" }),
+      title: "Contact",
+    },
+    {
+      name: "the team page download dialog",
+      path: "/basketball/team/Duke/",
+      opener: (page: Page) => page.getByRole("button", { name: "Download", exact: true }).first(),
+      title: "Select Component to Screenshot",
+    },
+  ];
+  for (const { name, path, opener, title } of dialogs) {
+    test(`${name} works from the keyboard`, async ({ page }) => {
+      // Let the page settle first: the team page swaps to its mobile layout
+      // after loading, which re-creates the button.
+      await waitForData(page, () => page.goto(path));
+      const button = opener(page);
+      await expect(button).toBeVisible();
+      await button.focus();
+      await page.keyboard.press("Enter");
+
+      const dialog = page.getByRole("dialog", { name: title });
+      await expect(dialog).toBeVisible();
+      await expect(dialog).toHaveAttribute("aria-modal", "true");
+      await expect(dialog).toBeFocused();
+      await expect(dialog.getByRole("button", { name: "Close" })).toBeVisible();
+
+      // Tab cycles through the dialog's controls without leaving it.
+      for (let i = 0; i < 12; i++) {
+        await page.keyboard.press("Tab");
+        expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+      }
+
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await expect(button).toBeFocused();
+    });
+  }
+
+  test("the contact dialog keeps a half-typed message after closing", async ({ page }) => {
+    // It loads on first open (out of every page's first load) and then
+    // stays mounted.
+    await page.goto("/football/standings/");
+    const open = page.locator("footer").getByRole("button", { name: "Contact" });
+    const dialog = page.getByRole("dialog", { name: "Contact" });
+    await open.click();
+    await dialog.getByPlaceholder("Your name").fill("Pat");
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await open.click();
+    await expect(dialog.getByPlaceholder("Your name")).toHaveValue("Pat");
+  });
 });
