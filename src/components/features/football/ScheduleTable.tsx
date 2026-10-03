@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { memo, MouseEvent, ReactNode, useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./ScheduleTable.module.css";
+import { resizedLogoSrc } from "@/lib/logo-src";
 
 interface FootballScheduleSummary {
   total_games: number;
@@ -754,7 +755,7 @@ function BucketTooltip({
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={game.opponentLogo || "/images/team_logos/default.png"}
+              src={resizedLogoSrc(game.opponentLogo || "/images/team_logos/default.png", 16)}
               alt=""
               style={{ width: "16px", height: "16px", objectFit: "contain", flexShrink: 0 }}
             />
