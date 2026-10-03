@@ -1,7 +1,8 @@
 // Frontend React Component for What-If CSV Export with Pagination
 // Add this to your existing what-if export UI component
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { useDialog } from "@/hooks/useDialog";
 import { api } from "@/services/api";
 import { logger } from "@/lib/logger";
 
@@ -157,6 +158,9 @@ export const ExportOptionsModal = ({
     }
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialog(dialogRef, isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (
@@ -177,7 +181,13 @@ export const ExportOptionsModal = ({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="export-options-dialog-title"
+        tabIndex={-1}
         style={{
+          outline: "none",
           backgroundColor: "white",
           borderRadius: "8px",
           boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
@@ -199,11 +209,15 @@ export const ExportOptionsModal = ({
             borderBottom: "1px solid #e5e7eb",
           }}
         >
-          <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "600" }}>
+          <h2
+            id="export-options-dialog-title"
+            style={{ margin: 0, fontSize: "18px", fontWeight: "600" }}
+          >
             Export What-If Scenarios
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             style={{
               background: "none",
               border: "none",

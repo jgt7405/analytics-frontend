@@ -3,7 +3,8 @@
 
 import { sendContactMessage } from "@/services/contact";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useDialog } from "@/hooks/useDialog";
 import { logger } from "@/lib/logger";
 
 interface ContactModalProps {
@@ -69,16 +70,31 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
     }
   };
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const close = () => {
+    onClose();
+    setFormMessage("");
+  };
+  useDialog(dialogRef, isOpen, close);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-dialog-title"
+        tabIndex={-1}
+        className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full outline-none"
+      >
         <div
           className="flex items-center justify-between border-b border-gray-200"
           style={{ padding: "6px 12px" }}
         >
           <h2
+            id="contact-dialog-title"
             className="text-xl font-bold text-gray-500 dark:text-gray-200"
             style={{
               fontFamily: "Roboto Condensed, system-ui, sans-serif",
@@ -88,10 +104,8 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
             Contact
           </h2>
           <button
-            onClick={() => {
-              onClose();
-              setFormMessage("");
-            }}
+            onClick={close}
+            aria-label="Close"
             className="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 transition-colors bg-transparent border-none"
             style={{ padding: 0, cursor: "pointer" }}
           >
