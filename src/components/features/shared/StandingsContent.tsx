@@ -197,8 +197,9 @@ export default function StandingsContent<
     selectedConference,
     season,
     // Server-fetched initialData is for the default conference of the
-    // current season only.
-    selectedConference === "Big 12" && !season ? initialData : undefined,
+    // page's season (current or archive; only the page's own season is ever
+    // passed).
+    selectedConference === "Big 12" ? initialData : undefined,
   );
 
   const useHistoryData = config.useHistoryData;
