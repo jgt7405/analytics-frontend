@@ -5,7 +5,7 @@ import { Providers } from "@/components/providers/Providers";
 import { robotoCondensed } from "@/lib/fonts";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { baseMetadata } from "./metadata";
@@ -14,6 +14,18 @@ export const metadata: Metadata = {
   ...baseMetadata,
   description:
     "Advanced basketball and football analytics and projections for D1 college conferences and teams.",
+};
+
+// Next renders these as the page's only viewport and theme-color tags (a
+// hand-written viewport <meta> in <head> came on top of Next's default one).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { color: "#ffffff" },
+    { color: "#0f172a", media: "(prefers-color-scheme: dark)" },
+  ],
 };
 
 // Client component for chunk error handling
@@ -39,18 +51,6 @@ export default function RootLayout({
         {/* No preconnect to the Railway backend: the browser never talks to it
             directly — all client data goes through the same-origin /api/proxy,
             so a cross-origin preconnect here is an unused, dropped connection. */}
-        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-        <meta httpEquiv="Referrer-Policy" content="origin-when-cross-origin" />
-        <meta name="theme-color" content="#ffffff" />
-        <meta
-          name="theme-color"
-          content="#0f172a"
-          media="(prefers-color-scheme: dark)"
-        />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, viewport-fit=cover"
-        />
 
         {/* Favicon and icon links */}
         <link rel="icon" href="/images/favicon.ico" sizes="any" />
