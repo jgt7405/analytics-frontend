@@ -22,16 +22,20 @@ export function rateLimit(ip: string, limit: number = 5, windowMs: number = 3600
   return true;
 }
 
-export function getClientIp(headers: Record<string, string | string[]>): string {
-  const forwarded = headers['x-forwarded-for'];
-  if (forwarded) {
-    const ips = typeof forwarded === 'string' ? forwarded.split(',') : forwarded;
-    return ips[0].trim();
-  }
-  return headers['x-real-ip'] as string || 'unknown';
+/**
+ * The visitor's IP from the request headers (on Vercel, x-forwarded-for's
+ * first entry is the client). Takes the Headers object itself: indexing it
+ * like a plain object returns undefined, which used to put every visitor
+ * in one "unknown" bucket.
+ */
+export function getClientIp(headers: Headers): string {
+  const forwarded = headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim() || "unknown";
+  return headers.get("x-real-ip")?.trim() || "unknown";
 }
 
-// Cleanup old entries every 10 minutes
+// Cleanup old entries every 10 minutes. unref() so the timer never keeps a
+// process (a test run, a build step) alive on its own.
 setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of store.entries()) {
@@ -39,4 +43,4 @@ setInterval(() => {
       store.delete(key);
     }
   }
-}, 600000);
+}, 600000).unref?.();

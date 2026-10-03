@@ -1,7 +1,8 @@
 // src/app/api/contact/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { rateLimit, getClientIp } from "@/lib/ratelimit";
+import { getClientIp } from "@/lib/ratelimit";
+import { sharedRateLimit } from "@/lib/shared-ratelimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -25,8 +26,8 @@ function isValidEmail(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const clientIp = getClientIp(request.headers as unknown as Record<string, string | string[]>);
-    if (!rateLimit(clientIp, 5, 3600000)) {
+    const clientIp = getClientIp(request.headers);
+    if (!(await sharedRateLimit("contact", clientIp, 5, 3600))) {
       return NextResponse.json(
         { error: "Too many contact form submissions. Please try again later." },
         { status: 429 },
