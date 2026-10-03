@@ -1,5 +1,6 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
+import { CONTENT_SECURITY_POLICY, REPORTING_ENDPOINTS } from "./src/config/csp";
 import { HOME_SPORT, SEASONS, SPORT_IDS } from "./src/config/seasons";
 import { sportPagePath } from "./src/config/sports";
 
@@ -77,6 +78,15 @@ const nextConfig: NextConfig = {
           {
             key: "Referrer-Policy",
             value: "origin-when-cross-origin",
+          },
+          {
+            // Report-only until the reports are clean (src/config/csp.ts).
+            key: "Content-Security-Policy-Report-Only",
+            value: CONTENT_SECURITY_POLICY,
+          },
+          {
+            key: "Reporting-Endpoints",
+            value: REPORTING_ENDPOINTS,
           },
         ],
       },
