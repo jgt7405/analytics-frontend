@@ -2,9 +2,12 @@
 "use client";
 
 import { X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import ContactModal from "./ContactModal";
+
+// Loaded when first opened, so it stays out of every page's first load.
+const ContactModal = dynamic(() => import("./ContactModal"), { ssr: false });
 
 interface MethodologyModalProps {
   isOpen: boolean;
@@ -218,6 +221,9 @@ function SocialMediaModal({ isOpen, onClose }: SocialMediaModalProps) {
 export default function Footer() {
   const [isMethodologyOpen, setIsMethodologyOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  // Stays mounted after the first open so a half-typed message survives closing.
+  const [contactLoaded, setContactLoaded] = useState(false);
+  if (isContactOpen && !contactLoaded) setContactLoaded(true);
   const [isSocialOpen, setIsSocialOpen] = useState(false);
   const pathname = usePathname();
   const isFootball = pathname?.startsWith("/football") ?? false;
@@ -280,10 +286,9 @@ export default function Footer() {
         onClose={() => setIsMethodologyOpen(false)}
         isFootball={isFootball}
       />
-      <ContactModal
-        isOpen={isContactOpen}
-        onClose={() => setIsContactOpen(false)}
-      />
+      {contactLoaded && (
+        <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+      )}
       <SocialMediaModal
         isOpen={isSocialOpen}
         onClose={() => setIsSocialOpen(false)}

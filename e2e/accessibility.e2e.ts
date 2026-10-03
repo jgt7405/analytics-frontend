@@ -247,4 +247,18 @@ test.describe("keyboard and focus", () => {
       await expect(button).toBeFocused();
     });
   }
+
+  test("the contact dialog keeps a half-typed message after closing", async ({ page }) => {
+    // It loads on first open (out of every page's first load) and then
+    // stays mounted.
+    await page.goto("/football/standings/");
+    const open = page.locator("footer").getByRole("button", { name: "Contact" });
+    const dialog = page.getByRole("dialog", { name: "Contact" });
+    await open.click();
+    await dialog.getByPlaceholder("Your name").fill("Pat");
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await open.click();
+    await expect(dialog.getByPlaceholder("Your name")).toHaveValue("Pat");
+  });
 });
