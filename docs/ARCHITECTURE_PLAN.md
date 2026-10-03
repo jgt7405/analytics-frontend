@@ -1,16 +1,17 @@
 # Refactor plan: make the site easier for agents to maintain, and faster
 
-Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). **Step 8 complete** (2026-10-01: history charts 8a–8d, #62–#69; export code in `src/lib/export/` with one html2canvas loader, #74–#82; the game preview PDF keeps its own loader and stays unchecked, owner's decision). **Step 9 in progress** (2026-10-01): re-measured (see `docs/baselines/README.md`, "2026-10-01 — before step 9"); the Production baseline workflow now covers the weak pages and desktop (#86); the archive pilot `/football/2025-26/wins/` is deployed (#87) and is kept or reverted on the daily runs that follow; the layout shift on the football wins pages and `/basketball/wins/` is fixed (#89, #91); the header's links no longer prefetch (#93); compare-page logos go through the image optimizer (#95 basketball, #97 football), and so do conference logos (#99) the team pages' chart logos (#102), the football archive compare page (#106), compare-schedules (#108), basketball what-if (#110), the custom scatterplot (#112), the game preview (#113) and the football schedule tooltip (#114): no page loads an original logo file any more. Baselines are in `docs/baselines/README.md`.
+Status: **steps 1–6 complete** (2026-09-27; step 5 was done ahead of 3–4 for security; steps 4 and 6 in the PRs listed under their outcomes). Open from step 6: the Search Console re-check around 2026-10-11 (baseline and findings recorded 2026-09-28; fixes in #40 and backend #9). **Step 7 complete** (2026-09-29, #42–#59; see its outcome). **Step 8 complete** (2026-10-01: history charts 8a–8d, #62–#69; export code in `src/lib/export/` with one html2canvas loader, #74–#82; the game preview PDF keeps its own loader and stays unchecked, owner's decision). **Step 9 in progress** (2026-10-01): re-measured (see `docs/baselines/README.md`, "2026-10-01 — before step 9"); the Production baseline workflow now covers the weak pages and desktop (#86); the archive pilot `/football/2025-26/wins/` is deployed (#87) and is kept or reverted on the daily runs that follow; the layout shift on the football wins pages and `/basketball/wins/` is fixed (#89, #91); the header's links no longer prefetch (#93); compare-page logos go through the image optimizer (#95 basketball, #97 football), and so do conference logos (#99) the team pages' chart logos (#102), the football archive compare page (#106), compare-schedules (#108), basketball what-if (#110), the custom scatterplot (#112), the game preview (#113) and the football schedule tooltip (#114): no page loads an original logo file any more. Baselines are in `docs/baselines/README.md`. **Step 10 started** (2026-10-03): accessibility regression tests (#116); its findings await the owner's OK before any fix.
 
 Revision 2 (2026-09-25): folds in feedback from an external review of revision 1 (Architecture Plan Review) plus follow-up adjustments. Findings reflect the
 codebase as of 2026-09-25.
 
-## Where to pick up (2026-10-01)
+## Where to pick up (2026-10-03)
 
-- **Next: step 9, judge the archive pilot (#87).** `/football/2025-26/wins/` now server-renders its default conference like `/football/wins/`. Compare the daily Production baseline runs after its deploy with the 2026-10-01 numbers (proxy calls 1 → 0 expected; LCP, CLS, performance over several days). If it beats them, extend it to the other 22 archive pages, a few per PR; if not, revert it. Then, as candidates: `/basketball/<season>/wins/` (desktop CLS 0.075: still loads its data in the browser, so it waits for the archive pilot's verdict); the logo work is complete (#95–#114). Re-measure with the "Production baseline" workflow (agent sessions can't start it on demand, 403; a push that touches its scripts runs it, and it runs daily) and `npm run size`. Each item is kept only if it beats the baselines.
+- **Step 9 leftovers (data-driven):** judge the archive pilot (#87) on the daily Production baseline runs (proxy calls 1 → 0 expected; before: LCP 2.8–4.4 s, CLS 0–0.21, performance 65–73); if it beats them, extend it to the other 22 archive pages a few per PR, otherwise revert it; then `/basketball/<season>/wins/` (desktop CLS 0.075). Report production numbers for 9c, 9d (CLS), 9e (`Fetch` requests per load) and the logo PRs (image bytes). Each item is kept only if it beats the baselines. Agent sessions can't start the workflow (403); it runs daily.
+- **Next in step 10 (proposed order, lowest risk first):** drop `X-XSS-Protection` and the duplicate header `<meta>` tags in `layout.tsx`, add `/api/health`; then a Content-Security-Policy in Report-Only mode (enforce only with the owner's OK); then contact-form rate limiting (owner chooses Vercel KV/Upstash or Vercel's firewall); then styling and loading/empty/error states page by page (visible changes, owner's OK and a screenshot review each). Fixes for the accessibility findings (10c table) each need the owner's OK.
 - **Open from step 6:** the Search Console re-check around 2026-10-11 against `docs/baselines/README.md` (record a summary only; the owner does the clicks, so give tap-by-tap steps).
-- **Owner decisions on record:** the game preview PDF stays unchecked with its own loader; the scatterplot stays wider than a phone screen; per-sport presentation differences kept in the chart themes are visible changes that need the owner's OK; a logo-resizing PR may merge with the Visual check red when every differing pixel is inside a logo box and the diffs were reviewed (2026-10-02, see 9h).
-- **Open:** no PRs or branches. A reminder for the Search Console re-check is scheduled for 2026-10-11 in the step 9 session. The umbrella repo (`jthom-analytics-umbrella`) points at current `main` of both submodules.
+- **Owner decisions on record:** the game preview PDF stays unchecked with its own loader; the scatterplot stays wider than a phone screen; per-sport presentation differences kept in the chart themes are visible changes that need the owner's OK; a logo-resizing PR may merge with the Visual check red when every differing pixel is inside a logo box and the diffs were reviewed (2026-10-02, see 9h); that rule doesn't cover step 10 styling work, where any visible change needs the owner's OK.
+- **Open:** no PRs. The repo now deletes a PR's branch when it merges (owner's setting, 2026-10-03). Reminders for the archive pilot verdict (2026-10-03 18:00 UTC) and the Search Console re-check (2026-10-11 13:00 UTC) are scheduled in the step 10 session. The umbrella repo (`jthom-analytics-umbrella`) points at current `main` of both submodules.
 
 ## Guiding principles
 
@@ -334,6 +335,27 @@ The step 1 baselines show the site is already fast for most visitors (Real Exper
    - Contact-form rate limiting: the in-memory Map doesn't work on serverless because each instance has its own. Move it to Upstash/Vercel KV, or rely on Vercel's firewall.
    - Add a Content-Security-Policy. Drop the deprecated `X-XSS-Protection` header and the duplicate header `<meta>` tags in `layout.tsx`.
    - A `/api/health` endpoint for monitoring.
+
+**Outcome so far:**
+
+| Item | What | Result |
+|---|---|---|
+| 10a (#116) | Accessibility regression tests | `e2e/accessibility.e2e.ts` (in `npm run test:e2e`, desktop and mobile, fixtures; `@axe-core/playwright` dev dependency). axe, WCAG 2.0/2.1 A and AA, on the 11 pages with no violations: standings (both sports, current and 2025-26), wins (both sports, plus football 2025-26), basketball 2025-26 conf-tourney, football 2025-26 conf-champ, both compare pages; each loads in a tall viewport so sections that mount on scroll are scanned. Keyboard and focus: header tabs reached with Tab in order with a visible outline, Enter navigates; the mobile menu opens with Enter, traps focus and closes with Escape back to its toggle; the conference selector is reached with Tab and named; the compare search picks a team with type → Tab → Enter; a standings team button opens the team page with Enter; standings and wins tables have column headers; the standings charts are `role="img"` with a description. About 1 minute more in the e2e step. Each check covers only what passed; the rest is listed below and joins a check when fixed. |
+
+**Accessibility findings (10a), not fixed; each fix needs the owner's OK:**
+
+| # | Where | Problem |
+|---|---|---|
+| 1 | Contact, export options and screenshot modals | No `role="dialog"`/`aria-modal`; focus stays on the opening button and Tab leaves the modal; Escape doesn't close; Contact's close (X) button has no accessible name |
+| 2 | Conference selector | `globals.css` removes its focus indicator (`outline: none; box-shadow: none !important`) |
+| 3 | Standings pages | Three selects share `id="conference-select"`; the two in the history chart sections have no label of their own |
+| 4 | Compare search (both sports) | Results have no visible focus (`outline-none`) and no arrow-key navigation; the box is labelled only by its placeholder; each result's name reads "Duke Duke" (logo alt repeats the name) |
+| 5 | Game preview, both what-if pages | Unlabelled `<select>`s (axe `select-name`, critical) |
+| 6 | Game preview, basketball what-if, conf-data (both sports, current and archive), both team pages, football what-if | Text contrast below AA (axe `color-contrast`); some are computed heat-map colors |
+| 7 | conf-data, team pages (mobile), football what-if | Horizontally scrolling regions can't be focused, so the keyboard can't scroll them (`scrollable-region-focusable`) |
+| 8 | Football team page; team-page charts generally | One canvas has `role="img"` with an empty label (`role-img-alt`); team-page charts have no text alternative |
+| 9 | Mobile menu | The focus trap ends at Contact, so the sport switch after it is never reached with Tab |
+| 10 | Site-wide | No "skip to content" link (`#main-content` exists) |
 
 ---
 
