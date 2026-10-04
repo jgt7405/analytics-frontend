@@ -36,6 +36,8 @@ const VISUAL_ROUTES: VisualRoute[] = [
   { path: "/football/2025-26/wins/" },
   // basketball WinsContent (BoxWhiskerChart's pre-mount card, step 9)
   { path: "/basketball/wins/" },
+  // and its archive, which server-renders its default conference too
+  { path: "/basketball/2025-26/wins/" },
   // standings history and first-place charts (fixtures dated in 2025-26, so
   // the archive page's axis doesn't move with today's date)
   { path: "/basketball/2025-26/standings/" },

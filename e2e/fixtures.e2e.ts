@@ -100,3 +100,10 @@ for (const [page, backendPath] of [
     expect(await requestedBackendUrls()).toContain(`/api/${backendPath}/Big_12?season=2025-26`);
   });
 }
+
+test("the basketball archive wins page server-renders its default conference", async ({ request }) => {
+  const response = await request.get("/basketball/2025-26/wins/");
+  expect(response.status()).toBe(200);
+  expect(await response.text()).toContain("Duke");
+  expect(await requestedBackendUrls()).toContain("/api/standings/Big_12?season=2025-26");
+});
