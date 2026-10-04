@@ -57,13 +57,14 @@ const UA = {
   desktop:
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
 };
-// What each layout's HTML contains: the conference selector's width class
-// (both pages) and the seed table's row height.
+// What each layout's HTML contains: the action buttons' width class (all
+// pages) and the seed table's row height.
 const LAYOUT_MARKERS: Array<[string, { phone: string[]; desktop: string[] }]> = [
   ["/football/seed/", { phone: ["w-1/3", "height:24px"], desktop: ["w-auto mr-2", "height:28px"] }],
   ["/football/2025-26/seed/", { phone: ["w-1/3", "height:24px"], desktop: ["w-auto mr-2", "height:28px"] }],
   ["/football/cwv/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
   ["/football/2025-26/cwv/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
+  ["/basketball/standings/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
 ];
 
 for (const [path, markers] of LAYOUT_MARKERS) {
