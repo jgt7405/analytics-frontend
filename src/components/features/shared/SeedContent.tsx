@@ -338,10 +338,12 @@ export default function SeedContent<TTeam>({
           ) : (
             <ErrorBoundary level="component" onRetry={() => refetch()}>
               <div className="mb-8">
+                {/* No Suspense boundary here: nothing in the table suspends,
+                    and React's server renderer sends a large finished boundary
+                    separately, so a slow phone painted the taller skeleton
+                    first and the page jumped when the table replaced it. */}
                 <div className="seed-table">
-                  <Suspense fallback={tableSkeleton}>
-                    {seedData && config.renderTable(seedData, ctx)}
-                  </Suspense>
+                  {seedData && config.renderTable(seedData, ctx)}
                 </div>
 
                 <div className="mt-6">

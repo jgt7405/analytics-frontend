@@ -122,6 +122,8 @@ for (const path of HEADER_PAGES) {
 const TABLES_IN_PAGE_CHUNK: Array<[string, string]> = [
   ["/football/cwv/", "CWVTable-module"],
   ["/football/2025-26/cwv/", "CWVTable-module"],
+  ["/football/seed/", "FootballSeedTable-module"],
+  ["/football/2025-26/seed/", "FootballSeedTable-module"],
 ];
 
 for (const [path, table] of TABLES_IN_PAGE_CHUNK) {
