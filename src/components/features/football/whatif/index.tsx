@@ -6,10 +6,6 @@
 // the results card is ResultsCard.
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
-import {
-  ExportOptionsModal,
-  useExportModal,
-} from "@/components/common/ExportOptionsModal";
 import ScreenshotModal from "@/components/common/ScreenshotModal";
 import TeamMultiSearch from "@/components/common/TeamMultiSearch";
 import FootballGameImpactBoard from "@/components/features/football/FootballGameImpactBoard";
@@ -89,9 +85,6 @@ export default function FootballWhatIfContent() {
     const cleanup = injectStructuredData();
     return cleanup;
   }, []);
-
-  // Export modal state
-  const exportModal = useExportModal();
 
   // Fetch conference list
   const { data: conferenceData, isLoading: isLoadingConferences } =
@@ -462,23 +455,6 @@ export default function FootballWhatIfContent() {
           )}
         </div>
       </div>
-
-      {/* Export Options Modal */}
-      <ExportOptionsModal
-        isOpen={exportModal.isOpen}
-        onClose={exportModal.closeModal}
-        conference={selectedConference}
-        selections={Array.from(gameSelections.entries()).map(
-          ([gameId, winnerId]) => ({
-            game_id: gameId,
-            winner_team_id: winnerId,
-          })
-        )}
-        onExportComplete={(result) => {
-          setExportStatus(`✓ Exported ${result.scenarios}: ${result.filename}`);
-          setTimeout(() => setExportStatus(""), 5000);
-        }}
-      />
 
       {/* Screenshot Modal */}
       <ScreenshotModal
