@@ -33,6 +33,8 @@ import basketballUpcomingGames from "./basketball.upcomingGames.json";
 import basketballWhatIfBaseline from "./basketball.whatIfBaseline.json";
 import footballConferenceData from "./football.conferenceData.json";
 import footballConferenceDataHistory from "./football.conferenceDataHistory.json";
+import footballCwv from "./football.cwv.json";
+import footballSeed from "./football.seed.json";
 import footballStandings from "./football.standings.json";
 import footballStandingsHistory from "./football.standingsHistory.json";
 import footballTeam from "./football.team.json";
@@ -61,6 +63,8 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "basketball.whatIfBaseline": basketballWhatIfBaseline,
   "football.conferenceData": footballConferenceData,
   "football.conferenceDataHistory": footballConferenceDataHistory,
+  "football.cwv": footballCwv,
+  "football.seed": footballSeed,
   "football.standings": footballStandings,
   "football.standingsHistory": footballStandingsHistory,
   "football.team": footballTeam,

@@ -35,6 +35,8 @@ ROUTES = {
     "basketball.teams": ("basketball.teams", "/api/basketball_teams", c.basketball_db),
     "football.teams": ("football.teams", "/api/football_teams", c.football_db),
     "football.team": ("football.teams", "/api/football_team/Alabama", c.football_db),
+    "football.seed": ("football.seed", "/api/football_seed/Southeastern", c.football_db),
+    "football.cwv": ("football.standings", "/api/football/cwv/Southeastern", c.football_db),
 }
 
 for key, (module, url, make_db) in ROUTES.items():
