@@ -124,10 +124,14 @@ const TABLES_IN_PAGE_CHUNK: Array<[string, string]> = [
   ["/football/2025-26/cwv/", "CWVTable-module"],
   ["/football/seed/", "FootballSeedTable-module"],
   ["/football/2025-26/seed/", "FootballSeedTable-module"],
+  ["/football/standings/", "FootballStandingsTable-module"],
+  ["/football/standings/", "FootballStandingsTableNoTies-module"],
+  ["/football/2025-26/standings/", "FootballStandingsTable-module"],
+  ["/football/2025-26/standings/", "FootballStandingsTableNoTies-module"],
 ];
 
 for (const [path, table] of TABLES_IN_PAGE_CHUNK) {
-  test(`${path} sends its table with the page, not as a separate chunk`, async ({ request }, testInfo) => {
+  test(`${path} sends ${table.replace("-module", "")} with the page, not as a separate chunk`, async ({ request }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "checks the HTML only");
     const html = await (await request.get(path, { headers: { "user-agent": UA.phone } })).text();
     expect(html).toContain(table);

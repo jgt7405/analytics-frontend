@@ -21,7 +21,6 @@ import { useSearchParams } from "next/navigation";
 import {
   ComponentType,
   ReactNode,
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -504,17 +503,20 @@ export default function StandingsContent<
                 "Projected Conference Standings (including ties)",
                 "Conference Standings with Ties",
                 null,
-                <Suspense fallback={tableSkeleton}>
-                  {standings && (
-                    <StandingsTable
-                      standings={standings}
-                      season={season}
-                      headerRight={
-                        config.hidePageTitle ? conferenceSelector : undefined
-                      }
-                    />
-                  )}
-                </Suspense>,
+                // No Suspense boundaries around the two tables: nothing in
+                // them suspends, and React's server renderer sends a large
+                // finished boundary separately, so a slow phone painted the
+                // taller skeleton first and the page jumped when the table
+                // replaced it.
+                standings && (
+                  <StandingsTable
+                    standings={standings}
+                    season={season}
+                    headerRight={
+                      config.hidePageTitle ? conferenceSelector : undefined
+                    }
+                  />
+                ),
               )}
               {section(
                 "standings-no-ties-table",
@@ -528,11 +530,9 @@ export default function StandingsContent<
                     (Breaking All Ties)
                   </span>
                 </>,
-                <Suspense fallback={tableSkeleton}>
-                  {standings && (
-                    <NoTiesTable standings={standings} season={season} />
-                  )}
-                </Suspense>,
+                standings && (
+                  <NoTiesTable standings={standings} season={season} />
+                ),
               )}
               {filteredHistoryData && (
                 <div className="space-y-6 mb-8">
