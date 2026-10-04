@@ -40,6 +40,12 @@ const VISUAL_ROUTES: VisualRoute[] = [
   // the archive page's axis doesn't move with today's date)
   { path: "/basketball/2025-26/standings/" },
   { path: "/football/2025-26/standings/" },
+  // FootballSeedContent and FootballCWVContent: current pages (server
+  // initialData) and archives (browser fetch until they server-render)
+  { path: "/football/seed/" },
+  { path: "/football/2025-26/seed/" },
+  { path: "/football/cwv/" },
+  { path: "/football/2025-26/cwv/" },
   // conference bids history charts (fixtures dated in 2025-26, as above)
   { path: "/basketball/2025-26/conf-data/" },
   { path: "/football/2025-26/conf-data/" },

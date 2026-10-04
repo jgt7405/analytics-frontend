@@ -1,0 +1,92 @@
+{
+ "conferences": [
+  "Southeastern"
+ ],
+ "data": {
+  "games": [
+   {
+    "date": "2024-01-11",
+    "location": "Home",
+    "opponent": "Georgia",
+    "opponent_logo": "/images/team_logos/georgia.png",
+    "rank": 2,
+    "status": "W",
+    "team": "Alabama",
+    "win_prob": 60.0
+   },
+   {
+    "date": "2024-01-12",
+    "location": "Home",
+    "opponent": "Texas",
+    "opponent_logo": "/images/team_logos/texas.png",
+    "rank": 3,
+    "status": "2024-02-12",
+    "team": "Alabama",
+    "win_prob": 60.0
+   },
+   {
+    "date": "2024-01-10",
+    "location": "Away",
+    "opponent": "Alabama",
+    "opponent_logo": "/images/team_logos/alabama.png",
+    "rank": 1,
+    "status": "2024-02-10",
+    "team": "Georgia",
+    "win_prob": 40.0
+   },
+   {
+    "date": "2024-01-12",
+    "location": "Home",
+    "opponent": "Texas",
+    "opponent_logo": "/images/team_logos/texas.png",
+    "rank": 3,
+    "status": "W",
+    "team": "Georgia",
+    "win_prob": 60.0
+   },
+   {
+    "date": "2024-01-10",
+    "location": "Away",
+    "opponent": "Alabama",
+    "opponent_logo": "/images/team_logos/alabama.png",
+    "rank": 1,
+    "status": "L",
+    "team": "Texas",
+    "win_prob": 40.0
+   },
+   {
+    "date": "2024-01-11",
+    "location": "Away",
+    "opponent": "Georgia",
+    "opponent_logo": "/images/team_logos/georgia.png",
+    "rank": 2,
+    "status": "2024-02-11",
+    "team": "Texas",
+    "win_prob": 40.0
+   }
+  ],
+  "teams": [
+   {
+    "current_record": "1-0",
+    "cwv": 0.4,
+    "est_avg_record": "0.6-0.4",
+    "logo_url": "/images/team_logos/alabama.png",
+    "team_name": "Alabama"
+   },
+   {
+    "current_record": "1-0",
+    "cwv": 0.4,
+    "est_avg_record": "0.6-0.4",
+    "logo_url": "/images/team_logos/georgia.png",
+    "team_name": "Georgia"
+   },
+   {
+    "current_record": "0-1",
+    "cwv": -0.4,
+    "est_avg_record": "0.4-0.6",
+    "logo_url": "/images/team_logos/texas.png",
+    "team_name": "Texas"
+   }
+  ]
+ }
+}

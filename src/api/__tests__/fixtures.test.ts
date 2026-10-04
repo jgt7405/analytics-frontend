@@ -84,7 +84,7 @@ describe("the proxy serving fixtures", () => {
   });
 
   it("passes the backend's 404 for an endpoint without a fixture", async () => {
-    const res = await get("football/cwv/Southeastern/");
+    const res = await get("football/conf_schedule/Southeastern/");
     expect(res.status).toBe(404);
     expect(res.headers.get("Cache-Control")).toBe("no-store");
   });
@@ -101,8 +101,8 @@ describe("server fetches of fixtures", () => {
   it("returns undefined when the backend has no data", async () => {
     // A conference with no fixture scenario still resolves; an endpoint
     // without a fixture 404s, which server-api turns into undefined.
-    const { getFootballCWVServer } = await import("@/lib/server-api");
-    expect(await getFootballCWVServer("Southeastern")).toBeUndefined();
+    const { getFootballScheduleServer } = await import("@/lib/server-api");
+    expect(await getFootballScheduleServer("Southeastern")).toBeUndefined();
   });
 });
 
