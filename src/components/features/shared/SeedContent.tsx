@@ -135,7 +135,10 @@ export default function SeedContent<TTeam>({
   } = useSeedData(
     selectedConference,
     season,
-    selectedConference === "Big 12" && !season ? initialData : undefined,
+    // Server-fetched initialData is for the default conference of the
+    // page's season (current or archive; only the page's own season is ever
+    // passed).
+    selectedConference === "Big 12" ? initialData : undefined,
   );
 
   useEffect(() => {

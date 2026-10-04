@@ -3,7 +3,9 @@
 
 import FootballCWVContent from "@/app/football/cwv/FootballCWVContent";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { sportPageMetadata } from "@/app/metadata";
+import { getFootballCWVServer } from "@/lib/server-api";
 
 export async function generateMetadata({
   params,
@@ -14,11 +16,18 @@ export async function generateMetadata({
   return sportPageMetadata("football", "cwv", season);
 }
 
+// Like the current-season page, the default conference is fetched on the
+// server so the first paint has the table (step 9 archive extension).
 export default async function ArchiveFootballCWVPage({
   params,
 }: {
   params: Promise<{ season: string }>;
 }) {
   const { season } = await params;
-  return <FootballCWVContent season={season} />;
+  const initialData = await getFootballCWVServer("Big 12", season);
+  return (
+    <Suspense fallback={null}>
+      <FootballCWVContent season={season} initialData={initialData} />
+    </Suspense>
+  );
 }
