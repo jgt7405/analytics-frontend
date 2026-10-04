@@ -8,8 +8,7 @@ const PAGES = [
   "/football/wins/",
   "/football/2025-26/wins/",
   "/basketball/wins/",
-  // Not /basketball/<season>/wins/ yet: it still loads its data in the
-  // browser (the archive pilot, #87, is football only so far).
+  "/basketball/2025-26/wins/",
 ];
 const MAX_CLS = 0.01;
 
