@@ -77,3 +77,37 @@ for (const [path, markers] of LAYOUT_MARKERS) {
     }
   });
 }
+
+// The header is the same height before and after the page's JavaScript runs.
+// Static pages (/ and /football/compare/) and some dynamic ones (both wins
+// pages) send the navigation's Suspense fallback first; it was 40px against
+// the navigation's 49px on phones and basketball's 46px tab bar on desktop, so
+// everything below moved
+// 2-5px once the real navigation rendered (plan step 10 streaming notes).
+const HEADER_PAGES = [
+  "/",
+  "/football/compare/",
+  "/basketball/compare/",
+  "/football/wins/",
+  "/basketball/wins/",
+  "/football/standings/",
+  "/football/cwv/",
+];
+
+for (const path of HEADER_PAGES) {
+  test(`${path} header keeps its height when the navigation renders`, async ({ browser }, testInfo) => {
+    const device = testInfo.project.use;
+    const headerHeight = async (javaScriptEnabled: boolean) => {
+      const context = await browser.newContext({ ...device, javaScriptEnabled });
+      const page = await context.newPage();
+      await page.goto(path);
+      if (javaScriptEnabled) {
+        await expect(page.locator('header nav[aria-label="Main navigation"], header [aria-label="Toggle navigation menu"]').first()).toBeAttached();
+      }
+      const height = await page.locator("header").evaluate((el) => el.getBoundingClientRect().height);
+      await context.close();
+      return height;
+    };
+    expect(await headerHeight(true)).toBe(await headerHeight(false));
+  });
+}
