@@ -328,9 +328,21 @@ function NavigationContent() {
   );
 }
 
+// The fallback shows while NavigationContent waits (static pages such as / and
+// /football/compare/ always render it on the client, and some dynamic pages
+// stream it in late). It matches the rendered navigation's height so the
+// header doesn't grow when the real navigation replaces it: the menu button
+// row on phones (49px); from md up, basketball's tab bar (46px, some labels
+// wrap to two lines), while football's (about 40px) sits under the 44px logo.
+// usePathname doesn't suspend, unlike the useSearchParams call inside.
 export default function Navigation() {
+  const isBasketball = usePathname().startsWith("/basketball");
   return (
-    <Suspense fallback={<div className="h-10 w-full" aria-hidden />}>
+    <Suspense
+      fallback={
+        <div className={cn("h-[49px] w-full", isBasketball ? "md:h-[46px]" : "md:h-10")} aria-hidden />
+      }
+    >
       <NavigationContent />
     </Suspense>
   );
