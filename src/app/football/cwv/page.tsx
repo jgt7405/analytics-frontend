@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { sportPageMetadata } from "@/app/metadata";
+import { ResponsiveProvider } from "@/components/providers/ResponsiveProvider";
 import { getFootballCWVServer } from "@/lib/server-api";
+import { detectMobileFromHeaders } from "@/lib/server-device";
 import FootballCWVContent from "./FootballCWVContent";
 
 // Was dynamic(ssr:false) which never server-rendered. Use a normal server
@@ -10,10 +12,15 @@ export const dynamic = "force-dynamic";
 export const metadata = sportPageMetadata("football", "cwv");
 
 export default async function FootballCWVPage() {
-  const initialData = await getFootballCWVServer("Big 12");
+  const [initialData, initialIsMobile] = await Promise.all([
+    getFootballCWVServer("Big 12"),
+    detectMobileFromHeaders(),
+  ]);
   return (
-    <Suspense fallback={null}>
-      <FootballCWVContent initialData={initialData} />
-    </Suspense>
+    <ResponsiveProvider initialIsMobile={initialIsMobile}>
+      <Suspense fallback={null}>
+        <FootballCWVContent initialData={initialData} />
+      </Suspense>
+    </ResponsiveProvider>
   );
 }

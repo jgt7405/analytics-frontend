@@ -5,7 +5,9 @@ import FootballSeedContent from "@/app/football/seed/FootballSeedContent";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { sportPageMetadata } from "@/app/metadata";
+import { ResponsiveProvider } from "@/components/providers/ResponsiveProvider";
 import { getFootballSeedServer } from "@/lib/server-api";
+import { detectMobileFromHeaders } from "@/lib/server-device";
 
 export async function generateMetadata({
   params,
@@ -17,17 +19,23 @@ export async function generateMetadata({
 }
 
 // Like the current-season page, the default conference is fetched on the
-// server so the first paint has the table (step 9 archive extension).
+// server so the first paint has the table, and the device is read from the
+// User-Agent so that paint has the mobile layout (step 9 archive extension).
 export default async function ArchiveFootballSeedPage({
   params,
 }: {
   params: Promise<{ season: string }>;
 }) {
   const { season } = await params;
-  const initialData = await getFootballSeedServer("Big 12", season);
+  const [initialData, initialIsMobile] = await Promise.all([
+    getFootballSeedServer("Big 12", season),
+    detectMobileFromHeaders(),
+  ]);
   return (
-    <Suspense fallback={null}>
-      <FootballSeedContent season={season} initialData={initialData} />
-    </Suspense>
+    <ResponsiveProvider initialIsMobile={initialIsMobile}>
+      <Suspense fallback={null}>
+        <FootballSeedContent season={season} initialData={initialData} />
+      </Suspense>
+    </ResponsiveProvider>
   );
 }
