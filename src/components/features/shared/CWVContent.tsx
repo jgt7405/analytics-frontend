@@ -17,7 +17,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
-import { ComponentType, Suspense, useEffect, useState } from "react";
+import { ComponentType, useEffect, useState } from "react";
 
 export interface CWVContentConfig<TData extends { teams?: unknown[] }> {
   /** Tracking page id ("cwv" | "football-cwv") — kept for analytics continuity. */
@@ -275,16 +275,18 @@ export default function CWVContent<TData extends { teams?: unknown[] }>({
                     {conferenceSelector}
                   </div>
                 )}
+                {/* No Suspense boundary here: nothing in the table suspends,
+                    and React's server renderer sends a large finished boundary
+                    separately, so a slow phone painted the taller skeleton
+                    first and the page jumped when the table replaced it. */}
                 <div className="cwv-table">
-                  <Suspense fallback={tableSkeleton}>
-                    {cwvResponse?.data && (
-                      <CWVTable
-                        cwvData={cwvResponse.data}
-                        className="cwv-table"
-                        season={season}
-                      />
-                    )}
-                  </Suspense>
+                  {cwvResponse?.data && (
+                    <CWVTable
+                      cwvData={cwvResponse.data}
+                      className="cwv-table"
+                      season={season}
+                    />
+                  )}
                 </div>
 
                 <div className="mt-4 mb-6 text-sm text-gray-600 dark:text-gray-300">
