@@ -111,3 +111,25 @@ for (const path of HEADER_PAGES) {
     expect(await headerHeight(true)).toBe(await headerHeight(false));
   });
 }
+
+// The table is sent in the same HTML chunk as the rest of the page. React's
+// server renderer sends a large finished Suspense boundary as a separate
+// hidden chunk (`<div hidden id="S:n">`) and paints its fallback until a
+// script swaps it in; on a slowed phone the taller table skeleton was often
+// painted first, and the page jumped when the table replaced it (0.118, 27
+// of 40 loads on /football/cwv/). Table pages join this list as their table
+// boundaries are removed (plan step 10 streaming notes).
+const TABLES_IN_PAGE_CHUNK: Array<[string, string]> = [
+  ["/football/cwv/", "CWVTable-module"],
+  ["/football/2025-26/cwv/", "CWVTable-module"],
+];
+
+for (const [path, table] of TABLES_IN_PAGE_CHUNK) {
+  test(`${path} sends its table with the page, not as a separate chunk`, async ({ request }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "checks the HTML only");
+    const html = await (await request.get(path, { headers: { "user-agent": UA.phone } })).text();
+    expect(html).toContain(table);
+    const chunkStarts = [...html.matchAll(/<div hidden id="S:\d+">(<[^>]*>)/g)].map((m) => m[1]);
+    expect(chunkStarts.filter((tag) => tag.includes(table))).toEqual([]);
+  });
+}
