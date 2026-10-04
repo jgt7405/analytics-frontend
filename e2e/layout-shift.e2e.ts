@@ -43,3 +43,38 @@ for (const path of PAGES) {
     expect(cls).toBeLessThan(MAX_CLS);
   });
 }
+
+// Phones with a slow CPU paint the server HTML before the page's JavaScript
+// runs, so markup sized for desktop (useResponsive's default without a
+// ResponsiveProvider) shifts when it switches to the mobile layout. With the
+// CPU slowed 6x (Lighthouse's mobile preset), /football/seed/ measured 0.079
+// and /football/cwv/ 0.011 before these pages read the device on the server
+// (production /football/seed/ mobile: 0.147). Checked here on the HTML
+// itself, not by timing: a timed check also catches an unrelated, occasional
+// shift from the page body streaming in late (plan step 10 notes).
+const UA = {
+  phone:
+    "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36",
+  desktop:
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+};
+// What each layout's HTML contains: the conference selector's width class
+// (both pages) and the seed table's row height.
+const LAYOUT_MARKERS: Array<[string, { phone: string[]; desktop: string[] }]> = [
+  ["/football/seed/", { phone: ["w-1/3", "height:24px"], desktop: ["w-auto mr-2", "height:28px"] }],
+  ["/football/2025-26/seed/", { phone: ["w-1/3", "height:24px"], desktop: ["w-auto mr-2", "height:28px"] }],
+  ["/football/cwv/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
+  ["/football/2025-26/cwv/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
+];
+
+for (const [path, markers] of LAYOUT_MARKERS) {
+  test(`${path} sends phones the mobile layout in the HTML`, async ({ request }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "sets its own User-Agents");
+    for (const device of ["phone", "desktop"] as const) {
+      const other = device === "phone" ? "desktop" : "phone";
+      const html = await (await request.get(path, { headers: { "user-agent": UA[device] } })).text();
+      for (const marker of markers[device]) expect(html, `${device}: ${marker}`).toContain(marker);
+      for (const marker of markers[other]) expect(html, `${device}: no ${marker}`).not.toContain(marker);
+    }
+  });
+}
