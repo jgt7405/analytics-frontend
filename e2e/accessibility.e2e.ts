@@ -149,7 +149,9 @@ test.describe("keyboard and focus", () => {
     const select = page.getByRole("combobox", { name: "Select conference" });
     await expect(select).toBeVisible();
     await tabTo(page, select);
-    // Not checked yet: a visible focus indicator (globals.css removes it).
+    // A focus ring shows for keyboard focus (globals.css removed it for
+    // every focus until plan step 10, finding 2).
+    await expect.poll(() => hasVisibleFocus(select)).toBe(true);
   });
 
   for (const [path, team] of [
