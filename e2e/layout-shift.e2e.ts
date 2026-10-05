@@ -67,6 +67,7 @@ const LAYOUT_MARKERS: Array<[string, { phone: string[]; desktop: string[] }]> = 
   ["/basketball/standings/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
   ["/basketball/home/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
   ["/football/schedule/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
+  ["/football/twv/", { phone: ["w-1/3"], desktop: ["w-auto mr-2"] }],
   // The teams grid's column width (cards are in the HTML since the team list
   // is fetched on the server).
   ["/basketball/teams/?conf=Atlantic%20Coast", { phone: ["minmax(140px"], desktop: ["minmax(180px"] }],
