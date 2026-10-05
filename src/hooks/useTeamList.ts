@@ -29,9 +29,15 @@ const fetchTeamList = async (
 };
 
 /** Every team in a sport for a season (the current one when omitted). */
-export const useTeamList = (sport: "basketball" | "football", season?: string) =>
+export const useTeamList = (
+  sport: "basketball" | "football",
+  season?: string,
+  initialData?: TeamListResponse,
+) =>
   useQuery({
     queryKey: queryKeys[sport].teams(season),
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => fetchTeamList(sport, season),
     ...queryCachePolicy("referenceData"),
   });

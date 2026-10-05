@@ -17,7 +17,11 @@ import { useMonitoring } from "@/lib/unified-monitoring";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./TeamsContent.module.css";
-import { useTeamList, type TeamListRow } from "@/hooks/useTeamList";
+import {
+  useTeamList,
+  type TeamListResponse,
+  type TeamListRow,
+} from "@/hooks/useTeamList";
 
 const cx = (...classes: Array<string | false | undefined>) =>
   classes.filter(Boolean).join(" ");
@@ -57,9 +61,15 @@ interface Team {
 interface TeamsContentProps {
   config: TeamsContentConfig;
   season?: string;
+  /** The season's team list fetched on the server, so the first paint has the grid. */
+  initialData?: TeamListResponse;
 }
 
-export default function TeamsContent({ config, season }: TeamsContentProps) {
+export default function TeamsContent({
+  config,
+  season,
+  initialData,
+}: TeamsContentProps) {
   const { trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
   const { isMobile } = useResponsive();
@@ -87,7 +97,7 @@ export default function TeamsContent({ config, season }: TeamsContentProps) {
     data: teamList,
     isLoading: loading,
     error: queryError,
-  } = useTeamList(config.sport, season);
+  } = useTeamList(config.sport, season, initialData);
   const error = queryError ? "Failed to load teams data" : null;
   const rows = teamList?.data;
 

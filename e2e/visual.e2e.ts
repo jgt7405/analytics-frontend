@@ -55,6 +55,13 @@ const VISUAL_ROUTES: VisualRoute[] = [
   // championship game (football), fixtures dated in 2025-26 as above
   { path: "/basketball/2025-26/conf-tourney/" },
   { path: "/football/2025-26/conf-champ/" },
+  // TeamsContent grids: current pages and archives, which get the season's
+  // team list from the server (a conference with fixture teams; the default
+  // Big 12 has none)
+  { path: "/basketball/teams/?conf=Atlantic%20Coast", name: "basketball-teams" },
+  { path: "/football/teams/?conf=Southeastern", name: "football-teams" },
+  { path: "/basketball/2025-26/teams/?conf=Atlantic%20Coast", name: "basketball-2025-26-teams" },
+  { path: "/football/2025-26/teams/?conf=Southeastern", name: "football-2025-26-teams" },
   // basketball compare-schedules (drawn once a team is picked)
   { path: "/basketball/compare/", name: "basketball-compare-Duke", setup: selectTeam("Duke") },
   // football compare-schedules
