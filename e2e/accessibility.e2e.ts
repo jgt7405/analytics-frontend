@@ -152,6 +152,20 @@ test.describe("keyboard and focus", () => {
     // Not checked yet: a visible focus indicator (globals.css removes it).
   });
 
+  for (const path of ["/basketball/standings/", "/football/standings/"]) {
+    test(`${path} gives each conference selector its own id and name`, async ({ page }) => {
+      // The page shows the same selector in the table header and in both
+      // history charts; they shared one id, so only the first had a label
+      // (plan step 10, finding 3).
+      await openTall(page, path);
+      const selects = page.getByRole("combobox", { name: "Select conference" });
+      await expect.poll(() => selects.count()).toBeGreaterThan(1);
+      const ids = await selects.evaluateAll((els) => els.map((el) => el.id));
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(await page.locator('select:not([id]), select[id=""]').count()).toBe(0);
+    });
+  }
+
   for (const [path, team] of [
     ["/basketball/compare/", "Duke"],
     ["/football/compare/", "Alabama"],

@@ -1,6 +1,8 @@
 // src/components/common/ConferenceSelector.tsx
 "use client";
 
+import { useId } from "react";
+
 interface ConferenceSelectorProps {
   conferences: string[];
   selectedConference: string;
@@ -33,14 +35,21 @@ export default function ConferenceSelector({
     (conf) => conf !== "FCS" && conf !== "Non D1" && conf !== "Non-D1" && !excludeConferences.includes(conf),
   );
 
+  // A page can show the selector more than once (the standings page puts the
+  // same one in the table header and in both history charts), so each copy
+  // gets its own id for its label. (The error message is announced through
+  // role="alert"; aria-describedby pointed at ids that were missing or
+  // shared between copies.)
+  const selectId = useId();
+
   return (
     <div className={inline ? "conference-selector-inline" : "conference-selector"}>
-      <label htmlFor="conference-select" className="sr-only">
+      <label htmlFor={selectId} className="sr-only">
         Select conference
       </label>
       <div className="relative">
         <select
-          id="conference-select"
+          id={selectId}
           value={selectedConference}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled || filteredConferences.length === 0}
@@ -56,7 +65,6 @@ export default function ConferenceSelector({
                : "hover:border-gray-400"
            }
            focus:ring-2 focus:outline-none`}
-          aria-describedby={error ? "conference-error" : "conference-help"}
           aria-invalid={!!error}
         >
           {filteredConferences.length === 0 ? (
@@ -79,7 +87,6 @@ export default function ConferenceSelector({
 
       {error && (
         <div
-          id="conference-error"
           className="mt-1 text-sm text-red-600"
           role="alert"
         >
