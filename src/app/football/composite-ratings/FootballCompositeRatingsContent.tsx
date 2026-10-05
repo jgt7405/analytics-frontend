@@ -6,8 +6,15 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import {
   useFootballCompositeRatingDates,
   useFootballCompositeRatings,
+  useFootballCompositeRatingsTimeline,
 } from "@/hooks/useFootballCompositeRatings";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+
+const CompositeRatingsHistoryChart = dynamic(
+  () => import("@/components/features/shared/CompositeRatingsHistoryChart"),
+  { ssr: false },
+);
 
 export default function FootballCompositeRatingsContent() {
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -15,8 +22,12 @@ export default function FootballCompositeRatingsContent() {
     selectedDate || undefined,
   );
   const { data: datesData } = useFootballCompositeRatingDates();
+  const [chartTeams, setChartTeams] = useState<string[]>([]);
+  const initializedChartTeams = useRef(false);
+  const [chartRating, setChartRating] = useState("composite");
+  const timeline = useFootballCompositeRatingsTimeline(chartTeams);
 
-  const teams = data?.teams ?? [];
+  const teams = useMemo(() => data?.teams ?? [], [data?.teams]);
   const lastUpdated = data?.last_updated
     ? new Date(data.last_updated).toLocaleDateString()
     : null;
@@ -26,6 +37,17 @@ export default function FootballCompositeRatingsContent() {
     ? datesData.dates[datesData.dates.length - 1]
     : undefined;
   const maxDate = datesData?.dates?.length ? datesData.dates[0] : undefined;
+  const teamOptions = useMemo(() => teams.map((team) => team.team_name).sort(), [teams]);
+  useEffect(() => {
+    if (!initializedChartTeams.current && teams.length > 0) {
+      initializedChartTeams.current = true;
+      setChartTeams(teams.slice(0, 2).map((team) => team.team_name));
+    }
+  }, [teams]);
+  const ratingOptions = [
+    { key: "composite", label: "Composite z-score" },
+    ...(data?.sources ?? []).map((source) => ({ key: source.key, label: source.label })),
+  ];
 
   return (
     <ErrorBoundary level="page">
@@ -73,6 +95,16 @@ export default function FootballCompositeRatingsContent() {
           </div>
 
           <FootballCompositeRatingsTable teams={teams} sources={data?.sources ?? []} />
+          <CompositeRatingsHistoryChart
+            points={timeline.data?.points ?? []}
+            teams={teamOptions}
+            selectedTeams={chartTeams}
+            onSelectedTeamsChange={setChartTeams}
+            ratings={ratingOptions}
+            selectedRating={chartRating}
+            onSelectedRatingChange={setChartRating}
+            isLoading={timeline.isLoading}
+          />
         </div>
       </PageLayoutWrapper>
     </ErrorBoundary>

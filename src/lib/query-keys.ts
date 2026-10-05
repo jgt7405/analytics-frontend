@@ -16,6 +16,8 @@ export const queryKeys = {
   basketball: {
     all: ["basketball"] as const,
     compositeRatings: () => ["basketball", "composite-ratings"] as const,
+    compositeRatingsTimeline: (teams: string[]) =>
+      ["basketball", "composite-ratings-timeline", teams] as const,
     confChampAnalysis: (conference: string) =>
       ["basketball", "conf-champ-analysis", conference] as const,
     confData: (season: Season) => ["basketball", "conf-data", season] as const,
@@ -61,6 +63,8 @@ export const queryKeys = {
     compositeRatingDates: () => ["football", "composite-rating-dates"] as const,
     compositeRatings: (date: string | undefined) =>
       ["football", "composite-ratings", date] as const,
+    compositeRatingsTimeline: (teams: string[]) =>
+      ["football", "composite-ratings-timeline", teams] as const,
     confChamp: (conference: string, season: Season) =>
       ["football", "conf-champ", conference, season] as const,
     confData: (season: Season) => ["football", "conf-data", season] as const,
