@@ -22,6 +22,7 @@ interface CompositeRatingsHistoryChartProps {
   selectedRating: string;
   onSelectedRatingChange: (rating: string) => void;
   isLoading?: boolean;
+  earliestDate?: string;
 }
 
 const COLORS = ["#0891b2", "#f97316", "#8b5cf6", "#16a34a", "#e11d48", "#2563eb"];
@@ -35,10 +36,14 @@ function shortDate(value: string) {
 export default function CompositeRatingsHistoryChart(props: CompositeRatingsHistoryChartProps) {
   // History reads chronologically from the earliest snapshot on the left to
   // the latest snapshot on the right, matching the site's other §8 charts.
-  const dates = Array.from(new Set(props.points.map((point) => point.date))).sort((a, b) => a.localeCompare(b));
+  const earliestDate = props.earliestDate;
+  const visiblePoints = earliestDate
+    ? props.points.filter((point) => point.date >= earliestDate)
+    : props.points;
+  const dates = Array.from(new Set(visiblePoints.map((point) => point.date))).sort((a, b) => a.localeCompare(b));
   const datasets = props.selectedTeams.map((team, index) => {
     const byDate = new Map(
-      props.points.filter((point) => point.team_name === team).map((point) => [point.date, point.ratings[props.selectedRating]]),
+      visiblePoints.filter((point) => point.team_name === team).map((point) => [point.date, point.ratings[props.selectedRating]]),
     );
     const color = COLORS[index % COLORS.length];
     return {

@@ -10,6 +10,7 @@ import {
 } from "@/hooks/useFootballCompositeRatings";
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { currentSeason } from "@/config/seasons";
 
 const CompositeRatingsHistoryChart = dynamic(
   () => import("@/components/features/shared/CompositeRatingsHistoryChart"),
@@ -104,6 +105,7 @@ export default function FootballCompositeRatingsContent() {
             selectedRating={chartRating}
             onSelectedRatingChange={setChartRating}
             isLoading={timeline.isLoading}
+            earliestDate={`${currentSeason("football").slice(0, 4)}-08-27`}
           />
         </div>
       </PageLayoutWrapper>
