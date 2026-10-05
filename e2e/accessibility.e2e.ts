@@ -125,6 +125,20 @@ async function tabTo(page: Page, target: Locator, max = 40) {
 }
 
 test.describe("keyboard and focus", () => {
+  test("the first Tab shows a skip link that jumps past the navigation", async ({ page }) => {
+    await page.goto("/football/standings/");
+    await expect(page.locator("#main-content table").first()).toBeVisible();
+    const skip = page.getByRole("link", { name: "Skip to main content" });
+    await page.keyboard.press("Tab");
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeInViewport();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await expect
+      .poll(() => page.evaluate(() => document.getElementById("main-content")?.contains(document.activeElement)))
+      .toBe(true);
+  });
+
   test("header tabs are reached with Tab in order and show a focus outline", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === "mobile", "tabs are in the menu on mobile");
     await page.goto("/football/standings/");
