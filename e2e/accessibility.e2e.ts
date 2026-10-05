@@ -172,13 +172,20 @@ test.describe("keyboard and focus", () => {
   ]) {
     test(`${path} search picks a team with the keyboard`, async ({ page }) => {
       await page.goto(path);
-      const search = page.getByPlaceholder("Search teams...");
+      const search = page.getByRole("textbox", { name: "Search teams" });
       await tabTo(page, search);
       await page.keyboard.type(team.slice(0, 4));
-      // Tab moves from the box to the first result; Enter picks it. Not
-      // checked yet: arrow keys and a visible focus on the results.
-      const result = search.locator("..").getByRole("button", { name: team });
-      await tabTo(page, result, 3);
+      // Down moves from the box to the first result, which shows a focus
+      // ring and is named by the team alone (its logo is decorative); Up
+      // goes back to the box; Enter picks the result (plan step 10,
+      // finding 4).
+      const result = search.locator("..").getByRole("button", { name: team, exact: true });
+      await page.keyboard.press("ArrowDown");
+      await expect(result).toBeFocused();
+      await expect.poll(() => hasVisibleFocus(result)).toBe(true);
+      await page.keyboard.press("ArrowUp");
+      await expect(search).toBeFocused();
+      await page.keyboard.press("ArrowDown");
       await page.keyboard.press("Enter");
       await expect(search).toHaveValue("");
       await expect(page.getByText("Select teams above or use search")).toBeHidden();
