@@ -137,6 +137,7 @@ const TABLES_IN_PAGE_CHUNK: Array<[string, string]> = [
   ["/football/standings/", "FootballStandingsTableNoTies-module"],
   ["/football/2025-26/standings/", "FootballStandingsTable-module"],
   ["/football/2025-26/standings/", "FootballStandingsTableNoTies-module"],
+  ["/football/schedule/", "ScheduleTable-module"],
 ];
 
 for (const [path, table] of TABLES_IN_PAGE_CHUNK) {
