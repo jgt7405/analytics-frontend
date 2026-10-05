@@ -33,9 +33,9 @@ function shortDate(value: string) {
 }
 
 export default function CompositeRatingsHistoryChart(props: CompositeRatingsHistoryChartProps) {
-  // Newest-to-oldest is intentional: the requested current snapshot is the
-  // first thing the eye meets, with earlier updates extending to the right. §8.
-  const dates = Array.from(new Set(props.points.map((point) => point.date))).sort((a, b) => b.localeCompare(a));
+  // History reads chronologically from the earliest snapshot on the left to
+  // the latest snapshot on the right, matching the site's other §8 charts.
+  const dates = Array.from(new Set(props.points.map((point) => point.date))).sort((a, b) => a.localeCompare(b));
   const datasets = props.selectedTeams.map((team, index) => {
     const byDate = new Map(
       props.points.filter((point) => point.team_name === team).map((point) => [point.date, point.ratings[props.selectedRating]]),
@@ -63,7 +63,7 @@ export default function CompositeRatingsHistoryChart(props: CompositeRatingsHist
       tooltip: { callbacks: { title: (items) => dates[items[0]?.dataIndex ?? 0] ?? "" } },
     },
     scales: {
-      x: { grid: { display: false }, title: { display: true, text: "Most recent → oldest" }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 9 } },
+      x: { grid: { display: false }, title: { display: true, text: "Oldest → most recent" }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 9 } },
       y: { grid: { color: "rgba(148,163,184,.18)" }, title: { display: true, text: props.ratings.find((rating) => rating.key === props.selectedRating)?.label ?? "Rating" } },
     },
   };
@@ -72,7 +72,7 @@ export default function CompositeRatingsHistoryChart(props: CompositeRatingsHist
     <section className={`${CARD_CLASS} mt-7 p-4 sm:p-5`}>
       <div className="mb-4">
         <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">Rating history</h2>
-        <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Compare multiple teams using one rating. The newest update appears first.</p>
+        <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Compare multiple teams using one rating, from the earliest update through the latest.</p>
       </div>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end">
         <CompositeTeamPicker teams={props.teams} selected={props.selectedTeams} onChange={props.onSelectedTeamsChange} />

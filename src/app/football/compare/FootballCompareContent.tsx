@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
+import { handleListArrowKeys } from "@/lib/a11y/list-arrow-keys";
 
 // Matches the gradient/border/shadow "card" look used across the
 // modernized Wins/Standings/CWV/etc. pages.
@@ -400,10 +401,12 @@ export default function FootballCompareContent() {
             className="relative w-72 mb-0"
             ref={searchRef}
             data-debug="Search Bar Container"
+            onKeyDown={handleListArrowKeys}
           >
             <input
               type="text"
               placeholder="Search teams..."
+              aria-label="Search teams"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-slate-200/90 dark:border-slate-700/90 rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(0,151,178)] m-0"
@@ -425,7 +428,7 @@ export default function FootballCompareContent() {
                         setSearchQuery("");
                       }}
                       disabled={isDisabled}
-                      className={`w-full flex items-center gap-3 px-3 py-2 transition-colors text-sm outline-none focus:outline-none border-0 ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 transition-colors text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[rgb(0,151,178)] border-0 ${
                         isSelected
                           ? "bg-[rgb(0,151,178)] text-white"
                           : isDisabled
@@ -436,7 +439,7 @@ export default function FootballCompareContent() {
                       <div className="relative w-6 h-6 flex-shrink-0">
                         <Image
                           src={team.logo_url}
-                          alt={team.team_name}
+                          alt=""
                           fill
                           className="object-contain"
                           sizes="24px"

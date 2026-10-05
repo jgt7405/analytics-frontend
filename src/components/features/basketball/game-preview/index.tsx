@@ -269,11 +269,13 @@ export default function GamePreviewPageContent() {
                   style={{ display: "flex", flexDirection: "column", gap: 3 }}
                 >
                   <label
+                    htmlFor="game-preview-conference"
                     style={{ fontSize: 11, color: "#6b7280", fontWeight: 500 }}
                   >
                     Conference
                   </label>
                   <select
+                    id="game-preview-conference"
                     value={conferenceFilter}
                     onChange={(e) => setConferenceFilter(e.target.value)}
                     style={{
@@ -302,11 +304,13 @@ export default function GamePreviewPageContent() {
                   }}
                 >
                   <label
+                    htmlFor="game-preview-game"
                     style={{ fontSize: 11, color: "#6b7280", fontWeight: 500 }}
                   >
                     Select Game ({filteredGames.length} upcoming)
                   </label>
                   <select
+                    id="game-preview-game"
                     value={selectedGame ? selectedGame.game_id : ""}
                     onChange={(e) => {
                       const val = e.target.value;
