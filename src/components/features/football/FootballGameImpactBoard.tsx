@@ -403,6 +403,7 @@ export default function FootballGameImpactBoard({
         data-screenshot-hide="true"
       >
         <select
+          aria-label="Select team"
           value={focusTeamId ?? ""}
           onChange={(e) =>
             setFocusTeamId(e.target.value ? parseInt(e.target.value, 10) : null)
