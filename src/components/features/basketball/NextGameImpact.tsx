@@ -235,6 +235,7 @@ export default function NextGameImpact({
       {/* Shared team selector - controls both NGI and WhatIfTeamSummary */}
       <div className="mb-3" data-no-screenshot>
         <select
+          aria-label="Select team"
           value={selectedTeamId ?? ""}
           onChange={(e) => {
             const val = e.target.value;
