@@ -48,6 +48,12 @@ const VISUAL_ROUTES: VisualRoute[] = [
   { path: "/football/2025-26/seed/" },
   { path: "/football/cwv/" },
   { path: "/football/2025-26/cwv/" },
+  // FootballTWVContent and FootballScheduleContent: current pages (server
+  // initialData) and archives (browser fetch); fixtures since plan step 10
+  { path: "/football/twv/" },
+  { path: "/football/2025-26/twv/" },
+  { path: "/football/schedule/" },
+  { path: "/football/2025-26/schedule/" },
   // conference bids history charts (fixtures dated in 2025-26, as above)
   { path: "/basketball/2025-26/conf-data/" },
   { path: "/football/2025-26/conf-data/" },

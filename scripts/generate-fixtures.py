@@ -37,6 +37,20 @@ ROUTES = {
     "football.team": ("football.teams", "/api/football_team/Alabama", c.football_db),
     "football.seed": ("football.seed", "/api/football_seed/Southeastern", c.football_db),
     "football.cwv": ("football.standings", "/api/football/cwv/Southeastern", c.football_db),
+    "football.twv": ("football.standings", "/api/football/twv/Southeastern", c.football_db),
+    # The football schedule route reads the conference difficulty tables and
+    # the schedule's `conf` column, which football_db doesn't set up; the
+    # basketball helpers build the same columns.
+    "football.confSchedule": (
+        "football.schedule",
+        "/api/football/conf_schedule/Southeastern",
+        lambda: c.football_db(
+            football_team_schedule=c.bball_schedule(c.SEC_TEAMS, "Southeastern"),
+            football_team_schedule_archive=c.bball_schedule(c.SEC_TEAMS, "Southeastern"),
+            football_conf_difficulty=c.bball_conf_difficulty(c.SEC_TEAMS, "Southeastern"),
+            football_conf_difficulty_archive=c.bball_conf_difficulty(c.SEC_TEAMS, "Southeastern"),
+        ),
+    ),
 }
 
 for key, (module, url, make_db) in ROUTES.items():

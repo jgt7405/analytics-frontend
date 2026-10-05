@@ -1,0 +1,120 @@
+{
+ "conferences": [
+  "American Athletic",
+  "Atlantic Coast",
+  "Big 12",
+  "Big Ten",
+  "Conference USA",
+  "FCS",
+  "Independent",
+  "Mid-American",
+  "Mountain West",
+  "Pac-12",
+  "Southeastern",
+  "Sun Belt"
+ ],
+ "data": [
+  {
+   "Loc": "away",
+   "Team": "Texas",
+   "Win_Pct": "40%",
+   "Win_Pct_Raw": 0.4,
+   "games": {
+    "Alabama": "-",
+    "Georgia": "-",
+    "Texas": "-"
+   }
+  },
+  {
+   "Loc": "away",
+   "Team": "Georgia",
+   "Win_Pct": "45%",
+   "Win_Pct_Raw": 0.45,
+   "games": {
+    "Alabama": "-",
+    "Georgia": "-",
+    "Texas": "2/11/2024"
+   }
+  },
+  {
+   "Loc": "away",
+   "Team": "Alabama",
+   "Win_Pct": "50%",
+   "Win_Pct_Raw": 0.5,
+   "games": {
+    "Alabama": "-",
+    "Georgia": "2/10/2024",
+    "Texas": "L"
+   }
+  },
+  {
+   "Loc": "home",
+   "Team": "Texas",
+   "Win_Pct": "60%",
+   "Win_Pct_Raw": 0.6,
+   "games": {
+    "Alabama": "2/12/2024",
+    "Georgia": "W",
+    "Texas": "-"
+   }
+  },
+  {
+   "Loc": "home",
+   "Team": "Georgia",
+   "Win_Pct": "65%",
+   "Win_Pct_Raw": 0.6499999999999999,
+   "games": {
+    "Alabama": "W",
+    "Georgia": "-",
+    "Texas": "-"
+   }
+  },
+  {
+   "Loc": "home",
+   "Team": "Alabama",
+   "Win_Pct": "70%",
+   "Win_Pct_Raw": 0.7,
+   "games": {
+    "Alabama": "-",
+    "Georgia": "-",
+    "Texas": "-"
+   }
+  }
+ ],
+ "summary": {
+  "Alabama": {
+   "bottom_quartile": 1,
+   "expected_wins": 1.2,
+   "second_quartile": 0,
+   "third_quartile": 1,
+   "top_quartile": 0,
+   "total_games": 2
+  },
+  "Georgia": {
+   "bottom_quartile": 0,
+   "expected_wins": 1.1,
+   "second_quartile": 1,
+   "third_quartile": 1,
+   "top_quartile": 0,
+   "total_games": 2
+  },
+  "Texas": {
+   "bottom_quartile": 0,
+   "expected_wins": 0.9,
+   "second_quartile": 1,
+   "third_quartile": 0,
+   "top_quartile": 1,
+   "total_games": 2
+  }
+ },
+ "team_logos": {
+  "Alabama": "/images/team_logos/alabama.png",
+  "Georgia": "/images/team_logos/georgia.png",
+  "Texas": "/images/team_logos/texas.png"
+ },
+ "teams": [
+  "Alabama",
+  "Georgia",
+  "Texas"
+ ]
+}
