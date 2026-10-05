@@ -5,6 +5,7 @@ import {
   BasketballCompositeRatingTeam,
 } from "@/types/basketball";
 import { useMemo, useState } from "react";
+import CompositeTeamPicker from "@/components/features/shared/CompositeTeamPicker";
 
 const EMPTY_SOURCES: BasketballCompositeRatingSource[] = [];
 
@@ -104,10 +105,10 @@ function formatCellValue(
 
 function getStickyClass(columnKey: string): string {
   if (columnKey === "rank") {
-    return " sticky left-0 z-10 bg-white dark:bg-gray-900 w-12";
+    return " sticky left-0 z-10 w-14 bg-white dark:bg-slate-900";
   }
   if (columnKey === "team_name") {
-    return " sticky left-[3rem] z-10 bg-white dark:bg-gray-900 w-40 truncate";
+    return " sticky left-14 z-10 min-w-44 max-w-44 bg-white shadow-[1px_0_0_0_rgb(226_232_240),9px_0_14px_-14px_rgb(15_23_42)] dark:bg-slate-900 dark:shadow-[1px_0_0_0_rgb(51_65_85),9px_0_14px_-14px_black]";
   }
   return "";
 }
@@ -141,6 +142,7 @@ export default function BasketballCompositeRatingsTable(
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selectedConferences, setSelectedConferences] = useState<string[]>([]);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   const columns = useMemo(
     function () {
@@ -159,6 +161,7 @@ export default function BasketballCompositeRatingsTable(
     },
     [teams],
   );
+  const teamOptions = useMemo(() => teams.map((team) => team.team_name).sort(), [teams]);
 
   // A source with no data anywhere is called out above the table rather than
   // leaving the reader to wonder why its columns are all dashes. Deliberately
@@ -208,6 +211,7 @@ export default function BasketballCompositeRatingsTable(
   }
 
   const filteredTeams = teams.filter(function (team) {
+    if (selectedTeams.length > 0 && !selectedTeams.includes(team.team_name)) return false;
     if (
       selectedConferences.length > 0 &&
       selectedConferences.indexOf(team.conference) === -1
@@ -280,8 +284,10 @@ export default function BasketballCompositeRatingsTable(
   }
 
   return (
-    <div>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <section className="relative rounded-[1.25rem] border border-slate-200/90 bg-gradient-to-br from-white to-[#fbfdff] p-3 shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:border-slate-700/90 dark:from-[#111827] dark:to-[#0f172a] sm:p-4">
+      <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-end">
+        <CompositeTeamPicker teams={teamOptions} selected={selectedTeams} onChange={setSelectedTeams} label="Filter teams" />
+        <div className="flex items-center justify-between gap-3 lg:justify-end">
         <div className="text-xs text-gray-500 dark:text-gray-400">
           {sortedTeams.length === teams.length
             ? String(teams.length) + " teams"
@@ -297,14 +303,15 @@ export default function BasketballCompositeRatingsTable(
         <button
           type="button"
           onClick={handleDownloadCsv}
-          className="text-xs border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600 shadow-sm hover:border-cyan-400 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
         >
           Download CSV
         </button>
+        </div>
       </div>
-      <div className="overflow-x-auto overflow-y-auto max-h-[70vh] border border-gray-200 dark:border-gray-700 rounded">
-        <table className="min-w-full text-sm border-collapse">
-          <thead className="sticky top-0 z-20 bg-white dark:bg-gray-900">
+      <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700">
+        <table className="min-w-full border-separate border-spacing-0 text-sm tabular-nums">
+          <thead className="bg-white dark:bg-slate-900">
             <tr className="border-b border-gray-300 dark:border-gray-600">
               {columns.map(function (column) {
                 const alignClass = column.numeric ? "text-right" : "text-left";
@@ -322,7 +329,7 @@ export default function BasketballCompositeRatingsTable(
                     }}
                     className={
                       alignClass +
-                      " py-2 px-3 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap cursor-pointer select-none hover:text-[rgb(0,151,178)]" +
+                      " sticky top-0 z-30 h-[3.25rem] bg-slate-50 py-2 px-3 font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200 whitespace-nowrap cursor-pointer select-none hover:text-[rgb(0,151,178)]" +
                       getStickyClass(column.key)
                     }
                   >
@@ -368,7 +375,7 @@ export default function BasketballCompositeRatingsTable(
               {columns.map(function (column) {
                 if (column.key === "conference") {
                   return (
-                    <th key={column.key} className="py-1 px-3 relative">
+                    <th key={column.key} className="sticky top-[3.25rem] z-30 h-10 bg-slate-50 px-3 py-1 dark:bg-slate-900">
                       <details className="relative">
                         <summary className="cursor-pointer list-none text-xs border border-gray-300 dark:border-gray-600 rounded px-1.5 py-1 bg-white dark:bg-gray-800 truncate">
                           {selectedConferences.length === 0
@@ -423,7 +430,7 @@ export default function BasketballCompositeRatingsTable(
                 return (
                   <th
                     key={column.key}
-                    className={"py-1 px-3" + getStickyClass(column.key)}
+                    className={"sticky top-[3.25rem] z-30 h-10 bg-slate-50 px-3 py-1 dark:bg-slate-900" + getStickyClass(column.key)}
                   >
                     <input
                       type="text"
@@ -462,7 +469,7 @@ export default function BasketballCompositeRatingsTable(
                         key={column.key}
                         className={
                           alignClass +
-                          " py-2 px-3 " +
+                          " border-b border-slate-100 px-3 py-2.5 " +
                           textColorClass +
                           getStickyClass(column.key)
                         }
@@ -477,6 +484,6 @@ export default function BasketballCompositeRatingsTable(
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

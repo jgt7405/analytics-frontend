@@ -705,3 +705,8 @@ export interface BasketballCompositeRatingsResponse {
   last_scraped: string | null;
   error?: string;
 }
+
+export interface BasketballCompositeRatingsTimelineResponse {
+  points: Array<{ date: string; team_name: string; ratings: Record<string, number | null> }>;
+  error?: string;
+}

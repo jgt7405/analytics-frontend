@@ -23,7 +23,7 @@ export type HttpMethod = "GET" | "POST";
  */
 export type ParamRule = "segment" | "conference" | "team";
 
-export type QueryParam = "season" | "mode" | "date";
+export type QueryParam = "season" | "mode" | "date" | "teams";
 
 export interface Endpoint {
   /** Unique id, `<sport>.<name>`. */
@@ -73,6 +73,7 @@ const QUERY_PATTERNS: Record<QueryParam, RegExp> = {
   season: /^\d{4}-\d{2}$/,
   mode: /^(season|current)$/,
   date: /^\d{4}-\d{2}-\d{2}$/,
+  teams: /^[^<>{}\[\]\\/]{1,500}$/,
 };
 
 export function isValidQueryValue(name: QueryParam, value: string): boolean {
@@ -164,6 +165,7 @@ export const ENDPOINTS = [
   get("ncaaProjections", "basketball", ["basketball/ncaa-projections"], "/basketball/ncaa-projections", "currentStandings", { query: ["season", "mode"] }),
   get("upcomingGames", "basketball", ["basketball/upcoming_games"], "/basketball/upcoming_games", "live"),
   get("compositeRatings", "basketball", ["basketball/composite_ratings"], "/basketball/composite_ratings", "currentStandings"),
+  get("compositeRatingsTimeline", "basketball", ["basketball/composite_ratings/timeline"], "/basketball/composite_ratings/timeline", "historical", { query: ["teams"] }),
   get("seasonHighlights", "basketball", ["basketball/season_highlights"], "/basketball/season_highlights", "currentStandings"),
   // Chart page's "Download Team Schedule": the whole schedule table as a file.
   get("teamScheduleCsv", "basketball", ["basketball/team_schedule/csv"], "/basketball/team_schedule/csv", "currentStandings", { query: [], response: "csv" }),
@@ -194,6 +196,7 @@ export const ENDPOINTS = [
   get("compositeRatings", "football", ["football/composite_ratings"], "/football/composite_ratings", "currentStandings"),
   get("compositeRatingsDates", "football", ["football/composite_ratings/dates"], "/football/composite_ratings/dates", "currentStandings"),
   get("compositeRatingsHistory", "football", ["football/composite_ratings/history"], "/football/composite_ratings/history", "historical", { query: ["season", "date"] }),
+  get("compositeRatingsTimeline", "football", ["football/composite_ratings/timeline"], "/football/composite_ratings/timeline", "historical", { query: ["teams"] }),
   get("futureGames", "football", ["football/future_games"], "/football/future_games", "live"),
   get("allFutureGames", "football", ["football/all_future_games"], "/football/all_future_games", "live"),
   get("seasonHighlights", "football", ["football/season_highlights"], "/football/season_highlights", "currentStandings"),

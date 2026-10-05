@@ -597,3 +597,8 @@ export interface CompositeRatingDatesResponse {
   dates: string[];
   error?: string;
 }
+
+export interface CompositeRatingsTimelineResponse {
+  points: Array<{ date: string; team_name: string; ratings: Record<string, number | null> }>;
+  error?: string;
+}
