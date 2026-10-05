@@ -10,7 +10,7 @@ export const metadata = sportPageMetadata("basketball", "composite-ratings");
 
 function CompositeRatingsPageSkeleton() {
   return (
-    <PageLayoutWrapper title="Composite Basketball Ratings" isLoading={true}>
+    <PageLayoutWrapper title="Composite Basketball Ratings" hideTitle isLoading={true}>
       <div className="-mt-2 md:-mt-6">
         <BasketballTableSkeleton />
       </div>
