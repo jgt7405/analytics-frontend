@@ -10,7 +10,7 @@
 //   "Empty"                 { data: [] }: a conference with no teams
 //   "Missing_Fields"        rows keep only team_name and team_id
 //   "Preseason"             every record 0-0, no distributions
-//   ?season=<archived>      normal rows, conferences marked "(archive)"
+//   ?season=<archived>      normal rows, conferences marked "(archive)" (not the schedule)
 //
 // POST endpoints with a fixture answer it for any request body. Endpoints
 // without a fixture answer 404, so pages still show their error states for
@@ -31,6 +31,7 @@ import basketballTeam from "./basketball.team.json";
 import basketballTeams from "./basketball.teams.json";
 import basketballUpcomingGames from "./basketball.upcomingGames.json";
 import basketballWhatIfBaseline from "./basketball.whatIfBaseline.json";
+import footballConfSchedule from "./football.confSchedule.json";
 import footballConferenceData from "./football.conferenceData.json";
 import footballConferenceDataHistory from "./football.conferenceDataHistory.json";
 import footballCwv from "./football.cwv.json";
@@ -39,6 +40,7 @@ import footballStandings from "./football.standings.json";
 import footballStandingsHistory from "./football.standingsHistory.json";
 import footballTeam from "./football.team.json";
 import footballTeams from "./football.teams.json";
+import footballTwv from "./football.twv.json";
 import footballWhatIf from "./football.whatIf.json";
 
 type Json = Record<string, unknown>;
@@ -61,6 +63,7 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   // checks only need one to land (WhatIfTeamSummary renders after it).
   "basketball.whatIf": basketballWhatIfBaseline,
   "basketball.whatIfBaseline": basketballWhatIfBaseline,
+  "football.confSchedule": footballConfSchedule,
   "football.conferenceData": footballConferenceData,
   "football.conferenceDataHistory": footballConferenceDataHistory,
   "football.cwv": footballCwv,
@@ -69,6 +72,7 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "football.standingsHistory": footballStandingsHistory,
   "football.team": footballTeam,
   "football.teams": footballTeams,
+  "football.twv": footballTwv,
   "football.whatIf": footballWhatIf,
 };
 
@@ -117,7 +121,10 @@ export function fixtureFor(key: EndpointKey, scenario: Scenario): Json | undefin
     case "archived":
       return {
         ...body,
-        ...(Array.isArray(body.conferences) && {
+        // Not the schedule: its page switches to the first listed
+        // conference when the selected one isn't listed (changing the URL),
+        // then asks for "<name> (archive)", which the endpoint rejects.
+        ...(Array.isArray(body.conferences) && key !== "football.confSchedule" && {
           conferences: (body.conferences as string[]).map((c) => `${c} (archive)`),
         }),
       };

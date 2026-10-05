@@ -1,0 +1,34 @@
+{
+ "conferences": [
+  "Southeastern"
+ ],
+ "data": [
+  {
+   "actual_record": "12-0",
+   "expected_record": "0.0-12.0",
+   "logo_url": "/images/team_logos/alabama.png",
+   "rank": 1,
+   "team_id": "101",
+   "team_name": "Alabama",
+   "twv": 12.0
+  },
+  {
+   "actual_record": "11-1",
+   "expected_record": "0.0-12.0",
+   "logo_url": "/images/team_logos/georgia.png",
+   "rank": 2,
+   "team_id": "102",
+   "team_name": "Georgia",
+   "twv": 11.0
+  },
+  {
+   "actual_record": "10-2",
+   "expected_record": "0.0-12.0",
+   "logo_url": "/images/team_logos/texas.png",
+   "rank": 3,
+   "team_id": "103",
+   "team_name": "Texas",
+   "twv": 10.0
+  }
+ ]
+}
