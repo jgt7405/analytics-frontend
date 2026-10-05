@@ -20,6 +20,7 @@ import type { Chart, ChartArea, TooltipModel } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface HistoricalDataPoint {
   date: string;
@@ -422,7 +423,15 @@ export default function FootballTeamStandingsHistory({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel(`${teamName} projected conference standing over the season`, [
+          ["with ties", lastStandingsWithTies !== null ? `#${lastStandingsWithTies.toFixed(1)}` : null],
+          ["without ties", lastStandingsNoTies !== null ? `#${lastStandingsNoTies.toFixed(1)}` : null],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}

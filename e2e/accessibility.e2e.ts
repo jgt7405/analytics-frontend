@@ -104,6 +104,21 @@ test.describe("axe", () => {
       expect(summary).toEqual([]);
     });
   }
+
+  // Team pages still fail contrast, but every chart has a text alternative
+  // (react-chartjs-2 gives each canvas role="img").
+  for (const path of ["/basketball/team/Duke/", "/football/team/Alabama/"]) {
+    test(`${path} gives every chart a text alternative`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page }).withRules(["role-img-alt"]).analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+      expect(summary).toEqual([]);
+      const labels = await page.locator('canvas[role="img"]').evaluateAll((canvases) =>
+        canvases.map((c) => c.getAttribute("aria-label") ?? ""),
+      );
+      for (const label of labels) expect(label).toMatch(/over the season/);
+    });
+  }
 });
 
 /** True once the focused element shows an outline or a focus ring. */

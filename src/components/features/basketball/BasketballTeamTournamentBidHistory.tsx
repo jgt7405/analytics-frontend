@@ -25,6 +25,7 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface TournamentHistoricalDataPoint {
   date: string;
@@ -461,7 +462,15 @@ export default function BasketballTeamTournamentBidHistory({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel(`${teamName} NCAA tournament bid chance and average seed over the season`, [
+          ["bid chance", lastBid !== null ? `${lastBid.toFixed(0)}%` : null],
+          ["average seed", lastAvgSeed !== null ? `#${lastAvgSeed.toFixed(1)}` : null],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}

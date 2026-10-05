@@ -20,6 +20,7 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface TournamentProgressionDataPoint {
   date: string;
@@ -538,7 +539,18 @@ export default function BasketballTeamTournamentProgressionHistory({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel(`${teamName} NCAA tournament round chances over the season`, [
+          ["Sweet 16", lastSweetSixteen !== null ? `${lastSweetSixteen.toFixed(0)}%` : null],
+          ["Elite 8", lastEliteEight !== null ? `${lastEliteEight.toFixed(0)}%` : null],
+          ["Final Four", lastFinalFour !== null ? `${lastFinalFour.toFixed(0)}%` : null],
+          ["championship game", lastChampionshipGame !== null ? `${lastChampionshipGame.toFixed(0)}%` : null],
+          ["champion", lastChampion !== null ? `${lastChampion.toFixed(0)}%` : null],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}

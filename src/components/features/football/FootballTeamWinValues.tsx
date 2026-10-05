@@ -18,6 +18,7 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface FootballTeamGame {
   date: string;
@@ -444,7 +445,15 @@ export default function FootballTeamWinValues({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel("True win value (TWV) and conference win value (CWV) over the season", [
+          ["TWV", lastTwv?.toFixed(1)],
+          ["CWV", lastCwv?.toFixed(1)],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}
