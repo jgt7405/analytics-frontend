@@ -148,3 +148,28 @@ for (const [path, table] of TABLES_IN_PAGE_CHUNK) {
     expect(chunkStarts.filter((tag) => tag.includes(table))).toEqual([]);
   });
 }
+
+// Season-info renders in the browser only, so its HTML can't be checked.
+// The action buttons read the device on their first render: without the
+// device from the User-Agent they rendered side by side (desktop) and
+// stacked a moment later on phones (0.021 of a 0.042 shift on a slowed
+// phone). The first class the buttons' row is drawn with is recorded.
+for (const path of ["/basketball/season-info/", "/football/season-info/"]) {
+  test(`${path} draws the phone action buttons stacked from the first render`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile", "phone layout only");
+    await page.addInitScript(() => {
+      const w = window as unknown as { __firstButtonsClass?: string };
+      new MutationObserver(() => {
+        if (w.__firstButtonsClass) return;
+        const row = document.querySelector('[role="group"][aria-label="Export and sharing actions"]');
+        if (row) w.__firstButtonsClass = row.className;
+      }).observe(document, { childList: true, subtree: true });
+    });
+    await page.goto(path);
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { __firstButtonsClass?: string }).__firstButtonsClass))
+      .toBeTruthy();
+    const first = await page.evaluate(() => (window as unknown as { __firstButtonsClass?: string }).__firstButtonsClass);
+    expect(first).toContain("flex-col");
+  });
+}
