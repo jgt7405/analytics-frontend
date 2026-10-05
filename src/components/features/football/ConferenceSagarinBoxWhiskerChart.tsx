@@ -247,7 +247,12 @@ export default function ConferenceSagarinBoxWhiskerChart({
         </div>
 
         {/* Scrollable chart area */}
-        <div className={styles.scrollViewport}>
+        <div
+          className={styles.scrollViewport}
+          role="region"
+          aria-label="Conference win probability vs average team chart. Scroll horizontally to see every conference."
+          tabIndex={0}
+        >
           <div
             className="relative"
             style={{

@@ -414,7 +414,12 @@ export default function TeamSeedProjections({
           />
         </div>
       )}
-      <div className={styles.scrollViewport}>
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="NCAA tournament seed projections. Scroll to see every column."
+        tabIndex={0}
+      >
         <table className={styles.table}>
           {/* Rest of table code remains exactly the same */}
           <thead>

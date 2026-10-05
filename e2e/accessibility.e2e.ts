@@ -74,6 +74,25 @@ test.describe("axe", () => {
       expect(summary).toEqual([]);
     });
   }
+
+  // These pages still fail other rules (see AXE_ROUTES), but the keyboard
+  // can reach and scroll every scrolling table and chart on them.
+  for (const path of [
+    "/basketball/conf-data/",
+    "/football/conf-data/",
+    "/basketball/2025-26/conf-data/",
+    "/football/2025-26/conf-data/",
+    "/basketball/team/Duke/",
+    "/football/team/Alabama/",
+    "/football/whatif/",
+  ]) {
+    test(`${path} lets the keyboard scroll every scrolling region`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page }).withRules(["scrollable-region-focusable"]).analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
 });
 
 /** True once the focused element shows an outline or a focus ring. */

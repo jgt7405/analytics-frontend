@@ -267,7 +267,12 @@ export default function BballConfBoxWhiskerChart({
         </div>
 
         {/* Scrollable chart area */}
-        <div className={styles.scrollViewport}>
+        <div
+          className={styles.scrollViewport}
+          role="region"
+          aria-label="Conference net rating distribution chart. Scroll horizontally to see every conference."
+          tabIndex={0}
+        >
           <div
             className="relative"
             style={{

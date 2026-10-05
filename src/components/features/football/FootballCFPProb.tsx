@@ -245,7 +245,12 @@ function FootballCFPProb({
 
   return (
     <div className={cn(styles.card, "cfp-prob-table", className)}>
-      <div className={styles.scrollViewport}>
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="College Football Playoff probabilities. Scroll to see every column."
+        tabIndex={0}
+      >
         <table className={styles.table} style={{ width: "100%" }}>
           <thead>
             <tr>
