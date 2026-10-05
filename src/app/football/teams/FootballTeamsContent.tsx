@@ -6,6 +6,7 @@
 import TeamsContent, {
   TeamsContentConfig,
 } from "@/components/features/shared/TeamsContent";
+import type { TeamListResponse } from "@/hooks/useTeamList";
 
 const FOOTBALL_TEAMS: TeamsContentConfig = {
   sport: "football",
@@ -18,6 +19,9 @@ const FOOTBALL_TEAMS: TeamsContentConfig = {
   hidePageTitle: true,
 };
 
-export default function FootballTeamsContent(props: { season?: string }) {
+export default function FootballTeamsContent(props: {
+  season?: string;
+  initialData?: TeamListResponse;
+}) {
   return <TeamsContent config={FOOTBALL_TEAMS} {...props} />;
 }

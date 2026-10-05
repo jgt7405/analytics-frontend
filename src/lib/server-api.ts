@@ -33,6 +33,7 @@ import type { FootballTeamData } from "@/hooks/useFootballTeam";
 import type { NCAAProjectionsResponse } from "@/hooks/useNCAAProjections";
 import type { CombinedBasketballConfResponse } from "@/hooks/useBasketballConfData";
 import type { PlayoffRankingsResponse } from "@/types/football";
+import type { TeamListResponse } from "@/hooks/useTeamList";
 import { BACKEND_API_URL } from "@/config/env";
 import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
 import type { EndpointKey } from "@/api/endpoints";
@@ -144,14 +145,14 @@ export const getBasketballConfDataServer = async (
 export const getFootballConfDataServer = (season?: string) =>
   fetchEndpoint<FootballConferenceApiResponse>("football.conferenceData", {}, { season });
 
-// --- Team lists (for the SSR crawlable team index on /teams hubs) -----------
-// The backend returns { data: [{ team_name, conference, ... }] }. We only need
-// name + conference to render the link index, so the shape is kept minimal.
+// --- Team lists (the /teams grids and their SSR crawlable team index) -------
+// The backend returns { data: [{ team_name, conference, ... }] }, the shape
+// useTeamList expects. The link index needs only name + conference.
 export interface TeamListEntry {
   team_name: string;
   conference: string;
 }
-export const getBasketballTeamsServer = () =>
-  fetchEndpoint<{ data: TeamListEntry[] }>("basketball.teams");
-export const getFootballTeamsServer = () =>
-  fetchEndpoint<{ data: TeamListEntry[] }>("football.teams");
+export const getBasketballTeamsServer = (season?: string) =>
+  fetchEndpoint<TeamListResponse>("basketball.teams", {}, { season });
+export const getFootballTeamsServer = (season?: string) =>
+  fetchEndpoint<TeamListResponse>("football.teams", {}, { season });

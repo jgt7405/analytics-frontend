@@ -6,6 +6,7 @@
 import TeamsContent, {
   TeamsContentConfig,
 } from "@/components/features/shared/TeamsContent";
+import type { TeamListResponse } from "@/hooks/useTeamList";
 
 const BASKETBALL_TEAMS: TeamsContentConfig = {
   sport: "basketball",
@@ -20,6 +21,9 @@ const BASKETBALL_TEAMS: TeamsContentConfig = {
   title: "Basketball Teams",
 };
 
-export default function BasketballTeamsContent(props: { season?: string }) {
+export default function BasketballTeamsContent(props: {
+  season?: string;
+  initialData?: TeamListResponse;
+}) {
   return <TeamsContent config={BASKETBALL_TEAMS} {...props} />;
 }

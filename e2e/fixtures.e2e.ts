@@ -107,3 +107,23 @@ test("the basketball archive wins page server-renders its default conference", a
   expect(await response.text()).toContain("Duke");
   expect(await requestedBackendUrls()).toContain("/api/standings/Big_12?season=2025-26");
 });
+
+// The teams grid is in the HTML: the team list is fetched on the server (for
+// the archive, with its season), so the cards don't replace a loading state.
+// The bid label appears only on the cards (the current pages also send a
+// hidden link index with the same team links).
+for (const [path, team, bidLabel, backendPath] of [
+  ["/basketball/teams/?conf=Atlantic%20Coast", "/basketball/team/Duke/", "NCAA Bid", null],
+  ["/football/teams/?conf=Southeastern", "/football/team/Alabama/", "Playoff Bid", null],
+  ["/basketball/2025-26/teams/?conf=Atlantic%20Coast", "/basketball/2025-26/team/Duke/", "NCAA Bid", "/api/basketball_teams?season=2025-26"],
+  ["/football/2025-26/teams/?conf=Southeastern", "/football/2025-26/team/Alabama/", "Playoff Bid", "/api/football_teams?season=2025-26"],
+] as const) {
+  test(`${path} server-renders the team cards`, async ({ request }) => {
+    const response = await request.get(path);
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    expect(html).toContain(`href="${team}"`);
+    expect(html).toContain(bidLabel);
+    if (backendPath) expect(await requestedBackendUrls()).toContain(backendPath);
+  });
+}
