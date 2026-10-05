@@ -56,8 +56,11 @@ body {
   border-color: #d1d5db !important;
 }
 
-.conference-selector select:focus,
-.conference-selector-inline select:focus {
+/* Mouse focus stays plain; keyboard focus (:focus-visible) keeps the
+   selector's own focus ring (ConferenceSelector's focus:ring-2), which this
+   rule used to remove for every focus. */
+.conference-selector select:focus:not(:focus-visible),
+.conference-selector-inline select:focus:not(:focus-visible) {
   outline: none !important;
   border-color: #d1d5db !important;
   box-shadow: none !important;

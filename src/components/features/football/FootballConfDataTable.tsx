@@ -91,7 +91,12 @@ function FootballConfDataTable({
         {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
       </div>
 
-      <div className={styles.scrollViewport}>
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="Conference CFP bid projections. Scroll to see every column."
+        tabIndex={0}
+      >
         <table className={styles.table}>
           <thead>
             <tr>

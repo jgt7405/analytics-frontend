@@ -214,7 +214,12 @@ function FootballConfChampProb({
 
   return (
     <div className={cn(styles.card, "conf-champ-prob-table", className)}>
-      <div className={styles.scrollViewport}>
+      <div
+        className={styles.scrollViewport}
+        role="region"
+        aria-label="Conference championship probabilities. Scroll to see every column."
+        tabIndex={0}
+      >
         <table className={styles.table} style={{ width: "100%" }}>
           <thead>
             <tr>
