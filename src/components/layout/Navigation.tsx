@@ -26,7 +26,7 @@ function NavigationContent() {
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const firstItemRef = useRef<HTMLAnchorElement>(null);
-  const lastItemRef = useRef<HTMLButtonElement>(null);
+  const lastItemRef = useRef<HTMLAnchorElement>(null);
 
   const isFootball = pathname.startsWith("/football");
   const sport: Sport = isFootball ? "football" : "basketball";
@@ -279,7 +279,6 @@ function NavigationContent() {
                 setIsContactModalOpen(true);
                 setMobileMenuOpen(false);
               }}
-              ref={lastItemRef}
               className={navStyles.tabButton}
               style={{
                 all: "unset",
@@ -304,6 +303,7 @@ function NavigationContent() {
             <Link
               prefetch={false}
               href={getSportSwitchUrl()}
+              ref={lastItemRef}
               className={cn(
                 navStyles.tabButton,
                 "text-xs flex flex-col items-center justify-center leading-none py-1 gap-0",

@@ -140,13 +140,19 @@ test.describe("keyboard and focus", () => {
     await page.keyboard.press("Enter");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
-    const first = page.locator("#mobile-menu a").first();
-    // The focus trap ends at Contact (the sport switch after it isn't
-    // reached with Tab yet).
-    const contact = page.locator("#mobile-menu").getByRole("menuitem", { name: "Contact" });
+    const menu = page.locator("#mobile-menu");
+    const first = menu.locator("a").first();
+    const contact = menu.getByRole("menuitem", { name: "Contact" });
+    // The sport switch comes after Contact and closes the trap (plan step
+    // 10, finding 9: the trap used to end at Contact).
+    const sportSwitch = menu.getByRole("menuitem", { name: /Switch to Basketball/ });
     await expect(first).toBeFocused();
     await page.keyboard.press("Shift+Tab");
+    await expect(sportSwitch).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
     await expect(contact).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(sportSwitch).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(first).toBeFocused();
 
