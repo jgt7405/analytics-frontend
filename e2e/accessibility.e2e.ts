@@ -75,6 +75,17 @@ test.describe("axe", () => {
     });
   }
 
+  // These pages still fail other rules (see AXE_ROUTES), but every form
+  // control on them has a name.
+  for (const path of ["/basketball/game-preview/", "/basketball/whatif/", "/football/whatif/"]) {
+    test(`${path} labels every form control`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page }).withRules(["select-name", "label"]).analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
+
   // These pages still fail other rules (see AXE_ROUTES), but the keyboard
   // can reach and scroll every scrolling table and chart on them.
   for (const path of [
