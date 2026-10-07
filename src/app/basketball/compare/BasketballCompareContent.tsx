@@ -139,10 +139,16 @@ export default function BasketballCompareContent() {
   const loadTeamData = useCallback(
     async (teamName: string): Promise<TeamData | null> => {
       try {
-        const response = await fetch(
-          apiUrl("basketball.team", { team: teamName }),
-        );
-        return await response.json();
+        const [teamResponse, scheduleResponse] = await Promise.all([
+          fetch(apiUrl("basketball.team", { team: teamName })),
+          fetch(apiUrl("basketball.allScheduleData")),
+        ]);
+        if (!teamResponse.ok || !scheduleResponse.ok) return null;
+        const [teamData, scheduleData] = await Promise.all([
+          teamResponse.json(),
+          scheduleResponse.json(),
+        ]);
+        return { ...teamData, all_schedule_data: scheduleData.data };
       } catch (error) {
         logger.error("Error loading team data:", error);
         return null;

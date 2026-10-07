@@ -35,14 +35,9 @@ export default async function BasketballTeamPage({
   if (!fullData?.team_info) {
     notFound();
   }
-  // Strip the league-wide all_schedule_data (~2MB / ~12k rows) from the SSR
-  // payload — it's only used by client-side charts, which refetch the full
-  // dataset on mount (see initialDataUpdatedAt in useBasketballTeamData). This
-  // keeps the crawlable HTML small enough for Google's crawl budget.
-  const initialData = { ...fullData, all_schedule_data: undefined };
   return (
     <Suspense fallback={null}>
-      <BasketballTeamContent params={{ teamname }} initialData={initialData} />
+      <BasketballTeamContent params={{ teamname }} initialData={fullData} />
     </Suspense>
   );
 }

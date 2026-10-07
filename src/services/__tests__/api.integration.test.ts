@@ -69,6 +69,31 @@ describe('API Client Integration Tests', () => {
     })
   })
 
+  describe('Basketball Team', () => {
+    it('loads team details and league schedule data from separate endpoints', async () => {
+      ;(global.fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ team_info: {}, schedule: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: [] }),
+        })
+
+      await api.getTeamData('Boston College')
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/team/Boston%20College/'),
+        expect.any(Object)
+      )
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/proxy/basketball/all_schedule_data/'),
+        expect.any(Object)
+      )
+    })
+  })
+
   describe('Football Standings', () => {
     it('getFootballStandings should call correct endpoint', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({

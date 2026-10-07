@@ -158,6 +158,7 @@ export const ENDPOINTS = [
   get("seed", "basketball", ["seed/:conference"], "/seed/:conference", "currentStandings", { params: conference }),
   get("ncaaTourney", "basketball", ["ncaa_tourney/:conference"], "/ncaa_tourney/:conference", "currentStandings", { params: conference }),
   get("team", "basketball", ["team/:team"], "/team/:team", "currentStandings", { params: team }),
+  get("allScheduleData", "basketball", ["basketball/all_schedule_data"], "/basketball/all_schedule_data", "currentStandings"),
   get("teamConfWinsHistory", "basketball", ["basketball/team/:team/history/conf_wins"], "/basketball/team/:team/history/conf_wins", "historical", { params: team }),
   get("teamNcaaHistory", "basketball", ["basketball/ncaa/:team/history"], "/basketball/ncaa/:team/history", "historical", { params: team }),
   get("nonconfAnalysis", "basketball", ["basketball/nonconf_analysis/:conference"], "/basketball/nonconf_analysis/:conference", "currentStandings", { params: conference }),

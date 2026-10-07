@@ -47,6 +47,8 @@ export const queryKeys = {
       ["basketball", "standings-history", conference, season] as const,
     team: (teamName: string, season: Season) =>
       ["basketball", "team", teamName, season] as const,
+    allScheduleData: (season: Season) =>
+      ["basketball", "all-schedule-data", season] as const,
     teamAllHistory: (teamName: string, season: Season) =>
       ["basketball", "team-all-history", teamName, season] as const,
     teams: (season: Season) => ["basketball", "teams", season] as const,
