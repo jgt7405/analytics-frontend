@@ -119,6 +119,29 @@ test.describe("axe", () => {
       for (const label of labels) expect(label).toMatch(/over the season/);
     });
   }
+
+  // Heat-map tiles pick text that keeps 4.5:1 on every shade (plan step 10,
+  // finding 6). Only the tiles are scanned; other text on these pages is
+  // covered elsewhere or still open.
+  for (const path of [
+    "/basketball/whatif/",
+    "/football/whatif/",
+    "/basketball/conf-data/",
+    "/football/conf-data/",
+    "/basketball/2025-26/conf-data/",
+    "/football/2025-26/conf-data/",
+  ]) {
+    test(`${path} heat-map text has enough contrast`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page })
+        .withRules(["color-contrast"])
+        .include('[class*="heatTile"]')
+        .include('[aria-label^="Non-conference opponent analysis"] td')
+        .analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 5).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
 });
 
 /** True once the focused element shows an outline or a focus ring. */

@@ -3,7 +3,7 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
-import { getCellColor } from "@/lib/color-utils";
+import { getCellColor, readableTextColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { memo, useMemo, useState, useEffect } from "react";
@@ -195,7 +195,7 @@ function FootballConfChampProb({
 
     // Calculate brightness for text color contrast
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    const textColor = brightness > 140 ? "#000000" : "#ffffff";
+    const textColor = readableTextColor(r, g, b, brightness > 140 ? "#000000" : "#ffffff");
 
     return {
       backgroundColor: `rgb(${r}, ${g}, ${b})`,

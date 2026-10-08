@@ -1,7 +1,7 @@
 // Colors and small helpers shared by the what-if tables.
 
 import { type NcaaAllTeam, type WhatIfTeamResult } from "@/hooks/useBasketballWhatIf";
-import { getCellColor } from "@/lib/color-utils";
+import { getCellColor, readableTextColor } from "@/lib/color-utils";
 import { type ExtraColumn } from "./types";
 
 export const TEAL_COLOR = "rgb(0, 151, 178)";
@@ -22,7 +22,7 @@ export function getDeltaColor(delta: number, maxAbs: number) {
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return {
     backgroundColor: `rgb(${r}, ${g}, ${b})`,
-    color: brightness > 140 ? "#374151" : "#ffffff",
+    color: readableTextColor(r, g, b, brightness > 140 ? "#374151" : "#ffffff"),
   };
 }
 
