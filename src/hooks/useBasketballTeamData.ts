@@ -43,7 +43,7 @@ interface TeamGame {
   opp_points?: number;
 }
 
-interface AllScheduleGame {
+export interface AllScheduleGame {
   team: string;
   opponent: string;
   rk50_win_prob: number;
@@ -62,14 +62,9 @@ export const useBasketballTeamData = (
   season?: string,
   initialData?: TeamData,
 ) => {
-  return useQuery<TeamData, Error>({
+  const teamQuery = useQuery<TeamData, Error>({
     queryKey: queryKeys.basketball.team(teamName, season),
     initialData,
-    // The SSR initialData is served WITHOUT the heavy league-wide
-    // all_schedule_data (~2MB) to keep the crawlable HTML light. Mark it
-    // immediately stale so the client refetches the full dataset on mount,
-    // which populates the charts that need all_schedule_data.
-    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {
       const response = await fetch(
         apiUrl("basketball.team", { team: teamName }, { season })
@@ -81,4 +76,31 @@ export const useBasketballTeamData = (
     ...queryCachePolicy("currentStandings"),
     retry: 2,
   });
+
+  const allScheduleQuery = useQuery<{ data: AllScheduleGame[] }, Error>({
+    queryKey: queryKeys.basketball.allScheduleData(season),
+    queryFn: async () => {
+      const response = await fetch(
+        apiUrl("basketball.allScheduleData", {}, { season }),
+      );
+      if (!response.ok) throw new Error("Failed to load schedule difficulty data");
+      return response.json();
+    },
+    ...queryCachePolicy("currentStandings"),
+    retry: 2,
+  });
+
+  return {
+    ...teamQuery,
+    data: teamQuery.data
+      ? { ...teamQuery.data, all_schedule_data: allScheduleQuery.data?.data }
+      : undefined,
+    refetch: async () => {
+      const [teamResult] = await Promise.all([
+        teamQuery.refetch(),
+        allScheduleQuery.refetch(),
+      ]);
+      return teamResult;
+    },
+  };
 };
