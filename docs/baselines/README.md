@@ -383,3 +383,18 @@ Production, Lighthouse from GitHub Actions, mobile preset unless noted, median o
 
 Still weak: `/football/seed/` mobile CLS 0.147 on every run; both compare pages' mobile LCP 2.6–5.0 s and TBT up to 1.2 s. Two "after" runs only, and lab performance scores swing up to 25 points between days, so the per-route verdicts rest on the large, consistent changes (proxy calls, requests, CLS) more than on single performance scores.
 
+
+## 2026-10-08 — step 10 layout-shift verdicts
+
+Production, Lighthouse from GitHub Actions, mobile preset unless noted, median of 3 runs per route: the daily runs of 10-04 ([37214455345](https://github.com/jgt7405/analytics-frontend/actions/runs/37214455345); had #141 and #143, not #145 or #147), 10-06 ([37502200759](https://github.com/jgt7405/analytics-frontend/actions/runs/37502200759)) and 10-07 ([37662209630](https://github.com/jgt7405/analytics-frontend/actions/runs/37662209630)); both later runs include all four. The 10-05 run ([37364728015](https://github.com/jgt7405/analytics-frontend/actions/runs/37364728015)) was cancelled by the runner before any step ran.
+
+| What | Before | 10-04 | 10-06 | 10-07 | Verdict |
+|---|---|---|---|---|---|
+| Seed table (#135, #143), `/football/seed/` | CLS 0.147 on every run 10-01 to 10-03 | CLS 0, perf 95, LCP 2.26 s | 0, 92, 2.56 s | 0, 95, 2.18 s | **Kept**; desktop CLS 0 on all three runs |
+| CWV table (#141), `/football/cwv/` | not in the daily route list | — | — | — | No production number |
+| Standings tables (#145), `/football/standings/` and `/basketball/standings/` | CLS 0 | 0 / 0 | 0 / 0 | 0 / 0 | **Kept**: no regression; the target (shifts while a slowed phone streams the page) isn't reproduced by the lab |
+| Basketball standings buttons (#147) | CLS 0 | 0 | 0 | 0 | **Kept**, same reason |
+
+Other routes stay at or near their earlier CLS: compare pages 0–0.021, game preview 0–0.021, `/football/twv/` 0–0.002, `/football/wins/` and the archive wins page 0. Proxy on 10-07: 0 failures in 75 calls, median 9 ms.
+
+Noise to watch: `/basketball/standings/` mobile LCP went 2.49 s (10-04) → 4.61 / 4.62 s (10-06, 10-07), perf 90 → 74 / 71. That is inside the 3.0–5.7 s range of 09-28 to 10-01, so it isn't counted against #145 or #147; recheck if it stays above 4.5 s for a week.
