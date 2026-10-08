@@ -32,7 +32,7 @@
     "/basketball/standings": 285,
     "/basketball/standings/[conf]": 285,
     "/basketball/team/[teamname]": 264.7,
-    "/basketball/teams": 177.7,
+    "/basketball/teams": 186.6,
     "/basketball/twv": 209.2,
     "/basketball/whatif": 185.7,
     "/basketball/wins": 202.8,
@@ -61,7 +61,7 @@
     "/football/seed": 210.6,
     "/football/standings": 283.7,
     "/football/team/[teamname]": 275.9,
-    "/football/teams": 177.7,
+    "/football/teams": 186.6,
     "/football/twv": 193.2,
     "/football/whatif": 217.2,
     "/football/wins": 202.7
