@@ -238,6 +238,9 @@ test.describe("keyboard and focus", () => {
     await expect(sportSwitch).toBeFocused();
     await page.keyboard.press("Shift+Tab");
     await expect(contact).toBeFocused();
+    // Contact resets its styles inline; the ring still shows (finding 9
+    // follow-up).
+    await expect.poll(() => hasVisibleFocus(contact)).toBe(true);
     await page.keyboard.press("Tab");
     await expect(sportSwitch).toBeFocused();
     await page.keyboard.press("Tab");

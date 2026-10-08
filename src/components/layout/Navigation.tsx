@@ -279,10 +279,14 @@ function NavigationContent() {
                 setIsContactModalOpen(true);
                 setMobileMenuOpen(false);
               }}
-              className={navStyles.tabButton}
+              className={cn(navStyles.tabButton, navStyles.contactButton)}
               style={{
                 all: "unset",
                 display: "block",
+                // all: unset drops the border-box sizing the other items get,
+                // which pushed this item (and its focus ring) past the menu edge.
+                boxSizing: "border-box",
+                borderRadius: "4px 4px 0 0",
                 width: "calc(100% - 16px)",
                 textAlign: "left",
                 padding: "8px 20px",
