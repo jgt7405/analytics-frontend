@@ -27,6 +27,15 @@ import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { chartLabel } from "@/lib/a11y/chart-label";
 
+// One point of the bid or average-seed series from the history endpoint.
+interface BidHistoryPoint {
+  date: string;
+  team_name: string;
+  team_info: TournamentHistoricalDataPoint["team_info"];
+  tournament_bid_pct?: number;
+  average_seed?: number;
+}
+
 interface TournamentHistoricalDataPoint {
   date: string;
   tournament_bid_pct: number;
@@ -109,7 +118,7 @@ export default function BasketballTeamTournamentBidHistory({
     const tournamentBidData = ncaaData.tournament_bid_data || [];
     const avgSeedData = ncaaData.average_seed_data || [];
 
-    tournamentBidData.forEach((point: any) => {
+    tournamentBidData.forEach((point: BidHistoryPoint) => {
       dataByDate.set(point.date, {
         date: point.date,
         tournament_bid_pct: point.tournament_bid_pct || 0,
@@ -119,7 +128,7 @@ export default function BasketballTeamTournamentBidHistory({
       });
     });
 
-    avgSeedData.forEach((point: any) => {
+    avgSeedData.forEach((point: BidHistoryPoint) => {
       if (dataByDate.has(point.date)) {
         const existingPoint = dataByDate.get(point.date)!;
         existingPoint.average_seed = point.average_seed || 0;
