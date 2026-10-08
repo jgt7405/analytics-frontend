@@ -22,6 +22,14 @@ interface TeamScheduleProps {
 
 type LocationType = "Away" | "Neutral" | "Home";
 
+const isTbdOpponent = (opponent: string) => opponent.endsWith(" - TBD");
+
+const formatOpponentRank = (game: TeamGame) => {
+  if (isTbdOpponent(game.opponent)) return "TBD";
+  if (!game.kenpom_rank || game.kenpom_rank === 999) return "Non D1";
+  return `#${game.kenpom_rank}`;
+};
+
 export default function TeamSchedule({
   schedule,
   navigateToTeam,
@@ -111,14 +119,22 @@ export default function TeamSchedule({
               groupedGames.groups[location].map((game, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800/60 cursor-pointer hover:opacity-80 transition-opacity"
+                  className={`flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800/60 transition-opacity ${
+                    isTbdOpponent(game.opponent)
+                      ? "cursor-default"
+                      : "cursor-pointer hover:opacity-80"
+                  }`}
                   style={{
                     width: boxWidth,
                     height: boxHeight,
                     border: `2px solid ${getBorderColor(game.status)}`,
                   }}
-                  onClick={() => navigateToTeam(game.opponent)}
-                  title={`${game.opponent} (${game.kenpom_rank ? (game.kenpom_rank === 999 ? "Non D1" : `#${game.kenpom_rank}`) : "Non D1"}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
+                  onClick={() => {
+                    if (!isTbdOpponent(game.opponent)) {
+                      navigateToTeam(game.opponent);
+                    }
+                  }}
+                  title={`${game.opponent} (${formatOpponentRank(game)}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
                 >
                   <TeamLogo
                     logoUrl={
@@ -128,11 +144,7 @@ export default function TeamSchedule({
                     size={logoSize}
                   />
                   <span className="text-xs text-gray-600 dark:text-gray-300 font-medium text-right">
-                    {game.kenpom_rank
-                      ? game.kenpom_rank === 999
-                        ? "Non D1"
-                        : `#${game.kenpom_rank}`
-                      : "Non D1"}
+                    {formatOpponentRank(game)}
                   </span>
                 </div>
               ))

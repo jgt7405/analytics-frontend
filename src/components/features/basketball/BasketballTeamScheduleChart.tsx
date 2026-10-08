@@ -36,6 +36,8 @@ interface BasketballTeamScheduleChartProps {
   teamName?: string;
 }
 
+const isTbdOpponent = (opponent: string) => opponent.endsWith(" - TBD");
+
 export default function BasketballTeamScheduleChart({
   schedule,
   navigateToTeam,
@@ -145,6 +147,7 @@ export default function BasketballTeamScheduleChart({
         <tbody>
           {schedule.map((game, index) => {
             const isNextGame = index === nextGameIndex;
+            const opponentIsTbd = isTbdOpponent(game.opponent);
             const scoreContent = formatScore(
               game.team_points,
               game.opp_points,
@@ -179,8 +182,14 @@ export default function BasketballTeamScheduleChart({
                 </td>
                 <td className="p-2">
                   <div
-                    className="flex items-center cursor-pointer hover:text-blue-600"
-                    onClick={() => navigateToTeam(game.opponent)}
+                    className={`flex items-center ${
+                      opponentIsTbd
+                        ? "cursor-default"
+                        : "cursor-pointer hover:text-blue-600"
+                    }`}
+                    onClick={() => {
+                      if (!opponentIsTbd) navigateToTeam(game.opponent);
+                    }}
                   >
                     <TeamLogo
                       logoUrl={
@@ -192,7 +201,9 @@ export default function BasketballTeamScheduleChart({
                   </div>
                 </td>
                 <td className="text-center p-2">
-                  {!game.opp_kp_rank && !game.kenpom_rank
+                  {opponentIsTbd
+                    ? "TBD"
+                    : !game.opp_kp_rank && !game.kenpom_rank
                     ? "Non D1"
                     : formatRank(game.opp_kp_rank || game.kenpom_rank)}
                 </td>
