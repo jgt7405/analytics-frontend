@@ -120,8 +120,8 @@ test.describe("axe", () => {
     });
   }
 
-  // Text contrast on these pages, leaving out what is still open (plan step
-  // 10, finding 6): heat-map tiles, and by the owner's choice the selected
+  // Text contrast on these pages (plan step 10, finding 6), leaving out the
+  // heat-map tiles (checked below) and, by the owner's choice, the selected
   // teal toggle buttons on team pages.
   for (const path of ["/basketball/whatif/", "/basketball/team/Duke/"]) {
     test(`${path} text has enough contrast`, async ({ page }) => {
@@ -130,6 +130,29 @@ test.describe("axe", () => {
         .withRules(["color-contrast"])
         .exclude('[class*="heatTile"]')
         .exclude("button.text-white")
+        .analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 5).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
+
+  // Heat-map tiles pick text that keeps 4.5:1 on every shade (plan step 10,
+  // finding 6). Only the tiles are scanned; the rest of the what-if text is
+  // checked above.
+  for (const path of [
+    "/basketball/whatif/",
+    "/football/whatif/",
+    "/basketball/conf-data/",
+    "/football/conf-data/",
+    "/basketball/2025-26/conf-data/",
+    "/football/2025-26/conf-data/",
+  ]) {
+    test(`${path} heat-map text has enough contrast`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page })
+        .withRules(["color-contrast"])
+        .include('[class*="heatTile"]')
+        .include('[aria-label^="Non-conference opponent analysis"] td')
         .analyze();
       const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 5).join(", ")}`);
       expect(summary).toEqual([]);

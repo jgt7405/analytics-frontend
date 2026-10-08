@@ -6,6 +6,32 @@ export interface ColorStyle {
   color: string;
 }
 
+const channel = (c: number) => {
+  c = c / 255;
+  return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+};
+const luminance = (r: number, g: number, b: number) =>
+  0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+const hexToRgb = (hex: string): [number, number, number] => {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+
+/** WCAG contrast ratio between two luminances. */
+const ratio = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+
+/**
+ * Text color for a filled cell: `preferred` (a #rrggbb color) when it reaches
+ * the WCAG AA 4.5:1 minimum against rgb(r, g, b), otherwise black or white,
+ * whichever reads better. Mid-tone tiles are where neither white nor a dark
+ * gray reaches 4.5:1 (plan step 10, finding 6).
+ */
+export function readableTextColor(r: number, g: number, b: number, preferred: string): string {
+  const bg = luminance(r, g, b);
+  if (ratio(bg, luminance(...hexToRgb(preferred))) >= 4.5) return preferred;
+  return ratio(bg, 0) >= ratio(bg, 1) ? "#000000" : "#ffffff";
+}
+
 export function getCellColor(
   value: number,
   scheme: ColorScheme = "blue"
@@ -46,22 +72,10 @@ export function getCellColor(
     colors.light[2] + (colors.dark[2] - colors.light[2]) * intensity
   );
 
-  const getLuminance = (r: number, g: number, b: number): number => {
-    const [rs, gs, bs] = [r, g, b].map((c) => {
-      c = c / 255;
-      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-  };
-
-  const bgLuminance = getLuminance(r, g, b);
-  const darkTextLuminance = getLuminance(31, 41, 55);
-  const lightTextLuminance = getLuminance(255, 255, 255);
-
-  const darkContrast = (Math.max(bgLuminance, darkTextLuminance) + 0.05) / (Math.min(bgLuminance, darkTextLuminance) + 0.05);
-  const lightContrast = (Math.max(bgLuminance, lightTextLuminance) + 0.05) / (Math.min(bgLuminance, lightTextLuminance) + 0.05);
-
-  const textColor = darkContrast >= lightContrast ? "#1f2937" : "#ffffff";
+  const bgLuminance = luminance(r, g, b);
+  const darkContrast = ratio(bgLuminance, luminance(31, 41, 55));
+  const lightContrast = ratio(bgLuminance, 1);
+  const textColor = readableTextColor(r, g, b, darkContrast >= lightContrast ? "#1f2937" : "#ffffff");
 
   return {
     backgroundColor: `rgb(${r}, ${g}, ${b})`,

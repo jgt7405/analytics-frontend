@@ -3,7 +3,7 @@
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
-import { getCellColor } from "@/lib/color-utils";
+import { getCellColor, readableTextColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { memo, useMemo, useState, useEffect } from "react";
@@ -194,7 +194,7 @@ function FootballCFPProb({
     const g = Math.round(white[1] + (yellow[1] - white[1]) * ratio);
     const b = Math.round(white[2] + (yellow[2] - white[2]) * ratio);
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: brightness > 140 ? "#000000" : "#ffffff" };
+    return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: readableTextColor(r, g, b, brightness > 140 ? "#000000" : "#ffffff") };
   };
 
   // Get TWV-style color for change cells (matches TWV table exactly)
@@ -226,7 +226,7 @@ function FootballCFPProb({
 
     // Calculate brightness for text color contrast
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    const textColor = brightness > 140 ? "#000000" : "#ffffff";
+    const textColor = readableTextColor(r, g, b, brightness > 140 ? "#000000" : "#ffffff");
 
     return {
       backgroundColor: `rgb(${r}, ${g}, ${b})`,
