@@ -215,7 +215,7 @@ export default function BasketballTeamScheduleChart({
                     <span
                       className={`font-medium ${
                         game.status === "W"
-                          ? "text-green-600"
+                          ? "text-green-700"
                           : game.status === "L"
                             ? "text-red-600"
                             : "text-gray-600 dark:text-gray-300"
