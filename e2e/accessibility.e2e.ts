@@ -119,6 +119,22 @@ test.describe("axe", () => {
       for (const label of labels) expect(label).toMatch(/over the season/);
     });
   }
+
+  // Text contrast on these pages, leaving out what is still open (plan step
+  // 10, finding 6): heat-map tiles, and by the owner's choice the selected
+  // teal toggle buttons on team pages.
+  for (const path of ["/basketball/whatif/", "/basketball/team/Duke/"]) {
+    test(`${path} text has enough contrast`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page })
+        .withRules(["color-contrast"])
+        .exclude('[class*="heatTile"]')
+        .exclude("button.text-white")
+        .analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 5).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
 });
 
 /** True once the focused element shows an outline or a focus ring. */

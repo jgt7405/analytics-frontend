@@ -372,7 +372,7 @@ export default function WhatIfTeamSummary({
               }
               setCapturing(false);
             }}
-            className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-500 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
+            className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
             title="Download screenshot"
           >
             {capturing ? (
