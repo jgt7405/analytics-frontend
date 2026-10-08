@@ -145,7 +145,7 @@ export function ResultsPanel({
                     <button
                       type="button"
                       onClick={onToggleAllNcaaTeams}
-                      className="px-2 py-1 text-[11px] text-gray-500 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-slate-800 transition"
+                      className="px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-slate-800 transition"
                       aria-pressed={showAllNcaaTeams}
                     >
                       {showAllNcaaTeams ? "Conference Only" : "All Teams"}
@@ -200,7 +200,7 @@ export function ResultsPanel({
         !isLoadingBaseline &&
         displayBaseline.length > 0 && (
           <div className="mt-4 px-1">
-            <p className="text-[10px] text-gray-400 leading-relaxed">
+            <p className="text-[10px] text-gray-500 leading-relaxed">
               Current reflects current probabilities; what if reflects
               updated probabilities with game results selected. Change is
               the difference between current and what if. Ties broken based
