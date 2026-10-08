@@ -23,6 +23,7 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface CFPProgressionDataPoint {
   date: string;
@@ -537,7 +538,17 @@ export default function FootballTeamCFPProgressionHistory({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel(`${teamName} College Football Playoff round chances over the season`, [
+          ["quarterfinals", lastQuarterfinals !== null ? `${lastQuarterfinals.toFixed(0)}%` : null],
+          ["semifinals", lastSemifinals !== null ? `${lastSemifinals.toFixed(0)}%` : null],
+          ["championship game", lastChampionship !== null ? `${lastChampionship.toFixed(0)}%` : null],
+          ["champion", lastChampion !== null ? `${lastChampion.toFixed(0)}%` : null],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}

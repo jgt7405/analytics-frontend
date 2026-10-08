@@ -25,6 +25,7 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface HistoricalDataPoint {
   date: string;
@@ -355,7 +356,14 @@ export default function BasketballTeamRankHistory({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel(`${teamName} rating rank over the season`, [
+          ["rank", lastRank !== null ? `#${Math.round(lastRank)}` : null],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}

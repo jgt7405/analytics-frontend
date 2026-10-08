@@ -20,6 +20,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { useFootballTeamCFPHistory } from "@/hooks/useFootballTeamCFPHistory";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface CFPHistoricalDataPoint {
   date: string;
@@ -447,7 +448,15 @@ export default function FootballTeamCFPBidHistory({
         </div>
       )}
 
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel(`${teamName} College Football Playoff bid chance and average seed over the season`, [
+          ["bid chance", lastCfpBid !== null ? `${lastCfpBid.toFixed(0)}%` : null],
+          ["average seed", lastAvgSeed !== null ? `#${lastAvgSeed.toFixed(1)}` : null],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}
