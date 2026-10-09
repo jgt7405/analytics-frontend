@@ -1,31 +1,13 @@
-// jest.setup.js stubs next/image for component tests; this needs the real
-// getImageProps to check resizedLogoSrc against it.
-jest.unmock("next/image");
-
-import { getImageProps } from "next/image";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import nextConfig from "../../../next.config";
-import { OPTIMIZER_WIDTHS, resizedLogoSrc } from "../logo-src";
+import { resizedLogoSrc } from "../logo-src";
 
 describe("resizedLogoSrc", () => {
-  it("routes local logo files through the image optimizer at 2x", () => {
-    const url = resizedLogoSrc("/images/team_logos/duke.png", 32);
-    expect(url).toBe("/_next/image/?url=%2Fimages%2Fteam_logos%2Fduke.png&w=64&q=75");
-  });
-
-  it("gives the same src as next/image for a square of that size", () => {
-    for (const px of [12, 16, 20, 24, 28, 32, 48]) {
-      const src = "/images/conf_logos/Big_Ten.png";
-      const expected = getImageProps({ src, alt: "", width: px, height: px }).props.src;
-      // Under Jest, Next doesn't see next.config.ts's trailingSlash: true,
-      // which only adds the slash before "?".
-      expect(resizedLogoSrc(src, px)).toBe(expected.replace("/_next/image?", "/_next/image/?"));
-    }
-  });
-
-  it("uses the widths and trailing slash configured in next.config.ts", () => {
-    const { imageSizes = [], deviceSizes = [] } = nextConfig.images ?? {};
-    expect(OPTIMIZER_WIDTHS).toEqual([...imageSizes, ...deviceSizes].sort((a, b) => a - b));
-    expect(nextConfig.trailingSlash).toBe(true);
+  it("uses local logo files as they are", () => {
+    expect(resizedLogoSrc("/images/team_logos/duke.png", 32)).toBe(
+      "/images/team_logos/duke.png",
+    );
   });
 
   it("leaves other URLs alone", () => {
@@ -41,4 +23,37 @@ describe("resizedLogoSrc", () => {
     expect(resizedLogoSrc(undefined, 32)).toBeUndefined();
     expect(resizedLogoSrc("", 32)).toBeUndefined();
   });
+});
+
+// Logos are served without the image optimizer (next.config.ts), so a logo
+// file committed at full size goes to every visitor at full size. Run
+// `node scripts/shrink-logos.mjs` after adding one.
+describe("logo files", () => {
+  it("are served without the image optimizer", () => {
+    expect(nextConfig.images?.unoptimized).toBe(true);
+  });
+
+  const PUBLIC = join(__dirname, "../../../public/images");
+  const LIMITS = [
+    { folder: "team_logos", width: 128, height: 128 },
+    { folder: "conf_logos", width: 600, height: 128 },
+  ];
+
+  for (const { folder, width, height } of LIMITS) {
+    it(`in ${folder} fit ${width}x${height} and 40 kB`, () => {
+      const oversized: string[] = [];
+      for (const name of readdirSync(join(PUBLIC, folder))) {
+        // compare_*.png in team_logos is a saved chart export, not a logo.
+        if (!name.endsWith(".png") || name.startsWith("compare_")) continue;
+        const file = readFileSync(join(PUBLIC, folder, name));
+        // PNG IHDR: width and height are the big-endian uint32s at 16 and 20.
+        const w = file.readUInt32BE(16);
+        const h = file.readUInt32BE(20);
+        if (w > width || h > height || file.length > 40 * 1024) {
+          oversized.push(`${name} (${w}x${h}, ${Math.round(file.length / 1024)} kB)`);
+        }
+      }
+      expect(oversized).toEqual([]);
+    });
+  }
 });
