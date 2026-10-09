@@ -81,7 +81,8 @@ export default function TeamSeedProjections({
     value: number,
     isOutCategory: boolean
   ): ColorStyle => {
-    if (value === 0) return { backgroundColor: "white", color: "transparent" };
+    if (value === 0)
+      return { backgroundColor: "var(--bg-primary)", color: "transparent" };
 
     if (isOutCategory) {
       const white = [255, 255, 255];
@@ -387,11 +388,15 @@ export default function TeamSeedProjections({
     return label;
   };
 
-  const winsColWidth = "40px";
-  const seedColWidth = isMobile ? "33px" : "38px";
-  const statusColWidth = isMobile ? "45px" : "60px";
-  const bidColWidth = isMobile ? "40px" : "50px";
-  const totalColWidth = isMobile ? "35px" : "45px";
+  const winsColWidth = isMobile ? 52 : 60;
+  const seedColWidth = isMobile ? 33 : 38;
+  const statusColWidth = isMobile ? 45 : 60;
+  const bidColWidth = isMobile ? 40 : 50;
+  const totalColWidth = isMobile ? 35 : 45;
+  const row1Height = isMobile ? 24 : 28;
+  const row2Height = isMobile ? 34 : 38;
+  const cellHeight = isMobile ? 24 : 28;
+  const textSize = isMobile ? "text-xs" : "text-sm";
 
   return (
     <div style={{ position: "relative" }}>
@@ -421,39 +426,54 @@ export default function TeamSeedProjections({
         tabIndex={0}
       >
         <table className={styles.table}>
-          {/* Rest of table code remains exactly the same */}
           <thead>
             <tr>
+              {/* Wins header - placeholder split from row 2 below since a
+                  rowSpan on a sticky-left <th> doesn't reliably stick
+                  (PAGE_MODERNIZATION_GUIDE.md §6b). */}
               <th
-                rowSpan={2}
-                className={cn(styles.headerCell, styles.stickyHeaderCell)}
-                    style={{
+                className={cn(styles.headerCell, styles.stickyCell, textSize)}
+                style={{
                   width: winsColWidth,
                   minWidth: winsColWidth,
                   maxWidth: winsColWidth,
+                  height: row1Height,
+                  left: 0,
                 }}
               >
                 Wins
               </th>
 
               {seedColumns.length > 0 && (
-                <th colSpan={seedColumns.length} className={styles.headerCell}>
+                <th
+                  colSpan={seedColumns.length}
+                  className={cn(styles.headerCell, textSize)}
+                  style={{ height: row1Height }}
+                >
                   Seed
                 </th>
               )}
 
-              <th colSpan={statusColumns.length} className={styles.headerCell}>
+              <th
+                colSpan={statusColumns.length}
+                className={cn(styles.headerCell, textSize)}
+                style={{ height: row1Height }}
+              >
                 NCAA Tourney Status
               </th>
 
-              <th colSpan={bidCategoryColumns.length} className={styles.headerCell}>
+              <th
+                colSpan={bidCategoryColumns.length}
+                className={cn(styles.headerCell, textSize)}
+                style={{ height: row1Height }}
+              >
                 Bid Category
               </th>
 
               <th
                 rowSpan={2}
-                className={styles.headerCell}
-                    style={{
+                className={cn(styles.headerCell, textSize)}
+                style={{
                   width: totalColWidth,
                   minWidth: totalColWidth,
                   maxWidth: totalColWidth,
@@ -464,14 +484,30 @@ export default function TeamSeedProjections({
             </tr>
 
             <tr>
+              {/* Wins placeholder - see note above. Sticky, pinned right
+                  below row 1 (top: row1Height). */}
+              <th
+                className={styles.stickyCell}
+                style={{
+                  width: winsColWidth,
+                  minWidth: winsColWidth,
+                  maxWidth: winsColWidth,
+                  height: row2Height,
+                  top: row1Height,
+                  left: 0,
+                }}
+              />
+
               {seedColumns.map((seed) => (
                 <th
                   key={`seed-${seed}`}
-                  className={styles.headerCell}
-                    style={{
+                  className={cn(styles.colHeaderCell, textSize)}
+                  style={{
                     width: seedColWidth,
                     minWidth: seedColWidth,
                     maxWidth: seedColWidth,
+                    height: row2Height,
+                    top: row1Height,
                   }}
                 >
                   {seed}
@@ -481,14 +517,14 @@ export default function TeamSeedProjections({
               {statusColumns.map((status) => (
                 <th
                   key={`status-${status}`}
-                  className={styles.headerCell}
-                    style={{
+                  className={styles.colHeaderCell}
+                  style={{
                     width: statusColWidth,
                     minWidth: statusColWidth,
                     maxWidth: statusColWidth,
-                    whiteSpace: "normal",
+                    height: row2Height,
+                    top: row1Height,
                     fontSize: isMobile ? "10px" : "11px",
-                    lineHeight: "1.1",
                   }}
                 >
                   {getCompactHeader(status)}
@@ -498,14 +534,14 @@ export default function TeamSeedProjections({
               {bidCategoryColumns.map((category) => (
                 <th
                   key={`bid-${category}`}
-                  className={styles.headerCell}
-                    style={{
+                  className={styles.colHeaderCell}
+                  style={{
                     width: bidColWidth,
                     minWidth: bidColWidth,
                     maxWidth: bidColWidth,
-                    whiteSpace: "normal",
+                    height: row2Height,
+                    top: row1Height,
                     fontSize: isMobile ? "10px" : "11px",
-                    lineHeight: "1.1",
                   }}
                 >
                   {getCompactHeader(category)}
@@ -517,16 +553,21 @@ export default function TeamSeedProjections({
             {data.winTotals.map((winsValue: string) => {
               const rowData = data.winData[winsValue];
               const percentOfTotal = rowData.percentOfTotal;
-              const totalColorStyle = getCellColor(percentOfTotal);
 
               return (
                 <tr key={`win-${winsValue}`}>
                   <td
-                    className={cn(styles.dataCell, styles.stickyCell)}
+                    className={cn(
+                      styles.recordCell,
+                      styles.stickyBodyCell,
+                      textSize,
+                    )}
                     style={{
                       width: winsColWidth,
                       minWidth: winsColWidth,
                       maxWidth: winsColWidth,
+                      height: cellHeight,
+                      left: 0,
                     }}
                   >
                     {winsValue}
@@ -537,39 +578,47 @@ export default function TeamSeedProjections({
                     return (
                       <td
                         key={`win-${winsValue}-seed-${seed}`}
-                        className={styles.dataCell}
-                    style={{
-                          ...getCellColor(pct),
+                        style={{
+                          height: cellHeight,
                           width: seedColWidth,
                           minWidth: seedColWidth,
                           maxWidth: seedColWidth,
+                          padding: 0,
                         }}
                       >
-                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        <div
+                          className={cn(styles.heatTile, textSize)}
+                          style={getCellColor(pct)}
+                        >
+                          {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        </div>
                       </td>
                     );
                   })}
 
                   {statusColumns.map((status) => {
-                    const pct = rowData.statusDistribution[status] || 0;
                     const isOutCategory =
-                      status === "Out of Tourney" ||
                       status === "First Four Out" ||
-                      status === "Next Four Out";
-                    const colorStyle = getStatusColor(pct, isOutCategory);
-
+                      status === "Next Four Out" ||
+                      status === "Out of Tourney";
+                    const pct = rowData.statusDistribution[status] || 0;
                     return (
                       <td
                         key={`win-${winsValue}-status-${status}`}
-                        className={styles.dataCell}
-                    style={{
-                          ...colorStyle,
+                        style={{
+                          height: cellHeight,
                           width: statusColWidth,
                           minWidth: statusColWidth,
                           maxWidth: statusColWidth,
+                          padding: 0,
                         }}
                       >
-                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        <div
+                          className={cn(styles.heatTile, textSize)}
+                          style={getStatusColor(pct, isOutCategory)}
+                        >
+                          {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        </div>
                       </td>
                     );
                   })}
@@ -579,47 +628,58 @@ export default function TeamSeedProjections({
                     return (
                       <td
                         key={`win-${winsValue}-bid-${category}`}
-                        className={styles.dataCell}
-                    style={{
-                          ...getCellColor(pct),
+                        style={{
+                          height: cellHeight,
                           width: bidColWidth,
                           minWidth: bidColWidth,
                           maxWidth: bidColWidth,
+                          padding: 0,
                         }}
                       >
-                        {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        <div
+                          className={cn(styles.heatTile, textSize)}
+                          style={getCellColor(pct)}
+                        >
+                          {pct > 0 ? `${Math.round(pct)}%` : ""}
+                        </div>
                       </td>
                     );
                   })}
 
                   <td
-                    className={styles.dataCell}
                     style={{
-                      ...totalColorStyle,
+                      height: cellHeight,
                       width: totalColWidth,
                       minWidth: totalColWidth,
                       maxWidth: totalColWidth,
+                      padding: 0,
                     }}
                   >
-                    {Math.round(percentOfTotal)}%
+                    <div
+                      className={cn(styles.heatTile, textSize)}
+                      style={getCellColor(percentOfTotal)}
+                    >
+                      {`${Math.round(percentOfTotal)}%`}
+                    </div>
                   </td>
                 </tr>
               );
             })}
 
-            <tr
-              style={{
-                borderTop: "2px solid #444",
-                backgroundColor: "#f8f9fa",
-              }}
-            >
+            {/* Totals Row */}
+            <tr>
               <td
-                className={cn(styles.dataCell, styles.stickyCell)}
-                    style={{
+                className={cn(
+                  styles.recordCell,
+                  styles.stickyBodyCell,
+                  textSize,
+                )}
+                style={{
                   width: winsColWidth,
                   minWidth: winsColWidth,
                   maxWidth: winsColWidth,
-                  backgroundColor: "#f8f9fa",
+                  height: cellHeight,
+                  left: 0,
                 }}
               >
                 Total
@@ -627,46 +687,50 @@ export default function TeamSeedProjections({
 
               {seedColumns.map((seed) => {
                 const pct = data.totalRow.seedDistribution[seed] || 0;
-                const colorStyle = getCellColor(pct);
-
                 return (
                   <td
                     key={`total-seed-${seed}`}
-                    className={styles.dataCell}
                     style={{
-                      ...colorStyle,
-                      backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
+                      height: cellHeight,
                       width: seedColWidth,
                       minWidth: seedColWidth,
                       maxWidth: seedColWidth,
+                      padding: 0,
                     }}
                   >
-                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    <div
+                      className={cn(styles.heatTile, textSize)}
+                      style={getCellColor(pct)}
+                    >
+                      {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    </div>
                   </td>
                 );
               })}
 
               {statusColumns.map((status) => {
-                const pct = data.totalRow.statusDistribution[status] || 0;
                 const isOutCategory =
-                  status === "Out of Tourney" ||
                   status === "First Four Out" ||
-                  status === "Next Four Out";
-                const colorStyle = getStatusColor(pct, isOutCategory);
-
+                  status === "Next Four Out" ||
+                  status === "Out of Tourney";
+                const pct = data.totalRow.statusDistribution[status] || 0;
                 return (
                   <td
                     key={`total-status-${status}`}
-                    className={styles.dataCell}
                     style={{
-                      ...colorStyle,
-                      backgroundColor: colorStyle.backgroundColor || "#f8f9fa",
+                      height: cellHeight,
                       width: statusColWidth,
                       minWidth: statusColWidth,
                       maxWidth: statusColWidth,
+                      padding: 0,
                     }}
                   >
-                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    <div
+                      className={cn(styles.heatTile, textSize)}
+                      style={getStatusColor(pct, isOutCategory)}
+                    >
+                      {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    </div>
                   </td>
                 );
               })}
@@ -677,31 +741,36 @@ export default function TeamSeedProjections({
                 return (
                   <td
                     key={`total-bid-${category}`}
-                    className={styles.dataCell}
                     style={{
-                      ...getCellColor(pct),
-                      backgroundColor:
-                        getCellColor(pct).backgroundColor || "#f8f9fa",
+                      height: cellHeight,
                       width: bidColWidth,
                       minWidth: bidColWidth,
                       maxWidth: bidColWidth,
+                      padding: 0,
                     }}
                   >
-                    {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    <div
+                      className={cn(styles.heatTile, textSize)}
+                      style={getCellColor(pct)}
+                    >
+                      {pct > 0 ? `${Math.round(pct)}%` : ""}
+                    </div>
                   </td>
                 );
               })}
 
               <td
-                className={styles.dataCell}
-                    style={{
-                  backgroundColor: "#f8f9fa",
+                style={{
+                  height: cellHeight,
                   width: totalColWidth,
                   minWidth: totalColWidth,
                   maxWidth: totalColWidth,
+                  padding: 0,
                 }}
               >
-                {/* Empty cell */}
+                <div className={cn(styles.heatTile, textSize)}>
+                  {`${Math.round((data.totalRow.total / data.grandTotal) * 100)}%`}
+                </div>
               </td>
             </tr>
           </tbody>
