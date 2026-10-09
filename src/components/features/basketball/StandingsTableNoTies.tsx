@@ -1,9 +1,10 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
+import { formatConfRecord } from "@/lib/basketballRecords";
 import { formatTeamName } from "@/lib/formatTeamName";
-import { getCellColor } from "@/lib/color-utils";
 import { cn } from "@/lib/utils";
+import { getWinCellColor } from "@/lib/winCellColor";
 import { Standing } from "@/types/basketball";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useMemo } from "react";
@@ -132,6 +133,26 @@ function StandingsTableNoTies({
           </thead>
 
           <tbody>
+            <tr>
+              <th
+                className={cn(styles.stickyColumn, styles.summaryLabel)}
+                scope="row"
+              >
+                Avg Position
+              </th>
+              {sortedTeams.map((team) => (
+                <td
+                  key={`${team.team_name}-average`}
+                  className={styles.summaryValue}
+                >
+                  <div className={styles.summaryChip}>
+                    {(team.Conf_Standing_No_Ties_Avg ?? team.avg_standing)?.toFixed(
+                      1,
+                    ) ?? "-"}
+                  </div>
+                </td>
+              ))}
+            </tr>
             {positions.map((position) => (
               <tr key={`position-${position}`}>
                 <th
@@ -147,7 +168,7 @@ function StandingsTableNoTies({
                   );
                   const rounded = Math.round(percentage);
                   const cellStyle = hasData
-                    ? getCellColor(percentage)
+                    ? getWinCellColor(percentage)
                     : { backgroundColor: "transparent", color: "transparent" };
                   const isPeak =
                     hasData &&
@@ -188,26 +209,6 @@ function StandingsTableNoTies({
                 className={cn(styles.stickyColumn, styles.summaryLabel)}
                 scope="row"
               >
-                Avg Position
-              </th>
-              {sortedTeams.map((team) => (
-                <td
-                  key={`${team.team_name}-average`}
-                  className={styles.summaryValue}
-                >
-                  <div className={styles.summaryChip}>
-                    {(team.Conf_Standing_No_Ties_Avg ?? team.avg_standing)?.toFixed(
-                      1,
-                    ) ?? "-"}
-                  </div>
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <th
-                className={cn(styles.stickyColumn, styles.summaryLabel)}
-                scope="row"
-              >
                 Curr Conf Record
               </th>
               {sortedTeams.map((team) => (
@@ -216,7 +217,7 @@ function StandingsTableNoTies({
                   className={styles.summaryValue}
                 >
                   <div className={styles.summaryChip}>
-                    {team.conference_record || "-"}
+                    {formatConfRecord(team)}
                   </div>
                 </td>
               ))}
