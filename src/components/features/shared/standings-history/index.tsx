@@ -58,7 +58,7 @@ export default function StandingsHistoryChart({
   const isDark = useIsDark();
 
   useEffect(() => {
-    setSelectedTeams(new Set());
+    setSelectedTeams((prev) => (prev.size === 0 ? prev : new Set()));
   }, [timelineData]);
 
   useEffect(() => {
@@ -99,67 +99,89 @@ export default function StandingsHistoryChart({
     return () => observer.disconnect();
   }, [timelineData, conferenceSize]);
 
-  const range = theme.dateRange(season, timelineData);
-  const filteredTimelineData = filterDataToRange(timelineData, range);
+  // Everything below derives from the data alone. Memoized so a re-render
+  // for layout (chartDimensions) or selection doesn't hand Chart.js new
+  // objects: react-chartjs-2 re-runs the whole chart update for any new
+  // data/options object, ~0.3-0.8 s on a mid-range phone.
+  const {
+    filteredTimelineData,
+    chartLabels,
+    teamData,
+    dates,
+    finalStandings,
+    allTeamsSorted,
+  } = useMemo(() => {
+    const range = theme.dateRange(season, timelineData);
+    const filteredTimelineData = filterDataToRange(timelineData, range);
 
-  // Deduplicate by team and date, keeping earliest version_id
-  const dataByTeamAndDate = new Map<string, TimelineData>();
-  filteredTimelineData.forEach((item: TimelineData) => {
-    const key = `${item.team_name}-${item.date}`;
-    if (
-      !dataByTeamAndDate.has(key) ||
-      (item.version_id &&
-        dataByTeamAndDate.get(key)?.version_id &&
-        item.version_id < dataByTeamAndDate.get(key)!.version_id!)
-    ) {
-      dataByTeamAndDate.set(key, item);
-    }
-  });
+    // Deduplicate by team and date, keeping earliest version_id
+    const dataByTeamAndDate = new Map<string, TimelineData>();
+    filteredTimelineData.forEach((item: TimelineData) => {
+      const key = `${item.team_name}-${item.date}`;
+      if (
+        !dataByTeamAndDate.has(key) ||
+        (item.version_id &&
+          dataByTeamAndDate.get(key)?.version_id &&
+          item.version_id < dataByTeamAndDate.get(key)!.version_id!)
+      ) {
+        dataByTeamAndDate.set(key, item);
+      }
+    });
 
-  const allDatesFromData = [
-    ...new Set(filteredTimelineData.map((d) => d.date)),
-  ].sort();
-  const chartLabels = buildChartLabels(allDatesFromData, range, theme.sport);
-  const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
+    const allDatesFromData = [
+      ...new Set(filteredTimelineData.map((d) => d.date)),
+    ].sort();
+    const chartLabels = buildChartLabels(allDatesFromData, range, theme.sport);
+    const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
 
-  // Build team data from deduplicated items with remapped dates
-  const teamData: Record<string, TeamInfo> = {};
-  Array.from(dataByTeamAndDate.values()).forEach((item) => {
-    if (!teamData[item.team_name]) {
-      teamData[item.team_name] = {
-        data: [],
+    // Build team data from deduplicated items with remapped dates
+    const teamData: Record<string, TeamInfo> = {};
+    Array.from(dataByTeamAndDate.values()).forEach((item) => {
+      if (!teamData[item.team_name]) {
+        teamData[item.team_name] = {
+          data: [],
+          team_info: item.team_info,
+        };
+      }
+      const dataIndex = dateIndexMap.get(item.date);
+      if (dataIndex !== undefined) {
+        teamData[item.team_name].data.push({
+          x: chartLabels[dataIndex].displayLabel,
+          y: item.avg_standing,
+        });
+      }
+    });
+
+    const dates = chartLabels.map((l) => l.displayLabel);
+
+    const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+    );
+    const lastDate = allDates[allDates.length - 1];
+    const finalStandings = filteredTimelineData
+      .filter((item) => item.date === lastDate)
+      .sort((a, b) => a.avg_standing - b.avg_standing);
+
+    // All teams sorted by final standing for bottom logos
+    const allTeamsSorted = finalStandings.map((item) => {
+      const points = teamData[item.team_name]?.data || [];
+      const lastPoint = points[points.length - 1];
+      return {
+        team_name: item.team_name,
+        avg_standing: lastPoint?.y ?? item.avg_standing,
         team_info: item.team_info,
       };
-    }
-    const dataIndex = dateIndexMap.get(item.date);
-    if (dataIndex !== undefined) {
-      teamData[item.team_name].data.push({
-        x: chartLabels[dataIndex].displayLabel,
-        y: item.avg_standing,
-      });
-    }
-  });
+    });
 
-  const dates = chartLabels.map((l) => l.displayLabel);
-
-  const allDates = [...new Set(filteredTimelineData.map((d) => d.date))].sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime(),
-  );
-  const lastDate = allDates[allDates.length - 1];
-  const finalStandings = filteredTimelineData
-    .filter((item) => item.date === lastDate)
-    .sort((a, b) => a.avg_standing - b.avg_standing);
-
-  // All teams sorted by final standing for bottom logos
-  const allTeamsSorted = finalStandings.map((item) => {
-    const points = teamData[item.team_name]?.data || [];
-    const lastPoint = points[points.length - 1];
     return {
-      team_name: item.team_name,
-      avg_standing: lastPoint?.y ?? item.avg_standing,
-      team_info: item.team_info,
+      filteredTimelineData,
+      chartLabels,
+      teamData,
+      dates,
+      finalStandings,
+      allTeamsSorted,
     };
-  });
+  }, [timelineData, season, theme]);
 
   const clearSelectedTeams = () => setSelectedTeams(new Set());
 
@@ -187,126 +209,139 @@ export default function StandingsHistoryChart({
     });
   };
 
-  const datasets = Object.entries(teamData).map(([teamName, team]) => {
-    // Show team if no teams are selected OR this team is in the selected set
-    const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
-    const color = isSelected
-      ? team.team_info.primary_color || "#000000"
-      : "#d1d5db";
+  const chartData = useMemo(() => {
+    const datasets = Object.entries(teamData).map(([teamName, team]) => {
+      // Show team if no teams are selected OR this team is in the selected set
+      const isSelected =
+        selectedTeams.size === 0 || selectedTeams.has(teamName);
+      const color = isSelected
+        ? team.team_info.primary_color || "#000000"
+        : "#d1d5db";
+
+      return {
+        label: teamName,
+        data: team.data,
+        borderColor: color,
+        backgroundColor: color,
+        borderWidth: isSelected ? 2.25 : 1.1,
+        order: isSelected ? 0 : 1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        tension: 0.1,
+      };
+    });
 
     return {
-      label: teamName,
-      data: team.data,
-      borderColor: color,
-      backgroundColor: color,
-      borderWidth: isSelected ? 2.25 : 1.1,
-      order: isSelected ? 0 : 1,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0.1,
+      labels: dates,
+      datasets,
     };
-  });
+  }, [teamData, dates, selectedTeams]);
 
-  const chartData = {
-    labels: dates,
-    datasets,
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: "index" as const,
-      intersect: false,
-    },
-    plugins: {
-      title: { display: false },
-      legend: { display: false },
-      tooltip: {
-        enabled: false,
-        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
-          const { tooltip: tooltipModel, chart } = args;
-
-          let heading = "";
-          let rows: TooltipRow[] = [];
-          if (tooltipModel.body) {
-            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            const isoDate = chartLabels[dataIndex]?.isoDate;
-            heading = chartLabels[dataIndex]?.displayLabel ?? "";
-            rows = filteredTimelineData
-              .filter((item) => item.date === isoDate)
-              .sort((a, b) => a.avg_standing - b.avg_standing)
-              .map((item, index) => ({
-                label: `${index + 1}. ${item.team_name}`,
-                value: item.avg_standing.toFixed(1),
-                color: item.team_info.primary_color || "#000000",
-                logoUrl:
-                  item.team_info.logo_url || "/images/team_logos/default.png",
-              }));
-          }
-
-          renderExternalTooltip(chart, tooltipModel, {
-            id: tooltipId,
-            isDark,
-            heading,
-            rows,
-            verticalOffset: 0,
-          });
-        },
+  const options = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index" as const,
+        intersect: false,
       },
-    },
-    scales: {
-      x: {
+      plugins: {
         title: { display: false },
-        ticks: {
-          maxTicksLimit: isMobile ? 5 : 10,
-          color: isDark ? "#94a3b8" : "#475569",
-          padding: 8,
-          font: {
-            weight: 600,
-            size: isMobile ? 13 : 15,
+        legend: { display: false },
+        tooltip: {
+          enabled: false,
+          external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+            const { tooltip: tooltipModel, chart } = args;
+
+            let heading = "";
+            let rows: TooltipRow[] = [];
+            if (tooltipModel.body) {
+              const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+              const isoDate = chartLabels[dataIndex]?.isoDate;
+              heading = chartLabels[dataIndex]?.displayLabel ?? "";
+              rows = filteredTimelineData
+                .filter((item) => item.date === isoDate)
+                .sort((a, b) => a.avg_standing - b.avg_standing)
+                .map((item, index) => ({
+                  label: `${index + 1}. ${item.team_name}`,
+                  value: item.avg_standing.toFixed(1),
+                  color: item.team_info.primary_color || "#000000",
+                  logoUrl:
+                    item.team_info.logo_url || "/images/team_logos/default.png",
+                }));
+            }
+
+            renderExternalTooltip(chart, tooltipModel, {
+              id: tooltipId,
+              isDark,
+              heading,
+              rows,
+              verticalOffset: 0,
+            });
           },
         },
-        grid: { display: false, drawOnChartArea: false, drawTicks: false },
-        border: { display: false },
       },
-      y: {
-        title: {
-          display: true,
-          text: "Average Standing",
-          color: isDark ? "#cbd5e1" : "#334155",
-          font: {
-            weight: 600,
-            size: isMobile ? 13 : 15,
+      scales: {
+        x: {
+          title: { display: false },
+          ticks: {
+            maxTicksLimit: isMobile ? 5 : 10,
+            color: isDark ? "#94a3b8" : "#475569",
+            padding: 8,
+            font: {
+              weight: 600,
+              size: isMobile ? 13 : 15,
+            },
           },
+          grid: { display: false, drawOnChartArea: false, drawTicks: false },
+          border: { display: false },
         },
-        reverse: true,
-        min: 1,
-        max: conferenceSize,
-        ticks: {
-          stepSize: 1,
-          color: isDark ? "#94a3b8" : "#475569",
-          font: {
-            weight: 600,
-            size: isMobile ? 13 : 15,
+        y: {
+          title: {
+            display: true,
+            text: "Average Standing",
+            color: isDark ? "#cbd5e1" : "#334155",
+            font: {
+              weight: 600,
+              size: isMobile ? 13 : 15,
+            },
           },
-          callback: function (value: string | number) {
-            return Number(value);
+          reverse: true,
+          min: 1,
+          max: conferenceSize,
+          ticks: {
+            stepSize: 1,
+            color: isDark ? "#94a3b8" : "#475569",
+            font: {
+              weight: 600,
+              size: isMobile ? 13 : 15,
+            },
+            callback: function (value: string | number) {
+              return Number(value);
+            },
           },
+          grid: {
+            color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
+          },
+          border: { display: false },
         },
-        grid: {
-          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
-        },
-        border: { display: false },
       },
-    },
-    layout: {
-      padding: { left: 10, right: 76, top: 14 },
-    },
-    animation: {
-      duration: 750,
-    },
-  };
+      layout: {
+        padding: { left: 10, right: 76, top: 14 },
+      },
+      animation: {
+        duration: 750,
+      },
+    }),
+    [
+      chartLabels,
+      filteredTimelineData,
+      tooltipId,
+      isDark,
+      isMobile,
+      conferenceSize,
+    ],
+  );
 
   const chartHeight = isMobile ? 420 : 560;
 

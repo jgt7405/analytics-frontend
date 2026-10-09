@@ -21,7 +21,7 @@ import {
   TooltipModel,
 } from "chart.js";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { chartLabel } from "@/lib/a11y/chart-label";
 
@@ -46,7 +46,7 @@ interface BasketballTeamStandingsHistoryProps {
   season?: string;
 }
 
-export default function BasketballTeamStandingsHistory({
+function BasketballTeamStandingsHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
@@ -444,3 +444,10 @@ export default function BasketballTeamStandingsHistory({
     </div>
   );
 }
+
+// Memoized: the team page re-renders as each of its data requests resolves,
+// and every re-render gave Chart.js new data/options objects, so it
+// recalculated and re-animated the chart each time (0.1-0.4 s per pass on a
+// mid-range phone). The props are strings and query data, stable between
+// those renders.
+export default memo(BasketballTeamStandingsHistory);

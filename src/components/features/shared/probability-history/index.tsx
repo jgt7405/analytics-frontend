@@ -64,7 +64,7 @@ export default function ProbabilityHistoryChart({
   const isDark = useIsDark();
 
   useEffect(() => {
-    setSelectedTeams(new Set());
+    setSelectedTeams((prev) => (prev.size === 0 ? prev : new Set()));
   }, [rows]);
 
   useEffect(() => {
@@ -105,71 +105,95 @@ export default function ProbabilityHistoryChart({
     return () => observer.disconnect();
   }, [rows]);
 
-  const range = theme.dateRange(season, rows);
-  const filteredRows = filterDataToRange(rows, range);
+  // Everything below derives from the data alone. Memoized so a re-render
+  // for layout (chartDimensions) or selection doesn't hand Chart.js new
+  // objects: react-chartjs-2 re-runs the whole chart update for any new
+  // data/options object, ~0.3-0.8 s on a mid-range phone.
+  const {
+    filteredRows,
+    chartLabels,
+    teamData,
+    displayLabels,
+    teamsForLogos,
+    allTeamsSorted,
+  } = useMemo(() => {
+    const range = theme.dateRange(season, rows);
+    const filteredRows = filterDataToRange(rows, range);
 
-  // Deduplicate by team and date, keeping earliest version_id
-  const dataByTeamAndDate = new Map<string, ProbabilityRow>();
-  filteredRows.forEach((item: ProbabilityRow) => {
-    const key = `${item.team_name}-${item.date}`;
-    if (
-      !dataByTeamAndDate.has(key) ||
-      (item.version_id &&
-        dataByTeamAndDate.get(key)?.version_id &&
-        item.version_id < dataByTeamAndDate.get(key)!.version_id!)
-    ) {
-      dataByTeamAndDate.set(key, item);
-    }
-  });
+    // Deduplicate by team and date, keeping earliest version_id
+    const dataByTeamAndDate = new Map<string, ProbabilityRow>();
+    filteredRows.forEach((item: ProbabilityRow) => {
+      const key = `${item.team_name}-${item.date}`;
+      if (
+        !dataByTeamAndDate.has(key) ||
+        (item.version_id &&
+          dataByTeamAndDate.get(key)?.version_id &&
+          item.version_id < dataByTeamAndDate.get(key)!.version_id!)
+      ) {
+        dataByTeamAndDate.set(key, item);
+      }
+    });
 
-  const allDatesFromData = [...new Set(filteredRows.map((d) => d.date))].sort();
-  const chartLabels = buildChartLabels(allDatesFromData, range, theme.sport);
-  const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
+    const allDatesFromData = [
+      ...new Set(filteredRows.map((d) => d.date)),
+    ].sort();
+    const chartLabels = buildChartLabels(allDatesFromData, range, theme.sport);
+    const dateIndexMap = new Map(chartLabels.map((l, i) => [l.isoDate, i]));
 
-  // Build team data from deduplicated items with remapped dates
-  const teamData: Record<string, TeamInfo> = {};
-  Array.from(dataByTeamAndDate.values()).forEach((item) => {
-    if (!teamData[item.team_name]) {
-      teamData[item.team_name] = {
-        data: [],
-        team_info: item.team_info,
-      };
-    }
-    const dataIndex = dateIndexMap.get(item.date);
-    if (dataIndex !== undefined) {
-      teamData[item.team_name].data.push({
-        x: chartLabels[dataIndex].displayLabel,
-        y: valueOf(item, valueKey),
-      });
-    }
-  });
+    // Build team data from deduplicated items with remapped dates
+    const teamData: Record<string, TeamInfo> = {};
+    Array.from(dataByTeamAndDate.values()).forEach((item) => {
+      if (!teamData[item.team_name]) {
+        teamData[item.team_name] = {
+          data: [],
+          team_info: item.team_info,
+        };
+      }
+      const dataIndex = dateIndexMap.get(item.date);
+      if (dataIndex !== undefined) {
+        teamData[item.team_name].data.push({
+          x: chartLabels[dataIndex].displayLabel,
+          y: valueOf(item, valueKey),
+        });
+      }
+    });
 
-  const displayLabels = chartLabels.map((l) => l.displayLabel);
+    const displayLabels = chartLabels.map((l) => l.displayLabel);
 
-  const teamsForLogos = Object.entries(teamData)
-    .map(([teamName, team]) => {
-      const finalPct = team.data[team.data.length - 1]?.y || 0;
-      return {
-        team_name: teamName,
-        final_pct: finalPct,
-        team_info: team.team_info,
-        should_show: finalPct >= 3,
-      };
-    })
-    .filter((team) => team.should_show)
-    .sort((a, b) => b.final_pct - a.final_pct);
+    const teamsForLogos = Object.entries(teamData)
+      .map(([teamName, team]) => {
+        const finalPct = team.data[team.data.length - 1]?.y || 0;
+        return {
+          team_name: teamName,
+          final_pct: finalPct,
+          team_info: team.team_info,
+          should_show: finalPct >= 3,
+        };
+      })
+      .filter((team) => team.should_show)
+      .sort((a, b) => b.final_pct - a.final_pct);
 
-  // All teams sorted by final percentage for bottom logos
-  const allTeamsSorted = Object.entries(teamData)
-    .map(([teamName, team]) => {
-      const finalPct = team.data[team.data.length - 1]?.y || 0;
-      return {
-        team_name: teamName,
-        final_pct: finalPct,
-        team_info: team.team_info,
-      };
-    })
-    .sort((a, b) => b.final_pct - a.final_pct);
+    // All teams sorted by final percentage for bottom logos
+    const allTeamsSorted = Object.entries(teamData)
+      .map(([teamName, team]) => {
+        const finalPct = team.data[team.data.length - 1]?.y || 0;
+        return {
+          team_name: teamName,
+          final_pct: finalPct,
+          team_info: team.team_info,
+        };
+      })
+      .sort((a, b) => b.final_pct - a.final_pct);
+
+    return {
+      filteredRows,
+      chartLabels,
+      teamData,
+      displayLabels,
+      teamsForLogos,
+      allTeamsSorted,
+    };
+  }, [rows, season, theme, valueKey]);
 
   const clearSelectedTeams = () => setSelectedTeams(new Set());
 
@@ -197,125 +221,140 @@ export default function ProbabilityHistoryChart({
     });
   };
 
-  const datasets = Object.entries(teamData).map(([teamName, team]) => {
-    const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
-    const color = isSelected
-      ? team.team_info.primary_color || "#000000"
-      : "#d1d5db";
+  const chartData = useMemo(() => {
+    const datasets = Object.entries(teamData).map(([teamName, team]) => {
+      const isSelected =
+        selectedTeams.size === 0 || selectedTeams.has(teamName);
+      const color = isSelected
+        ? team.team_info.primary_color || "#000000"
+        : "#d1d5db";
+
+      return {
+        label: teamName,
+        data: team.data,
+        borderColor: color,
+        backgroundColor: color,
+        borderWidth: isSelected ? 2.25 : 1.1,
+        order: isSelected ? 0 : 1,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        tension: 0.1,
+        fill: false,
+      };
+    });
 
     return {
-      label: teamName,
-      data: team.data,
-      borderColor: color,
-      backgroundColor: color,
-      borderWidth: isSelected ? 2.25 : 1.1,
-      order: isSelected ? 0 : 1,
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0.1,
-      fill: false,
+      labels: displayLabels,
+      datasets,
     };
-  });
+  }, [teamData, displayLabels, selectedTeams]);
 
-  const chartData = {
-    labels: displayLabels,
-    datasets,
-  };
-
-  const yAxisMax = (() => {
+  const yAxisMax = useMemo(() => {
     const allValues = Object.values(teamData).flatMap((team) =>
       team.data.map((d: TeamDataPoint) => d.y),
     );
     const maxValue = allValues.length > 0 ? Math.max(...allValues) : 0;
     return Math.max(20, Math.ceil(maxValue / 10) * 10);
-  })();
+  }, [teamData]);
 
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: "index" as const,
-      intersect: false,
-    },
-    plugins: {
-      title: { display: false },
-      legend: { display: false },
-      tooltip: {
-        enabled: false,
-        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
-          const { tooltip: tooltipModel, chart } = args;
-
-          let heading = "";
-          let lines: TooltipRow[] = [];
-          if (tooltipModel.body) {
-            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            heading = chartLabels[dataIndex]?.displayLabel ?? "";
-            lines = tooltipRows(
-              theme,
-              chartLabels[dataIndex] ?? {},
-              filteredRows,
-              teamData,
-            );
-          }
-
-          renderExternalTooltip(chart, tooltipModel, {
-            id: tooltipId,
-            isDark,
-            heading,
-            rows: lines,
-            verticalOffset: 0,
-          });
-        },
+  const options = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index" as const,
+        intersect: false,
       },
-    },
-    scales: {
-      x: {
+      plugins: {
         title: { display: false },
-        ticks: {
-          maxTicksLimit: isMobile ? 5 : 10,
-          color: isDark ? "#94a3b8" : "#475569",
-          padding: 8,
-          font: {
-            weight: 600,
-            size: isMobile ? 13 : 15,
+        legend: { display: false },
+        tooltip: {
+          enabled: false,
+          external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+            const { tooltip: tooltipModel, chart } = args;
+
+            let heading = "";
+            let lines: TooltipRow[] = [];
+            if (tooltipModel.body) {
+              const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+              heading = chartLabels[dataIndex]?.displayLabel ?? "";
+              lines = tooltipRows(
+                theme,
+                chartLabels[dataIndex] ?? {},
+                filteredRows,
+                teamData,
+              );
+            }
+
+            renderExternalTooltip(chart, tooltipModel, {
+              id: tooltipId,
+              isDark,
+              heading,
+              rows: lines,
+              verticalOffset: 0,
+            });
           },
         },
-        grid: { display: false, drawOnChartArea: false, drawTicks: false },
-        border: { display: false },
       },
-      y: {
-        title: {
-          display: true,
-          text: theme.yAxisLabel,
-          color: isDark ? "#cbd5e1" : "#334155",
-          font: {
-            weight: 600,
-            size: isMobile ? 13 : 15,
+      scales: {
+        x: {
+          title: { display: false },
+          ticks: {
+            maxTicksLimit: isMobile ? 5 : 10,
+            color: isDark ? "#94a3b8" : "#475569",
+            padding: 8,
+            font: {
+              weight: 600,
+              size: isMobile ? 13 : 15,
+            },
           },
+          grid: { display: false, drawOnChartArea: false, drawTicks: false },
+          border: { display: false },
         },
-        min: 0,
-        max: yAxisMax,
-        ticks: {
-          color: isDark ? "#94a3b8" : "#475569",
-          font: {
-            weight: 600,
-            size: isMobile ? 13 : 15,
+        y: {
+          title: {
+            display: true,
+            text: theme.yAxisLabel,
+            color: isDark ? "#cbd5e1" : "#334155",
+            font: {
+              weight: 600,
+              size: isMobile ? 13 : 15,
+            },
           },
-          callback: (value: string | number) => `${value}%`,
+          min: 0,
+          max: yAxisMax,
+          ticks: {
+            color: isDark ? "#94a3b8" : "#475569",
+            font: {
+              weight: 600,
+              size: isMobile ? 13 : 15,
+            },
+            callback: (value: string | number) => `${value}%`,
+          },
+          grid: {
+            color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
+          },
+          border: { display: false },
         },
-        grid: {
-          color: isDark ? "rgb(51 65 85 / 0.5)" : "rgb(226 232 240 / 0.9)",
-        },
-        border: { display: false },
       },
-    },
-    layout: {
-      padding: { left: 10, right: theme.rightPadding, top: 14 },
-    },
-    animation: {
-      duration: 750,
-    },
-  };
+      layout: {
+        padding: { left: 10, right: theme.rightPadding, top: 14 },
+      },
+      animation: {
+        duration: 750,
+      },
+    }),
+    [
+      chartLabels,
+      filteredRows,
+      teamData,
+      theme,
+      tooltipId,
+      isDark,
+      isMobile,
+      yAxisMax,
+    ],
+  );
 
   const chartHeight = isMobile ? 420 : 560;
 

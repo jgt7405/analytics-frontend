@@ -16,7 +16,7 @@ import {
   Chart as ChartJS,
 } from "chart.js";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { chartLabel } from "@/lib/a11y/chart-label";
 
@@ -49,7 +49,7 @@ interface ContinuousDataPoint {
   cwv: number;
 }
 
-export default function FootballTeamWinValues({
+function FootballTeamWinValues({
   schedule,
   logoUrl,
   season,
@@ -214,7 +214,16 @@ export default function FootballTeamWinValues({
     return { continuousData, labels, twvData, cwvData };
   };
 
-  const { continuousData, labels, twvData, cwvData } = processScheduleData();
+  // Memoized, like chartData and options below: this component re-renders
+  // several times while the page settles (screen size, the chart area for
+  // the end marker), and new data/options objects made Chart.js recalculate
+  // and re-animate the whole chart each time.
+  const { continuousData, labels, twvData, cwvData } = useMemo(
+    () => processScheduleData(),
+    // processScheduleData reads only schedule and season.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [schedule, season],
+  );
 
   // Tracks the end-of-line marker with a ResizeObserver (not a one-shot
   // timeout) so it stays aligned with the chart's actual current layout
@@ -246,142 +255,147 @@ export default function FootballTeamWinValues({
   const lastTwv = twvData.length > 0 ? twvData[twvData.length - 1] : null;
   const lastCwv = cwvData.length > 0 ? cwvData[cwvData.length - 1] : null;
 
-  const datasets = [
-    {
-      label: "TWV (True Win Value)",
-      data: twvData.map((value, index) => ({ x: labels[index], y: value })),
-      backgroundColor: "rgba(0, 151, 178, 0.1)",
-      borderColor: "rgb(0, 151, 178)",
-      borderWidth: 2,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      tension: 0.1,
-      fill: false,
-    },
-    {
-      label: "CWV (Conference Win Value)",
-      data: cwvData.map((value, index) => ({ x: labels[index], y: value })),
-      backgroundColor: "rgba(255, 230, 113, 0.1)",
-      borderColor: "rgb(255, 230, 113)",
-      borderWidth: 2,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      tension: 0.1,
-      fill: false,
-    },
-  ];
-
-  const chartData = {
-    labels: labels,
-    datasets,
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: "index" as const,
-      intersect: false,
-    },
-    plugins: {
-      title: { display: false },
-      legend: {
-        display: true,
-        position: "top" as const,
-        labels: {
-          color: isDark ? "#cbd5e1" : "#334155",
-          font: {
-            size: isMobile ? 12 : 14,
-            weight: 600,
-          },
-        },
+  const chartData = useMemo(() => {
+    const datasets = [
+      {
+        label: "TWV (True Win Value)",
+        data: twvData.map((value, index) => ({ x: labels[index], y: value })),
+        backgroundColor: "rgba(0, 151, 178, 0.1)",
+        borderColor: "rgb(0, 151, 178)",
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.1,
+        fill: false,
       },
-      tooltip: {
-        enabled: false,
-        external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
-          const { tooltip: tooltipModel, chart } = args;
-
-          let heading = "";
-          let rows: TooltipRow[] = [];
-          if (tooltipModel.body) {
-            const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-            heading = labels[dataIndex] ?? "";
-            rows = [
-              {
-                label: "TWV",
-                value: twvData[dataIndex].toFixed(1),
-                color: "rgb(0, 151, 178)",
-              },
-              {
-                label: "CWV",
-                value: cwvData[dataIndex].toFixed(1),
-                color: "rgb(217, 119, 6)",
-              },
-            ];
-          }
-
-          renderExternalTooltip(chart, tooltipModel, {
-            id: "chartjs-tooltip-winvalues",
-            isDark,
-            heading,
-            rows,
-          });
-        },
+      {
+        label: "CWV (Conference Win Value)",
+        data: cwvData.map((value, index) => ({ x: labels[index], y: value })),
+        backgroundColor: "rgba(255, 230, 113, 0.1)",
+        borderColor: "rgb(255, 230, 113)",
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.1,
+        fill: false,
       },
-    },
-    scales: {
-      x: {
+    ];
+
+    return {
+      labels: labels,
+      datasets,
+    };
+  }, [labels, twvData, cwvData]);
+
+  const options = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index" as const,
+        intersect: false,
+      },
+      plugins: {
         title: { display: false },
-        ticks: {
-          maxTicksLimit: isMobile ? 5 : 10,
-          color: isDark ? "#94a3b8" : "#475569",
-          padding: 8,
-          font: {
-            size: isMobile ? 13 : 15,
-            weight: 600,
-          },
-        },
-        grid: { display: false },
-        border: { display: false },
-      },
-      y: {
-        grid: {
-          color: (context: { tick: { value: number } }) => {
-            if (context.tick.value === 0) {
-              return isDark ? "rgb(148 163 184 / 0.6)" : "rgba(0, 0, 0, 0.5)";
-            }
-            return "transparent"; // Hide all other grid lines
-          },
+        legend: {
           display: true,
-          drawOnChartArea: true,
-        },
-        ticks: {
-          color: isDark ? "#94a3b8" : "#475569",
-          font: {
-            size: isMobile ? 13 : 15,
-            weight: 600,
+          position: "top" as const,
+          labels: {
+            color: isDark ? "#cbd5e1" : "#334155",
+            font: {
+              size: isMobile ? 12 : 14,
+              weight: 600,
+            },
           },
         },
-        border: { display: false },
+        tooltip: {
+          enabled: false,
+          external: (args: { chart: Chart; tooltip: TooltipModel<"line"> }) => {
+            const { tooltip: tooltipModel, chart } = args;
+
+            let heading = "";
+            let rows: TooltipRow[] = [];
+            if (tooltipModel.body) {
+              const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+              heading = labels[dataIndex] ?? "";
+              rows = [
+                {
+                  label: "TWV",
+                  value: twvData[dataIndex].toFixed(1),
+                  color: "rgb(0, 151, 178)",
+                },
+                {
+                  label: "CWV",
+                  value: cwvData[dataIndex].toFixed(1),
+                  color: "rgb(217, 119, 6)",
+                },
+              ];
+            }
+
+            renderExternalTooltip(chart, tooltipModel, {
+              id: "chartjs-tooltip-winvalues",
+              isDark,
+              heading,
+              rows,
+            });
+          },
+        },
       },
-    },
-    layout: {
-      padding: {
-        top: 14,
-        right: isMobile
-          ? END_LABEL_PADDING_RIGHT.mobile
-          : END_LABEL_PADDING_RIGHT.desktop,
+      scales: {
+        x: {
+          title: { display: false },
+          ticks: {
+            maxTicksLimit: isMobile ? 5 : 10,
+            color: isDark ? "#94a3b8" : "#475569",
+            padding: 8,
+            font: {
+              size: isMobile ? 13 : 15,
+              weight: 600,
+            },
+          },
+          grid: { display: false },
+          border: { display: false },
+        },
+        y: {
+          grid: {
+            color: (context: { tick: { value: number } }) => {
+              if (context.tick.value === 0) {
+                return isDark ? "rgb(148 163 184 / 0.6)" : "rgba(0, 0, 0, 0.5)";
+              }
+              return "transparent"; // Hide all other grid lines
+            },
+            display: true,
+            drawOnChartArea: true,
+          },
+          ticks: {
+            color: isDark ? "#94a3b8" : "#475569",
+            font: {
+              size: isMobile ? 13 : 15,
+              weight: 600,
+            },
+          },
+          border: { display: false },
+        },
       },
-    },
-    elements: {
-      point: {
-        radius: 0,
+      layout: {
+        padding: {
+          top: 14,
+          right: isMobile
+            ? END_LABEL_PADDING_RIGHT.mobile
+            : END_LABEL_PADDING_RIGHT.desktop,
+        },
       },
-    },
-    animation: {
-      duration: 750,
-    },
-  };
+      elements: {
+        point: {
+          radius: 0,
+        },
+      },
+      animation: {
+        duration: 750,
+      },
+    }),
+    [labels, twvData, cwvData, isDark, isMobile],
+  );
 
   const chartHeight = isMobile ? 200 : 250;
 
@@ -475,3 +489,10 @@ export default function FootballTeamWinValues({
     </div>
   );
 }
+
+// Memoized: the team page re-renders as each of its data requests resolves,
+// and every re-render gave Chart.js new data/options objects, so it
+// recalculated and re-animated the chart each time (0.1-0.4 s per pass on a
+// mid-range phone). The props are strings and query data, stable between
+// those renders.
+export default memo(FootballTeamWinValues);

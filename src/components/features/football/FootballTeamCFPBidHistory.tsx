@@ -17,7 +17,7 @@ import {
 import { renderExternalTooltip, TooltipRow } from "@/lib/chartTooltip";
 import type { Chart, ChartArea, TooltipModel } from "chart.js";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { useFootballTeamCFPHistory } from "@/hooks/useFootballTeamCFPHistory";
 import { chartLabel } from "@/lib/a11y/chart-label";
@@ -50,7 +50,7 @@ interface FootballTeamCFPBidHistoryProps {
   displaySeason?: string;
 }
 
-export default function FootballTeamCFPBidHistory({
+function FootballTeamCFPBidHistory({
   teamName,
   primaryColor = "#3b82f6",
   secondaryColor,
@@ -481,3 +481,10 @@ export default function FootballTeamCFPBidHistory({
     </div>
   );
 }
+
+// Memoized: the team page re-renders as each of its data requests resolves,
+// and every re-render gave Chart.js new data/options objects, so it
+// recalculated and re-animated the chart each time (0.1-0.4 s per pass on a
+// mid-range phone). The props are strings and query data, stable between
+// those renders.
+export default memo(FootballTeamCFPBidHistory);
