@@ -26,8 +26,8 @@ interface ColumnDef {
   lastUpdated?: string | null;
 }
 
-// Column order: the composite first, then per source its published rating, its
-// KenPom-scaled equivalent, and its rank. Grouping by source rather than by
+// Column order: the composite first, then per source its rank, its published
+// rating, and its KenPom-scaled equivalent. Grouping by source rather than by
 // metric keeps each system's three numbers together, which is what makes the
 // rescaling readable - you can see Torvik's raw number and what it becomes.
 // Sources run from the most recently updated to the least.
@@ -42,6 +42,13 @@ function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
 
   sources.forEach(function (source) {
     columns.push({
+      key: "rank_" + source.key,
+      label: source.label + " Rank",
+      numeric: true,
+      sourceUrl: source.source_url,
+      lastUpdated: source.last_updated,
+    });
+    columns.push({
       key: "rating_" + source.key,
       label: source.label + " Rtg",
       numeric: true,
@@ -54,16 +61,9 @@ function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
         label: source.label + " Adj",
         numeric: true,
         sourceUrl: source.source_url,
-      lastUpdated: source.last_updated,
+        lastUpdated: source.last_updated,
       });
     }
-    columns.push({
-      key: "rank_" + source.key,
-      label: source.label + " Rank",
-      numeric: true,
-      sourceUrl: source.source_url,
-      lastUpdated: source.last_updated,
-    });
   });
 
   return columns;
