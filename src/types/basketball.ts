@@ -681,6 +681,8 @@ export interface BasketballCompositeRatingSource {
   label: string;
   source_url: string | null;
   has_adjusted: boolean;
+  // Last history snapshot on which this source's ratings moved.
+  last_updated?: string | null;
 }
 
 export interface BasketballCompositeRatingTeam {

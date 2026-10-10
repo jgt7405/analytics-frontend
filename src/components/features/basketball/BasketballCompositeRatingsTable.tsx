@@ -23,12 +23,14 @@ interface ColumnDef {
   label: string;
   numeric: boolean;
   sourceUrl?: string | null;
+  lastUpdated?: string | null;
 }
 
 // Column order: the composite first, then per source its published rating, its
 // KenPom-scaled equivalent, and its rank. Grouping by source rather than by
 // metric keeps each system's three numbers together, which is what makes the
 // rescaling readable - you can see Torvik's raw number and what it becomes.
+// Sources run from the most recently updated to the least.
 function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
   const columns: ColumnDef[] = [
     { key: "rank", label: "Rank", numeric: true },
@@ -44,6 +46,7 @@ function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
       label: source.label + " Rtg",
       numeric: true,
       sourceUrl: source.source_url,
+      lastUpdated: source.last_updated,
     });
     if (source.has_adjusted) {
       columns.push({
@@ -51,6 +54,7 @@ function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
         label: source.label + " Adj",
         numeric: true,
         sourceUrl: source.source_url,
+      lastUpdated: source.last_updated,
       });
     }
     columns.push({
@@ -58,10 +62,30 @@ function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
       label: source.label + " Rank",
       numeric: true,
       sourceUrl: source.source_url,
+      lastUpdated: source.last_updated,
     });
   });
 
   return columns;
+}
+
+// Most recently updated model first; sources with no date go last.
+function sortSourcesByLastUpdated(
+  sources: BasketballCompositeRatingSource[],
+): BasketballCompositeRatingSource[] {
+  return sources.slice().sort(function (a, b) {
+    if (a.last_updated === b.last_updated) return 0;
+    if (!a.last_updated) return 1;
+    if (!b.last_updated) return -1;
+    return b.last_updated.localeCompare(a.last_updated);
+  });
+}
+
+function formatLastUpdated(lastUpdated: string | null | undefined): string | null {
+  if (!lastUpdated) return null;
+  const parsed = new Date(lastUpdated + "T00:00:00");
+  if (isNaN(parsed.getTime())) return lastUpdated;
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function getCellValue(
@@ -150,7 +174,7 @@ export default function BasketballCompositeRatingsTable(
 
   const columns = useMemo(
     function () {
-      return buildColumns(sources);
+      return buildColumns(sortSourcesByLastUpdated(sources));
     },
     [sources],
   );
@@ -370,6 +394,11 @@ export default function BasketballCompositeRatingsTable(
                           <line x1="10" y1="14" x2="21" y2="3" />
                         </svg>
                       </a>
+                    ) : null}
+                    {formatLastUpdated(column.lastUpdated) ? (
+                      <div className="text-[10px] font-normal text-gray-400 dark:text-gray-500 normal-case">
+                        Updated {formatLastUpdated(column.lastUpdated)}
+                      </div>
                     ) : null}
                   </th>
                 );
