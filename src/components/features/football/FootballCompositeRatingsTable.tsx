@@ -22,6 +22,16 @@ interface ColumnDef {
     sourceUrl?: string | null;
 }
 
+// Most recently updated model first; sources with no date go last.
+function sortSourcesByLastUpdated(sources: CompositeRatingSource[]): CompositeRatingSource[] {
+  return sources.slice().sort(function (a, b) {
+    if (a.last_updated === b.last_updated) return 0;
+    if (!a.last_updated) return 1;
+    if (!b.last_updated) return -1;
+    return b.last_updated.localeCompare(a.last_updated);
+  });
+}
+
 function buildColumns(sources: CompositeRatingSource[]): ColumnDef[] {
   const columns: ColumnDef[] = [
     { key: "rank", label: "Rank", numeric: true },
@@ -124,12 +134,16 @@ function formatCellValue(column: ColumnDef, value: CellValue): string {
   return String(value);
 }
 
-function getStickyClass(columnKey: string): string {
+// Header cells are all z-30 (sticky top), so the pinned Rank/Team header
+// cells need a higher layer or later header cells paint over them when the
+// table scrolls sideways.
+function getStickyClass(columnKey: string, isHeader = false): string {
+  const layer = isHeader ? " z-40" : " z-10";
   if (columnKey === "rank") {
-    return " sticky left-0 z-10 w-14 bg-white dark:bg-slate-900";
+    return " sticky left-0" + layer + " w-14 bg-white dark:bg-slate-900";
   }
   if (columnKey === "team_name") {
-    return " sticky left-14 z-10 min-w-44 max-w-44 bg-white shadow-[1px_0_0_0_rgb(226_232_240),9px_0_14px_-14px_rgb(15_23_42)] dark:bg-slate-900 dark:shadow-[1px_0_0_0_rgb(51_65_85),9px_0_14px_-14px_black]";
+    return " sticky left-14" + layer + " min-w-44 max-w-44 bg-white shadow-[1px_0_0_0_rgb(226_232_240),9px_0_14px_-14px_rgb(15_23_42)] dark:bg-slate-900 dark:shadow-[1px_0_0_0_rgb(51_65_85),9px_0_14px_-14px_black]";
   }
   return "";
 }
@@ -177,7 +191,7 @@ export default function FootballCompositeRatingsTable(
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   const columns = useMemo(function () {
-    return buildColumns(sources);
+    return buildColumns(sortSourcesByLastUpdated(sources));
   }, [sources]);
 
   const sourceRankMaps = useMemo(function () {
@@ -318,8 +332,8 @@ return sortDirection === "asc" ? cmp : -cmp;
                   }}
                   className={
                     alignClass +
-                    " sticky top-0 z-30 h-[3.25rem] bg-slate-50 py-2 px-3 font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200 whitespace-nowrap cursor-pointer select-none hover:text-[rgb(0,151,178)]" +
-                    getStickyClass(column.key)
+                    " sticky top-0 h-[3.25rem] bg-slate-50 py-2 px-3 font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200 whitespace-nowrap cursor-pointer select-none hover:text-[rgb(0,151,178)]" +
+                    (getStickyClass(column.key, true) || " z-30")
                   }
                 >
                   {column.label}
@@ -411,7 +425,7 @@ return sortDirection === "asc" ? cmp : -cmp;
                 );
               }
               return (
-                <th key={column.key} className={"sticky top-[3.25rem] z-30 h-10 bg-slate-50 px-3 py-1 dark:bg-slate-900" + getStickyClass(column.key)}>
+                <th key={column.key} className={"sticky top-[3.25rem] h-10 bg-slate-50 px-3 py-1 dark:bg-slate-900" + (getStickyClass(column.key, true) || " z-30")}>
                   <input
                     type="text"
                     value={filters[column.key] || ""}
