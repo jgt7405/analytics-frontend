@@ -1,17 +1,16 @@
 "use client";
 
-// Details for the hovered game: date, win probability, result, how teams
-// fared in games of similar difficulty, and its difficulty rank.
+// Details for the hovered game: date, win probability, result and its
+// difficulty rank.
 
 import { formatGameDate } from "./data";
-import type { DifficultyStats, PositionedGame } from "./types";
+import type { PositionedGame } from "./types";
 
 interface GameTooltipProps {
   game: PositionedGame;
   /** Logo center in chart coordinates; the tooltip sits below it, or above when `above`. */
   position: { y: number; above: boolean };
   rank: number;
-  difficultyStats: DifficultyStats;
   filterDescription: string;
   /** Opened by a tap: stays open and takes taps (× and the team link). */
   pinned: boolean;
@@ -23,7 +22,6 @@ export default function GameTooltip({
   game,
   position,
   rank,
-  difficultyStats,
   filterDescription,
   pinned,
   onClose,
@@ -144,34 +142,6 @@ export default function GameTooltip({
           >
             {game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}
           </span>
-        </div>
-
-        <div
-          style={{
-            color: "rgb(107 114 128)",
-            fontSize: "12px",
-            marginTop: "4px",
-            paddingTop: "4px",
-            borderTop: "1px solid rgb(226 232 240 / 0.5)",
-          }}
-        >
-          <div style={{ fontWeight: "500", marginBottom: "2px" }}>
-            Similar Difficulty ({difficultyStats.total} games):
-          </div>
-          <div style={{ display: "flex", gap: "12px", fontSize: "12px" }}>
-            <span>
-              <span style={{ color: "rgb(34 197 94)" }}>●</span> W:{" "}
-              {difficultyStats.wins}
-            </span>
-            <span>
-              <span style={{ color: "rgb(239 68 68)" }}>●</span> L:{" "}
-              {difficultyStats.losses}
-            </span>
-            <span>
-              <span style={{ color: "rgb(156 163 175)" }}>●</span> Sched:{" "}
-              {difficultyStats.scheduled}
-            </span>
-          </div>
         </div>
 
         <div

@@ -9,7 +9,6 @@ import {
   gameRank,
   layoutGames,
   positionGames,
-  similarDifficulty,
 } from "../data";
 import type { AllScheduleGame, FootballTeamGame } from "../types";
 
@@ -132,21 +131,6 @@ describe("stats and tooltip figures", () => {
     ];
     expect(gameRank(dataset, game({ sag12_win_prob: 0.5, opp_rating: 80 }))).toBe(3);
     expect(gameRank(dataset, game({ sag12_win_prob: 0.1 }))).toBe(1);
-  });
-
-  it("summarizes games within 5 points of the win probability", () => {
-    const dataset = [
-      league({ sag12_win_prob: 0.52, status: "W" }),
-      league({ sag12_win_prob: 0.48, status: "L" }),
-      league({ sag12_win_prob: 0.5, status: "11/29" }),
-      league({ sag12_win_prob: 0.9, status: "W" }),
-    ];
-    expect(similarDifficulty(dataset, game({ sag12_win_prob: 0.5 }))).toEqual({
-      total: 3,
-      wins: 1,
-      losses: 1,
-      scheduled: 1,
-    });
   });
 
   it("describes the comparison group and formats dates", () => {

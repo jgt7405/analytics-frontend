@@ -27,7 +27,6 @@ import {
   gameRank,
   layoutGames,
   positionGames,
-  similarDifficulty,
 } from "./data";
 import { resizedLogoSrc } from "@/lib/logo-src";
 import DifficultyChart from "./DifficultyChart";
@@ -163,7 +162,6 @@ export default function FootballTeamScheduleDifficulty({
             game={hoveredGame}
             position={tooltipPosition}
             rank={gameRank(comparisonDataset, hoveredGame)}
-            difficultyStats={similarDifficulty(comparisonDataset, hoveredGame)}
             filterDescription={description}
             pinned={tooltipPinned}
             onClose={closeTooltip}
