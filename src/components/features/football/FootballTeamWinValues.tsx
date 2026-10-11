@@ -91,7 +91,6 @@ export default function FootballTeamWinValues({
   // Bumped when the y-axis range changes so the end labels re-read the scale;
   // the chart can rescale without resizing, which the observer below misses.
   const [yRange, setYRange] = useState("");
-  const syncLayoutRef = useRef<() => void>(() => {});
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -220,6 +219,11 @@ export default function FootballTeamWinValues({
 
   const { continuousData, labels, twvData, cwvData } = processScheduleData();
 
+  const allValues = [...twvData, ...cwvData, 0];
+  const yMin = Math.min(...allValues);
+  const yMax = Math.max(...allValues);
+  const yPad = (yMax - yMin) * 0.15 || 0.1;
+
   // Tracks the end-of-line marker with a ResizeObserver (not a one-shot
   // timeout) so it stays aligned with the chart's actual current layout
   // (PAGE_MODERNIZATION_GUIDE.md §8g).
@@ -242,21 +246,18 @@ export default function FootballTeamWinValues({
       );
     };
 
-    syncLayoutRef.current = updateChartArea;
     const observer = new ResizeObserver(updateChartArea);
     observer.observe(canvas);
     updateChartArea();
 
     return () => observer.disconnect();
-  }, [continuousData]);
+    // Primitive deps, not the data arrays: those are rebuilt every render, so
+    // depending on them re-ran this effect (and its setState calls) after
+    // every render - an endless render loop that froze client navigation.
+  }, [continuousData.length, yMin, yMax]);
 
   const lastTwv = twvData.length > 0 ? twvData[twvData.length - 1] : null;
   const lastCwv = cwvData.length > 0 ? cwvData[cwvData.length - 1] : null;
-
-  const allValues = [...twvData, ...cwvData, 0];
-  const yMin = Math.min(...allValues);
-  const yMax = Math.max(...allValues);
-  const yPad = (yMax - yMin) * 0.15 || 0.1;
 
   const datasets = [
     {
@@ -401,7 +402,6 @@ export default function FootballTeamWinValues({
     },
     animation: {
       duration: 750,
-      onComplete: () => syncLayoutRef.current(),
     },
   };
 

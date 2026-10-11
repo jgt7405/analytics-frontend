@@ -173,7 +173,11 @@ export default function TeamContent<TData, THistory>({
     ? config.getTeamInfo(teamData).conference
     : undefined;
   useEffect(() => {
-    if (teamConference) {
+    // Only write when it differs: replaceState updates searchParams, which
+    // re-runs this effect, so an unconditional write looped ~40 times a
+    // second - re-rendering everything that reads the router and starving
+    // every client-side navigation off the page (links never completed).
+    if (teamConference && searchParams.get("teamConf") !== teamConference) {
       const urlParams = new URLSearchParams(searchParams.toString());
       urlParams.set("teamConf", teamConference);
       const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
