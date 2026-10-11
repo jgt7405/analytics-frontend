@@ -65,6 +65,9 @@ export const useBasketballTeamData = (
   const teamQuery = useQuery<TeamData, Error>({
     queryKey: queryKeys.basketball.team(teamName, season),
     initialData,
+    // The server copy can be a stale cache hit (Next serves an expired entry
+    // once while it revalidates), so refetch on mount rather than trust it.
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {
       const response = await fetch(
         apiUrl("basketball.team", { team: teamName }, { season })

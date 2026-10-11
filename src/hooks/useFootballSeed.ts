@@ -13,6 +13,9 @@ export const useFootballSeed = (
   return useQuery<FootballSeedApiResponse, Error>({
     queryKey: queryKeys.football.seed(conference, season),
     initialData,
+    // The server copy can be a stale cache hit (Next serves an expired entry
+    // once while it revalidates), so refetch on mount rather than trust it.
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => api.getFootballSeed(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),

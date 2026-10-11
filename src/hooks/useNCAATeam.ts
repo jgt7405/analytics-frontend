@@ -13,6 +13,9 @@ export const useNCAATeam = (
   return useQuery({
     queryKey: queryKeys.basketball.ncaaTourney(conference, season),
     initialData,
+    // The server copy can be a stale cache hit (Next serves an expired entry
+    // once while it revalidates), so refetch on mount rather than trust it.
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => api.getNCAATourney(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
