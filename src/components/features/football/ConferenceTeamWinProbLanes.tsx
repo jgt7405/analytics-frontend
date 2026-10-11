@@ -137,7 +137,7 @@ export default function ConferenceTeamWinProbLanes({
                   logoPx,
                 );
                 const byName = new Map(teams.map((team) => [team.team_name, team]));
-                const accent = withAlpha(conf.primary_color, 0.85, "rgb(100, 116, 139)");
+                const accent = withAlpha(conf.primary_color, 1, "rgb(100, 116, 139)");
 
                 return (
                   <div
@@ -163,9 +163,14 @@ export default function ConferenceTeamWinProbLanes({
                     </div>
 
                     {/* Conference median */}
+                    {/* Drawn as a gradient, not a dashed border: Chrome renders
+                        2px border dashes as short squares that look doubled. */}
                     <div
-                      className="absolute left-1 right-1 border-t-2 border-dashed"
-                      style={{ top: headerHeight + scale(conf.winprob_median) - 1, borderColor: accent }}
+                      className="absolute left-1.5 right-1.5 h-0.5"
+                      style={{
+                        top: headerHeight + scale(conf.winprob_median) - 1,
+                        backgroundImage: `repeating-linear-gradient(to right, ${accent} 0 7px, transparent 7px 11px)`,
+                      }}
                       title={`${conf.conference_name} median: ${conf.winprob_median.toFixed(1)}%`}
                     />
 
