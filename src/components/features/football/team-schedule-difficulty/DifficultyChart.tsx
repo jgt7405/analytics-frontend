@@ -1,11 +1,11 @@
 "use client";
 
 // The SVG: each game placed by difficulty percentile, opponent logos
-// alternating right and left. Hovering a logo shows the tooltip (index.tsx
-// renders it); clicking or tapping opens the opponent's team page.
+// alternating right and left. Hover and tap behavior comes from index.tsx
+// (useHoverOrTapTooltip): hovering shows the tooltip and a click opens the
+// opponent's team page; on touch the first tap shows it, the second opens.
 
-import { teamPagePathFromRoute } from "@/components/ui/TeamLogo";
-import { usePathname, useRouter } from "next/navigation";
+import type { MouseEvent, PointerEvent } from "react";
 import { CHART_HEIGHT, MARGIN, PLOT_HEIGHT } from "./constants";
 import type { Percentile, PositionedGame } from "./types";
 import { resizedLogoSrc } from "@/lib/logo-src";
@@ -14,29 +14,24 @@ interface DifficultyChartProps {
   chartWidth: number;
   percentiles: Percentile[];
   positionedGames: PositionedGame[];
-  onHover: (game: PositionedGame) => void;
-  onLeave: () => void;
+  markHandlers: (game: PositionedGame) => {
+    onPointerDown: (event: PointerEvent) => void;
+    onPointerEnter: (event: PointerEvent) => void;
+    onPointerLeave: (event: PointerEvent) => void;
+    onClick: (event: MouseEvent) => void;
+  };
 }
 
 export default function DifficultyChart({
   chartWidth,
   percentiles,
   positionedGames,
-  onHover,
-  onLeave,
+  markHandlers,
 }: DifficultyChartProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const navigateToOpponent = (opponent: string) => {
-    const path = teamPagePathFromRoute(pathname, opponent);
-    if (path) router.push(path);
-  };
-
   const PLOT_WIDTH = chartWidth - MARGIN.left - MARGIN.right;
 
   return (
-    <div className="flex justify-center" onMouseLeave={onLeave}>
+    <div className="flex justify-center">
       <svg
         width={chartWidth}
         height={CHART_HEIGHT}
@@ -128,18 +123,7 @@ export default function DifficultyChart({
                     width={32}
                     height={32}
                     style={{ cursor: "pointer" }}
-                    onMouseEnter={() => onHover(game)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigateToOpponent(game.opponent);
-                    }}
-                    onTouchStart={(e) => {
-                      e.stopPropagation();
-                    }}
-                    onTouchEnd={(e) => {
-                      e.stopPropagation();
-                      navigateToOpponent(game.opponent);
-                    }}
+                    {...markHandlers(game)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img

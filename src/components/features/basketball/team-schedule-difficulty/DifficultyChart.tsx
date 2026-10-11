@@ -1,12 +1,13 @@
 "use client";
 
 // The SVG: charted (<=95%) games placed by difficulty percentile with their
-// opponents' logos, the >95% record below the dashed line, and a hover
-// tooltip. Clicking a logo opens that opponent's team page.
+// opponents' logos, the >95% record below the dashed line, and a tooltip.
+// Mouse: hover shows it, click opens the opponent's team page. Touch: the
+// first tap shows it, the second opens the page (useHoverOrTapTooltip).
 
 import { teamPagePathFromRoute } from "@/components/ui/TeamLogo";
+import { useHoverOrTapTooltip } from "@/hooks/useHoverOrTapTooltip";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   BOTTOM_MARGIN,
   TOP_MARGIN,
@@ -39,7 +40,15 @@ export default function DifficultyChart({
   comparisonDataset,
   teamColor,
 }: DifficultyChartProps) {
-  const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
+  const {
+    active: hoveredGame,
+    pinned: tooltipPinned,
+    close: closeTooltip,
+    rootRef: tooltipRootRef,
+    markHandlers,
+  } = useHoverOrTapTooltip<PositionedGame>(
+    (a, b) => a.opponent === b.opponent && a.date === b.date,
+  );
   const router = useRouter();
   const pathname = usePathname();
 
@@ -51,7 +60,12 @@ export default function DifficultyChart({
   const TOP_PLOT_WIDTH = chartWidth - TOP_MARGIN.left - TOP_MARGIN.right;
 
   return (
-    <div className="flex justify-center" style={{ position: "relative" }}>
+    <div
+      className="flex justify-center"
+      style={{ position: "relative" }}
+      ref={tooltipRootRef}
+      onClick={closeTooltip}
+    >
       <svg
         width={chartWidth}
         height={TOTAL_CHART_HEIGHT}
@@ -142,12 +156,7 @@ export default function DifficultyChart({
 
               {(game.opponent_logo || "/images/team_logos/default.png") && (
                 <g
-                  onMouseEnter={() => setHoveredGame(game)}
-                  onMouseLeave={() => setHoveredGame(null)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigateToOpponent(game.opponent);
-                  }}
+                  {...markHandlers(game, () => navigateToOpponent(game.opponent))}
                   style={{ cursor: "pointer" }}
                 >
                   <foreignObject
@@ -301,8 +310,7 @@ export default function DifficultyChart({
 
           return (
             <div
-              onMouseEnter={() => setHoveredGame(hoveredGame)}
-              onMouseLeave={() => setHoveredGame(null)}
+              onClick={(e) => e.stopPropagation()}
               style={{
                 position: "absolute",
                 left: `${tooltipLeft}px`,
@@ -318,7 +326,9 @@ export default function DifficultyChart({
                 fontFamily:
                   "var(--font-roboto-condensed), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 zIndex: 50,
-                pointerEvents: "none",
+                // Takes taps only when opened by a tap (for the team link);
+                // a hover tooltip must not cover the logos under it.
+                pointerEvents: tooltipPinned ? "auto" : "none",
               }}
             >
               <div
@@ -349,6 +359,18 @@ export default function DifficultyChart({
                       : "Scheduled"}
                 </div>
               </div>
+              {tooltipPinned && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToOpponent(hoveredGame.opponent);
+                  }}
+                  className="mt-2 w-full rounded-md border border-slate-200 px-2 py-1.5 text-left text-xs font-semibold text-[rgb(0,151,178)]"
+                >
+                  Open {hoveredGame.opponent} page →
+                </button>
+              )}
             </div>
           );
         })()}

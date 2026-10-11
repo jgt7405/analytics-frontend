@@ -29,7 +29,6 @@ const THEME = {
     border: "rgb(226 232 240 / 0.9)",
     heading: "#1f2937",
     text: "#6b7280",
-    closeBtn: "#6b7280",
     shadow: "0 4px 12px rgba(0, 0, 0, 0.12)",
   },
   dark: {
@@ -37,10 +36,27 @@ const THEME = {
     border: "rgb(71 85 105 / 0.9)",
     heading: "#e2e8f0",
     text: "#94a3b8",
-    closeBtn: "#94a3b8",
     shadow: "0 4px 16px rgba(0, 0, 0, 0.55)",
   },
 };
+
+// The chart each tooltip element currently belongs to, so the outside-tap
+// handler can tell a tap on the chart (which Chart.js answers by moving the
+// tooltip) from a tap elsewhere (which closes it).
+const tooltipCharts = new Map<string, Chart>();
+
+function hideOnOutsidePointer(id: string) {
+  // Once per id: charts remove their tooltip element on unmount, and the
+  // listener looks the element up by id, so it serves every remount.
+  if (tooltipCharts.has(id)) return;
+  document.addEventListener("pointerdown", (event) => {
+    const el = document.getElementById(id);
+    if (!el || el.style.opacity === "0") return;
+    const canvas = tooltipCharts.get(id)?.canvas;
+    if (canvas && canvas.isConnected && canvas.contains(event.target as Node)) return;
+    el.style.opacity = "0";
+  });
+}
 
 export function renderExternalTooltip(
   chart: Chart,
@@ -55,8 +71,12 @@ export function renderExternalTooltip(
     tooltipEl.id = config.id;
     tooltipEl.style.position = "absolute";
     tooltipEl.style.opacity = "0";
-    tooltipEl.style.pointerEvents = "auto";
-    tooltipEl.style.transition = "all .1s ease";
+    // Never takes the pointer: an invisible (opacity 0) tooltip that did
+    // swallowed taps on whatever sat under it, and a visible one hid itself
+    // when the mouse moved onto it. Mouse-out and outside taps close it.
+    tooltipEl.style.pointerEvents = "none";
+    // Opacity only: animating left/top made it trail behind the pointer.
+    tooltipEl.style.transition = "opacity .1s ease";
     tooltipEl.style.zIndex = "1000";
     tooltipEl.style.borderRadius = "8px";
     tooltipEl.style.fontFamily = "Inter, system-ui, sans-serif";
@@ -66,23 +86,13 @@ export function renderExternalTooltip(
     tooltipEl.style.minWidth = "200px";
     tooltipEl.style.maxWidth = "300px";
 
-    const handleClickOutside = (e: Event) => {
-      if (!tooltipEl?.contains(e.target as Node)) {
-        tooltipEl!.style.opacity = "0";
-        setTimeout(() => {
-          if (tooltipEl && tooltipEl.parentNode) {
-            document.removeEventListener("click", handleClickOutside);
-            document.removeEventListener("touchstart", handleClickOutside);
-            document.body.removeChild(tooltipEl);
-          }
-        }, 100);
-      }
-    };
-
-    document.addEventListener("click", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
+    // The old handler removed the element 100 ms after any tap that wasn't
+    // on the tooltip itself - including the tap on the chart that opened
+    // it - so on phones the tooltip flashed and vanished.
+    hideOnOutsidePointer(config.id);
     document.body.appendChild(tooltipEl);
   }
+  tooltipCharts.set(config.id, chart);
 
   // Re-apply themed colors every render so a light<->dark toggle mid-session
   // (or a stale element left over from the other theme) never shows stale colors.
@@ -98,23 +108,8 @@ export function renderExternalTooltip(
 
   if (tooltipModel.body) {
     let innerHtml = `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <div style="margin-bottom: 8px;">
         <div style="font-weight: 600; color: ${theme.heading};">${config.heading}</div>
-        <button id="${config.id}-close" style="
-          background: none;
-          border: none;
-          font-size: 16px;
-          cursor: pointer;
-          color: ${theme.closeBtn};
-          padding: 0;
-          margin: 0;
-          line-height: 1;
-          width: 20px;
-          height: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">&times;</button>
       </div>
     `;
 
@@ -133,14 +128,6 @@ export function renderExternalTooltip(
     });
 
     tooltipEl.innerHTML = innerHtml;
-
-    const closeBtn = tooltipEl.querySelector(`#${config.id}-close`);
-    if (closeBtn) {
-      closeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        tooltipEl!.style.opacity = "0";
-      });
-    }
   }
 
   // Smart positioning: flip left/right of the cursor based on which half

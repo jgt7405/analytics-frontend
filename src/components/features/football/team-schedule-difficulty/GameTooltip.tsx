@@ -8,13 +8,15 @@ import type { DifficultyStats, PositionedGame } from "./types";
 
 interface GameTooltipProps {
   game: PositionedGame;
-  position: { x: number; y: number };
+  /** Logo center in chart coordinates; the tooltip sits below it, or above when `above`. */
+  position: { y: number; above: boolean };
   rank: number;
   difficultyStats: DifficultyStats;
   filterDescription: string;
+  /** Opened by a tap: stays open and takes taps (× and the team link). */
+  pinned: boolean;
   onClose: () => void;
-  /** Tapping × on a touch screen toggles the game (see index.tsx). */
-  onToggle: (game: PositionedGame) => void;
+  onOpenTeam: () => void;
 }
 
 export default function GameTooltip({
@@ -23,8 +25,9 @@ export default function GameTooltip({
   rank,
   difficultyStats,
   filterDescription,
+  pinned,
   onClose,
-  onToggle,
+  onOpenTeam,
 }: GameTooltipProps) {
   const winProb = Math.round((game.sag12_win_prob || 0) * 100);
   const percentile = Math.round(game.percentilePosition);
@@ -33,14 +36,17 @@ export default function GameTooltip({
     <div
       className="absolute bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg z-50 min-w-[220px]"
       style={{
-        left: position.x,
-        top: position.y,
-        touchAction: "none",
+        // Centered on the chart, clear of the logo (16 px half-height + gap).
+        left: "50%",
+        top: position.above ? position.y - 22 : position.y + 22,
+        transform: `translate(-50%, ${position.above ? "-100%" : "0"})`,
         padding: "10px 12px",
         fontSize: "13px",
+        // A hover tooltip must not take the pointer, or it covers the logos
+        // below it and moving onto it hides it (flicker).
+        pointerEvents: pinned ? "auto" : "none",
       }}
       onClick={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
     >
       <div
         style={{
@@ -62,17 +68,10 @@ export default function GameTooltip({
           {game.opponent}
         </div>
         <button
+          aria-label="Close"
           onClick={(e) => {
             e.stopPropagation();
-            e.preventDefault();
             onClose();
-          }}
-          onTouchStart={(e) => {
-            e.stopPropagation();
-          }}
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-            onToggle(game);
           }}
           style={{
             background: "none",
@@ -187,6 +186,19 @@ export default function GameTooltip({
           #{rank} hardest in {filterDescription} ({percentile}th
           percentile)
         </div>
+
+        {pinned && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenTeam();
+            }}
+            className="mt-2 rounded-md border border-slate-200 px-2 py-1.5 text-left text-xs font-semibold text-[rgb(0,151,178)] dark:border-slate-600"
+          >
+            Open {game.opponent} page →
+          </button>
+        )}
       </div>
     </div>
   );
