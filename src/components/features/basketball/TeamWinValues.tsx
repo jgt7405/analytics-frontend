@@ -17,6 +17,7 @@ import { Chart as ChartJS, TooltipModel, } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface TeamGame {
   date: string;
@@ -179,6 +180,8 @@ export default function TeamWinValues({
   };
 
   const { continuousData, labels, twvData, cwvData } = processScheduleData();
+  const latestTwv = twvData[twvData.length - 1];
+  const latestCwv = cwvData[cwvData.length - 1];
 
   const lastTwv =
     [...twvData].reverse().find((v) => v !== null && v !== undefined) ?? null;
@@ -241,7 +244,10 @@ export default function TeamWinValues({
     updateChartArea();
 
     return () => observer.disconnect();
-  }, [continuousData]);
+    // Primitive deps: continuousData is rebuilt every render, so depending
+    // on it re-ran this setState effect after every render (the football
+    // twin of this chart looped forever and froze client navigation).
+  }, [continuousData.length, latestTwv, latestCwv]);
 
   const options = {
     responsive: true,
@@ -409,7 +415,15 @@ export default function TeamWinValues({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel("True win value (TWV) and conference win value (CWV) over the season", [
+          ["TWV", lastTwv?.toFixed(1)],
+          ["CWV", lastCwv?.toFixed(1)],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}

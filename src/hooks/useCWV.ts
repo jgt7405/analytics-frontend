@@ -12,6 +12,9 @@ export const useCWV = (
   return useQuery<CWVApiResponse, Error>({
     queryKey: queryKeys.basketball.cwv(conference, season),
     initialData,
+    // The server copy can be a stale cache hit (Next serves an expired entry
+    // once while it revalidates), so refetch on mount rather than trust it.
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => api.getCWV(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),

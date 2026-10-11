@@ -51,12 +51,5 @@ export interface Percentile {
   value: number;
 }
 
-export interface DifficultyStats {
-  total: number;
-  wins: number;
-  losses: number;
-  scheduled: number;
-}
-
 export type ComparisonFilter = "all_fbs" | "power_4" | "non_power_4" | "conference";
 export type GameFilter = "all" | "completed" | "wins" | "losses" | "remaining";

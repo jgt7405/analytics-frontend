@@ -20,6 +20,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { useFootballTeamCFPHistory } from "@/hooks/useFootballTeamCFPHistory";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface CFPHistoricalDataPoint {
   date: string;
@@ -32,6 +33,20 @@ interface CFPHistoricalDataPoint {
     secondary_color?: string;
   };
 }
+
+// A bid chance that rounds to 0% shows as "No bid" (a "No bid" row under #12)
+// rather than the average seed from the odd simulation where the team got
+// in; from 0.5% (displayed as 1%) up, the seed is shown, #12 included.
+const MIN_BID_PCT_FOR_SEED = 0.5;
+const NO_BID_SEED = 13;
+
+const seedOrNoBid = (point: { cfp_bid_pct: number; average_seed: number }) =>
+  point.cfp_bid_pct >= MIN_BID_PCT_FOR_SEED && point.average_seed > 0
+    ? point.average_seed
+    : NO_BID_SEED;
+
+const formatSeed = (seed: number) =>
+  seed === NO_BID_SEED ? "No bid" : `#${seed.toFixed(1)}`;
 
 const parseDateCentralTime = (dateString: string) => {
   const [year, month, day] = dateString.split("-").map(Number);
@@ -161,9 +176,7 @@ export default function FootballTeamCFPBidHistory({
 
   const avgSeedData = chartLabels.map((label) => {
     const point = dataByDate.get(label.isoDate);
-    return point && point.average_seed && point.average_seed > 0
-      ? point.average_seed
-      : null;
+    return point ? seedOrNoBid(point) : null;
   });
 
   const lastCfpBid = [...cfpBidData].reverse().find((v) => v !== null) ?? null;
@@ -273,7 +286,7 @@ export default function FootballTeamCFPBidHistory({
             const dataPoint = dataByDate.get(label.isoDate);
             if (dataPoint) {
               heading = label.displayLabel;
-              const avgSeed = dataPoint.average_seed || 0;
+              const seed = seedOrNoBid(dataPoint);
               rows = [
                 {
                   label: "CFP Bid Probability",
@@ -282,7 +295,7 @@ export default function FootballTeamCFPBidHistory({
                 },
                 {
                   label: "Average Seed",
-                  value: avgSeed > 0 ? `#${avgSeed.toFixed(1)}` : "N/A",
+                  value: formatSeed(seed),
                   color: finalSecondaryColor,
                 },
               ];
@@ -349,7 +362,7 @@ export default function FootballTeamCFPBidHistory({
         display: true,
         position: "right" as const,
         min: 1,
-        max: 12,
+        max: NO_BID_SEED,
         ticks: {
           font: {
             size: isMobile ? 13 : 15,
@@ -358,7 +371,9 @@ export default function FootballTeamCFPBidHistory({
           color: finalSecondaryColor,
           stepSize: 1,
           callback: function (value: string | number) {
-            return `#${value}`;
+            // Blank at the "No bid" row: the end-of-line label sits on that
+            // row and says "No bid" itself, and the two collided.
+            return Number(value) === NO_BID_SEED ? "" : `#${value}`;
           },
         },
         title: {
@@ -369,7 +384,7 @@ export default function FootballTeamCFPBidHistory({
         },
         border: { display: false },
         grid: { display: false },
-        reverse: true, // #1 at top, #12 at bottom
+        reverse: true, // #1 at top, #12 then "No bid" at bottom
       },
     },
     layout: {
@@ -447,7 +462,15 @@ export default function FootballTeamCFPBidHistory({
         </div>
       )}
 
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel(`${teamName} College Football Playoff bid chance and average seed over the season`, [
+          ["bid chance", lastCfpBid !== null ? `${lastCfpBid.toFixed(0)}%` : null],
+          ["average seed", lastAvgSeed !== null ? formatSeed(lastAvgSeed) : null],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}
@@ -465,7 +488,7 @@ export default function FootballTeamCFPBidHistory({
             value: lastAvgSeed,
             color: finalSecondaryColor,
             scaleId: "y1",
-            text: lastAvgSeed !== null ? `#${lastAvgSeed.toFixed(1)}` : "",
+            text: lastAvgSeed !== null ? formatSeed(lastAvgSeed) : "",
           },
         ]}
       />

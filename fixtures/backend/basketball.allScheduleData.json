@@ -1,0 +1,7 @@
+{
+ "_note": "Hand-written like basketball.team.json: the backend route reads rk50_prob, which the backend tests' fake schedule table doesn't have. These are the rows the team fixture carried before the backend split them into /basketball/all_schedule_data.",
+ "data": [
+  {"team": "Duke", "opponent": "Virginia", "rk50_win_prob": 0.72, "team_conf": "Atlantic Coast", "status": "W"},
+  {"team": "Duke", "opponent": "North Carolina", "rk50_win_prob": 0.58, "team_conf": "Atlantic Coast", "status": "2026-02-07"}
+ ]
+}

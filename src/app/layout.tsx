@@ -72,6 +72,14 @@ export default function RootLayout({
         {/* ✅ REMOVED: Don't preload logo here since it's already priority in Header component */}
       </head>
       <body className={`min-h-screen bg-gray-50 dark:bg-slate-900 ${robotoCondensed.className}`}>
+        {/* First tab stop: jumps past the header and navigation. Hidden until it
+            has keyboard focus. */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-gray-900 focus:shadow-lg focus:outline focus:outline-2 focus:outline-[rgb(0,151,178)]"
+        >
+          Skip to main content
+        </a>
         <GoogleAnalytics />
         <ChunkErrorHandler />
         <Providers>

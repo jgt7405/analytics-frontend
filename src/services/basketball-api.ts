@@ -74,6 +74,14 @@ interface TeamDataApiResponse {
     location: string;
     status: string;
   }>;
+  all_schedule_data?: Array<{
+    team: string;
+    opponent: string;
+    rk50_win_prob: number;
+    team_conf: string;
+    team_conf_catg?: string;
+    status: string;
+  }>;
 }
 
 export interface UnifiedConferenceDataResponse {
@@ -260,11 +268,19 @@ export class BasketballApiClient extends BaseApiClient {
   async getTeamData(teamName: string): Promise<TeamDataApiResponse> {
     logger.debug(`🏀 Getting team data for: ${teamName}`);
 
-    return this.request(apiPath("basketball.team", { team: teamName }), (data) => ({
-      success: true,
-      data: data as TeamDataApiResponse,
-      error: null,
-    }));
+    const [teamData, scheduleData] = await Promise.all([
+      this.request(apiPath("basketball.team", { team: teamName }), (data) => ({
+        success: true,
+        data: data as TeamDataApiResponse,
+        error: null,
+      })),
+      this.request(apiPath("basketball.allScheduleData"), (data) => ({
+        success: true,
+        data: data as { data: NonNullable<TeamDataApiResponse["all_schedule_data"]> },
+        error: null,
+      })),
+    ]);
+    return { ...teamData, all_schedule_data: scheduleData.data };
   }
 
   async getUnifiedConferenceData(): Promise<UnifiedConferenceDataResponse> {

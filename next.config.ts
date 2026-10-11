@@ -36,21 +36,13 @@ const nextConfig: NextConfig = {
     webpackBuildWorker: true,
   },
 
+  // Logos are the site's only next/image content, and the files in
+  // public/images/{team,conf}_logos are already shrunk to the size they're
+  // shown at (scripts/shrink-logos.mjs), so they're served as-is: no
+  // on-demand resize per logo, per width, per format on Vercel's image
+  // optimizer, which made logos slow to appear (or missing) on a cold cache.
   images: {
-    formats: ["image/avif", "image/webp"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "jthomprodbackend-production.up.railway.app",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "5000",
-      },
-    ],
+    unoptimized: true,
   },
 
   compiler: {
@@ -87,6 +79,19 @@ const nextConfig: NextConfig = {
           {
             key: "Reporting-Endpoints",
             value: REPORTING_ENDPOINTS,
+          },
+        ],
+      },
+      {
+        // Logo files keep their names when replaced, so cache for a day
+        // (then revalidate in the background) rather than forever. Without
+        // this, Vercel sends max-age=0 and every logo is re-checked on every
+        // page view - 180 requests on the compare pages.
+        source: "/images/:folder(team_logos|conf_logos)/:file*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
           },
         ],
       },

@@ -20,7 +20,6 @@ import { useSearchParams } from "next/navigation";
 import {
   ComponentType,
   ReactNode,
-  Suspense,
   useCallback,
   useEffect,
   useState,
@@ -321,22 +320,25 @@ export default function ScheduleContent<TGame, TSummary>({
                   scheduleResponse?.team_logos &&
                   scheduleResponse?.summary && (
                     <div className="mb-8">
+                      {/* No Suspense boundary here: nothing in the table
+                          suspends, and React's server renderer sends a large
+                          finished boundary separately, so a slow phone
+                          painted the skeleton first and the page jumped when
+                          the table replaced it. */}
                       <div className={tableClass}>
-                        <Suspense fallback={mainSkeleton}>
-                          <ScheduleTable
-                            scheduleData={scheduleResponse.data}
-                            teams={scheduleResponse.teams}
-                            teamLogos={scheduleResponse.team_logos}
-                            summary={scheduleResponse.summary}
-                            renderSummaryTable={false}
-                            season={season}
-                            headerRight={
-                              config.hidePageTitle
-                                ? conferenceSelector
-                                : undefined
-                            }
-                          />
-                        </Suspense>
+                        <ScheduleTable
+                          scheduleData={scheduleResponse.data}
+                          teams={scheduleResponse.teams}
+                          teamLogos={scheduleResponse.team_logos}
+                          summary={scheduleResponse.summary}
+                          renderSummaryTable={false}
+                          season={season}
+                          headerRight={
+                            config.hidePageTitle
+                              ? conferenceSelector
+                              : undefined
+                          }
+                        />
                       </div>
 
                       <div className="mt-4 mb-6 text-sm text-gray-600 dark:text-gray-300">
@@ -405,16 +407,14 @@ export default function ScheduleContent<TGame, TSummary>({
                       </h1>
 
                       <div className={summaryClass}>
-                        <Suspense fallback={summarySkeleton}>
-                          <ScheduleTable
-                            scheduleData={scheduleResponse.data}
-                            teams={scheduleResponse.teams}
-                            teamLogos={scheduleResponse.team_logos}
-                            summary={scheduleResponse.summary}
-                            renderMainTable={false}
-                            season={season}
-                          />
-                        </Suspense>
+                        <ScheduleTable
+                          scheduleData={scheduleResponse.data}
+                          teams={scheduleResponse.teams}
+                          teamLogos={scheduleResponse.team_logos}
+                          summary={scheduleResponse.summary}
+                          renderMainTable={false}
+                          season={season}
+                        />
                       </div>
 
                       <div className="mt-6">

@@ -4,7 +4,7 @@
 //
 // Replaces next-pwa with the same behavior: take over immediately, precache
 // the build's static JS/CSS, and cache images on first view (CacheFirst,
-// 24 h, 64 entries). API data is never cached here; the CDN and React Query
+// 24 h, 512 entries). API data is never cached here; the CDN and React Query
 // handle freshness (docs/data-flow.md).
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { CacheFirst, ExpirationPlugin, Serwist } from "serwist";
@@ -34,7 +34,10 @@ const serwist = new Serwist({
       handler: new CacheFirst({
         cacheName: "images",
         plugins: [
-          new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 24 * 60 * 60 }),
+          // Room for every team and conference logo (~5 kB each): the
+          // compare pages alone show ~180, which overflowed a 64-entry cache
+          // so it evicted and re-fetched logos on every visit.
+          new ExpirationPlugin({ maxEntries: 512, maxAgeSeconds: 24 * 60 * 60 }),
         ],
       }),
     },

@@ -1,13 +1,12 @@
 // Pure calculations behind the football schedule-difficulty chart: which
 // games to show, the comparison distribution, percentile positions, logo
-// layout, summary stats and the tooltip's figures. No React; index.tsx
+// layout, summary stats and the tooltip's rank. No React; index.tsx
 // memoizes each step.
 
 import { MARGIN, PLOT_HEIGHT } from "./constants";
 import type {
   AllScheduleGame,
   ComparisonFilter,
-  DifficultyStats,
   FootballTeamGame,
   GameFilter,
   GameWithPosition,
@@ -267,29 +266,6 @@ export function gameRank(comparisonDataset: AllScheduleGame[], game: FootballTea
   }).length;
 
   return harderCount + 1;
-}
-
-/** Results of comparison games within 5 points of this game's win probability. */
-export function similarDifficulty(
-  comparisonDataset: AllScheduleGame[],
-  game: FootballTeamGame,
-): DifficultyStats {
-  const gamesInCategory = comparisonDataset.filter((g) => {
-    const gProb = g.sag12_win_prob || 0;
-    const gameProb = game.sag12_win_prob || 0;
-    return Math.abs(gProb - gameProb) < 0.05;
-  });
-
-  const winsInCategory = gamesInCategory.filter((g) => g.status === "W").length;
-  const lossesInCategory = gamesInCategory.filter((g) => g.status === "L").length;
-  const scheduledInCategory = gamesInCategory.filter((g) => !["W", "L"].includes(g.status)).length;
-
-  return {
-    total: gamesInCategory.length,
-    wins: winsInCategory,
-    losses: lossesInCategory,
-    scheduled: scheduledInCategory,
-  };
 }
 
 /** How the comparison group reads in sentences ("all FBS", "Power 4 conferences"). */

@@ -96,6 +96,10 @@ function BballNonConfAnalysisTable({ className: _className = "" }: BballNonConfA
           left: expandColWidth - 1, ...) is measured against collapsed borders,
           and §6 warns how easily those seals break. */}
       <div
+        role="region"
+        aria-label="Non-conference opponent analysis. Scroll to see every column."
+        tabIndex={0}
+        className="focus-visible:outline focus-visible:outline-[3px] focus-visible:-outline-offset-[3px] focus-visible:outline-[rgb(14_116_144/0.35)]"
         style={{
           overflowX: "auto",
           overflowY: "auto",

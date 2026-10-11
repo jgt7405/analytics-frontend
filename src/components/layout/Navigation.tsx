@@ -26,7 +26,7 @@ function NavigationContent() {
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const firstItemRef = useRef<HTMLAnchorElement>(null);
-  const lastItemRef = useRef<HTMLButtonElement>(null);
+  const lastItemRef = useRef<HTMLAnchorElement>(null);
 
   const isFootball = pathname.startsWith("/football");
   const sport: Sport = isFootball ? "football" : "basketball";
@@ -279,11 +279,14 @@ function NavigationContent() {
                 setIsContactModalOpen(true);
                 setMobileMenuOpen(false);
               }}
-              ref={lastItemRef}
-              className={navStyles.tabButton}
+              className={cn(navStyles.tabButton, navStyles.contactButton)}
               style={{
                 all: "unset",
                 display: "block",
+                // all: unset drops the border-box sizing the other items get,
+                // which pushed this item (and its focus ring) past the menu edge.
+                boxSizing: "border-box",
+                borderRadius: "4px 4px 0 0",
                 width: "calc(100% - 16px)",
                 textAlign: "left",
                 padding: "8px 20px",
@@ -304,6 +307,7 @@ function NavigationContent() {
             <Link
               prefetch={false}
               href={getSportSwitchUrl()}
+              ref={lastItemRef}
               className={cn(
                 navStyles.tabButton,
                 "text-xs flex flex-col items-center justify-center leading-none py-1 gap-0",

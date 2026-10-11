@@ -13,6 +13,9 @@ export const useStandings = (
   return useQuery<StandingsApiResponse, Error>({
     queryKey: queryKeys.basketball.standings(conference, season),
     initialData,
+    // The server copy can be a stale cache hit (Next serves an expired entry
+    // once while it revalidates), so refetch on mount rather than trust it.
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: async () => {
       logger.debug("Fetching standings for:", conference, season);
       try {

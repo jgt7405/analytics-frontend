@@ -1,9 +1,9 @@
 "use client";
 
 import TeamLogo from "@/components/ui/TeamLogo";
-import { getCellColor } from "@/lib/color-utils";
 import { formatTeamName } from "@/lib/formatTeamName";
 import { cn } from "@/lib/utils";
+import { getWinCellColor } from "@/lib/winCellColor";
 import {
   classifyWinTotal,
   inferTotalGames,
@@ -241,7 +241,7 @@ function BballRegSeasonWinsTable({
                   const cellStyle = showGlyph
                     ? { backgroundColor: "transparent" }
                     : hasData
-                      ? getCellColor(percentage)
+                      ? getWinCellColor(percentage)
                       : { backgroundColor: "transparent", color: "transparent" };
                   const isPeak =
                     hasData &&

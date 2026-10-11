@@ -3,12 +3,23 @@
 import BasketballCompositeRatingsTable from "@/components/features/basketball/BasketballCompositeRatingsTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { useBasketballCompositeRatings } from "@/hooks/useBasketballCompositeRatings";
+import { useBasketballCompositeRatings, useBasketballCompositeRatingsTimeline } from "@/hooks/useBasketballCompositeRatings";
+import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+
+const CompositeRatingsHistoryChart = dynamic(
+  () => import("@/components/features/shared/CompositeRatingsHistoryChart"),
+  { ssr: false },
+);
 
 export default function BasketballCompositeRatingsContent() {
   const { data, isLoading } = useBasketballCompositeRatings();
+  const [chartTeams, setChartTeams] = useState<string[]>([]);
+  const initializedChartTeams = useRef(false);
+  const [chartRating, setChartRating] = useState("composite");
+  const timeline = useBasketballCompositeRatingsTimeline(chartTeams);
 
-  const teams = data?.teams ?? [];
+  const teams = useMemo(() => data?.teams ?? [], [data?.teams]);
   const sources = data?.sources ?? [];
   const totalSources = data?.total_sources ?? sources.length;
 
@@ -23,6 +34,20 @@ export default function BasketballCompositeRatingsContent() {
   const lastChanged = formatDate(data?.last_changed);
   const lastScraped = formatDate(data?.last_scraped);
   const headerDate = lastChanged ?? lastScraped;
+  const teamOptions = useMemo(() => teams.map((team) => team.team_name).sort(), [teams]);
+  useEffect(() => {
+    if (!initializedChartTeams.current && teams.length > 0) {
+      initializedChartTeams.current = true;
+      setChartTeams(teams.slice(0, 2).map((team) => team.team_name));
+    }
+  }, [teams]);
+  const ratingOptions = [
+    { key: "composite", label: "Composite NetRtg" },
+    ...sources.flatMap((source) => [
+      { key: source.key, label: `${source.label} rating` },
+      ...(source.has_adjusted ? [{ key: `${source.key}_adjusted`, label: `${source.label} adjusted` }] : []),
+    ]),
+  ];
 
   return (
     <ErrorBoundary level="page">
@@ -71,6 +96,16 @@ export default function BasketballCompositeRatingsContent() {
             teams={teams}
             sources={sources}
             totalSources={totalSources}
+          />
+          <CompositeRatingsHistoryChart
+            points={timeline.data?.points ?? []}
+            teams={teamOptions}
+            selectedTeams={chartTeams}
+            onSelectedTeamsChange={setChartTeams}
+            ratings={ratingOptions}
+            selectedRating={chartRating}
+            onSelectedRatingChange={setChartRating}
+            isLoading={timeline.isLoading}
           />
         </div>
       </PageLayoutWrapper>

@@ -259,6 +259,16 @@ export interface FootballConferenceData {
   winprob_median: number;
   winprob_q75: number;
   winprob_max: number;
+  primary_color?: string;
+  secondary_color?: string;
+  /** Each team's own win probability vs an average FBS team, highest first. */
+  team_winprobs?: FootballConferenceTeamWinProb[];
+}
+
+export interface FootballConferenceTeamWinProb {
+  team_name: string;
+  win_prob: number;
+  logo_url: string;
 }
 
 export interface FootballConferenceApiResponse {
@@ -595,5 +605,10 @@ export interface CompositeRatingsResponse {
 
 export interface CompositeRatingDatesResponse {
   dates: string[];
+  error?: string;
+}
+
+export interface CompositeRatingsTimelineResponse {
+  points: Array<{ date: string; team_name: string; ratings: Record<string, number | null> }>;
   error?: string;
 }

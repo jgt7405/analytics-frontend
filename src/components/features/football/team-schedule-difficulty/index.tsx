@@ -6,14 +6,17 @@
 // (DifficultyChart) with a hover tooltip (GameTooltip), summary below
 // (StatsSummary). The calculations are in data.ts.
 
+import { teamPagePathFromRoute } from "@/components/ui/TeamLogo";
+import { useHoverOrTapTooltip } from "@/hooks/useHoverOrTapTooltip";
 import { useResponsive } from "@/hooks/useResponsive";
+import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   CHART_WIDTH_DESKTOP,
   CHART_WIDTH_MOBILE,
   COMPARISON_OPTIONS,
   GAME_OPTIONS,
-  TOOLTIP_WIDTH,
+  CHART_HEIGHT,
 } from "./constants";
 import {
   comparisonGames,
@@ -24,7 +27,6 @@ import {
   gameRank,
   layoutGames,
   positionGames,
-  similarDifficulty,
 } from "./data";
 import { resizedLogoSrc } from "@/lib/logo-src";
 import DifficultyChart from "./DifficultyChart";
@@ -56,8 +58,21 @@ export default function FootballTeamScheduleDifficulty({
 }: FootballTeamScheduleDifficultyProps) {
   const [comparisonFilter, setComparisonFilter] = useState<ComparisonFilter>("all_fbs");
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
-  const [hoveredGame, setHoveredGame] = useState<PositionedGame | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const {
+    active: hoveredGame,
+    pinned: tooltipPinned,
+    close: closeTooltip,
+    rootRef: tooltipRootRef,
+    markHandlers,
+  } = useHoverOrTapTooltip<PositionedGame>(
+    (a, b) => a.opponent === b.opponent && a.date === b.date,
+  );
+  const router = useRouter();
+  const pathname = usePathname();
+  const navigateToOpponent = (opponent: string) => {
+    const path = teamPagePathFromRoute(pathname, opponent);
+    if (path) router.push(path);
+  };
 
   // Phone layout at 768 px and below (useResponsive's isMobile is < 768).
   const { width, isHydrated } = useResponsive();
@@ -81,24 +96,16 @@ export default function FootballTeamScheduleDifficulty({
   const teamStats = useMemo(() => computeTeamStats(teamGames), [teamGames]);
   const description = filterDescription(comparisonFilter, teamConference);
 
-  // The tooltip sits centered under the hovered logo.
-  const showTooltip = (game: PositionedGame) => {
-    const x = (CHART_WIDTH - TOOLTIP_WIDTH) / 2 - 30;
-    const y = game.adjustedY + 20;
-    setTooltipPosition({ x, y });
-    setHoveredGame(game);
-  };
-
-  const toggleTooltip = (game: PositionedGame) => {
-    if (hoveredGame?.opponent === game.opponent && hoveredGame?.date === game.date) {
-      setHoveredGame(null);
-    } else {
-      showTooltip(game);
-    }
-  };
+  // Centered on the chart, under the logo - or above it in the lower half,
+  // so it stays on the chart. Coordinates are the chart's (see the wrapper
+  // around DifficultyChart): measuring from this component's top, as before,
+  // put it ~180 px too high, over the filters and the logos being tapped.
+  const tooltipPosition = hoveredGame
+    ? { y: hoveredGame.adjustedY, above: hoveredGame.adjustedY > CHART_HEIGHT * 0.55 }
+    : { y: 0, above: false };
 
   return (
-    <div className="w-full relative" onClick={() => setHoveredGame(null)}>
+    <div className="w-full relative" ref={tooltipRootRef} onClick={closeTooltip}>
       {_logoUrl && (
         <div
           className="absolute z-10"
@@ -140,25 +147,28 @@ export default function FootballTeamScheduleDifficulty({
         />
       </div>
 
-      <DifficultyChart
-        chartWidth={CHART_WIDTH}
-        percentiles={percentiles}
-        positionedGames={positionedGames}
-        onHover={showTooltip}
-        onLeave={() => setHoveredGame(null)}
-      />
-
-      {hoveredGame && (
-        <GameTooltip
-          game={hoveredGame}
-          position={tooltipPosition}
-          rank={gameRank(comparisonDataset, hoveredGame)}
-          difficultyStats={similarDifficulty(comparisonDataset, hoveredGame)}
-          filterDescription={description}
-          onClose={() => setHoveredGame(null)}
-          onToggle={toggleTooltip}
+      <div className="relative mx-auto" style={{ width: CHART_WIDTH }}>
+        <DifficultyChart
+          chartWidth={CHART_WIDTH}
+          percentiles={percentiles}
+          positionedGames={positionedGames}
+          markHandlers={(game) =>
+            markHandlers(game, () => navigateToOpponent(game.opponent))
+          }
         />
-      )}
+
+        {hoveredGame && (
+          <GameTooltip
+            game={hoveredGame}
+            position={tooltipPosition}
+            rank={gameRank(comparisonDataset, hoveredGame)}
+            filterDescription={description}
+            pinned={tooltipPinned}
+            onClose={closeTooltip}
+            onOpenTeam={() => navigateToOpponent(hoveredGame.opponent)}
+          />
+        )}
+      </div>
 
       <StatsSummary
         teamStats={teamStats}

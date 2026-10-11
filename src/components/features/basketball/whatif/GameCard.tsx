@@ -62,7 +62,7 @@ function TeamTile({
         )}
       </div>
       {probability != null && (
-        <span className="text-[8px] text-gray-400 mt-0.5">
+        <span className="text-[8px] text-gray-500 mt-0.5">
           {Math.round(probability * 100)}%
         </span>
       )}
@@ -105,7 +105,7 @@ export function GameCard({
         onClick={() => onSelect(game.game_id, game.away_team_id)}
         isDark={isDark}
       />
-      <span className="text-[8px] text-gray-400">
+      <span className="text-[8px] text-gray-500">
         {game.neutral_site ? "vs" : "@"}
       </span>
       <TeamTile

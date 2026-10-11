@@ -1,4 +1,4 @@
-import { CompositeRatingDatesResponse, CompositeRatingsResponse } from "@/types/football";
+import { CompositeRatingDatesResponse, CompositeRatingsResponse, CompositeRatingsTimelineResponse } from "@/types/football";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { apiUrl } from "@/api/urls";
@@ -20,6 +20,19 @@ export function useFootballCompositeRatings(date?: string) {
     // A past date's ratings are frozen; the latest ones update daily.
     ...queryCachePolicy(date ? "historical" : "currentStandings"),
     refetchOnWindowFocus: false,
+  });
+}
+
+export function useFootballCompositeRatingsTimeline(teams: string[]) {
+  return useQuery<CompositeRatingsTimelineResponse>({
+    queryKey: queryKeys.football.compositeRatingsTimeline(teams),
+    queryFn: async () => {
+      const response = await fetch(apiUrl("football.compositeRatingsTimeline", {}, { teams: teams.join(",") }));
+      if (!response.ok) throw new Error("Failed to fetch composite rating history");
+      return response.json();
+    },
+    enabled: teams.length > 0,
+    ...queryCachePolicy("historical"),
   });
 }
 

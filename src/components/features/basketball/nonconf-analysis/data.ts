@@ -1,6 +1,7 @@
 // Pure calculations behind the non-conference analysis table: color scales,
 // expected win %, and sorting. No React.
 
+import { readableTextColor } from "@/lib/color-utils";
 import type { CellColors, ColorRanges, ColumnType, Conference, SortField, SortOrder, Team } from "./types";
 
 export const COLUMNS: ColumnType[] = ["power", "nonpower", "total"];
@@ -61,7 +62,7 @@ export function computeColorRanges(tableData: Conference[]): ColorRanges {
 
 function withTextColor(r: number, g: number, b: number): CellColors {
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  const textColor = brightness > 140 ? "#000000" : "#ffffff";
+  const textColor = readableTextColor(r, g, b, brightness > 140 ? "#000000" : "#ffffff");
   return {
     backgroundColor: `rgb(${r}, ${g}, ${b})`,
     color: textColor,

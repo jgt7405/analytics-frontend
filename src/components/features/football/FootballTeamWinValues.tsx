@@ -18,6 +18,7 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 interface FootballTeamGame {
   date: string;
@@ -87,6 +88,9 @@ export default function FootballTeamWinValues({
   }, []);
 
   const [chartArea, setChartArea] = useState<ChartArea | null>(null);
+  // Bumped when the y-axis range changes so the end labels re-read the scale;
+  // the chart can rescale without resizing, which the observer below misses.
+  const [yRange, setYRange] = useState("");
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -215,6 +219,11 @@ export default function FootballTeamWinValues({
 
   const { continuousData, labels, twvData, cwvData } = processScheduleData();
 
+  const allValues = [...twvData, ...cwvData, 0];
+  const yMin = Math.min(...allValues);
+  const yMax = Math.max(...allValues);
+  const yPad = (yMax - yMin) * 0.15 || 0.1;
+
   // Tracks the end-of-line marker with a ResizeObserver (not a one-shot
   // timeout) so it stays aligned with the chart's actual current layout
   // (PAGE_MODERNIZATION_GUIDE.md §8g).
@@ -225,6 +234,8 @@ export default function FootballTeamWinValues({
     const updateChartArea = () => {
       const area = chartRef.current?.chartArea;
       if (!area) return;
+      const y = chartRef.current?.scales.y;
+      if (y) setYRange(y.min + ":" + y.max);
       setChartArea((prev) =>
         prev &&
         prev.top === area.top &&
@@ -240,7 +251,10 @@ export default function FootballTeamWinValues({
     updateChartArea();
 
     return () => observer.disconnect();
-  }, [continuousData]);
+    // Primitive deps, not the data arrays: those are rebuilt every render, so
+    // depending on them re-ran this effect (and its setState calls) after
+    // every render - an endless render loop that froze client navigation.
+  }, [continuousData.length, yMin, yMax]);
 
   const lastTwv = twvData.length > 0 ? twvData[twvData.length - 1] : null;
   const lastCwv = cwvData.length > 0 ? cwvData[cwvData.length - 1] : null;
@@ -355,6 +369,9 @@ export default function FootballTeamWinValues({
           drawOnChartArea: true,
         },
         ticks: {
+          // Few enough that Chart.js picks a step every tick fits with, so
+          // it never auto-skips labels (which can skip the 0 tick).
+          maxTicksLimit: 6,
           color: isDark ? "#94a3b8" : "#475569",
           font: {
             size: isMobile ? 13 : 15,
@@ -362,6 +379,12 @@ export default function FootballTeamWinValues({
           },
         },
         border: { display: false },
+        // Headroom above and below so the highest and lowest points (and
+        // the end-of-line markers on them) never sit on the chart's edge.
+        // Suggested bounds rather than `grace`: Chart.js rounds them out to
+        // whole tick steps, so 0 stays a tick and keeps its zero line.
+        suggestedMin: yMin - yPad,
+        suggestedMax: yMax + yPad,
       },
     },
     layout: {
@@ -444,8 +467,17 @@ export default function FootballTeamWinValues({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel("True win value (TWV) and conference win value (CWV) over the season", [
+          ["TWV", lastTwv?.toFixed(1)],
+          ["CWV", lastCwv?.toFixed(1)],
+        ])}
+      />
       <ChartEndLabels
+        key={yRange}
         chart={chartRef.current}
         chartArea={chartArea}
         isDark={isDark}

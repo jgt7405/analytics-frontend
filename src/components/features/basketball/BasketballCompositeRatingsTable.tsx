@@ -5,6 +5,7 @@ import {
   BasketballCompositeRatingTeam,
 } from "@/types/basketball";
 import { useMemo, useState } from "react";
+import CompositeTeamPicker from "@/components/features/shared/CompositeTeamPicker";
 
 const EMPTY_SOURCES: BasketballCompositeRatingSource[] = [];
 
@@ -22,12 +23,14 @@ interface ColumnDef {
   label: string;
   numeric: boolean;
   sourceUrl?: string | null;
+  lastUpdated?: string | null;
 }
 
-// Column order: the composite first, then per source its published rating, its
-// KenPom-scaled equivalent, and its rank. Grouping by source rather than by
+// Column order: the composite first, then per source its rank, its published
+// rating, and its KenPom-scaled equivalent. Grouping by source rather than by
 // metric keeps each system's three numbers together, which is what makes the
 // rescaling readable - you can see Torvik's raw number and what it becomes.
+// Sources run from the most recently updated to the least.
 function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
   const columns: ColumnDef[] = [
     { key: "rank", label: "Rank", numeric: true },
@@ -39,10 +42,18 @@ function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
 
   sources.forEach(function (source) {
     columns.push({
+      key: "rank_" + source.key,
+      label: source.label + " Rank",
+      numeric: true,
+      sourceUrl: source.source_url,
+      lastUpdated: source.last_updated,
+    });
+    columns.push({
       key: "rating_" + source.key,
       label: source.label + " Rtg",
       numeric: true,
       sourceUrl: source.source_url,
+      lastUpdated: source.last_updated,
     });
     if (source.has_adjusted) {
       columns.push({
@@ -50,17 +61,31 @@ function buildColumns(sources: BasketballCompositeRatingSource[]): ColumnDef[] {
         label: source.label + " Adj",
         numeric: true,
         sourceUrl: source.source_url,
+        lastUpdated: source.last_updated,
       });
     }
-    columns.push({
-      key: "rank_" + source.key,
-      label: source.label + " Rank",
-      numeric: true,
-      sourceUrl: source.source_url,
-    });
   });
 
   return columns;
+}
+
+// Most recently updated model first; sources with no date go last.
+function sortSourcesByLastUpdated(
+  sources: BasketballCompositeRatingSource[],
+): BasketballCompositeRatingSource[] {
+  return sources.slice().sort(function (a, b) {
+    if (a.last_updated === b.last_updated) return 0;
+    if (!a.last_updated) return 1;
+    if (!b.last_updated) return -1;
+    return b.last_updated.localeCompare(a.last_updated);
+  });
+}
+
+function formatLastUpdated(lastUpdated: string | null | undefined): string | null {
+  if (!lastUpdated) return null;
+  const parsed = new Date(lastUpdated + "T00:00:00");
+  if (isNaN(parsed.getTime())) return lastUpdated;
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function getCellValue(
@@ -102,12 +127,16 @@ function formatCellValue(
   return String(value);
 }
 
-function getStickyClass(columnKey: string): string {
+// Header cells are all z-30 (sticky top), so the pinned Rank/Team header
+// cells need a higher layer or later header cells paint over them when the
+// table scrolls sideways.
+function getStickyClass(columnKey: string, isHeader = false): string {
+  const layer = isHeader ? " z-40" : " z-10";
   if (columnKey === "rank") {
-    return " sticky left-0 z-10 bg-white dark:bg-gray-900 w-12";
+    return " sticky left-0" + layer + " w-14 bg-white dark:bg-slate-900";
   }
   if (columnKey === "team_name") {
-    return " sticky left-[3rem] z-10 bg-white dark:bg-gray-900 w-40 truncate";
+    return " sticky left-14" + layer + " min-w-44 max-w-44 bg-white shadow-[1px_0_0_0_rgb(226_232_240),9px_0_14px_-14px_rgb(15_23_42)] dark:bg-slate-900 dark:shadow-[1px_0_0_0_rgb(51_65_85),9px_0_14px_-14px_black]";
   }
   return "";
 }
@@ -141,10 +170,11 @@ export default function BasketballCompositeRatingsTable(
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selectedConferences, setSelectedConferences] = useState<string[]>([]);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   const columns = useMemo(
     function () {
-      return buildColumns(sources);
+      return buildColumns(sortSourcesByLastUpdated(sources));
     },
     [sources],
   );
@@ -159,6 +189,7 @@ export default function BasketballCompositeRatingsTable(
     },
     [teams],
   );
+  const teamOptions = useMemo(() => teams.map((team) => team.team_name).sort(), [teams]);
 
   // A source with no data anywhere is called out above the table rather than
   // leaving the reader to wonder why its columns are all dashes. Deliberately
@@ -208,6 +239,7 @@ export default function BasketballCompositeRatingsTable(
   }
 
   const filteredTeams = teams.filter(function (team) {
+    if (selectedTeams.length > 0 && !selectedTeams.includes(team.team_name)) return false;
     if (
       selectedConferences.length > 0 &&
       selectedConferences.indexOf(team.conference) === -1
@@ -280,8 +312,10 @@ export default function BasketballCompositeRatingsTable(
   }
 
   return (
-    <div>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <section className="relative rounded-[1.25rem] border border-slate-200/90 bg-gradient-to-br from-white to-[#fbfdff] p-3 shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:border-slate-700/90 dark:from-[#111827] dark:to-[#0f172a] sm:p-4">
+      <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-end">
+        <CompositeTeamPicker teams={teamOptions} selected={selectedTeams} onChange={setSelectedTeams} label="Filter teams" />
+        <div className="flex items-center justify-between gap-3 lg:justify-end">
         <div className="text-xs text-gray-500 dark:text-gray-400">
           {sortedTeams.length === teams.length
             ? String(teams.length) + " teams"
@@ -297,14 +331,15 @@ export default function BasketballCompositeRatingsTable(
         <button
           type="button"
           onClick={handleDownloadCsv}
-          className="text-xs border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600 shadow-sm hover:border-cyan-400 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
         >
           Download CSV
         </button>
+        </div>
       </div>
-      <div className="overflow-x-auto overflow-y-auto max-h-[70vh] border border-gray-200 dark:border-gray-700 rounded">
-        <table className="min-w-full text-sm border-collapse">
-          <thead className="sticky top-0 z-20 bg-white dark:bg-gray-900">
+      <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700">
+        <table className="min-w-full border-separate border-spacing-0 text-sm tabular-nums">
+          <thead className="bg-white dark:bg-slate-900">
             <tr className="border-b border-gray-300 dark:border-gray-600">
               {columns.map(function (column) {
                 const alignClass = column.numeric ? "text-right" : "text-left";
@@ -322,8 +357,8 @@ export default function BasketballCompositeRatingsTable(
                     }}
                     className={
                       alignClass +
-                      " py-2 px-3 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap cursor-pointer select-none hover:text-[rgb(0,151,178)]" +
-                      getStickyClass(column.key)
+                      " sticky top-0 h-[3.25rem] bg-slate-50 py-2 px-3 font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-200 whitespace-nowrap cursor-pointer select-none hover:text-[rgb(0,151,178)]" +
+                      (getStickyClass(column.key, true) || " z-30")
                     }
                   >
                     {column.label}
@@ -360,6 +395,11 @@ export default function BasketballCompositeRatingsTable(
                         </svg>
                       </a>
                     ) : null}
+                    {formatLastUpdated(column.lastUpdated) ? (
+                      <div className="text-[10px] font-normal text-gray-400 dark:text-gray-500 normal-case">
+                        Updated {formatLastUpdated(column.lastUpdated)}
+                      </div>
+                    ) : null}
                   </th>
                 );
               })}
@@ -368,7 +408,7 @@ export default function BasketballCompositeRatingsTable(
               {columns.map(function (column) {
                 if (column.key === "conference") {
                   return (
-                    <th key={column.key} className="py-1 px-3 relative">
+                    <th key={column.key} className="sticky top-[3.25rem] z-30 h-10 bg-slate-50 px-3 py-1 dark:bg-slate-900">
                       <details className="relative">
                         <summary className="cursor-pointer list-none text-xs border border-gray-300 dark:border-gray-600 rounded px-1.5 py-1 bg-white dark:bg-gray-800 truncate">
                           {selectedConferences.length === 0
@@ -423,7 +463,7 @@ export default function BasketballCompositeRatingsTable(
                 return (
                   <th
                     key={column.key}
-                    className={"py-1 px-3" + getStickyClass(column.key)}
+                    className={"sticky top-[3.25rem] h-10 bg-slate-50 px-3 py-1 dark:bg-slate-900" + (getStickyClass(column.key, true) || " z-30")}
                   >
                     <input
                       type="text"
@@ -462,7 +502,7 @@ export default function BasketballCompositeRatingsTable(
                         key={column.key}
                         className={
                           alignClass +
-                          " py-2 px-3 " +
+                          " border-b border-slate-100 px-3 py-2.5 " +
                           textColorClass +
                           getStickyClass(column.key)
                         }
@@ -477,6 +517,6 @@ export default function BasketballCompositeRatingsTable(
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }

@@ -40,7 +40,5 @@ it("shows bucket tooltip logos resized", () => {
   for (const chip of screen.getAllByText("1")) fireEvent.mouseEnter(chip);
   expect(screen.getByText(/70-100% Win Prob/)).toBeTruthy();
   const logo = document.querySelector('img[src*="auburn"]');
-  expect(logo?.getAttribute("src")).toBe(
-    "/_next/image/?url=%2Fimages%2Fteam_logos%2Fauburn.png&w=32&q=75",
-  );
+  expect(logo?.getAttribute("src")).toBe("/images/team_logos/auburn.png");
 });

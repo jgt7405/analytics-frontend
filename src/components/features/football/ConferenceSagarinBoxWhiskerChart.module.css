@@ -44,6 +44,11 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.scrollViewport:focus-visible {
+  outline: 3px solid rgb(14 116 144 / 0.35);
+  outline-offset: -3px;
+}
+
 .scrollViewport::-webkit-scrollbar {
   height: 0.55rem;
 }

@@ -16,6 +16,7 @@ import type { Chart, ChartArea, TooltipModel } from "chart.js";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import { chartLabel } from "@/lib/a11y/chart-label";
 
 
 interface HistoricalDataPoint {
@@ -400,7 +401,15 @@ export default function FootballTeamWinHistory({
           />
         </div>
       )}
-      <Line ref={chartRef} data={chartData} options={options} />
+      <Line
+        ref={chartRef}
+        data={chartData}
+        options={options}
+        aria-label={chartLabel(`${teamName} projected wins over the season`, [
+          ["total wins", lastTotalWins?.toFixed(1)],
+          ["conference wins", lastConfWins?.toFixed(1)],
+        ])}
+      />
       <ChartEndLabels
         chart={chartRef.current}
         chartArea={chartArea}

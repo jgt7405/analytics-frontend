@@ -74,6 +74,90 @@ test.describe("axe", () => {
       expect(summary).toEqual([]);
     });
   }
+
+  // These pages still fail other rules (see AXE_ROUTES), but every form
+  // control on them has a name.
+  for (const path of ["/basketball/game-preview/", "/basketball/whatif/", "/football/whatif/"]) {
+    test(`${path} labels every form control`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page }).withRules(["select-name", "label"]).analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
+
+  // These pages still fail other rules (see AXE_ROUTES), but the keyboard
+  // can reach and scroll every scrolling table and chart on them.
+  for (const path of [
+    "/basketball/conf-data/",
+    "/football/conf-data/",
+    "/basketball/2025-26/conf-data/",
+    "/football/2025-26/conf-data/",
+    "/basketball/team/Duke/",
+    "/football/team/Alabama/",
+    "/football/whatif/",
+  ]) {
+    test(`${path} lets the keyboard scroll every scrolling region`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page }).withRules(["scrollable-region-focusable"]).analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
+
+  // Team pages still fail contrast, but every chart has a text alternative
+  // (react-chartjs-2 gives each canvas role="img").
+  for (const path of ["/basketball/team/Duke/", "/football/team/Alabama/"]) {
+    test(`${path} gives every chart a text alternative`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page }).withRules(["role-img-alt"]).analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+      expect(summary).toEqual([]);
+      const labels = await page.locator('canvas[role="img"]').evaluateAll((canvases) =>
+        canvases.map((c) => c.getAttribute("aria-label") ?? ""),
+      );
+      for (const label of labels) expect(label).toMatch(/over the season/);
+    });
+  }
+
+  // Text contrast on these pages (plan step 10, finding 6), leaving out the
+  // heat-map tiles (checked below) and, by the owner's choice, the selected
+  // teal toggle buttons on team pages.
+  for (const path of ["/basketball/whatif/", "/basketball/team/Duke/"]) {
+    test(`${path} text has enough contrast`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page })
+        .withRules(["color-contrast"])
+        .exclude('[class*="heatTile"]')
+        .exclude("button.text-white")
+        .analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 5).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
+
+  // Heat-map tiles pick text that keeps 4.5:1 on every shade (plan step 10,
+  // finding 6). Only the tiles are scanned; the rest of the what-if text is
+  // checked above.
+  for (const path of [
+    "/basketball/whatif/",
+    "/football/whatif/",
+    "/basketball/conf-data/",
+    "/football/conf-data/",
+    "/basketball/2025-26/conf-data/",
+    "/football/2025-26/conf-data/",
+  ]) {
+    test(`${path} heat-map text has enough contrast`, async ({ page }) => {
+      await openTall(page, path);
+      const { violations } = await new AxeBuilder({ page })
+        .withRules(["color-contrast"])
+        .include('[class*="heatTile"]')
+        .include('[aria-label^="Non-conference opponent analysis"] td')
+        .analyze();
+      const summary = violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 5).join(", ")}`);
+      expect(summary).toEqual([]);
+    });
+  }
 });
 
 /** True once the focused element shows an outline or a focus ring. */
@@ -95,6 +179,20 @@ async function tabTo(page: Page, target: Locator, max = 40) {
 }
 
 test.describe("keyboard and focus", () => {
+  test("the first Tab shows a skip link that jumps past the navigation", async ({ page }) => {
+    await page.goto("/football/standings/");
+    await expect(page.locator("#main-content table").first()).toBeVisible();
+    const skip = page.getByRole("link", { name: "Skip to main content" });
+    await page.keyboard.press("Tab");
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeInViewport();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await expect
+      .poll(() => page.evaluate(() => document.getElementById("main-content")?.contains(document.activeElement)))
+      .toBe(true);
+  });
+
   test("header tabs are reached with Tab in order and show a focus outline", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === "mobile", "tabs are in the menu on mobile");
     await page.goto("/football/standings/");
@@ -129,13 +227,22 @@ test.describe("keyboard and focus", () => {
     await page.keyboard.press("Enter");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
-    const first = page.locator("#mobile-menu a").first();
-    // The focus trap ends at Contact (the sport switch after it isn't
-    // reached with Tab yet).
-    const contact = page.locator("#mobile-menu").getByRole("menuitem", { name: "Contact" });
+    const menu = page.locator("#mobile-menu");
+    const first = menu.locator("a").first();
+    const contact = menu.getByRole("menuitem", { name: "Contact" });
+    // The sport switch comes after Contact and closes the trap (plan step
+    // 10, finding 9: the trap used to end at Contact).
+    const sportSwitch = menu.getByRole("menuitem", { name: /Switch to Basketball/ });
     await expect(first).toBeFocused();
     await page.keyboard.press("Shift+Tab");
+    await expect(sportSwitch).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
     await expect(contact).toBeFocused();
+    // Contact resets its styles inline; the ring still shows (finding 9
+    // follow-up).
+    await expect.poll(() => hasVisibleFocus(contact)).toBe(true);
+    await page.keyboard.press("Tab");
+    await expect(sportSwitch).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(first).toBeFocused();
 
@@ -149,8 +256,24 @@ test.describe("keyboard and focus", () => {
     const select = page.getByRole("combobox", { name: "Select conference" });
     await expect(select).toBeVisible();
     await tabTo(page, select);
-    // Not checked yet: a visible focus indicator (globals.css removes it).
+    // A focus ring shows for keyboard focus (globals.css removed it for
+    // every focus until plan step 10, finding 2).
+    await expect.poll(() => hasVisibleFocus(select)).toBe(true);
   });
+
+  for (const path of ["/basketball/standings/", "/football/standings/"]) {
+    test(`${path} gives each conference selector its own id and name`, async ({ page }) => {
+      // The page shows the same selector in the table header and in both
+      // history charts; they shared one id, so only the first had a label
+      // (plan step 10, finding 3).
+      await openTall(page, path);
+      const selects = page.getByRole("combobox", { name: "Select conference" });
+      await expect.poll(() => selects.count()).toBeGreaterThan(1);
+      const ids = await selects.evaluateAll((els) => els.map((el) => el.id));
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(await page.locator('select:not([id]), select[id=""]').count()).toBe(0);
+    });
+  }
 
   for (const [path, team] of [
     ["/basketball/compare/", "Duke"],
@@ -158,13 +281,20 @@ test.describe("keyboard and focus", () => {
   ]) {
     test(`${path} search picks a team with the keyboard`, async ({ page }) => {
       await page.goto(path);
-      const search = page.getByPlaceholder("Search teams...");
+      const search = page.getByRole("textbox", { name: "Search teams" });
       await tabTo(page, search);
       await page.keyboard.type(team.slice(0, 4));
-      // Tab moves from the box to the first result; Enter picks it. Not
-      // checked yet: arrow keys and a visible focus on the results.
-      const result = search.locator("..").getByRole("button", { name: team });
-      await tabTo(page, result, 3);
+      // Down moves from the box to the first result, which shows a focus
+      // ring and is named by the team alone (its logo is decorative); Up
+      // goes back to the box; Enter picks the result (plan step 10,
+      // finding 4).
+      const result = search.locator("..").getByRole("button", { name: team, exact: true });
+      await page.keyboard.press("ArrowDown");
+      await expect(result).toBeFocused();
+      await expect.poll(() => hasVisibleFocus(result)).toBe(true);
+      await page.keyboard.press("ArrowUp");
+      await expect(search).toBeFocused();
+      await page.keyboard.press("ArrowDown");
       await page.keyboard.press("Enter");
       await expect(search).toHaveValue("");
       await expect(page.getByText("Select teams above or use search")).toBeHidden();
