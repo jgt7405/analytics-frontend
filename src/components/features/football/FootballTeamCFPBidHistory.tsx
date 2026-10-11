@@ -34,10 +34,10 @@ interface CFPHistoricalDataPoint {
   };
 }
 
-// Below this bid chance a team's average seed is averaged over a handful of
-// the 1,000 simulations (it almost always sneaks in as the 12 seed), so the
-// seed line drops to a "No bid" row under #12 instead of plotting it.
-const MIN_BID_PCT_FOR_SEED = 1;
+// A bid chance that rounds to 0% shows as "No bid" (a "No bid" row under #12)
+// rather than the average seed from the odd simulation where the team got
+// in; from 0.5% (displayed as 1%) up, the seed is shown, #12 included.
+const MIN_BID_PCT_FOR_SEED = 0.5;
 const NO_BID_SEED = 13;
 
 const seedOrNoBid = (point: { cfp_bid_pct: number; average_seed: number }) =>
@@ -295,12 +295,7 @@ export default function FootballTeamCFPBidHistory({
                 },
                 {
                   label: "Average Seed",
-                  value:
-                    seed !== NO_BID_SEED
-                      ? formatSeed(seed)
-                      : (dataPoint.cfp_bid_pct || 0) > 0
-                        ? `<${MIN_BID_PCT_FOR_SEED}% bid`
-                        : "No bid",
+                  value: formatSeed(seed),
                   color: finalSecondaryColor,
                 },
               ];
