@@ -88,6 +88,10 @@ export default function FootballTeamWinValues({
   }, []);
 
   const [chartArea, setChartArea] = useState<ChartArea | null>(null);
+  // Bumped when the y-axis range changes so the end labels re-read the scale;
+  // the chart can rescale without resizing, which the observer below misses.
+  const [yRange, setYRange] = useState("");
+  const syncLayoutRef = useRef<() => void>(() => {});
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-").map(Number);
@@ -226,6 +230,8 @@ export default function FootballTeamWinValues({
     const updateChartArea = () => {
       const area = chartRef.current?.chartArea;
       if (!area) return;
+      const y = chartRef.current?.scales.y;
+      if (y) setYRange(y.min + ":" + y.max);
       setChartArea((prev) =>
         prev &&
         prev.top === area.top &&
@@ -236,6 +242,7 @@ export default function FootballTeamWinValues({
       );
     };
 
+    syncLayoutRef.current = updateChartArea;
     const observer = new ResizeObserver(updateChartArea);
     observer.observe(canvas);
     updateChartArea();
@@ -245,6 +252,11 @@ export default function FootballTeamWinValues({
 
   const lastTwv = twvData.length > 0 ? twvData[twvData.length - 1] : null;
   const lastCwv = cwvData.length > 0 ? cwvData[cwvData.length - 1] : null;
+
+  const allValues = [...twvData, ...cwvData, 0];
+  const yMin = Math.min(...allValues);
+  const yMax = Math.max(...allValues);
+  const yPad = (yMax - yMin) * 0.15 || 0.1;
 
   const datasets = [
     {
@@ -356,6 +368,9 @@ export default function FootballTeamWinValues({
           drawOnChartArea: true,
         },
         ticks: {
+          // Few enough that Chart.js picks a step every tick fits with, so
+          // it never auto-skips labels (which can skip the 0 tick).
+          maxTicksLimit: 6,
           color: isDark ? "#94a3b8" : "#475569",
           font: {
             size: isMobile ? 13 : 15,
@@ -363,6 +378,12 @@ export default function FootballTeamWinValues({
           },
         },
         border: { display: false },
+        // Headroom above and below so the highest and lowest points (and
+        // the end-of-line markers on them) never sit on the chart's edge.
+        // Suggested bounds rather than `grace`: Chart.js rounds them out to
+        // whole tick steps, so 0 stays a tick and keeps its zero line.
+        suggestedMin: yMin - yPad,
+        suggestedMax: yMax + yPad,
       },
     },
     layout: {
@@ -380,6 +401,7 @@ export default function FootballTeamWinValues({
     },
     animation: {
       duration: 750,
+      onComplete: () => syncLayoutRef.current(),
     },
   };
 
@@ -455,6 +477,7 @@ export default function FootballTeamWinValues({
         ])}
       />
       <ChartEndLabels
+        key={yRange}
         chart={chartRef.current}
         chartArea={chartArea}
         isDark={isDark}
