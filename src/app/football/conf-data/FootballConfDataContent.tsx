@@ -2,6 +2,7 @@
 
 import TableActionButtons from "@/components/common/TableActionButtons";
 import ConferenceSagarinBoxWhiskerChart from "@/components/features/football/ConferenceSagarinBoxWhiskerChart";
+import ConferenceTeamWinProbLanes from "@/components/features/football/ConferenceTeamWinProbLanes";
 import FootballConfBidsHistoryChart from "@/components/features/football/FootballConfBidsHistoryChart";
 import FootballConfDataTable from "@/components/features/football/FootballConfDataTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
@@ -171,6 +172,40 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
                 </div>
               </div>
             </div>
+
+            {confResponse?.data?.some((conf) => (conf.team_winprobs?.length ?? 0) > 0) && (
+              <div className="mb-8">
+                <div className="team-winprob-lanes-container">
+                  <ErrorBoundary level="component">
+                    <ConferenceTeamWinProbLanes conferenceData={confResponse.data} />
+                  </ErrorBoundary>
+                </div>
+                <div className="mt-6">
+                  <div className="flex flex-row items-start gap-4">
+                    <div className="team-winprob-lanes-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
+                      <div style={{ lineHeight: "1.3" }}>
+                        <div>
+                          Each team&apos;s probability of beating the average
+                          college football team at a neutral site, grouped by
+                          conference. Dashed line shows the conference median.
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
+                    >
+                      <TableActionButtons
+                        contentSelector=".team-winprob-lanes-container"
+                        explainerSelector=".team-winprob-lanes-explainer"
+                        pageName="conference-team-win-probability-lanes"
+                        pageTitle="Team Win Probability by Conference"
+                        shareTitle="Team Win Probability vs Average Team by Conference"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {historyData && (
               <div className="mb-8">

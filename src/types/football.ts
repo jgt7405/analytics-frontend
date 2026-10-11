@@ -259,6 +259,16 @@ export interface FootballConferenceData {
   winprob_median: number;
   winprob_q75: number;
   winprob_max: number;
+  primary_color?: string;
+  secondary_color?: string;
+  /** Each team's own win probability vs an average FBS team, highest first. */
+  team_winprobs?: FootballConferenceTeamWinProb[];
+}
+
+export interface FootballConferenceTeamWinProb {
+  team_name: string;
+  win_prob: number;
+  logo_url: string;
 }
 
 export interface FootballConferenceApiResponse {
