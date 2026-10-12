@@ -18,8 +18,8 @@ export const queryKeys = {
     compositeRatings: () => ["basketball", "composite-ratings"] as const,
     compositeRatingsTimeline: (teams: string[]) =>
       ["basketball", "composite-ratings-timeline", teams] as const,
-    confChampAnalysis: (conference: string) =>
-      ["basketball", "conf-champ-analysis", conference] as const,
+    confChampAnalysis: (conference: string, season?: Season) =>
+      ["basketball", "conf-champ-analysis", conference, season] as const,
     confData: (season: Season) => ["basketball", "conf-data", season] as const,
     confDataHistory: (season: Season) =>
       ["basketball", "conf-data-history", season] as const,

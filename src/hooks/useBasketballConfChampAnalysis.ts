@@ -36,20 +36,24 @@ export interface ConfChampAnalysisResponse {
 
 const fetchConfChampAnalysis = async (
   conference: string,
+  season?: string,
 ): Promise<ConfChampAnalysisResponse> => {
   const confFormatted = conference.replace(/\s+/g, "_");
-  const response = await fetch(apiUrl("basketball.confChampAnalysis", { conference: confFormatted }));
+  const response = await fetch(
+    apiUrl("basketball.confChampAnalysis", { conference: confFormatted }, { season }),
+  );
   if (!response.ok) throw new Error(`Failed to fetch conference analysis: ${response.status}`);
   return response.json();
 };
 
-/** Current-season conference championship analysis for every team in a
- *  conference. (useBasketballSeedWinsData reads the same endpoint with a
- *  season and maps it for the seed-wins chart.) */
-export const useBasketballConfChampAnalysis = (conference: string) =>
+/** Conference championship analysis for every team in a conference: the
+ *  current projection, or an archived season's final snapshot when `season`
+ *  is given. (useBasketballSeedWinsData reads the same endpoint and maps it
+ *  for the seed-wins chart.) */
+export const useBasketballConfChampAnalysis = (conference: string, season?: string) =>
   useQuery({
-    queryKey: queryKeys.basketball.confChampAnalysis(conference),
-    queryFn: () => fetchConfChampAnalysis(conference),
+    queryKey: queryKeys.basketball.confChampAnalysis(conference, season),
+    queryFn: () => fetchConfChampAnalysis(conference, season),
     enabled: !!conference,
-    ...queryCachePolicy("currentStandings"),
+    ...queryCachePolicy(season ? "historical" : "currentStandings"),
   });

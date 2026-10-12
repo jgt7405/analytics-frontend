@@ -132,6 +132,7 @@ const SECTIONS: TeamSection<TeamData>[] = [
         primaryColor={ctx.teamData.team_info.primary_color}
         secondaryColor={ctx.teamInfo.secondary_color}
         logoUrl={ctx.teamInfo.logo_url}
+        season={ctx.season}
       />
     ),
   },

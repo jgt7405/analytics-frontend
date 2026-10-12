@@ -32,6 +32,8 @@ interface BasketballTeamWinsBreakdownProps {
   primaryColor: string;
   secondaryColor?: string;
   logoUrl?: string;
+  /** Archive season; undefined on the current-season page. */
+  season?: string;
 }
 
 export default function BasketballTeamWinsBreakdown({
@@ -41,11 +43,13 @@ export default function BasketballTeamWinsBreakdown({
   primaryColor,
   secondaryColor,
   logoUrl: _logoUrl,
+  season,
 }: BasketballTeamWinsBreakdownProps) {
   const confLogoUrl = useMemo(() => confLogoPath(conference), [conference]);
 
   const { data: confChampResult, isLoading: loading } = useBasketballConfChampAnalysis(
     teamName ? conference : "",
+    season,
   );
   const confChampData: ConfChampData | null = useMemo(
     () => confChampResult?.data?.find((t) => t.team_name === teamName) ?? null,
@@ -54,9 +58,11 @@ export default function BasketballTeamWinsBreakdown({
 
   const separatorColor = barSecondaryColor(primaryColor, secondaryColor);
 
+  // A finished season's conference tournament is already in the schedule as
+  // real results, so projected tournament rows would only add phantom games.
   const confChampGames = useMemo(
-    () => confTourneyGames(confChampData, confLogoUrl),
-    [confChampData, confLogoUrl],
+    () => (season ? [] : confTourneyGames(confChampData, confLogoUrl)),
+    [season, confChampData, confLogoUrl],
   );
 
   const { completedWins, remainingGames, totalWins } = useMemo(
