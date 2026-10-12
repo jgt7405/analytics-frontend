@@ -5,6 +5,9 @@ import BballConfBidsHistoryChart from "@/components/features/basketball/BballCon
 import BballConfBoxWhiskerChart from "@/components/features/basketball/BballConfBoxWhiskerChart";
 import BballNonConfAnalysisTable from "@/components/features/basketball/nonconf-analysis";
 import ConferenceBidsTable from "@/components/features/basketball/ConferenceBidsTable";
+import ConferenceTeamWinProbLanes, {
+  type WinProbLane,
+} from "@/components/features/shared/ConferenceTeamWinProbLanes";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -12,18 +15,114 @@ import {
   BasketballTableSkeleton,
   BoxWhiskerChartSkeleton,
 } from "@/components/ui/LoadingSkeleton";
-import { useBasketballConfData, type CombinedBasketballConfResponse } from "@/hooks/useBasketballConfData";
+import {
+  useBasketballConfData,
+  type CombinedBasketballConfResponse,
+  type ConferenceData,
+  type WinProbOpponent,
+} from "@/hooks/useBasketballConfData";
 import { getBasketballSeasonLabel, getLatestDataDate } from "@/lib/chartDateRange";
 import { useBasketballConfDataHistory } from "@/hooks/useBasketballConfDataHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { logger } from "@/lib/logger";
 
 // PAGE_MODERNIZATION_GUIDE.md §2 title tier - bold slate, not the old
 // gray/normal style.
 const SECTION_TITLE_CLASS =
   "text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300 mb-4";
+
+const BOX_EXPLAINER =
+  "Box shows 25th to 75th percentile teams in conference, line shows median, whiskers show top and bottom teams.";
+
+function formatRating(rating: number | undefined): string {
+  if (rating === undefined || !Number.isFinite(rating)) return "";
+  return ` (rating ${rating > 0 ? "+" : ""}${rating.toFixed(1)})`;
+}
+
+/** Chart card plus its explainer and export buttons, the block every chart
+ * on this page uses. `name` keys the container/explainer selectors. */
+function ChartSection({
+  name,
+  pageTitle,
+  explainer,
+  isMobile,
+  children,
+}: {
+  name: string;
+  pageTitle: string;
+  explainer: ReactNode;
+  isMobile: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mb-8">
+      <div className={`${name}-container`}>{children}</div>
+      <div className="mt-6">
+        <div className="flex flex-row items-start gap-4">
+          <div
+            className={`${name}-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4`}
+          >
+            <div style={{ lineHeight: "1.3" }}>{explainer}</div>
+          </div>
+          <div
+            className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
+          >
+            <TableActionButtons
+              contentSelector={`.${name}-container`}
+              explainerSelector={`.${name}-explainer`}
+              pageName={name}
+              pageTitle={pageTitle}
+              shareTitle={pageTitle}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WinProbBoxSection({
+  conferenceData,
+  opponent,
+  title,
+  opponentText,
+  isMobile,
+}: {
+  conferenceData: ConferenceData[];
+  opponent: WinProbOpponent;
+  title: string;
+  opponentText: string;
+  isMobile: boolean;
+}) {
+  if (!conferenceData.some((conf) => conf.winprob?.[opponent])) return null;
+  return (
+    <ChartSection
+      name={`winprob-${opponent}-box-whisker`}
+      pageTitle={title}
+      isMobile={isMobile}
+      explainer={
+        <>
+          <div>
+            Win probability distribution by conference based on probability
+            each team in conference would win a game vs {opponentText} in a
+            neutral location.
+          </div>
+          <div style={{ marginTop: "6px" }}>{BOX_EXPLAINER}</div>
+        </>
+      }
+    >
+      <Suspense fallback={<BoxWhiskerChartSkeleton />}>
+        <BballConfBoxWhiskerChart
+          conferenceData={conferenceData}
+          metric={opponent}
+          title={title}
+        />
+      </Suspense>
+    </ChartSection>
+  );
+}
 
 export default function BasketballConfDataContent({ initialData }: { initialData?: CombinedBasketballConfResponse }) {
   const { trackEvent } = useMonitoring();
@@ -94,6 +193,26 @@ export default function BasketballConfDataContent({ initialData }: { initialData
 
     return showAll ? sorted : sorted.slice(0, 12);
   }, [conferenceData?.data, showAll]);
+
+  // One lane per conference, each team at its win probability vs the
+  // average D1 team (same filter as the charts above it).
+  const winProbLanes = useMemo<WinProbLane[]>(
+    () =>
+      filteredConfData.map((conf) => ({
+        conference_name: conf.conference_name,
+        logo_url: conf.logo_url,
+        primary_color: conf.primary_color,
+        median: conf.winprob?.avg?.median ?? 0,
+        teams: (conf.team_winprobs ?? []).map((team) => ({
+          team_name: team.team_name,
+          logo_url: team.logo_url,
+          win_prob: team.win_prob_avg,
+        })),
+      })),
+    [filteredConfData],
+  );
+
+  const baselines = conferenceData?.winprob_baselines;
 
   // Filter history data based on showAll state
   const filteredHistoryData = useMemo(() => {
@@ -288,6 +407,54 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                   </div>
                 </div>
               </div>
+
+              {/* Win probability vs the average D1 team: conference boxes,
+                  then every team by conference. */}
+              <WinProbBoxSection
+                conferenceData={filteredConfData}
+                opponent="avg"
+                title="Conference Win Probability vs Average Team"
+                opponentText="the average Division I team"
+                isMobile={isMobile}
+              />
+
+              {winProbLanes.some((lane) => lane.teams.length > 0) && (
+                <ChartSection
+                  name="team-winprob-lanes"
+                  pageTitle="Team Win Probability by Conference"
+                  isMobile={isMobile}
+                  explainer={
+                    <div>
+                      Each team&apos;s probability of beating the average
+                      Division I team at a neutral site, grouped by conference.
+                      Dashed line shows the conference median.
+                    </div>
+                  }
+                >
+                  <ErrorBoundary level="component">
+                    <ConferenceTeamWinProbLanes
+                      lanes={winProbLanes}
+                      opponentLabel="Division I team"
+                    />
+                  </ErrorBoundary>
+                </ChartSection>
+              )}
+
+              <WinProbBoxSection
+                conferenceData={filteredConfData}
+                opponent="rk100"
+                title="Conference Win Probability vs #100 Team"
+                opponentText={`the 100th rated team${formatRating(baselines?.rk100)}`}
+                isMobile={isMobile}
+              />
+
+              <WinProbBoxSection
+                conferenceData={filteredConfData}
+                opponent="rk50"
+                title="Conference Win Probability vs #50 Team"
+                opponentText={`the 50th rated team${formatRating(baselines?.rk50)}`}
+                isMobile={isMobile}
+              />
 
               {/* Conference Tournament Bid Trends Section */}
               <div className="mb-8">

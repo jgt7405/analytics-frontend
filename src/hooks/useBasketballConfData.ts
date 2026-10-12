@@ -3,6 +3,27 @@ import { queryKeys } from "@/lib/query-keys";
 import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
 
+export interface WinProbQuartiles {
+  min: number;
+  q25: number;
+  median: number;
+  q75: number;
+  max: number;
+}
+
+/** Opponent a win probability is measured against: the average D1 team, or
+ * the teams ranked #100 / #50 in the combo ratings. Always a neutral site. */
+export type WinProbOpponent = "avg" | "rk100" | "rk50";
+
+export interface ConferenceTeamWinProb {
+  team_name: string;
+  logo_url: string;
+  netrtg: number;
+  win_prob_avg: number;
+  win_prob_rk100: number;
+  win_prob_rk50: number;
+}
+
 export interface ConferenceData {
   conference_name: string;
   teamcount: number;
@@ -17,6 +38,8 @@ export interface ConferenceData {
   logo_url?: string;
   primary_color?: string;
   secondary_color?: string;
+  winprob?: Partial<Record<WinProbOpponent, WinProbQuartiles>>;
+  team_winprobs?: ConferenceTeamWinProb[];
 }
 
 export interface TeamNonconfAnalysis {
@@ -48,6 +71,8 @@ export interface NonconfAnalysis {
 
 interface BasketballConfDataResponse {
   data: ConferenceData[];
+  /** Net rating of each win-probability opponent (avg, #100, #50). */
+  winprob_baselines?: Partial<Record<WinProbOpponent, number>>;
 }
 
 interface BasketballNonconfAnalysisResponse {

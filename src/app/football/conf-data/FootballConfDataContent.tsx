@@ -2,9 +2,11 @@
 
 import TableActionButtons from "@/components/common/TableActionButtons";
 import ConferenceSagarinBoxWhiskerChart from "@/components/features/football/ConferenceSagarinBoxWhiskerChart";
-import ConferenceTeamWinProbLanes from "@/components/features/football/ConferenceTeamWinProbLanes";
 import FootballConfBidsHistoryChart from "@/components/features/football/FootballConfBidsHistoryChart";
 import FootballConfDataTable from "@/components/features/football/FootballConfDataTable";
+import ConferenceTeamWinProbLanes, {
+  type WinProbLane,
+} from "@/components/features/shared/ConferenceTeamWinProbLanes";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -17,7 +19,10 @@ import { FootballConferenceApiResponse } from "@/types/football";
 import { useFootballConfDataHistory } from "@/hooks/useFootballConfDataHistory";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useMemo } from "react";
+
+// FCS teams are an opponent pool, not a conference with its own lane.
+const LANE_EXCLUDED_CONFERENCES = ["FCS"];
 
 export default function FootballConfDataContent({ initialData }: { initialData?: FootballConferenceApiResponse }) {
   const { trackEvent } = useMonitoring();
@@ -31,6 +36,20 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
   } = useFootballConfData(undefined, initialData);
 
   const { data: historyData } = useFootballConfDataHistory();
+
+  const winProbLanes = useMemo<WinProbLane[]>(
+    () =>
+      (confResponse?.data ?? [])
+        .filter((conf) => !LANE_EXCLUDED_CONFERENCES.includes(conf.conference_name))
+        .map((conf) => ({
+          conference_name: conf.conference_name,
+          logo_url: conf.logo_url,
+          primary_color: conf.primary_color,
+          median: conf.winprob_median,
+          teams: conf.team_winprobs ?? [],
+        })),
+    [confResponse?.data],
+  );
 
   useEffect(() => {
     trackEvent({
@@ -173,11 +192,14 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
               </div>
             </div>
 
-            {confResponse?.data?.some((conf) => (conf.team_winprobs?.length ?? 0) > 0) && (
+            {winProbLanes.some((lane) => lane.teams.length > 0) && (
               <div className="mb-8">
                 <div className="team-winprob-lanes-container">
                   <ErrorBoundary level="component">
-                    <ConferenceTeamWinProbLanes conferenceData={confResponse.data} />
+                    <ConferenceTeamWinProbLanes
+                      lanes={winProbLanes}
+                      opponentLabel="college football team"
+                    />
                   </ErrorBoundary>
                 </div>
                 <div className="mt-6">

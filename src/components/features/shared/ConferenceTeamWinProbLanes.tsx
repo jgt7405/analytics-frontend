@@ -1,22 +1,39 @@
 "use client";
 
 // One swim lane per conference with every team's logo placed at its win
-// probability vs an average FBS team - the teams behind the box-and-whisker
-// chart above it on /football/conf-data/. Logos that would overlap are spread
-// sideways by layoutLaneLogos; the dashed line is the conference median.
+// probability vs an average team - the teams behind the box-and-whisker chart
+// above it on /football/conf-data/ and /basketball/conf-data/. Logos that
+// would overlap are spread sideways by layoutLaneLogos; the dashed line is the
+// conference median. Each sport's page maps its conference data into lanes.
 
 import { useResponsive } from "@/hooks/useResponsive";
 import { layoutLaneLogos } from "@/lib/lane-logo-layout";
-import type { FootballConferenceData } from "@/types/football";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
+export interface WinProbLaneTeam {
+  team_name: string;
+  logo_url: string;
+  /** Percent, 0-100. */
+  win_prob: number;
+}
+
+export interface WinProbLane {
+  conference_name: string;
+  logo_url?: string | null;
+  primary_color?: string | null;
+  /** Conference median win probability, percent. */
+  median: number;
+  teams: WinProbLaneTeam[];
+}
+
 interface ConferenceTeamWinProbLanesProps {
-  conferenceData: FootballConferenceData[];
+  lanes: WinProbLane[];
+  /** e.g. "college football team" - used in the scroll region's label. */
+  opponentLabel?: string;
 }
 
 const Y_TICKS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-const EXCLUDED_CONFERENCES = ["FCS"];
 
 function withAlpha(color: string | null | undefined, alpha: number, fallback: string): string {
   const hex = (color || "").replace("#", "");
@@ -27,7 +44,7 @@ function withAlpha(color: string | null | undefined, alpha: number, fallback: st
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function LaneConferenceLogo({ conf, size }: { conf: FootballConferenceData; size: number }) {
+function LaneConferenceLogo({ conf, size }: { conf: WinProbLane; size: number }) {
   const [failed, setFailed] = useState(false);
   if (!conf.logo_url || failed) {
     return (
@@ -52,7 +69,8 @@ function LaneConferenceLogo({ conf, size }: { conf: FootballConferenceData; size
 }
 
 export default function ConferenceTeamWinProbLanes({
-  conferenceData,
+  lanes: laneData,
+  opponentLabel = "team",
 }: ConferenceTeamWinProbLanesProps) {
   const { isMobile } = useResponsive();
 
@@ -67,14 +85,10 @@ export default function ConferenceTeamWinProbLanes({
 
   const lanes = useMemo(
     () =>
-      (conferenceData || [])
-        .filter(
-          (conf) =>
-            !EXCLUDED_CONFERENCES.includes(conf.conference_name) &&
-            (conf.team_winprobs?.length ?? 0) > 0,
-        )
-        .sort((a, b) => b.winprob_median - a.winprob_median),
-    [conferenceData],
+      (laneData || [])
+        .filter((conf) => conf.teams.length > 0)
+        .sort((a, b) => b.median - a.median),
+    [laneData],
   );
 
   const scale = (value: number) =>
@@ -113,7 +127,7 @@ export default function ConferenceTeamWinProbLanes({
         <div
           className="overflow-x-auto px-[0.9rem] [overscroll-behavior-inline:contain] max-md:px-[0.35rem]"
           role="region"
-          aria-label="Team win probability vs an average team, one lane per conference. Scroll horizontally to see every conference."
+          aria-label={`Team win probability vs an average ${opponentLabel}, one lane per conference. Scroll horizontally to see every conference.`}
           tabIndex={0}
         >
           <div
@@ -131,7 +145,7 @@ export default function ConferenceTeamWinProbLanes({
 
             <div className="relative flex" style={{ gap: laneGap }}>
               {lanes.map((conf) => {
-                const teams = conf.team_winprobs ?? [];
+                const teams = conf.teams;
                 const placed = layoutLaneLogos(
                   teams.map((team) => ({ id: team.team_name, y: scale(team.win_prob) })),
                   logoPx,
@@ -168,10 +182,10 @@ export default function ConferenceTeamWinProbLanes({
                     <div
                       className="absolute left-1.5 right-1.5 h-0.5"
                       style={{
-                        top: headerHeight + scale(conf.winprob_median) - 1,
+                        top: headerHeight + scale(conf.median) - 1,
                         backgroundImage: `repeating-linear-gradient(to right, ${accent} 0 7px, transparent 7px 11px)`,
                       }}
-                      title={`${conf.conference_name} median: ${conf.winprob_median.toFixed(1)}%`}
+                      title={`${conf.conference_name} median: ${conf.median.toFixed(1)}%`}
                     />
 
                     {placed.map((pos) => {

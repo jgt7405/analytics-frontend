@@ -1,30 +1,45 @@
 "use client";
 
 import { BoxWhiskerChartSkeleton } from "@/components/ui/LoadingSkeleton";
+import type {
+  ConferenceData,
+  WinProbOpponent,
+  WinProbQuartiles,
+} from "@/hooks/useBasketballConfData";
 import { useResponsive } from "@/hooks/useResponsive";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import styles from "./BballConfBoxWhiskerChart.module.css";
 
-interface ConferenceData {
-  conference_name: string;
-  teamcount: number;
-  teams: string[];
-  netrtg_min: number;
-  netrtg_q25: number;
-  netrtg_median: number;
-  netrtg_q75: number;
-  netrtg_max: number;
-  bid_distribution: Record<string, number>;
-  average_bids: number;
-  logo_url?: string;
-  primary_color?: string;
-  secondary_color?: string;
+/** What the boxes measure: the net rating itself, or the neutral-site win
+ * probability vs the average D1 team / the #100 team / the #50 team. */
+export type BoxWhiskerMetric = "netrtg" | WinProbOpponent;
+
+const PERCENT_TICKS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+function metricStats(
+  conf: ConferenceData,
+  metric: BoxWhiskerMetric,
+): WinProbQuartiles | undefined {
+  if (metric === "netrtg") {
+    return {
+      min: conf.netrtg_min,
+      q25: conf.netrtg_q25,
+      median: conf.netrtg_median,
+      q75: conf.netrtg_q75,
+      max: conf.netrtg_max,
+    };
+  }
+  return conf.winprob?.[metric];
 }
 
 interface BballConfBoxWhiskerChartProps {
   conferenceData: ConferenceData[];
+  /** Defaults to "netrtg" (the original rating chart). */
+  metric?: BoxWhiskerMetric;
+  /** In-card title; defaults to "Conference Net Rating Distribution". */
+  title?: string;
   className?: string;
   /** Optional element rendered on the right of the in-card title row. */
   headerRight?: ReactNode;
@@ -71,6 +86,8 @@ function ConferenceLogo({
 
 export default function BballConfBoxWhiskerChart({
   conferenceData,
+  metric = "netrtg",
+  title = "Conference Net Rating Distribution",
   className = "",
   headerRight,
 }: BballConfBoxWhiskerChartProps) {
@@ -113,43 +130,44 @@ export default function BballConfBoxWhiskerChart({
     return color;
   };
 
+  const isPercent = metric !== "netrtg";
+
   const validConferences = useMemo(() => {
     if (!conferenceData || !Array.isArray(conferenceData)) {
       return [];
     }
 
-    return conferenceData.filter((conf) => {
-      if (!conf) return false;
+    return conferenceData.flatMap((conf) => {
+      if (!conf) return [];
+      const stats = metricStats(conf, metric);
+      if (!stats) return [];
 
-      const fields = [
-        "netrtg_min",
-        "netrtg_q25",
-        "netrtg_median",
-        "netrtg_q75",
-        "netrtg_max",
-      ];
-      const values = fields.map((field) => conf[field as keyof typeof conf]);
-
-      return values.every(
+      const values = [stats.min, stats.q25, stats.median, stats.q75, stats.max];
+      const valid = values.every(
         (val) => typeof val === "number" && !isNaN(val) && isFinite(val)
       );
+      return valid ? [{ conf, stats }] : [];
     });
-  }, [conferenceData]);
+  }, [conferenceData, metric]);
 
   const sortedConferences = useMemo(() => {
     return [...validConferences].sort(
-      (a, b) => b.netrtg_median - a.netrtg_median
+      (a, b) => b.stats.median - a.stats.median
     );
   }, [validConferences]);
 
   const chartBounds = useMemo(() => {
+    if (isPercent) {
+      return { yMin: 0, yMax: 100 };
+    }
+
     if (sortedConferences.length === 0) {
       return { yMin: -20, yMax: 30 };
     }
 
-    const allValues = sortedConferences.flatMap((conf) => [
-      conf.netrtg_min,
-      conf.netrtg_max,
+    const allValues = sortedConferences.flatMap(({ stats }) => [
+      stats.min,
+      stats.max,
     ]);
 
     const dataMin = Math.min(...allValues);
@@ -160,9 +178,11 @@ export default function BballConfBoxWhiskerChart({
     const yMax = Math.ceil((dataMax + padding) / 5) * 5;
 
     return { yMin, yMax };
-  }, [sortedConferences]);
+  }, [sortedConferences, isPercent]);
 
   const yAxisTicks = useMemo(() => {
+    if (isPercent) return PERCENT_TICKS;
+
     const range = chartBounds.yMax - chartBounds.yMin;
     const stepSize = range <= 30 ? 5 : 10;
     const ticks = [];
@@ -172,7 +192,7 @@ export default function BballConfBoxWhiskerChart({
     }
 
     return ticks;
-  }, [chartBounds]);
+  }, [chartBounds, isPercent]);
 
   if (!conferenceData || conferenceData.length === 0) {
     return (
@@ -185,7 +205,11 @@ export default function BballConfBoxWhiskerChart({
   if (validConferences.length === 0) {
     return (
       <div className={cn(styles.card, "p-8 text-center", className)}>
-        <p className={styles.emptyState}>No valid Net Rating data available</p>
+        <p className={styles.emptyState}>
+          {isPercent
+            ? "No win probability data available"
+            : "No valid Net Rating data available"}
+        </p>
       </div>
     );
   }
@@ -200,7 +224,8 @@ export default function BballConfBoxWhiskerChart({
   const whiskerWidth = isMobile ? 12 : 18;
   const lineThickness = isMobile ? 3 : 4;
   const teamSpacing = isMobile ? 15 : 35;
-  const padding = { top: 20, right: 10, bottom: 10, left: 40 };
+  // "100%" labels need a little more room than "+30".
+  const padding = { top: 20, right: 10, bottom: 10, left: isPercent ? 48 : 40 };
   const logoSize = isMobile ? 26 : 36;
   // Rounded marks: caps/lines get pill ends (half their thickness), the
   // Q1-Q3 box a softer corner.
@@ -224,7 +249,7 @@ export default function BballConfBoxWhiskerChart({
     <div className={cn(styles.card, className)}>
       <div className={styles.cardHeader}>
         <div className={styles.titleGroup} data-screenshot-hide="true">
-          <h2 className={styles.title}>Conference Net Rating Distribution</h2>
+          <h2 className={styles.title}>{title}</h2>
         </div>
         {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
       </div>
@@ -260,7 +285,7 @@ export default function BballConfBoxWhiskerChart({
                   fontSize: isMobile ? "14px" : "16px",
                 }}
               >
-                {tick > 0 ? `+${tick}` : tick}
+                {isPercent ? `${tick}%` : tick > 0 ? `+${tick}` : tick}
               </div>
             ))}
           </div>
@@ -270,7 +295,7 @@ export default function BballConfBoxWhiskerChart({
         <div
           className={styles.scrollViewport}
           role="region"
-          aria-label="Conference net rating distribution chart. Scroll horizontally to see every conference."
+          aria-label={`${title} chart. Scroll horizontally to see every conference.`}
           tabIndex={0}
         >
           <div
@@ -300,7 +325,7 @@ export default function BballConfBoxWhiskerChart({
               className="relative flex items-start justify-start"
               style={{ paddingLeft: "10px", paddingTop: padding.top }}
             >
-              {sortedConferences.map((conf, index) => {
+              {sortedConferences.map(({ conf, stats }, index) => {
                 const primaryColor =
                   conf.primary_color && conf.primary_color !== "null"
                     ? conf.primary_color
@@ -310,11 +335,11 @@ export default function BballConfBoxWhiskerChart({
                     ? conf.secondary_color
                     : "#64748b";
 
-                const bottom = conf.netrtg_min;
-                const q1 = conf.netrtg_q25;
-                const median = conf.netrtg_median;
-                const q3 = conf.netrtg_q75;
-                const top = conf.netrtg_max;
+                const bottom = stats.min;
+                const q1 = stats.q25;
+                const median = stats.median;
+                const q3 = stats.q75;
+                const top = stats.max;
 
                 return (
                   <div
