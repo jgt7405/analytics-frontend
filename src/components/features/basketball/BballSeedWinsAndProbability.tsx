@@ -356,7 +356,10 @@ export default function BballSeedWinsAndProbability({
             {row.map((team) => (
               <div
                 key={team.team_id}
-                style={{ cursor: "pointer" }}
+                // Flex, not a plain block: an inline <img> sits on the text
+                // baseline and leaves ~8px of descender space below each
+                // logo, which pushed them toward the row's top line.
+                style={{ cursor: "pointer", display: "flex" }}
                 onClick={() => {
                   const path = season
                     ? `/basketball/${season}/team/${encodeURIComponent(team.team_name)}`
@@ -420,7 +423,10 @@ export default function BballSeedWinsAndProbability({
             {row.map((team) => (
               <div
                 key={team.team_id}
-                style={{ cursor: "pointer" }}
+                // Flex, not a plain block: an inline <img> sits on the text
+                // baseline and leaves ~8px of descender space below each
+                // logo, which pushed them toward the row's top line.
+                style={{ cursor: "pointer", display: "flex" }}
                 onClick={() => {
                   const path = season
                     ? `/basketball/${season}/team/${encodeURIComponent(team.team_name)}`
