@@ -1,7 +1,7 @@
 "use client";
 
 // One swim lane per conference with every team's logo placed at its win
-// probability vs an average team - the teams behind the box-and-whisker chart
+// probability vs a reference opponent - the teams behind the box-and-whisker chart
 // above it on /football/conf-data/ and /basketball/conf-data/. Logos that
 // would overlap are spread sideways by layoutLaneLogos; the dashed line is the
 // conference median. Each sport's page maps its conference data into lanes.
@@ -29,7 +29,8 @@ export interface WinProbLane {
 
 interface ConferenceTeamWinProbLanesProps {
   lanes: WinProbLane[];
-  /** e.g. "college football team" - used in the scroll region's label. */
+  title?: string;
+  /** e.g. "an average college football team" - used in the scroll region's label. */
   opponentLabel?: string;
 }
 
@@ -70,7 +71,8 @@ function LaneConferenceLogo({ conf, size }: { conf: WinProbLane; size: number })
 
 export default function ConferenceTeamWinProbLanes({
   lanes: laneData,
-  opponentLabel = "team",
+  title = "Team Win Probability by Conference",
+  opponentLabel = "an average team",
 }: ConferenceTeamWinProbLanesProps) {
   const { isMobile } = useResponsive();
 
@@ -103,7 +105,7 @@ export default function ConferenceTeamWinProbLanes({
     <section className="relative rounded-[1.25rem] border border-slate-200/90 bg-gradient-to-br from-white to-[#fbfdff] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:border-slate-700/90 dark:from-[#111827] dark:to-[#0f172a]">
       <div className="px-[1.35rem] pb-4 pt-5 max-md:px-[0.9rem] max-md:pb-3 max-md:pt-4" data-screenshot-hide="true">
         <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
-          Team Win Probability by Conference
+          {title}
         </h2>
       </div>
       <div className="relative pb-4 max-md:pb-2">
@@ -127,7 +129,7 @@ export default function ConferenceTeamWinProbLanes({
         <div
           className="overflow-x-auto px-[0.9rem] [overscroll-behavior-inline:contain] max-md:px-[0.35rem]"
           role="region"
-          aria-label={`Team win probability vs an average ${opponentLabel}, one lane per conference. Scroll horizontally to see every conference.`}
+          aria-label={`Team win probability vs ${opponentLabel}, one lane per conference. Scroll horizontally to see every conference.`}
           tabIndex={0}
         >
           <div

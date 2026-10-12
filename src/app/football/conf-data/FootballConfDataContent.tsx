@@ -198,7 +198,7 @@ export default function FootballConfDataContent({ initialData }: { initialData?:
                   <ErrorBoundary level="component">
                     <ConferenceTeamWinProbLanes
                       lanes={winProbLanes}
-                      opponentLabel="college football team"
+                      opponentLabel="an average college football team"
                     />
                   </ErrorBoundary>
                 </div>

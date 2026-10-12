@@ -194,19 +194,19 @@ export default function BasketballConfDataContent({ initialData }: { initialData
     return showAll ? sorted : sorted.slice(0, 12);
   }, [conferenceData?.data, showAll]);
 
-  // One lane per conference, each team at its win probability vs the
-  // average D1 team (same filter as the charts above it).
+  // One lane per conference, each team at its win probability vs the #100
+  // team (same filter as the box-whisker above it).
   const winProbLanes = useMemo<WinProbLane[]>(
     () =>
       filteredConfData.map((conf) => ({
         conference_name: conf.conference_name,
         logo_url: conf.logo_url,
         primary_color: conf.primary_color,
-        median: conf.winprob?.avg?.median ?? 0,
+        median: conf.winprob?.rk100?.median ?? 0,
         teams: (conf.team_winprobs ?? []).map((team) => ({
           team_name: team.team_name,
           logo_url: team.logo_url,
-          win_prob: team.win_prob_avg,
+          win_prob: team.win_prob_rk100,
         })),
       })),
     [filteredConfData],
@@ -364,82 +364,8 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                 </div>
               </div>
 
-              {/* Conference Net Rating Distribution Section */}
-              <div className="mb-8">
-                {/* No external h3 here - BballConfBoxWhiskerChart renders its
-                    own bold in-card title per §8a of
-                    PAGE_MODERNIZATION_GUIDE.md; an external heading would
-                    duplicate it (§3). */}
-                <div className="netrtg-box-whisker-container">
-                  <Suspense fallback={<BoxWhiskerChartSkeleton />}>
-                    {filteredConfData.length > 0 && (
-                      <BballConfBoxWhiskerChart
-                        conferenceData={filteredConfData}
-                      />
-                    )}
-                  </Suspense>
-                </div>
-                <div className="mt-6">
-                  <div className="flex flex-row items-start gap-4">
-                    <div className="netrtg-box-whisker-explainer flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
-                      <div style={{ lineHeight: "1.3" }}>
-                        <div>
-                          Rating distribution by conference showing the strength
-                          of teams within each conference.
-                        </div>
-                        <div style={{ marginTop: "6px" }}>
-                          Box shows 25th to 75th percentile teams in conference,
-                          line shows median, whiskers show top and bottom teams.
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      className={`flex-shrink-0 ${isMobile ? "w-1/3 pr-2" : "w-auto mr-4"}`}
-                    >
-                      <TableActionButtons
-                        contentSelector=".netrtg-box-whisker-container"
-                        explainerSelector=".netrtg-box-whisker-explainer"
-                        pageName="conference-netrtg-chart"
-                        pageTitle="Conference Net Rating Distribution"
-                        shareTitle="Conference Net Rating Distribution"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Win probability vs the average D1 team: conference boxes,
-                  then every team by conference. */}
-              <WinProbBoxSection
-                conferenceData={filteredConfData}
-                opponent="avg"
-                title="Conference Win Probability vs Average Team"
-                opponentText="the average Division I team"
-                isMobile={isMobile}
-              />
-
-              {winProbLanes.some((lane) => lane.teams.length > 0) && (
-                <ChartSection
-                  name="team-winprob-lanes"
-                  pageTitle="Team Win Probability by Conference"
-                  isMobile={isMobile}
-                  explainer={
-                    <div>
-                      Each team&apos;s probability of beating the average
-                      Division I team at a neutral site, grouped by conference.
-                      Dashed line shows the conference median.
-                    </div>
-                  }
-                >
-                  <ErrorBoundary level="component">
-                    <ConferenceTeamWinProbLanes
-                      lanes={winProbLanes}
-                      opponentLabel="Division I team"
-                    />
-                  </ErrorBoundary>
-                </ChartSection>
-              )}
-
+              {/* Win probability vs the #100 team: conference boxes, then
+                  every team by conference. */}
               <WinProbBoxSection
                 conferenceData={filteredConfData}
                 opponent="rk100"
@@ -448,13 +374,29 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                 isMobile={isMobile}
               />
 
-              <WinProbBoxSection
-                conferenceData={filteredConfData}
-                opponent="rk50"
-                title="Conference Win Probability vs #50 Team"
-                opponentText={`the 50th rated team${formatRating(baselines?.rk50)}`}
-                isMobile={isMobile}
-              />
+              {winProbLanes.some((lane) => lane.teams.length > 0) && (
+                <ChartSection
+                  name="team-winprob-lanes"
+                  pageTitle="Team Win Probability vs #100 Team by Conference"
+                  isMobile={isMobile}
+                  explainer={
+                    <div>
+                      Each team&apos;s probability of beating the 100th rated
+                      team{formatRating(baselines?.rk100)} at a neutral site,
+                      grouped by conference. Dashed line shows the conference
+                      median.
+                    </div>
+                  }
+                >
+                  <ErrorBoundary level="component">
+                    <ConferenceTeamWinProbLanes
+                      lanes={winProbLanes}
+                      title="Team Win Probability vs #100 Team by Conference"
+                      opponentLabel="the 100th rated team"
+                    />
+                  </ErrorBoundary>
+                </ChartSection>
+              )}
 
               {/* Conference Tournament Bid Trends Section */}
               <div className="mb-8">
