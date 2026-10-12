@@ -95,4 +95,88 @@ describe("screenshot layout helpers", () => {
     expect(clonedLabel.style.visibility).toBe("visible");
     expect(clonedLabel.style.whiteSpace).toBe("normal");
   });
+
+  describe("html2canvas workarounds", () => {
+    // jsdom doesn't normalize computed styles the way browsers do, so feed
+    // expandExportClone the browser's serialized values directly.
+    function mockComputedStyle(styles: Map<Element, Record<string, string>>) {
+      const real = window.getComputedStyle.bind(window);
+      return jest
+        .spyOn(window, "getComputedStyle")
+        .mockImplementation((element: Element) => {
+          const values = styles.get(element);
+          if (!values) return real(element);
+          const style = real(element);
+          return new Proxy(style, {
+            get(target, property) {
+              if (property === "getPropertyValue") {
+                return (name: string) => values[name] ?? "";
+              }
+              const name = String(property).replace(
+                /[A-Z]/g,
+                (c) => `-${c.toLowerCase()}`,
+              );
+              if (name in values) return values[name];
+              const value = Reflect.get(target, property);
+              return typeof value === "function" ? value.bind(target) : value;
+            },
+          });
+        });
+    }
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it("redraws an inset ring as an overlay border and drops shadows", () => {
+      const source = document.createElement("button");
+      const clone = source.cloneNode(true) as HTMLElement;
+      mockComputedStyle(
+        new Map([
+          [
+            source,
+            {
+              "box-shadow":
+                "rgb(0, 136, 206) 0px 0px 0px 2px inset, rgba(15, 23, 42, 0.36) 0px 22px 55px -36px",
+              position: "static",
+              "border-top-left-radius": "12px",
+              "border-top-right-radius": "12px",
+              "border-bottom-right-radius": "12px",
+              "border-bottom-left-radius": "12px",
+              "border-top-width": "2px",
+              "border-right-width": "2px",
+              "border-bottom-width": "2px",
+              "border-left-width": "2px",
+            },
+          ],
+        ]),
+      );
+
+      expandExportClone(source, clone);
+
+      expect(clone.style.getPropertyValue("box-shadow")).toBe("none");
+      expect(clone.style.position).toBe("relative");
+      const overlay = clone.lastElementChild as HTMLElement;
+      expect(overlay.style.position).toBe("absolute");
+      expect(overlay.style.border).toBe("2px solid rgb(0, 136, 206)");
+      expect(overlay.style.borderTopLeftRadius).toBe("10px");
+    });
+
+    it("letterboxes an object-fit: contain image instead of stretching it", () => {
+      const source = document.createElement("img");
+      Object.defineProperty(source, "naturalWidth", { value: 200 });
+      Object.defineProperty(source, "naturalHeight", { value: 100 });
+      source.getBoundingClientRect = () =>
+        ({ width: 20, height: 20 }) as DOMRect;
+      const clone = source.cloneNode(true) as HTMLImageElement;
+      mockComputedStyle(new Map([[source, { "object-fit": "contain" }]]));
+
+      expandExportClone(source, clone);
+
+      expect(clone.style.width).toBe("20px");
+      expect(clone.style.height).toBe("20px");
+      expect(clone.style.paddingTop).toBe("5px");
+      expect(clone.style.paddingBottom).toBe("5px");
+      expect(clone.style.paddingLeft).toBe("0px");
+      expect(clone.style.objectFit).toBe("fill");
+    });
+  });
 });
