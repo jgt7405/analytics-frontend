@@ -36,11 +36,6 @@ const SECTION_TITLE_CLASS =
 const BOX_EXPLAINER =
   "Box shows 25th to 75th percentile teams in conference, line shows median, whiskers show top and bottom teams.";
 
-function formatRating(rating: number | undefined): string {
-  if (rating === undefined || !Number.isFinite(rating)) return "";
-  return ` (rating ${rating > 0 ? "+" : ""}${rating.toFixed(1)})`;
-}
-
 /** Chart card plus its explainer and export buttons, the block every chart
  * on this page uses. `name` keys the container/explainer selectors. */
 function ChartSection({
@@ -212,7 +207,6 @@ export default function BasketballConfDataContent({ initialData }: { initialData
     [filteredConfData],
   );
 
-  const baselines = conferenceData?.winprob_baselines;
 
   // Filter history data based on showAll state
   const filteredHistoryData = useMemo(() => {
@@ -370,7 +364,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                 conferenceData={filteredConfData}
                 opponent="rk100"
                 title="Conference Win Probability vs #100 Team"
-                opponentText={`the 100th rated team${formatRating(baselines?.rk100)}`}
+                opponentText="the 100th rated team"
                 isMobile={isMobile}
               />
 
@@ -382,9 +376,8 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                   explainer={
                     <div>
                       Each team&apos;s probability of beating the 100th rated
-                      team{formatRating(baselines?.rk100)} at a neutral site,
-                      grouped by conference. Dashed line shows the conference
-                      median.
+                      team at a neutral site, grouped by conference. Dashed
+                      line shows the conference median.
                     </div>
                   }
                 >

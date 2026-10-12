@@ -45,6 +45,28 @@ interface BballConfBoxWhiskerChartProps {
   headerRight?: ReactNode;
 }
 
+function relativeLuminance(hex: string): number | null {
+  const clean = hex.replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(clean)) return null;
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(clean.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** The median line sits on the box fill, not the page, so a conference whose
+ * line color is close to its box color (Pac-12: black on navy) gets a white or
+ * black line instead, whichever stands out more. */
+function medianLineColor(lineColor: string, boxColor: string): string {
+  const line = relativeLuminance(lineColor);
+  const box = relativeLuminance(boxColor);
+  if (line === null || box === null) return lineColor;
+  const contrast = (Math.max(line, box) + 0.05) / (Math.min(line, box) + 0.05);
+  if (contrast >= 2) return lineColor;
+  return (1.05 / (box + 0.05)) >= ((box + 0.05) / 0.05) ? "#ffffff" : "#000000";
+}
+
 function ConferenceLogo({
   logoUrl,
   conferenceName,
@@ -406,7 +428,10 @@ export default function BballConfBoxWhiskerChart({
                         top: scale(median),
                         width: boxWidth,
                         height: lineThickness,
-                        backgroundColor: adjustColorIfWhite(rawSecondaryColor),
+                        backgroundColor: medianLineColor(
+                          adjustColorIfWhite(rawSecondaryColor),
+                          primaryColor,
+                        ),
                         borderRadius: capRadius,
                       }}
                     />
