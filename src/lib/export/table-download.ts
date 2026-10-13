@@ -467,7 +467,11 @@ export async function downloadTableImage({
   document.body.removeChild(wrapper);
 
   const timestamp = new Date().toISOString().split("T")[0];
-  const filename = `${selectedConference}_${pageName}_${timestamp}.png`;
+  // Skip parts a page doesn't pass (no conference picker, no pageName) so
+  // the file isn't named "undefined_...".
+  const filename = `${[selectedConference, pageName || "jthom-analytics", timestamp]
+    .filter(Boolean)
+    .join("_")}.png`;
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((result) => {
