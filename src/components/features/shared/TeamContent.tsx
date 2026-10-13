@@ -10,7 +10,6 @@
 // TeamContentConfig; each section renders once and is placed into both
 // layouts by key.
 
-import ScreenshotModal from "@/components/common/ScreenshotModal";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -21,6 +20,13 @@ import { Download } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+
+// Loaded on first open: the modal and the export code behind it aren't part
+// of the page's first-load JS.
+const ScreenshotModal = dynamic(() => import("@/components/common/ScreenshotModal"), {
+  ssr: false,
+});
 
 // Matches the gradient/border/shadow "card" look used across the
 // modernized Wins/Standings/CWV/etc. pages (PAGE_MODERNIZATION_GUIDE.md
@@ -491,13 +497,15 @@ export default function TeamContent<TData, THistory>({
           )}
         </div>
 
-        <ScreenshotModal
-          isOpen={isScreenshotModalOpen}
-          onClose={() => setIsScreenshotModalOpen(false)}
-          options={screenshotOptions}
-          teamName={teamInfo.team_name}
-          teamLogoUrl={teamInfo.logo_url}
-        />
+        {isScreenshotModalOpen && (
+          <ScreenshotModal
+            isOpen={isScreenshotModalOpen}
+            onClose={() => setIsScreenshotModalOpen(false)}
+            options={screenshotOptions}
+            teamName={teamInfo.team_name}
+            teamLogoUrl={teamInfo.logo_url}
+          />
+        )}
       </div>
     </ErrorBoundary>
   );

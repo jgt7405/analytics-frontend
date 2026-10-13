@@ -3,13 +3,6 @@
 
 import type { WhatIfGame, WhatIfTeamResult } from "@/hooks/useBasketballWhatIf";
 import { getCellColor } from "@/lib/color-utils";
-import {
-  expandExportClone,
-  getFullContentWidth,
-  getFullScreenshotDimensions,
-} from "@/lib/export/layout";
-import { ensureHtml2Canvas } from "@/lib/export/capture";
-import { saveCanvasImage } from "@/lib/export/save";
 import { Camera, Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -42,6 +35,10 @@ async function captureScreenshot(
   teamLogoUrl?: string,
 ) {
   if (typeof window === "undefined") return;
+  // Export helpers load on demand, not with the page.
+  const { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } = await import("@/lib/export/layout");
+  const { ensureHtml2Canvas } = await import("@/lib/export/capture");
+  const { saveCanvasImage } = await import("@/lib/export/save");
   await ensureHtml2Canvas();
   const html2canvas = window.html2canvas;
   if (!html2canvas) return;

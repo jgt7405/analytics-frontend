@@ -5,13 +5,6 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import {
-  expandExportClone,
-  getFullContentWidth,
-  getFullScreenshotDimensions,
-} from "@/lib/export/layout";
-import { ensureHtml2Canvas } from "@/lib/export/capture";
-import { saveCanvasImage } from "@/lib/export/save";
 import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import Image from "next/image";
@@ -266,6 +259,10 @@ export default function BasketballCompareContent() {
     if (!chartElement) return;
 
     try {
+      // Export helpers load on demand, not with the page.
+      const { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } = await import("@/lib/export/layout");
+      const { ensureHtml2Canvas } = await import("@/lib/export/capture");
+      const { saveCanvasImage } = await import("@/lib/export/save");
       await ensureHtml2Canvas();
 
       // Helper function to convert image URL to base64

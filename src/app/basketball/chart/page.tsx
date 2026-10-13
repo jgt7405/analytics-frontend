@@ -3,14 +3,6 @@
 import BballScatterplotChart from "@/components/features/basketball/BballScatterplotChart";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import {
-  expandExportClone,
-  getFullContentWidth,
-  getFullScreenshotDimensions,
-} from "@/lib/export/layout";
-import { ensureHtml2Canvas } from "@/lib/export/capture";
-import { setInlinedSrc } from "@/lib/export/inline";
-import { saveCanvasImage } from "@/lib/export/save";
 import { Download, Share2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { logger } from "@/lib/logger";
@@ -27,7 +19,8 @@ export default function BasketballChartPage() {
   // Load html2canvas up front, so the modal can say when it's ready
   useEffect(() => {
     let active = true;
-    ensureHtml2Canvas()
+    import("@/lib/export/capture")
+      .then(({ ensureHtml2Canvas }) => ensureHtml2Canvas())
       .then(() => {
         if (active) setHtml2canvasLoaded(true);
       })
@@ -89,6 +82,10 @@ export default function BasketballChartPage() {
     if (!chartRef.current || !html2canvasLoaded) return;
 
     try {
+      // Export helpers load on demand, not with the page.
+      const { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } = await import("@/lib/export/layout");
+      const { setInlinedSrc } = await import("@/lib/export/inline");
+      const { saveCanvasImage } = await import("@/lib/export/save");
       setIsCapturing(true);
       logger.debug("Screenshot started");
 

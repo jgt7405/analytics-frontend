@@ -7,7 +7,6 @@ import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { downloadCompareChart } from "@/lib/export/compare-chart";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "@/api/urls";
@@ -222,6 +221,8 @@ export default function FootballCompareArchivePage() {
 
   const downloadChart = async () => {
     try {
+      // Export helpers load on demand, not with the page.
+      const { downloadCompareChart } = await import("@/lib/export/compare-chart");
       await downloadCompareChart({
         chartId: "football-compare-chart",
         title: "Schedule Difficulty Comparison",

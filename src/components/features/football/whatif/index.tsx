@@ -6,7 +6,6 @@
 // the results card is ResultsCard.
 
 import ConferenceSelector from "@/components/common/ConferenceSelector";
-import ScreenshotModal from "@/components/common/ScreenshotModal";
 import TeamMultiSearch from "@/components/common/TeamMultiSearch";
 import FootballGameImpactBoard from "@/components/features/football/FootballGameImpactBoard";
 import { useFootballCFP } from "@/hooks/useFootballCFP";
@@ -36,6 +35,13 @@ import {
 import GameTile from "./GameTile";
 import ResultsCard from "./ResultsCard";
 import { injectStructuredData } from "./structuredData";
+import dynamic from "next/dynamic";
+
+// Loaded on first open: the modal and the export code behind it aren't part
+// of the page's first-load JS.
+const ScreenshotModal = dynamic(() => import("@/components/common/ScreenshotModal"), {
+  ssr: false,
+});
 
 
 export default function FootballWhatIfContent() {
@@ -457,53 +463,55 @@ export default function FootballWhatIfContent() {
       </div>
 
       {/* Screenshot Modal */}
-      <ScreenshotModal
-        isOpen={isScreenshotModalOpen}
-        onClose={handleCloseScreenshotModal}
-        options={[
-          {
-            id: "whatif-results",
-            label: "What If Results",
-            selector: "[data-component='whatif-results']",
-          },
-          ...(selectedConference !== "Independent" &&
-          currentTableData.length > 0
-            ? [
-                {
-                  id: "whatif-conf-champ-chart",
-                  label: "Conference Championship Chart",
-                  selector:
-                    selectedGamesWithDetails.length > 0
-                      ? [
-                          "[data-component='whatif-conf-champ-chart']",
-                          "[data-component='whatif-selected-games']",
-                        ]
-                      : "[data-component='whatif-conf-champ-chart']",
-                },
-              ]
-            : []),
-          ...(currentCFPTableData.length > 0
-            ? [
-                {
-                  id: "whatif-cfp-chart",
-                  label: "CFP Chart",
-                  selector:
-                    selectedGamesWithDetails.length > 0
-                      ? [
-                          "[data-component='whatif-cfp-chart']",
-                          "[data-component='whatif-selected-games']",
-                        ]
-                      : "[data-component='whatif-cfp-chart']",
-                },
-              ]
-            : []),
-        ]}
-        teamLogoUrl={
-          conferenceData?.data?.find(
-            (conf) => conf.conference_name === selectedConference
-          )?.logo_url
-        }
-      />
+      {isScreenshotModalOpen && (
+        <ScreenshotModal
+          isOpen={isScreenshotModalOpen}
+          onClose={handleCloseScreenshotModal}
+          options={[
+            {
+              id: "whatif-results",
+              label: "What If Results",
+              selector: "[data-component='whatif-results']",
+            },
+            ...(selectedConference !== "Independent" &&
+            currentTableData.length > 0
+              ? [
+                  {
+                    id: "whatif-conf-champ-chart",
+                    label: "Conference Championship Chart",
+                    selector:
+                      selectedGamesWithDetails.length > 0
+                        ? [
+                            "[data-component='whatif-conf-champ-chart']",
+                            "[data-component='whatif-selected-games']",
+                          ]
+                        : "[data-component='whatif-conf-champ-chart']",
+                  },
+                ]
+              : []),
+            ...(currentCFPTableData.length > 0
+              ? [
+                  {
+                    id: "whatif-cfp-chart",
+                    label: "CFP Chart",
+                    selector:
+                      selectedGamesWithDetails.length > 0
+                        ? [
+                            "[data-component='whatif-cfp-chart']",
+                            "[data-component='whatif-selected-games']",
+                          ]
+                        : "[data-component='whatif-cfp-chart']",
+                  },
+                ]
+              : []),
+          ]}
+          teamLogoUrl={
+            conferenceData?.data?.find(
+              (conf) => conf.conference_name === selectedConference
+            )?.logo_url
+          }
+        />
+      )}
 
       {/* Error Display */}
       {whatIfMutation.isError && (

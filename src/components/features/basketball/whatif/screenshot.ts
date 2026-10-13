@@ -1,8 +1,5 @@
 // PNG export of a what-if table (html2canvas, loaded on first use).
 
-import { ensureHtml2Canvas } from "@/lib/export/capture";
-import { saveCanvasImage } from "@/lib/export/save";
-import { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } from "@/lib/export/layout";
 
 // – Screenshot helper –
 export async function captureScreenshot(
@@ -12,6 +9,10 @@ export async function captureScreenshot(
   chartTitle?: string,
 ) {
   if (typeof window === "undefined") return;
+  // Export helpers load on demand, not with the page.
+  const { ensureHtml2Canvas } = await import("@/lib/export/capture");
+  const { saveCanvasImage } = await import("@/lib/export/save");
+  const { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } = await import("@/lib/export/layout");
   await ensureHtml2Canvas();
   const html2canvas = window.html2canvas;
   if (!html2canvas) return;
