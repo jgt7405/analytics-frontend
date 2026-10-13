@@ -17,15 +17,28 @@ const roundToHalf = (num: number) => {
 };
 
 export default function SeedRegions({ confChampData, layout }: SeedRegionsProps) {
-  const { isMobile, barX, barWidth, chartAreaTop, chartAreaBottom, barBottomY, regionRight, getYFromWins } =
+  const { isMobile, barX, barWidth, chartAreaTop, chartAreaBottom, barBottomY, regionRight, getYFromWins, maxGames } =
     layout;
   const { bubbleWins, seed10Wins, seed7Wins, seed4Wins, seed1Wins } = seedThresholds(confChampData);
+
+  // A seed line is only drawn if the team can still win enough games to get
+  // there; the top of the chart is its maximum possible wins. Unreachable
+  // lines would otherwise stack their labels above the chart. The band
+  // below an unreachable line still runs to the top of the chart.
+  const reachable = (wins: number) => wins > 0 && wins <= maxGames;
+  const show1 = reachable(seed1Wins);
+  const show4 = reachable(seed4Wins);
+  const show7 = reachable(seed7Wins);
+  const show10 = reachable(seed10Wins);
+  const showBubble = reachable(bubbleWins);
 
   const bubbleY = getYFromWins(bubbleWins);
   const seed10Y = getYFromWins(seed10Wins);
   const seed7Y = getYFromWins(seed7Wins);
   const seed4Y = getYFromWins(seed4Wins);
   const seed1Y = getYFromWins(seed1Wins);
+  const notAtLargeTop = Math.max(chartAreaTop, bubbleY);
+  const notAtLargeMidY = notAtLargeTop + (chartAreaBottom - notAtLargeTop) / 2;
 
   const regionLeft = barX + barWidth;
   const labelX = regionLeft + (regionRight - regionLeft) * 0.425 - (isMobile ? 5 : 0);
@@ -34,7 +47,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
   return (
     <>
       <g clipPath="url(#seedRegionClip)">
-        {seed1Wins > 0 && (
+        {show1 && (
           <>
             <rect
               x={regionLeft}
@@ -57,7 +70,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
           </>
         )}
 
-        {seed4Wins > 0 && seed4Y > seed1Y && (
+        {show4 && seed4Y > seed1Y && (
           <>
             <rect
               x={regionLeft}
@@ -80,7 +93,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
           </>
         )}
 
-        {seed7Wins > 0 && seed7Y > seed4Y && (
+        {show7 && seed7Y > seed4Y && (
           <>
             <rect
               x={regionLeft}
@@ -103,7 +116,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
           </>
         )}
 
-        {seed10Wins > 0 && seed10Y > seed7Y && (
+        {show10 && seed10Y > seed7Y && (
           <>
             <rect
               x={regionLeft}
@@ -126,7 +139,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
           </>
         )}
 
-        {bubbleWins > 0 && bubbleY > seed10Y && (
+        {showBubble && bubbleY > seed10Y && (
           <>
             <rect
               x={regionLeft}
@@ -161,7 +174,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
         )}
       </g>
 
-      {seed1Wins > 0 && seed1Y <= barBottomY && (
+      {show1 && seed1Y <= barBottomY && (
         <>
           <text
             x={labelX}
@@ -189,7 +202,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
         </>
       )}
 
-      {seed4Wins > 0 && seed4Y > seed1Y && seed4Y <= barBottomY && (
+      {show4 && seed4Y > seed1Y && seed4Y <= barBottomY && (
         <>
           <text
             x={labelX}
@@ -220,7 +233,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
         </>
       )}
 
-      {seed7Wins > 0 && seed7Y > seed4Y && seed7Y <= barBottomY && (
+      {show7 && seed7Y > seed4Y && seed7Y <= barBottomY && (
         <>
           <text
             x={labelX}
@@ -251,7 +264,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
         </>
       )}
 
-      {seed10Wins > 0 && seed10Y > seed7Y && seed10Y <= barBottomY && (
+      {show10 && seed10Y > seed7Y && seed10Y <= barBottomY && (
         <>
           <text
             x={labelX}
@@ -282,7 +295,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
         </>
       )}
 
-      {bubbleWins > 0 && bubbleY > seed10Y && bubbleY <= barBottomY && (
+      {showBubble && bubbleY > seed10Y && bubbleY <= barBottomY && (
         <>
           <text
             x={labelX}
@@ -317,7 +330,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
         <>
           <text
             x={labelX}
-            y={bubbleY + (chartAreaBottom - bubbleY) / 2 - 6}
+            y={notAtLargeMidY - 6}
             textAnchor="middle"
             fontSize="11"
             fill="#991b1b"
@@ -329,7 +342,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
           </text>
           <text
             x={labelX}
-            y={bubbleY + (chartAreaBottom - bubbleY) / 2 + 6}
+            y={notAtLargeMidY + 6}
             textAnchor="middle"
             fontSize="11"
             fill="#991b1b"
