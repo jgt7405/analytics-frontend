@@ -51,12 +51,15 @@ interface TWVContentProps<TTeam> {
   config: TWVContentConfig<TTeam>;
   season?: string;
   initialData?: any;
+  /** Conference the server fetched initialData for (defaults to Big 12). */
+  initialConference?: string;
 }
 
 export default function TWVContent<TTeam>({
   config,
   season,
   initialData,
+  initialConference = "Big 12",
 }: TWVContentProps<TTeam>) {
   const { startMeasurement, endMeasurement, trackEvent } = useMonitoring();
   const { preferences, updatePreference } = useUserPreferences();
@@ -89,7 +92,7 @@ export default function TWVContent<TTeam>({
   } = useTWVData(
     selectedConference,
     season,
-    selectedConference === "Big 12" && !season ? initialData : undefined,
+    selectedConference === initialConference && !season ? initialData : undefined,
   );
 
   // "All Teams" always leads the list; the API list never includes it twice.

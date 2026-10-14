@@ -11,16 +11,27 @@ export const metadata = sportPageMetadata("football", "twv");
 
 // The device is read from the User-Agent so phones get the mobile layout in
 // the HTML (the action buttons stacked), not the desktop one switching after
-// hydration.
-export default async function FootballTWVPage() {
+// hydration. The server fetches the conference the link asked for (?conf=,
+// which the nav menu always sets), so the first paint already has its table
+// instead of waiting on a second fetch from the browser.
+export default async function FootballTWVPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ conf?: string | string[] }>;
+}) {
+  const { conf } = await searchParams;
+  const initialConference = (typeof conf === "string" && conf) || "Big 12";
   const [initialData, initialIsMobile] = await Promise.all([
-    getFootballTWVServer("Big 12"),
+    getFootballTWVServer(initialConference),
     detectMobileFromHeaders(),
   ]);
   return (
     <ResponsiveProvider initialIsMobile={initialIsMobile}>
       <Suspense fallback={null}>
-        <FootballTWVContent initialData={initialData} />
+        <FootballTWVContent
+          initialData={initialData}
+          initialConference={initialConference}
+        />
       </Suspense>
     </ResponsiveProvider>
   );
