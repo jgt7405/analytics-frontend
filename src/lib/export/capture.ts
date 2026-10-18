@@ -62,18 +62,16 @@ export async function toDataUri(url: string): Promise<string> {
   });
 }
 
+/**
+ * Load html2canvas from our own bundle (a chunk fetched on first export) and
+ * expose it as `window.html2canvas` for the export helpers. It used to come
+ * from html2canvas.hertzen.com at click time, which had no timeout: when that
+ * host was slow or unreachable, the Download buttons silently did nothing.
+ */
 export async function ensureHtml2Canvas(): Promise<void> {
   if (typeof window.html2canvas === "function") return;
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load html2canvas"));
-    document.body.appendChild(script);
-  });
-  if (typeof window.html2canvas !== "function") {
-    throw new Error("Failed to load html2canvas");
-  }
+  const { default: html2canvas } = await import("html2canvas");
+  window.html2canvas = html2canvas as Window["html2canvas"];
 }
 
 interface CaptureAndSaveElementOptions {
