@@ -135,11 +135,6 @@
   hyphens: auto;
 }
 
-:global(.dark) .avgLabel,
-:global(.dark) .teamName {
-  color: #e2e8f0;
-}
-
 .tooltip {
   position: fixed;
   z-index: 60;
@@ -173,38 +168,47 @@
   font-weight: 650;
 }
 
-:global(.dark) .card {
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. */
+@media (prefers-color-scheme: dark) {
+  .avgLabel,
+  .teamName {
+    color: #e2e8f0;
+  }
 
-:global(.dark) .yAxisLabel {
-  color: #94a3b8;
-}
+  .card {
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
 
-:global(.dark) .gridLine {
-  border-top-color: rgb(71 85 105 / 0.5);
-}
+  .yAxisLabel {
+    color: #94a3b8;
+  }
 
-:global(.dark) .tooltip {
-  border-color: rgb(71 85 105 / 0.8);
-  background: #1e293b;
-  box-shadow: 0 16px 32px -16px rgb(0 0 0 / 0.7);
-}
+  .gridLine {
+    border-top-color: rgb(71 85 105 / 0.5);
+  }
 
-:global(.dark) .tooltipTeam {
-  color: #e2e8f0;
-}
+  .tooltip {
+    border-color: rgb(71 85 105 / 0.8);
+    background: #1e293b;
+    box-shadow: 0 16px 32px -16px rgb(0 0 0 / 0.7);
+  }
 
-:global(.dark) .tooltipRow {
-  color: #94a3b8;
-}
+  .tooltipTeam {
+    color: #e2e8f0;
+  }
 
-:global(.dark) .tooltipRow strong {
-  color: #f1f5f9;
+  .tooltipRow {
+    color: #94a3b8;
+  }
+
+  .tooltipRow strong {
+    color: #f1f5f9;
+  }
 }
 
 @media (max-width: 767px) {

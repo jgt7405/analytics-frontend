@@ -70,20 +70,24 @@
   font-weight: 600;
 }
 
-:global(.dark) .yAxisLabel {
-  color: #94a3b8;
-}
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. */
+@media (prefers-color-scheme: dark) {
+  .yAxisLabel {
+    color: #94a3b8;
+  }
 
-:global(.dark) .card {
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
+  .card {
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
 
-:global(.dark) .title {
-  color: #cbd5e1;
+  .title {
+    color: #cbd5e1;
+  }
 }
 
 @media (max-width: 767px) {
