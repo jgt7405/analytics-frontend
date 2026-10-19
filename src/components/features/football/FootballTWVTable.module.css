@@ -223,48 +223,6 @@
   text-align: center;
 }
 
-:global(.dark) .card {
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
-
-:global(.dark) .controls {
-  color: #94a3b8;
-}
-
-:global(.dark) .rowsInput {
-  border-color: rgb(71 85 105 / 0.8);
-  background: #1e293b;
-  color: #f1f5f9;
-}
-
-:global(.dark) .stickyRank,
-:global(.dark) .stickyTeam,
-:global(.dark) .headerRow th {
-  --sticky-column-background: #111827;
-  background: #111827;
-  color: #cbd5e1;
-}
-
-:global(.dark) .headerRow th {
-  box-shadow: 0 2px 0 0 #111827;
-}
-
-:global(.dark) .rankValue {
-  color: #94a3b8;
-}
-
-:global(.dark) .teamName {
-  color: #f1f5f9;
-}
-
-:global(.dark) .recordCell {
-  color: #cbd5e1;
-}
-
 @media (max-width: 767px) {
   .card {
     --rank-col-width: 2.75rem;
@@ -324,5 +282,53 @@
   .recordCell,
   .rankValue {
     font-size: 0.74rem;
+  }
+}
+
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. :root
+   keeps these one notch more specific than the light :hover/:focus rules,
+   as .dark did. */
+@media (prefers-color-scheme: dark) {
+  :root .card {
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+
+  :root .controls {
+    color: #94a3b8;
+  }
+
+  :root .rowsInput {
+    border-color: rgb(71 85 105 / 0.8);
+    background: #1e293b;
+    color: #f1f5f9;
+  }
+
+  :root .stickyRank,
+  :root .stickyTeam,
+  :root .headerRow th {
+    --sticky-column-background: #111827;
+    background: #111827;
+    color: #cbd5e1;
+  }
+
+  :root .headerRow th {
+    box-shadow: 0 2px 0 0 #111827;
+  }
+
+  :root .rankValue {
+    color: #94a3b8;
+  }
+
+  :root .teamName {
+    color: #f1f5f9;
+  }
+
+  :root .recordCell {
+    color: #cbd5e1;
   }
 }

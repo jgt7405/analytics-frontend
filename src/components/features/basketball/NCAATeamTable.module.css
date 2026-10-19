@@ -53,12 +53,9 @@
   padding: 0 1.35rem 0.9rem;
 }
 
-/* Filter-row text colors live here rather than as Tailwind dark: classes.
-   Tailwind's darkMode is "media" (follows the OS), but this card's dark
-   styles key off a .dark class - so a Tailwind dark: color would switch to
-   light text while the card behind it stays white, leaving the label
-   near-invisible in OS dark mode. Keeping every color inside the card on
-   the card's own mechanism keeps them in step. */
+/* Filter-row text colors live here rather than as Tailwind dark: classes,
+   so every color inside the card switches with the card's own dark block
+   at the bottom of this file. */
 .filterLabel {
   color: #374151;
   font-weight: 500;
@@ -312,62 +309,6 @@
   border-color: rgb(255 255 255 / 0.9);
 }
 
-:global(.dark) .card {
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    inset 0 0 0 1px rgb(51 65 85 / 0.9),
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
-
-:global(.dark) .title {
-  color: #cbd5e1;
-}
-
-:global(.dark) .filterLabel,
-:global(.dark) .filterHint {
-  color: #d1d5db;
-}
-
-:global(.dark) .filterInput {
-  border-color: rgb(71 85 105 / 0.9);
-  background: #0f172a;
-  color: #e2e8f0;
-}
-
-:global(.dark) .stickyHead,
-:global(.dark) .stickyBody,
-:global(.dark) .headerRow th {
-  --sticky-bg: #111827;
-  background: #111827;
-  color: #cbd5e1;
-}
-
-:global(.dark) .headerRow th {
-  box-shadow: 0 1px 0 0 #111827;
-}
-
-:global(.dark) .headerRow .sortable:hover {
-  background: #1e293b;
-}
-
-:global(.dark) .headerRow .sortActive,
-:global(.dark) .headerRow .sortActive:hover {
-  background: #1e3a4a;
-}
-
-:global(.dark) .sortArrow {
-  color: #67e8f9;
-}
-
-:global(.dark) .rankCell {
-  color: #e2e8f0;
-}
-
-:global(.dark) .teamName {
-  color: #f1f5f9;
-}
-
 @media (max-width: 767px) {
   .card {
     --rank-col-width: 2.2rem;
@@ -424,5 +365,67 @@
   .heatTile {
     border-radius: 2px;
     font-size: 0.76rem;
+  }
+}
+
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. :root
+   keeps these one notch more specific than the light :hover/:focus rules,
+   as .dark did. */
+@media (prefers-color-scheme: dark) {
+  :root .card {
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      inset 0 0 0 1px rgb(51 65 85 / 0.9),
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+
+  :root .title {
+    color: #cbd5e1;
+  }
+
+  :root .filterLabel,
+  :root .filterHint {
+    color: #d1d5db;
+  }
+
+  :root .filterInput {
+    border-color: rgb(71 85 105 / 0.9);
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+
+  :root .stickyHead,
+  :root .stickyBody,
+  :root .headerRow th {
+    --sticky-bg: #111827;
+    background: #111827;
+    color: #cbd5e1;
+  }
+
+  :root .headerRow th {
+    box-shadow: 0 1px 0 0 #111827;
+  }
+
+  :root .headerRow .sortable:hover {
+    background: #1e293b;
+  }
+
+  :root .headerRow .sortActive,
+  :root .headerRow .sortActive:hover {
+    background: #1e3a4a;
+  }
+
+  :root .sortArrow {
+    color: #67e8f9;
+  }
+
+  :root .rankCell {
+    color: #e2e8f0;
+  }
+
+  :root .teamName {
+    color: #f1f5f9;
   }
 }

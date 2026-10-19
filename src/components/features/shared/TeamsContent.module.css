@@ -8,14 +8,6 @@
     0 8px 22px -18px rgb(15 23 42 / 0.24);
 }
 
-:global(.dark) .card {
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
-
 .cardHeader {
   display: flex;
   align-items: center;
@@ -40,10 +32,6 @@
   letter-spacing: -0.035em;
   line-height: 1.1;
   white-space: nowrap;
-}
-
-:global(.dark) .title {
-  color: #cbd5e1;
 }
 
 .grid {
@@ -89,17 +77,8 @@
   background: rgb(248 250 252);
 }
 
-:global(.dark) .teamCardModern:hover {
-  background: rgb(30 41 59 / 0.6);
-}
-
 .teamCard.mobile {
   padding: 8px;
-}
-
-:global(.dark) .teamCard {
-  background: #1e293b;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 0.3);
 }
 
 .teamCard:hover {
@@ -119,10 +98,6 @@
 .teamName.mobile {
   margin: 8px 0 4px 0;
   font-size: 12px;
-}
-
-:global(.dark) .teamName {
-  color: #f1f5f9;
 }
 
 .statRow {
@@ -161,6 +136,37 @@
   font-size: 11px;
 }
 
-:global(.dark) .statValue {
-  color: #f1f5f9;
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. :root
+   keeps these one notch more specific than the light :hover/:focus rules,
+   as .dark did. */
+@media (prefers-color-scheme: dark) {
+  :root .card {
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+
+  :root .title {
+    color: #cbd5e1;
+  }
+
+  :root .teamCardModern:hover {
+    background: rgb(30 41 59 / 0.6);
+  }
+
+  :root .teamCard {
+    background: #1e293b;
+    box-shadow: 0 2px 5px rgb(0 0 0 / 0.3);
+  }
+
+  :root .teamName {
+    color: #f1f5f9;
+  }
+
+  :root .statValue {
+    color: #f1f5f9;
+  }
 }

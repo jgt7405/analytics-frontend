@@ -248,55 +248,6 @@
   letter-spacing: 0;
 }
 
-:global(.dark) .card {
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
-
-:global(.dark) .stickySeed,
-:global(.dark) .stickyTeam,
-:global(.dark) .headerRow th {
-  --sticky-column-background: #111827;
-  background: #111827;
-  color: #cbd5e1;
-}
-
-:global(.dark) .stickyTeam.autoBidSecured {
-  --sticky-column-background: #14532d;
-  box-shadow: inset 0 0 0 1px #22c55e;
-}
-
-:global(.dark) .headerRow th {
-  box-shadow: 0 1px 0 0 #111827;
-}
-
-:global(.dark) .seedValue {
-  color: #94a3b8;
-}
-
-:global(.dark) .teamName {
-  color: #f1f5f9;
-}
-
-:global(.dark) .statValue {
-  color: #cbd5e1;
-}
-
-:global(.dark) .bodyRow td {
-  border-bottom-color: rgb(51 65 85 / 0.8);
-}
-
-:global(.dark) .groupBoundary td {
-  border-bottom-color: #94a3b8;
-}
-
-:global(.dark) .confPlaceholder {
-  color: #64748b;
-}
-
 @media (max-width: 767px) {
   .card {
     --seed-col-width: 3.1rem;
@@ -345,5 +296,60 @@
   .statValue,
   .seedValue {
     font-size: 0.72rem;
+  }
+}
+
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. :root
+   keeps these one notch more specific than the light :hover/:focus rules,
+   as .dark did. */
+@media (prefers-color-scheme: dark) {
+  :root .card {
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+
+  :root .stickySeed,
+  :root .stickyTeam,
+  :root .headerRow th {
+    --sticky-column-background: #111827;
+    background: #111827;
+    color: #cbd5e1;
+  }
+
+  :root .stickyTeam.autoBidSecured {
+    --sticky-column-background: #14532d;
+    box-shadow: inset 0 0 0 1px #22c55e;
+  }
+
+  :root .headerRow th {
+    box-shadow: 0 1px 0 0 #111827;
+  }
+
+  :root .seedValue {
+    color: #94a3b8;
+  }
+
+  :root .teamName {
+    color: #f1f5f9;
+  }
+
+  :root .statValue {
+    color: #cbd5e1;
+  }
+
+  :root .bodyRow td {
+    border-bottom-color: rgb(51 65 85 / 0.8);
+  }
+
+  :root .groupBoundary td {
+    border-bottom-color: #94a3b8;
+  }
+
+  :root .confPlaceholder {
+    color: #64748b;
   }
 }

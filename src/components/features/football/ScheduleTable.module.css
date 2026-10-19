@@ -473,82 +473,6 @@
   font-weight: 600;
 }
 
-:global(.dark) .card {
-  --wins-cell-text: #e2e8f0;
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
-
-:global(.dark) .title {
-  color: #cbd5e1;
-}
-
-:global(.dark) .mainHeaderRow {
-  background: #111827;
-  box-shadow: 0 2px 0 0 #111827;
-}
-
-:global(.dark) .teamName {
-  color: #e2e8f0;
-}
-
-:global(.dark) .stickyColumn,
-:global(.dark) .stickyLocation,
-:global(.dark) .stickyOpponent,
-:global(.dark) .stickyWinProb,
-:global(.dark) .rowHeader,
-:global(.dark) .teamHeader,
-:global(.dark) .summaryTeamHeader,
-:global(.dark) .summaryStatHeader {
-  --sticky-column-background: #111827;
-  background: #111827;
-  color: #cbd5e1;
-}
-
-:global(.dark) .rowHeader,
-:global(.dark) .teamHeader {
-  box-shadow: 0 2px 0 0 #111827;
-}
-
-:global(.dark) .summaryTeamHeader,
-:global(.dark) .summaryStatHeader {
-  box-shadow: 0 2px 0 0 #111827;
-}
-
-:global(.dark) .summaryTeamName {
-  color: #e2e8f0;
-}
-
-:global(.dark) .summaryTeamButton:hover {
-  background: rgb(255 255 255 / 0.06);
-}
-
-:global(.dark) .byeTile {
-  background: #334155;
-}
-
-:global(.dark) .summaryLabel,
-:global(.dark) .summaryValue {
-  color: #e2e8f0;
-}
-
-:global(.dark) .summaryLabel {
-  --sticky-column-background: #263449;
-  background: var(--sticky-column-background);
-}
-
-:global(.dark) .summaryChip {
-  background: #263449;
-}
-
-:global(.dark) .summaryRow .summaryLabel,
-:global(.dark) .summaryRow .summaryValue {
-  border-top: 2px solid rgb(71 85 105 / 0.8);
-}
-
 @media (max-width: 767px) {
   .card {
     --location-col-width: 2.6rem;
@@ -644,5 +568,85 @@
   .teamButton,
   .gameTile {
     transition: none;
+  }
+}
+
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. */
+@media (prefers-color-scheme: dark) {
+  .card {
+    --wins-cell-text: #e2e8f0;
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+
+  .title {
+    color: #cbd5e1;
+  }
+
+  .mainHeaderRow {
+    background: #111827;
+    box-shadow: 0 2px 0 0 #111827;
+  }
+
+  .teamName {
+    color: #e2e8f0;
+  }
+
+  .stickyColumn,
+  .stickyLocation,
+  .stickyOpponent,
+  .stickyWinProb,
+  .rowHeader,
+  .teamHeader,
+  .summaryTeamHeader,
+  .summaryStatHeader {
+    --sticky-column-background: #111827;
+    background: #111827;
+    color: #cbd5e1;
+  }
+
+  .rowHeader,
+  .teamHeader {
+    box-shadow: 0 2px 0 0 #111827;
+  }
+
+  .summaryTeamHeader,
+  .summaryStatHeader {
+    box-shadow: 0 2px 0 0 #111827;
+  }
+
+  .summaryTeamName {
+    color: #e2e8f0;
+  }
+
+  .summaryTeamButton:hover {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  .byeTile {
+    background: #334155;
+  }
+
+  .summaryLabel,
+  .summaryValue {
+    color: #e2e8f0;
+  }
+
+  .summaryLabel {
+    --sticky-column-background: #263449;
+    background: var(--sticky-column-background);
+  }
+
+  .summaryChip {
+    background: #263449;
+  }
+
+  .summaryRow .summaryLabel,
+  .summaryRow .summaryValue {
+    border-top: 2px solid rgb(71 85 105 / 0.8);
   }
 }

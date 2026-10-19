@@ -10,14 +10,6 @@
     0 8px 22px -18px rgb(15 23 42 / 0.24);
 }
 
-:global(.dark) .card {
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
-
 /* Card header: bold title — §2 */
 .cardHeader {
   display: flex;
@@ -43,10 +35,6 @@
   line-height: 1.1;
 }
 
-:global(.dark) .title {
-  color: #cbd5e1;
-}
-
 /* Sub-section headings (per-table titles nested inside the results card) —
    kept a step below the card's own bold title since this page stacks five
    sub-tables (three probability tables + two full-standings tables) under
@@ -58,10 +46,6 @@
   font-size: 1rem;
   font-weight: 650;
   letter-spacing: -0.01em;
-}
-
-:global(.dark) .subTitle {
-  color: #cbd5e1;
 }
 
 /* Heat-tile grid cells — §5 */
@@ -129,10 +113,6 @@
   background: #f8fafc;
 }
 
-:global(.dark) .stickyCell {
-  background: #1e293b;
-}
-
 .stickyBodyCell {
   position: sticky;
   left: 0;
@@ -140,6 +120,30 @@
   background: #ffffff;
 }
 
-:global(.dark) .stickyBodyCell {
-  background: #0f172a;
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. */
+@media (prefers-color-scheme: dark) {
+  .card {
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+
+  .title {
+    color: #cbd5e1;
+  }
+
+  .subTitle {
+    color: #cbd5e1;
+  }
+
+  .stickyCell {
+    background: #1e293b;
+  }
+
+  .stickyBodyCell {
+    background: #0f172a;
+  }
 }

@@ -149,53 +149,59 @@
   background: #1e293b;
 }
 
-:global(.dark) .card {
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. :root
+   keeps these one notch more specific than the light :hover/:focus rules,
+   as .dark did. */
+@media (prefers-color-scheme: dark) {
+  :root .card {
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
 
-:global(.dark) .confHeaderRow {
-  border-color: rgb(51 65 85 / 0.8);
-  background: #111827;
-  box-shadow: 0 2px 0 0 #111827;
-}
+  :root .confHeaderRow {
+    border-color: rgb(51 65 85 / 0.8);
+    background: #111827;
+    box-shadow: 0 2px 0 0 #111827;
+  }
 
-:global(.dark) .confHeaderRow::before {
-  background: #111827;
-}
+  :root .confHeaderRow::before {
+    background: #111827;
+  }
 
-:global(.dark) .confHeaderCell {
-  background: #1e293b;
-}
+  :root .confHeaderCell {
+    background: #1e293b;
+  }
 
-:global(.dark) .confTeamCount {
-  color: #94a3b8;
-}
+  :root .confTeamCount {
+    color: #94a3b8;
+  }
 
-:global(.dark) .sectionGrid {
-  border-color: rgb(51 65 85 / 0.8);
-  background: #0f172a;
-}
+  :root .sectionGrid {
+    border-color: rgb(51 65 85 / 0.8);
+    background: #0f172a;
+  }
 
-:global(.dark) .teamRow {
-  background: #1e293b;
-}
+  :root .teamRow {
+    background: #1e293b;
+  }
 
-:global(.dark) .teamRow:hover {
-  background: #263449;
-}
+  :root .teamRow:hover {
+    background: #263449;
+  }
 
-:global(.dark) .teamRank {
-  color: #cbd5e1;
-}
+  :root .teamRank {
+    color: #cbd5e1;
+  }
 
-:global(.dark) .emptyCell {
-  background: rgb(51 65 85 / 0.5);
-}
+  :root .emptyCell {
+    background: rgb(51 65 85 / 0.5);
+  }
 
-:global(.dark) .groupSeparator {
-  background: #94a3b8;
+  :root .groupSeparator {
+    background: #94a3b8;
+  }
 }

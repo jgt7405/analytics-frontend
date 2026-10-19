@@ -165,62 +165,6 @@
   background: rgb(248 250 252 / 1);
 }
 
-:global(.dark) .card {
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
-
-:global(.dark) .axisColumn {
-  --sticky-column-background: #111827;
-}
-
-:global(.dark) .axisCell {
-  border-bottom-color: rgb(51 65 85 / 0.6);
-  color: #94a3b8;
-}
-
-:global(.dark) .dateHeader {
-  border-bottom-color: rgb(71 85 105 / 0.8);
-  color: #cbd5e1;
-}
-
-:global(.dark) .tileCell {
-  border-bottom-color: rgb(51 65 85 / 0.6);
-}
-
-:global(.dark) .tileCell:hover {
-  background: rgb(51 65 85 / 0.35);
-}
-
-:global(.dark) .emptyMark {
-  color: #475569;
-}
-
-:global(.dark) .footerNote {
-  border-top-color: rgb(51 65 85 / 0.88);
-  color: #94a3b8;
-}
-
-:global(.dark) .filterHeading {
-  color: #cbd5e1;
-}
-
-:global(.dark) .filterSection {
-  border-top-color: rgb(51 65 85 / 0.88);
-}
-
-:global(.dark) .filterChip {
-  background: rgb(15 23 42 / 0.6);
-  box-shadow: inset 0 0 0 1px rgb(51 65 85 / 0.9);
-}
-
-:global(.dark) .filterChip:hover {
-  background: rgb(30 41 59 / 1);
-}
-
 @media (max-width: 767px) {
   .card {
     border-radius: 1rem;
@@ -246,5 +190,67 @@
   .tile,
   .filterChip {
     transition: none;
+  }
+}
+
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. :root
+   keeps these one notch more specific than the light :hover/:focus rules,
+   as .dark did. */
+@media (prefers-color-scheme: dark) {
+  :root .card {
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+
+  :root .axisColumn {
+    --sticky-column-background: #111827;
+  }
+
+  :root .axisCell {
+    border-bottom-color: rgb(51 65 85 / 0.6);
+    color: #94a3b8;
+  }
+
+  :root .dateHeader {
+    border-bottom-color: rgb(71 85 105 / 0.8);
+    color: #cbd5e1;
+  }
+
+  :root .tileCell {
+    border-bottom-color: rgb(51 65 85 / 0.6);
+  }
+
+  :root .tileCell:hover {
+    background: rgb(51 65 85 / 0.35);
+  }
+
+  :root .emptyMark {
+    color: #475569;
+  }
+
+  :root .footerNote {
+    border-top-color: rgb(51 65 85 / 0.88);
+    color: #94a3b8;
+  }
+
+  :root .filterHeading {
+    color: #cbd5e1;
+  }
+
+  :root .filterSection {
+    border-top-color: rgb(51 65 85 / 0.88);
+  }
+
+  :root .filterChip {
+    background: rgb(15 23 42 / 0.6);
+    box-shadow: inset 0 0 0 1px rgb(51 65 85 / 0.9);
+  }
+
+  :root .filterChip:hover {
+    background: rgb(30 41 59 / 1);
   }
 }

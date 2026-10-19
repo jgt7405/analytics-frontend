@@ -291,60 +291,6 @@
   border-top: 2px solid #cbd5e1;
 }
 
-:global(.dark) .card {
-  --wins-cell-text: #e2e8f0;
-  border-color: rgb(51 65 85 / 0.88);
-  background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
-  box-shadow:
-    0 24px 58px -34px rgb(0 0 0 / 0.82),
-    inset 0 1px 0 rgb(255 255 255 / 0.025);
-}
-
-:global(.dark) .title {
-  color: #cbd5e1;
-}
-
-:global(.dark) .titleParenthetical {
-  color: #94a3b8;
-}
-
-:global(.dark) .teamName {
-  color: #e2e8f0;
-}
-
-:global(.dark) .stickyColumn,
-:global(.dark) .winsHeader,
-:global(.dark) .teamHeader {
-  --sticky-column-background: #111827;
-  background: #111827;
-  color: #cbd5e1;
-}
-
-:global(.dark) .winLabel {
-  --sticky-column-background: #0f172a;
-  border-bottom-color: rgb(51 65 85 / 0.6);
-  background: var(--sticky-column-background);
-}
-
-:global(.dark) .summaryLabel,
-:global(.dark) .summaryValue {
-  color: #e2e8f0;
-}
-
-:global(.dark) .summaryLabel {
-  --sticky-column-background: #263449;
-  background: var(--sticky-column-background);
-}
-
-:global(.dark) .summaryChip {
-  background: #263449;
-}
-
-:global(.dark) .table tfoot tr:first-child .summaryLabel,
-:global(.dark) .table tfoot tr:first-child .summaryValue {
-  border-top: 2px solid rgb(71 85 105 / 0.8);
-}
-
 @media (max-width: 767px) {
   .card {
     --label-column-width: 3.75rem;
@@ -419,5 +365,63 @@
   .teamButton,
   .heatTile {
     transition: none;
+  }
+}
+
+/* This app's dark mode is prefers-color-scheme only (tailwind.config.ts
+   darkMode: "media") - nothing ever adds a .dark class to the DOM. */
+@media (prefers-color-scheme: dark) {
+  .card {
+    --wins-cell-text: #e2e8f0;
+    border-color: rgb(51 65 85 / 0.88);
+    background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
+    box-shadow:
+      0 24px 58px -34px rgb(0 0 0 / 0.82),
+      inset 0 1px 0 rgb(255 255 255 / 0.025);
+  }
+
+  .title {
+    color: #cbd5e1;
+  }
+
+  .titleParenthetical {
+    color: #94a3b8;
+  }
+
+  .teamName {
+    color: #e2e8f0;
+  }
+
+  .stickyColumn,
+  .winsHeader,
+  .teamHeader {
+    --sticky-column-background: #111827;
+    background: #111827;
+    color: #cbd5e1;
+  }
+
+  .winLabel {
+    --sticky-column-background: #0f172a;
+    border-bottom-color: rgb(51 65 85 / 0.6);
+    background: var(--sticky-column-background);
+  }
+
+  .summaryLabel,
+  .summaryValue {
+    color: #e2e8f0;
+  }
+
+  .summaryLabel {
+    --sticky-column-background: #263449;
+    background: var(--sticky-column-background);
+  }
+
+  .summaryChip {
+    background: #263449;
+  }
+
+  .table tfoot tr:first-child .summaryLabel,
+  .table tfoot tr:first-child .summaryValue {
+    border-top: 2px solid rgb(71 85 105 / 0.8);
   }
 }
