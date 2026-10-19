@@ -138,3 +138,35 @@ test("/basketball/chart/ draws uploaded teams' logos from small, sharp files", a
   await page.waitForTimeout(1000);
   expectSmallLogos(recorded);
 });
+
+// A failed request (a dropped connection on a phone) used to leave the gray
+// placeholder in place of a TeamLogo until a reload; it's now asked for once
+// more, as a fresh request. Here every request for the logo's own URL fails
+// (a preload can absorb a single failure), so only the retry can show it.
+// Service workers are blocked so page.route sees the requests.
+test.describe("a logo whose request fails", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("still shows on /football/standings/", async ({ page }) => {
+    let failed = 0;
+    await page.route("**/images/team_logos/**", (route) => {
+      if (new URL(route.request().url()).searchParams.has("retry")) return route.continue();
+      failed++;
+      return route.abort("connectionreset");
+    });
+    await page.goto("/football/standings/");
+    // The standings table's logos are TeamLogos.
+    const logos = page.locator('main table img[alt$=" logo"]');
+    await expect(logos.first()).toBeVisible();
+    await expect
+      .poll(() =>
+        logos.evaluateAll((imgs) =>
+          (imgs as HTMLImageElement[]).every(
+            (img) => img.complete && img.naturalWidth > 0 && !img.currentSrc.startsWith("data:"),
+          ),
+        ),
+      )
+      .toBe(true);
+    expect(failed).toBeGreaterThan(0);
+  });
+});

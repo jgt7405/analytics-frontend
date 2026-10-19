@@ -18,7 +18,7 @@ Railway
   Flask backend /api/...
 ```
 
-Server-rendered first paint skips the browser leg: `page.tsx` calls a helper in `src/lib/server-api.ts`, which fetches the backend directly (`fetchEndpoint`, built from the same endpoint entries, parameters checked the same way) and passes the result to the client hook as React Query `initialData`. Today only some pages do this (e.g. `/football/wins/`, which makes zero browser data requests on load).
+Server-rendered first paint skips the browser leg: `page.tsx` calls a helper in `src/lib/server-api.ts`, which fetches the backend directly (`fetchEndpoint`, built from the same endpoint entries, parameters checked the same way) and passes the result to the client hook as React Query `initialData`. Today only some pages do this (e.g. `/football/wins/`, which makes zero browser data requests on load). A server fetch waits at most `SERVER_FETCH_TIMEOUT_MS` (6 s; a cache miss normally takes 0.1–0.6 s); after that the page renders without `initialData` and the browser fetches the data. While a page waits, its `loading.tsx` (`components/ui/PageLoading`) is already on screen, so a click answers at once however slow the backend is (`e2e/nav-speed.e2e.ts`). Team pages stream the same way through a `<Suspense>`, except for names missing from the cached team list, which wait so an unknown team still gets a real 404; a backend that fails or times out never turns a team page into a 404.
 
 ## Caching layers
 

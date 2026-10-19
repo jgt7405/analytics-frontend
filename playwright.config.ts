@@ -1,6 +1,10 @@
 import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
-import { FIXTURE_BACKEND_URL } from "./e2e/fixture-server";
+import {
+  FIXTURE_BACKEND_URL,
+  SLOW_APP_PORT,
+  SLOW_FIXTURE_BACKEND_URL,
+} from "./e2e/fixture-server";
 
 // Browser smoke tests against a production build (`npm run build` first).
 // The app talks to a fixture backend (e2e/fixture-server.ts, started in
@@ -48,15 +52,26 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   globalSetup: "./e2e/global-setup.ts",
-  webServer: {
-    command: `npx next start -p ${PORT}`,
-    // The app to serve: this checkout, or the base build during a
-    // screenshot comparison.
-    cwd: process.env.E2E_APP_DIR,
-    env: { BACKEND_API_URL: FIXTURE_BACKEND_URL },
-    url: `http://localhost:${PORT}/robots.txt`,
-    // Always start a fresh server: a running one may point at another backend.
-    reuseExistingServer: false,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      command: `npx next start -p ${PORT}`,
+      // The app to serve: this checkout, or the base build during a
+      // screenshot comparison.
+      cwd: process.env.E2E_APP_DIR,
+      env: { BACKEND_API_URL: FIXTURE_BACKEND_URL },
+      url: `http://localhost:${PORT}/robots.txt`,
+      // Always start a fresh server: a running one may point at another backend.
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      // The same build in front of the slow backend, for e2e/nav-speed.e2e.ts.
+      command: `npx next start -p ${SLOW_APP_PORT}`,
+      cwd: process.env.E2E_APP_DIR,
+      env: { BACKEND_API_URL: SLOW_FIXTURE_BACKEND_URL },
+      url: `http://localhost:${SLOW_APP_PORT}/robots.txt`,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+  ],
 });

@@ -14,6 +14,7 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useMonitoring } from "@/lib/unified-monitoring";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./TeamsContent.module.css";
@@ -169,9 +170,12 @@ export default function TeamsContent({
     </div>
   );
 
+  // A client-side link, like the header's: a plain <a> reloaded the whole
+  // site on every click.
   const TeamCard = ({ team }: { team: Team }) => (
-    <a
+    <Link
       href={teamHref(team.team_name)}
+      prefetch={false}
       className={cx(
         styles.teamCard,
         isMobile && styles.mobile,
@@ -204,7 +208,7 @@ export default function TeamsContent({
         )}
         {statCell(config.bidLabel, formatBidPct(team.bid_pct))}
       </div>
-    </a>
+    </Link>
   );
 
   const conferenceSelectorNode = (

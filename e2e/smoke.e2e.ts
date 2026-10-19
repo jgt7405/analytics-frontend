@@ -1,28 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { SPORT_IDS, archivedSeasons, sportAndSeasonFromPath, type Sport } from "../src/config/seasons";
-import { SPORTS, sportPage, sportPagePath } from "../src/config/sports";
+import { sportAndSeasonFromPath } from "../src/config/seasons";
+import { sportPage } from "../src/config/sports";
+import { ROUTES } from "./routes";
 
-// Every page in src/config/sports.ts, current season and (where the page has
-// one) its archive version for each archived season in src/config/seasons.ts,
-// must load and render the site shell without an uncaught JavaScript error.
-// The app runs against the fixture backend (e2e/fixture-server.ts): endpoints
-// with a fixture return data, the rest 404, so pages show their error states
-// too. Team pages resolve only with data, so they use teams with fixtures.
-const FIXTURE_TEAM: Record<Sport, string> = { basketball: "Duke", football: "Alabama" };
-
-const ROUTES = SPORT_IDS.flatMap((sport) => {
-  const path = (slug: string, season: string | null) =>
-    slug === "team"
-      ? `/${sport}${season ? `/${season}` : ""}/team/${FIXTURE_TEAM[sport]}/`
-      : sportPagePath(sport, slug, season);
-  const pages = SPORTS[sport].pages;
-  return [
-    ...pages.map((page) => path(page.slug, null)),
-    ...archivedSeasons(sport).flatMap((season) =>
-      pages.filter((page) => page.archive).map((page) => path(page.slug, season)),
-    ),
-  ];
-});
+// Every page (e2e/routes.ts) must load and render the site shell without an
+// uncaught JavaScript error. The app runs against the fixture backend
+// (e2e/fixture-server.ts): endpoints with a fixture return data, the rest
+// 404, so pages show their error states too.
 
 const SITE_URL = "https://www.jthomanalytics.com";
 

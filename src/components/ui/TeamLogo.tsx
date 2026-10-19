@@ -3,8 +3,12 @@
 
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import type { MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { sportAndSeasonFromPath } from "@/config/seasons";
+
+// Simple gray circle SVG
+const LOGO_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23cccccc'/%3E%3C/svg%3E";
 
 interface TeamLogoProps {
   logoUrl: string;
@@ -64,6 +68,18 @@ export default function TeamLogo({
 
   const clickable = Boolean(handleClick);
 
+  // A logo whose request fails (a dropped connection on a phone) is asked
+  // for once more, as a fresh request, before the gray placeholder; the
+  // placeholder used to stay until the page was reloaded.
+  const [failed, setFailed] = useState({ url: logoUrl, count: 0 });
+  const failures = failed.url === logoUrl ? failed.count : 0;
+  const src =
+    failures === 0
+      ? logoUrl
+      : failures === 1 && !logoUrl.startsWith("data:")
+        ? `${logoUrl}${logoUrl.includes("?") ? "&" : "?"}retry=1`
+        : LOGO_PLACEHOLDER;
+
   return (
     <div
       className={`inline-flex items-center justify-center rounded-full bg-transparent dark:bg-white p-0.5 ${clickable ? "cursor-pointer" : ""} ${className}`}
@@ -72,7 +88,7 @@ export default function TeamLogo({
       title={showTooltip ? teamName : undefined}
     >
       <Image
-        src={logoUrl}
+        src={src}
         alt={`${teamName} logo`}
         width={size}
         height={size}
@@ -80,11 +96,8 @@ export default function TeamLogo({
         priority={priority}
         sizes={`${size}px`}
         quality={75}
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          // Simple gray circle SVG as base64
-          target.src =
-            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23cccccc'/%3E%3C/svg%3E";
+        onError={() => {
+          if (src !== LOGO_PLACEHOLDER) setFailed({ url: logoUrl, count: failures + 1 });
         }}
       />
     </div>
