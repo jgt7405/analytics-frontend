@@ -24,6 +24,7 @@ import type {
   ConfBidsHistoryChartProps,
   ConfBidsTheme,
 } from "./types";
+import { DARK_CARD_BG, ensureContrast } from "@/lib/color-utils";
 
 interface ChartDimensions {
   chartArea: ChartArea;
@@ -56,6 +57,11 @@ export default function ConfBidsHistoryChart({
     new Set(),
   );
   const isDark = useIsDark();
+
+  // Dark brand colors (navy, black, maroon) vanish on the dark card, so lift
+  // them just enough to read: 3:1 for lines and markers, 4.5:1 for text.
+  const lineColor = (c: string) => (isDark ? ensureContrast(c, DARK_CARD_BG, 3) : c);
+  const textColor = (c: string) => (isDark ? ensureContrast(c) : c);
 
   useEffect(() => {
     setSelectedConferences(new Set());
@@ -217,7 +223,7 @@ export default function ConfBidsHistoryChart({
     const isSelected =
       selectedConferences.size === 0 || selectedConferences.has(confName);
     const color = isSelected
-      ? conf.conference_info.primary_color || "#666666"
+      ? lineColor(conf.conference_info.primary_color || "#666666")
       : "#d1d5db";
 
     return {
@@ -431,7 +437,7 @@ export default function ConfBidsHistoryChart({
                   selectedConferences.size === 0 ||
                   selectedConferences.has(conf.conference);
                 const confColor = isSelected
-                  ? conf.conference_info.primary_color || "#94a3b8"
+                  ? lineColor(conf.conference_info.primary_color || "#94a3b8")
                   : "#d1d5db";
 
                 return (
@@ -542,7 +548,7 @@ export default function ConfBidsHistoryChart({
                       <span
                         className={`${theme.endLabelClassName} min-w-[30px] text-left text-xs font-medium leading-none tabular-nums`}
                         style={{
-                          color: isSelected ? confColor : "#d1d5db",
+                          color: isSelected ? textColor(confColor) : "#d1d5db",
                           alignSelf: "stretch",
                           display: "flex",
                           alignItems: "center",

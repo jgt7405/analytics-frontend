@@ -32,6 +32,45 @@ export function readableTextColor(r: number, g: number, b: number, preferred: st
   return ratio(bg, 0) >= ratio(bg, 1) ? "#000000" : "#ffffff";
 }
 
+/** The lighter end of the dark-mode card gradient (gray-900). */
+export const DARK_CARD_BG = "#111827";
+
+const parseColor = (color: string): [number, number, number] | null => {
+  const hex = color.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hex) {
+    const h = hex[1].length === 3 ? hex[1].replace(/./g, "$&$&") : hex[1];
+    return hexToRgb(`#${h}`);
+  }
+  const rgb = color.match(/^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i);
+  return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : null;
+};
+
+/**
+ * Lightens a team or conference color toward white just enough to reach
+ * `minRatio` contrast against `background`, keeping its hue. Dark brand
+ * colors (navy, black, maroon) are near-invisible on dark-mode cards
+ * otherwise. Use 4.5 for text and 3 for lines and markers. Returns #rrggbb
+ * (callers append hex alpha); colors that already pass, or that can't be
+ * parsed, come back unchanged.
+ */
+export function ensureContrast(
+  color: string,
+  background: string = DARK_CARD_BG,
+  minRatio = 4.5,
+): string {
+  const fg = parseColor(color);
+  const bg = parseColor(background);
+  if (!fg || !bg) return color;
+  const bgLum = luminance(...bg);
+  if (ratio(luminance(...fg), bgLum) >= minRatio) return color;
+  for (let t = 0.05; t < 1; t += 0.05) {
+    const mixed = fg.map((c) => Math.round(c + (255 - c) * t)) as [number, number, number];
+    if (ratio(luminance(...mixed), bgLum) >= minRatio)
+      return `#${mixed.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+  }
+  return "#ffffff";
+}
+
 export function getCellColor(
   value: number,
   scheme: ColorScheme = "blue"

@@ -21,6 +21,8 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { ensureContrast } from "@/lib/color-utils";
+import { useIsDark } from "./history-chart/useIsDark";
 
 // Loaded on first open: the modal and the export code behind it aren't part
 // of the page's first-load JS.
@@ -143,6 +145,7 @@ export default function TeamContent<TData, THistory>({
 }: TeamContentProps<TData, THistory>) {
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
+  const isDark = useIsDark();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
@@ -408,7 +411,14 @@ export default function TeamContent<TData, THistory>({
       <div className="flex flex-col justify-center">
         <h1
           className={`${mobile ? "text-xl" : "text-2xl"} font-semibold leading-tight -mb-1`}
-          style={{ color: teamInfo.primary_color || "#1f2937" }}
+          style={{
+            // Dark team colors vanish on the dark page; lift them to 4.5:1.
+            color: teamInfo.primary_color
+              ? isDark
+                ? ensureContrast(teamInfo.primary_color, "#0f172a")
+                : teamInfo.primary_color
+              : undefined,
+          }}
         >
           {teamInfo.team_name} {rankLabel}
         </h1>

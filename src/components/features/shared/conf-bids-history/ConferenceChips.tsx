@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import Image from "next/image";
 import type { ConferenceEnd } from "./types";
+import { ensureContrast } from "@/lib/color-utils";
 
 interface ConferenceChipsProps {
   conferences: ConferenceEnd[];
@@ -104,7 +105,7 @@ export default function ConferenceChips({
               )}
               <span
                 className="text-xs font-semibold tabular-nums"
-                style={{ color: isSelected ? confColor : "#9ca3af" }}
+                style={{ color: isSelected ? (isDark ? ensureContrast(confColor) : confColor) : "#9ca3af" }}
               >
                 {conf.final_bids.toFixed(1)}
               </span>

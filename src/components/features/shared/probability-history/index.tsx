@@ -31,6 +31,7 @@ import type {
   TeamDataPoint,
   TeamInfo,
 } from "./types";
+import { DARK_CARD_BG, ensureContrast } from "@/lib/color-utils";
 
 interface ChartDimensions {
   chartArea: ChartArea;
@@ -62,6 +63,11 @@ export default function ProbabilityHistoryChart({
     useState<ChartDimensions | null>(null);
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set());
   const isDark = useIsDark();
+
+  // Dark brand colors (navy, black, maroon) vanish on the dark card, so lift
+  // them just enough to read: 3:1 for lines and markers, 4.5:1 for text.
+  const lineColor = (c: string) => (isDark ? ensureContrast(c, DARK_CARD_BG, 3) : c);
+  const textColor = (c: string) => (isDark ? ensureContrast(c) : c);
 
   useEffect(() => {
     setSelectedTeams(new Set());
@@ -200,7 +206,7 @@ export default function ProbabilityHistoryChart({
   const datasets = Object.entries(teamData).map(([teamName, team]) => {
     const isSelected = selectedTeams.size === 0 || selectedTeams.has(teamName);
     const color = isSelected
-      ? team.team_info.primary_color || "#000000"
+      ? lineColor(team.team_info.primary_color || "#000000")
       : "#d1d5db";
 
     return {
@@ -427,7 +433,7 @@ export default function ProbabilityHistoryChart({
                 const isSelected =
                   selectedTeams.size === 0 || selectedTeams.has(team.team_name);
                 const teamColor = isSelected
-                  ? team.team_info.primary_color || "#94a3b8"
+                  ? lineColor(team.team_info.primary_color || "#94a3b8")
                   : "#d1d5db";
 
                 return (
@@ -514,7 +520,7 @@ export default function ProbabilityHistoryChart({
                         className={`${theme.endLabelClassName} text-left text-xs font-medium leading-none tabular-nums`}
                         style={{
                           color: isSelected
-                            ? team.team_info.primary_color || "#000000"
+                            ? textColor(team.team_info.primary_color || "#000000")
                             : "#d1d5db",
                           alignSelf: "stretch",
                           display: "flex",
@@ -561,8 +567,9 @@ export default function ProbabilityHistoryChart({
                 onClick={() => handleTeamClick(team.team_name)}
                 style={{
                   boxShadow: `inset 0 0 0 1px ${
-                    team.team_info.primary_color ||
-                    (isDark ? "#475569" : "#cbd5e1")
+                    team.team_info.primary_color
+                      ? lineColor(team.team_info.primary_color)
+                      : isDark ? "#475569" : "#cbd5e1"
                   }`,
                 }}
                 className={cn(
@@ -582,7 +589,7 @@ export default function ProbabilityHistoryChart({
                   className="text-xs font-semibold tabular-nums"
                   style={{
                     color: isSelected
-                      ? team.team_info.primary_color || "#000000"
+                      ? textColor(team.team_info.primary_color || "#000000")
                       : "#9ca3af",
                   }}
                 >

@@ -1,5 +1,6 @@
 import TeamLogo from "@/components/ui/TeamLogo";
 import type { ChartArea } from "chart.js";
+import { DARK_CARD_BG, ensureContrast } from "@/lib/color-utils";
 import type { LogoPosition, TeamInfo } from "./types";
 
 interface EndMarkersProps {
@@ -11,6 +12,10 @@ interface EndMarkersProps {
   isMobile: boolean;
   endLabelClassName: string;
 }
+
+const lineColor = (c: string, isDark: boolean) =>
+  isDark ? ensureContrast(c, DARK_CARD_BG, 3) : c;
+const textColor = (c: string, isDark: boolean) => (isDark ? ensureContrast(c) : c);
 
 // End-of-line dots plus the logo and final value for each team, drawn over
 // the canvas at the plot's right edge (PAGE_MODERNIZATION_GUIDE.md §8g).
@@ -31,8 +36,10 @@ export default function EndMarkers({
       {positions.map(({ team, idealY, adjustedY }) => {
         const isSelected =
           selectedTeams.size === 0 || selectedTeams.has(team.team_name);
+        // Dark brand colors vanish on the dark card: lift markers to 3:1 and
+        // the value text to 4.5:1 (see ensureContrast).
         const teamColor = isSelected
-          ? team.team_info.primary_color || "#94a3b8"
+          ? lineColor(team.team_info.primary_color || "#94a3b8", isDark)
           : "#d1d5db";
 
         return (
@@ -119,7 +126,7 @@ export default function EndMarkers({
                 className={`${endLabelClassName} min-w-[30px] text-left text-xs font-medium leading-none tabular-nums`}
                 style={{
                   color: isSelected
-                    ? team.team_info.primary_color || "#000000"
+                    ? textColor(team.team_info.primary_color || "#000000", isDark)
                     : "#d1d5db",
                   alignSelf: "stretch",
                   display: "flex",

@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { useFootballTeamCFPHistory } from "@/hooks/useFootballTeamCFPHistory";
 import { chartLabel } from "@/lib/a11y/chart-label";
+import { ensureContrast } from "@/lib/color-utils";
 
 interface CFPHistoricalDataPoint {
   date: string;
@@ -66,7 +67,7 @@ interface FootballTeamCFPBidHistoryProps {
 
 export default function FootballTeamCFPBidHistory({
   teamName,
-  primaryColor = "#3b82f6",
+  primaryColor: rawPrimaryColor = "#3b82f6",
   secondaryColor,
   season,
   displaySeason,
@@ -76,6 +77,9 @@ export default function FootballTeamCFPBidHistory({
   const chartRef = useRef<any>(null);
 
   const [isDark, setIsDark] = useState(false);
+  // Dark brand colors (navy, black, maroon) vanish on the dark card; lift
+  // them to 4.5:1 so the line and its value labels read (see ensureContrast).
+  const primaryColor = isDark ? ensureContrast(rawPrimaryColor) : rawPrimaryColor;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -156,7 +160,7 @@ export default function FootballTeamCFPBidHistory({
       secondaryColor.toLowerCase() === "white"
       ? "#000000" // fallback to black if white
       : secondaryColor
-    : primaryColor === "#3b82f6"
+    : rawPrimaryColor === "#3b82f6"
       ? "#ef4444"
       : "#10b981";
 

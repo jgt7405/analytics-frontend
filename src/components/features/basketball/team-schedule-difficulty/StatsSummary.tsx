@@ -4,6 +4,8 @@
 // were compared.
 
 import type { TeamStats } from "./types";
+import { ensureContrast } from "@/lib/color-utils";
+import { useIsDark } from "@/components/features/shared/history-chart/useIsDark";
 
 interface StatsSummaryProps {
   teamStats: TeamStats;
@@ -18,6 +20,9 @@ export default function StatsSummary({
   chartedGames,
   comparisonGames,
 }: StatsSummaryProps) {
+  // Dark team colors vanish on the dark card; lift them to 4.5:1.
+  const isDark = useIsDark();
+  const valueColor = isDark ? ensureContrast(teamColor) : teamColor;
   return (
     <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
       {/* Team Stats Summary - MOVED TO TOP */}
@@ -25,7 +30,7 @@ export default function StatsSummary({
         <div className="grid grid-cols-5 gap-4 justify-center px-2">
           <div>
             <div className="font-medium text-gray-700 dark:text-gray-300">Record:</div>
-            <div style={{ color: teamColor }}>
+            <div style={{ color: valueColor }}>
               {teamStats.wins}-{teamStats.losses}
             </div>
           </div>
@@ -38,7 +43,7 @@ export default function StatsSummary({
           </div>
           <div>
             <div className="font-medium text-gray-700 dark:text-gray-300">Act Win %:</div>
-            <div style={{ color: teamColor }}>
+            <div style={{ color: valueColor }}>
               {teamStats.actualWinPct.toFixed(0)}%
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { getCellColor, readableTextColor } from "../color-utils";
+import { DARK_CARD_BG, ensureContrast, getCellColor, readableTextColor } from "../color-utils";
 
 describe("readableTextColor", () => {
   it("keeps the preferred color when it reaches 4.5:1", () => {
@@ -29,5 +29,34 @@ describe("getCellColor", () => {
       const [a, b] = [lum(parse(backgroundColor)), lum(parse(color))];
       expect((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)).toBeGreaterThanOrEqual(4.5);
     }
+  });
+});
+
+describe("ensureContrast", () => {
+  const lum = (hex: string) =>
+    [1, 3, 5]
+      .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)))
+      .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
+  const contrast = (a: string, b: string) =>
+    (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+
+  it("keeps colors that already read on the dark card", () => {
+    expect(ensureContrast("#f59e0b")).toBe("#f59e0b");
+    expect(ensureContrast("#ffffff")).toBe("#ffffff");
+  });
+
+  it("lifts dark brand colors to the requested contrast", () => {
+    // Duke navy, black, and a deep maroon.
+    for (const color of ["#001A57", "#000000", "#500000"]) {
+      expect(contrast(ensureContrast(color), DARK_CARD_BG)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(ensureContrast(color, DARK_CARD_BG, 3), DARK_CARD_BG)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("accepts short hex and rgb() and leaves unparseable colors alone", () => {
+    expect(ensureContrast("#000")).toMatch(/^#[0-9a-f]{6}$/);
+    expect(ensureContrast("rgb(0, 26, 87)")).toMatch(/^#[0-9a-f]{6}$/);
+    expect(ensureContrast("var(--x)")).toBe("var(--x)");
   });
 });

@@ -5,6 +5,7 @@
 // background, #1f2937 text) that turned into an unreadable white box once
 // the surrounding card went dark. This centralizes that logic once, themed.
 import type { Chart, TooltipModel } from "chart.js";
+import { ensureContrast } from "./color-utils";
 
 export interface TooltipRow {
   label: string;
@@ -114,12 +115,14 @@ export function renderExternalTooltip(
     `;
 
     config.rows.forEach((row) => {
+      // Team colors are tuned for white; lift dark ones off the dark tooltip.
+      const rowColor = config.isDark ? ensureContrast(row.color, theme.background) : row.color;
       const logo = row.logoUrl
         ? `<img src="${row.logoUrl}" alt="" style="width: 18px; height: 18px; object-fit: contain; flex: 0 0 18px;" />`
-        : `<span style="width: 7px; height: 7px; border-radius: 999px; background: ${row.color}; flex: 0 0 7px; margin: 0 5.5px;"></span>`;
+        : `<span style="width: 7px; height: 7px; border-radius: 999px; background: ${rowColor}; flex: 0 0 7px; margin: 0 5.5px;"></span>`;
 
       innerHtml += `
-        <div style="display: flex; align-items: center; gap: 7px; min-height: 20px; margin: 1px 0; color: ${row.color}; font-weight: 500;">
+        <div style="display: flex; align-items: center; gap: 7px; min-height: 20px; margin: 1px 0; color: ${rowColor}; font-weight: 500;">
           ${logo}
           <span style="min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.label}</span>
           <span style="font-weight: 700; font-variant-numeric: tabular-nums;">${row.value}</span>

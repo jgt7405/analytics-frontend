@@ -24,6 +24,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { chartLabel } from "@/lib/a11y/chart-label";
+import { ensureContrast } from "@/lib/color-utils";
 
 interface CFPProgressionDataPoint {
   date: string;
@@ -65,7 +66,7 @@ interface CFPRoundDataPoint {
 
 export default function FootballTeamCFPProgressionHistory({
   teamName,
-  primaryColor = "#3b82f6",
+  primaryColor: rawPrimaryColor = "#3b82f6",
   secondaryColor,
   season,
   displaySeason,
@@ -76,6 +77,9 @@ export default function FootballTeamCFPProgressionHistory({
   const [data, setData] = useState<CFPProgressionDataPoint[]>([]);
 
   const [isDark, setIsDark] = useState(false);
+  // Dark brand colors (navy, black, maroon) vanish on the dark card; lift
+  // them to 4.5:1 so the line and its value labels read (see ensureContrast).
+  const primaryColor = isDark ? ensureContrast(rawPrimaryColor) : rawPrimaryColor;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -185,7 +189,7 @@ export default function FootballTeamCFPProgressionHistory({
       secondaryColor.toLowerCase() === "white"
       ? "#000000"
       : secondaryColor
-    : primaryColor === "#3b82f6"
+    : rawPrimaryColor === "#3b82f6"
       ? "#ef4444"
       : "#10b981";
 

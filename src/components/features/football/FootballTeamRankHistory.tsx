@@ -25,6 +25,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { chartLabel } from "@/lib/a11y/chart-label";
+import { ensureContrast } from "@/lib/color-utils";
 
 interface HistoricalDataPoint {
   date: string;
@@ -52,7 +53,7 @@ interface FootballTeamRankHistoryProps {
 
 export default function FootballTeamRankHistory({
   teamName,
-  primaryColor = "#3b82f6",
+  primaryColor: rawPrimaryColor = "#3b82f6",
   logoUrl,
   season,
   displaySeason,
@@ -64,6 +65,9 @@ export default function FootballTeamRankHistory({
   const [data, setData] = useState<HistoricalDataPoint[]>([]);
 
   const [isDark, setIsDark] = useState(false);
+  // Dark brand colors (navy, black, maroon) vanish on the dark card; lift
+  // them to 4.5:1 so the line and its value labels read (see ensureContrast).
+  const primaryColor = isDark ? ensureContrast(rawPrimaryColor) : rawPrimaryColor;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

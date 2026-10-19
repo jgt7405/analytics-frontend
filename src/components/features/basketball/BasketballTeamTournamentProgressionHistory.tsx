@@ -21,6 +21,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 import { chartLabel } from "@/lib/a11y/chart-label";
+import { ensureContrast } from "@/lib/color-utils";
 
 interface TournamentProgressionDataPoint {
   date: string;
@@ -61,7 +62,7 @@ interface TournamentRoundDataPoint {
 
 export default function BasketballTeamTournamentProgressionHistory({
   teamName,
-  primaryColor = "#3b82f6",
+  primaryColor: rawPrimaryColor = "#3b82f6",
   secondaryColor,
   season,
 }: BasketballTeamTournamentProgressionHistoryProps) {
@@ -70,6 +71,9 @@ export default function BasketballTeamTournamentProgressionHistory({
   const chartRef = useRef<any>(null);
   const [data, setData] = useState<TournamentProgressionDataPoint[]>([]);
   const [isDark, setIsDark] = useState(false);
+  // Dark brand colors (navy, black, maroon) vanish on the dark card; lift
+  // them to 4.5:1 so the line and its value labels read (see ensureContrast).
+  const primaryColor = isDark ? ensureContrast(rawPrimaryColor) : rawPrimaryColor;
 
   const {
     data: allHistoryData,
@@ -166,7 +170,7 @@ export default function BasketballTeamTournamentProgressionHistory({
       secondaryColor.toLowerCase() === "white"
       ? "#000000"
       : secondaryColor
-    : primaryColor === "#3b82f6"
+    : rawPrimaryColor === "#3b82f6"
       ? "#ef4444"
       : "#10b981";
 
