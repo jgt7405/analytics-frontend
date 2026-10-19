@@ -159,6 +159,9 @@ export default function DifficultyChart({
                   {...markHandlers(game, () => navigateToOpponent(game.opponent))}
                   style={{ cursor: "pointer" }}
                 >
+                  {/* White disc behind the logo so dark logos read on any
+                      background. */}
+                  <circle cx={logoX} cy={game.adjustedY} r={14} fill="#ffffff" />
                   <foreignObject
                     x={logoX - 12}
                     y={game.adjustedY - 12}

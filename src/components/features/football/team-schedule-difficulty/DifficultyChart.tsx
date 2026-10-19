@@ -117,6 +117,9 @@ export default function DifficultyChart({
 
               {game.opponent_logo && (
                 <g>
+                  {/* White disc behind the logo so dark logos read on any
+                      background. */}
+                  <circle cx={logoX} cy={game.adjustedY} r={18} fill="#ffffff" />
                   <foreignObject
                     x={logoX - 16}
                     y={game.adjustedY - 16}
