@@ -238,7 +238,7 @@ export default function NextGameImpact({
             const val = e.target.value;
             onTeamChange(val ? parseInt(val) : null);
           }}
-          className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-900 text-xs hover:border-gray-400 transition-colors"
+          className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-slate-900 dark:text-gray-100 text-xs hover:border-gray-400 transition-colors"
         >
           <option value="">Select Team</option>
           {sortedTeams.map((t) => (

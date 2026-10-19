@@ -13,7 +13,7 @@ const TWV_YELLOW = [255, 230, 113];
 
 export function getDeltaColor(delta: number, maxAbs: number) {
   if (Math.abs(delta) < 0.05 || maxAbs === 0)
-    return { backgroundColor: "transparent", color: "#000000" };
+    return { backgroundColor: "transparent", color: "inherit" };
   const ratio = Math.min(Math.abs(delta) / maxAbs, 1);
   const t = delta > 0 ? TWV_BLUE : TWV_YELLOW;
   const r = Math.round(TWV_WHITE[0] + (t[0] - TWV_WHITE[0]) * ratio);

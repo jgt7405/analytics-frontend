@@ -408,7 +408,7 @@ export default function FootballGameImpactBoard({
           onChange={(e) =>
             setFocusTeamId(e.target.value ? parseInt(e.target.value, 10) : null)
           }
-          className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:border-gray-400 dark:border-gray-600 dark:bg-slate-900"
+          className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:border-gray-400 dark:border-gray-600 dark:bg-slate-900 dark:text-gray-100"
         >
           <option value="">Select a team…</option>
           {sortedTeams.map((t) => (

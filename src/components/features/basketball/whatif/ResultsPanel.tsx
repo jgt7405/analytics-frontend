@@ -145,7 +145,7 @@ export function ResultsPanel({
                     <button
                       type="button"
                       onClick={onToggleAllNcaaTeams}
-                      className="px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-slate-800 transition"
+                      className="px-2 py-1 text-[11px] bg-transparent text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-slate-800 transition"
                       aria-pressed={showAllNcaaTeams}
                     >
                       {showAllNcaaTeams ? "Conference Only" : "All Teams"}

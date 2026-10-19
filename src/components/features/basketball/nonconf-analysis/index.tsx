@@ -113,6 +113,9 @@ function BballNonConfAnalysisTable({ className: _className = "" }: BballNonConfA
             borderCollapse: "collapse",
             width: "max-content",
             borderSpacing: 0,
+            // The cells paint white in both themes, so the text must stay
+            // dark rather than inherit the body's dark-mode light text.
+            color: "#111827",
           }}
         >
           <thead>

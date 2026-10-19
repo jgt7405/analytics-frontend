@@ -415,7 +415,6 @@
    darkMode: "media") - nothing ever adds a .dark class to the DOM. */
 @media (prefers-color-scheme: dark) {
   .card {
-    --wins-cell-text: #e2e8f0;
     border-color: rgb(51 65 85 / 0.88);
     background: linear-gradient(145deg, #111827 0%, #0f172a 100%);
     box-shadow:

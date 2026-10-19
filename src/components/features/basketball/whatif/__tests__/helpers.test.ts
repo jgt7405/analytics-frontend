@@ -11,7 +11,7 @@ const team = (probs: Record<number, number>): WhatIfTeamResult =>
 
 describe("what-if helpers", () => {
   it("colors a change toward blue (up) or yellow (down), transparent when tiny", () => {
-    expect(getDeltaColor(0.01, 10)).toEqual({ backgroundColor: "transparent", color: "#000000" });
+    expect(getDeltaColor(0.01, 10)).toEqual({ backgroundColor: "transparent", color: "inherit" });
     expect(getDeltaColor(10, 10).backgroundColor).toBe("rgb(24, 98, 123)");
     expect(getDeltaColor(-10, 10).backgroundColor).toBe("rgb(255, 230, 113)");
   });

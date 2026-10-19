@@ -85,11 +85,11 @@ function BasketballScheduleTable({
   const getLocationStyle = useCallback((location: string) => {
     switch (location) {
       case "Home":
-        return { backgroundColor: "#e6f3f8" };
+        return { backgroundColor: "#e6f3f8", color: "#1f2937" };
       case "Away":
-        return { backgroundColor: "#fffff6" };
+        return { backgroundColor: "#fffff6", color: "#1f2937" };
       case "Neutral":
-        return { backgroundColor: "#f8f8fe" };
+        return { backgroundColor: "#f8f8fe", color: "#1f2937" };
       default:
         return { backgroundColor: "var(--bg-secondary)" };
     }
