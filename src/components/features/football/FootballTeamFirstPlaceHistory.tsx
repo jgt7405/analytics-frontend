@@ -162,11 +162,13 @@ export default function FootballTeamFirstPlaceHistory({
       "WHITE",
     ];
 
+    // White reads on the dark card but not the light one; dark secondaries
+    // get the same dark-mode lift as the primary color.
     if (whiteValues.includes(secondaryColor.toLowerCase().replace(/\s/g, ""))) {
-      return "#000000";
+      return isDark ? "#ffffff" : "#000000";
     }
 
-    return secondaryColor;
+    return isDark ? ensureContrast(secondaryColor) : secondaryColor;
   })();
 
   // Build chart labels and datasets

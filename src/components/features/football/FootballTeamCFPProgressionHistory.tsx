@@ -184,11 +184,17 @@ export default function FootballTeamCFPProgressionHistory({
     setData(finalData);
   }, [allHistoryData, teamName, season, displaySeason]);
 
+  // White reads on the dark card but not the light one; dark secondaries
+  // get the same dark-mode lift as the primary color.
   const finalSecondaryColor = secondaryColor
     ? secondaryColor.toLowerCase() === "#ffffff" ||
       secondaryColor.toLowerCase() === "white"
-      ? "#000000"
-      : secondaryColor
+      ? isDark
+        ? "#ffffff"
+        : "#000000"
+      : isDark
+        ? ensureContrast(secondaryColor)
+        : secondaryColor
     : rawPrimaryColor === "#3b82f6"
       ? "#ef4444"
       : "#10b981";
