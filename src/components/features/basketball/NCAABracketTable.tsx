@@ -37,7 +37,7 @@ const blendValue = (team: NCAATeam, rank: TwvRank) =>
   rank === 30 ? team.blend_30 : rank === 50 ? team.blend_50 : team.blend_200;
 
 const formatStat = (value: number | null | undefined) =>
-  value != null ? value.toFixed(2) : "—";
+  value != null ? value.toFixed(1) : "—";
 
 // Extend NCAATeam interface to include conf_logo_url
 interface NCAATeamWithConfLogo extends NCAATeam {
