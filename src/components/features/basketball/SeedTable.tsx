@@ -60,98 +60,63 @@ function SeedTable({
   const sortedTeams = useMemo(() => {
     const teams = [...seedData];
 
+    // Percentages are compared as displayed (whole numbers), so teams that
+    // show the same percentage fall through to the average seed tiebreaker
+    const shownPct = (value?: number | null) => Math.round(value || 0);
+    // tournament_bid_pct may arrive as a fraction (0-1) or a percentage
+    const inTourneyPct = (team: SeedTeam) =>
+      team.tournament_bid_pct && team.tournament_bid_pct <= 1
+        ? team.tournament_bid_pct * 100
+        : team.tournament_bid_pct || 0;
+    const avgSeed = (team: SeedTeam) =>
+      team.average_seed !== null &&
+      team.average_seed !== undefined &&
+      team.average_seed > 0
+        ? team.average_seed
+        : 999;
+
+    // Primary value for the selected column, sorted descending (highest first)
+    const columnPct = (team: SeedTeam, column: SortColumn) => {
+      switch (column) {
+        case "tournament_bid_pct":
+          return inTourneyPct(team);
+        case "auto_bid_overall_pct":
+          return team.auto_bid_overall_pct || 0;
+        case "at_large_overall_pct":
+          return team.at_large_overall_pct || 0;
+        case "first_four_out":
+          return team.seed_distribution?.["First Four Out"] || 0;
+        case "next_four_out":
+          return team.seed_distribution?.["Next Four Out"] || 0;
+        case "out_of_tourney":
+          return 100 - inTourneyPct(team);
+        default:
+          // Seed column (1-16)
+          return team.seed_distribution?.[column] || 0;
+      }
+    };
+
     if (sortColumn) {
       return teams.sort((a, b) => {
-        let aVal: number;
-        let bVal: number;
-
-        // Handle different column types
-        if (sortColumn === "tournament_bid_pct") {
-          aVal = a.tournament_bid_pct || 0;
-          bVal = b.tournament_bid_pct || 0;
-          // Sort descending (highest first)
-          if (aVal !== bVal) return bVal - aVal;
-        } else if (sortColumn === "average_seed") {
-          aVal =
-            a.average_seed !== null &&
-            a.average_seed !== undefined &&
-            a.average_seed > 0
-              ? a.average_seed
-              : 999;
-          bVal =
-            b.average_seed !== null &&
-            b.average_seed !== undefined &&
-            b.average_seed > 0
-              ? b.average_seed
-              : 999;
+        if (sortColumn === "average_seed") {
           // Sort ascending (lowest first)
-          if (aVal !== bVal) return aVal - bVal;
-        } else if (sortColumn === "auto_bid_overall_pct") {
-          aVal = a.auto_bid_overall_pct || 0;
-          bVal = b.auto_bid_overall_pct || 0;
-          // Sort descending (highest first)
-          if (aVal !== bVal) return bVal - aVal;
-        } else if (sortColumn === "at_large_overall_pct") {
-          aVal = a.at_large_overall_pct || 0;
-          bVal = b.at_large_overall_pct || 0;
-          // Sort descending (highest first)
-          if (aVal !== bVal) return bVal - aVal;
-        } else if (sortColumn === "first_four_out") {
-          aVal = a.seed_distribution?.["First Four Out"] || 0;
-          bVal = b.seed_distribution?.["First Four Out"] || 0;
-          // Sort descending (highest first)
-          if (aVal !== bVal) return bVal - aVal;
-        } else if (sortColumn === "next_four_out") {
-          aVal = a.seed_distribution?.["Next Four Out"] || 0;
-          bVal = b.seed_distribution?.["Next Four Out"] || 0;
-          // Sort descending (highest first)
-          if (aVal !== bVal) return bVal - aVal;
-        } else if (sortColumn === "out_of_tourney") {
-          // Calculate Out of Tourney percentage: 100% - In Tourney %
-          const aInTourney =
-            a.tournament_bid_pct && a.tournament_bid_pct <= 1
-              ? a.tournament_bid_pct * 100
-              : a.tournament_bid_pct || 0;
-          aVal = 100 - aInTourney;
-
-          const bInTourney =
-            b.tournament_bid_pct && b.tournament_bid_pct <= 1
-              ? b.tournament_bid_pct * 100
-              : b.tournament_bid_pct || 0;
-          bVal = 100 - bInTourney;
-
-          // Sort descending (highest first)
-          if (aVal !== bVal) return bVal - aVal;
+          const diff = avgSeed(a) - avgSeed(b);
+          if (diff !== 0) return diff;
+          // Tiebreaker: In Tourney % (descending)
+          const bidDiff =
+            shownPct(inTourneyPct(b)) - shownPct(inTourneyPct(a));
+          if (bidDiff !== 0) return bidDiff;
         } else {
-          // Seed column (1-16)
-          aVal = a.seed_distribution?.[sortColumn] || 0;
-          bVal = b.seed_distribution?.[sortColumn] || 0;
-          // Sort descending (highest first)
-          if (aVal !== bVal) return bVal - aVal;
+          const diff =
+            shownPct(columnPct(b, sortColumn)) -
+            shownPct(columnPct(a, sortColumn));
+          if (diff !== 0) return diff;
+          // Tiebreaker: Wgtd Avg Seed (ascending - lowest first)
+          const seedDiff = avgSeed(a) - avgSeed(b);
+          if (seedDiff !== 0) return seedDiff;
         }
 
-        // Secondary tiebreakers
-        // 1. Tournament bid %
-        const aBidPct = a.tournament_bid_pct || 0;
-        const bBidPct = b.tournament_bid_pct || 0;
-        if (aBidPct !== bBidPct) return bBidPct - aBidPct;
-
-        // 2. Average seed
-        const aAvgSeed =
-          a.average_seed !== null &&
-          a.average_seed !== undefined &&
-          a.average_seed > 0
-            ? a.average_seed
-            : 999;
-        const bAvgSeed =
-          b.average_seed !== null &&
-          b.average_seed !== undefined &&
-          b.average_seed > 0
-            ? b.average_seed
-            : 999;
-        if (aAvgSeed !== bAvgSeed) return aAvgSeed - bAvgSeed;
-
-        // 3. Alphabetical by team name
+        // Last resort: alphabetical by team name
         return a.team_name.localeCompare(b.team_name);
       });
     }
@@ -159,24 +124,12 @@ function SeedTable({
     // Default sort (no column selected)
     return teams.sort((a, b) => {
       // 1. Sort by In Tourney % (descending - highest first)
-      const aBidPct = a.tournament_bid_pct || 0;
-      const bBidPct = b.tournament_bid_pct || 0;
-      if (aBidPct !== bBidPct) return bBidPct - aBidPct;
+      const bidDiff = shownPct(inTourneyPct(b)) - shownPct(inTourneyPct(a));
+      if (bidDiff !== 0) return bidDiff;
 
       // 2. Sort by Wgtd Avg Seed (ascending - lowest first)
-      const aAvgSeed =
-        a.average_seed !== null &&
-        a.average_seed !== undefined &&
-        a.average_seed > 0
-          ? a.average_seed
-          : 999;
-      const bAvgSeed =
-        b.average_seed !== null &&
-        b.average_seed !== undefined &&
-        b.average_seed > 0
-          ? b.average_seed
-          : 999;
-      if (aAvgSeed !== bAvgSeed) return aAvgSeed - bAvgSeed;
+      const seedDiff = avgSeed(a) - avgSeed(b);
+      if (seedDiff !== 0) return seedDiff;
 
       // 3. Sort by 1st 4 Out (descending - highest first)
       const aFFO = a.seed_distribution?.["First Four Out"] || 0;
