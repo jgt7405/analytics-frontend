@@ -48,7 +48,8 @@ export interface ChartLayout {
 /** Wins needed for each seed line, 0 when unknown. */
 export interface SeedThresholds {
   bubbleWins: number;
-  seed10Wins: number;
+  seed11Wins: number;
+  seed9Wins: number;
   seed7Wins: number;
   seed4Wins: number;
   seed1Wins: number;

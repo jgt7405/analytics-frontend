@@ -25,7 +25,9 @@ const row = (over: Partial<ConfChampData>): ConfChampData =>
     wins_for_1_seed: 28,
     wins_for_4_seed: 25,
     wins_for_7_seed: 23,
+    wins_for_9_seed: 21.5,
     wins_for_10_seed: 21,
+    wins_for_11_seed: 20.5,
     season_total_proj_wins_avg: 24,
     ...over,
   }) as ConfChampData;
@@ -118,6 +120,8 @@ describe("cell styles", () => {
     expect(seedThresholds(row({ wins_for_bubble: undefined as unknown as number }))).toMatchObject({
       bubbleWins: 0,
       seed1Wins: 28,
+      seed9Wins: 21.5,
+      seed11Wins: 20.5,
     });
   });
 

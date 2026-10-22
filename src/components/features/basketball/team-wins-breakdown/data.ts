@@ -149,7 +149,8 @@ export function logoPositions(allGames: ChartGame[], layout: ChartLayout): LogoP
 export function seedThresholds(confChampData: ConfChampData): SeedThresholds {
   return {
     bubbleWins: confChampData.wins_for_bubble || 0,
-    seed10Wins: confChampData.wins_for_10_seed || 0,
+    seed11Wins: confChampData.wins_for_11_seed || 0,
+    seed9Wins: confChampData.wins_for_9_seed || 0,
     seed7Wins: confChampData.wins_for_7_seed || 0,
     seed4Wins: confChampData.wins_for_4_seed || 0,
     seed1Wins: confChampData.wins_for_1_seed || 0,

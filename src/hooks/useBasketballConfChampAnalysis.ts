@@ -27,6 +27,7 @@ export interface ConfChampAnalysisRow {
   wins_for_8_seed: number;
   wins_for_9_seed: number;
   wins_for_10_seed: number;
+  wins_for_11_seed: number;
   season_total_proj_wins_avg: number;
 }
 
