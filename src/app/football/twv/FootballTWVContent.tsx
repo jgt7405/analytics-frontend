@@ -17,6 +17,7 @@ const FOOTBALL_TWV: TWVContentConfig<FootballTWVTeam> = {
   tableTitle: "True Win Value (TWV)",
   useTWVData: useFootballTWV,
   TWVTable: FootballTWVTable,
+  allTeamsValues: ["All Teams", "Group of 6"],
   explainerLines: [
     "TWV (True Win Value) shows actual wins compared to expected wins for the 12th rated team in composite ratings.",
     "Positive values indicate overperformance, negative values indicate underperformance relative to the 12th rated team.",

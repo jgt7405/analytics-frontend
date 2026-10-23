@@ -69,6 +69,12 @@ export interface SeedContentConfig<TTeam> {
   tableShareTitle: string;
   /** Current-season-only chart sections below the table (basketball). */
   extraSections?: SeedExtraSection<TTeam>[];
+  /**
+   * Selector values that show a multi-conference view (row filter, never
+   * saved as the default conference). Defaults to ["All Teams"]; football
+   * adds the synthetic "Group of 6".
+   */
+  allTeamsValues?: string[];
 }
 
 interface SeedContentProps<TTeam> {
@@ -109,6 +115,7 @@ export default function SeedContent<TTeam>({
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
   const pageId = config.pageId;
+  const allTeamsValues = config.allTeamsValues ?? ["All Teams"];
 
   const [selectedConference, setSelectedConference] = useState(() => {
     const confParam = searchParams.get("conf");
@@ -212,7 +219,7 @@ export default function SeedContent<TTeam>({
 
   const handleConferenceChange = (conference: string) => {
     handleUrlChange(conference);
-    if (conference !== "All Teams") {
+    if (!allTeamsValues.includes(conference)) {
       updatePreference("defaultConference", conference);
     }
     trackEvent({
@@ -240,7 +247,7 @@ export default function SeedContent<TTeam>({
   const tableSkeleton = (
     <BasketballTableSkeleton
       tableType="standings"
-      rows={selectedConference === "All Teams" ? 25 : 15}
+      rows={allTeamsValues.includes(selectedConference) ? 25 : 15}
       teamCols={config.skeletonTeamCols}
       showSummaryRows={false}
     />
@@ -249,7 +256,7 @@ export default function SeedContent<TTeam>({
   const ctx: SeedRenderContext = {
     selectedConference,
     season,
-    showAllTeams: selectedConference === "All Teams",
+    showAllTeams: allTeamsValues.includes(selectedConference),
     headerRight: config.hidePageTitle ? conferenceSelector : undefined,
   };
 

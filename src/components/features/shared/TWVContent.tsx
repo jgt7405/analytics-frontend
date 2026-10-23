@@ -40,6 +40,12 @@ export interface TWVContentConfig<TTeam> {
   /** Explainer paragraphs (the TWV benchmark team differs per sport). */
   explainerLines: string[];
   /**
+   * Selector values that show a multi-conference view (row filter, never
+   * saved as the default conference). Defaults to ["All Teams"]; football
+   * adds the synthetic "Group of 6".
+   */
+  allTeamsValues?: string[];
+  /**
    * Bold card title rendered above the table. When set, the page-level gray
    * title is hidden so only this one shows (avoids stacked duplicate titles).
    * Omit to keep the previous page-level-title-only behavior.
@@ -66,6 +72,7 @@ export default function TWVContent<TTeam>({
   const { isMobile } = useResponsive();
   const searchParams = useSearchParams();
   const pageId = config.pageId;
+  const allTeamsValues = config.allTeamsValues ?? ["All Teams"];
 
   const [selectedConference, setSelectedConference] = useState(() => {
     const confParam = searchParams.get("conf");
@@ -168,7 +175,7 @@ export default function TWVContent<TTeam>({
   const handleConferenceChange = (conference: string) => {
     startMeasurement("conference-change");
     handleUrlChange(conference);
-    if (conference !== "All Teams") {
+    if (!allTeamsValues.includes(conference)) {
       updatePreference("defaultConference", conference);
     }
     trackEvent({
@@ -197,7 +204,7 @@ export default function TWVContent<TTeam>({
   const tableSkeleton = (
     <BasketballTableSkeleton
       tableType="standings"
-      rows={selectedConference === "All Teams" ? 25 : 15}
+      rows={allTeamsValues.includes(selectedConference) ? 25 : 15}
       teamCols={5}
       showSummaryRows={false}
     />
@@ -278,7 +285,7 @@ export default function TWVContent<TTeam>({
                       <TWVTable
                         twvData={twvResponse.data}
                         className="twv-table"
-                        showAllTeams={selectedConference === "All Teams"}
+                        showAllTeams={allTeamsValues.includes(selectedConference)}
                         season={season}
                       />
                     )}

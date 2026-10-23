@@ -19,6 +19,7 @@ const FOOTBALL_SEED: SeedContentConfig<FootballSeedRow> = {
   title: "CFP Seed Projections",
   hidePageTitle: true,
   skeletonTeamCols: 15,
+  allTeamsValues: ["All Teams", "Group of 6"],
   useSeedData: useFootballSeed,
   renderTable: (data, ctx) => (
     <FootballSeedTable
