@@ -40,6 +40,28 @@ describe("screenshot layout helpers", () => {
     });
   });
 
+  it("measures a canvas by its layout width, not its pixel buffer", () => {
+    const container = document.createElement("div");
+    const canvas = document.createElement("canvas");
+    // A 360px-wide chart on a 3x phone has a 1080px backing store.
+    canvas.width = 1080;
+    container.appendChild(canvas);
+    setLayout(container, {
+      clientWidth: 360,
+      clientHeight: 420,
+      scrollWidth: 360,
+      scrollHeight: 420,
+    });
+    setLayout(canvas, {
+      clientWidth: 360,
+      clientHeight: 420,
+      scrollWidth: 360,
+      scrollHeight: 420,
+    });
+
+    expect(getFullContentWidth(container)).toBe(360);
+  });
+
   it("expands clipped regions and restores export-critical labels", () => {
     const source = document.createElement("section");
     const viewport = document.createElement("div");

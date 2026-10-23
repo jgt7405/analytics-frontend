@@ -8,6 +8,7 @@ import {
   getFullScreenshotDimensions,
 } from "@/lib/export/layout";
 import { ensureHtml2Canvas } from "@/lib/export/capture";
+import { withDesktopLayout } from "@/lib/export/desktop-layout";
 import { saveImageBlob } from "@/lib/export/save";
 import toast from "react-hot-toast";
 import { logger } from "@/lib/logger";
@@ -17,7 +18,6 @@ const MIN_EXPORT_CONTENT_WIDTH = 660;
 export interface TableDownloadOptions {
   contentSelector: string;
   explainerSelector?: string;
-  isMobile: boolean;
   pageTitle?: string;
   pageName?: string;
   selectedConference?: string;
@@ -26,7 +26,6 @@ export interface TableDownloadOptions {
 export async function downloadTableImage({
   contentSelector,
   explainerSelector,
-  isMobile,
   pageTitle,
   pageName,
   selectedConference,
@@ -56,207 +55,215 @@ export async function downloadTableImage({
     ? document.querySelector(explainerSelector)
     : null;
 
-  // Check chart type and calculate width
-  const isLineChart = targetElement.querySelector("canvas") !== null;
-  const table = targetElement.querySelector("table");
-  const isSeedWinsComponent =
-    targetElement.querySelector(
-      '[data-component-type="bball-seed-wins-and-probability"]',
-    ) !== null || contentSelector.includes("seed-wins");
-  let actualWidth;
+  // Measure and clone the section as laid out on a desktop, so the image is
+  // the same from a phone (lib/export/desktop-layout).
+  const measured = await withDesktopLayout(
+    [targetElement as HTMLElement],
+    () => {
+      // Check chart type and calculate width
+      const isLineChart = targetElement.querySelector("canvas") !== null;
+      const table = targetElement.querySelector("table");
+      const isSeedWinsComponent =
+        targetElement.querySelector(
+          '[data-component-type="bball-seed-wins-and-probability"]',
+        ) !== null || contentSelector.includes("seed-wins");
+      let actualWidth: number;
 
-  logger.debug(
-    `🔍 SCREENSHOT DEBUG: Found table=`,
-    !!table,
-    `, isLineChart=`,
-    isLineChart,
-  );
-
-  if (table) {
-    // scrollWidth includes columns outside the current viewport.
-    let tableWidth = getFullContentWidth(table);
-    logger.debug(`🔍 SCREENSHOT DEBUG: table.offsetWidth=${tableWidth}`);
-
-    // Check the rightmost cell position to ensure we capture full table width
-    const cells = table.querySelectorAll("th, td");
-    if (cells.length > 0) {
-      const lastCell = cells[cells.length - 1] as HTMLElement;
-      const lastCellRight = lastCell.offsetLeft + lastCell.offsetWidth;
-      tableWidth = Math.max(tableWidth, lastCellRight);
       logger.debug(
-        `🔍 SCREENSHOT DEBUG: lastCellRight=${lastCellRight}, final tableWidth=${tableWidth}`,
+        `🔍 SCREENSHOT DEBUG: Found table=`,
+        !!table,
+        `, isLineChart=`,
+        isLineChart,
       );
-    }
 
-    actualWidth = Math.max(tableWidth, MIN_EXPORT_CONTENT_WIDTH) + 40;
-    logger.debug(`📊 TABLE SCREENSHOT: actualWidth set to ${actualWidth}`);
-  } else if (contentSelector.includes("standings-progression")) {
-    // For standings progression table (flex-based layout)
-    // Measure the flex container width after removing constraints
-    const flexContainer = targetElement.querySelector(
-      '[style*="min-width"]',
-    );
-    if (flexContainer) {
-      const containerWidth = (flexContainer as HTMLElement).offsetWidth;
-      logger.debug(
-        `🔍 SCREENSHOT DEBUG: Standings progression flex container width=${containerWidth}`,
+      if (table) {
+        // scrollWidth includes columns outside the current viewport.
+        let tableWidth = getFullContentWidth(table);
+        logger.debug(`🔍 SCREENSHOT DEBUG: table.offsetWidth=${tableWidth}`);
+
+        // Check the rightmost cell position to ensure we capture full table width
+        const cells = table.querySelectorAll("th, td");
+        if (cells.length > 0) {
+          const lastCell = cells[cells.length - 1] as HTMLElement;
+          const lastCellRight = lastCell.offsetLeft + lastCell.offsetWidth;
+          tableWidth = Math.max(tableWidth, lastCellRight);
+          logger.debug(
+            `🔍 SCREENSHOT DEBUG: lastCellRight=${lastCellRight}, final tableWidth=${tableWidth}`,
+          );
+        }
+
+        actualWidth = Math.max(tableWidth, MIN_EXPORT_CONTENT_WIDTH) + 40;
+        logger.debug(`📊 TABLE SCREENSHOT: actualWidth set to ${actualWidth}`);
+      } else if (contentSelector.includes("standings-progression")) {
+        // For standings progression table (flex-based layout)
+        // Measure the flex container width after removing constraints
+        const flexContainer = targetElement.querySelector(
+          '[style*="min-width"]',
+        );
+        if (flexContainer) {
+          const containerWidth = (flexContainer as HTMLElement).offsetWidth;
+          logger.debug(
+            `🔍 SCREENSHOT DEBUG: Standings progression flex container width=${containerWidth}`,
+          );
+          actualWidth =
+            Math.max(
+              containerWidth,
+              getFullContentWidth(targetElement),
+              MIN_EXPORT_CONTENT_WIDTH,
+            ) + 40;
+        } else {
+          actualWidth =
+            Math.max(
+              getFullContentWidth(targetElement),
+              MIN_EXPORT_CONTENT_WIDTH,
+            ) + 40;
+        }
+        logger.debug(
+          `📊 STANDINGS PROGRESSION SCREENSHOT: actualWidth set to ${actualWidth}`,
+        );
+      } else if (isSeedWinsComponent) {
+        // For seed-wins component, use a narrower width to fit content better
+        actualWidth = 700;
+      } else if (isLineChart) {
+        actualWidth = Math.max(getFullContentWidth(targetElement), 800) + 40;
+      } else if (contentSelector.includes("ceiling")) {
+        // For ceiling/floor chart, use actual component width with minimal buffer
+        actualWidth =
+          Math.max(
+            getFullContentWidth(targetElement),
+            MIN_EXPORT_CONTENT_WIDTH,
+          ) + 40;
+      } else {
+        const teamLogos1 = targetElement.querySelectorAll(
+          'img[src*="team_logos"]',
+        );
+        const teamLogos2 = targetElement.querySelectorAll('img[alt*="logo"]');
+        const teamLogos3 = targetElement.querySelectorAll('img[src*="logos"]');
+
+        let teamCount = Math.max(
+          teamLogos1.length,
+          teamLogos2.length,
+          teamLogos3.length,
+        );
+
+        if (teamCount === 0) {
+          const teamElements = targetElement.querySelectorAll(
+            '[data-team], .team-logo, [class*="team"]',
+          );
+          teamCount = teamElements.length;
+        }
+
+        if (teamCount === 0) {
+          teamCount = 10;
+        }
+
+        const baseWidth = 400;
+        const widthPerTeam = 50;
+        actualWidth = Math.max(
+          getFullContentWidth(targetElement) + 40,
+          baseWidth + teamCount * widthPerTeam,
+          MIN_EXPORT_CONTENT_WIDTH + 40,
+        );
+      }
+
+      // Clone element first
+      const clone = targetElement.cloneNode(true) as HTMLElement;
+      expandExportClone(targetElement as HTMLElement, clone);
+
+      // Point every logo at its full-resolution source instead of the tiny
+      // next/image variant it renders at on screen (~22-24px). html2canvas
+      // rasterizes whatever the <img> is actually showing, so a 24px source
+      // upscaled by the 2x capture scale looks fuzzy - unwrap
+      // /_next/image?url=<original> and drop the srcset so the browser loads
+      // the real PNG.
+      clone.querySelectorAll("img").forEach((img) => {
+        const src = img.getAttribute("src") || "";
+        if (!src.includes("/_next/image")) return;
+        try {
+          const real = new URL(src, window.location.origin).searchParams.get(
+            "url",
+          );
+          if (!real) return;
+          img.setAttribute(
+            "src",
+            real.startsWith("http") ? real : `${window.location.origin}${real}`,
+          );
+          img.removeAttribute("srcset");
+        } catch {
+          /* leave the original src in place */
+        }
+      });
+
+      // html2canvas can turn translucent/inset cell effects into large dark
+      // blocks. Freeze the live heat-tile colors and typography as explicit
+      // solid styles on the export clone so the PNG matches the screen.
+      const originalScreenshotTiles =
+        targetElement.querySelectorAll<HTMLElement>(
+          '[data-screenshot-tile="true"]',
+        );
+      const clonedScreenshotTiles = clone.querySelectorAll<HTMLElement>(
+        '[data-screenshot-tile="true"]',
       );
-      actualWidth =
-        Math.max(
-          containerWidth,
-          getFullContentWidth(targetElement),
-          MIN_EXPORT_CONTENT_WIDTH,
-        ) + 40;
-    } else {
-      actualWidth =
-        Math.max(
-          getFullContentWidth(targetElement),
-          MIN_EXPORT_CONTENT_WIDTH,
-        ) + 40;
-    }
-    logger.debug(
-      `📊 STANDINGS PROGRESSION SCREENSHOT: actualWidth set to ${actualWidth}`,
-    );
-  } else if (isSeedWinsComponent) {
-    // For seed-wins component, use a narrower width to fit content better
-    actualWidth = 700;
-  } else if (isLineChart) {
-    actualWidth = Math.max(getFullContentWidth(targetElement), 800) + 40;
-  } else if (contentSelector.includes("ceiling")) {
-    // For ceiling/floor chart, use actual component width with minimal buffer
-    actualWidth =
-      Math.max(
-        getFullContentWidth(targetElement),
-        MIN_EXPORT_CONTENT_WIDTH,
-      ) + 40;
-  } else {
-    const teamLogos1 = targetElement.querySelectorAll(
-      'img[src*="team_logos"]',
-    );
-    const teamLogos2 = targetElement.querySelectorAll('img[alt*="logo"]');
-    const teamLogos3 = targetElement.querySelectorAll('img[src*="logos"]');
 
-    let teamCount = Math.max(
-      teamLogos1.length,
-      teamLogos2.length,
-      teamLogos3.length,
-    );
+      originalScreenshotTiles.forEach((originalTile, index) => {
+        const clonedTile = clonedScreenshotTiles[index];
+        if (!clonedTile) return;
 
-    if (teamCount === 0) {
-      const teamElements = targetElement.querySelectorAll(
-        '[data-team], .team-logo, [class*="team"]',
-      );
-      teamCount = teamElements.length;
-    }
+        const computed = window.getComputedStyle(originalTile);
+        clonedTile.style.setProperty(
+          "background-color",
+          computed.backgroundColor,
+          "important",
+        );
+        clonedTile.style.setProperty("background-image", "none", "important");
+        clonedTile.style.setProperty("color", computed.color, "important");
+        clonedTile.style.setProperty(
+          "font-size",
+          computed.fontSize,
+          "important",
+        );
+        clonedTile.style.setProperty(
+          "font-weight",
+          computed.fontWeight,
+          "important",
+        );
+        clonedTile.style.setProperty(
+          "border-radius",
+          computed.borderRadius,
+          "important",
+        );
+        clonedTile.style.setProperty("box-shadow", "none", "important");
+        clonedTile.style.setProperty("filter", "none", "important");
+        clonedTile.style.setProperty("transform", "none", "important");
+        clonedTile.style.setProperty("transition", "none", "important");
+        clonedTile.style.setProperty("opacity", "1", "important");
+      });
 
-    if (teamCount === 0) {
-      teamCount = 10;
-    }
+      // Handle canvas replacement
+      const originalCanvases = targetElement.querySelectorAll("canvas");
+      const clonedCanvases = clone.querySelectorAll("canvas");
+      originalCanvases.forEach((originalCanvas, index) => {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = originalCanvas.width;
+        tempCanvas.height = originalCanvas.height;
+        tempCanvas.style.width = `${originalCanvas.getBoundingClientRect().width}px`;
+        tempCanvas.style.height = `${originalCanvas.getBoundingClientRect().height}px`;
 
-    const baseWidth = isMobile ? 200 : 400;
-    const widthPerTeam = isMobile ? 40 : 50;
-    actualWidth = Math.max(
-      getFullContentWidth(targetElement) + 40,
-      baseWidth + teamCount * widthPerTeam,
-      MIN_EXPORT_CONTENT_WIDTH + 40,
-    );
-  }
+        const ctx = tempCanvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(originalCanvas, 0, 0);
+        }
 
-  // Clone element first
-  const clone = targetElement.cloneNode(true) as HTMLElement;
-  expandExportClone(targetElement as HTMLElement, clone);
-
-  // Point every logo at its full-resolution source instead of the tiny
-  // next/image variant it renders at on screen (~22-24px). html2canvas
-  // rasterizes whatever the <img> is actually showing, so a 24px source
-  // upscaled by the 2x capture scale looks fuzzy - unwrap
-  // /_next/image?url=<original> and drop the srcset so the browser loads
-  // the real PNG.
-  clone.querySelectorAll("img").forEach((img) => {
-    const src = img.getAttribute("src") || "";
-    if (!src.includes("/_next/image")) return;
-    try {
-      const real = new URL(src, window.location.origin).searchParams.get(
-        "url",
-      );
-      if (!real) return;
-      img.setAttribute(
-        "src",
-        real.startsWith("http")
-          ? real
-          : `${window.location.origin}${real}`,
-      );
-      img.removeAttribute("srcset");
-    } catch {
-      /* leave the original src in place */
-    }
-  });
-
-  // html2canvas can turn translucent/inset cell effects into large dark
-  // blocks. Freeze the live heat-tile colors and typography as explicit
-  // solid styles on the export clone so the PNG matches the screen.
-  const originalScreenshotTiles =
-    targetElement.querySelectorAll<HTMLElement>(
-      '[data-screenshot-tile="true"]',
-    );
-  const clonedScreenshotTiles = clone.querySelectorAll<HTMLElement>(
-    '[data-screenshot-tile="true"]',
+        const clonedCanvas = clonedCanvases[index];
+        if (clonedCanvas && clonedCanvas.parentNode) {
+          clonedCanvas.parentNode.replaceChild(tempCanvas, clonedCanvas);
+        }
+      });
+      return { clone, actualWidth };
+    },
   );
-
-  originalScreenshotTiles.forEach((originalTile, index) => {
-    const clonedTile = clonedScreenshotTiles[index];
-    if (!clonedTile) return;
-
-    const computed = window.getComputedStyle(originalTile);
-    clonedTile.style.setProperty(
-      "background-color",
-      computed.backgroundColor,
-      "important",
-    );
-    clonedTile.style.setProperty("background-image", "none", "important");
-    clonedTile.style.setProperty("color", computed.color, "important");
-    clonedTile.style.setProperty(
-      "font-size",
-      computed.fontSize,
-      "important",
-    );
-    clonedTile.style.setProperty(
-      "font-weight",
-      computed.fontWeight,
-      "important",
-    );
-    clonedTile.style.setProperty(
-      "border-radius",
-      computed.borderRadius,
-      "important",
-    );
-    clonedTile.style.setProperty("box-shadow", "none", "important");
-    clonedTile.style.setProperty("filter", "none", "important");
-    clonedTile.style.setProperty("transform", "none", "important");
-    clonedTile.style.setProperty("transition", "none", "important");
-    clonedTile.style.setProperty("opacity", "1", "important");
-  });
-
-  // Handle canvas replacement
-  const originalCanvases = targetElement.querySelectorAll("canvas");
-  const clonedCanvases = clone.querySelectorAll("canvas");
-  originalCanvases.forEach((originalCanvas, index) => {
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = originalCanvas.width;
-    tempCanvas.height = originalCanvas.height;
-    tempCanvas.style.width = `${originalCanvas.getBoundingClientRect().width}px`;
-    tempCanvas.style.height = `${originalCanvas.getBoundingClientRect().height}px`;
-
-    const ctx = tempCanvas.getContext("2d");
-    if (ctx) {
-      ctx.drawImage(originalCanvas, 0, 0);
-    }
-
-    const clonedCanvas = clonedCanvases[index];
-    if (clonedCanvas && clonedCanvas.parentNode) {
-      clonedCanvas.parentNode.replaceChild(tempCanvas, clonedCanvas);
-    }
-  });
+  const { clone } = measured;
+  let { actualWidth } = measured;
 
   // Simple fixes only
   const style = document.createElement("style");
@@ -428,11 +435,7 @@ export async function downloadTableImage({
     actualWidth = renderedContentWidth + 40;
     wrapper.style.width = `${actualWidth}px`;
     header.style.width = `${renderedContentWidth}px`;
-    clone.style.setProperty(
-      "width",
-      `${renderedContentWidth}px`,
-      "important",
-    );
+    clone.style.setProperty("width", `${renderedContentWidth}px`, "important");
   }
   logger.debug("ÃƒÂ¢Ã‚ÂÃ‚Â³ Taking screenshot of component as displayed...");
   await new Promise((resolve) => setTimeout(resolve, 500));
@@ -457,7 +460,10 @@ export async function downloadTableImage({
     allowTaint: true,
     logging: false,
     width: captureSize.width,
-    height: captureSize.height,
+    // No `height`: html2canvas then measures the wrapper in its own frame,
+    // which is laid out at `windowWidth`. Measured here on a phone,
+    // viewport-relative sizes (clamp(..., 2.2vw, ...) headings) come out
+    // shorter than they render there, and the bottom got cut off.
     windowWidth: captureSize.width,
     windowHeight: captureSize.height,
     scrollX: 0,
@@ -469,7 +475,11 @@ export async function downloadTableImage({
   const timestamp = new Date().toISOString().split("T")[0];
   // Skip parts a page doesn't pass (no conference picker, no pageName) so
   // the file isn't named "undefined_...".
-  const filename = `${[selectedConference, pageName || "jthom-analytics", timestamp]
+  const filename = `${[
+    selectedConference,
+    pageName || "jthom-analytics",
+    timestamp,
+  ]
     .filter(Boolean)
     .join("_")}.png`;
 

@@ -17,9 +17,11 @@ export function getFullContentWidth(element: Element): number {
         htmlCandidate.scrollWidth || 0,
       );
 
-      if (candidate instanceof HTMLCanvasElement) {
-        intrinsicWidth = Math.max(intrinsicWidth, candidate.width);
-      } else if (candidate instanceof SVGSVGElement) {
+      // A canvas's `width` is its backing-store size (CSS width x
+      // devicePixelRatio), not layout width - counting it made a chart on a
+      // 3x phone export into an image three times its width, the chart
+      // shrunk into one corner. Its rect width above is the real one.
+      if (candidate instanceof SVGSVGElement) {
         intrinsicWidth = Math.max(
           intrinsicWidth,
           candidate.viewBox.baseVal?.width || 0,

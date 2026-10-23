@@ -47,7 +47,6 @@ export default function TableActionButtons({
       await downloadTableImage({
         contentSelector,
         explainerSelector,
-        isMobile,
         pageTitle,
         pageName,
         selectedConference,

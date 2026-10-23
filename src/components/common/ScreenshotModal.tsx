@@ -282,8 +282,15 @@ export default function ScreenshotModal({
       }
       logger.debug("Elements found:", targetElements);
 
-      const processed = await Promise.all(
-        targetElements.map((el) => buildProcessedClone(el as Element)),
+      // Clone as laid out on a desktop, so the image is the same from a
+      // phone (lib/export/desktop-layout).
+      const { withDesktopLayout } = await import("@/lib/export/desktop-layout");
+      const processed = await withDesktopLayout(
+        targetElements as HTMLElement[],
+        () =>
+          Promise.all(
+            targetElements.map((el) => buildProcessedClone(el as Element)),
+          ),
       );
 
       // Use intrinsic and scroll dimensions so off-screen rows/columns are

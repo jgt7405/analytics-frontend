@@ -2,7 +2,12 @@
 "use client";
 
 import { InitialResponsiveContext } from "@/components/providers/ResponsiveProvider";
-import { useContext, useEffect, useState } from "react";
+import {
+  DESKTOP_EXPORT_WIDTH,
+  isDesktopLayoutForced,
+  subscribeDesktopLayout,
+} from "@/lib/export/desktop-layout-state";
+import { useContext, useEffect, useState, useSyncExternalStore } from "react";
 
 export function useResponsive() {
   // When a ResponsiveProvider is present (set from the server-detected
@@ -18,6 +23,13 @@ export function useResponsive() {
     height: 0,
     isHydrated: false,
   });
+  // While a screenshot is being taken on a narrow screen, render as desktop
+  // so the image looks the same from any device (lib/export/desktop-layout).
+  const forceDesktop = useSyncExternalStore(
+    subscribeDesktopLayout,
+    isDesktopLayoutForced,
+    () => false,
+  );
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -39,6 +51,15 @@ export function useResponsive() {
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
+  if (forceDesktop) {
+    return {
+      ...dimensions,
+      isMobile: false,
+      isTablet: false,
+      isDesktop: true,
+      width: Math.max(dimensions.width, DESKTOP_EXPORT_WIDTH),
+    };
+  }
   return dimensions;
 }
 

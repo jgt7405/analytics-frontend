@@ -17,8 +17,16 @@ export async function captureScreenshot(
   const html2canvas = window.html2canvas;
   if (!html2canvas) return;
 
-  const clone = element.cloneNode(true) as HTMLElement;
-  expandExportClone(element, clone);
+  // Clone as laid out on a desktop, so the image is the same from a phone.
+  const { withDesktopLayout } = await import("@/lib/export/desktop-layout");
+  const { clone, contentWidth } = await withDesktopLayout([element], () => {
+    const clone = element.cloneNode(true) as HTMLElement;
+    expandExportClone(element, clone);
+    return {
+      clone,
+      contentWidth: Math.max(getFullContentWidth(element) + 48, 660),
+    };
+  });
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
 
   // Remove only the page-level explainer text (not the component's built-in explainer)
@@ -33,9 +41,6 @@ export async function captureScreenshot(
       el.remove();
     }
   });
-
-  // Measure actual content width for tighter screenshots
-  const contentWidth = Math.max(getFullContentWidth(element) + 48, 660);
 
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
