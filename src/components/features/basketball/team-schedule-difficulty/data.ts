@@ -2,7 +2,13 @@
 // show, the comparison distribution, percentile positions, logo layout and
 // the summary stats. No React; index.tsx memoizes each step.
 
-import { POWER_CONFERENCES, THRESHOLD, TOP_MARGIN, TOP_PLOT_HEIGHT } from "./constants";
+import {
+  COLUMN_OFFSETS,
+  POWER_CONFERENCES,
+  THRESHOLD,
+  TOP_MARGIN,
+  TOP_PLOT_HEIGHT,
+} from "./constants";
 import type {
   AllScheduleGame,
   BasketballTeamGame,
@@ -242,6 +248,7 @@ export function layoutGames(teamGamePositions: GameWithPosition[]): PositionedGa
       ...it.game,
       isRightSide: it.columnIndex >= 2,
       adjustedY: ys[i],
+      logoDx: COLUMN_OFFSETS[it.columnIndex],
       columnIndex: it.columnIndex,
     }));
   };

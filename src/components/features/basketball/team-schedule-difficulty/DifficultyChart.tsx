@@ -29,8 +29,6 @@ interface DifficultyChartProps {
   teamColor: string;
 }
 
-const COLUMN_OFFSETS = [-85, -45, 45, 85];
-
 export default function DifficultyChart({
   chartWidth,
   percentiles,
@@ -122,7 +120,7 @@ export default function DifficultyChart({
         {positionedGames.map((game, index) => {
           const gameY = TOP_MARGIN.top + (game.percentilePosition / 100) * TOP_PLOT_HEIGHT;
           const circleX = TOP_MARGIN.left + TOP_PLOT_WIDTH / 2;
-          const logoX = circleX + COLUMN_OFFSETS[game.columnIndex];
+          const logoX = circleX + game.logoDx;
 
           const uniqueKey = `${game.opponent}-${game.date}-${index}`;
           const opponentColor = game.opponent_primary_color || "#9ca3af";

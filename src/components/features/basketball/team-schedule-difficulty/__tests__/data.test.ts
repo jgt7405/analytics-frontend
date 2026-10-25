@@ -127,7 +127,7 @@ describe("layoutGames", () => {
         expect(y).toBeLessThanOrEqual(TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15);
       }
     }
-    expect(laid.filter((g) => g.isRightSide).map((g) => g.columnIndex).every((c) => c >= 2)).toBe(true);
+    expect(laid.filter((g) => g.isRightSide).map((g) => g.columnIndex).every((c) => c !== undefined && c >= 2)).toBe(true);
   });
 });
 
