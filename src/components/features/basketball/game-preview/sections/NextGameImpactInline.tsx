@@ -108,11 +108,14 @@ export function NextGameImpactInline({
         <span className="text-[8px] text-gray-400 ml-1">{game.date}</span>
       </div>
 
-      {isConferenceGame ? (
-        <>
       <h4 className="text-xs font-medium mb-1.5">
         Conference Tournament Probabilities
       </h4>
+      {!isConferenceGame && (
+        <p className="text-[10px] text-gray-500 dark:text-gray-300 mb-1.5">
+          Non-conference game, so these don&apos;t change with a win or loss.
+        </p>
+      )}
 
       <table className="w-full text-xs">
         <thead>
@@ -247,13 +250,6 @@ export function NextGameImpactInline({
           </tbody>
         </table>
       </div>
-
-        </>
-      ) : (
-        <p className="text-xs text-gray-500 dark:text-gray-300 py-1">
-          Non-conference game: conference standings and seeding are unaffected.
-        </p>
-      )}
 
       <div className="my-3 border-t border-gray-300" />
 
@@ -474,9 +470,8 @@ export function NextGameImpactInline({
       })()}
 
       <p className="text-[8px] text-gray-400 leading-relaxed mt-2 pt-1 border-t border-gray-100">
-        Shows the projected impact of this game on
-        {isConferenceGame ? " conference and" : ""} NCAA tournament
-        probabilities. Win and Loss columns show how probabilities change if
+        Shows the projected impact of this game on conference and NCAA
+        tournament probabilities. Win and Loss columns show how probabilities change if
         the team wins or loses.
       </p>
     </div>
