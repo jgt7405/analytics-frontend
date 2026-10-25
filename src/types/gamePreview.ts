@@ -123,6 +123,7 @@ export interface NextGameImpactData {
     away_team_logo: string;
     home_probability: number | null;
     away_probability: number | null;
+    neutral_site?: boolean;
   } | null;
   current: Record<number, NextGameMetrics>;
   with_win: Record<number, NextGameMetrics>;

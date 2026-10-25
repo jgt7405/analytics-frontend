@@ -92,7 +92,9 @@ export function NextGameImpactInline({
           />
           <span className="text-[10px] font-medium">{game.away_team}</span>
         </div>
-        <span className="text-[9px] text-gray-400">@</span>
+        <span className="text-[9px] text-gray-400">
+          {game.neutral_site ? "vs" : "@"}
+        </span>
         <div className="flex items-center gap-0.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
