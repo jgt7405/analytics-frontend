@@ -119,6 +119,45 @@ export function computeConfPosition(
 }
 
 
+export function isPlayed(g: TeamGameData): boolean {
+  return g.status === "W" || g.status === "L";
+}
+
+/**
+ * The schedule row for the previewed game. An unplayed game's status holds
+ * its ISO date, so match opponent + date first; fall back to the first
+ * unplayed game against that opponent. (`date` is "MM/DD" and does not sort.)
+ */
+export function findPreviewGame(
+  schedule: TeamGameData[],
+  opponent: string,
+  dateSort: string,
+): TeamGameData | null {
+  return (
+    schedule.find((g) => g.opponent === opponent && g.status === dateSort) ??
+    schedule.find((g) => g.opponent === opponent && !isPlayed(g)) ??
+    null
+  );
+}
+
+/** "home", "road" or "neutral-site", for "the 3rd toughest ___ game". */
+export function locationAdjective(location: string | undefined): string {
+  if (location === "Home") return "home";
+  if (location === "Neutral") return "neutral-site";
+  return "road";
+}
+
+/** "a 4 seed" / "an 8 seed" / "an 11 seed". */
+export function aSeed(seed: number | string): string {
+  const n = String(seed);
+  return `${n === "8" || n === "11" || n === "18" ? "an" : "a"} ${n} seed`;
+}
+
+/** "1 game" / "3 games". */
+export function plural(n: number, word: string): string {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
+}
+
 /** Helper to get a readable location phrase from a location filter string. */
 export function locationPhrase(locLabel: string): string {
   if (locLabel === "home") return "at home";

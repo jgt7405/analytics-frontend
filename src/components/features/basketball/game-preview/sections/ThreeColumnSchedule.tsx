@@ -3,7 +3,7 @@
 // Schedule strip: away, neutral and home games.
 
 import { type TeamGameData } from "@/types/gamePreview";
-import { TEAL, getLogoUrl } from "../metrics";
+import { TEAL, findPreviewGame, getLogoUrl } from "../metrics";
 import { resizedLogoSrc } from "@/lib/logo-src";
 
 // ─── 3-Column Schedule Strip (Away | Neutral | Home) ─────────────────────────
@@ -17,20 +17,7 @@ export function ThreeColumnSchedule({
   upcomingOpponent: string;
   upcomingDate: string;
 }) {
-  const nextGame = (() => {
-    const chronoNext = [...schedule]
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .find((g) => g.status !== "W" && g.status !== "L");
-    if (chronoNext) return chronoNext;
-    if (upcomingOpponent && upcomingDate) {
-      return (
-        schedule.find(
-          (g) => g.opponent === upcomingOpponent && g.date === upcomingDate,
-        ) || null
-      );
-    }
-    return null;
-  })();
+  const nextGame = findPreviewGame(schedule, upcomingOpponent, upcomingDate);
 
   const grouped = {
     Away: [] as TeamGameData[],
@@ -66,10 +53,7 @@ export function ThreeColumnSchedule({
   const BOX_H = 24;
   const LOGO_SIZE = 14;
 
-  const isNextGame = (g: TeamGameData) => {
-    if (!nextGame) return false;
-    return g.opponent === nextGame.opponent && g.date === nextGame.date;
-  };
+  const isNextGame = (g: TeamGameData) => g === nextGame;
 
   const getBorderColor = (g: TeamGameData) => {
     if (isNextGame(g)) return TEAL;

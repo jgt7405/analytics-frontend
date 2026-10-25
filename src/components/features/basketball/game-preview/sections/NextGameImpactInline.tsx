@@ -13,11 +13,13 @@ import { resizedLogoSrc } from "@/lib/logo-src";
 export function NextGameImpactInline({
   teamInfo,
   impactData: externalImpactData,
+  isConferenceGame,
 }: {
   teamId: string;
   conference: string;
   teamInfo: TeamInfo;
   impactData?: NextGameImpactData | null;
+  isConferenceGame: boolean;
 }) {
   // Use pre-fetched data from parent
   const impactData = externalImpactData ?? null;
@@ -106,6 +108,8 @@ export function NextGameImpactInline({
         <span className="text-[8px] text-gray-400 ml-1">{game.date}</span>
       </div>
 
+      {isConferenceGame ? (
+        <>
       <h4 className="text-xs font-medium mb-1.5">
         Conference Tournament Probabilities
       </h4>
@@ -243,6 +247,13 @@ export function NextGameImpactInline({
           </tbody>
         </table>
       </div>
+
+        </>
+      ) : (
+        <p className="text-xs text-gray-500 dark:text-gray-300 py-1">
+          Non-conference game: conference standings and seeding are unaffected.
+        </p>
+      )}
 
       <div className="my-3 border-t border-gray-300" />
 
@@ -463,9 +474,10 @@ export function NextGameImpactInline({
       })()}
 
       <p className="text-[8px] text-gray-400 leading-relaxed mt-2 pt-1 border-t border-gray-100">
-        Shows projected impact of the team&apos;s next scheduled conference game
-        on conference and NCAA tournament probabilities. Win and Loss columns
-        show how probabilities change if the team wins or loses that game.
+        Shows the projected impact of this game on
+        {isConferenceGame ? " conference and" : ""} NCAA tournament
+        probabilities. Win and Loss columns show how probabilities change if
+        the team wins or loses.
       </p>
     </div>
   );

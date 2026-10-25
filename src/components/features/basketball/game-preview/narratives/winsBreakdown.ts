@@ -1,7 +1,7 @@
 // Summary of projected wins and the seed they point to.
 
 import { type ConfChampData, type TeamGameData, type TeamInfo } from "@/types/gamePreview";
-import { ordinal } from "../metrics";
+import { aSeed, findPreviewGame, ordinal } from "../metrics";
 
 export function buildWinsBreakdownNarrative(
   awayTeam: string,
@@ -12,6 +12,7 @@ export function buildWinsBreakdownNarrative(
   homeInfo?: TeamInfo,
   awayConfChampData?: ConfChampData | null,
   homeConfChampData?: ConfChampData | null,
+  gameDate = "",
 ): string {
   const teamParagraph = (
     team: string,
@@ -62,7 +63,7 @@ export function buildWinsBreakdownNarrative(
     if (bidPct !== undefined && bidPct < 50) {
       // Team is more likely OUT of the tournament — don't show misleading seed
     } else if (avgSeed && avgSeed > 0) {
-      seedStr = ` which would put them at around a ${avgSeed.toFixed(0)} seed`;
+      seedStr = `, which points to about ${aSeed(Math.round(avgSeed))}`;
     }
 
     if (projLow === projHigh) {
@@ -79,7 +80,7 @@ export function buildWinsBreakdownNarrative(
       );
     } else {
       parts.push(
-        `${team} is projected to finish with between ${projLow} and ${projHigh} wins${seedStr}.`,
+        `${team} is projected to finish with ${projLow} to ${projHigh} wins${seedStr}.`,
       );
     }
 
@@ -105,7 +106,7 @@ export function buildWinsBreakdownNarrative(
           (g) => g.team_win_prob !== undefined && g.team_win_prob !== null,
         )
         .map((g) => ({
-          opponent: g.opponent,
+          game: g as TeamGameData | null,
           winProb: g.team_win_prob ?? 0,
           isConfTourney: false,
         }));
@@ -113,7 +114,7 @@ export function buildWinsBreakdownNarrative(
       // Build conference tournament games from ACTUAL confChampData
       // (same data source the chart component uses)
       const confTourneyGames: {
-        opponent: string;
+        game: TeamGameData | null;
         winProb: number;
         isConfTourney: boolean;
       }[] = [];
@@ -124,7 +125,7 @@ export function buildWinsBreakdownNarrative(
           const prob = (confChampData[probKey] as number) || 0;
           if (prob > 0) {
             confTourneyGames.push({
-              opponent: `Conf Tourney Game ${gameNum}`,
+              game: null,
               winProb: prob / 100, // API returns percentage, convert to decimal
               isConfTourney: true,
             });
@@ -139,9 +140,10 @@ export function buildWinsBreakdownNarrative(
       );
 
       // Find this game's position in the combined sorted list
-      const gameIdx = allRemaining.findIndex(
-        (g) => !g.isConfTourney && g.opponent === opponent,
-      );
+      const thisGame = findPreviewGame(schedule, opponent, gameDate);
+      const gameIdx = thisGame
+        ? allRemaining.findIndex((g) => g.game === thisGame)
+        : -1;
 
       if (gameIdx >= 0) {
         const easeRank = gameIdx + 1; // 1 = most likely to win
@@ -150,26 +152,17 @@ export function buildWinsBreakdownNarrative(
         // Compare to projected remaining wins to contextualize
         const projectedRemainingWins =
           projectedWinsExact !== null ? projectedWinsExact - currentWins : null;
-        const likelyInProjection =
-          projectedRemainingWins !== null &&
-          easeRank <= Math.round(projectedRemainingWins);
-
-        const rankLabel = easeRank === 1 ? "most" : ordinal(easeRank) + " most";
-
-        if (likelyInProjection) {
+        const rankLabel = easeRank === 1 ? "most" : `${ordinal(easeRank)} most`;
+        const projected =
+          projectedRemainingWins !== null ? Math.round(projectedRemainingWins) : null;
+        parts.push(
+          `Of their up to ${totalRemaining} remaining games${confTourneyGames.length > 0 ? " (including the conference tournament)" : ""}, this is the ${rankLabel} winnable.`,
+        );
+        if (projected !== null && easeRank <= projected) {
+          parts.push(`It's one they'd be expected to win on the way to their projected total.`);
+        } else if (projected !== null) {
           parts.push(
-            `This is the ${rankLabel} likely of their up to ${totalRemaining} remaining games that they would win and is one of the more likely games they would win if they achieve their projected total.`,
-          );
-        } else if (
-          projectedRemainingWins !== null &&
-          easeRank > Math.round(projectedRemainingWins)
-        ) {
-          parts.push(
-            `This is the ${rankLabel} likely of their up to ${totalRemaining} projected remaining games that they would win and a win here positions them to exceed their current projected win total.`,
-          );
-        } else {
-          parts.push(
-            `This is the ${rankLabel} likely of their up to ${totalRemaining} projected remaining games that they would win.`,
+            `It falls outside the wins they're projected to get, so a win here would put them ahead of their projection.`,
           );
         }
       } else {
@@ -200,28 +193,15 @@ export function buildWinsBreakdownNarrative(
 
       if (seeds.length > 0) {
         const bestSeed = Math.min(...seeds);
+        parts.push(`Their best-case outcomes reach about ${aSeed(bestSeed)}.`);
+      }
+      // "No more wins" is meaningless before the first win
+      if (currentWinEntry && currentWins > 0) {
         parts.push(
-          `Top end seed possibility looks to be around a ${bestSeed} seed`,
+          noMoreIsOut
+            ? `If they didn't win again, they'd project to miss the NCAA Tournament.`
+            : `If they didn't win again, they'd still project around ${aSeed(noMoreSeed!)}.`,
         );
-        if (noMoreIsOut) {
-          parts.push(
-            `and with no more wins they would project to be out of the tournament.`,
-          );
-        } else {
-          parts.push(
-            `and with no more wins they would project as around a ${noMoreSeed} seed.`,
-          );
-        }
-      } else if (currentWinEntry) {
-        if (noMoreIsOut) {
-          parts.push(
-            `With no more wins they would project to be out of the tournament.`,
-          );
-        } else {
-          parts.push(
-            `With no more wins they would project as around a ${noMoreSeed} seed.`,
-          );
-        }
       }
     }
 

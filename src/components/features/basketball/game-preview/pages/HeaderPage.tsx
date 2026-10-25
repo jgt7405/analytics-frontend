@@ -86,6 +86,7 @@ export default function HeaderPage({
           awayTeamData.team_info,
           homeTeamData.team_info,
           selectedGame.win_prob,
+          selectedGame.is_conference_game,
         )}
       </p>
       <HeadToHeadComparison
@@ -144,7 +145,6 @@ export default function HeaderPage({
             {buildTeamNarrative(
               selectedGame.away_team,
               awayMetrics,
-              awayTeamData.team_info,
               false,
               selectedGame.home_team,
               selectedGameDate,
@@ -213,7 +213,6 @@ export default function HeaderPage({
             {buildTeamNarrative(
               selectedGame.home_team,
               homeMetrics,
-              homeTeamData.team_info,
               true,
               selectedGame.away_team,
               selectedGameDate,

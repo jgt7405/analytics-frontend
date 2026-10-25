@@ -59,6 +59,7 @@ export default function ImpactPage({
             homeTeamData.team_info,
             awayImpactData,
             homeImpactData,
+            selectedGame.is_conference_game,
           );
           const [awayNarr, homeNarr] = full.split("\n\n");
           const narrStyle: React.CSSProperties = {
@@ -87,6 +88,7 @@ export default function ImpactPage({
                     }
                     teamInfo={awayTeamData.team_info}
                     impactData={awayImpactData}
+                    isConferenceGame={selectedGame.is_conference_game}
                   />
                 </div>
               </div>
@@ -108,6 +110,7 @@ export default function ImpactPage({
                     }
                     teamInfo={homeTeamData.team_info}
                     impactData={homeImpactData}
+                    isConferenceGame={selectedGame.is_conference_game}
                   />
                 </div>
               </div>
@@ -136,6 +139,7 @@ export default function ImpactPage({
                     }
                     teamInfo={awayTeamData.team_info}
                     impactData={awayImpactData}
+                    isConferenceGame={selectedGame.is_conference_game}
                   />
                 </div>
                 <div
@@ -153,6 +157,7 @@ export default function ImpactPage({
                     }
                     teamInfo={homeTeamData.team_info}
                     impactData={homeImpactData}
+                    isConferenceGame={selectedGame.is_conference_game}
                   />
                 </div>
               </div>

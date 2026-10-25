@@ -328,6 +328,7 @@ export default function SchedulePage({
             homeTeamData.team_info,
             awayConfChampData,
             homeConfChampData,
+            selectedGame.date_sort,
           );
           const [awayNarr, homeNarr] = full.split("\n\n");
           const narrStyle: React.CSSProperties = {
