@@ -6,7 +6,7 @@
 // line running through another logo or badge or over another dot, and leader
 // lines crossing each other.
 // One hard rule on top: logos keep difficulty order top to bottom, each at
-// least ORDER_GAP px below every harder game's logo (equal difficulties may
+// least ORDER_GAP px below the next harder game's logo (equal difficulties may
 // share a row), so reading down the logos lists games hardest to easiest.
 // A greedy pass places the games one by one; then each logo in turn is lifted
 // out and re-placed at its best spot until a full pass changes nothing. That
@@ -32,9 +32,10 @@ const X_STEP = 4;
 const Y_STEP = 2;
 const COARSE_X_STEP = 12;
 const COARSE_Y_STEP = 6;
-// Vertical step between logos of different difficulty (shrinks if the
+// Vertical step between logos of different difficulty: over half a logo, so
+// the order reads even between logos on opposite sides (shrinks if the
 // schedule has too many games to fit at this spacing).
-const ORDER_GAP = 8;
+const ORDER_GAP = 16;
 
 // Cost weights, in px of vertical displacement.
 const HORIZONTAL_WEIGHT = 0.35;
