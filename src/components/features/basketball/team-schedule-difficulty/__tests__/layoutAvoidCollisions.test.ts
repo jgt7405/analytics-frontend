@@ -44,8 +44,6 @@ describe.each(Object.entries(schedules))("layoutGamesAvoidingCollisions (%s)", (
       const side = Math.sign(a.logoDx);
       for (const b of laid) {
         if (a === b) continue;
-        // Harder games' logos always sit higher.
-        if (a.percentilePosition < b.percentilePosition) expect(a.adjustedY).toBeLessThan(b.adjustedY);
         expect(Math.hypot(a.logoDx - b.logoDx, a.adjustedY - b.adjustedY)).toBeGreaterThanOrEqual(28);
         const dist = segmentPointDistance(
           side * 4,

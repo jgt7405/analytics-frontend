@@ -5,9 +5,6 @@
 // plus penalties for overlapping another logo, badge or axis label, a leader
 // line running through another logo or badge or over another dot, and leader
 // lines crossing each other.
-// One hard rule on top: logos keep difficulty order top to bottom, each at
-// least ORDER_GAP px below the next harder game's logo (equal difficulties may
-// share a row), so reading down the logos lists games hardest to easiest.
 // A greedy pass places the games one by one; then each logo in turn is lifted
 // out and re-placed at its best spot until a full pass changes nothing. That
 // runs for a few placement orders and the cheapest result wins.
@@ -32,10 +29,6 @@ const X_STEP = 4;
 const Y_STEP = 2;
 const COARSE_X_STEP = 12;
 const COARSE_Y_STEP = 6;
-// Vertical step between logos of different difficulty: over half a logo, so
-// the order reads even between logos on opposite sides (shrinks if the
-// schedule has too many games to fit at this spacing).
-const ORDER_GAP = 16;
 
 // Cost weights, in px of vertical displacement.
 const HORIZONTAL_WEIGHT = 0.35;
@@ -196,12 +189,6 @@ export function layoutGamesAvoidingCollisions(
   }));
   const n = items.length;
 
-  // Difficulty rank (ties share one) and the step between ranks.
-  const distinct = [...new Set(items.map((it) => it.game.percentilePosition))].sort((a, b) => a - b);
-  const rank = items.map((it) => distinct.indexOf(it.game.percentilePosition));
-  const lastRank = distinct.length - 1;
-  const gap = lastRank > 0 ? Math.min(ORDER_GAP, Math.floor((maxY - minY) / lastRank)) : 0;
-
   const labelCost = (g: Geometry): number => {
     let cost = 0;
     for (const c of g.circles) for (const r of labels) if (circleHitsRect(c, r)) cost += OVERLAP_PENALTY;
@@ -227,22 +214,8 @@ export function layoutGamesAvoidingCollisions(
       return cost;
     };
 
-    // The rows item i may use while keeping difficulty order with every
-    // placed logo, leaving room (one gap per rank) for the ones still to come.
-    const yBounds = (i: number): [number, number] => {
-      let lo = minY + rank[i] * gap;
-      let hi = maxY - (lastRank - rank[i]) * gap;
-      for (let j = 0; j < n; j++) {
-        const pj = placed[j];
-        if (j === i || !pj) continue;
-        if (rank[j] < rank[i]) lo = Math.max(lo, pj.y + (rank[i] - rank[j]) * gap);
-        else if (rank[j] > rank[i]) hi = Math.min(hi, pj.y - (rank[j] - rank[i]) * gap);
-      }
-      return [lo, Math.max(lo, hi)];
-    };
-
     // Best spot for item i given everyone else: a coarse search over the
-    // rows it may use, then a fine one around the best coarse spot. Candidates are
+    // plot, then a fine one around the best coarse spot. Candidates are
     // visited in order of vertical distance from the dot, so a search stops
     // once displacement alone can't beat the best found.
     const bestPlacement = (i: number, current: Placement | null): Placement => {
@@ -283,15 +256,14 @@ export function layoutGamesAvoidingCollisions(
         }
       };
 
-      const [lo, hi] = yBounds(i);
-      const startY = Math.max(lo, Math.min(hi, Math.round(item.dotY)));
-      search(startY, lo, hi, COARSE_Y_STEP, MIN_DX, maxDx, COARSE_X_STEP);
+      const startY = Math.round(Math.max(minY, Math.min(maxY, item.dotY)));
+      search(startY, minY, maxY, COARSE_Y_STEP, MIN_DX, maxDx, COARSE_X_STEP);
       if (best) {
         const b: Placement = best;
         search(
           b.y,
-          Math.max(lo, b.y - COARSE_Y_STEP),
-          Math.min(hi, b.y + COARSE_Y_STEP),
+          Math.max(minY, b.y - COARSE_Y_STEP),
+          Math.min(maxY, b.y + COARSE_Y_STEP),
           Y_STEP,
           Math.max(MIN_DX, b.dx - COARSE_X_STEP + X_STEP),
           Math.min(maxDx, b.dx + COARSE_X_STEP - X_STEP),
@@ -310,9 +282,8 @@ export function layoutGamesAvoidingCollisions(
     if (start) start.forEach((p, i) => set(i, p));
     else for (const i of order) set(i, bestPlacement(i, null));
 
-    // Two logos whose leader lines cross often just need to trade places
-    // across the chart (side and distance out, each keeping its own row so
-    // difficulty order holds), which moving one logo at a time never finds.
+    // Two logos whose leader lines cross often just need to trade places,
+    // which moving one logo at a time never finds.
     const pairTotal = (i: number, j: number) =>
       costAt(i, placed[i]!, Infinity) + costAt(j, placed[j]!, Infinity) - pairCost(geoms[i]!, geoms[j]!);
     const swapCrossingPairs = (): boolean => {
@@ -325,8 +296,8 @@ export function layoutGamesAvoidingCollisions(
           const pi = placed[i]!;
           const pj = placed[j]!;
           const before = pairTotal(i, j);
-          set(i, { side: pj.side, dx: pj.dx, y: pi.y });
-          set(j, { side: pi.side, dx: pi.dx, y: pj.y });
+          set(i, pj);
+          set(j, pi);
           if (pairTotal(i, j) < before - 1e-6) {
             swapped = true;
           } else {
