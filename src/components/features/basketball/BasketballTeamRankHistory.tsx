@@ -46,7 +46,10 @@ interface BasketballTeamRankHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side display window. */
+  displaySeason?: string;
 }
 
 export default function BasketballTeamRankHistory({
@@ -54,6 +57,7 @@ export default function BasketballTeamRankHistory({
   primaryColor: rawPrimaryColor = "#3b82f6",
   logoUrl,
   season,
+  displaySeason,
 }: BasketballTeamRankHistoryProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", (number | null)[], string> | null>(
@@ -110,7 +114,7 @@ export default function BasketballTeamRankHistory({
     }
 
     const rawData = allHistoryData.confWins.data;
-    const range = getBasketballDateRange(season, rawData);
+    const range = getBasketballDateRange(displaySeason ?? season, rawData);
     const filteredData = filterDataToRange(rawData, range);
 
     const dataByDateMap = new Map<string, HistoricalDataPoint>();
@@ -137,7 +141,7 @@ export default function BasketballTeamRankHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   // Tracks the end-of-line marker with a ResizeObserver (not a one-shot
   // timeout) so it stays aligned with the chart's actual current layout
@@ -266,7 +270,7 @@ export default function BasketballTeamRankHistory({
     },
   } as const;
 
-  const range = getBasketballDateRange(season, data);
+  const range = getBasketballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((point) => point.date);
   const chartLabels = buildChartLabels(dataDates, range, "basketball");
   const dataByDate = new Map(data.map((point) => [point.date, point]));

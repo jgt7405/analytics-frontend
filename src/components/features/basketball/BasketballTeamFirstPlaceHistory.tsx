@@ -45,7 +45,10 @@ interface BasketballTeamFirstPlaceHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side display window. */
+  displaySeason?: string;
 }
 
 export default function BasketballTeamFirstPlaceHistory({
@@ -54,6 +57,7 @@ export default function BasketballTeamFirstPlaceHistory({
   secondaryColor,
   logoUrl,
   season,
+  displaySeason,
 }: BasketballTeamFirstPlaceHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,7 +119,7 @@ export default function BasketballTeamFirstPlaceHistory({
       return;
     }
 
-    const range = getBasketballDateRange(season, rawData);
+    const range = getBasketballDateRange(displaySeason ?? season, rawData);
     const filteredData = filterDataToRange(rawData, range);
 
     const dataByDate = new Map<string, HistoricalDataPoint>();
@@ -136,7 +140,7 @@ export default function BasketballTeamFirstPlaceHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {
@@ -163,7 +167,7 @@ export default function BasketballTeamFirstPlaceHistory({
     return isDark ? ensureContrast(secondaryColor) : secondaryColor;
   })();
 
-  const range = getBasketballDateRange(season, data);
+  const range = getBasketballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((point) => point.date);
   const chartLabels = buildChartLabels(dataDates, range, "basketball");
   const dataByDate = new Map(data.map((point) => [point.date, point]));

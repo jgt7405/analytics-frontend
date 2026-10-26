@@ -42,7 +42,10 @@ interface BasketballTeamTournamentProgressionHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side display window. */
+  displaySeason?: string;
 }
 
 interface TournamentRoundDataPoint {
@@ -65,6 +68,7 @@ export default function BasketballTeamTournamentProgressionHistory({
   primaryColor: rawPrimaryColor = "#3b82f6",
   secondaryColor,
   season,
+  displaySeason,
 }: BasketballTeamTournamentProgressionHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -156,14 +160,14 @@ export default function BasketballTeamTournamentProgressionHistory({
       champion_pct: item.champion_pct!,
     }));
 
-    const range = getBasketballDateRange(season, rawData);
+    const range = getBasketballDateRange(displaySeason ?? season, rawData);
     const filteredData = filterDataToRange(rawData, range);
     const finalData = filteredData.sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
     setData(finalData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   // White reads on the dark card but not the light one; dark secondaries
   // get the same dark-mode lift as the primary color.
@@ -180,7 +184,7 @@ export default function BasketballTeamTournamentProgressionHistory({
       ? "#ef4444"
       : "#10b981";
 
-  const range = getBasketballDateRange(season, data);
+  const range = getBasketballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((point) => point.date);
   const chartLabels = buildChartLabels(dataDates, range, "basketball");
   const dataByDate = new Map(data.map((point) => [point.date, point]));

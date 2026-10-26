@@ -61,6 +61,10 @@ type History = ReturnType<typeof useBasketballTeamAllHistory>["data"];
 const computeSeason = (historyData: History | null | undefined): string =>
   getBasketballSeasonLabel(getLatestDataDate(historyData?.confWins?.data));
 
+// History charts fetch with the raw URL `season` (undefined on the current
+// page), the same query TeamContent already made to compute `displaySeason`,
+// so React Query shares one request instead of refetching with the label.
+// `displaySeason` only picks the charts' display window.
 const historySectionProps = (ctx: {
   teamInfo: {
     team_name: string;
@@ -68,12 +72,14 @@ const historySectionProps = (ctx: {
     secondary_color?: string;
     logo_url: string;
   };
+  season?: string;
   displaySeason: string;
 }) => ({
   teamName: ctx.teamInfo.team_name,
   primaryColor: ctx.teamInfo.primary_color,
   secondaryColor: ctx.teamInfo.secondary_color,
-  season: ctx.displaySeason,
+  season: ctx.season,
+  displaySeason: ctx.displaySeason,
 });
 
 const SECTIONS: TeamSection<TeamData>[] = [

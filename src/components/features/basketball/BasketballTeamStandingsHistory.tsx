@@ -44,7 +44,10 @@ interface BasketballTeamStandingsHistoryProps {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side display window. */
+  displaySeason?: string;
 }
 
 export default function BasketballTeamStandingsHistory({
@@ -53,6 +56,7 @@ export default function BasketballTeamStandingsHistory({
   secondaryColor,
   logoUrl,
   season,
+  displaySeason,
 }: BasketballTeamStandingsHistoryProps) {
   const { isMobile } = useResponsive();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,7 +126,7 @@ export default function BasketballTeamStandingsHistory({
       return;
     }
 
-    const range = getBasketballDateRange(season, rawData);
+    const range = getBasketballDateRange(displaySeason ?? season, rawData);
     const filteredData = filterDataToRange(rawData, range);
 
     const dataByDate = new Map<string, HistoricalDataPoint>();
@@ -143,7 +147,7 @@ export default function BasketballTeamStandingsHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   const finalSecondaryColor = (() => {
     if (!secondaryColor) {

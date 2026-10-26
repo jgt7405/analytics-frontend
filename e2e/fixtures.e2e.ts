@@ -61,6 +61,27 @@ for (const [route, team] of [
   });
 }
 
+// The page computes its season label from the history it fetched; the six
+// history charts must share that fetch, not repeat it with ?season=<label>.
+// (These endpoints have no fixture, so the one query's retries also appear
+// here: the check is that no request carries the label.)
+test("a basketball team page doesn't refetch history with its season label", async ({ page }) => {
+  const historyRequests: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (/\/api\/proxy\/basketball\/(ncaa\/Duke\/history|team\/Duke\/history\/conf_wins)/.test(url.pathname)) {
+      historyRequests.push(`${url.pathname}${url.search}`);
+    }
+  });
+  await page.goto("/basketball/team/Duke/");
+  await expect(page.getByText("Duke").first()).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await settle(page);
+  expect(historyRequests.some((u) => u.includes("conf_wins"))).toBe(true);
+  expect(historyRequests.some((u) => u.includes("/ncaa/"))).toBe(true);
+  expect(historyRequests.filter((u) => u.includes("season="))).toEqual([]);
+});
+
 for (const conference of ["Empty", "Missing_Fields", "Preseason"]) {
   for (const sport of ["football", "basketball"]) {
     test(`${sport} standings survive the ${conference} scenario`, async ({ page }) => {

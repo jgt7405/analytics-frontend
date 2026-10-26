@@ -53,7 +53,10 @@ interface BasketballTeamTournamentBidHistoryProps {
   teamName: string;
   primaryColor?: string;
   secondaryColor?: string;
+  /** Raw archive season (undefined on the current page) - sent to the backend history query. */
   season?: string;
+  /** Season used for the chart's client-side display window. */
+  displaySeason?: string;
 }
 
 export default function BasketballTeamTournamentBidHistory({
@@ -61,6 +64,7 @@ export default function BasketballTeamTournamentBidHistory({
   primaryColor: rawPrimaryColor = "#3b82f6",
   secondaryColor,
   season,
+  displaySeason,
 }: BasketballTeamTournamentBidHistoryProps) {
   const { isMobile } = useResponsive();
   const chartRef = useRef<ChartJS<"line", (number | null)[], string> | null>(
@@ -147,7 +151,7 @@ export default function BasketballTeamTournamentBidHistory({
       }
     });
 
-    const range = getBasketballDateRange(season, Array.from(dataByDate.values()));
+    const range = getBasketballDateRange(displaySeason ?? season, Array.from(dataByDate.values()));
     const filteredData = filterDataToRange(
       Array.from(dataByDate.values()),
       range
@@ -160,7 +164,7 @@ export default function BasketballTeamTournamentBidHistory({
     });
 
     setData(processedData);
-  }, [allHistoryData, teamName, season]);
+  }, [allHistoryData, teamName, season, displaySeason]);
 
   // White reads on the dark card but not the light one; dark secondaries
   // get the same dark-mode lift as the primary color.
@@ -177,7 +181,7 @@ export default function BasketballTeamTournamentBidHistory({
       ? "#ef4444"
       : "#10b981";
 
-  const range = getBasketballDateRange(season, data);
+  const range = getBasketballDateRange(displaySeason ?? season, data);
   const dataDates = data.map((point) => point.date);
   const chartLabels = buildChartLabels(dataDates, range, "basketball");
   const dataByDate = new Map(data.map((point) => [point.date, point]));
