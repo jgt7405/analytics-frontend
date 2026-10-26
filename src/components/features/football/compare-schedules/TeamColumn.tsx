@@ -144,39 +144,37 @@ export default function TeamColumn({
               </g>
             ) : null}
 
-            {/* Opponent Logo to the Left */}
-            {game.opponentLogo && (
-              <g>
-                <circle
-                  cx={logoX + 12}
-                  cy={game.adjustedY}
-                  r="14"
-                  fill="white"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  opacity={1}
+            {/* Opponent Logo to the Left (default NCAA logo for TBD opponents) */}
+            <g>
+              <circle
+                cx={logoX + 12}
+                cy={game.adjustedY}
+                r="14"
+                fill="white"
+                stroke="white"
+                strokeWidth="1.5"
+                opacity={1}
+              />
+              <foreignObject
+                x={logoX}
+                y={game.adjustedY - 12}
+                width="24"
+                height="24"
+                style={{ overflow: "hidden" }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={resizedLogoSrc(game.opponentLogo || "/images/team_logos/default.png", 24)}
+                  alt=""
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    objectFit: "contain",
+                    borderRadius: "4px",
+                  }}
                 />
-                <foreignObject
-                  x={logoX}
-                  y={game.adjustedY - 12}
-                  width="24"
-                  height="24"
-                  style={{ overflow: "hidden" }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={resizedLogoSrc(game.opponentLogo, 24)}
-                    alt=""
-                    style={{
-                      width: "24px",
-                      height: "24px",
-                      objectFit: "contain",
-                      borderRadius: "4px",
-                    }}
-                  />
-                </foreignObject>
-              </g>
-            )}
+              </foreignObject>
+            </g>
 
             {/* Game Dot on the Line - at exact percentile position */}
             <circle
