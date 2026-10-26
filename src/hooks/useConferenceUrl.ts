@@ -125,7 +125,7 @@ export const useConferenceUrl = (
       const appropriateConference = getAppropriateConference(decodedConf);
       setSelectedConference(appropriateConference);
       // An old name in the URL (?conf=Metro_Atlantic_Athletic) is replaced by
-      // the one shown (?conf=MAAC).
+      // the one shown (?conf=Metro).
       if (appropriateConference !== decodedConf) updateUrl(appropriateConference);
     } else {
       // Rule 1: No conference in URL, default to Big 12

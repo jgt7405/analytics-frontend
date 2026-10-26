@@ -22,13 +22,20 @@ import { currentSeason, type Sport } from "@/config/seasons";
 
 interface Maps {
   toLabel: Map<string, DisplayName>;
+  /** Labels and aliases -> stored name. */
   toStored: Map<string, string>;
+  aliases: Map<string, DisplayName>;
 }
 
 function maps(entries: readonly DisplayName[]): Maps {
+  const aliases = entries.flatMap((e) => (e.aliases ?? []).map((a) => [a, e] as const));
   return {
     toLabel: new Map(entries.map((e) => [e.stored, e])),
-    toStored: new Map(entries.map((e) => [e.label, e.stored])),
+    toStored: new Map([
+      ...entries.map((e) => [e.label, e.stored] as const),
+      ...aliases.map(([a, e]) => [a, e.stored] as const),
+    ]),
+    aliases: new Map(aliases),
   };
 }
 
@@ -52,24 +59,26 @@ export function isConferenceKey(key: string | undefined): boolean {
   return !!key && /conf/i.test(key);
 }
 
+/** The label for a stored name or an alias, for the season; any other name
+ *  unchanged. */
 export function teamLabel(sport: Sport, name: string, season?: string | null): string {
-  const entry = TEAMS[sport].toLabel.get(name);
+  const entry = TEAMS[sport].toLabel.get(name) ?? TEAMS[sport].aliases.get(name);
   return entry && applies(entry, sport, season) ? entry.label : name;
 }
 
 export function conferenceLabel(sport: Sport, name: string, season?: string | null): string {
-  const stored = name.replace(/_/g, " ");
-  const entry = CONFERENCES[sport].toLabel.get(stored);
+  const spaced = name.replace(/_/g, " ");
+  const entry = CONFERENCES[sport].toLabel.get(spaced) ?? CONFERENCES[sport].aliases.get(spaced);
   return entry && applies(entry, sport, season) ? entry.label : name;
 }
 
-/** The stored name for a team label; any other name unchanged. */
+/** The stored name for a team label or alias; any other name unchanged. */
 export function storedTeamName(sport: Sport, name: string): string {
   return TEAMS[sport].toStored.get(name) ?? name;
 }
 
-/** The stored name for a conference label (`_` or spaces); any other name
- *  unchanged, in the form it came in. */
+/** The stored name for a conference label or alias (`_` or spaces); any
+ *  other name unchanged, in the form it came in. */
 export function storedConferenceName(sport: Sport, name: string): string {
   const stored = CONFERENCES[sport].toStored.get(name.replace(/_/g, " "));
   return stored === undefined ? name : name.includes("_") ? stored.replace(/ /g, "_") : stored;
@@ -169,7 +178,9 @@ export function storedQueryValue(sport: Sport, name: string, value: string): str
     : value;
 }
 
-const CONFERENCE_LABEL_TO_STORED = new Map(CONFERENCE_DISPLAY_NAMES.map((c) => [c.label, c.stored]));
+const CONFERENCE_LABEL_TO_STORED = new Map(
+  CONFERENCE_DISPLAY_NAMES.flatMap((c) => [c.label, ...(c.aliases ?? [])].map((n) => [n, c.stored] as const)),
+);
 
 /** A conference's logo (/images/conf_logos/, named after the stored name
  *  with spaces and hyphens as `_`), from its stored name or its label. */

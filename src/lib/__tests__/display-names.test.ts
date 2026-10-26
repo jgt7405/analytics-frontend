@@ -33,7 +33,9 @@ describe("the display-name list", () => {
       for (const { label } of TEAM_DISPLAY_NAMES[sport]) expect(stored.has(label)).toBe(false);
     }
     const stored = new Set(CONFERENCE_DISPLAY_NAMES.map((c) => c.stored));
-    for (const { label } of CONFERENCE_DISPLAY_NAMES) expect(stored.has(label)).toBe(false);
+    for (const { label, aliases = [] } of CONFERENCE_DISPLAY_NAMES) {
+      for (const name of [label, ...aliases]) expect(stored.has(name)).toBe(false);
+    }
   });
 
   it("only uses labels the proxy's path rules accept", () => {
@@ -52,8 +54,8 @@ describe("labels by season", () => {
     expect(teamLabel("basketball", "New Orleans", currentSeason("basketball"))).toBe(
       "LSU New Orleans",
     );
-    expect(conferenceLabel("basketball", "Metro Atlantic Athletic")).toBe("MAAC");
-    expect(conferenceLabel("basketball", "Metro_Atlantic_Athletic")).toBe("MAAC");
+    expect(conferenceLabel("basketball", "Metro Atlantic Athletic")).toBe("Metro");
+    expect(conferenceLabel("basketball", "Metro_Atlantic_Athletic")).toBe("Metro");
     expect(teamLabel("football", "Connecticut")).toBe("UConn");
   });
 
@@ -74,7 +76,7 @@ describe("stored names for requests", () => {
   it("turns labels back into stored names", () => {
     expect(storedTeamName("basketball", "LSU New Orleans")).toBe("New Orleans");
     expect(storedTeamName("basketball", "Duke")).toBe("Duke");
-    expect(storedConferenceName("basketball", "MAAC")).toBe("Metro Atlantic Athletic");
+    expect(storedConferenceName("basketball", "Metro")).toBe("Metro Atlantic Athletic");
     expect(storedConferenceName("basketball", "Summit_League")).toBe("Summit");
     expect(storedConferenceName("basketball", "Big_12")).toBe("Big_12");
   });
@@ -124,7 +126,7 @@ describe("labelResponse", () => {
 
   it("relabels values, list items and keys", () => {
     expect(labelResponse("basketball", response)).toEqual({
-      conferences: ["Big 12", "SoCon", "MAAC"],
+      conferences: ["Big 12", "SoCon", "Metro"],
       data: [
         // Southern University stays; the Southern Conference becomes SoCon.
         { team_name: "Southern", conference: "SWAC" },
@@ -155,6 +157,7 @@ describe("team page paths", () => {
 
 describe("conference logos", () => {
   it("names the file after the stored name, from either name", () => {
+    expect(conferenceLogoPath("Metro")).toBe("/images/conf_logos/Metro_Atlantic_Athletic.png");
     expect(conferenceLogoPath("MAAC")).toBe("/images/conf_logos/Metro_Atlantic_Athletic.png");
     expect(conferenceLogoPath("Mid-American")).toBe("/images/conf_logos/Mid_American.png");
     expect(conferenceLogoPath("MAC")).toBe("/images/conf_logos/Mid_American.png");
@@ -163,7 +166,21 @@ describe("conference logos", () => {
 
   it("lists every label for known-conference checks", () => {
     expect(conferenceLabels("basketball")).toEqual(
-      expect.arrayContaining(["MAAC", "SoCon", "UAC", "ASUN"]),
+      expect.arrayContaining(["Metro", "SoCon", "UAC", "ASUN"]),
     );
+  });
+});
+
+describe("aliases (earlier display names)", () => {
+  it("lead to the current label and the stored name", () => {
+    expect(conferenceLabel("basketball", "MAAC")).toBe("Metro");
+    expect(storedConferenceName("basketball", "MAAC")).toBe("Metro Atlantic Athletic");
+    expect(storedParams("basketball", { conference: "MAAC" })).toEqual({
+      conference: "Metro_Atlantic_Athletic",
+    });
+  });
+
+  it("aren't relabeled in responses (only stored names are)", () => {
+    expect(labelResponse("basketball", { abbreviation: "MAAC" })).toEqual({ abbreviation: "MAAC" });
   });
 });

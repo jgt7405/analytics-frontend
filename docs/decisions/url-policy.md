@@ -81,9 +81,10 @@ Generated from `src/config/sports.ts`: every indexed seasonless page of each spo
 
 ## Addendum 2026-10-26: display names and alias URLs
 
-Some stored conference and team names aren't the ones fans use, or are out of date ("Metro Atlantic Athletic" for the MAAC, "New Orleans" for LSU New Orleans). `src/config/display-names.ts` lists a display name for each, keyed by the pipeline's id and starting from a season (2026-27).
+Some stored conference and team names aren't the ones fans use, or are out of date ("Metro Atlantic Athletic" for the Metro Conference, "New Orleans" for LSU New Orleans). `src/config/display-names.ts` lists a display name for each, keyed by the pipeline's id and starting from a season (2026-27).
 
 - The stored name stays the key everywhere: the backend, history, archived seasons. The proxy and server fetches (`src/lib/display-names.ts`) send the stored name to the backend for any label in a path, query or POST body, and relabel JSON responses for the seasons a label applies to. Archived seasons are untouched.
 - The display name is the canonical URL on current-season pages: `/<sport>/team/<display name>/` and `?conf=<display name>`. The stored name's URL still works: a team page 301s to the alias (one hop, together with the legacy `_` slug redirect), and a stored `?conf=` is replaced in place. The sitemap lists the aliases.
+- A conference or team renamed again keeps its earlier display names as `aliases` ("MAAC" for the Metro): links that used them still lead to the current name.
 - Archive URLs keep the stored names (`/basketball/2025-26/team/New%20Orleans/`).
 - "Independent" (football) keeps its name: thirteen places in the code compare against it.

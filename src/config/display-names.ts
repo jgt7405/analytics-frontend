@@ -21,6 +21,9 @@ export interface DisplayName {
   label: string;
   /** First season (YYYY-YY) the label is shown for. */
   since: string;
+  /** Earlier display names, still accepted wherever a name is (links from
+   *  before a rename) and shown as `label`. */
+  aliases?: readonly string[];
 }
 
 const BOTH: readonly Sport[] = ["basketball", "football"];
@@ -33,7 +36,9 @@ export const CONFERENCE_DISPLAY_NAMES: readonly (DisplayName & { sports: readonl
   // Renamed 2016.
   { id: 4, stored: "Atlantic Sun", label: "ASUN", since: "2026-27", sports: BOTH },
   { id: 12, stored: "Coastal Athletic Association", label: "CAA", since: "2026-27", sports: BOTH },
-  { id: 17, stored: "Metro Atlantic Athletic", label: "MAAC", since: "2026-27", sports: BOTH },
+  // The MAAC became the Metro Conference on July 1, 2026. "MAAC" was this
+  // site's label before that was caught; its links still work.
+  { id: 17, stored: "Metro Atlantic Athletic", label: "Metro", since: "2026-27", sports: BOTH, aliases: ["MAAC"] },
   { id: 18, stored: "Mid-American", label: "MAC", since: "2026-27", sports: BOTH },
   { id: 19, stored: "Mid-Eastern", label: "MEAC", since: "2026-27", sports: BOTH },
   { id: 22, stored: "Northeast", label: "NEC", since: "2026-27", sports: BOTH },

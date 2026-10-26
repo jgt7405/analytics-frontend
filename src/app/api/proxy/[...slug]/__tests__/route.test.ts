@@ -206,6 +206,10 @@ describe("proxy display names", () => {
     await call("GET", `team/${encodeURIComponent("LSU New Orleans")}/`);
     expect(backendUrl()).toBe(`${BACKEND}/team/New%20Orleans`);
     backendFetch.mockClear();
+    await call("GET", "standings/Metro/");
+    expect(backendUrl()).toBe(`${BACKEND}/standings/Metro_Atlantic_Athletic`);
+    backendFetch.mockClear();
+    // An earlier label (the site showed "MAAC" before the Metro rename).
     await call("GET", "standings/MAAC/");
     expect(backendUrl()).toBe(`${BACKEND}/standings/Metro_Atlantic_Athletic`);
   });
