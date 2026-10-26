@@ -1,7 +1,7 @@
 // Alternative logo layout for the schedule-difficulty chart, shown as a second
 // chart for review against layoutGames (fixed four columns). Logos are not tied
-// to columns: each may sit anywhere on either side of the center line, and goes
-// where its cost is lowest. Cost = distance from its dot (vertical counts most)
+// to columns: sides alternate in difficulty order, and within its side each
+// logo goes where its cost is lowest. Cost = distance from its dot (vertical counts most)
 // plus penalties for overlapping another logo, badge or axis label, a leader
 // line running through another logo or badge or over another dot, and leader
 // lines crossing each other.
@@ -189,6 +189,16 @@ export function layoutGamesAvoidingCollisions(
   }));
   const n = items.length;
 
+  // Sides alternate in difficulty order (hardest left, next right, ...), so
+  // neighbouring games split across the center line instead of piling up
+  // on one side.
+  const sideOf: (1 | -1)[] = items.map(() => -1);
+  [...items.keys()]
+    .sort((a, b) => items[a].dotY - items[b].dotY || a - b)
+    .forEach((i, k) => {
+      sideOf[i] = k % 2 === 0 ? -1 : 1;
+    });
+
   const labelCost = (g: Geometry): number => {
     let cost = 0;
     for (const c of g.circles) for (const r of labels) if (circleHitsRect(c, r)) cost += OVERLAP_PENALTY;
@@ -222,8 +232,7 @@ export function layoutGamesAvoidingCollisions(
       const item = items[i];
       let best = current;
       let bestCost = current ? costAt(i, current, Infinity) : Infinity;
-      // Alternate the first side tried so ties spread logos left and right.
-      const sides: (1 | -1)[] = order.indexOf(i) % 2 === 0 ? [-1, 1] : [1, -1];
+      const sides: (1 | -1)[] = [sideOf[i]];
 
       const search = (
         centerY: number,
