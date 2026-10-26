@@ -97,6 +97,35 @@ test("a basketball team page asks only for next games", async ({ page }) => {
   expect(upcoming.every((search) => search === "?next_only=1")).toBe(true);
 });
 
+// Game details on the Wins to Seed Map: hover with a mouse, tap on a phone
+// (the old SVG <title> only ever showed on hover).
+test("the Wins to Seed Map shows a game's details on hover or tap", async ({ page }, testInfo) => {
+  await page.goto("/basketball/team/Duke/");
+  await settle(page); // the chart re-lays out once the phone width is known
+  const map = page.locator(".basketball-wins-breakdown");
+  const firstGame = map
+    .locator("svg g.cursor-pointer")
+    .filter({ has: page.locator('image[href*="virginia"]') });
+  await firstGame.scrollIntoViewIfNeeded();
+  const tooltip = map.getByRole("tooltip");
+
+  if (testInfo.project.name === "mobile") {
+    await firstGame.tap();
+    await expect(tooltip).toContainText("Virginia");
+    await expect(tooltip).toContainText("Location: Home");
+    await expect(tooltip).toContainText("01/10");
+    // A tap outside the chart closes it.
+    await page.locator("h1").first().tap();
+    await expect(tooltip).toBeHidden();
+  } else {
+    await firstGame.hover();
+    await expect(tooltip).toContainText("Virginia");
+    await expect(tooltip).toContainText("Win Probability:");
+    await page.mouse.move(0, 0);
+    await expect(tooltip).toBeHidden();
+  }
+});
+
 for (const conference of ["Empty", "Missing_Fields", "Preseason"]) {
   for (const sport of ["football", "basketball"]) {
     test(`${sport} standings survive the ${conference} scenario`, async ({ page }) => {

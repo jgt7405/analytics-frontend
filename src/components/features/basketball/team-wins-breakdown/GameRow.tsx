@@ -1,8 +1,9 @@
 "use client";
 
 // One game's row left of the bar: dashed leader to its slot, opponent logo
-// (conference tournament games carry a round badge), hover title, and the
-// win-probability, location and game-number cells.
+// (conference tournament games carry a round badge), and the
+// win-probability, location and game-number cells. A transparent strip
+// across the row is its hover and tap target (GameTooltip).
 
 import { LOGO_SIZE } from "./constants";
 import { resizedLogoSrc } from "@/lib/logo-src";
@@ -21,11 +22,19 @@ export default function GameRow({ position, barX, lineColor }: GameRowProps) {
   const probability = (game.winProb * 100).toFixed(0);
   const confGameNumber = game.opponent.match(/\d+/)?.[0];
   const location = locationStyle(game.location);
-  const dateDisplay = game.date || "No date";
   const cellStyle = winProbCellStyle(parseInt(probability));
+  const rowLeft = logoX - LOGO_SIZE - 65;
 
   return (
     <>
+      <rect
+        x={rowLeft}
+        y={yPosition - LOGO_SIZE / 2}
+        width={barX - rowLeft}
+        height={LOGO_SIZE}
+        fill="transparent"
+      />
+
       <line
         x1={logoX + LOGO_SIZE - 2}
         y1={yPosition}
@@ -75,8 +84,6 @@ export default function GameRow({ position, barX, lineColor }: GameRowProps) {
           </text>
         </>
       )}
-
-      <title>{`${game.opponent}\nLocation: ${location.label}\n${dateDisplay}\nWin Probability: ${probability}%`}</title>
 
       <rect
         x={logoX - LOGO_SIZE - 65}
