@@ -87,12 +87,12 @@ export default function ChartFooter({ chartHeight, confChampData, primaryColor }
         <tspan fontWeight="500">Game</tspan>
         <tspan>
           {" "}
-          = current wins and count of potential remaining games;{" "}
+          = current wins and count of potential remaining games
         </tspan>
-        <tspan fontWeight="500">Opp</tspan>
-        <tspan> = Opponent;</tspan>
       </text>
       <text x={-80} y={chartHeight + 100} fontSize="9" fill="#374151">
+        <tspan fontWeight="500">Opp</tspan>
+        <tspan> = Opponent; </tspan>
         <tspan fontWeight="500">NCAA Seed</tspan>
         <tspan> = expected seed by wins</tspan>
       </text>

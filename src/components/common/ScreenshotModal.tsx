@@ -21,6 +21,9 @@ interface ScreenshotOption {
   // e.g. a specific chart plus a shared "selected games" summary that
   // isn't already inside that chart's own DOM subtree.
   selector: string | string[];
+  // Size the image to the chart (its widest <svg>/<canvas>/<table>) instead
+  // of the card, for fixed-width charts that sit in a wider card.
+  fitContent?: boolean;
 }
 
 interface ScreenshotModalProps {
@@ -77,6 +80,7 @@ export default function ScreenshotModal({
   // tables so nothing gets cropped in the static export.
   const buildProcessedClone = async (
     targetElement: Element,
+    fitContent = false,
   ): Promise<{ clone: HTMLElement; width: number }> => {
     // Extract all Next.js image URLs and convert to base64
     const images = targetElement.querySelectorAll("img");
@@ -153,7 +157,14 @@ export default function ScreenshotModal({
 
     // Use intrinsic and scroll dimensions so off-screen rows/columns are part
     // of the export instead of inheriting the current viewport crop.
-    const width = getFullContentWidth(targetElement);
+    const width = fitContent
+      ? Math.max(
+          ...Array.from(targetElement.querySelectorAll("svg, canvas, table"))
+            .filter((el) => !el.parentElement?.closest("svg"))
+            .map((el) => Math.ceil(el.getBoundingClientRect().width)),
+          0,
+        )
+      : getFullContentWidth(targetElement);
 
     // Clone and replace images with base64
     const clone = targetElement.cloneNode(true) as HTMLElement;
@@ -202,6 +213,11 @@ export default function ScreenshotModal({
     const componentTitle = clone.querySelector("h2");
     if (componentTitle) {
       componentTitle.style.display = "none";
+      // A fitted chart drops the whole heading row (it still has height
+      // from the watermark/margins once the title is hidden).
+      if (fitContent && componentTitle.parentElement !== clone) {
+        componentTitle.parentElement!.style.display = "none";
+      }
     }
 
     const componentLogos = clone.querySelectorAll(".absolute img");
@@ -249,6 +265,7 @@ export default function ScreenshotModal({
   const handleScreenshot = async (
     selector: string | string[],
     label: string,
+    fitContent = false,
   ) => {
     const selectors = Array.isArray(selector) ? selector : [selector];
     logger.debug("Screenshot started for selector(s):", selectors);
@@ -289,23 +306,30 @@ export default function ScreenshotModal({
         targetElements as HTMLElement[],
         () =>
           Promise.all(
-            targetElements.map((el) => buildProcessedClone(el as Element)),
+            targetElements.map((el) =>
+              buildProcessedClone(el as Element, fitContent),
+            ),
           ),
       );
 
       // Use intrinsic and scroll dimensions so off-screen rows/columns are
       // part of the export instead of inheriting the current viewport crop.
+      // A fitted image only needs room for the header (logo, title, team
+      // logo) and keeps its side padding small.
+      const sidePad = fitContent ? 20 : 50;
+      const minContentWidth = fitContent ? 400 : 660;
       const actualWidth =
-        Math.max(...processed.map((p) => p.width), 660) + 100;
+        Math.max(...processed.map((p) => p.width), minContentWidth) +
+        sidePad * 2;
 
       logger.debug("Creating wrapper...");
       // Create wrapper
       const wrapper = document.createElement("div");
-      wrapper.style.cssText = `position: fixed; left: -9999px; top: 0; background-color: white; padding: 24px 50px; width: ${actualWidth}px; z-index: -1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;`;
+      wrapper.style.cssText = `position: fixed; left: -9999px; top: 0; background-color: white; padding: ${fitContent ? 16 : 24}px ${sidePad}px; width: ${actualWidth}px; z-index: -1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;`;
 
-      const contentWidth = actualWidth - 100;
+      const contentWidth = actualWidth - sidePad * 2;
       const header = document.createElement("div");
-      header.style.cssText = `display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; width: ${contentWidth}px;`;
+      header.style.cssText = `display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: ${fitContent ? 8 : 20}px; padding-bottom: ${fitContent ? 8 : 12}px; border-bottom: 2px solid #e5e7eb; width: ${contentWidth}px;`;
 
       // JThom logo as base64
       const logo = document.createElement("img");
@@ -316,11 +340,11 @@ export default function ScreenshotModal({
         `${window.location.origin}${logoPath}`,
       );
       logo.src = logoBase64;
-      logo.style.cssText = `height: 50px; width: auto;`;
+      logo.style.cssText = `height: ${fitContent ? 42 : 50}px; width: auto;`;
 
       const titleElement = document.createElement("h1");
       titleElement.textContent = label;
-      titleElement.style.cssText = `font-family: "Roboto Condensed", system-ui, sans-serif; font-size: 1.25rem; font-weight: 500; color: #6b7280; margin: 0; text-align: center; flex: 1;`;
+      titleElement.style.cssText = `font-family: "Roboto Condensed", system-ui, sans-serif; font-size: 1.25rem; font-weight: 500; color: #6b7280; margin: 0; text-align: center; flex: 1; white-space: nowrap;`;
 
       const infoSection = document.createElement("div");
       infoSection.style.cssText = `display: flex; flex-direction: column; align-items: flex-end; gap: 4px;`;
@@ -348,6 +372,10 @@ export default function ScreenshotModal({
       processed.forEach(({ clone }, index) => {
         const marginBottom = index < processed.length - 1 ? "24px" : "0";
         clone.style.cssText = `width: ${contentWidth}px !important; overflow: visible !important; display: block !important; margin-bottom: ${marginBottom} !important;`;
+        if (fitContent) {
+          // Drop the card's padding, border and shadow; only the chart shows.
+          clone.style.cssText += `padding: 0 !important; margin-top: 0 !important; min-width: 0 !important; border: none !important; box-shadow: none !important; background: transparent !important;`;
+        }
         wrapper.appendChild(clone);
       });
 
@@ -436,7 +464,9 @@ export default function ScreenshotModal({
           {options.map((option) => (
             <button
               key={option.id}
-              onClick={() => handleScreenshot(option.selector, option.label)}
+              onClick={() =>
+                handleScreenshot(option.selector, option.label, option.fitContent)
+              }
               disabled={isCapturing}
               className="w-full text-left px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

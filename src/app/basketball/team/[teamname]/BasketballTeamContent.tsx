@@ -124,6 +124,7 @@ const SECTIONS: TeamSection<TeamData>[] = [
     heading: "Wins to Seed Map",
     containerClass: "basketball-wins-breakdown",
     watermark: true,
+    screenshotFitContent: true,
     render: (ctx) => (
       <BasketballTeamWinsBreakdown
         schedule={ctx.teamData.schedule}

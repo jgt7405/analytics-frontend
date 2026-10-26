@@ -81,6 +81,8 @@ export interface TeamSection<TData> {
   containerClass: string;
   /** Show the small team-logo watermark next to the heading. */
   watermark?: boolean;
+  /** Size the screenshot to the chart rather than the (wider) card. */
+  screenshotFitContent?: boolean;
   /** Team Schedule uses a distinct card frame with a bordered header. */
   scheduleFrame?: boolean;
   /** Omit the section when this returns false (e.g. data not loaded yet). */
@@ -258,6 +260,7 @@ export default function TeamContent<TData, THistory>({
       id: s.key,
       label: s.heading,
       selector: `.${s.containerClass}`,
+      fitContent: s.screenshotFitContent,
     }));
 
   const watermark = (size: number, style: React.CSSProperties) =>
