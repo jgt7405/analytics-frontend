@@ -123,6 +123,44 @@ describe("proxy forwarding", () => {
   });
 });
 
+// A slow or down backend must not break pages that were already fetched:
+// GETs go through Next's data cache, which answers the last good copy while
+// it refreshes in the background.
+describe("proxy resilience", () => {
+  const init = () => backendFetch.mock.calls[0][1] as RequestInit & {
+    next?: { revalidate?: number };
+  };
+
+  it("keeps GETs in the data cache for their class's lifetime", async () => {
+    await call("GET", "football/standings/SEC/");
+    expect(init().next?.revalidate).toBe(300);
+    expect(init().cache).toBeUndefined();
+  });
+
+  it("keeps history GETs for the historical lifetime", async () => {
+    await call("GET", "basketball/ncaa/Duke/history/");
+    expect(init().next?.revalidate).toBe(3600);
+  });
+
+  it("sends no per-visitor header on GETs (it would split the cache entry)", async () => {
+    const request = new NextRequest("http://localhost/api/proxy/football/standings/SEC/", {
+      headers: { "x-forwarded-for": "203.0.113.7" },
+    });
+    await GET(request, { params: Promise.resolve({ slug: ["football", "standings", "SEC"] }) });
+    expect(new Headers(init().headers).get("X-Client-IP")).toBeNull();
+  });
+
+  it("passes the visitor's address on POSTs for the backend's rate limit", async () => {
+    const request = new NextRequest("http://localhost/api/proxy/football/whatif/", {
+      method: "POST",
+      body: JSON.stringify({ conference: "SEC", selections: [] }),
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.7, 10.0.0.1" },
+    });
+    await POST(request, { params: Promise.resolve({ slug: ["football", "whatif"] }) });
+    expect(new Headers(init().headers).get("X-Client-IP")).toBe("203.0.113.7");
+  });
+});
+
 describe("proxy rejections (never reach the backend)", () => {
   it.each([
     ["GET", "nope/", 404],

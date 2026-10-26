@@ -10,9 +10,12 @@ import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
 import { logger } from "@/lib/logger";
 import { MAX_UPLOAD_BYTES, requestSchemaFor, responseSchemaFor } from "@/api/schemas";
 
-// Force Node.js runtime and disable static optimization
+// Node.js runtime. The route reads the request, so it always runs per
+// request; `default-no-store` leaves fetches uncached unless they opt in
+// (forwardGet does). `dynamic = "force-dynamic"` would force every fetch to
+// no-store, including forwardGet's.
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const fetchCache = "default-no-store";
 
 // The proxy forwards only what src/api/endpoints.ts registers: the path
 // shape, method, each path parameter's rule and the query parameters.
@@ -118,9 +121,15 @@ async function forwardGet(
   backendUrl: string,
   season: string | null,
 ): Promise<NextResponse> {
+  const cacheClass = cacheClassFor(endpoint, season);
+  // Next's data cache keeps the last 200 per URL (the same `revalidate` as
+  // server fetches, src/lib/server-api.ts). Past its lifetime the stored copy
+  // is still answered at once while a background request refreshes it, and a
+  // failed refresh keeps it: a slow or down backend serves the last good data
+  // instead of a timeout. Only a URL never fetched waits on the backend.
   const response = await fetch(backendUrl, {
-    headers: { Accept: "application/json", "Cache-Control": "no-cache" },
-    cache: "no-store",
+    headers: { Accept: "application/json" },
+    next: { revalidate: CACHE_POLICIES[cacheClass].revalidate },
     signal: AbortSignal.timeout(endpoint.timeoutMs),
   });
 
@@ -136,7 +145,6 @@ async function forwardGet(
   }
 
   // CDN caching per freshness class (src/lib/cache-policy.ts)
-  const cacheClass = cacheClassFor(endpoint, season);
   const cacheHeaders = {
     "Cache-Control": CACHE_POLICIES[cacheClass].cacheControl,
     "x-cache-class": cacheClass,
@@ -211,12 +219,21 @@ async function forwardPost(
   if ("error" in body) {
     return NextResponse.json({ error: body.error }, { status: 400 });
   }
+  // The backend rate-limits POSTs per visitor; every request reaches it from
+  // Vercel's addresses, so pass the visitor's (Vercel sets x-forwarded-for).
+  // GETs don't send it: it would split their data-cache entry per visitor.
+  const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0].trim();
+  const clientHeaders: Record<string, string> = clientIp ? { "X-Client-IP": clientIp } : {};
   const init: RequestInit =
     body.formData !== undefined
-      ? { method: "POST", body: body.formData }
+      ? { method: "POST", headers: clientHeaders, body: body.formData }
       : {
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            ...clientHeaders,
+          },
           body: JSON.stringify(body.json),
         };
   const response = await fetch(backendUrl, {
