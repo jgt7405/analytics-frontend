@@ -21,7 +21,6 @@ import {
   computeTeamStats,
   filterTeamGames,
   highProbabilityRecord,
-  layoutGames,
   positionGames,
   splitByThreshold,
 } from "./data";
@@ -77,9 +76,7 @@ export default function BasketballTeamScheduleDifficulty({
     () => positionGames(lowProbGames, percentiles),
     [lowProbGames, percentiles],
   );
-  const positionedGames = useMemo(() => layoutGames(teamGamePositions), [teamGamePositions]);
-  // Second chart, under review: collision-aware logo placement.
-  const collisionAwareGames = useMemo(
+  const positionedGames = useMemo(
     () => layoutGamesAvoidingCollisions(teamGamePositions, CHART_WIDTH),
     [teamGamePositions, CHART_WIDTH],
   );
@@ -145,19 +142,6 @@ export default function BasketballTeamScheduleDifficulty({
         chartWidth={CHART_WIDTH}
         percentiles={percentiles}
         positionedGames={positionedGames}
-        highProbGameCount={highProbGames.length}
-        highProbRecord={highProbRecord}
-        comparisonDataset={comparisonDataset}
-        teamColor={teamColor}
-      />
-
-      <div className="mt-4 mb-1 text-center text-xs font-semibold text-gray-600">
-        Layout B (test): collision-aware logo placement
-      </div>
-      <DifficultyChart
-        chartWidth={CHART_WIDTH}
-        percentiles={percentiles}
-        positionedGames={collisionAwareGames}
         highProbGameCount={highProbGames.length}
         highProbRecord={highProbRecord}
         comparisonDataset={comparisonDataset}

@@ -1,14 +1,9 @@
 // Pure calculations behind the schedule-difficulty chart: which games to
-// show, the comparison distribution, percentile positions, logo layout and
-// the summary stats. No React; index.tsx memoizes each step.
+// show, the comparison distribution, percentile positions and the summary
+// stats (logo layout is in layoutAvoidCollisions.ts). No React; index.tsx
+// memoizes each step.
 
-import {
-  COLUMN_OFFSETS,
-  POWER_CONFERENCES,
-  THRESHOLD,
-  TOP_MARGIN,
-  TOP_PLOT_HEIGHT,
-} from "./constants";
+import { POWER_CONFERENCES, THRESHOLD } from "./constants";
 import type {
   AllScheduleGame,
   BasketballTeamGame,
@@ -18,7 +13,6 @@ import type {
   HighProbRecord,
   LocationFilter,
   Percentile,
-  PositionedGame,
   TeamStats,
 } from "./types";
 
@@ -185,77 +179,6 @@ export function positionGames(
       isHighProb: false,
     };
   });
-}
-
-/**
- * Logo positions: games are dealt into four columns by difficulty, and each
- * column is spread so no logos overlap, keeping each as close to its true
- * difficulty position as possible.
- */
-export function layoutGames(teamGamePositions: GameWithPosition[]): PositionedGame[] {
-  const sortedByDifficulty = [...teamGamePositions].sort(
-    (a, b) => a.percentilePosition - b.percentilePosition,
-  );
-
-  const minSpacing = 28; // Logos are 24px tall; keep a small gap between them.
-  const minY = TOP_MARGIN.top + 15;
-  const maxY = TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15;
-  const columnPattern = [0, 3, 1, 2];
-
-  const withColumn = sortedByDifficulty.map((game, index) => ({
-    game,
-    columnIndex: columnPattern[index % 4],
-  }));
-
-  const layoutColumn = (
-    entries: { game: GameWithPosition; columnIndex: number }[],
-  ): PositionedGame[] => {
-    const items = entries
-      .map(({ game, columnIndex }) => ({
-        game,
-        columnIndex,
-        idealY: Math.max(
-          minY,
-          Math.min(maxY, TOP_MARGIN.top + (game.percentilePosition / 100) * TOP_PLOT_HEIGHT),
-        ),
-      }))
-      .sort((a, b) => a.idealY - b.idealY);
-
-    const ys = items.map((it) => it.idealY);
-
-    // Forward pass: enforce spacing moving downward.
-    for (let i = 1; i < ys.length; i++) {
-      if (ys[i] - ys[i - 1] < minSpacing) ys[i] = ys[i - 1] + minSpacing;
-    }
-
-    // If the column overflowed the bottom, shift it all up.
-    const overflow = ys.length ? ys[ys.length - 1] - maxY : 0;
-    if (overflow > 0) {
-      for (let i = 0; i < ys.length; i++) ys[i] -= overflow;
-    }
-
-    // Backward pass in case the shift pushed the top logo above the plot.
-    for (let i = ys.length - 2; i >= 0; i--) {
-      if (ys[i + 1] - ys[i] < minSpacing) ys[i] = ys[i + 1] - minSpacing;
-    }
-
-    // Final clamp (only bites when a column genuinely has more logos than fit).
-    for (let i = 0; i < ys.length; i++) {
-      ys[i] = Math.max(minY, Math.min(maxY, ys[i]));
-    }
-
-    return items.map((it, i) => ({
-      ...it.game,
-      isRightSide: it.columnIndex >= 2,
-      adjustedY: ys[i],
-      logoDx: COLUMN_OFFSETS[it.columnIndex],
-      columnIndex: it.columnIndex,
-    }));
-  };
-
-  return [0, 1, 2, 3].flatMap((col) =>
-    layoutColumn(withColumn.filter((e) => e.columnIndex === col)),
-  );
 }
 
 /** Wins, losses and games left among the >95% games. */

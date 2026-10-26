@@ -1,6 +1,5 @@
-// Alternative logo layout for the schedule-difficulty chart, shown as a second
-// chart for review against layoutGames (fixed four columns). Logos are not tied
-// to columns: sides alternate in difficulty order, and within its side each
+// Logo layout for the schedule-difficulty chart. Logos are not tied to
+// columns: sides alternate in difficulty order, and within its side each
 // logo goes where its cost is lowest. Cost = distance from its dot (vertical counts most)
 // plus penalties for overlapping another logo, badge or axis label, a leader
 // line running through another logo or badge or over another dot, and leader

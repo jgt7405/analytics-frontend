@@ -5,11 +5,9 @@ import {
   difficultyRank,
   filterTeamGames,
   highProbabilityRecord,
-  layoutGames,
   positionGames,
   splitByThreshold,
 } from "../data";
-import { TOP_MARGIN, TOP_PLOT_HEIGHT } from "../constants";
 import type { AllScheduleGame, BasketballTeamGame } from "../types";
 
 const game = (over: Partial<BasketballTeamGame>): BasketballTeamGame => ({
@@ -106,28 +104,6 @@ describe("computePercentiles and positionGames", () => {
     expect(middle.percentilePosition).toBeGreaterThan(40);
     expect(middle.percentilePosition).toBeLessThan(60);
     expect(positionGames([game({})], [])).toEqual([]);
-  });
-});
-
-describe("layoutGames", () => {
-  it("deals games into four columns and keeps logos in one column at least 28px apart", () => {
-    const games = Array.from({ length: 8 }, (_, i) => ({
-      ...game({ opponent: `T${i}` }),
-      percentilePosition: 50,
-      gameIndex: i,
-      isHighProb: false,
-    }));
-    const laid = layoutGames(games);
-    expect(new Set(laid.map((g) => g.columnIndex))).toEqual(new Set([0, 1, 2, 3]));
-    for (const col of [0, 1, 2, 3]) {
-      const ys = laid.filter((g) => g.columnIndex === col).map((g) => g.adjustedY).sort((a, b) => a - b);
-      for (let i = 1; i < ys.length; i++) expect(ys[i] - ys[i - 1]).toBeGreaterThanOrEqual(28);
-      for (const y of ys) {
-        expect(y).toBeGreaterThanOrEqual(TOP_MARGIN.top + 15);
-        expect(y).toBeLessThanOrEqual(TOP_MARGIN.top + TOP_PLOT_HEIGHT - 15);
-      }
-    }
-    expect(laid.filter((g) => g.isRightSide).map((g) => g.columnIndex).every((c) => c !== undefined && c >= 2)).toBe(true);
   });
 });
 

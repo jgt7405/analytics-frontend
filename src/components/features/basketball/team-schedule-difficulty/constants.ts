@@ -11,9 +11,6 @@ export const TOP_MARGIN: Margin = { top: 20, right: 60, bottom: 30, left: 60 };
 export const BOTTOM_MARGIN: Margin = { top: 2, right: 60, bottom: 5, left: 60 };
 export const TOP_PLOT_HEIGHT = TOP_SECTION_HEIGHT - TOP_MARGIN.top - TOP_MARGIN.bottom;
 
-// Logo x offsets from the center line for layoutGames' four columns.
-export const COLUMN_OFFSETS = [-85, -45, 45, 85];
-
 // Fallback when a game has no team_conf_catg.
 export const POWER_CONFERENCES = [
   "Southeastern",

@@ -32,7 +32,6 @@ export interface PositionedGame extends GameWithPosition {
   /** Logo center's horizontal offset from the center line (negative = left). */
   logoDx: number;
   /** Column (0-3) in the fixed-column layout; absent in the collision-aware one. */
-  columnIndex?: number;
 }
 
 export type ComparisonFilter = "all_d1" | "power_6" | "non_power_6" | "conference";
