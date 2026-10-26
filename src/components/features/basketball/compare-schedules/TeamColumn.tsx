@@ -6,7 +6,10 @@
 
 import { CHART_HEIGHT, COLUMN_WIDTH, GRAY_COLOR, MARGIN, PLOT_HEIGHT, SVG_FONT_FAMILY, TOP_SECTION_HEIGHT } from "./constants";
 import type { PositionedGame, TeamSchedule, TeamStats } from "./types";
+import { teamPagePathFromRoute } from "@/components/ui/TeamLogo";
 import { resizedLogoSrc } from "@/lib/logo-src";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface TeamColumnProps {
   team: TeamSchedule;
@@ -35,10 +38,23 @@ export default function TeamColumn({
   const columnX = MARGIN.left + teamIndex * COLUMN_WIDTH + COLUMN_WIDTH / 2;
   const dividerX = columnX + COLUMN_WIDTH / 2;
   const statStyle = { fontSize: "12px", fontFamily: SVG_FONT_FAMILY };
+  const teamHref = teamPagePathFromRoute(usePathname(), team.teamName);
+  const teamLogoImg = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={resizedLogoSrc(team.teamLogo, 36)}
+      alt={team.teamName}
+      style={{
+        width: "36px",
+        height: "36px",
+        objectFit: "contain",
+      }}
+    />
+  );
 
   return (
     <g>
-      {/* Team Logo - reduced size */}
+      {/* Team Logo - links to the team page */}
       <foreignObject
         x={columnX - 18}
         y={MARGIN.top - 45}
@@ -48,16 +64,13 @@ export default function TeamColumn({
           overflow: "hidden",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={resizedLogoSrc(team.teamLogo, 36)}
-          alt={team.teamName}
-          style={{
-            width: "36px",
-            height: "36px",
-            objectFit: "contain",
-          }}
-        />
+        {teamHref ? (
+          <Link href={teamHref} title={team.teamName} style={{ display: "block" }}>
+            {teamLogoImg}
+          </Link>
+        ) : (
+          teamLogoImg
+        )}
       </foreignObject>
 
       {/* Vertical Line - centered */}
@@ -140,32 +153,30 @@ export default function TeamColumn({
               </g>
             ) : null}
 
-            {/* Opponent Logo - using foreignObject for screenshot compatibility */}
-            {game.opponentLogo && (
-              <foreignObject
-                x={logoX - 9}
-                y={game.adjustedY - 9}
-                width="18"
-                height="18"
+            {/* Opponent Logo (default NCAA logo for TBD opponents) - foreignObject for screenshot compatibility */}
+            <foreignObject
+              x={logoX - 9}
+              y={game.adjustedY - 9}
+              width="18"
+              height="18"
+              style={{
+                cursor: "pointer",
+                overflow: "hidden",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={resizedLogoSrc(game.opponentLogo || "/images/team_logos/default.png", 18)}
+                alt={game.opponent}
                 style={{
-                  cursor: "pointer",
-                  overflow: "hidden",
+                  width: "18px",
+                  height: "18px",
+                  objectFit: "contain",
+                  opacity: isHovered ? 1 : 0.7,
+                  transition: "opacity 0.2s",
                 }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={resizedLogoSrc(game.opponentLogo, 18)}
-                  alt={game.opponent}
-                  style={{
-                    width: "18px",
-                    height: "18px",
-                    objectFit: "contain",
-                    opacity: isHovered ? 1 : 0.7,
-                    transition: "opacity 0.2s",
-                  }}
-                />
-              </foreignObject>
-            )}
+              />
+            </foreignObject>
 
             {/* Game Dot on the Line */}
             <circle
