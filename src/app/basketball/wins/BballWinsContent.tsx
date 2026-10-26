@@ -14,6 +14,7 @@ import {
 import { useStandings } from "@/hooks/useStandings";
 import type { Standing, StandingsApiResponse } from "@/types/basketball";
 import dynamic from "next/dynamic";
+import { conferenceLabels } from "@/lib/display-names";
 
 const BoxWhiskerChart = dynamic(
   () => import("@/components/features/basketball/BoxWhiskerChart"),
@@ -62,6 +63,8 @@ const KNOWN_CONFERENCES = [
   "NEC",
   "MEAC",
   "SWAC",
+  // Display names (src/config/display-names.ts), e.g. "SoCon", "UAC".
+  ...conferenceLabels("basketball"),
 ];
 
 const SIM_BLURB =

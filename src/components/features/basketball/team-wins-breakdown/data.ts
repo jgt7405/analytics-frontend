@@ -1,6 +1,7 @@
 // Pure calculations behind the wins-to-seed chart. No React; index.tsx
 // memoizes them.
 
+import { conferenceLogoPath } from "@/lib/display-names";
 import {
   BAR_WIDTH,
   CHART_HEIGHT,
@@ -19,10 +20,9 @@ import type {
   SeedThresholds,
 } from "./types";
 
-/** Conference logo path: spaces and hyphens become underscores. */
+/** Conference logo path, from the stored conference name or its label. */
 export function confLogoPath(conference: string): string {
-  const formattedConfName = conference.replace(/\s+/g, "_").replace(/-/g, "_");
-  return `/images/conf_logos/${formattedConfName}.png`;
+  return conferenceLogoPath(conference);
 }
 
 /** Secondary color for bar separators, with a contrast fallback when the team has none. */

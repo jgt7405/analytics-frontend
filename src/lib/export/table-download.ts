@@ -11,6 +11,7 @@ import { ensureHtml2Canvas } from "@/lib/export/capture";
 import { withDesktopLayout } from "@/lib/export/desktop-layout";
 import { saveImageBlob } from "@/lib/export/save";
 import toast from "react-hot-toast";
+import { conferenceLogoPath } from "@/lib/display-names";
 import { logger } from "@/lib/logger";
 
 const MIN_EXPORT_CONTENT_WIDTH = 660;
@@ -361,8 +362,7 @@ export async function downloadTableImage({
 
   const confName = selectedConference || "All";
   if (confName && confName !== "All") {
-    const formattedConfName = confName.replace(/[ -]/g, "_");
-    const conferenceLogoUrl = `/images/conf_logos/${formattedConfName}.png`;
+    const conferenceLogoUrl = conferenceLogoPath(confName);
 
     const confLogo = document.createElement("img");
     confLogo.src = conferenceLogoUrl;

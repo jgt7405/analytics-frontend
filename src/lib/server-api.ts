@@ -37,7 +37,13 @@ import type { TeamListResponse } from "@/hooks/useTeamList";
 import { BACKEND_API_URL } from "@/config/env";
 import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
 import type { EndpointKey } from "@/api/endpoints";
-import { backendRequest, type EndpointParams, type EndpointQuery } from "@/api/urls";
+import {
+  backendRequest,
+  endpointFor,
+  type EndpointParams,
+  type EndpointQuery,
+} from "@/api/urls";
+import { labelResponse, storedParams, storedQueryValue } from "@/lib/display-names";
 import { logger } from "@/lib/logger";
 
 const BACKEND = BACKEND_API_URL;
@@ -66,9 +72,20 @@ async function requestEndpoint<T>(
   query: EndpointQuery = {},
   timeoutMs = SERVER_FETCH_TIMEOUT_MS,
 ): Promise<FetchResult<T>> {
+  // Display names, as in the proxy: labels in, labels out.
+  const sport = endpointFor(key).sport;
   let request: ReturnType<typeof backendRequest>;
   try {
-    request = backendRequest(key, params, query);
+    request = backendRequest(
+      key,
+      storedParams(sport, params),
+      Object.fromEntries(
+        Object.entries(query).map(([name, value]) => [
+          name,
+          typeof value === "string" ? storedQueryValue(sport, name, value) : value,
+        ]),
+      ),
+    );
   } catch (error) {
     logger.warn("Server fetch skipped", { key, error: String(error) });
     return { ok: false };
@@ -79,7 +96,9 @@ async function requestEndpoint<T>(
     headers: { Accept: "application/json" },
   })
     .then(async (res): Promise<FetchResult<T>> =>
-      res.ok ? { ok: true, data: (await res.json()) as T } : { ok: false, status: res.status },
+      res.ok
+        ? { ok: true, data: labelResponse(sport, (await res.json()) as T, query.season) }
+        : { ok: false, status: res.status },
     )
     .catch((): FetchResult<T> => ({ ok: false }));
   let timer: ReturnType<typeof setTimeout> | undefined;

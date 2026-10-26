@@ -4,6 +4,7 @@ import { ResponsiveProvider } from "@/components/providers/ResponsiveProvider";
 import { getBasketballTWVServer } from "@/lib/server-api";
 import { detectMobileFromHeaders } from "@/lib/server-device";
 import BasketballTWVContent from "./BasketballTWVContent";
+import { conferenceLabel } from "@/lib/display-names";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,8 @@ export default async function BasketballTWVPage({
   searchParams: Promise<{ conf?: string | string[] }>;
 }) {
   const { conf } = await searchParams;
-  const initialConference = (typeof conf === "string" && conf) || "Big 12";
+  // The display name for an old stored name (src/lib/display-names.ts).
+  const initialConference = conferenceLabel("basketball", (typeof conf === "string" && conf) || "Big 12");
   const [initialData, initialIsMobile] = await Promise.all([
     getBasketballTWVServer(initialConference),
     detectMobileFromHeaders(),

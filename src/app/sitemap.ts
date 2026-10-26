@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { BACKEND_API_URL } from '@/config/env';
 import { CACHE_POLICIES } from '@/lib/cache-policy';
+import { teamPagePath } from "@/lib/display-names";
 import { logger } from "@/lib/logger";
 import { SPORT_IDS } from "@/config/seasons";
 import { SPORTS, sportPagePath } from "@/config/sports";
@@ -35,13 +36,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const basketballTeams = (await basketballTeamsRes.json())?.data;
       if (Array.isArray(basketballTeams)) {
         basketballTeams.forEach((team: { team_name: string }) => {
-          // Use the raw team name, URL-encoded (spaces -> %20, & -> %26).
-          // The backend team endpoint expects the name with spaces, NOT
-          // underscores (underscore slugs 404). This matches in-app links and
-          // also keeps the sitemap valid XML (no raw &).
-          const slug = encodeURIComponent(team.team_name);
+          // The team page URL as in-app links build it: the name with
+          // spaces, URL-encoded (valid XML, no raw &), and the display name
+          // where there is one (src/lib/display-names.ts).
           teamPages.push({
-            url: `${baseUrl}/basketball/team/${slug}/`,
+            url: `${baseUrl}${teamPagePath("basketball", team.team_name)}`,
             changeFrequency: 'weekly',
             priority: 0.7,
           });
@@ -63,13 +62,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const footballTeams = (await footballTeamsRes.json())?.data;
       if (Array.isArray(footballTeams)) {
         footballTeams.forEach((team: { team_name: string }) => {
-          // Use the raw team name, URL-encoded (spaces -> %20, & -> %26).
-          // The backend team endpoint expects the name with spaces, NOT
-          // underscores (underscore slugs 404). This matches in-app links and
-          // also keeps the sitemap valid XML (no raw &).
-          const slug = encodeURIComponent(team.team_name);
+          // The team page URL as in-app links build it: the name with
+          // spaces, URL-encoded (valid XML, no raw &), and the display name
+          // where there is one (src/lib/display-names.ts).
           teamPages.push({
-            url: `${baseUrl}/football/team/${slug}/`,
+            url: `${baseUrl}${teamPagePath("football", team.team_name)}`,
             changeFrequency: 'weekly',
             priority: 0.7,
           });

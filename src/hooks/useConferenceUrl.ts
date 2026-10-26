@@ -1,6 +1,8 @@
 // src/hooks/useConferenceUrl.ts
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
+import { sportAndSeasonFromPath } from "@/config/seasons";
+import { conferenceLabel } from "@/lib/display-names";
 
 export const useConferenceUrl = (
   setSelectedConference: (conference: string) => void,
@@ -35,9 +37,16 @@ export const useConferenceUrl = (
     return !pagesWithoutIndependent.some((page) => pathname.includes(page));
   }, [pathname]);
 
-  // Get appropriate conference with fallback logic
+  // Get appropriate conference with fallback logic. A stored conference
+  // name that has a display name becomes that name (src/lib/display-names.ts)
+  // on the seasons it applies to, so ?conf= links from before keep working.
   const getAppropriateConference = useCallback(
-    (requestedConference: string) => {
+    (conference: string) => {
+      const route = sportAndSeasonFromPath(pathname);
+      const requestedConference = route
+        ? conferenceLabel(route.sport, conference, route.season)
+        : conference;
+
       // If requesting Independent but page doesn't support it, use Big 12
       if (requestedConference === "Independent" && !supportsIndependent()) {
         return "Big 12";
@@ -55,7 +64,7 @@ export const useConferenceUrl = (
 
       return requestedConference;
     },
-    [supportsIndependent, allowAllTeams]
+    [pathname, supportsIndependent, allowAllTeams]
   );
 
   // Update URL when conference changes
@@ -115,13 +124,16 @@ export const useConferenceUrl = (
       const decodedConf = decodeURIComponent(confParam);
       const appropriateConference = getAppropriateConference(decodedConf);
       setSelectedConference(appropriateConference);
+      // An old name in the URL (?conf=Metro_Atlantic_Athletic) is replaced by
+      // the one shown (?conf=MAAC).
+      if (appropriateConference !== decodedConf) updateUrl(appropriateConference);
     } else {
       // Rule 1: No conference in URL, default to Big 12
       setSelectedConference("Big 12");
     }
 
     hasInitialized.current = true;
-  }, [searchParams, setSelectedConference, getAppropriateConference]);
+  }, [searchParams, setSelectedConference, getAppropriateConference, updateUrl]);
 
   // ============================================================================
   // Validate against page constraints AFTER initialization

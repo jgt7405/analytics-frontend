@@ -22,6 +22,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { ensureContrast } from "@/lib/color-utils";
+import { conferenceLogoPath } from "@/lib/display-names";
 import { useIsDark } from "./history-chart/useIsDark";
 
 // Loaded on first open: the modal and the export code behind it aren't part
@@ -234,13 +235,10 @@ export default function TeamContent<TData, THistory>({
 
   const teamInfo = config.getTeamInfo(teamData);
 
-  // Conference logo: prefer the API-provided URL, otherwise construct it
-  // (spaces AND hyphens become underscores: Mid-American -> Mid_American).
-  const formattedConfName = teamInfo.conference
-    .replace(/ /g, "_")
-    .replace(/-/g, "_");
+  // Conference logo: prefer the API-provided URL, otherwise the file named
+  // after the stored conference name (the data may carry its display name).
   const conferenceLogoUrl =
-    teamInfo.conf_logo_url || `/images/conf_logos/${formattedConfName}.png`;
+    teamInfo.conf_logo_url || conferenceLogoPath(teamInfo.conference);
 
   const rankLabel = config.getRankLabel(teamInfo);
 

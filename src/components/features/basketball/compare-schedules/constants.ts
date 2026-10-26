@@ -13,7 +13,9 @@ export const PLOT_HEIGHT = TOP_SECTION_HEIGHT - MARGIN.top - MARGIN.bottom;
 export const SVG_FONT_FAMILY = '"Roboto Condensed", system-ui, -apple-system, sans-serif';
 
 // Fallback when a game has no team_conf_catg.
-export const POWER_CONFERENCES = ["Southeastern", "Big Ten", "Atlantic Coast", "Big 12", "Big East"];
+// Display names (current season) and stored names (archived seasons):
+// src/config/display-names.ts.
+export const POWER_CONFERENCES = ["Southeastern", "SEC", "Big Ten", "Atlantic Coast", "ACC", "Big 12", "Big East"];
 
 export const COMPARISON_OPTIONS = [
   { value: "all_d1" as ComparisonFilter, label: "All D1" },

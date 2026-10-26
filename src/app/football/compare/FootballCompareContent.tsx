@@ -92,11 +92,15 @@ interface SelectedTeam {
 }
 
 const MAX_SELECTED_TEAMS = 12;
+// Each conference by its display name (current season) and its stored name
+// (archived seasons): src/config/display-names.ts.
 const PRIORITY_CONFERENCES = [
+  "ACC",
   "Atlantic Coast",
   "Big 12",
   "Big Ten",
   "Independent",
+  "SEC",
   "Southeastern",
 ];
 

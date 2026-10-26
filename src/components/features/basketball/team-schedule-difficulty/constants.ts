@@ -11,11 +11,14 @@ export const TOP_MARGIN: Margin = { top: 20, right: 60, bottom: 30, left: 60 };
 export const BOTTOM_MARGIN: Margin = { top: 2, right: 60, bottom: 5, left: 60 };
 export const TOP_PLOT_HEIGHT = TOP_SECTION_HEIGHT - TOP_MARGIN.top - TOP_MARGIN.bottom;
 
-// Fallback when a game has no team_conf_catg.
+// Fallback when a game has no team_conf_catg. Display names (current
+// season) and stored names (archived seasons): src/config/display-names.ts.
 export const POWER_CONFERENCES = [
   "Southeastern",
+  "SEC",
   "Big Ten",
   "Atlantic Coast",
+  "ACC",
   "Big 12",
   "Big East",
 ];

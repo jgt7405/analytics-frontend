@@ -66,7 +66,8 @@ describe("proxy forwarding", () => {
 
   it("forwards the season and marks the response with its endpoint", async () => {
     const res = await call("GET", "football/standings/SEC/?season=2025-26");
-    expect(backendUrl()).toBe(`${BACKEND}/football/standings/SEC?season=2025-26`);
+    // "SEC" is a display name: the backend gets the stored name.
+    expect(backendUrl()).toBe(`${BACKEND}/football/standings/Southeastern?season=2025-26`);
     expect(res.headers.get("x-endpoint")).toBe("football.standings");
     expect(res.headers.get("x-cache-class")).toBe("historical");
   });
@@ -195,5 +196,33 @@ describe("proxy rejections (never reach the backend)", () => {
     const res = await POST(request, { params: Promise.resolve({ slug: ["football", "whatif"] }) });
     expect(res.status).toBe(400);
     expect(backendFetch).not.toHaveBeenCalled();
+  });
+});
+
+// Display names (src/lib/display-names.ts): labels in, stored names to the
+// backend; stored names back, labels out, except for archived seasons.
+describe("proxy display names", () => {
+  it("sends the stored name for a label in the path", async () => {
+    await call("GET", `team/${encodeURIComponent("LSU New Orleans")}/`);
+    expect(backendUrl()).toBe(`${BACKEND}/team/New%20Orleans`);
+    backendFetch.mockClear();
+    await call("GET", "standings/MAAC/");
+    expect(backendUrl()).toBe(`${BACKEND}/standings/Metro_Atlantic_Athletic`);
+  });
+
+  it("labels the current season's response", async () => {
+    backendFetch.mockResolvedValue(
+      new Response(JSON.stringify({ data: [{ team_name: "New Orleans", conference: "Southland" }] })),
+    );
+    const res = await call("GET", "standings/Southland/");
+    expect((await res.json()).data[0].team_name).toBe("LSU New Orleans");
+  });
+
+  it("leaves an archived season's response as it was", async () => {
+    backendFetch.mockResolvedValue(
+      new Response(JSON.stringify({ data: [{ team_name: "New Orleans", conference: "Southland" }] })),
+    );
+    const res = await call("GET", "standings/Southland/?season=2025-26");
+    expect((await res.json()).data[0].team_name).toBe("New Orleans");
   });
 });

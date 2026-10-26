@@ -16,6 +16,7 @@ import { useBballStandingsHistory } from "@/hooks/useBballStandingsHistory";
 import { useStandings } from "@/hooks/useStandings";
 import { getBasketballSeasonLabel } from "@/lib/chartDateRange";
 import type { Standing, StandingsApiResponse } from "@/types/basketball";
+import { conferenceLabels } from "@/lib/display-names";
 
 const KNOWN_CONFERENCES = [
   "Big 12",
@@ -45,6 +46,8 @@ const KNOWN_CONFERENCES = [
   "NEC",
   "MEAC",
   "SWAC",
+  // Display names (src/config/display-names.ts), e.g. "SoCon", "UAC".
+  ...conferenceLabels("basketball"),
 ];
 
 const SIM_BLURB =

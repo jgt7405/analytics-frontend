@@ -23,6 +23,7 @@ import {
   type TeamListResponse,
   type TeamListRow,
 } from "@/hooks/useTeamList";
+import { conferenceLabel } from "@/lib/display-names";
 
 const cx = (...classes: Array<string | false | undefined>) =>
   classes.filter(Boolean).join(" ");
@@ -78,7 +79,9 @@ export default function TeamsContent({
 
   const [selectedConference, setSelectedConference] = useState(() => {
     const confParam = searchParams.get("conf");
-    if (confParam) return decodeURIComponent(confParam);
+    // An old stored name (?conf=Metro_Atlantic_Athletic) selects the
+    // conference by the name the list shows (src/lib/display-names.ts).
+    if (confParam) return conferenceLabel(config.sport, decodeURIComponent(confParam), season);
     return preferences.defaultConference;
   });
 

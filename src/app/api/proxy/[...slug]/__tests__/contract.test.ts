@@ -200,7 +200,8 @@ describe("POST bodies", () => {
     });
     expect(res.status).toBe(200);
     const sent = JSON.parse((backendFetch.mock.calls[0][1] as RequestInit).body as string);
-    expect(sent).toEqual({ conference: "SEC", team_id: 12 });
+    // "SEC" is a display name: the backend gets the stored name.
+    expect(sent).toEqual({ conference: "Southeastern", team_id: 12 });
   });
 
   it("rejects an upload without a file or over the size limit", async () => {

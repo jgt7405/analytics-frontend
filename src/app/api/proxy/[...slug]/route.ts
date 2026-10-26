@@ -7,6 +7,12 @@ import {
   type Endpoint,
 } from "@/api/endpoints";
 import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
+import {
+  labelResponse,
+  storedParams,
+  storedQueryValue,
+  storedRequestBody,
+} from "@/lib/display-names";
 import { logger } from "@/lib/logger";
 import { MAX_UPLOAD_BYTES, requestSchemaFor, responseSchemaFor } from "@/api/schemas";
 
@@ -20,6 +26,10 @@ export const fetchCache = "default-no-store";
 // The proxy forwards only what src/api/endpoints.ts registers: the path
 // shape, method, each path parameter's rule and the query parameters.
 // Anything else is rejected here and never reaches the backend.
+//
+// Display names (src/lib/display-names.ts): labels in path parameters,
+// query values and POST bodies become the backend's stored names, and JSON
+// responses carry labels for the seasons they apply to.
 
 type RouteContext = { params: Promise<{ slug: string[] }> };
 
@@ -93,7 +103,10 @@ async function handle(
     );
   }
 
-  const backendPath = buildBackendPath(endpoint, match.params);
+  const backendPath = buildBackendPath(endpoint, storedParams(endpoint.sport, match.params));
+  for (const [name, value] of [...query.query]) {
+    query.query.set(name, storedQueryValue(endpoint.sport, name, value));
+  }
   const qs = query.query.toString();
   const backendUrl = `${BACKEND_API_URL}${backendPath}${qs ? `?${qs}` : ""}`;
 
@@ -164,7 +177,9 @@ async function forwardGet(
   const parsed = parseJson(endpoint, await response.text());
   if (!parsed) return invalidJsonResponse();
   checkResponseShape(endpoint, parsed.data);
-  return NextResponse.json(parsed.data, { headers: cacheHeaders });
+  return NextResponse.json(labelResponse(endpoint.sport, parsed.data, season), {
+    headers: cacheHeaders,
+  });
 }
 
 // The request body the backend receives: a JSON body parsed by the
@@ -234,7 +249,7 @@ async function forwardPost(
             Accept: "application/json",
             ...clientHeaders,
           },
-          body: JSON.stringify(body.json),
+          body: JSON.stringify(storedRequestBody(endpoint.sport, body.json)),
         };
   const response = await fetch(backendUrl, {
     ...init,
@@ -266,7 +281,11 @@ async function forwardPost(
   }
 
   const parsed = parseJson(endpoint, text);
-  return parsed ? NextResponse.json(parsed.data) : invalidJsonResponse();
+  if (!parsed) return invalidJsonResponse();
+  const bodySeason = (body.json as { season?: unknown } | undefined)?.season;
+  return NextResponse.json(
+    labelResponse(endpoint.sport, parsed.data, typeof bodySeason === "string" ? bodySeason : null),
+  );
 }
 
 function parseJson(endpoint: Endpoint, text: string): { data: unknown } | null {

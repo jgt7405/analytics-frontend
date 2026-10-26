@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { teamPageMetadata } from "@/app/metadata";
 import PageLoading from "@/components/ui/PageLoading";
+import { teamPagePath } from "@/lib/display-names";
 import { getBasketballTeamPageServer, isListedTeam } from "@/lib/server-api";
 import BasketballTeamContent from "./BasketballTeamContent";
 
@@ -24,12 +25,13 @@ export default async function BasketballTeamPage({
 }) {
   const { teamname } = await params;
   const teamName = decodeURIComponent(teamname);
-  // Legacy underscore slugs (e.g. /team/Sam_Houston) 404 against the backend,
-  // which expects spaces. 301 them to the canonical encoded-space URL.
-  if (teamName.includes("_")) {
-    permanentRedirect(
-      `/basketball/team/${encodeURIComponent(teamName.replace(/_/g, " "))}/`,
-    );
+  // One 301 to the canonical URL: legacy underscore slugs (e.g.
+  // /team/Sam_Houston; the backend expects spaces) and stored names that
+  // have a display name (/team/New%20Orleans/ -> /team/LSU%20New%20Orleans/,
+  // src/config/display-names.ts) both go there.
+  const canonicalPath = teamPagePath("basketball", teamName.replace(/_/g, " "));
+  if (canonicalPath !== `/basketball/team/${encodeURIComponent(teamName)}/`) {
+    permanentRedirect(canonicalPath);
   }
   // A team page streams: a click shows the skeleton at once and the data
   // follows. Only a name the (cached) team list doesn't have waits for the

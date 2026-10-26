@@ -34,11 +34,15 @@ const DATE_RANGE_OPTIONS: { value: DateRangeFilter; label: string }[] = [
   { value: "all", label: "Full Season" },
 ];
 
+// Each conference by its display name (current season) and its stored name
+// (archived seasons): src/config/display-names.ts.
 const PRIORITY_CONFERENCES = [
+  "ACC",
   "Atlantic Coast",
   "Big 12",
   "Big Ten",
   "Independent",
+  "SEC",
   "Southeastern",
 ];
 

@@ -536,12 +536,14 @@ export interface FootballApiMetrics {
 // Constants
 export const FOOTBALL_CONFERENCES = [
   "ACC",
+  "American",
   "American Athletic",
   "Atlantic Coast",
   "Big 12",
   "Big Ten",
   "Conference USA",
   "Independent",
+  "MAC",
   "Mid-American",
   "Mountain West",
   "Pac-12",

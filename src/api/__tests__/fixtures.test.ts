@@ -26,6 +26,7 @@ import { RESPONSE_SCHEMAS } from "../schemas";
 import { BACKEND_API_URL } from "@/config/env";
 import { GET } from "@/app/api/proxy/[...slug]/route";
 import { getFootballStandingsServer, getFootballTeamServer } from "@/lib/server-api";
+import { labelResponse } from "@/lib/display-names";
 
 const SCENARIOS: Scenario[] = ["normal", "empty", "missingFields", "preseason", "archived"];
 const keys = Object.keys(FIXTURES) as EndpointKey[];
@@ -72,7 +73,8 @@ describe("the proxy serving fixtures", () => {
     const res = await get(`standings/${conference}/`);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toEqual(fixtureFor("basketball.standings", scenario as Scenario));
+    // With display names (src/lib/display-names.ts): "Atlantic Coast" -> "ACC".
+    expect(body).toEqual(labelResponse("basketball", fixtureFor("basketball.standings", scenario as Scenario)));
   });
 
   it("forwards the archived season to the backend", async () => {
@@ -95,7 +97,8 @@ describe("server fetches of fixtures", () => {
     const standings = await getFootballStandingsServer("Southeastern");
     expect(standings?.data?.length).toBe(3);
     const team = await getFootballTeamServer("Alabama");
-    expect(team?.team_info.conference).toBe("Southeastern");
+    // Its display name (src/lib/display-names.ts).
+    expect(team?.team_info.conference).toBe("SEC");
   });
 
   it("returns undefined when the backend has no data", async () => {

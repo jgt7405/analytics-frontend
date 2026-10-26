@@ -31,6 +31,13 @@ import HeaderPage from "./pages/HeaderPage";
 import ImpactPage from "./pages/ImpactPage";
 import SchedulePage from "./pages/SchedulePage";
 
+// "11/5 — Duke @ North Carolina", from the game's fields rather than the
+// backend's `label`, so the teams show by their display names
+// (src/lib/display-names.ts relabels whole values, not text inside one).
+function gameLabel(g: UpcomingGame): string {
+  return `${g.date} — ${g.away_team} ${g.location === "Neutral" ? "vs" : "@"} ${g.home_team}`;
+}
+
 // ─── Main Page Component ─────────────────────────────────────────────────────
 
 export default function GamePreviewPageContent() {
@@ -234,7 +241,7 @@ export default function GamePreviewPageContent() {
     if (!selectedGame) return;
     setIsPdfGenerating(true);
     try {
-      await generatePDF(pdfContainerRef, selectedGame.label);
+      await generatePDF(pdfContainerRef, gameLabel(selectedGame));
     } finally {
       setIsPdfGenerating(false);
     }
@@ -335,7 +342,7 @@ export default function GamePreviewPageContent() {
                     <option value="">— Choose an upcoming game —</option>
                     {filteredGames.map((g) => (
                       <option key={g.game_id} value={g.game_id}>
-                        {g.label}
+                        {gameLabel(g)}
                       </option>
                     ))}
                   </select>

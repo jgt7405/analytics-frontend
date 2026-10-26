@@ -126,6 +126,45 @@ test("the Wins to Seed Map shows a game's details on hover or tap", async ({ pag
   }
 });
 
+// Display names (src/config/display-names.ts): the current season shows and
+// links the alias, old URLs move to it, archived seasons keep stored names.
+test("an old ?conf= name moves to the conference's display name", async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto("/basketball/standings/?conf=Atlantic_Coast");
+  await expect(page).toHaveURL(/[?&]conf=ACC(&|$)/);
+  await expect(page.getByText("Duke").first()).toBeVisible();
+  await expect(page.locator("select option", { hasText: /^ACC$/ }).first()).toBeAttached();
+  await settle(page);
+  expect(errors).toEqual([]);
+});
+
+test("an archived season keeps the stored conference name", async ({ page }) => {
+  // "Southeastern" shows as "SEC" from 2026-27 on, not on 2025-26 pages.
+  await page.goto("/football/2025-26/standings/?conf=Southeastern");
+  await expect(page.getByText("Alabama").first()).toBeVisible();
+  await settle(page);
+  expect(page.url()).toContain("conf=Southeastern");
+});
+
+for (const [sport, stored, alias] of [
+  ["basketball", "New Orleans", "LSU New Orleans"],
+  ["basketball", "Connecticut", "UConn"],
+  ["football", "Connecticut", "UConn"],
+] as const) {
+  test(`/${sport}/team/${stored}/ redirects to the display name`, async ({ request }) => {
+    const response = await request.get(`/${sport}/team/${encodeURIComponent(stored)}/`, {
+      maxRedirects: 0,
+    });
+    expect([301, 308]).toContain(response.status());
+    expect(response.headers().location).toBe(`/${sport}/team/${encodeURIComponent(alias)}/`);
+  });
+}
+
+test("an archived team page keeps the stored name", async ({ request }) => {
+  const response = await request.get("/basketball/2025-26/team/Duke/", { maxRedirects: 0 });
+  expect(response.status()).toBe(200);
+});
+
 for (const conference of ["Empty", "Missing_Fields", "Preseason"]) {
   for (const sport of ["football", "basketball"]) {
     test(`${sport} standings survive the ${conference} scenario`, async ({ page }) => {
