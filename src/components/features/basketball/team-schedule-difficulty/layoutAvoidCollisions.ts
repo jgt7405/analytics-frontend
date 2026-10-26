@@ -36,9 +36,9 @@ const DRIFT_SCALE = 60;
 const MAX_SLOPE = 1.5; // leader rise over run before it counts as steep
 const STEEP_WEIGHT = 4;
 const OVERLAP_PENALTY = 100_000;
-const LINE_THROUGH_PENALTY = 1_000;
+const LINE_THROUGH_PENALTY = 400;
 const LINE_OVER_DOT_PENALTY = 150;
-const CROSSING_PENALTY = 1_000;
+const CROSSING_PENALTY = 120;
 const MAX_PASSES = 8;
 
 type Segment = [number, number, number, number];
