@@ -6,7 +6,7 @@ import type { ConfChampData, ConferenceStandingsTeam, NextGameImpactData, Upcomi
 
 /** Upcoming games and their conferences; throws when the request fails. */
 export async function fetchUpcomingGames(): Promise<{ games?: UpcomingGame[]; conferences?: string[] }> {
-  const response = await fetch(apiUrl("basketball.upcomingGames"));
+  const response = await fetch(apiUrl("basketball.upcomingGames", {}, { next_only: "1" }));
   if (!response.ok) throw new Error("Failed to fetch upcoming games");
   return response.json();
 }

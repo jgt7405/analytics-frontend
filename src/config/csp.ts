@@ -17,6 +17,8 @@ const GOOGLE_ANALYTICS = [
   "https://www.googletagmanager.com",
   "https://*.google-analytics.com",
   "https://*.analytics.google.com",
+  // GA4 also sends hits to www.google.com/g/collect (reported 2026-10-26).
+  "https://www.google.com",
 ];
 
 const DIRECTIVES: Record<string, string[]> = {

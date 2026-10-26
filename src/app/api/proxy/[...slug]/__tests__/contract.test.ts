@@ -49,6 +49,7 @@ const QUERY_SAMPLE: Record<QueryParam, string> = {
   mode: "current",
   date: "2025-11-01",
   teams: "Duke%2CNorth+Carolina",
+  next_only: "1",
 };
 const ALL_QUERY = Object.keys(QUERY_SAMPLE) as QueryParam[];
 

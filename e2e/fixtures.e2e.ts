@@ -82,6 +82,21 @@ test("a basketball team page doesn't refetch history with its season label", asy
   expect(historyRequests.filter((u) => u.includes("season="))).toEqual([]);
 });
 
+// The full upcoming-games list is over the proxy's 2 MB cache limit; team
+// pages only need each pair's next game.
+test("a basketball team page asks only for next games", async ({ page }) => {
+  const upcoming: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/api/proxy/basketball/upcoming_games")) upcoming.push(url.search);
+  });
+  await page.goto("/basketball/team/Duke/");
+  await expect(page.getByText("Duke").first()).toBeVisible();
+  await settle(page);
+  expect(upcoming.length).toBeGreaterThan(0);
+  expect(upcoming.every((search) => search === "?next_only=1")).toBe(true);
+});
+
 for (const conference of ["Empty", "Missing_Fields", "Preseason"]) {
   for (const sport of ["football", "basketball"]) {
     test(`${sport} standings survive the ${conference} scenario`, async ({ page }) => {

@@ -23,7 +23,7 @@ export type HttpMethod = "GET" | "POST";
  */
 export type ParamRule = "segment" | "conference" | "team";
 
-export type QueryParam = "season" | "mode" | "date" | "teams";
+export type QueryParam = "season" | "mode" | "date" | "teams" | "next_only";
 
 export interface Endpoint {
   /** Unique id, `<sport>.<name>`. */
@@ -74,6 +74,7 @@ const QUERY_PATTERNS: Record<QueryParam, RegExp> = {
   mode: /^(season|current)$/,
   date: /^\d{4}-\d{2}-\d{2}$/,
   teams: /^[^<>{}\[\]\\/]{1,500}$/,
+  next_only: /^1$/,
 };
 
 export function isValidQueryValue(name: QueryParam, value: string): boolean {
@@ -164,7 +165,9 @@ export const ENDPOINTS = [
   get("nonconfAnalysis", "basketball", ["basketball/nonconf_analysis/:conference"], "/basketball/nonconf_analysis/:conference", "currentStandings", { params: conference }),
   get("confChampAnalysis", "basketball", ["basketball/conf_champ_analysis/:conference"], "/basketball/conf_champ_analysis/:conference", "currentStandings", { params: conference }),
   get("ncaaProjections", "basketball", ["basketball/ncaa-projections"], "/basketball/ncaa-projections", "currentStandings", { query: ["season", "mode"] }),
-  get("upcomingGames", "basketball", ["basketball/upcoming_games"], "/basketball/upcoming_games", "live"),
+  // ?next_only=1: only games that are both teams' next game, all the site
+  // uses (the full season list is ~4 MB, over the proxy's 2 MB cache limit).
+  get("upcomingGames", "basketball", ["basketball/upcoming_games"], "/basketball/upcoming_games", "live", { query: ["season", "next_only"] }),
   get("compositeRatings", "basketball", ["basketball/composite_ratings"], "/basketball/composite_ratings", "currentStandings"),
   get("compositeRatingsTimeline", "basketball", ["basketball/composite_ratings/timeline"], "/basketball/composite_ratings/timeline", "historical", { query: ["teams"] }),
   get("seasonHighlights", "basketball", ["basketball/season_highlights"], "/basketball/season_highlights", "currentStandings"),

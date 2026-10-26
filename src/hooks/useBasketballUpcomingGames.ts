@@ -5,6 +5,8 @@ import { queryCachePolicy } from "@/lib/cache-policy";
 
 // Fields of /basketball/upcoming_games used for game-preview links. The
 // response has many more per game (odds, ratings) for the preview page.
+// Both callers ask for ?next_only=1 (games that are both teams' next game,
+// the only ones they use), so they share one small, cacheable response.
 export interface UpcomingGame {
   game_id: string;
   is_next_game_for_both: boolean;
@@ -19,7 +21,7 @@ export interface UpcomingGamesResponse {
 }
 
 const fetchUpcomingGames = async (): Promise<UpcomingGamesResponse> => {
-  const response = await fetch(apiUrl("basketball.upcomingGames"));
+  const response = await fetch(apiUrl("basketball.upcomingGames", {}, { next_only: "1" }));
   if (!response.ok) throw new Error(`Failed to fetch upcoming games: ${response.status}`);
   return response.json();
 };
