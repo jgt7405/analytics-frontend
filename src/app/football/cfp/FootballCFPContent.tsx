@@ -83,8 +83,10 @@ export default function FootballCFPContent(props: {
         "@type": "Organization",
         name: "JThom Analytics",
       },
-      mainEntity: {
-        "@type": "Event",
+      // A Thing, not an Event: Google's Event rich result requires startDate
+      // and location, which a projections page doesn't have.
+      about: {
+        "@type": "Thing",
         name: "College Football Playoff",
         description:
           "College Football Playoff bracket and seeding projections",
