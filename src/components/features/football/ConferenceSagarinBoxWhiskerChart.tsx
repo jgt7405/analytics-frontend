@@ -211,7 +211,7 @@ export default function ConferenceSagarinBoxWhiskerChart({
       <div className="relative">
         {/* Fixed Y-axis outside scroll container */}
         <div
-          className="absolute left-0 top-0 bg-white dark:bg-slate-900 z-50"
+          className="absolute left-0 top-0 bg-white dark:bg-slate-900 z-10"
           style={{
             width: padding.left,
             height: chartHeight + logoHeight + padding.top + padding.bottom,

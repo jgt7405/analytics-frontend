@@ -280,7 +280,7 @@ export default function BballConfBoxWhiskerChart({
             the 0 label so the logo row scrolls out from under it rather than
             disappearing behind the axis labels. */}
         <div
-          className={cn(styles.yAxisPane, "absolute left-0 top-0 z-50")}
+          className={cn(styles.yAxisPane, "absolute left-0 top-0 z-10")}
           style={{
             width: padding.left,
             height: padding.top + chartHeight + 12,
