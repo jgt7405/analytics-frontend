@@ -276,12 +276,14 @@ export default function BballConfBoxWhiskerChart({
         {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
       </div>
       <div className="relative">
-        {/* Fixed Y-axis outside scroll container */}
+        {/* Fixed Y-axis outside scroll container. The pane stops just below
+            the 0 label so the logo row scrolls out from under it rather than
+            disappearing behind the axis labels. */}
         <div
           className={cn(styles.yAxisPane, "absolute left-0 top-0 z-50")}
           style={{
             width: padding.left,
-            height: chartHeight + logoHeight + padding.top + padding.bottom,
+            height: padding.top + chartHeight + 12,
           }}
         >
           <div
