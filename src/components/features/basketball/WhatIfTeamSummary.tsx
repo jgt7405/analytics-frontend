@@ -10,10 +10,15 @@ import { Camera, Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { logger } from "@/lib/logger";
 import {
-  captureTeamSummaryScreenshot,
-  SUMMARY_SECTIONS,
+  captureSectionScreenshot,
+  SECTION_TITLE_SUFFIX,
   type SummarySection,
-} from "./whatif/teamSummaryScreenshot";
+} from "./whatif/sectionScreenshot";
+
+const EXPLAINS: Record<SummarySection, string> = {
+  conf: "conference tournament seed probabilities",
+  ncaa: "NCAA tournament probabilities",
+};
 
 const TWV_BLUE = [24, 98, 123];
 const TWV_WHITE = [255, 255, 255];
@@ -281,13 +286,14 @@ export default function WhatIfTeamSummary({
         if (!contentRef.current || capturing) return;
         setCapturing(section);
         try {
-          await captureTeamSummaryScreenshot(
-            contentRef.current,
-            `whatif_summary_${(blTeam.team_name ?? "team").replace(/\s+/g, "_").toLowerCase()}_${section}.png`,
+          await captureSectionScreenshot(contentRef.current, {
             section,
-            `What If Summary - ${blTeam.team_name ?? ""}${SUMMARY_SECTIONS[section].titleSuffix}`,
-            blTeam.logo_url,
-          );
+            filename: `whatif_summary_${(blTeam.team_name ?? "team").replace(/\s+/g, "_").toLowerCase()}_${section}.png`,
+            title: `What If Summary - ${blTeam.team_name ?? ""}${SECTION_TITLE_SUFFIX[section]}`,
+            teamLogoUrl: blTeam.logo_url,
+            explainer: `Shows how selected game outcomes affect this team's ${EXPLAINS[section]}. Current reflects pre-selection probabilities; What If reflects updated probabilities after applying selected game results.`,
+            saveTitle: "What-If Team Summary",
+          });
         } catch (e) {
           logger.error("Screenshot failed:", e);
         }

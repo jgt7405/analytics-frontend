@@ -1,30 +1,32 @@
-// PNG export of one section of the What If Summary for a team (html2canvas,
-// loaded on first use). The summary's sections carry data-summary-section
-// ("conf", "ncaa", "divider"); the image keeps the selections and the chosen
-// section only.
+// PNG export of one tournament section of a what-if team panel (Team Detail,
+// What If Summary) with html2canvas, loaded on first use. The panel's
+// sections carry data-summary-section ("conf", "ncaa", "divider"); the image
+// keeps everything else plus the chosen section only.
 
 export type SummarySection = "conf" | "ncaa";
 
-export const SUMMARY_SECTIONS: Record<
-  SummarySection,
-  { titleSuffix: string; explains: string }
-> = {
-  conf: {
-    titleSuffix: " (Conference Tournament)",
-    explains: "conference tournament seed probabilities",
-  },
-  ncaa: {
-    titleSuffix: " (NCAA Tournament)",
-    explains: "NCAA tournament probabilities",
-  },
+export const SECTION_TITLE_SUFFIX: Record<SummarySection, string> = {
+  conf: " (Conference Tournament)",
+  ncaa: " (NCAA Tournament)",
 };
 
-export async function captureTeamSummaryScreenshot(
+export async function captureSectionScreenshot(
   element: HTMLElement,
-  filename: string,
-  section: SummarySection,
-  chartTitle?: string,
-  teamLogoUrl?: string,
+  {
+    section,
+    filename,
+    title,
+    teamLogoUrl,
+    explainer: explainerText,
+    saveTitle,
+  }: {
+    section: SummarySection;
+    filename: string;
+    title: string;
+    teamLogoUrl?: string;
+    explainer: string;
+    saveTitle: string;
+  },
 ) {
   if (typeof window === "undefined") return;
   // Export helpers load on demand, not with the page.
@@ -65,7 +67,7 @@ export async function captureTeamSummaryScreenshot(
   logo.src = "/images/JThom_Logo.png";
   logo.style.cssText = "height:40px;width:auto;";
   const titleSpan = document.createElement("div");
-  titleSpan.textContent = chartTitle || "What If Summary by Team";
+  titleSpan.textContent = title;
   titleSpan.style.cssText =
     "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
   // Right side: team logo above date
@@ -92,7 +94,7 @@ export async function captureTeamSummaryScreenshot(
   const explainer = document.createElement("div");
   explainer.style.cssText =
     "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
-  explainer.textContent = `Shows how selected game outcomes affect this team's ${SUMMARY_SECTIONS[section].explains}. Current reflects pre-selection probabilities; What If reflects updated probabilities after applying selected game results.`;
+  explainer.textContent = explainerText;
   wrapper.appendChild(explainer);
   document.body.appendChild(wrapper);
   await new Promise((r) => setTimeout(r, 400));
@@ -111,5 +113,5 @@ export async function captureTeamSummaryScreenshot(
     scrollY: 0,
   });
   document.body.removeChild(wrapper);
-  await saveCanvasImage(canvas, filename, "What-If Team Summary");
+  await saveCanvasImage(canvas, filename, saveTitle);
 }
