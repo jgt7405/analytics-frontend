@@ -4,7 +4,6 @@ import Header from "@/components/layout/Header";
 import { Providers } from "@/components/providers/Providers";
 import { robotoCondensed } from "@/lib/fonts";
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
@@ -90,7 +89,6 @@ export default function RootLayout({
             </main>
           </div>
           {isProduction && <Analytics />}
-          {isProduction && <SpeedInsights />}
           <Toaster
             position="top-right"
             toastOptions={{
