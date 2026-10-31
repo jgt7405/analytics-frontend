@@ -5,6 +5,10 @@
 
 export type SummarySection = "conf" | "ncaa";
 
+// Image width (px). One section's tables are four narrow columns; a wider
+// image only stretches the label column into empty space.
+const IMAGE_WIDTH = 440;
+
 export const SECTION_TITLE_SUFFIX: Record<SummarySection, string> = {
   conf: " (Conference Tournament)",
   ncaa: " (NCAA Tournament)",
@@ -30,11 +34,8 @@ export async function captureSectionScreenshot(
 ) {
   if (typeof window === "undefined") return;
   // Export helpers load on demand, not with the page.
-  const {
-    expandExportClone,
-    getFullContentWidth,
-    getFullScreenshotDimensions,
-  } = await import("@/lib/export/layout");
+  const { expandExportClone, getFullScreenshotDimensions } =
+    await import("@/lib/export/layout");
   const { ensureHtml2Canvas } = await import("@/lib/export/capture");
   const { saveCanvasImage } = await import("@/lib/export/save");
   await ensureHtml2Canvas();
@@ -42,13 +43,10 @@ export async function captureSectionScreenshot(
   if (!html2canvas) return;
   // Clone as laid out on a desktop, so the image is the same from a phone.
   const { withDesktopLayout } = await import("@/lib/export/desktop-layout");
-  const { clone, contentWidth } = await withDesktopLayout([element], () => {
+  const clone = await withDesktopLayout([element], () => {
     const clone = element.cloneNode(true) as HTMLElement;
     expandExportClone(element, clone);
-    return {
-      clone,
-      contentWidth: Math.max(getFullContentWidth(element) + 48, 660),
-    };
+    return clone;
   });
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
   // Drop the other section and the divider between the two
@@ -59,7 +57,7 @@ export async function captureSectionScreenshot(
     )
     .forEach((el) => el.remove());
   const wrapper = document.createElement("div");
-  wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
+  wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${IMAGE_WIDTH}px;z-index:-1;overflow:visible;`;
   const header = document.createElement("div");
   header.style.cssText =
     "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #e5e7eb;";
