@@ -11,8 +11,8 @@ import { useMemo, useRef, useState } from "react";
 import { logger } from "@/lib/logger";
 import {
   captureTeamSummaryScreenshot,
-  SCREENSHOT_SECTIONS,
-  type ScreenshotSections,
+  SUMMARY_SECTIONS,
+  type SummarySection,
 } from "./whatif/teamSummaryScreenshot";
 
 const TWV_BLUE = [24, 98, 123];
@@ -60,9 +60,7 @@ export default function WhatIfTeamSummary({
   hasCalculated,
   selectedTeamId,
 }: WhatIfTeamSummaryProps) {
-  const [capturing, setCapturing] = useState(false);
-  const [screenshotSections, setScreenshotSections] =
-    useState<ScreenshotSections>("both");
+  const [capturing, setCapturing] = useState<SummarySection | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const baselineMap = useMemo(
@@ -276,56 +274,43 @@ export default function WhatIfTeamSummary({
     0.1,
   );
 
+  // Screenshot of one section (with the selections), top right of the section
+  const renderScreenshotButton = (section: SummarySection) => (
+    <button
+      onClick={async () => {
+        if (!contentRef.current || capturing) return;
+        setCapturing(section);
+        try {
+          await captureTeamSummaryScreenshot(
+            contentRef.current,
+            `whatif_summary_${(blTeam.team_name ?? "team").replace(/\s+/g, "_").toLowerCase()}_${section}.png`,
+            section,
+            `What If Summary - ${blTeam.team_name ?? ""}${SUMMARY_SECTIONS[section].titleSuffix}`,
+            blTeam.logo_url,
+          );
+        } catch (e) {
+          logger.error("Screenshot failed:", e);
+        }
+        setCapturing(null);
+      }}
+      className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
+      title="Download screenshot"
+    >
+      {capturing === section ? (
+        <Loader size={12} className="animate-spin" />
+      ) : (
+        <Camera size={12} />
+      )}
+      <span className="hidden sm:inline">Screenshot</span>
+    </button>
+  );
+
   return (
     <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-sm font-[650] tracking-[-0.01em] text-slate-700 dark:text-slate-300">
           What If Summary
         </h4>
-        <div className="flex items-center gap-2" data-no-screenshot>
-          <select
-            aria-label="Screenshot sections"
-            title="Sections to include in the screenshot"
-            value={screenshotSections}
-            onChange={(e) =>
-              setScreenshotSections(e.target.value as ScreenshotSections)
-            }
-            className="px-1.5 py-1 text-[11px] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-slate-900 hover:border-gray-400 transition-colors"
-          >
-            {Object.entries(SCREENSHOT_SECTIONS).map(([value, { label }]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={async () => {
-              if (!contentRef.current || capturing) return;
-              setCapturing(true);
-              try {
-                await captureTeamSummaryScreenshot(
-                  contentRef.current,
-                  `whatif_summary_${(blTeam.team_name ?? "team").replace(/\s+/g, "_").toLowerCase()}${screenshotSections === "both" ? "" : `_${screenshotSections}`}.png`,
-                  screenshotSections,
-                  `What If Summary - ${blTeam.team_name ?? ""}${SCREENSHOT_SECTIONS[screenshotSections].titleSuffix}`,
-                  blTeam.logo_url,
-                );
-              } catch (e) {
-                logger.error("Screenshot failed:", e);
-              }
-              setCapturing(false);
-            }}
-            className="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded hover:bg-gray-50 dark:bg-slate-800 transition"
-            title="Download screenshot"
-          >
-            {capturing ? (
-              <Loader size={12} className="animate-spin" />
-            ) : (
-              <Camera size={12} />
-            )}
-            <span className="hidden sm:inline">Screenshot</span>
-          </button>
-        </div>
       </div>
 
       <div ref={contentRef}>
@@ -402,7 +387,10 @@ export default function WhatIfTeamSummary({
         {/* ============================================================ */}
         {/* SECTION 1: Conference Tournament Probabilities               */}
         {/* ============================================================ */}
-        <div data-summary-section="conf">
+        <div data-summary-section="conf" className="relative">
+          <div className="absolute right-0 top-0" data-no-screenshot>
+            {renderScreenshotButton("conf")}
+          </div>
           <h4 className="text-sm font-semibold mb-1">
             Conference Tournament Probabilities
           </h4>
@@ -475,7 +463,10 @@ export default function WhatIfTeamSummary({
         {/* ============================================================ */}
         {/* SECTION 2: NCAA Tournament Probabilities                     */}
         {/* ============================================================ */}
-        <div data-summary-section="ncaa">
+        <div data-summary-section="ncaa" className="relative">
+          <div className="absolute right-0 top-0" data-no-screenshot>
+            {renderScreenshotButton("ncaa")}
+          </div>
           <h4 className="text-sm font-semibold mb-1">
             NCAA Tournament Probabilities
           </h4>

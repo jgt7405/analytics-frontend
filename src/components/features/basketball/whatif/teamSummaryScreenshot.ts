@@ -1,22 +1,19 @@
-// PNG export of the What If Summary for one team (html2canvas, loaded on
-// first use). The summary's sections carry data-summary-section ("conf",
-// "ncaa", "divider") so the image can hold one tournament or both.
+// PNG export of one section of the What If Summary for a team (html2canvas,
+// loaded on first use). The summary's sections carry data-summary-section
+// ("conf", "ncaa", "divider"); the image keeps the selections and the chosen
+// section only.
 
-// Which tournament sections the screenshot includes
-export type ScreenshotSections = "both" | "conf" | "ncaa";
+export type SummarySection = "conf" | "ncaa";
 
-export const SCREENSHOT_SECTIONS: Record<
-  ScreenshotSections,
-  { label: string; titleSuffix: string; explains: string }
+export const SUMMARY_SECTIONS: Record<
+  SummarySection,
+  { titleSuffix: string; explains: string }
 > = {
-  both: { label: "Both", titleSuffix: "", explains: "seed probabilities" },
   conf: {
-    label: "Conference",
     titleSuffix: " (Conference Tournament)",
     explains: "conference tournament seed probabilities",
   },
   ncaa: {
-    label: "NCAA",
     titleSuffix: " (NCAA Tournament)",
     explains: "NCAA tournament probabilities",
   },
@@ -25,7 +22,7 @@ export const SCREENSHOT_SECTIONS: Record<
 export async function captureTeamSummaryScreenshot(
   element: HTMLElement,
   filename: string,
-  sections: ScreenshotSections,
+  section: SummarySection,
   chartTitle?: string,
   teamLogoUrl?: string,
 ) {
@@ -52,15 +49,13 @@ export async function captureTeamSummaryScreenshot(
     };
   });
   clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
-  // Drop the section left out, and the divider between the two
-  if (sections !== "both") {
-    const dropped = sections === "conf" ? "ncaa" : "conf";
-    clone
-      .querySelectorAll(
-        `[data-summary-section="${dropped}"], [data-summary-section="divider"]`,
-      )
-      .forEach((el) => el.remove());
-  }
+  // Drop the other section and the divider between the two
+  const dropped = section === "conf" ? "ncaa" : "conf";
+  clone
+    .querySelectorAll(
+      `[data-summary-section="${dropped}"], [data-summary-section="divider"]`,
+    )
+    .forEach((el) => el.remove());
   const wrapper = document.createElement("div");
   wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
   const header = document.createElement("div");
@@ -97,7 +92,7 @@ export async function captureTeamSummaryScreenshot(
   const explainer = document.createElement("div");
   explainer.style.cssText =
     "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
-  explainer.textContent = `Shows how selected game outcomes affect this team's ${SCREENSHOT_SECTIONS[sections].explains}. Current reflects pre-selection probabilities; What If reflects updated probabilities after applying selected game results.`;
+  explainer.textContent = `Shows how selected game outcomes affect this team's ${SUMMARY_SECTIONS[section].explains}. Current reflects pre-selection probabilities; What If reflects updated probabilities after applying selected game results.`;
   wrapper.appendChild(explainer);
   document.body.appendChild(wrapper);
   await new Promise((r) => setTimeout(r, 400));
