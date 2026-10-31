@@ -9,6 +9,11 @@ import { getCellColor } from "@/lib/color-utils";
 import { Camera, Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { logger } from "@/lib/logger";
+import {
+  captureTeamSummaryScreenshot,
+  SCREENSHOT_SECTIONS,
+  type ScreenshotSections,
+} from "./whatif/teamSummaryScreenshot";
 
 const TWV_BLUE = [24, 98, 123];
 const TWV_WHITE = [255, 255, 255];
@@ -35,90 +40,6 @@ function getStandingProb(team: WhatIfTeamResult, standing: number): number {
   return (team[key] as number) ?? 0;
 }
 
-async function captureScreenshot(
-  element: HTMLElement,
-  filename: string,
-  chartTitle?: string,
-  teamLogoUrl?: string,
-) {
-  if (typeof window === "undefined") return;
-  // Export helpers load on demand, not with the page.
-  const { expandExportClone, getFullContentWidth, getFullScreenshotDimensions } = await import("@/lib/export/layout");
-  const { ensureHtml2Canvas } = await import("@/lib/export/capture");
-  const { saveCanvasImage } = await import("@/lib/export/save");
-  await ensureHtml2Canvas();
-  const html2canvas = window.html2canvas;
-  if (!html2canvas) return;
-  // Clone as laid out on a desktop, so the image is the same from a phone.
-  const { withDesktopLayout } = await import("@/lib/export/desktop-layout");
-  const { clone, contentWidth } = await withDesktopLayout([element], () => {
-    const clone = element.cloneNode(true) as HTMLElement;
-    expandExportClone(element, clone);
-    return {
-      clone,
-      contentWidth: Math.max(getFullContentWidth(element) + 48, 660),
-    };
-  });
-  clone.querySelectorAll("[data-no-screenshot]").forEach((el) => el.remove());
-  const wrapper = document.createElement("div");
-  wrapper.style.cssText = `position:fixed;left:-9999px;top:0;background:#fff;padding:16px 24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto",sans-serif;width:${contentWidth}px;z-index:-1;overflow:visible;`;
-  const header = document.createElement("div");
-  header.style.cssText =
-    "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #e5e7eb;";
-  const logo = document.createElement("img");
-  logo.src = "/images/JThom_Logo.png";
-  logo.style.cssText = "height:40px;width:auto;";
-  const titleSpan = document.createElement("div");
-  titleSpan.textContent = chartTitle || "What If Summary by Team";
-  titleSpan.style.cssText =
-    "font-size:13px;font-weight:500;color:#374151;text-align:center;flex:1;padding:0 12px;";
-  // Right side: team logo above date
-  const rightCol = document.createElement("div");
-  rightCol.style.cssText =
-    "display:flex;flex-direction:column;align-items:center;gap:2px;";
-  if (teamLogoUrl) {
-    const teamLogo = document.createElement("img");
-    teamLogo.src = teamLogoUrl;
-    teamLogo.style.cssText = "height:28px;width:28px;object-fit:contain;";
-    rightCol.appendChild(teamLogo);
-  }
-  const date = document.createElement("div");
-  date.textContent = new Date().toLocaleDateString();
-  date.style.cssText = "font-size:12px;color:#6b7280;";
-  rightCol.appendChild(date);
-  header.appendChild(logo);
-  header.appendChild(titleSpan);
-  header.appendChild(rightCol);
-  wrapper.appendChild(header);
-  clone.style.cssText = "overflow:visible!important;width:100%!important;";
-  wrapper.appendChild(clone);
-  // Explainer text for screenshot
-  const explainer = document.createElement("div");
-  explainer.style.cssText =
-    "margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:9px;color:#9ca3af;line-height:1.4;";
-  explainer.innerHTML =
-    "Shows how selected game outcomes affect this team's seed probabilities. Current reflects pre-selection probabilities; What If reflects updated probabilities after applying selected game results.";
-  wrapper.appendChild(explainer);
-  document.body.appendChild(wrapper);
-  await new Promise((r) => setTimeout(r, 400));
-  const captureSize = getFullScreenshotDimensions(wrapper);
-  const canvas = await html2canvas(wrapper, {
-    backgroundColor: "#ffffff",
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,
-    logging: false,
-    width: captureSize.width,
-    height: captureSize.height,
-    windowWidth: captureSize.width,
-    windowHeight: captureSize.height,
-    scrollX: 0,
-    scrollY: 0,
-  });
-  document.body.removeChild(wrapper);
-  await saveCanvasImage(canvas, filename, "What-If Team Summary");
-}
-
 const COL_METRIC = { minWidth: "110px" };
 const COL_DATA = { minWidth: "65px", width: "65px" };
 
@@ -140,6 +61,8 @@ export default function WhatIfTeamSummary({
   selectedTeamId,
 }: WhatIfTeamSummaryProps) {
   const [capturing, setCapturing] = useState(false);
+  const [screenshotSections, setScreenshotSections] =
+    useState<ScreenshotSections>("both");
   const contentRef = useRef<HTMLDivElement>(null);
 
   const baselineMap = useMemo(
@@ -360,15 +283,31 @@ export default function WhatIfTeamSummary({
           What If Summary
         </h4>
         <div className="flex items-center gap-2" data-no-screenshot>
+          <select
+            aria-label="Screenshot sections"
+            title="Sections to include in the screenshot"
+            value={screenshotSections}
+            onChange={(e) =>
+              setScreenshotSections(e.target.value as ScreenshotSections)
+            }
+            className="px-1.5 py-1 text-[11px] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded bg-white dark:bg-slate-900 hover:border-gray-400 transition-colors"
+          >
+            {Object.entries(SCREENSHOT_SECTIONS).map(([value, { label }]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
           <button
             onClick={async () => {
               if (!contentRef.current || capturing) return;
               setCapturing(true);
               try {
-                await captureScreenshot(
+                await captureTeamSummaryScreenshot(
                   contentRef.current,
-                  `whatif_summary_${(blTeam.team_name ?? "team").replace(/\s+/g, "_").toLowerCase()}.png`,
-                  `What If Summary - ${blTeam.team_name ?? ""}`,
+                  `whatif_summary_${(blTeam.team_name ?? "team").replace(/\s+/g, "_").toLowerCase()}${screenshotSections === "both" ? "" : `_${screenshotSections}`}.png`,
+                  screenshotSections,
+                  `What If Summary - ${blTeam.team_name ?? ""}${SCREENSHOT_SECTIONS[screenshotSections].titleSuffix}`,
                   blTeam.logo_url,
                 );
               } catch (e) {
@@ -463,96 +402,38 @@ export default function WhatIfTeamSummary({
         {/* ============================================================ */}
         {/* SECTION 1: Conference Tournament Probabilities               */}
         {/* ============================================================ */}
-        <h4 className="text-sm font-semibold mb-1">
-          Conference Tournament Probabilities
-        </h4>
-        <table className="w-full text-sm">
-          {tableHeader}
-          <tbody>{renderMetricsRows(confMetrics)}</tbody>
-        </table>
-
-        {/* Conference Seed Distribution (no heading, small visual break) */}
-        <div className="mt-3">
+        <div data-summary-section="conf">
+          <h4 className="text-sm font-semibold mb-1">
+            Conference Tournament Probabilities
+          </h4>
           <table className="w-full text-sm">
-            {seedTableHeader}
-            <tbody>
-              {Array.from({ length: numTeams }, (_, i) => {
-                const seed = i + 1;
-                const cur = getStandingProb(blTeam, seed);
-                const wi = getStandingProb(wiTeam, seed);
-                const change = wi - cur;
-                if (cur === 0 && wi === 0) return null;
-                return (
-                  <tr key={seed} className="border-b border-gray-100">
-                    <td className="py-1.5 px-2">
-                      {seed}
-                      {seed === 1
-                        ? "st"
-                        : seed === 2
-                          ? "nd"
-                          : seed === 3
-                            ? "rd"
-                            : "th"}
-                    </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getCellColor(cur, "blue")}
-                    >
-                      {cur > 0 ? `${cur.toFixed(1)}%` : ""}
-                    </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getCellColor(wi, "blue")}
-                    >
-                      {wi > 0 ? `${wi.toFixed(1)}%` : ""}
-                    </td>
-                    <td
-                      className="text-center py-1.5 px-2 tabular-nums"
-                      style={getDeltaColor(change, confSeedMaxAbs)}
-                    >
-                      {Math.abs(change) < 0.05
-                        ? "\u2014"
-                        : change > 0
-                          ? `+${change.toFixed(1)}%`
-                          : `${change.toFixed(1)}%`}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
+            {tableHeader}
+            <tbody>{renderMetricsRows(confMetrics)}</tbody>
           </table>
-        </div>
 
-        {/* ============================================================ */}
-        {/* Gray divider                                                 */}
-        {/* ============================================================ */}
-        <div className="my-4 border-t border-gray-300 dark:border-gray-600" />
-
-        {/* ============================================================ */}
-        {/* SECTION 2: NCAA Tournament Probabilities                     */}
-        {/* ============================================================ */}
-        <h4 className="text-sm font-semibold mb-1">
-          NCAA Tournament Probabilities
-        </h4>
-        <table className="w-full text-sm">
-          {tableHeader}
-          <tbody>{renderMetricsRows(ncaaMetrics)}</tbody>
-        </table>
-
-        {/* NCAA Seed Distribution (no heading, small visual break) */}
-        {(allNcaaSeeds.length > 0 || blBidPct > 0 || wiBidPct > 0) && (
+          {/* Conference Seed Distribution (no heading, small visual break) */}
           <div className="mt-3">
             <table className="w-full text-sm">
               {seedTableHeader}
               <tbody>
-                {allNcaaSeeds.map((seed) => {
-                  const cur = blDist[String(seed)] ?? 0;
-                  const wi = wiDist[String(seed)] ?? 0;
+                {Array.from({ length: numTeams }, (_, i) => {
+                  const seed = i + 1;
+                  const cur = getStandingProb(blTeam, seed);
+                  const wi = getStandingProb(wiTeam, seed);
                   const change = wi - cur;
                   if (cur === 0 && wi === 0) return null;
                   return (
                     <tr key={seed} className="border-b border-gray-100">
-                      <td className="py-1.5 px-2">{seed}</td>
+                      <td className="py-1.5 px-2">
+                        {seed}
+                        {seed === 1
+                          ? "st"
+                          : seed === 2
+                            ? "nd"
+                            : seed === 3
+                              ? "rd"
+                              : "th"}
+                      </td>
                       <td
                         className="text-center py-1.5 px-2 tabular-nums"
                         style={getCellColor(cur, "blue")}
@@ -567,7 +448,7 @@ export default function WhatIfTeamSummary({
                       </td>
                       <td
                         className="text-center py-1.5 px-2 tabular-nums"
-                        style={getDeltaColor(change, ncaaSeedMaxAbs)}
+                        style={getDeltaColor(change, confSeedMaxAbs)}
                       >
                         {Math.abs(change) < 0.05
                           ? "\u2014"
@@ -578,38 +459,103 @@ export default function WhatIfTeamSummary({
                     </tr>
                   );
                 })}
-                {/* Out of Tournament row */}
-                <tr className="border-b border-gray-100">
-                  <td className="py-1.5 px-2 text-gray-500 dark:text-gray-300 italic text-xs">
-                    Out
-                  </td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={getCellColor(blOutPct, "yellow")}
-                  >
-                    {blOutPct > 0.05 ? `${blOutPct.toFixed(1)}%` : ""}
-                  </td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={getCellColor(wiOutPct, "yellow")}
-                  >
-                    {wiOutPct > 0.05 ? `${wiOutPct.toFixed(1)}%` : ""}
-                  </td>
-                  <td
-                    className="text-center py-1.5 px-2 tabular-nums"
-                    style={getDeltaColor(outChange, ncaaSeedMaxAbs)}
-                  >
-                    {Math.abs(outChange) < 0.05
-                      ? "\u2014"
-                      : outChange > 0
-                        ? `+${outChange.toFixed(1)}%`
-                        : `${outChange.toFixed(1)}%`}
-                  </td>
-                </tr>
               </tbody>
             </table>
           </div>
-        )}
+        </div>
+
+        {/* ============================================================ */}
+        {/* Gray divider                                                 */}
+        {/* ============================================================ */}
+        <div
+          className="my-4 border-t border-gray-300 dark:border-gray-600"
+          data-summary-section="divider"
+        />
+
+        {/* ============================================================ */}
+        {/* SECTION 2: NCAA Tournament Probabilities                     */}
+        {/* ============================================================ */}
+        <div data-summary-section="ncaa">
+          <h4 className="text-sm font-semibold mb-1">
+            NCAA Tournament Probabilities
+          </h4>
+          <table className="w-full text-sm">
+            {tableHeader}
+            <tbody>{renderMetricsRows(ncaaMetrics)}</tbody>
+          </table>
+
+          {/* NCAA Seed Distribution (no heading, small visual break) */}
+          {(allNcaaSeeds.length > 0 || blBidPct > 0 || wiBidPct > 0) && (
+            <div className="mt-3">
+              <table className="w-full text-sm">
+                {seedTableHeader}
+                <tbody>
+                  {allNcaaSeeds.map((seed) => {
+                    const cur = blDist[String(seed)] ?? 0;
+                    const wi = wiDist[String(seed)] ?? 0;
+                    const change = wi - cur;
+                    if (cur === 0 && wi === 0) return null;
+                    return (
+                      <tr key={seed} className="border-b border-gray-100">
+                        <td className="py-1.5 px-2">{seed}</td>
+                        <td
+                          className="text-center py-1.5 px-2 tabular-nums"
+                          style={getCellColor(cur, "blue")}
+                        >
+                          {cur > 0 ? `${cur.toFixed(1)}%` : ""}
+                        </td>
+                        <td
+                          className="text-center py-1.5 px-2 tabular-nums"
+                          style={getCellColor(wi, "blue")}
+                        >
+                          {wi > 0 ? `${wi.toFixed(1)}%` : ""}
+                        </td>
+                        <td
+                          className="text-center py-1.5 px-2 tabular-nums"
+                          style={getDeltaColor(change, ncaaSeedMaxAbs)}
+                        >
+                          {Math.abs(change) < 0.05
+                            ? "\u2014"
+                            : change > 0
+                              ? `+${change.toFixed(1)}%`
+                              : `${change.toFixed(1)}%`}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* Out of Tournament row */}
+                  <tr className="border-b border-gray-100">
+                    <td className="py-1.5 px-2 text-gray-500 dark:text-gray-300 italic text-xs">
+                      Out
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={getCellColor(blOutPct, "yellow")}
+                    >
+                      {blOutPct > 0.05 ? `${blOutPct.toFixed(1)}%` : ""}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={getCellColor(wiOutPct, "yellow")}
+                    >
+                      {wiOutPct > 0.05 ? `${wiOutPct.toFixed(1)}%` : ""}
+                    </td>
+                    <td
+                      className="text-center py-1.5 px-2 tabular-nums"
+                      style={getDeltaColor(outChange, ncaaSeedMaxAbs)}
+                    >
+                      {Math.abs(outChange) < 0.05
+                        ? "\u2014"
+                        : outChange > 0
+                          ? `+${outChange.toFixed(1)}%`
+                          : `${outChange.toFixed(1)}%`}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         {/* Explainer text - data-no-screenshot prevents duplicate with screenshot's programmatic explainer */}
         <p
