@@ -1,6 +1,7 @@
 # Weekly dependency update PRs; CI runs on each one before it can merge.
 # Majors of the framework and toolchain (next, react, eslint, typescript,
-# @types/node) are ignored: they are planned migrations, not routine bumps.
+# tailwindcss, @types/node) are ignored: they are planned migrations, not
+# routine bumps (Tailwind 4 changed its config and PostCSS plugin).
 # @types/node tracks the Node major in .nvmrc.
 version: 2
 updates:
@@ -33,6 +34,8 @@ updates:
       - dependency-name: typescript
         update-types: [version-update:semver-major]
       - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
+      - dependency-name: tailwindcss
         update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
