@@ -6,6 +6,15 @@ import { type TeamGameData } from "@/types/gamePreview";
 import { TEAL, findPreviewGame, getLogoUrl } from "../metrics";
 import { resizedLogoSrc } from "@/lib/logo-src";
 
+// Bracketed tournament games whose opponent isn't set yet ("Players Era 8 - TBD")
+const isTbdOpponent = (opponent: string) => opponent.endsWith(" - TBD");
+
+const rankLabel = (g: TeamGameData) => {
+  if (isTbdOpponent(g.opponent)) return "TBD";
+  if (!g.kenpom_rank || g.kenpom_rank === 999) return "Non D1";
+  return `#${g.kenpom_rank}`;
+};
+
 // ─── 3-Column Schedule Strip (Away | Neutral | Home) ─────────────────────────
 
 export function ThreeColumnSchedule({
@@ -93,7 +102,7 @@ export function ThreeColumnSchedule({
                 return (
                   <div
                     key={`${g.date}-${g.opponent}-${idx}`}
-                    title={`${g.opponent} ${g.kenpom_rank && g.kenpom_rank !== 999 ? `#${g.kenpom_rank}` : "Non D1"} - ${g.status === "W" ? "Win" : g.status === "L" ? "Loss" : "Upcoming"}`}
+                    title={`${g.opponent} ${rankLabel(g)} - ${g.status === "W" ? "Win" : g.status === "L" ? "Loss" : "Upcoming"}`}
                     style={{
                       width: BOX_W,
                       height: BOX_H,
@@ -147,9 +156,7 @@ export function ThreeColumnSchedule({
                         flexShrink: 0,
                       }}
                     >
-                      {g.kenpom_rank && g.kenpom_rank !== 999
-                        ? `#${g.kenpom_rank}`
-                        : "Non D1"}
+                      {rankLabel(g)}
                     </span>
                   </div>
                 );

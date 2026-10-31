@@ -13,6 +13,7 @@ export function buildHeadToHeadNarrative(
   homeInfo: TeamInfo,
   winProb: number | null,
   isConferenceGame: boolean,
+  neutralSite: boolean,
 ): string {
   const parts: string[] = [];
 
@@ -108,6 +109,8 @@ export function buildHeadToHeadNarrative(
 
   return (
     parts.join(" ") ||
-    `${awayTeam} (${awayMetrics.overallRecord}) visits ${homeTeam} (${homeMetrics.overallRecord}) in this matchup.`
+    (neutralSite
+      ? `${awayTeam} (${awayMetrics.overallRecord}) meets ${homeTeam} (${homeMetrics.overallRecord}) at a neutral site.`
+      : `${awayTeam} (${awayMetrics.overallRecord}) visits ${homeTeam} (${homeMetrics.overallRecord}) in this matchup.`)
   );
 }

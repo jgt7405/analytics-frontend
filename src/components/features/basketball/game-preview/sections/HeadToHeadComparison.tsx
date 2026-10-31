@@ -15,6 +15,7 @@ export function HeadToHeadComparison({
   awayInfo,
   homeInfo,
   winProb,
+  neutralSite,
 }: {
   awayTeam: string;
   homeTeam: string;
@@ -23,6 +24,7 @@ export function HeadToHeadComparison({
   awayInfo: TeamInfo;
   homeInfo: TeamInfo;
   winProb: number | null;
+  neutralSite: boolean;
 }) {
   const homeWinPct =
     winProb !== null ? (winProb > 1 ? winProb : winProb * 100) : null;
@@ -131,7 +133,7 @@ export function HeadToHeadComparison({
           }}
         >
           <span style={{ fontSize: 10, color: "#9ca3af", fontWeight: 600 }}>
-            @
+            {neutralSite ? "vs" : "@"}
           </span>
         </div>
         <div

@@ -87,6 +87,7 @@ export default function HeaderPage({
           homeTeamData.team_info,
           selectedGame.win_prob,
           selectedGame.is_conference_game,
+          selectedGame.location === "Neutral",
         )}
       </p>
       <HeadToHeadComparison
@@ -97,6 +98,7 @@ export default function HeaderPage({
         awayInfo={awayTeamData.team_info}
         homeInfo={homeTeamData.team_info}
         winProb={selectedGame.win_prob}
+        neutralSite={selectedGame.location === "Neutral"}
       />
 
       {/* 2. Team Narratives + 3-Column Schedule */}
