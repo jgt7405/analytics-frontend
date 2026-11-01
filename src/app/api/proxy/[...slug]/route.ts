@@ -6,7 +6,7 @@ import {
   matchEndpoint,
   type Endpoint,
 } from "@/api/endpoints";
-import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
+import { CACHE_POLICIES, cacheClassFor, sportCacheTag } from "@/lib/cache-policy";
 import {
   labelResponse,
   storedParams,
@@ -140,9 +140,13 @@ async function forwardGet(
   // is still answered at once while a background request refreshes it, and a
   // failed refresh keeps it: a slow or down backend serves the last good data
   // instead of a timeout. Only a URL never fetched waits on the backend.
+  // The sport's tag lets /api/revalidate drop the copy after a pipeline run.
   const response = await fetch(backendUrl, {
     headers: { Accept: "application/json" },
-    next: { revalidate: CACHE_POLICIES[cacheClass].revalidate },
+    next: {
+      revalidate: CACHE_POLICIES[cacheClass].revalidate,
+      tags: [sportCacheTag(endpoint.sport)],
+    },
     signal: AbortSignal.timeout(endpoint.timeoutMs),
   });
 
@@ -157,9 +161,11 @@ async function forwardGet(
     );
   }
 
-  // CDN caching per freshness class (src/lib/cache-policy.ts)
+  // CDN caching per freshness class (src/lib/cache-policy.ts), tagged by
+  // sport so /api/revalidate can delete the CDN copies too
   const cacheHeaders = {
     "Cache-Control": CACHE_POLICIES[cacheClass].cacheControl,
+    "Vercel-Cache-Tag": sportCacheTag(endpoint.sport),
     "x-cache-class": cacheClass,
   };
 

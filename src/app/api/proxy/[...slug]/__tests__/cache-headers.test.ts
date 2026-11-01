@@ -36,6 +36,13 @@ describe("proxy cache headers", () => {
     );
   });
 
+  it("tags cached data by sport so a pipeline run can clear it", async () => {
+    backendFetch.mockResolvedValue(new Response(JSON.stringify({ data: [] })));
+    const res = await GET(get("cwv/ACC/"), context(["cwv", "ACC"]));
+    expect(res.headers.get("Vercel-Cache-Tag")).toBe("basketball-data");
+    expect(backendFetch.mock.calls[0][1].next.tags).toEqual(["basketball-data"]);
+  });
+
   it("caches an archived season as historical", async () => {
     backendFetch.mockResolvedValue(new Response(JSON.stringify({ data: [] })));
     const res = await GET(

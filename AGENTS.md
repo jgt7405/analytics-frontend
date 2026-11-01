@@ -85,6 +85,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 | `BACKEND_API_URL` | `src/config/env.ts` (proxy, server-side fetches, sitemap) | Defaults to the production Railway API. Set to e.g. `http://localhost:5000/api` for a local backend. Server-only: import `BACKEND_API_URL` from `@/config/env`, never read `process.env` for it directly |
 | `NEXT_PUBLIC_BACKEND_URL` | `src/config/env.ts` | Deprecated fallback for `BACKEND_API_URL`; remove it from any environment that sets it |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_SECURE`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM` | `/api/contact` | Contact form SMTP. The form returns 500 without them |
+| `REVALIDATE_SECRET` | `/api/revalidate` (`src/config/env.ts`) | Shared with the data pipeline, which calls the route after each sport's run to clear that sport's cached data. Without it the route refuses every request and caches only expire on their timers |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Google Analytics | Optional |
 | `NEXT_PUBLIC_SITE_URL` | Metadata | Optional; defaults to the production URL |
 

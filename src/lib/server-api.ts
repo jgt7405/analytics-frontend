@@ -35,7 +35,7 @@ import type { CombinedBasketballConfResponse } from "@/hooks/useBasketballConfDa
 import type { PlayoffRankingsResponse } from "@/types/football";
 import type { TeamListResponse } from "@/hooks/useTeamList";
 import { BACKEND_API_URL } from "@/config/env";
-import { CACHE_POLICIES, cacheClassFor } from "@/lib/cache-policy";
+import { CACHE_POLICIES, cacheClassFor, sportCacheTag } from "@/lib/cache-policy";
 import type { EndpointKey } from "@/api/endpoints";
 import {
   backendRequest,
@@ -92,7 +92,7 @@ async function requestEndpoint<T>(
   }
   const cacheClass = cacheClassFor(request.endpoint, query.season);
   const response = fetch(`${BACKEND}${request.path}`, {
-    next: { revalidate: CACHE_POLICIES[cacheClass].revalidate },
+    next: { revalidate: CACHE_POLICIES[cacheClass].revalidate, tags: [sportCacheTag(sport)] },
     headers: { Accept: "application/json" },
   })
     .then(async (res): Promise<FetchResult<T>> =>

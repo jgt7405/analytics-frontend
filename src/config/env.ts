@@ -22,3 +22,11 @@ function readBackendApiUrl(): string {
 
 /** Base URL of the Flask backend API, without a trailing slash. */
 export const BACKEND_API_URL = readBackendApiUrl();
+
+/**
+ * Shared secret the data pipeline sends to /api/revalidate after a run.
+ * Undefined when unset: the route then refuses every request.
+ */
+export function revalidateSecret(): string | undefined {
+  return process.env.REVALIDATE_SECRET || undefined;
+}

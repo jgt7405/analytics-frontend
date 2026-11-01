@@ -13,7 +13,7 @@
 // Imported by both server and client code: import only dependency-free
 // modules (src/config/seasons.ts).
 
-import { isArchivedSeason } from "@/config/seasons";
+import { isArchivedSeason, type Sport } from "@/config/seasons";
 
 export type CacheClass =
   | "live"
@@ -74,6 +74,17 @@ export const CACHE_POLICIES: Record<CacheClass, CachePolicy> = {
     cacheControl: "private, no-store",
   },
 };
+
+/**
+ * Tag on everything cached from one sport's backend data, whatever its class:
+ * Next's data-cache entries (proxy and server fetches, and the ISR pages
+ * built from them) and the proxy's CDN responses (`Vercel-Cache-Tag`).
+ * /api/revalidate clears the tag when that sport's data pipeline finishes,
+ * so the first visitor after a run gets the new data, not the last copy.
+ */
+export function sportCacheTag(sport: Sport): string {
+  return `${sport}-data`;
+}
 
 /** Spread into a `useQuery` call: `...queryCachePolicy("historical")`. */
 export function queryCachePolicy(cacheClass: CacheClass) {
