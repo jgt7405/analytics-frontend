@@ -1,6 +1,10 @@
 "use client";
 
 import FootballCompareSchedulesChart from "@/components/features/football/compare-schedules";
+import RankQuickSelect from "@/components/features/football/compare-schedules/RankQuickSelect";
+import { buildRankedLists } from "@/components/features/football/compare-schedules/rank-select";
+import { useFootballCompositeRatings } from "@/hooks/useFootballCompositeRatings";
+import { useFootballTWV } from "@/hooks/useFootballTWV";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Download } from "@/components/ui/icons";
@@ -8,7 +12,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { cn } from "@/lib/utils";
 import { RotateCcw } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 import { handleListArrowKeys } from "@/lib/a11y/list-arrow-keys";
@@ -104,6 +108,33 @@ const PRIORITY_CONFERENCES = [
   "Southeastern",
 ];
 
+function toSelectedTeam(teamData: TeamData): SelectedTeam {
+  return {
+    teamName: teamData.team_info.team_name,
+    teamLogo: teamData.team_info.logo_url,
+    teamColor: teamData.team_info.primary_color || "#000000",
+    teamConference: teamData.team_info.conference,
+    games: teamData.schedule.map((game) => ({
+      date: game.date,
+      opponent: game.opponent,
+      opponentLogo: game.opponent_logo,
+      opponentColor: game.opponent_primary_color || "#9ca3af",
+      winProb: game.sag12_win_prob || 0.5,
+      status: game.status,
+      location: game.location,
+    })),
+    allScheduleData: teamData.all_schedule_data.map((game) => ({
+      team: game.team,
+      opponent: game.opponent,
+      opponentColor: game.opponent_primary_color || "#9ca3af",
+      winProb: game.sag12_win_prob,
+      teamConference: game.team_conf,
+      teamConfCategory: game.team_conf_catg,
+      status: game.status,
+    })),
+  };
+}
+
 export default function FootballCompareContent() {
   const [availableConferences, setAvailableConferences] = useState<string[]>(
     []
@@ -120,6 +151,14 @@ export default function FootballCompareContent() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [highlightedTeam, setHighlightedTeam] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Quick select (top N / ranks X-Y by rating, TWV, AP or CFP).
+  const composite = useFootballCompositeRatings();
+  const twv = useFootballTWV("All Teams");
+  const rankedLists = useMemo(
+    () => buildRankedLists(composite.data?.teams, twv.data?.data),
+    [composite.data?.teams, twv.data?.data],
+  );
 
   const loadTeamData = useCallback(
     async (teamName: string): Promise<TeamData | null> => {
@@ -241,34 +280,32 @@ export default function FootballCompareContent() {
 
     if (!teamData) return;
 
-    const newTeam: SelectedTeam = {
-      teamName: teamData.team_info.team_name,
-      teamLogo: teamData.team_info.logo_url,
-      teamColor: teamData.team_info.primary_color || "#000000",
-      teamConference: teamData.team_info.conference,
-      games: teamData.schedule.map((game) => ({
-        date: game.date,
-        opponent: game.opponent,
-        opponentLogo: game.opponent_logo,
-        opponentColor: game.opponent_primary_color || "#9ca3af",
-        winProb: game.sag12_win_prob || 0.5,
-        status: game.status,
-        location: game.location,
-      })),
-      allScheduleData: teamData.all_schedule_data.map((game) => ({
-        team: game.team,
-        opponent: game.opponent,
-        opponentColor: game.opponent_primary_color || "#9ca3af",
-        winProb: game.sag12_win_prob,
-        teamConference: game.team_conf,
-        teamConfCategory: game.team_conf_catg,
-        status: game.status,
-      })),
-    };
-
-    setSelectedTeams((prev) => [...prev, newTeam]);
+    setSelectedTeams((prev) => [...prev, toSelectedTeam(teamData)]);
     setHighlightedTeam(team.team_name);
     setTimeout(() => setHighlightedTeam(null), 2000);
+  };
+
+  // Adds these teams after the current selection, in the given (rank)
+  // order. Already-selected teams stay where they are; stops at the limit.
+  const addTeamsInOrder = async (teamNames: string[]) => {
+    const already = new Set(selectedTeams.map((t) => t.teamName));
+    const names = teamNames
+      .filter((name) => !already.has(name))
+      .slice(0, MAX_SELECTED_TEAMS - selectedTeams.length);
+    if (names.length === 0) return;
+    setLoadingTeams((prev) => new Set([...prev, ...names]));
+    const results = await Promise.all(names.map((name) => loadTeamData(name)));
+    setLoadingTeams((prev) => {
+      const next = new Set(prev);
+      names.forEach((name) => next.delete(name));
+      return next;
+    });
+    const added = results.filter((data): data is TeamData => data !== null).map(toSelectedTeam);
+    setSelectedTeams((prev) => {
+      const present = new Set(prev.map((t) => t.teamName));
+      const fresh = added.filter((t) => !present.has(t.teamName));
+      return [...prev, ...fresh].slice(0, MAX_SELECTED_TEAMS);
+    });
   };
 
   const removeTeam = (teamName: string) => {
@@ -314,6 +351,13 @@ export default function FootballCompareContent() {
         <h1 className={cn(TITLE_CLASS, "mb-4")} data-screenshot-hide="true">
           Compare Schedules
         </h1>
+        <RankQuickSelect
+          rankings={rankedLists}
+          isLoading={composite.isLoading || twv.isLoading || loadingTeams.size > 0}
+          maxTeams={MAX_SELECTED_TEAMS}
+          selectedTeamNames={selectedTeams.map((t) => t.teamName)}
+          onAdd={addTeamsInOrder}
+        />
         <div className="space-y-0">
           {/* Scrollable Conference Cards with Team Logos */}
           <div
