@@ -1,6 +1,6 @@
 "use client";
 
-import { CompositeRatingSource, CompositeRatingTeam } from "@/types/football";
+import { CompositeRatingPollWeeks, CompositeRatingSource, CompositeRatingTeam } from "@/types/football";
 import { useMemo, useState } from "react";
 import CompositeTeamPicker from "@/components/features/shared/CompositeTeamPicker";
 
@@ -9,6 +9,7 @@ const EMPTY_SOURCES: CompositeRatingSource[] = [];
 interface FootballCompositeRatingsTableProps {
   teams: CompositeRatingTeam[];
   sources?: CompositeRatingSource[];
+  polls?: CompositeRatingPollWeeks;
 }
 
 type CellValue = number | string | null;
@@ -20,6 +21,8 @@ interface ColumnDef {
     numeric: boolean;
     lastUpdated?: string | null;
     sourceUrl?: string | null;
+    /** Small second header line, e.g. the poll week. */
+    note?: string | null;
 }
 
 // Most recently updated model first; sources with no date go last.
@@ -32,11 +35,17 @@ function sortSourcesByLastUpdated(sources: CompositeRatingSource[]): CompositeRa
   });
 }
 
-function buildColumns(sources: CompositeRatingSource[]): ColumnDef[] {
+function pollNote(week: number | null | undefined): string {
+  return typeof week === "number" ? "Wk " + week : "Not released";
+}
+
+function buildColumns(sources: CompositeRatingSource[], polls?: CompositeRatingPollWeeks): ColumnDef[] {
   const columns: ColumnDef[] = [
     { key: "rank", label: "Rank", numeric: true },
     { key: "team_name", label: "Team", numeric: false },
     { key: "conference", label: "Conference", numeric: false },
+    { key: "ap_rank", label: "AP", numeric: true, note: pollNote(polls?.ap_week) },
+    { key: "cfp_rank", label: "CFP", numeric: true, note: pollNote(polls?.cfp_week) },
     { key: "display_score", label: "Composite Rtg %", numeric: true },
     { key: "composite_rating", label: "Z-Score", numeric: true },
     { key: "num_sources", label: "# Sources", numeric: true },
@@ -105,6 +114,8 @@ function getCellValue(
   if (column.key === "display_score") return team.display_score;
   if (column.key === "composite_rating") return team.composite_rating;
   if (column.key === "num_sources") return team.num_sources;
+  if (column.key === "ap_rank") return typeof team.ap_rank === "number" ? team.ap_rank : null;
+  if (column.key === "cfp_rank") return typeof team.cfp_rank === "number" ? team.cfp_rank : null;
   if (column.key.indexOf("rating_") === 0) {
     const sourceKey = column.key.slice(7);
         const rating = team.sources[sourceKey];
@@ -172,6 +183,7 @@ export default function FootballCompositeRatingsTable(
 ) {
   const teams = props.teams;
   const sources = props.sources || EMPTY_SOURCES;
+  const polls = props.polls;
 
   const sortState = useState<string | null>(null);
     const sortKey = sortState[0];
@@ -191,8 +203,8 @@ export default function FootballCompositeRatingsTable(
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   const columns = useMemo(function () {
-    return buildColumns(sortSourcesByLastUpdated(sources));
-  }, [sources]);
+    return buildColumns(sortSourcesByLastUpdated(sources), polls);
+  }, [sources, polls]);
 
   const sourceRankMaps = useMemo(function () {
     const maps: Record<string, Map<string, number>> = {};
@@ -369,6 +381,11 @@ return sortDirection === "asc" ? cmp : -cmp;
                   {formatLastUpdated(column.lastUpdated) ? (
                     <div className="text-[10px] font-normal text-gray-400 dark:text-gray-500 normal-case">
                       Updated {formatLastUpdated(column.lastUpdated)}
+                    </div>
+                  ) : null}
+                  {column.note ? (
+                    <div className="text-[10px] font-normal text-gray-400 dark:text-gray-500 normal-case">
+                      {column.note}
                     </div>
                   ) : null}
                 </th>
