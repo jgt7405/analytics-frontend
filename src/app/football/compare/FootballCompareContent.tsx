@@ -285,15 +285,27 @@ export default function FootballCompareContent() {
     setTimeout(() => setHighlightedTeam(null), 2000);
   };
 
-  // Replaces the selection with these teams, kept in the given (rank) order.
-  const selectTeamsInOrder = async (teamNames: string[]) => {
-    const names = teamNames.slice(0, MAX_SELECTED_TEAMS);
-    setLoadingTeams(new Set(names));
+  // Adds these teams after the current selection, in the given (rank)
+  // order. Already-selected teams stay where they are; stops at the limit.
+  const addTeamsInOrder = async (teamNames: string[]) => {
+    const already = new Set(selectedTeams.map((t) => t.teamName));
+    const names = teamNames
+      .filter((name) => !already.has(name))
+      .slice(0, MAX_SELECTED_TEAMS - selectedTeams.length);
+    if (names.length === 0) return;
+    setLoadingTeams((prev) => new Set([...prev, ...names]));
     const results = await Promise.all(names.map((name) => loadTeamData(name)));
-    setLoadingTeams(new Set());
-    setSelectedTeams(
-      results.filter((data): data is TeamData => data !== null).map(toSelectedTeam),
-    );
+    setLoadingTeams((prev) => {
+      const next = new Set(prev);
+      names.forEach((name) => next.delete(name));
+      return next;
+    });
+    const added = results.filter((data): data is TeamData => data !== null).map(toSelectedTeam);
+    setSelectedTeams((prev) => {
+      const present = new Set(prev.map((t) => t.teamName));
+      const fresh = added.filter((t) => !present.has(t.teamName));
+      return [...prev, ...fresh].slice(0, MAX_SELECTED_TEAMS);
+    });
   };
 
   const removeTeam = (teamName: string) => {
@@ -343,7 +355,8 @@ export default function FootballCompareContent() {
           rankings={rankedLists}
           isLoading={composite.isLoading || twv.isLoading || loadingTeams.size > 0}
           maxTeams={MAX_SELECTED_TEAMS}
-          onSelect={selectTeamsInOrder}
+          selectedTeamNames={selectedTeams.map((t) => t.teamName)}
+          onAdd={addTeamsInOrder}
         />
         <div className="space-y-0">
           {/* Scrollable Conference Cards with Team Logos */}
