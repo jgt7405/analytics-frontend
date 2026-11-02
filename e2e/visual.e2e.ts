@@ -93,8 +93,11 @@ const VISUAL_ROUTES: VisualRoute[] = [
     path: "/basketball/conf-data/",
     name: "basketball-conf-data-ACC",
     setup: async (page) => {
-      // By the logo: phones hide the conference name.
-      const row = page.locator("table").last().locator("tr", { has: page.locator('img[alt="Atlantic Coast"]') });
+      // By the logo: phones hide the conference name. Its alt is the
+      // conference's display name ("ACC" from 2026-27, src/config/display-names.ts),
+      // or the stored name for older seasons.
+      const logo = page.locator('img[alt="ACC"], img[alt="Atlantic Coast"]');
+      const row = page.locator("table").last().locator("tr", { has: logo });
       await row.locator("td").first().click();
     },
   },
@@ -190,7 +193,10 @@ const DOWNLOAD_ROUTES: DownloadRoute[] = [
       await pickDetailTeam(page, "Arizona");
     },
     trigger: async (page) => {
-      await teamDetailCard(page).locator('button[title="Download screenshot"]').click();
+      // Each section has its own button (4d48176); take Conference Tournament's.
+      await teamDetailCard(page)
+        .locator('[data-summary-section="conf"] button[title="Download screenshot"]')
+        .click();
     },
   },
   {
@@ -204,7 +210,8 @@ const DOWNLOAD_ROUTES: DownloadRoute[] = [
       await page
         .locator('h4:text-is("What If Summary"):visible')
         .locator("xpath=../..")
-        .locator('button[title="Download screenshot"]')
+        // Each section has its own button (35e73a3); take Conference Tournament's.
+        .locator('[data-summary-section="conf"] button[title="Download screenshot"]')
         .click();
     },
   },
