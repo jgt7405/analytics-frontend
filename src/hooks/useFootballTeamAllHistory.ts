@@ -101,7 +101,7 @@ export const useFootballTeamAllHistory = (
       };
     },
     enabled: !!teamName,
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

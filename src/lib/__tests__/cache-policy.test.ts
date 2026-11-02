@@ -14,9 +14,12 @@ describe("cacheClassFor", () => {
   it.each([
     ["football.standings", undefined, "currentStandings"],
     ["basketball.standings", undefined, "currentStandings"],
-    ["football.standingsHistory", undefined, "historical"],
-    ["football.teamConfWinsHistory", undefined, "historical"],
-    ["basketball.conferenceDataHistory", undefined, "historical"],
+    ["football.standingsHistory", undefined, "history"],
+    ["football.teamConfWinsHistory", undefined, "history"],
+    ["basketball.conferenceDataHistory", undefined, "history"],
+    ["basketball.teamNcaaHistory", undefined, "history"],
+    ["football.cfpHistory", undefined, "history"],
+    ["football.compositeRatingsHistory", undefined, "historical"],
     ["football.allFutureGames", undefined, "live"],
     ["basketball.upcomingGames", undefined, "live"],
     ["football.bowlScoreboard", undefined, "live"],
@@ -30,6 +33,7 @@ describe("cacheClassFor", () => {
     expect(classFor("football.standings", "2025-26")).toBe("historical");
     expect(classFor("football.cfp", "2025-26")).toBe("historical");
     expect(classFor("basketball.standings", "2025-26")).toBe("historical");
+    expect(classFor("football.standingsHistory", "2025-26")).toBe("historical");
   });
 
   it("keeps the current season and unlisted seasons at the endpoint's own class", () => {

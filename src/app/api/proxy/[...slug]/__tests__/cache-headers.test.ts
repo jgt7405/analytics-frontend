@@ -8,6 +8,7 @@ jest.mock("server-only", () => ({}));
 
 import { NextRequest } from "next/server";
 import { GET, POST } from "../route";
+import { clearLastGood } from "@/lib/last-good-cache";
 
 const backendFetch = jest.fn();
 global.fetch = backendFetch as unknown as typeof fetch;
@@ -21,6 +22,7 @@ function get(path: string) {
 
 beforeEach(() => {
   backendFetch.mockReset();
+  clearLastGood();
   for (const level of ["info", "warn", "error"] as const) {
     jest.spyOn(console, level).mockImplementation(() => {});
   }
@@ -40,7 +42,18 @@ describe("proxy cache headers", () => {
     backendFetch.mockResolvedValue(new Response(JSON.stringify({ data: [] })));
     const res = await GET(get("cwv/ACC/"), context(["cwv", "ACC"]));
     expect(res.headers.get("Vercel-Cache-Tag")).toBe("basketball-data");
-    expect(backendFetch.mock.calls[0][1].next.tags).toEqual(["basketball-data"]);
+  });
+
+  it("keeps current-season history charts on the CDN for a minute", async () => {
+    backendFetch.mockResolvedValue(new Response(JSON.stringify({ ncaa: {} })));
+    const res = await GET(
+      get("basketball/ncaa/Villanova/history/"),
+      context(["basketball", "ncaa", "Villanova", "history"]),
+    );
+    expect(res.headers.get("x-cache-class")).toBe("history");
+    expect(res.headers.get("Cache-Control")).toBe(
+      "public, s-maxage=60, stale-while-revalidate=300",
+    );
   });
 
   it("caches an archived season as historical", async () => {

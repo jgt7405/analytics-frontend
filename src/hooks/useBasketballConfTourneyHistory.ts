@@ -65,7 +65,7 @@ export const useBasketballConfTourneyHistory = (
       return response.json();
     },
     enabled: !!conference,
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
     retry: 3,
   });
 };

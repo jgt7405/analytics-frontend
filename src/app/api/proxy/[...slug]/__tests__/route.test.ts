@@ -7,6 +7,7 @@ jest.mock("server-only", () => ({}));
 
 import { NextRequest } from "next/server";
 import { GET, POST } from "../route";
+import { clearLastGood } from "@/lib/last-good-cache";
 
 const backendFetch = jest.fn();
 global.fetch = backendFetch as unknown as typeof fetch;
@@ -34,6 +35,7 @@ function call(method: "GET" | "POST", path: string, body?: unknown) {
 
 beforeEach(() => {
   backendFetch.mockReset();
+  clearLastGood();
   backendFetch.mockImplementation(
     async () => new Response(JSON.stringify({ data: [] })),
   );
@@ -125,22 +127,55 @@ describe("proxy forwarding", () => {
 });
 
 // A slow or down backend must not break pages that were already fetched:
-// GETs go through Next's data cache, which answers the last good copy while
-// it refreshes in the background.
+// the proxy answers the last good copy it fetched. Next's data cache isn't
+// used: on Vercel its entries kept serving pre-run data for hours.
 describe("proxy resilience", () => {
   const init = () => backendFetch.mock.calls[0][1] as RequestInit & {
     next?: { revalidate?: number };
   };
 
-  it("keeps GETs in the data cache for their class's lifetime", async () => {
+  it("asks the backend on every GET, bypassing Next's data cache", async () => {
     await call("GET", "football/standings/SEC/");
-    expect(init().next?.revalidate).toBe(300);
-    expect(init().cache).toBeUndefined();
+    expect(init().cache).toBe("no-store");
+    expect(init().next).toBeUndefined();
   });
 
-  it("keeps history GETs for the historical lifetime", async () => {
+  it("serves the latest good copy when the backend fails", async () => {
+    backendFetch.mockResolvedValueOnce(new Response(JSON.stringify({ ncaa: { v: 1 } })));
+    backendFetch.mockResolvedValueOnce(new Response(JSON.stringify({ ncaa: { v: 2 } })));
+    backendFetch.mockResolvedValueOnce(new Response("down", { status: 503 }));
     await call("GET", "basketball/ncaa/Duke/history/");
-    expect(init().next?.revalidate).toBe(3600);
+    await call("GET", "basketball/ncaa/Duke/history/");
+    const res = await call("GET", "basketball/ncaa/Duke/history/");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ncaa: { v: 2 } });
+    expect(res.headers.get("x-proxy-fallback")).toBe("last-good");
+    expect(res.headers.get("Cache-Control")).toBe(
+      "public, s-maxage=30, stale-while-revalidate=30",
+    );
+  });
+
+  it("serves the last good copy when the backend times out", async () => {
+    backendFetch.mockResolvedValueOnce(new Response(JSON.stringify({ rows: [1] })));
+    backendFetch.mockRejectedValueOnce(new DOMException("timed out", "TimeoutError"));
+    await call("GET", "football/standings/SEC/");
+    const res = await call("GET", "football/standings/SEC/");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ rows: [1] });
+  });
+
+  it("passes a failure on when there is no good copy yet", async () => {
+    backendFetch.mockResolvedValueOnce(new Response("down", { status: 503 }));
+    const res = await call("GET", "football/standings/SEC/");
+    expect(res.status).toBe(503);
+  });
+
+  it("passes 4xx answers on rather than masking them", async () => {
+    backendFetch.mockResolvedValueOnce(new Response(JSON.stringify({ rows: [1] })));
+    backendFetch.mockResolvedValueOnce(new Response("missing", { status: 404 }));
+    await call("GET", "football/standings/SEC/");
+    const res = await call("GET", "football/standings/SEC/");
+    expect(res.status).toBe(404);
   });
 
   it("sends no per-visitor header on GETs (it would split the cache entry)", async () => {

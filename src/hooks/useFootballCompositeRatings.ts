@@ -32,7 +32,7 @@ export function useFootballCompositeRatingsTimeline(teams: string[]) {
       return response.json();
     },
     enabled: teams.length > 0,
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
   });
 }
 

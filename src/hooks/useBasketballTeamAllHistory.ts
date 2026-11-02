@@ -78,7 +78,7 @@ export const useBasketballTeamAllHistory = (
       };
     },
     enabled: !!teamName,
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
     retry: 2,
   });
 };

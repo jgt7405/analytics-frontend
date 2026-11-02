@@ -13,13 +13,14 @@ import {
   storedQueryValue,
   storedRequestBody,
 } from "@/lib/display-names";
+import { lastGood, rememberLastGood } from "@/lib/last-good-cache";
 import { logger } from "@/lib/logger";
 import { MAX_UPLOAD_BYTES, requestSchemaFor, responseSchemaFor } from "@/api/schemas";
 
 // Node.js runtime. The route reads the request, so it always runs per
-// request; `default-no-store` leaves fetches uncached unless they opt in
-// (forwardGet does). `dynamic = "force-dynamic"` would force every fetch to
-// no-store, including forwardGet's.
+// request, and no fetch here uses Next's data cache: the CDN in front of
+// this route is the shared cache (Cache-Control below), and LAST_GOOD covers
+// a slow or down backend.
 export const runtime = "nodejs";
 export const fetchCache = "default-no-store";
 
@@ -129,58 +130,88 @@ async function handle(
   }
 }
 
+// The backend's answer, or the last good copy when it fails (a thrown
+// fetch, a timeout or a 5xx). 4xx answers are passed on: they're about the
+// request, not an outage.
+async function fetchGet(
+  endpoint: Endpoint,
+  backendUrl: string,
+): Promise<
+  | { ok: true; body: string; disposition: string | null; fallback: boolean }
+  | { ok: false; status: number; statusText: string }
+> {
+  let failure: { status: number; statusText: string };
+  try {
+    const response = await fetch(backendUrl, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(endpoint.timeoutMs),
+    });
+    if (response.ok) {
+      const body = await response.text();
+      const disposition = response.headers.get("Content-Disposition");
+      rememberLastGood(backendUrl, { body, disposition });
+      return { ok: true, body, disposition, fallback: false };
+    }
+    failure = { status: response.status, statusText: response.statusText };
+    if (response.status < 500) return { ok: false, ...failure };
+  } catch (error) {
+    if (!lastGood(backendUrl)) throw error;
+    failure = { status: 502, statusText: String(error) };
+  }
+  // A slow or down backend serves the last good data instead of errors
+  // (2026-10-26 traffic spike)
+  const saved = lastGood(backendUrl);
+  if (!saved) return { ok: false, ...failure };
+  logger.warn("Backend request failed; serving last good copy", {
+    endpoint: endpoint.key,
+    status: failure.status,
+  });
+  return { ok: true, body: saved.body, disposition: saved.disposition, fallback: true };
+}
+
 async function forwardGet(
   endpoint: Endpoint,
   backendUrl: string,
   season: string | null,
 ): Promise<NextResponse> {
   const cacheClass = cacheClassFor(endpoint, season);
-  // Next's data cache keeps the last 200 per URL (the same `revalidate` as
-  // server fetches, src/lib/server-api.ts). Past its lifetime the stored copy
-  // is still answered at once while a background request refreshes it, and a
-  // failed refresh keeps it: a slow or down backend serves the last good data
-  // instead of a timeout. Only a URL never fetched waits on the backend.
-  // The sport's tag lets /api/revalidate drop the copy after a pipeline run.
-  const response = await fetch(backendUrl, {
-    headers: { Accept: "application/json" },
-    next: {
-      revalidate: CACHE_POLICIES[cacheClass].revalidate,
-      tags: [sportCacheTag(endpoint.sport)],
-    },
-    signal: AbortSignal.timeout(endpoint.timeoutMs),
-  });
+  const result = await fetchGet(endpoint, backendUrl);
 
-  if (!response.ok) {
+  if (!result.ok) {
     logger.warn("Backend request failed", {
       endpoint: endpoint.key,
-      status: response.status,
+      status: result.status,
     });
     return NextResponse.json(
-      { error: `Backend request failed: ${response.status}`, details: response.statusText },
-      { status: response.status },
+      { error: `Backend request failed: ${result.status}`, details: result.statusText },
+      { status: result.status },
     );
   }
 
   // CDN caching per freshness class (src/lib/cache-policy.ts), tagged by
-  // sport so /api/revalidate can delete the CDN copies too
+  // sport so /api/revalidate can delete the CDN copies too. A fallback copy
+  // is kept only briefly, so the CDN asks again soon after the backend is back.
   const cacheHeaders = {
-    "Cache-Control": CACHE_POLICIES[cacheClass].cacheControl,
+    "Cache-Control": result.fallback
+      ? CACHE_POLICIES.live.cacheControl
+      : CACHE_POLICIES[cacheClass].cacheControl,
     "Vercel-Cache-Tag": sportCacheTag(endpoint.sport),
     "x-cache-class": cacheClass,
+    ...(result.fallback ? { "x-proxy-fallback": "last-good" } : {}),
   };
 
   if (endpoint.response === "csv") {
-    return new NextResponse(await response.text(), {
+    return new NextResponse(result.body, {
       headers: {
         ...cacheHeaders,
         "Content-Type": "text/csv",
-        "Content-Disposition":
-          response.headers.get("Content-Disposition") || 'attachment; filename="export.csv"',
+        "Content-Disposition": result.disposition || 'attachment; filename="export.csv"',
       },
     });
   }
 
-  const parsed = parseJson(endpoint, await response.text());
+  const parsed = parseJson(endpoint, result.body);
   if (!parsed) return invalidJsonResponse();
   checkResponseShape(endpoint, parsed.data);
   return NextResponse.json(labelResponse(endpoint.sport, parsed.data, season), {

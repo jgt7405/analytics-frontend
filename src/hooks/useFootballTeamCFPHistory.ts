@@ -43,5 +43,5 @@ export const useFootballTeamCFPHistory = (teamName: string) =>
     queryKey: queryKeys.football.teamCfpHistory(teamName),
     queryFn: () => fetchTeamCFPHistory(teamName),
     enabled: !!teamName,
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
   });

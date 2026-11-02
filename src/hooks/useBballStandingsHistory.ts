@@ -53,6 +53,6 @@ export function useBballStandingsHistory(
       return response.json();
     },
     enabled: !!conference,
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
   });
 }

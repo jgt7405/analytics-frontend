@@ -26,7 +26,7 @@ export function useFootballConfDataHistory(season?: string) {
         apiPath("football.conferenceDataHistory", {}, { season }),
       );
     },
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
     retry: 2,
   });
 }

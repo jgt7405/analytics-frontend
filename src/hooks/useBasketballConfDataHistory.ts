@@ -32,6 +32,6 @@ export function useBasketballConfDataHistory(season?: string) {
       }
       return response.json();
     },
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
   });
 }

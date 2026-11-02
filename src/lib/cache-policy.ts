@@ -18,6 +18,7 @@ import { isArchivedSeason, type Sport } from "@/config/seasons";
 export type CacheClass =
   | "live"
   | "currentStandings"
+  | "history"
   | "historical"
   | "referenceData"
   | "scenario";
@@ -52,7 +53,16 @@ export const CACHE_POLICIES: Record<CacheClass, CachePolicy> = {
     revalidate: 300,
     cacheControl: "public, s-maxage=300, stale-while-revalidate=600",
   },
-  // History charts and archived seasons: append-only or frozen.
+  // Current-season history charts: one new point per pipeline run, so they
+  // go stale as often as standings do. Kept short on the CDN so a missed
+  // /api/revalidate call costs a minute, not hours.
+  history: {
+    staleTime: 1 * MINUTE,
+    gcTime: 10 * MINUTE,
+    revalidate: 60,
+    cacheControl: "public, s-maxage=60, stale-while-revalidate=300",
+  },
+  // Archived seasons and a past date's composite ratings: frozen.
   historical: {
     staleTime: 60 * MINUTE,
     gcTime: 120 * MINUTE,
@@ -86,7 +96,7 @@ export function sportCacheTag(sport: Sport): string {
   return `${sport}-data`;
 }
 
-/** Spread into a `useQuery` call: `...queryCachePolicy("historical")`. */
+/** Spread into a `useQuery` call: `...queryCachePolicy("history")`. */
 export function queryCachePolicy(cacheClass: CacheClass) {
   const { staleTime, gcTime } = CACHE_POLICIES[cacheClass];
   return { staleTime, gcTime };

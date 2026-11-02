@@ -62,7 +62,7 @@ export const useFootballStandingsHistory = (
       return response.json();
     },
     enabled: !!conference,
-    ...queryCachePolicy("historical"),
+    ...queryCachePolicy("history"),
     retry: 3,
   });
 };
