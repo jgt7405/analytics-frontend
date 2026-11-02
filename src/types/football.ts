@@ -588,6 +588,16 @@ export interface CompositeRatingTeam {
   display_score: number;
   num_sources: number;
   sources: Record<string, number | null>;
+  /** Latest AP Top 25 rank; null = unranked. Missing from older backends. */
+  ap_rank?: number | null;
+  /** Latest CFP committee rank; null = unranked. Missing from older backends. */
+  cfp_rank?: number | null;
+}
+
+/** Week of the poll release the snapshot's ranks came from; null = not released. */
+export interface CompositeRatingPollWeeks {
+  ap_week: number | null;
+  cfp_week: number | null;
 }
 
 export interface CompositeRatingSource {
@@ -602,6 +612,7 @@ export interface CompositeRatingsResponse {
   last_updated: string | null;
   requested_date?: string;
   sources?: CompositeRatingSource[];
+  polls?: CompositeRatingPollWeeks;
   error?: string;
 }
 

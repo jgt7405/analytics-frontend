@@ -89,13 +89,14 @@ export default function FootballCompositeRatingsContent() {
 
           <div className="mb-6 text-xs text-gray-600 dark:text-gray-300" style={{ lineHeight: "1.3" }}>
             Composite of 10 independent college football rating systems, z-scored
-            and averaged. Composite Rtg % is a 0-100 display scaling of the
+            and averaged. AP and CFP show each team&apos;s rank in the latest AP Top 25
+            and College Football Playoff committee rankings (- = unranked). Composite Rtg % is a 0-100 display scaling of the
             underlying z-score (top team = 100, bottom = 0) - relative to the
             current team pool, not directly comparable across different weeks.
             See composite_methodology.md for the full methodology.
           </div>
 
-          <FootballCompositeRatingsTable teams={teams} sources={data?.sources ?? []} />
+          <FootballCompositeRatingsTable teams={teams} sources={data?.sources ?? []} polls={data?.polls} />
           <CompositeRatingsHistoryChart
             points={timeline.data?.points ?? []}
             teams={teamOptions}
