@@ -8,6 +8,7 @@ import type {
   FootballSeasonHighlightGame,
   FootballSeasonHighlightsResponse,
 } from "@/types/football";
+import { withLogos } from "@/types/seasonHighlights";
 import { useEffect, useMemo, useState } from "react";
 import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
@@ -81,7 +82,7 @@ export default function FootballSeasonInfoContent() {
         const response = await fetch(apiUrl("football.seasonHighlights"));
         if (!response.ok) throw new Error(`Request failed (${response.status})`);
         const json = (await response.json()) as FootballSeasonHighlightsResponse;
-        if (!cancelled) setData(json);
+        if (!cancelled) setData(withLogos(json));
       } catch (err) {
         logger.error("Error loading season highlights:", err);
         if (!cancelled) {
@@ -233,21 +234,21 @@ export default function FootballSeasonInfoContent() {
 
         <div className="space-y-6">
           <SeasonHighlightsTable
-            title="Biggest Upsets"
-            description="Wins where team had the lowest win probability for that game."
-            probLabel="Win Prob"
-            rows={applyFilters(data?.upsets ?? [])}
-            exportClassName="season-highlights-upsets"
-            pageName="football-season-upsets"
-          />
-
-          <SeasonHighlightsTable
             title="Best Wins"
             description="Wins where the #12-rated team would have the lowest win probability if they played in that game."
             probLabel="#12 Win Prob"
             rows={applyFilters(data?.best_wins ?? [])}
             exportClassName="season-highlights-best-wins"
             pageName="football-season-best-wins"
+          />
+
+          <SeasonHighlightsTable
+            title="Biggest Upsets"
+            description="Wins where team had the lowest win probability for that game."
+            probLabel="Win Prob"
+            rows={applyFilters(data?.upsets ?? [])}
+            exportClassName="season-highlights-upsets"
+            pageName="football-season-upsets"
           />
 
           <SeasonHighlightsTable

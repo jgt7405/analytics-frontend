@@ -25,9 +25,9 @@ export interface SeasonHighlightsResponse {
   /** Every conference on the schedule, so the filter is complete before any
    *  games have been played (older responses may omit it). */
   conferences?: string[];
-  /** Logo per team name. Basketball sends logos here once instead of on
-   *  every row (its full-season lists run to thousands of games); rows then
-   *  omit team_logo / opponent_logo. See withLogos(). */
+  /** Logo per team name, sent once instead of on every row (the full-season
+   *  lists run to thousands of games); rows then omit team_logo /
+   *  opponent_logo. See withLogos(). */
   logos?: Record<string, string>;
 }
 
