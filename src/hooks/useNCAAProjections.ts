@@ -12,6 +12,8 @@ export interface NCAATeam {
   seed?: string;
   standing?: number;
   category?: string;
+  /** Games played so far, W-L; null when unknown. */
+  record?: string | null;
   post_conf_tourney_twv_50: number;
   // TWV vs the rank-30/50/200 baselines and the rating: projected
   // (season-average) in season mode, completed games / today's rating in

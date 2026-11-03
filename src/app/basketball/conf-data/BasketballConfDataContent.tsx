@@ -189,6 +189,12 @@ export default function BasketballConfDataContent({ initialData }: { initialData
     return showAll ? sorted : sorted.slice(0, 12);
   }, [conferenceData?.data, showAll]);
 
+  // The non-conference table follows the same top-12 / all filter
+  const nonconfConferences = useMemo(
+    () => (showAll ? undefined : filteredConfData.map((conf) => conf.conference_name)),
+    [filteredConfData, showAll],
+  );
+
   // One lane per conference, each team at its win probability vs the #100
   // team (same filter as the box-whisker above it).
   const winProbLanes = useMemo<WinProbLane[]>(
@@ -506,7 +512,10 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                         </p>
                       </div>
                     ) : nonconfData?.data && nonconfData.data.length > 0 ? (
-                      <BballNonConfAnalysisTable className="nonconf-analysis-table" />
+                      <BballNonConfAnalysisTable
+                        className="nonconf-analysis-table"
+                        conferences={nonconfConferences}
+                      />
                     ) : (
                       <div className="p-8 text-center text-gray-500 dark:text-gray-300">
                         No non-conference data available
@@ -527,14 +536,14 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                           Ten, and SEC.
                         </div>
                         <div style={{ marginTop: "6px" }}>
-                          Exp Win % reflects the projected record of the #30
+                          Exp Win % reflects the projected win % of the #100
                           rated team vs the schedule of that conference or team.
                         </div>
                         <div style={{ marginTop: "6px" }}>
-                          TWV reflects # of wins above or below the projected
-                          wins for the #30 rated team vs that schedule. For
-                          conferences, this is the average for the conference's
-                          teams.
+                          TWV 100 reflects # of wins above or below the
+                          projected wins for the #100 rated team vs that
+                          schedule. For conferences, this is the average for the
+                          conference&apos;s teams.
                         </div>
                       </div>
                     </div>

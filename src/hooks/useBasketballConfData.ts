@@ -46,26 +46,26 @@ export interface TeamNonconfAnalysis {
   team_name: string;
   power_record: string;
   power_win_pct: number;
-  power_twv_50: number;
+  power_twv_100: number;
   nonpower_record: string;
   nonpower_win_pct: number;
-  nonpower_twv_50: number;
+  nonpower_twv_100: number;
   total_record: string;
   total_win_pct: number;
-  total_twv_50: number;
+  total_twv_100: number;
 }
 
 export interface NonconfAnalysis {
   team_conf: string;
   power_record: string;
   power_win_pct: number;
-  power_twv_50: number;
+  power_twv_100: number;
   nonpower_record: string;
   nonpower_win_pct: number;
-  nonpower_twv_50: number;
+  nonpower_twv_100: number;
   total_record: string;
   total_win_pct: number;
-  total_twv_50: number;
+  total_twv_100: number;
   teams: TeamNonconfAnalysis[];
 }
 
@@ -109,9 +109,9 @@ export function useBasketballConfData(season?: string, initialData?: CombinedBas
       const conferenceData = await confResponse.json();
       const nonconfData = await nonconfResponse.json();
 
-      // Sort non-conference data by total_twv_50 descending (biggest to smallest)
+      // Sort non-conference data by total_twv_100 descending (biggest to smallest)
       nonconfData.data.sort(
-        (a: NonconfAnalysis, b: NonconfAnalysis) => b.total_twv_50 - a.total_twv_50
+        (a: NonconfAnalysis, b: NonconfAnalysis) => b.total_twv_100 - a.total_twv_100
       );
 
       return {

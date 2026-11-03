@@ -248,6 +248,7 @@ function NCAABracketTable({
                 <th className={styles.categoryHeader} scope="col">
                   Category
                 </th>
+                <th scope="col">Record</th>
                 {TWV_RANKS.map((rank) => (
                   <th key={rank} scope="col">
                     {prefix}TWV {rank}
@@ -329,6 +330,10 @@ function NCAABracketTable({
                           {team.category}
                         </span>
                       )}
+                    </td>
+
+                    <td>
+                      <span className={styles.statValue}>{team.record || "—"}</span>
                     </td>
 
                     {TWV_RANKS.map((rank) => (

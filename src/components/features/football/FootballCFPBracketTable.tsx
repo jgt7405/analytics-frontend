@@ -28,6 +28,7 @@ interface BracketRow {
   conference: string;
   conf_logo_url?: string;
   category: string;
+  record?: string;
   twv?: number;
   rating?: number;
   score?: number;
@@ -60,6 +61,7 @@ export default function FootballCFPBracketTable({
       conf_logo_url: team.conf_logo_url,
       category:
         team.bid_type === "Conference Champion" ? "Auto Bid" : "At Large",
+      record: team.record,
       twv: team.post_champ_twv,
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
@@ -74,6 +76,7 @@ export default function FootballCFPBracketTable({
       conference: team.conference,
       conf_logo_url: team.conf_logo_url,
       category: "First 4 Out",
+      record: team.record,
       twv: team.post_champ_twv,
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
@@ -88,6 +91,7 @@ export default function FootballCFPBracketTable({
       conference: team.conference,
       conf_logo_url: team.conf_logo_url,
       category: "Next 4 Out",
+      record: team.record,
       twv: team.post_champ_twv,
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
@@ -104,7 +108,8 @@ export default function FootballCFPBracketTable({
           conference: team.conference,
           conf_logo_url: team.conf_logo_url,
           category: "",
-          twv: team.post_champ_twv,
+          record: team.record,
+      twv: team.post_champ_twv,
           rating: team.blended_full_season_rating_avg,
           score: team.cfp_score,
           group: "other",
@@ -153,6 +158,7 @@ export default function FootballCFPBracketTable({
                 <th className={styles.categoryHeader} scope="col">
                   Category
                 </th>
+                <th scope="col">Record</th>
                 <th scope="col">{isCurrent ? "TWV" : "Proj TWV"}</th>
                 <th scope="col">{isCurrent ? "Rtg" : "Proj Rtg"}</th>
                 <th className={styles.scoreHeader} scope="col">
@@ -219,6 +225,10 @@ export default function FootballCFPBracketTable({
                           {row.category}
                         </span>
                       )}
+                    </td>
+
+                    <td>
+                      <span className={styles.statValue}>{row.record || "—"}</span>
                     </td>
 
                     <td>

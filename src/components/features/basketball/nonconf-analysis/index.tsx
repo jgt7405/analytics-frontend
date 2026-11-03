@@ -20,19 +20,27 @@ const CARD_CLASS =
 
 interface BballNonConfAnalysisTableProps {
   className?: string;
+  /** Conferences to show (the page's top-12 / all filter); all when omitted. */
+  conferences?: readonly string[];
 }
 
-function BballNonConfAnalysisTable({ className: _className = "" }: BballNonConfAnalysisTableProps) {
+function BballNonConfAnalysisTable({
+  className: _className = "",
+  conferences,
+}: BballNonConfAnalysisTableProps) {
   const { isMobile } = useResponsive();
   const { data, isLoading, error } = useBasketballConfData();
   const [expandedConferences, setExpandedConferences] = useState<Set<string>>(new Set());
-  const [sortField, setSortField] = useState<SortField>("total_twv_50");
+  const [sortField, setSortField] = useState<SortField>("total_twv_100");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const tableData = useMemo(() => {
     const response = data as BasketballConfDataResponseWithNonconf | undefined;
-    return response?.nonconfData?.data || [];
-  }, [data]);
+    const rows = response?.nonconfData?.data || [];
+    if (!conferences) return rows;
+    const shown = new Set(conferences);
+    return rows.filter((row) => shown.has(row.team_conf));
+  }, [data, conferences]);
 
   const ranges = useMemo(() => computeColorRanges(tableData), [tableData]);
 

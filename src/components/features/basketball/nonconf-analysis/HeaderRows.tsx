@@ -16,7 +16,7 @@ const SUB_COLUMNS = [
   { suffix: "record", key: "record", label: "Record" },
   { suffix: "win_pct", key: "winpct", label: "Win %" },
   { suffix: "exp_win_pct", key: "expwin", label: "Exp Win %" },
-  { suffix: "twv_50", key: "twv", label: "TWV" },
+  { suffix: "twv_100", key: "twv", label: "TWV 100" },
 ] as const;
 
 interface HeaderRowsProps {
