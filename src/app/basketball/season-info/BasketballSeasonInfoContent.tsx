@@ -225,21 +225,21 @@ export default function BasketballSeasonInfoContent() {
 
         <div className="space-y-6">
           <SeasonHighlightsTable
-            title="Biggest Upsets"
-            description="Wins where team had the lowest win probability for that game."
-            probLabel="Win Prob"
-            rows={applyFilters(data?.upsets ?? [])}
-            exportClassName="season-highlights-upsets"
-            pageName="basketball-season-upsets"
-          />
-
-          <SeasonHighlightsTable
             title="Best Wins"
             description="Wins where the #50-rated team would have the lowest win probability if they played in that game."
             probLabel="#50 Win Prob"
             rows={applyFilters(data?.best_wins ?? [])}
             exportClassName="season-highlights-best-wins"
             pageName="basketball-season-best-wins"
+          />
+
+          <SeasonHighlightsTable
+            title="Biggest Upsets"
+            description="Wins where team had the lowest win probability for that game."
+            probLabel="Win Prob"
+            rows={applyFilters(data?.upsets ?? [])}
+            exportClassName="season-highlights-upsets"
+            pageName="basketball-season-upsets"
           />
 
           <SeasonHighlightsTable
