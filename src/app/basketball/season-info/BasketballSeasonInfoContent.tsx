@@ -4,9 +4,10 @@ import SeasonHighlightsTable from "@/components/common/SeasonHighlightsTable";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import type {
-  SeasonHighlightGame,
-  SeasonHighlightsResponse,
+import {
+  withLogos,
+  type SeasonHighlightGame,
+  type SeasonHighlightsResponse,
 } from "@/types/seasonHighlights";
 import { useEffect, useMemo, useState } from "react";
 import { apiUrl } from "@/api/urls";
@@ -72,7 +73,7 @@ export default function BasketballSeasonInfoContent() {
         const response = await fetch(apiUrl("basketball.seasonHighlights"));
         if (!response.ok) throw new Error(`Request failed (${response.status})`);
         const json = (await response.json()) as SeasonHighlightsResponse;
-        if (!cancelled) setData(json);
+        if (!cancelled) setData(withLogos(json));
       } catch (err) {
         logger.error("Error loading season highlights:", err);
         if (!cancelled) {
