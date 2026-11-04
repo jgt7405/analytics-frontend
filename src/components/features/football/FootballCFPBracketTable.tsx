@@ -29,12 +29,20 @@ interface BracketRow {
   conf_logo_url?: string;
   category: string;
   record?: string;
+  // CFP TWV ranks the field; TWV 12 is shown beside it for reference.
   twv?: number;
+  twv12?: number;
   rating?: number;
   score?: number;
   // Group used for separator logic: "playoff" | "f4o" | "n4o" | "other"
   group: "playoff" | "f4o" | "n4o" | "other";
 }
+
+// Rows from before CFP TWV existed carry only TWV 12.
+const twvColumns = (team: { cfp_twv?: number; post_champ_twv?: number }) => ({
+  twv: team.cfp_twv ?? team.post_champ_twv,
+  twv12: team.post_champ_twv,
+});
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   "Auto Bid": { bg: "#dbeafe", text: "#1e40af" },
@@ -62,7 +70,7 @@ export default function FootballCFPBracketTable({
       category:
         team.bid_type === "Conference Champion" ? "Auto Bid" : "At Large",
       record: team.record,
-      twv: team.post_champ_twv,
+      ...twvColumns(team),
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
       group: "playoff",
@@ -77,7 +85,7 @@ export default function FootballCFPBracketTable({
       conf_logo_url: team.conf_logo_url,
       category: "First 4 Out",
       record: team.record,
-      twv: team.post_champ_twv,
+      ...twvColumns(team),
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
       group: "f4o",
@@ -92,7 +100,7 @@ export default function FootballCFPBracketTable({
       conf_logo_url: team.conf_logo_url,
       category: "Next 4 Out",
       record: team.record,
-      twv: team.post_champ_twv,
+      ...twvColumns(team),
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
       group: "n4o",
@@ -109,7 +117,7 @@ export default function FootballCFPBracketTable({
           conf_logo_url: team.conf_logo_url,
           category: "",
           record: team.record,
-      twv: team.post_champ_twv,
+      ...twvColumns(team),
           rating: team.blended_full_season_rating_avg,
           score: team.cfp_score,
           group: "other",
@@ -160,6 +168,7 @@ export default function FootballCFPBracketTable({
                 </th>
                 <th scope="col">Record</th>
                 <th scope="col">{isCurrent ? "TWV" : "Proj TWV"}</th>
+                <th scope="col">{isCurrent ? "TWV 12" : "Proj TWV 12"}</th>
                 <th scope="col">{isCurrent ? "Rtg" : "Proj Rtg"}</th>
                 <th className={styles.scoreHeader} scope="col">
                   CFP Rtg %
@@ -234,6 +243,12 @@ export default function FootballCFPBracketTable({
                     <td>
                       <span className={styles.statValue}>
                         {row.twv != null ? row.twv.toFixed(2) : "—"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className={styles.statValue}>
+                        {row.twv12 != null ? row.twv12.toFixed(2) : "—"}
                       </span>
                     </td>
 

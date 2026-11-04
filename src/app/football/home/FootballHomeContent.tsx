@@ -189,8 +189,15 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         Seed and rank are based on 70% TWV (performance) and 30%
-                        team rating — the weighting that most closely matches
-                        prior CFP rankings.
+                        team rating, with head-to-head results breaking near
+                        ties — the approach that most closely matches prior
+                        CFP rankings.
+                      </div>
+                      <div style={{ marginTop: "6px" }}>
+                        TWV credits each win against what the 25th-best team
+                        would do and charges each loss against what the best
+                        team would do. TWV 12 measures both against the
+                        12th-best team, for reference.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         CFP Rtg % blends {mode === "current" ? "current" : "projected"}{" "}

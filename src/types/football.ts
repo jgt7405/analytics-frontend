@@ -377,7 +377,10 @@ export interface PlayoffTeam {
   conference: string;
   conf_logo_url?: string;
   twv: number;
+  // TWV 12 (wins and losses vs the rank-12 team)
   post_champ_twv?: number;
+  // CFP TWV (wins vs rank 25, losses vs rank 1) - the TWV that ranks
+  cfp_twv?: number;
   record: string;
   bid_type: "Conference Champion" | "At-Large";
   cfp_bid_pct?: number;
@@ -399,7 +402,10 @@ export interface BubbleTeam {
   conference: string;
   conf_logo_url?: string;
   twv: number;
+  // TWV 12 (wins and losses vs the rank-12 team)
   post_champ_twv?: number;
+  // CFP TWV (wins vs rank 25, losses vs rank 1) - the TWV that ranks
+  cfp_twv?: number;
   record: string;
   cfp_bid_pct?: number;
   full_season_cfp_rating_avg?: number;
@@ -414,7 +420,10 @@ export interface OtherTeam {
   conference: string;
   conf_logo_url?: string;
   twv: number;
+  // TWV 12 (wins and losses vs the rank-12 team)
   post_champ_twv?: number;
+  // CFP TWV (wins vs rank 25, losses vs rank 1) - the TWV that ranks
+  cfp_twv?: number;
   record: string;
   cfp_bid_pct?: number;
   full_season_cfp_rating_avg?: number;
