@@ -57,6 +57,8 @@ export const CONFERENCE_DISPLAY_NAMES: readonly (DisplayName & { sports: readonl
 /** Stored conference names that are also team names (see "Southern"). */
 export const CONFERENCE_NAMES_SHARED_WITH_TEAMS: ReadonlySet<string> = new Set(["Southern"]);
 
+// Basketball labels are mirrored in data_scripts' bball_schedule_results.py
+// (TEAM_DISPLAY_NAMES), which matches NCAA scores on them: add a rename there too.
 export const TEAM_DISPLAY_NAMES: Record<Sport, readonly DisplayName[]> = {
   basketball: [
     // Became LSU New Orleans on July 1, 2026.
