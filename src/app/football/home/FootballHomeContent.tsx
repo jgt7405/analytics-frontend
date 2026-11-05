@@ -261,9 +261,12 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                         Head-to-head breaks close calls.
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        CFP TWV: wins count more against good teams; almost
-                        every loss hurts. TWV 12: every game is judged against
-                        the 12th-best team.
+                        CFP TWV: wins are compared to the probability the
+                        25th-rated team would have won that game, and losses
+                        are compared to the probability the 1st-rated team
+                        would have lost that game. This most closely aligns
+                        with how the committee has rated teams. TWV 12: every
+                        game is compared to the 12th-rated team.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         CFP Rtg %: top team = 100, bottom team = 0.
