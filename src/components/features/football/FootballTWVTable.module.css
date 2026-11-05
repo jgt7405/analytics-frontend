@@ -79,7 +79,7 @@
 }
 
 .table {
-  /* Only 5 narrow columns - min-width: 100% would stretch every column to
+  /* Only 5-8 narrow columns - min-width: 100% would stretch every column to
      fill the card's full width instead of sizing to its own content. */
   width: max-content;
   min-width: 0;

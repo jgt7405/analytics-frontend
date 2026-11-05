@@ -21,6 +21,8 @@ const FOOTBALL_TWV: TWVContentConfig<FootballTWVTeam> = {
   explainerLines: [
     "TWV (True Win Value) shows actual wins compared to expected wins for the 12th rated team in composite ratings.",
     "Positive values indicate overperformance, negative values indicate underperformance relative to the 12th rated team.",
+    "TWV 25 Wins credits each win against how likely the 25th rated team would have been to win that game. TWV 1 Losses charges each loss against how likely the top rated team would have been to win it.",
+    "CFP TWV adds the two together. It is the value used to rank teams for the CFP projections.",
   ],
 };
 

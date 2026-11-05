@@ -91,6 +91,11 @@ export interface FootballTWVData {
   team_id: string;
   logo_url: string;
   twv: number;
+  // CFP TWV halves: wins vs the rank-25 team, losses vs rank 1, and their
+  // sum. Null for seasons whose schedule predates them.
+  twv_25_wins?: number | null;
+  twv_1_losses?: number | null;
+  cfp_twv?: number | null;
   actual_record: string;
   expected_record: string;
   rank: number;

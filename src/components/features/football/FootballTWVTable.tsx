@@ -13,6 +13,9 @@ interface FootballTWVTeam {
   team_id?: string;
   logo_url: string;
   twv: number;
+  twv_25_wins?: number | null;
+  twv_1_losses?: number | null;
+  cfp_twv?: number | null;
   actual_record: string;
   expected_record: string;
 }
@@ -56,6 +59,19 @@ function getTWVColor(twv: number, minTWV: number, maxTWV: number) {
     color: textColor,
   };
 }
+
+// The CFP TWV columns, each colored on its own range.
+const CFP_COLUMNS = [
+  { key: "twv_25_wins", label: "TWV 25 Wins" },
+  { key: "twv_1_losses", label: "TWV 1 Losses" },
+  { key: "cfp_twv", label: "CFP TWV" },
+] as const;
+
+// Rounds first so a tiny negative reads 0.0, not -0.0
+const formatTWV = (value: number) => {
+  const rounded = Math.round(value * 10) / 10 || 0;
+  return rounded > 0 ? `+${rounded.toFixed(1)}` : rounded.toFixed(1);
+};
 
 function FootballTWVTable({
   twvData,
@@ -114,6 +130,15 @@ function FootballTWVTable({
     };
   }, [rankedTwvData]);
 
+  // Archived seasons have no CFP TWV halves; hide those columns there.
+  const cfpRanges = useMemo(() => {
+    if (!rankedTwvData.some((team) => team.cfp_twv != null)) return null;
+    return CFP_COLUMNS.map(({ key }) => {
+      const values = rankedTwvData.map((team) => team[key] ?? 0);
+      return { min: Math.min(...values, -1), max: Math.max(...values, 1) };
+    });
+  }, [rankedTwvData]);
+
   if (!rankedTwvData || rankedTwvData.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500 dark:text-gray-300">
@@ -160,6 +185,12 @@ function FootballTWVTable({
                 Team
               </th>
               <th scope="col">TWV</th>
+              {cfpRanges &&
+                CFP_COLUMNS.map(({ key, label }) => (
+                  <th key={key} scope="col">
+                    {label}
+                  </th>
+                ))}
               <th className={styles.recordHeader} scope="col">
                 Actual Record
               </th>
@@ -198,9 +229,24 @@ function FootballTWVTable({
                     className={styles.twvChip}
                     style={getTWVColor(team.twv, minTWV, maxTWV)}
                   >
-                    {team.twv > 0 ? `+${team.twv.toFixed(1)}` : team.twv.toFixed(1)}
+                    {formatTWV(team.twv)}
                   </div>
                 </td>
+
+                {cfpRanges &&
+                  CFP_COLUMNS.map(({ key }, col) => {
+                    const value = team[key] ?? 0;
+                    return (
+                      <td key={key} className={styles.twvCell} data-screenshot-tile="true">
+                        <div
+                          className={styles.twvChip}
+                          style={getTWVColor(value, cfpRanges[col].min, cfpRanges[col].max)}
+                        >
+                          {formatTWV(value)}
+                        </div>
+                      </td>
+                    );
+                  })}
 
                 <td className={styles.recordCell}>{team.actual_record}</td>
 
