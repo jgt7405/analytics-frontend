@@ -16,6 +16,9 @@ interface FootballTWVTeam {
   twv_25_wins?: number | null;
   twv_1_losses?: number | null;
   cfp_twv?: number | null;
+  twv_25_wins_rank?: number;
+  twv_1_losses_rank?: number;
+  cfp_twv_rank?: number;
   actual_record: string;
   expected_record: string;
 }
@@ -60,6 +63,10 @@ function getTWVColor(twv: number, minTWV: number, maxTWV: number) {
   };
 }
 
+type TWVKey = "twv" | "twv_25_wins" | "twv_1_losses" | "cfp_twv";
+type SortKey = TWVKey | "actual_record" | "expected_record";
+type SortDir = "desc" | "asc";
+
 // The CFP TWV columns, each colored on its own range.
 const CFP_COLUMNS = [
   { key: "twv_25_wins", label: "TWV 25 Wins" },
@@ -67,11 +74,42 @@ const CFP_COLUMNS = [
   { key: "cfp_twv", label: "CFP TWV" },
 ] as const;
 
+const SORT_LABELS: Record<SortKey, string> = {
+  actual_record: "Actual Record",
+  twv: "TWV 12",
+  expected_record: "Expected Record TWV 12",
+  twv_25_wins: "TWV 25 Wins",
+  twv_1_losses: "TWV 1 Losses",
+  cfp_twv: "CFP TWV",
+};
+
+// Global FBS rank the backend sends for each TWV column
+const RANK_FIELDS = {
+  twv: "rank",
+  twv_25_wins: "twv_25_wins_rank",
+  twv_1_losses: "twv_1_losses_rank",
+  cfp_twv: "cfp_twv_rank",
+} as const;
+
 // Rounds first so a tiny negative reads 0.0, not -0.0
 const formatTWV = (value: number) => {
   const rounded = Math.round(value * 10) / 10 || 0;
   return rounded > 0 ? `+${rounded.toFixed(1)}` : rounded.toFixed(1);
 };
+
+// "7-1" or "5.3-2.7" -> win share, so records of different lengths compare
+function winShare(record: string) {
+  const [wins, losses] = record.split("-").map(Number);
+  const games = (wins || 0) + (losses || 0);
+  return games > 0 ? (wins || 0) / games : 0;
+}
+
+function sortValue(team: FootballTWVTeam, key: SortKey) {
+  if (key === "actual_record" || key === "expected_record") {
+    return winShare(team[key]);
+  }
+  return team[key] ?? 0;
+}
 
 function FootballTWVTable({
   twvData,
@@ -82,6 +120,10 @@ function FootballTWVTable({
   const router = useRouter();
   const [rowsToShow, setRowsToShow] = useState<number>(twvData.length);
   const [inputValue, setInputValue] = useState<string>(twvData.length.toString());
+  const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
+    key: "twv",
+    dir: "desc",
+  });
 
   useEffect(() => {
     setRowsToShow(twvData.length);
@@ -98,12 +140,41 @@ function FootballTWVTable({
     [router, season],
   );
 
+  // A new column sorts best-first; clicking the sorted column flips it
+  const handleSort = (key: SortKey) =>
+    setSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "desc" ? "asc" : "desc" }
+        : { key, dir: "desc" },
+    );
+
   const rankedTwvData = useMemo(() => {
     if (!twvData || twvData.length === 0) return [];
+    const sign = sort.dir === "desc" ? -1 : 1;
     return [...twvData].sort(
-      (a, b) => b.twv - a.twv || a.team_name.localeCompare(b.team_name),
+      (a, b) =>
+        sign * (sortValue(a, sort.key) - sortValue(b, sort.key)) ||
+        a.team_name.localeCompare(b.team_name),
     );
-  }, [twvData]);
+  }, [twvData, sort]);
+
+  // Rank shown follows the sorted column: the backend's global FBS rank
+  // for a TWV column, otherwise the rank within this list (ties share).
+  const rankFor = useMemo(() => {
+    if (sort.key in RANK_FIELDS) {
+      const field = RANK_FIELDS[sort.key as TWVKey];
+      return (team: FootballTWVTeam) => team[field] ?? team.rank;
+    }
+    const key = sort.key;
+    const best = [...twvData].sort((a, b) => sortValue(b, key) - sortValue(a, key));
+    const ranks = new Map<string, number>();
+    best.forEach((team, i) => {
+      const prev = best[i - 1];
+      const tied = prev !== undefined && sortValue(prev, key) === sortValue(team, key);
+      ranks.set(team.team_name, tied ? (ranks.get(prev.team_name) ?? i + 1) : i + 1);
+    });
+    return (team: FootballTWVTeam) => ranks.get(team.team_name) ?? team.rank;
+  }, [twvData, sort.key]);
 
   const displayedTeams = useMemo(() => {
     if (showAllTeams) {
@@ -123,21 +194,21 @@ function FootballTWVTable({
   };
 
   const { minTWV, maxTWV } = useMemo(() => {
-    const twvValues = rankedTwvData.map((team) => team.twv);
+    const twvValues = twvData.map((team) => team.twv);
     return {
       minTWV: Math.min(...twvValues, -1),
       maxTWV: Math.max(...twvValues, 1),
     };
-  }, [rankedTwvData]);
+  }, [twvData]);
 
   // Archived seasons have no CFP TWV halves; hide those columns there.
   const cfpRanges = useMemo(() => {
-    if (!rankedTwvData.some((team) => team.cfp_twv != null)) return null;
+    if (!twvData.some((team) => team.cfp_twv != null)) return null;
     return CFP_COLUMNS.map(({ key }) => {
-      const values = rankedTwvData.map((team) => team[key] ?? 0);
+      const values = twvData.map((team) => team[key] ?? 0);
       return { min: Math.min(...values, -1), max: Math.max(...values, 1) };
     });
-  }, [rankedTwvData]);
+  }, [twvData]);
 
   if (!rankedTwvData || rankedTwvData.length === 0) {
     return (
@@ -146,6 +217,33 @@ function FootballTWVTable({
       </div>
     );
   }
+
+  const sortHeader = (key: SortKey, className?: string) => {
+    const isActive = sort.key === key;
+    return (
+      <th
+        key={key}
+        scope="col"
+        aria-sort={isActive ? (sort.dir === "desc" ? "descending" : "ascending") : "none"}
+        className={cn(styles.sortable, isActive && styles.sortActive, className)}
+      >
+        <button
+          type="button"
+          className={styles.sortButton}
+          onClick={() => handleSort(key)}
+          title="Click to sort by this column"
+          aria-label={`Sort by ${SORT_LABELS[key]}`}
+        >
+          {SORT_LABELS[key]}
+          {isActive && (
+            <span className={styles.sortArrow} aria-hidden="true">
+              {sort.dir === "desc" ? "▼" : "▲"}
+            </span>
+          )}
+        </button>
+      </th>
+    );
+  };
 
   return (
     <section className={cn(styles.card, "twv-table", className)} aria-label="True Win Value">
@@ -184,26 +282,17 @@ function FootballTWVTable({
               <th className={styles.stickyTeam} scope="col">
                 Team
               </th>
-              <th scope="col">TWV</th>
-              {cfpRanges &&
-                CFP_COLUMNS.map(({ key, label }) => (
-                  <th key={key} scope="col">
-                    {label}
-                  </th>
-                ))}
-              <th className={styles.recordHeader} scope="col">
-                Actual Record
-              </th>
-              <th className={styles.recordHeader} scope="col">
-                Expected Record
-              </th>
+              {sortHeader("actual_record", styles.recordHeader)}
+              {sortHeader("twv")}
+              {sortHeader("expected_record", styles.recordHeader)}
+              {cfpRanges && CFP_COLUMNS.map(({ key }) => sortHeader(key))}
             </tr>
           </thead>
           <tbody>
             {displayedTeams.map((team, index) => (
               <tr key={`${team.team_name}-${index}`} className={styles.bodyRow}>
                 <td className={styles.stickyRank}>
-                  <span className={styles.rankValue}>{team.rank}</span>
+                  <span className={styles.rankValue}>{rankFor(team)}</span>
                 </td>
 
                 <td className={cn(styles.stickyTeam, styles.teamCell)}>
@@ -224,6 +313,8 @@ function FootballTWVTable({
                   </button>
                 </td>
 
+                <td className={styles.recordCell}>{team.actual_record}</td>
+
                 <td className={styles.twvCell} data-screenshot-tile="true">
                   <div
                     className={styles.twvChip}
@@ -232,6 +323,8 @@ function FootballTWVTable({
                     {formatTWV(team.twv)}
                   </div>
                 </td>
+
+                <td className={styles.recordCell}>{team.expected_record}</td>
 
                 {cfpRanges &&
                   CFP_COLUMNS.map(({ key }, col) => {
@@ -247,10 +340,6 @@ function FootballTWVTable({
                       </td>
                     );
                   })}
-
-                <td className={styles.recordCell}>{team.actual_record}</td>
-
-                <td className={styles.recordCell}>{team.expected_record}</td>
               </tr>
             ))}
           </tbody>

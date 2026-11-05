@@ -96,6 +96,10 @@ export interface FootballTWVData {
   twv_25_wins?: number | null;
   twv_1_losses?: number | null;
   cfp_twv?: number | null;
+  // Global FBS ranks on each of those (rank above is on twv)
+  twv_25_wins_rank?: number;
+  twv_1_losses_rank?: number;
+  cfp_twv_rank?: number;
   actual_record: string;
   expected_record: string;
   rank: number;
