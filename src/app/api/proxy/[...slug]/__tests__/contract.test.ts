@@ -50,6 +50,8 @@ const QUERY_SAMPLE: Record<QueryParam, string> = {
   date: "2025-11-01",
   teams: "Duke%2CNorth+Carolina",
   next_only: "1",
+  metric: "twv12",
+  twv_weight: "50",
 };
 const ALL_QUERY = Object.keys(QUERY_SAMPLE) as QueryParam[];
 

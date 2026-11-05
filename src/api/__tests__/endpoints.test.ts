@@ -154,6 +154,13 @@ describe("checkQuery", () => {
     expect(result.ok && result.query.toString()).toBe("season=2025-26&mode=current");
   });
 
+  it("forwards the CFP ranking options and rejects bad ones", () => {
+    const result = checkQuery(rankings, q("metric=twv12&twv_weight=100"));
+    expect(result.ok && result.query.toString()).toBe("metric=twv12&twv_weight=100");
+    expect(checkQuery(rankings, q("metric=foo")).ok).toBe(false);
+    expect(checkQuery(rankings, q("twv_weight=101")).ok).toBe(false);
+  });
+
   it("drops empty values", () => {
     const result = checkQuery(standings, q("season="));
     expect(result.ok && result.query.toString()).toBe("");

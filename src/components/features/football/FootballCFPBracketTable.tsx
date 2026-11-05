@@ -14,8 +14,12 @@ interface FootballCFPBracketTableProps {
   otherTeams?: OtherTeam[];
   showAll?: boolean;
   // Current Snapshot uses live TWV/rating, so the columns are labeled
-  // "TWV"/"Rtg" rather than the projected "Proj TWV"/"Proj Rtg".
+  // "TWV"/"Rtg" rather than the projected "Proj CFP TWV"/"Proj Rtg", and it
+  // alone shows the TWV 12 reference column.
   isCurrent?: boolean;
+  // Which TWV ranks the table (the home page's "Ranked by" choice); the
+  // projected view shows that one.
+  twvMetric?: "cfp" | "twv12";
 }
 
 // Unified row shape combining playoff teams and bubble teams
@@ -58,6 +62,7 @@ export default function FootballCFPBracketTable({
   otherTeams = [],
   showAll = false,
   isCurrent = false,
+  twvMetric = "cfp",
 }: FootballCFPBracketTableProps) {
   const rows = useMemo<BracketRow[]>(() => {
     const playoffRows: BracketRow[] = playoffTeams.map((team) => ({
@@ -142,6 +147,11 @@ export default function FootballCFPBracketTable({
     return false;
   };
 
+  // The first TWV column: the ranking TWV in the projected view, CFP TWV
+  // in the snapshot (which shows TWV 12 in its own column)
+  const shownTwv = (row: BracketRow) =>
+    isCurrent || twvMetric === "cfp" ? row.twv : row.twv12;
+
   return (
     <section className="relative" aria-label="College Football Playoff bracket">
       <div className={styles.card}>
@@ -167,8 +177,10 @@ export default function FootballCFPBracketTable({
                   Category
                 </th>
                 <th scope="col">Record</th>
-                <th scope="col">{isCurrent ? "TWV" : "Proj TWV"}</th>
-                <th scope="col">{isCurrent ? "TWV 12" : "Proj TWV 12"}</th>
+                <th scope="col">
+                  {isCurrent ? "TWV" : twvMetric === "cfp" ? "Proj CFP TWV" : "Proj TWV 12"}
+                </th>
+                {isCurrent && <th scope="col">TWV 12</th>}
                 <th scope="col">{isCurrent ? "Rtg" : "Proj Rtg"}</th>
                 <th className={styles.scoreHeader} scope="col">
                   CFP Rtg %
@@ -242,15 +254,17 @@ export default function FootballCFPBracketTable({
 
                     <td>
                       <span className={styles.statValue}>
-                        {row.twv != null ? row.twv.toFixed(2) : "—"}
+                        {shownTwv(row)?.toFixed(2) ?? "—"}
                       </span>
                     </td>
 
-                    <td>
-                      <span className={styles.statValue}>
-                        {row.twv12 != null ? row.twv12.toFixed(2) : "—"}
-                      </span>
-                    </td>
+                    {isCurrent && (
+                      <td>
+                        <span className={styles.statValue}>
+                          {row.twv12 != null ? row.twv12.toFixed(2) : "—"}
+                        </span>
+                      </td>
+                    )}
 
                     <td>
                       <span className={styles.statValue}>

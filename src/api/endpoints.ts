@@ -23,7 +23,14 @@ export type HttpMethod = "GET" | "POST";
  */
 export type ParamRule = "segment" | "conference" | "team";
 
-export type QueryParam = "season" | "mode" | "date" | "teams" | "next_only";
+export type QueryParam =
+  | "season"
+  | "mode"
+  | "date"
+  | "teams"
+  | "next_only"
+  | "metric"
+  | "twv_weight";
 
 export interface Endpoint {
   /** Unique id, `<sport>.<name>`. */
@@ -75,6 +82,8 @@ const QUERY_PATTERNS: Record<QueryParam, RegExp> = {
   date: /^\d{4}-\d{2}-\d{2}$/,
   teams: /^[^<>{}\[\]\\/]{1,500}$/,
   next_only: /^1$/,
+  metric: /^(cfp|twv12)$/,
+  twv_weight: /^(100|[1-9]?\d)$/,
 };
 
 export function isValidQueryValue(name: QueryParam, value: string): boolean {
@@ -196,7 +205,7 @@ export const ENDPOINTS = [
   get("team", "football", ["football_team/:team", "football/team/:team"], "/football_team/:team", "currentStandings", { params: team }),
   get("teamConfWinsHistory", "football", ["football/team/:team/history/conf_wins"], "/football/team/:team/history/conf_wins", "history", { params: team }),
   // The site sends `All_Teams` as a placeholder; the backend path has none.
-  get("playoffRankings", "football", ["football/playoff_rankings/All_Teams"], "/football/playoff_rankings", "currentStandings", { query: ["season", "mode"] }),
+  get("playoffRankings", "football", ["football/playoff_rankings/All_Teams"], "/football/playoff_rankings", "currentStandings", { query: ["season", "mode", "metric", "twv_weight"] }),
   get("compositeRatings", "football", ["football/composite_ratings"], "/football/composite_ratings", "currentStandings"),
   get("compositeRatingsDates", "football", ["football/composite_ratings/dates"], "/football/composite_ratings/dates", "currentStandings"),
   get("compositeRatingsHistory", "football", ["football/composite_ratings/history"], "/football/composite_ratings/history", "historical", { query: ["season", "date"] }),

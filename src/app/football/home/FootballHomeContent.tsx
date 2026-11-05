@@ -9,6 +9,9 @@ import FootballCFPBracketTable from "@/components/features/football/FootballCFPB
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import {
+  CFPRankingOptions,
+  DEFAULT_CFP_RANKING,
+  isDefaultCFPRanking,
   PlayoffRankingsMode,
   useFootballPlayoffRankings,
 } from "@/hooks/useFootballPlayoffRankings";
@@ -18,6 +21,14 @@ import { PlayoffRankingsResponse } from "@/types/football";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { logger } from "@/lib/logger";
+
+// TWV share choices for the "Ranked by" control; rating gets the rest
+const TWV_WEIGHT_OPTIONS = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
+
+const TWV_LABELS: Record<CFPRankingOptions["metric"], string> = {
+  cfp: "CFP TWV",
+  twv12: "TWV 12",
+};
 
 const FootballConferenceBidsTable = dynamic(
   () =>
@@ -38,7 +49,14 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
   const confBidsRef = useRef<HTMLDivElement>(null);
   const [showAllTeams, setShowAllTeams] = useState(false);
   const [mode, setMode] = useState<PlayoffRankingsMode>("season");
-  const { data, isLoading } = useFootballPlayoffRankings(undefined, mode, initialData);
+  const [ranking, setRanking] = useState<CFPRankingOptions>(DEFAULT_CFP_RANKING);
+  const isDefaultRanking = isDefaultCFPRanking(ranking);
+  const { data, isLoading } = useFootballPlayoffRankings(
+    undefined,
+    mode,
+    initialData,
+    ranking,
+  );
 
   // Track page view
   useEffect(() => {
@@ -115,6 +133,50 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
     </div>
   );
 
+  // "Ranked by": which TWV and how much of it vs rating. Defaults to the
+  // real CFP formula (CFP TWV, 70/30).
+  const selectClasses = `${sizeClasses} border rounded bg-white border-gray-300 text-gray-700 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200`;
+  const rankingControls = (
+    <div
+      className={`flex flex-wrap items-center ${isMobile ? "gap-1.5 text-xs" : "gap-2 text-sm"} text-gray-700 dark:text-gray-300`}
+    >
+      <span className="font-semibold">Ranked by:</span>
+      <select
+        aria-label="TWV used for ranking"
+        value={ranking.metric}
+        onChange={(e) =>
+          setRanking({ ...ranking, metric: e.target.value as CFPRankingOptions["metric"] })
+        }
+        className={selectClasses}
+      >
+        <option value="cfp">{mode === "current" ? "CFP TWV" : "Proj CFP TWV"}</option>
+        <option value="twv12">{mode === "current" ? "TWV 12" : "Proj TWV 12"}</option>
+      </select>
+      <select
+        aria-label="TWV and rating split"
+        value={ranking.twvWeight}
+        onChange={(e) => setRanking({ ...ranking, twvWeight: Number(e.target.value) })}
+        className={selectClasses}
+      >
+        {TWV_WEIGHT_OPTIONS.map((weight) => (
+          <option key={weight} value={weight}>
+            {weight}% TWV / {100 - weight}% Rating
+            {weight === DEFAULT_CFP_RANKING.twvWeight ? " (CFP)" : ""}
+          </option>
+        ))}
+      </select>
+      {!isDefaultRanking && (
+        <button
+          type="button"
+          onClick={() => setRanking(DEFAULT_CFP_RANKING)}
+          className="text-[rgb(0,151,178)] underline underline-offset-2 hover:no-underline"
+        >
+          Reset to CFP formula
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <ErrorBoundary level="page">
       <PageLayoutWrapper
@@ -148,6 +210,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                   </div>
                 )}
               </div>
+              {!isMobile && <div className="mb-3">{rankingControls}</div>}
               {/* Mobile: the header's "Updated" date and the toggles don't
                   fit next to the title, so render them here in normal flow
                   above the chart. */}
@@ -162,6 +225,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                     {modeToggle}
                     {filterToggle}
                   </div>
+                  {rankingControls}
                 </div>
               )}
               <div
@@ -175,6 +239,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                   otherTeams={data?.other_teams ?? []}
                   showAll={showAllTeams}
                   isCurrent={mode === "current"}
+                  twvMetric={ranking.metric}
                 />
               </div>
 
@@ -188,20 +253,31 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                           : "CFP projections based on 1,000 season simulations."}
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        Seed and rank are based on 70% TWV (performance) and 30%
-                        team rating, with head-to-head results breaking near
-                        ties — the approach that most closely matches prior
-                        CFP rankings.
+                        {isDefaultRanking ? (
+                          <>
+                            Seed and rank are based on 70% CFP TWV (performance)
+                            and 30% team rating, with head-to-head results
+                            breaking near ties — the approach that most closely
+                            matches prior CFP rankings.
+                          </>
+                        ) : (
+                          <>
+                            Seed and rank here use your choice: {ranking.twvWeight}%{" "}
+                            {TWV_LABELS[ranking.metric]} and {100 - ranking.twvWeight}%
+                            team rating, with head-to-head results breaking near
+                            ties. The CFP formula is 70% CFP TWV and 30% rating.
+                          </>
+                        )}
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        TWV credits each win against what the 25th-best team
-                        would do and charges each loss against what the best
-                        team would do. TWV 12 measures both against the
-                        12th-best team, for reference.
+                        CFP TWV credits each win against what the 25th-best
+                        team would do and charges each loss against what the
+                        best team would do. TWV 12 measures both against the
+                        12th-best team.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         CFP Rtg % blends {mode === "current" ? "current" : "projected"}{" "}
-                        TWV and rating, scaled so the top team is 100% and the
+                        TWV and rating the same way, scaled so the top team is 100% and the
                         bottom is 0%.
                       </div>
                     </div>
@@ -230,7 +306,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
               </h2>
 
               <div className="conf-multi-bid-table min-h-[300px]" ref={confBidsRef}>
-                <FootballConferenceBidsTable mode={mode} />
+                <FootballConferenceBidsTable mode={mode} ranking={ranking} />
               </div>
 
               <div className="mt-6">

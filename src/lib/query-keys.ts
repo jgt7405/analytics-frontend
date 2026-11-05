@@ -74,8 +74,8 @@ export const queryKeys = {
       ["football", "conf-data-history", season] as const,
     cwv: (conference: string, season: Season) =>
       ["football", "cwv", conference, season] as const,
-    playoffRankings: (season: Season, mode: string) =>
-      ["football", "playoff-rankings", season, mode] as const,
+    playoffRankings: (season: Season, mode: string, metric: string, twvWeight: number) =>
+      ["football", "playoff-rankings", season, mode, metric, twvWeight] as const,
     schedule: (conference: string, season: Season) =>
       ["football", "schedule", conference, season] as const,
     seed: (conference: string, season: Season) =>

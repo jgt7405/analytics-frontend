@@ -5,6 +5,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import {
+  CFPRankingOptions,
   PlayoffRankingsMode,
   useFootballPlayoffRankings,
 } from "@/hooks/useFootballPlayoffRankings";
@@ -24,8 +25,11 @@ interface ConferenceColumn {
 
 export default function FootballConferenceBidsTable({
   mode = "season",
+  ranking,
 }: {
   mode?: PlayoffRankingsMode;
+  // The home page's "Ranked by" choice, so this table matches the CFP table
+  ranking?: CFPRankingOptions;
 }) {
   const { isMobile } = useResponsive();
   const {
@@ -35,7 +39,7 @@ export default function FootballConferenceBidsTable({
     refetch,
   } = useFootballConfData();
   const { data: rankings, isLoading: rankingsLoading } =
-    useFootballPlayoffRankings(undefined, mode);
+    useFootballPlayoffRankings(undefined, mode, undefined, ranking);
 
   // Build one column per conference (every FBS conference from conf data),
   // grouping playoff teams and bubble teams by matching conference name.
