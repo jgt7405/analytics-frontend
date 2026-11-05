@@ -253,32 +253,20 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                           : "CFP projections based on 1,000 season simulations."}
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        {isDefaultRanking ? (
-                          <>
-                            Seed and rank are based on 70% CFP TWV (performance)
-                            and 30% team rating, with head-to-head results
-                            breaking near ties — the approach that most closely
-                            matches prior CFP rankings.
-                          </>
-                        ) : (
-                          <>
-                            Seed and rank here use your choice: {ranking.twvWeight}%{" "}
-                            {TWV_LABELS[ranking.metric]} and {100 - ranking.twvWeight}%
-                            team rating, with head-to-head results breaking near
-                            ties. The CFP formula is 70% CFP TWV and 30% rating.
-                          </>
-                        )}
+                        Rank = {ranking.twvWeight}% {TWV_LABELS[ranking.metric]} (results) +{" "}
+                        {100 - ranking.twvWeight}% team rating
+                        {isDefaultRanking
+                          ? ", the default: the mix that most closely matched the CFP committee over the past 2 seasons."
+                          : ". The default, 70% CFP TWV + 30% rating, most closely matched the CFP committee over the past 2 seasons."}{" "}
+                        Head-to-head breaks close calls.
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        CFP TWV credits each win against what the 25th-best
-                        team would do and charges each loss against what the
-                        best team would do. TWV 12 measures both against the
-                        12th-best team.
+                        CFP TWV: wins count more against good teams; almost
+                        every loss hurts. TWV 12: every game is judged against
+                        the 12th-best team.
                       </div>
                       <div style={{ marginTop: "6px" }}>
-                        CFP Rtg % blends {mode === "current" ? "current" : "projected"}{" "}
-                        TWV and rating the same way, scaled so the top team is 100% and the
-                        bottom is 0%.
+                        CFP Rtg %: top team = 100, bottom team = 0.
                       </div>
                     </div>
                   </div>
