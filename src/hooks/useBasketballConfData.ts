@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
+import { stripNonD1ConfData } from "@/lib/nonD1";
 
 export interface WinProbQuartiles {
   min: number;
@@ -114,10 +115,10 @@ export function useBasketballConfData(season?: string, initialData?: CombinedBas
         (a: NonconfAnalysis, b: NonconfAnalysis) => b.total_twv_100 - a.total_twv_100
       );
 
-      return {
+      return stripNonD1ConfData({
         conferenceData,
         nonconfData,
-      };
+      });
     },
     ...queryCachePolicy("currentStandings"),
   });

@@ -45,6 +45,7 @@ import {
 } from "@/api/urls";
 import { labelResponse, storedParams, storedQueryValue } from "@/lib/display-names";
 import { logger } from "@/lib/logger";
+import { stripNonD1ConfData } from "@/lib/nonD1";
 
 const BACKEND = BACKEND_API_URL;
 
@@ -190,7 +191,7 @@ export const getBasketballConfDataServer = async (
   ]);
   if (!conferenceData || !nonconfData) return undefined;
   nonconfData.data?.sort((a, b) => b.total_twv_100 - a.total_twv_100);
-  return { conferenceData, nonconfData };
+  return stripNonD1ConfData({ conferenceData, nonconfData });
 };
 
 // --- Football conf-data -----------------------------------------------------

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
+import { isNonD1Conference } from "@/lib/nonD1";
 
 interface ConfHistoryData {
   conference: string; // ← Note: "conference" not "conference_name"
@@ -30,7 +31,11 @@ export function useBasketballConfDataHistory(season?: string) {
       if (!response.ok) {
         throw new Error("Failed to fetch basketball conference data history");
       }
-      return response.json();
+      const data: BasketballConfDataHistoryResponse = await response.json();
+      data.timeline_data = (data.timeline_data ?? []).filter(
+        (item) => !isNonD1Conference(item.conference),
+      );
+      return data;
     },
     ...queryCachePolicy("history"),
   });
