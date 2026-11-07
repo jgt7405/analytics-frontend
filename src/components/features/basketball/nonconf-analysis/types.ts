@@ -6,13 +6,13 @@ export interface Team {
   logo_url?: string;
   power_record: string;
   power_win_pct: number;
-  power_twv_100: number;
+  power_twv_50: number;
   nonpower_record: string;
   nonpower_win_pct: number;
-  nonpower_twv_100: number;
+  nonpower_twv_50: number;
   total_record: string;
   total_win_pct: number;
-  total_twv_100: number;
+  total_twv_50: number;
 }
 
 export interface Conference {
@@ -23,13 +23,13 @@ export interface Conference {
   teams: Team[];
   power_record: string;
   power_win_pct: number;
-  power_twv_100: number;
+  power_twv_50: number;
   nonpower_record: string;
   nonpower_win_pct: number;
-  nonpower_twv_100: number;
+  nonpower_twv_50: number;
   total_record: string;
   total_win_pct: number;
-  total_twv_100: number;
+  total_twv_50: number;
 }
 
 export interface NonconfResponse {
@@ -45,15 +45,15 @@ export type SortField =
   | "power_record"
   | "power_win_pct"
   | "power_exp_win_pct"
-  | "power_twv_100"
+  | "power_twv_50"
   | "nonpower_record"
   | "nonpower_win_pct"
   | "nonpower_exp_win_pct"
-  | "nonpower_twv_100"
+  | "nonpower_twv_50"
   | "total_record"
   | "total_win_pct"
   | "total_exp_win_pct"
-  | "total_twv_100";
+  | "total_twv_50";
 export type SortOrder = "asc" | "desc";
 /** Opponent group: power conferences, the rest, or all non-conference games. */
 export type ColumnType = "power" | "nonpower" | "total";

@@ -31,7 +31,7 @@ function BballNonConfAnalysisTable({
   const { isMobile } = useResponsive();
   const { data, isLoading, error } = useBasketballConfData();
   const [expandedConferences, setExpandedConferences] = useState<Set<string>>(new Set());
-  const [sortField, setSortField] = useState<SortField>("total_twv_100");
+  const [sortField, setSortField] = useState<SortField>("total_twv_50");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const tableData = useMemo(() => {

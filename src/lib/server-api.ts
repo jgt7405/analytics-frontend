@@ -190,7 +190,7 @@ export const getBasketballConfDataServer = async (
     ),
   ]);
   if (!conferenceData || !nonconfData) return undefined;
-  nonconfData.data?.sort((a, b) => b.total_twv_100 - a.total_twv_100);
+  nonconfData.data?.sort((a, b) => b.total_twv_50 - a.total_twv_50);
   return stripNonD1ConfData({ conferenceData, nonconfData });
 };
 

@@ -114,7 +114,7 @@ export function ConferenceRow({ row, isExpanded, onToggle, ranges, sizes }: Conf
             record={row[`${column}_record`]}
             winPct={row[`${column}_win_pct`]}
             twv={perTeamTwv}
-            expectedTwv={row[`${column}_twv_100`]}
+            expectedTwv={row[`${column}_twv_50`]}
             winPctColors={winPctColor(row[`${column}_win_pct`], winPct.min, winPct.max)}
             twvColors={twvColor(perTeamTwv, twv.min, twv.max)}
             isTeamRow={false}
@@ -203,10 +203,10 @@ export function TeamRow({ team, ranges, sizes }: TeamRowProps) {
             key={column}
             record={team[`${column}_record`]}
             winPct={team[`${column}_win_pct`]}
-            twv={team[`${column}_twv_100`]}
-            expectedTwv={team[`${column}_twv_100`]}
+            twv={team[`${column}_twv_50`]}
+            expectedTwv={team[`${column}_twv_50`]}
             winPctColors={winPctColor(team[`${column}_win_pct`], winPct.min, winPct.max)}
-            twvColors={twvColor(team[`${column}_twv_100`], twv.min, twv.max)}
+            twvColors={twvColor(team[`${column}_twv_50`], twv.min, twv.max)}
             isTeamRow
             sizes={sizes}
           />

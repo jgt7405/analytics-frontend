@@ -12,7 +12,7 @@ const YELLOW = [255, 230, 113];
 
 /** A conference's TWV is shown per team (the backend sends the conference sum). */
 export function conferenceTwv(conf: Conference, column: ColumnType): number {
-  return conf[`${column}_twv_100`] / (conf.teams?.length || 1);
+  return conf[`${column}_twv_50`] / (conf.teams?.length || 1);
 }
 
 /**
@@ -41,7 +41,7 @@ export function computeColorRanges(tableData: Conference[]): ColorRanges {
     if (conf.teams) {
       conf.teams.forEach((team: Team) => {
         for (const column of COLUMNS) {
-          widen(ranges.team[column].twv, team[`${column}_twv_100`]);
+          widen(ranges.team[column].twv, team[`${column}_twv_50`]);
           widen(ranges.team[column].winPct, team[`${column}_win_pct`]);
         }
       });
@@ -111,7 +111,7 @@ export function winPctColor(value: number, minWp: number, maxWp: number): CellCo
   return withTextColor(r, g, b);
 }
 
-/** Win % the #100-rated team would have had: (wins − TWV) / games. */
+/** Win % the #50-rated team would have had: (wins − TWV) / games. */
 export function expectedWinPct(record: string, twvValue: number): number {
   const parts = record.split("-");
   const wins = parseInt(parts[0], 10) || 0;
@@ -136,25 +136,25 @@ function conferenceSortValue(conf: Conference, field: SortField): number {
     case "power_win_pct":
       return conf.power_win_pct;
     case "power_exp_win_pct":
-      return expectedWinPct(conf.power_record, conf.power_twv_100);
-    case "power_twv_100":
-      return conf.power_twv_100 / (conf.teams?.length || 1);
+      return expectedWinPct(conf.power_record, conf.power_twv_50);
+    case "power_twv_50":
+      return conf.power_twv_50 / (conf.teams?.length || 1);
     case "nonpower_record":
       return parseRecord(conf.nonpower_record);
     case "nonpower_win_pct":
       return conf.nonpower_win_pct;
     case "nonpower_exp_win_pct":
-      return expectedWinPct(conf.nonpower_record, conf.nonpower_twv_100);
-    case "nonpower_twv_100":
-      return conf.nonpower_twv_100 / (conf.teams?.length || 1);
+      return expectedWinPct(conf.nonpower_record, conf.nonpower_twv_50);
+    case "nonpower_twv_50":
+      return conf.nonpower_twv_50 / (conf.teams?.length || 1);
     case "total_record":
       return parseRecord(conf.total_record);
     case "total_win_pct":
       return conf.total_win_pct;
     case "total_exp_win_pct":
-      return expectedWinPct(conf.total_record, conf.total_twv_100);
-    case "total_twv_100":
-      return conf.total_twv_100 / (conf.teams?.length || 1);
+      return expectedWinPct(conf.total_record, conf.total_twv_50);
+    case "total_twv_50":
+      return conf.total_twv_50 / (conf.teams?.length || 1);
     default:
       return 0;
   }
@@ -169,25 +169,25 @@ function teamSortValue(team: Team, field: SortField): number | string {
     case "power_win_pct":
       return team.power_win_pct;
     case "power_exp_win_pct":
-      return expectedWinPct(team.power_record, team.power_twv_100);
-    case "power_twv_100":
-      return team.power_twv_100;
+      return expectedWinPct(team.power_record, team.power_twv_50);
+    case "power_twv_50":
+      return team.power_twv_50;
     case "nonpower_record":
       return parseRecord(team.nonpower_record);
     case "nonpower_win_pct":
       return team.nonpower_win_pct;
     case "nonpower_exp_win_pct":
-      return expectedWinPct(team.nonpower_record, team.nonpower_twv_100);
-    case "nonpower_twv_100":
-      return team.nonpower_twv_100;
+      return expectedWinPct(team.nonpower_record, team.nonpower_twv_50);
+    case "nonpower_twv_50":
+      return team.nonpower_twv_50;
     case "total_record":
       return parseRecord(team.total_record);
     case "total_win_pct":
       return team.total_win_pct;
     case "total_exp_win_pct":
-      return expectedWinPct(team.total_record, team.total_twv_100);
-    case "total_twv_100":
-      return team.total_twv_100;
+      return expectedWinPct(team.total_record, team.total_twv_50);
+    case "total_twv_50":
+      return team.total_twv_50;
     default:
       return 0;
   }

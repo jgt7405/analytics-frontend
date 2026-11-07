@@ -14,13 +14,13 @@ const team = (name: string, twv: number, winPct: number): Team => ({
   team_name: name,
   power_record: "2-2",
   power_win_pct: winPct,
-  power_twv_100: twv,
+  power_twv_50: twv,
   nonpower_record: "5-1",
   nonpower_win_pct: 83.3,
-  nonpower_twv_100: 0,
+  nonpower_twv_50: 0,
   total_record: "7-3",
   total_win_pct: 70,
-  total_twv_100: twv,
+  total_twv_50: twv,
 });
 
 const conf = (name: string, teams: Team[], totalTwv: number): Conference => ({
@@ -31,13 +31,13 @@ const conf = (name: string, teams: Team[], totalTwv: number): Conference => ({
   teams,
   power_record: "4-4",
   power_win_pct: 50,
-  power_twv_100: totalTwv,
+  power_twv_50: totalTwv,
   nonpower_record: "10-2",
   nonpower_win_pct: 83.3,
-  nonpower_twv_100: 0,
+  nonpower_twv_50: 0,
   total_record: "14-6",
   total_win_pct: 70,
-  total_twv_100: totalTwv,
+  total_twv_50: totalTwv,
 });
 
 describe("computeColorRanges", () => {
@@ -83,12 +83,12 @@ describe("sorting", () => {
   const data = [conf("A", [team("a1", 1, 40)], 3), conf("B", [team("b1", 0, 50), team("b2", 2, 60)], 8)];
 
   it("sorts conferences by per-team TWV", () => {
-    expect(sortConferences(data, "total_twv_100", "desc").map((c) => c.team_conf)).toEqual(["B", "A"]);
-    expect(sortConferences(data, "total_twv_100", "asc").map((c) => c.team_conf)).toEqual(["A", "B"]);
+    expect(sortConferences(data, "total_twv_50", "desc").map((c) => c.team_conf)).toEqual(["B", "A"]);
+    expect(sortConferences(data, "total_twv_50", "asc").map((c) => c.team_conf)).toEqual(["A", "B"]);
   });
 
   it("sorts teams by value, or by name", () => {
-    expect(sortTeams(data[1].teams, "total_twv_100", "desc").map((t) => t.team_name)).toEqual(["b2", "b1"]);
+    expect(sortTeams(data[1].teams, "total_twv_50", "desc").map((t) => t.team_name)).toEqual(["b2", "b1"]);
     expect(sortTeams(data[1].teams, "team_name", "asc").map((t) => t.team_name)).toEqual(["b1", "b2"]);
   });
 });

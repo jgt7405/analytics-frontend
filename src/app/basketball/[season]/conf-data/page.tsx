@@ -418,14 +418,14 @@ export default function ArchiveBasketballConfDataPage() {
                           Ten, and SEC.
                         </div>
                         <div style={{ marginTop: "6px" }}>
-                          Exp Win % reflects the projected record of the #30
+                          Exp Win % reflects the projected win % of the #50
                           rated team vs the schedule of that conference or team.
                         </div>
                         <div style={{ marginTop: "6px" }}>
-                          TWV reflects # of wins above or below the projected
-                          wins for the #30 rated team vs that schedule. For
-                          conferences, this is the average for the conference's
-                          teams.
+                          TWV 50 reflects # of wins above or below the
+                          projected wins for the #50 rated team vs that
+                          schedule. For conferences, this is the average for the
+                          conference&apos;s teams.
                         </div>
                       </div>
                     </div>

@@ -536,12 +536,12 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                           Ten, and SEC.
                         </div>
                         <div style={{ marginTop: "6px" }}>
-                          Exp Win % reflects the projected win % of the #100
+                          Exp Win % reflects the projected win % of the #50
                           rated team vs the schedule of that conference or team.
                         </div>
                         <div style={{ marginTop: "6px" }}>
-                          TWV 100 reflects # of wins above or below the
-                          projected wins for the #100 rated team vs that
+                          TWV 50 reflects # of wins above or below the
+                          projected wins for the #50 rated team vs that
                           schedule. For conferences, this is the average for the
                           conference&apos;s teams.
                         </div>
