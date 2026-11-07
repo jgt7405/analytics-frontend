@@ -146,6 +146,16 @@ export function logoPositions(allGames: ChartGame[], layout: ChartLayout): LogoP
   });
 }
 
+// Each line is the win total where the team reaches that seed line in about
+// half the sims. Round up, never down, to the half win: "21.0" means 21 wins
+// gets there; "21.5" means 21 is about a coin flip and 22 likely. Rounding to
+// the nearest half printed 21.19 as "21.0", promising a line at a total where
+// most sims fell short.
+export const roundUpToHalf = (num: number) => {
+  // The epsilon keeps float noise (21.0000001) from bumping a whole number up.
+  return Math.ceil(num * 2 - 1e-9) / 2;
+};
+
 export function seedThresholds(confChampData: ConfChampData): SeedThresholds {
   return {
     bubbleWins: confChampData.wins_for_bubble || 0,

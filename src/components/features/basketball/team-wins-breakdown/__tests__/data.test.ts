@@ -6,6 +6,7 @@ import {
   confTourneyGames,
   locationStyle,
   logoPositions,
+  roundUpToHalf,
   seedThresholds,
   splitGames,
   winProbCellStyle,
@@ -136,5 +137,15 @@ describe("cell styles", () => {
     expect(locationStyle("Away").letter).toBe("A");
     expect(locationStyle("Neutral")).toMatchObject({ label: "Neutral", letter: "N" });
     expect(locationStyle("")).toMatchObject({ label: "Neutral", letter: "N" });
+  });
+});
+
+describe("roundUpToHalf", () => {
+  it("rounds seed lines up, never down, to the half win", () => {
+    expect(roundUpToHalf(21.19)).toBe(21.5);
+    expect(roundUpToHalf(21.5)).toBe(21.5);
+    expect(roundUpToHalf(21.51)).toBe(22);
+    expect(roundUpToHalf(21)).toBe(21);
+    expect(roundUpToHalf(21.0000000001)).toBe(21);
   });
 });

@@ -4,7 +4,7 @@
 // (1 seed, 2-4, 5-7, 8-9, 10-11, bubble, not an at-large candidate), then
 // their labels and win counts. Rendered only when conference analysis data exists.
 
-import { seedThresholds } from "./data";
+import { roundUpToHalf, seedThresholds } from "./data";
 import type { ChartLayout, ConfChampData } from "./types";
 
 interface SeedRegionsProps {
@@ -23,10 +23,6 @@ interface SeedBand {
   text: string;
   labelOpacity: number;
 }
-
-const roundToHalf = (num: number) => {
-  return Math.round(num * 2) / 2;
-};
 
 export default function SeedRegions({ confChampData, layout }: SeedRegionsProps) {
   const { isMobile, barX, barWidth, chartAreaTop, chartAreaBottom, barBottomY, regionRight, getYFromWins, maxGames } =
@@ -132,7 +128,7 @@ export default function SeedRegions({ confChampData, layout }: SeedRegionsProps)
                 opacity={0.8}
                 fontWeight="600"
               >
-                ~{roundToHalf(band.wins).toFixed(1)}
+                ~{roundUpToHalf(band.wins).toFixed(1)}
               </text>
             </g>
           ),

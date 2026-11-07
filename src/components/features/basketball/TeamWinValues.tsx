@@ -173,8 +173,11 @@ export default function TeamWinValues({
     });
 
     const labels = continuousData.map((point) => point.date);
-    const twvData = continuousData.map((point) => point.twv_50);
-    const cwvData = continuousData.map((point) => point.cwv);
+    // Two decimals: float noise like 3.6e-7 would otherwise plot as a jump
+    // and zoom the y-axis into scientific notation.
+    const round2 = (v: number) => Math.round(v * 100) / 100;
+    const twvData = continuousData.map((point) => round2(point.twv_50));
+    const cwvData = continuousData.map((point) => round2(point.cwv));
 
     return { continuousData, labels, twvData, cwvData };
   };
@@ -325,7 +328,12 @@ export default function TeamWinValues({
           display: true,
           drawOnChartArea: true,
         },
+        // Whole-number ticks only, over at least -1..1, so a near-flat season
+        // start doesn't stretch a sliver of a win across the whole chart.
+        suggestedMin: -1,
+        suggestedMax: 1,
         ticks: {
+          precision: 0,
           color: isDark ? "#94a3b8" : "#475569",
           font: {
             weight: 600,
