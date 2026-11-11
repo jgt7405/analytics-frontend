@@ -91,7 +91,7 @@ export interface FootballTWVData {
   team_id: string;
   logo_url: string;
   twv: number;
-  // CFP TWV halves: wins vs the rank-25 team, losses vs rank 1, and their
+  // CFP TWV halves: wins vs the rank-50 team (field names still say 25), losses vs rank 1, and their
   // sum. Null for seasons whose schedule predates them.
   twv_25_wins?: number | null;
   twv_1_losses?: number | null;
@@ -388,7 +388,7 @@ export interface PlayoffTeam {
   twv: number;
   // TWV 12 (wins and losses vs the rank-12 team)
   post_champ_twv?: number;
-  // CFP TWV (wins vs rank 25, losses vs rank 1) - the TWV that ranks
+  // CFP TWV (wins vs rank 50, losses vs rank 1) - the TWV that ranks
   cfp_twv?: number;
   record: string;
   bid_type: "Conference Champion" | "At-Large";
@@ -413,7 +413,7 @@ export interface BubbleTeam {
   twv: number;
   // TWV 12 (wins and losses vs the rank-12 team)
   post_champ_twv?: number;
-  // CFP TWV (wins vs rank 25, losses vs rank 1) - the TWV that ranks
+  // CFP TWV (wins vs rank 50, losses vs rank 1) - the TWV that ranks
   cfp_twv?: number;
   record: string;
   cfp_bid_pct?: number;
@@ -431,7 +431,7 @@ export interface OtherTeam {
   twv: number;
   // TWV 12 (wins and losses vs the rank-12 team)
   post_champ_twv?: number;
-  // CFP TWV (wins vs rank 25, losses vs rank 1) - the TWV that ranks
+  // CFP TWV (wins vs rank 50, losses vs rank 1) - the TWV that ranks
   cfp_twv?: number;
   record: string;
   cfp_bid_pct?: number;

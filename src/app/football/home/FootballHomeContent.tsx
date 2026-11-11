@@ -134,7 +134,7 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
   );
 
   // "Ranked by": which TWV and how much of it vs rating. Defaults to the
-  // real CFP formula (CFP TWV, 70/30).
+  // real CFP formula (CFP TWV, 80/20).
   const selectClasses = `${sizeClasses} border rounded bg-white border-gray-300 text-gray-700 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200`;
   const rankingControls = (
     <div
@@ -257,12 +257,12 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                         {100 - ranking.twvWeight}% team rating
                         {isDefaultRanking
                           ? ", the default: the mix that most closely matched the CFP committee over the past 2 seasons."
-                          : ". The default, 70% CFP TWV + 30% rating, most closely matched the CFP committee over the past 2 seasons."}{" "}
+                          : ". The default, 80% CFP TWV + 20% rating, most closely matched the CFP committee over the past 2 seasons."}{" "}
                         Head-to-head breaks close calls.
                       </div>
                       <div style={{ marginTop: "6px" }}>
                         CFP TWV: wins are compared to the probability the
-                        25th-rated team would have won that game, and losses
+                        50th-rated team would have won that game, and losses
                         are compared to the probability the 1st-rated team
                         would have lost that game. This most closely aligns
                         with how the committee has rated teams. TWV 12: every

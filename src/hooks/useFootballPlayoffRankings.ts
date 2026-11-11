@@ -14,7 +14,7 @@ export interface CFPRankingOptions {
   twvWeight: number;
 }
 
-export const DEFAULT_CFP_RANKING: CFPRankingOptions = { metric: "cfp", twvWeight: 70 };
+export const DEFAULT_CFP_RANKING: CFPRankingOptions = { metric: "cfp", twvWeight: 80 };
 
 export const isDefaultCFPRanking = (ranking: CFPRankingOptions) =>
   ranking.metric === DEFAULT_CFP_RANKING.metric &&

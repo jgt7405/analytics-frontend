@@ -69,7 +69,7 @@ type SortDir = "desc" | "asc";
 
 // The CFP TWV columns, each colored on its own range.
 const CFP_COLUMNS = [
-  { key: "twv_25_wins", label: "TWV 25 Wins" },
+  { key: "twv_25_wins", label: "TWV 50 Wins" },
   { key: "twv_1_losses", label: "TWV 1 Losses" },
   { key: "cfp_twv", label: "CFP TWV" },
 ] as const;
@@ -78,7 +78,7 @@ const SORT_LABELS: Record<SortKey, string> = {
   actual_record: "Actual Record",
   twv: "TWV 12",
   expected_record: "Expected Record TWV 12",
-  twv_25_wins: "TWV 25 Wins",
+  twv_25_wins: "TWV 50 Wins",
   twv_1_losses: "TWV 1 Losses",
   cfp_twv: "CFP TWV",
 };
