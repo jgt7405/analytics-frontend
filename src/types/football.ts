@@ -396,6 +396,10 @@ export interface PlayoffTeam {
   full_season_cfp_rating_avg?: number;
   blended_full_season_rating_avg?: number;
   cfp_score?: number;
+  // Chance (0-100) of making the field starting from the CFP committee's
+  // latest ranking; null on data from before it existed
+  current_cfp_bid_pct?: number | null;
+  cfp_committee_base?: number | null;
   CFP_First_Round?: number;
   CFP_Quarterfinals?: number;
   CFP_Semifinals?: number;
@@ -420,6 +424,10 @@ export interface BubbleTeam {
   full_season_cfp_rating_avg?: number;
   blended_full_season_rating_avg?: number;
   cfp_score?: number;
+  // Chance (0-100) of making the field starting from the CFP committee's
+  // latest ranking; null on data from before it existed
+  current_cfp_bid_pct?: number | null;
+  cfp_committee_base?: number | null;
 }
 
 export interface OtherTeam {
@@ -438,6 +446,10 @@ export interface OtherTeam {
   full_season_cfp_rating_avg?: number;
   blended_full_season_rating_avg?: number;
   cfp_score?: number;
+  // Chance (0-100) of making the field starting from the CFP committee's
+  // latest ranking; null on data from before it existed
+  current_cfp_bid_pct?: number | null;
+  cfp_committee_base?: number | null;
 }
 
 export interface PlayoffRankingsResponse {

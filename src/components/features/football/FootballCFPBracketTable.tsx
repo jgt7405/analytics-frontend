@@ -15,7 +15,8 @@ interface FootballCFPBracketTableProps {
   showAll?: boolean;
   // Current Snapshot uses live TWV/rating, so the columns are labeled
   // "TWV"/"Rtg" rather than the projected "Proj CFP TWV"/"Proj Rtg", and it
-  // alone shows the TWV 12 reference column.
+  // alone shows the TWV 12 reference column and the committee-anchored
+  // CFP % column.
   isCurrent?: boolean;
   // Which TWV ranks the table (the home page's "Ranked by" choice); the
   // projected view shows that one.
@@ -38,6 +39,8 @@ interface BracketRow {
   twv12?: number;
   rating?: number;
   score?: number;
+  // Chance (0-100) of making the field from the committee's latest ranking
+  bidPct?: number | null;
   // Group used for separator logic: "playoff" | "f4o" | "n4o" | "other"
   group: "playoff" | "f4o" | "n4o" | "other";
 }
@@ -47,6 +50,16 @@ const twvColumns = (team: { cfp_twv?: number; post_champ_twv?: number }) => ({
   twv: team.cfp_twv ?? team.post_champ_twv,
   twv12: team.post_champ_twv,
 });
+
+// Odds of making the field: whole percent, with "<1" / ">99" for the tails
+// so a long shot doesn't read as impossible or certain.
+const formatBidPct = (pct?: number | null) => {
+  if (pct == null) return "—";
+  if (pct === 0 || pct === 100) return `${pct}%`;
+  if (pct < 1) return "<1%";
+  if (pct > 99) return ">99%";
+  return `${Math.round(pct)}%`;
+};
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   "Auto Bid": { bg: "#dbeafe", text: "#1e40af" },
@@ -78,6 +91,7 @@ export default function FootballCFPBracketTable({
       ...twvColumns(team),
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
+      bidPct: team.current_cfp_bid_pct,
       group: "playoff",
     }));
 
@@ -93,6 +107,7 @@ export default function FootballCFPBracketTable({
       ...twvColumns(team),
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
+      bidPct: team.current_cfp_bid_pct,
       group: "f4o",
     }));
 
@@ -108,6 +123,7 @@ export default function FootballCFPBracketTable({
       ...twvColumns(team),
       rating: team.blended_full_season_rating_avg,
       score: team.cfp_score,
+      bidPct: team.current_cfp_bid_pct,
       group: "n4o",
     }));
 
@@ -125,6 +141,7 @@ export default function FootballCFPBracketTable({
       ...twvColumns(team),
           rating: team.blended_full_season_rating_avg,
           score: team.cfp_score,
+          bidPct: team.current_cfp_bid_pct,
           group: "other",
         }))
       : [];
@@ -185,6 +202,14 @@ export default function FootballCFPBracketTable({
                 <th className={styles.scoreHeader} scope="col">
                   CFP Rtg %
                 </th>
+                {isCurrent && (
+                  <th
+                    scope="col"
+                    title="Chance of making the 12-team field, starting from the CFP committee's latest ranking"
+                  >
+                    CFP %
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -277,6 +302,14 @@ export default function FootballCFPBracketTable({
                         {row.score != null ? row.score.toFixed(1) : "—"}
                       </span>
                     </td>
+
+                    {isCurrent && (
+                      <td>
+                        <span className={styles.statValue}>
+                          {formatBidPct(row.bidPct)}
+                        </span>
+                      </td>
+                    )}
                   </tr>
                 );
               })}

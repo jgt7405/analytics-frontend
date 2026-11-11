@@ -271,6 +271,15 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                       <div style={{ marginTop: "6px" }}>
                         CFP Rtg %: top team = 100, bottom team = 0.
                       </div>
+                      {mode === "current" && (
+                        <div style={{ marginTop: "6px" }}>
+                          CFP %: chance of making the 12-team field. Each team
+                          starts where the CFP committee&apos;s latest ranking
+                          has it; only results after that ranking move it,
+                          across 1,000 simulations of the remaining games and
+                          conference title games.
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div
