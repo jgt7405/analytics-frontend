@@ -58,6 +58,10 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
     ranking,
   );
 
+  // Season view at the default options ranks on the committee-anchored
+  // projection once the backend has it (ranking.basis).
+  const committeeBasis = data?.ranking?.basis === "committee";
+
   // Track page view
   useEffect(() => {
     trackEvent({
@@ -252,14 +256,25 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                           ? "Current snapshot based on teams' results and ratings to date."
                           : "CFP projections based on 1,000 season simulations."}
                       </div>
-                      <div style={{ marginTop: "6px" }}>
-                        Rank = {ranking.twvWeight}% {TWV_LABELS[ranking.metric]} (results) +{" "}
-                        {100 - ranking.twvWeight}% team rating
-                        {isDefaultRanking
-                          ? ", the default: the mix that most closely matched the CFP committee over the past 2 seasons."
-                          : ". The default, 80% CFP TWV + 20% rating, most closely matched the CFP committee over the past 2 seasons."}{" "}
-                        Head-to-head breaks close calls.
-                      </div>
+                      {committeeBasis ? (
+                        <div style={{ marginTop: "6px" }}>
+                          Rank = each team&apos;s projected final standing:
+                          where the CFP committee&apos;s latest ranking has it
+                          today, plus CFP TWV for the games since then and the
+                          simulated games left (wins add, losses subtract).
+                          Change &quot;Ranked by&quot; to rank on our own
+                          formula instead.
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: "6px" }}>
+                          Rank = {ranking.twvWeight}% {TWV_LABELS[ranking.metric]} (results) +{" "}
+                          {100 - ranking.twvWeight}% team rating
+                          {isDefaultRanking
+                            ? ", the default: the mix that most closely matched the CFP committee over the past 2 seasons."
+                            : ". The default, 80% CFP TWV + 20% rating, most closely matched the CFP committee over the past 2 seasons."}{" "}
+                          Head-to-head breaks close calls.
+                        </div>
+                      )}
                       <div style={{ marginTop: "6px" }}>
                         CFP TWV: wins are compared to the probability the
                         50th-rated team would have won that game, and losses
@@ -271,15 +286,13 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                       <div style={{ marginTop: "6px" }}>
                         CFP Rtg %: top team = 100, bottom team = 0.
                       </div>
-                      {mode === "current" && (
-                        <div style={{ marginTop: "6px" }}>
-                          CFP %: chance of making the 12-team field. Each team
-                          starts where the CFP committee&apos;s latest ranking
-                          has it; only results after that ranking move it,
-                          across 1,000 simulations of the remaining games and
-                          conference title games.
-                        </div>
-                      )}
+                      <div style={{ marginTop: "6px" }}>
+                        CFP %: chance of making the 12-team field. Each team
+                        starts where the CFP committee&apos;s latest ranking
+                        has it; only results after that ranking move it,
+                        across 1,000 simulations of the remaining games and
+                        conference title games.
+                      </div>
                     </div>
                   </div>
                   <div

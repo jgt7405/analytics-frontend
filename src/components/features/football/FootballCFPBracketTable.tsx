@@ -15,8 +15,8 @@ interface FootballCFPBracketTableProps {
   showAll?: boolean;
   // Current Snapshot uses live TWV/rating, so the columns are labeled
   // "TWV"/"Rtg" rather than the projected "Proj CFP TWV"/"Proj Rtg", and it
-  // alone shows the TWV 12 reference column and the committee-anchored
-  // CFP % column.
+  // alone shows the TWV 12 reference column. Both views show CFP %, the
+  // committee-anchored chance of making the field.
   isCurrent?: boolean;
   // Which TWV ranks the table (the home page's "Ranked by" choice); the
   // projected view shows that one.
@@ -202,14 +202,12 @@ export default function FootballCFPBracketTable({
                 <th className={styles.scoreHeader} scope="col">
                   CFP Rtg %
                 </th>
-                {isCurrent && (
-                  <th
-                    scope="col"
-                    title="Chance of making the 12-team field, starting from the CFP committee's latest ranking"
-                  >
-                    CFP %
-                  </th>
-                )}
+                <th
+                  scope="col"
+                  title="Chance of making the 12-team field, starting from the CFP committee's latest ranking"
+                >
+                  CFP %
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -303,13 +301,11 @@ export default function FootballCFPBracketTable({
                       </span>
                     </td>
 
-                    {isCurrent && (
-                      <td>
-                        <span className={styles.statValue}>
-                          {formatBidPct(row.bidPct)}
-                        </span>
-                      </td>
-                    )}
+                    <td>
+                      <span className={styles.statValue}>
+                        {formatBidPct(row.bidPct)}
+                      </span>
+                    </td>
                   </tr>
                 );
               })}

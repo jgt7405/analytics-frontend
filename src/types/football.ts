@@ -458,6 +458,14 @@ export interface PlayoffRankingsResponse {
   next_four_out: BubbleTeam[];
   other_teams?: OtherTeam[];
   last_updated?: string;
+  // How the order was built. basis "committee": the projected final number
+  // that starts from the CFP committee's latest ranking (season mode at the
+  // default options); "formula": our own TWV/rating blend.
+  ranking?: {
+    metric: "cfp" | "twv12";
+    twv_weight: number;
+    basis?: "committee" | "formula";
+  };
 }
 
 export interface ConferenceApiResponse {
