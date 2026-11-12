@@ -114,19 +114,16 @@ export default function BasketballTeamScheduleChart({
     teamPts?: number,
     oppPts?: number,
     status?: string,
-    oppKpRank?: number,
   ) => {
+    if (status === "Scheduled") return "";
     if (
-      status === "Scheduled" ||
       teamPts === null ||
       teamPts === undefined ||
       oppPts === null ||
       oppPts === undefined
     )
-      return "";
-    if (!oppKpRank || oppKpRank === 999) {
+      // A result without a score (non-D1 games the feeds didn't score)
       return status === "W" ? "W" : status === "L" ? "L" : "";
-    }
     return `${teamPts}-${oppPts}`;
   };
 
@@ -152,7 +149,6 @@ export default function BasketballTeamScheduleChart({
               game.team_points,
               game.opp_points,
               game.status,
-              game.opp_kp_rank || game.kenpom_rank,
             );
 
             return (
