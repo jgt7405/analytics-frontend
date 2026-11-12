@@ -30,3 +30,12 @@ export const BACKEND_API_URL = readBackendApiUrl();
 export function revalidateSecret(): string | undefined {
   return process.env.REVALIDATE_SECRET || undefined;
 }
+
+/**
+ * Shared secret the proxy sends to the backend with a visitor's address, so
+ * the backend believes X-Client-IP only from this app. Must match the
+ * backend's PROXY_SHARED_SECRET. Undefined when unset: nothing is sent.
+ */
+export function proxySharedSecret(): string | undefined {
+  return process.env.PROXY_SHARED_SECRET || undefined;
+}

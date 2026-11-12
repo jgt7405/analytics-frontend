@@ -194,6 +194,22 @@ describe("proxy resilience", () => {
     });
     await POST(request, { params: Promise.resolve({ slug: ["football", "whatif"] }) });
     expect(new Headers(init().headers).get("X-Client-IP")).toBe("203.0.113.7");
+    expect(new Headers(init().headers).get("X-Proxy-Secret")).toBeNull();
+  });
+
+  it("sends the shared secret with the visitor's address when one is set", async () => {
+    process.env.PROXY_SHARED_SECRET = "s3cret";
+    try {
+      const request = new NextRequest("http://localhost/api/proxy/football/whatif/", {
+        method: "POST",
+        body: JSON.stringify({ conference: "SEC", selections: [] }),
+        headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.7" },
+      });
+      await POST(request, { params: Promise.resolve({ slug: ["football", "whatif"] }) });
+      expect(new Headers(init().headers).get("X-Proxy-Secret")).toBe("s3cret");
+    } finally {
+      delete process.env.PROXY_SHARED_SECRET;
+    }
   });
 });
 

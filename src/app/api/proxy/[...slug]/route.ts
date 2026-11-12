@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND_API_URL } from "@/config/env";
+import { BACKEND_API_URL, proxySharedSecret } from "@/config/env";
 import {
   buildBackendPath,
   checkQuery,
@@ -276,6 +276,9 @@ async function forwardPost(
   // GETs don't send it: it would split their data-cache entry per visitor.
   const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0].trim();
   const clientHeaders: Record<string, string> = clientIp ? { "X-Client-IP": clientIp } : {};
+  // The backend believes X-Client-IP only alongside this secret (when set).
+  const secret = proxySharedSecret();
+  if (clientIp && secret) clientHeaders["X-Proxy-Secret"] = secret;
   const init: RequestInit =
     body.formData !== undefined
       ? { method: "POST", headers: clientHeaders, body: body.formData }

@@ -86,6 +86,7 @@ src/app/<sport>/[season]/<page>/page.tsx         archive season: renders the sam
 | `NEXT_PUBLIC_BACKEND_URL` | `src/config/env.ts` | Deprecated fallback for `BACKEND_API_URL`; remove it from any environment that sets it |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_SECURE`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM` | `/api/contact` | Contact form SMTP. The form returns 500 without them |
 | `REVALIDATE_SECRET` | `/api/revalidate` (`src/config/env.ts`) | Shared with the data pipeline, which calls the route after each sport's run to clear that sport's cached data. Without it the route refuses every request and caches only expire on their timers |
+| `PROXY_SHARED_SECRET` | proxy POSTs (`src/config/env.ts`) | Optional; unset on both sides, nothing changes. If used, must match the backend's variable of the same name. Sent as `X-Proxy-Secret` so the backend believes the visitor address in `X-Client-IP` only from this app. Set it on Vercel before setting it on Railway, or all visitors share one rate limit |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Google Analytics | Optional |
 | `NEXT_PUBLIC_SITE_URL` | Metadata | Optional; defaults to the production URL |
 
