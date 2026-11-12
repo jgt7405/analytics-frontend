@@ -82,6 +82,18 @@ export class BaseApiClient {
       };
     }
 
+    // Keep the HTTP status on every error (400, 429, ...) so React Query's
+    // retry rule can tell a client error from an outage.
+    if (
+      apiError.status === undefined &&
+      error &&
+      typeof error === "object" &&
+      "status" in error &&
+      typeof error.status === "number"
+    ) {
+      apiError.status = error.status;
+    }
+
     monitoring.trackError(
       error instanceof Error ? error : new Error(String(error)),
       {
@@ -113,7 +125,6 @@ export class BaseApiClient {
       data: T | null;
       error: unknown;
     },
-    retries = 3,
   ): Promise<T> {
     if (!this.validateEndpoint(endpoint)) {
       logger.warn(`Unregistered endpoint (src/api/endpoints.ts): ${endpoint}`);
@@ -124,83 +135,51 @@ export class BaseApiClient {
 
     logger.debug(`📄 Making API call to: ${fullUrl}`);
 
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch(fullUrl, {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            "Accept-Encoding": "gzip, deflate, br",
-            "X-Requested-With": "XMLHttpRequest",
-            "Cache-Control": "public, max-age=300",
-          },
-          signal: AbortSignal.timeout(15000),
-        });
+    // One attempt only. Retrying is React Query's job (QueryProvider): a
+    // second retry loop here multiplied every failure, up to 12 requests per
+    // query, just when the backend was already struggling.
+    try {
+      const response = await fetch(fullUrl, {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        signal: AbortSignal.timeout(15000),
+      });
 
-        const duration = Date.now() - startTime;
-        monitoring.trackApiCall(endpoint, "GET", duration, response.status);
+      const duration = Date.now() - startTime;
+      monitoring.trackApiCall(endpoint, "GET", duration, response.status);
 
-        if (!response.ok) {
-          logger.error(`❌ API Error Details:`, {
+      if (!response.ok) {
+        throw Object.assign(
+          new Error(`HTTP ${response.status}: ${response.statusText}`),
+          {
             status: response.status,
             statusText: response.statusText,
-            url: response.url,
-            endpoint: endpoint,
-            fullUrl: fullUrl,
-            attempt: i + 1,
-            maxRetries: retries,
-          });
-
-          throw Object.assign(
-            new Error(`HTTP ${response.status}: ${response.statusText}`),
-            {
-              status: response.status,
-              statusText: response.statusText,
-            },
-          );
-        }
-
-        const rawData = await response.json();
-        logger.debug(`✅ API Success for ${endpoint}:`, {
-          status: response.status,
-          dataKeys: Object.keys(rawData || {}),
-        });
-
-        const validation = validator(rawData);
-
-        if (!validation.success) {
-          logger.error("❌ API validation failed:", validation.error);
-          throw new Error(
-            `Validation failed: ${JSON.stringify(validation.error)}`,
-          );
-        }
-
-        return validation.data!;
-      } catch (error) {
-        logger.error(`❌ API Request failed (attempt ${i + 1}/${retries}):`, {
-          endpoint,
-          error: error instanceof Error ? error.message : String(error),
-          fullUrl,
-        });
-
-        if (i === retries - 1) {
-          throw this.createUserFriendlyError(error, endpoint);
-        }
-
-        monitoring.trackEvent({
-          name: "api_retry",
-          properties: {
-            endpoint,
-            attempt: i + 1,
-            error: (error as Error).message,
           },
-        });
-
-        const backoffTime = Math.min(Math.pow(2, i) * 1000, 5000);
-        await new Promise((resolve) => setTimeout(resolve, backoffTime));
+        );
       }
+
+      const rawData = await response.json();
+      logger.debug(`✅ API Success for ${endpoint}:`, {
+        status: response.status,
+        dataKeys: Object.keys(rawData || {}),
+      });
+
+      const validation = validator(rawData);
+
+      if (!validation.success) {
+        logger.error("❌ API validation failed:", validation.error);
+        throw new Error(
+          `Validation failed: ${JSON.stringify(validation.error)}`,
+        );
+      }
+
+      return validation.data!;
+    } catch (error) {
+      throw this.createUserFriendlyError(error, endpoint);
     }
-    throw new Error("Max retries exceeded");
   }
 
   async get<T>(

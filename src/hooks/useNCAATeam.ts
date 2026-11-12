@@ -19,6 +19,5 @@ export const useNCAATeam = (
     queryFn: () => api.getNCAATourney(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

@@ -29,6 +29,5 @@ export const useStandings = (
     },
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

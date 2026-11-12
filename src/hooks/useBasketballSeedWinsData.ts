@@ -204,6 +204,5 @@ export const useBasketballSeedWinsData = (
     },
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 2,
   });
 };

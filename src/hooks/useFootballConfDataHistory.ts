@@ -27,6 +27,5 @@ export function useFootballConfDataHistory(season?: string) {
       );
     },
     ...queryCachePolicy("history"),
-    retry: 2,
   });
 }

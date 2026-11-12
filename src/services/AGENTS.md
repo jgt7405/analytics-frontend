@@ -2,7 +2,7 @@
 
 Browser-side clients for the backend, all going through `/api/proxy` (see `docs/data-flow.md`).
 
-- `shared-request.ts`: `BaseApiClient.request(endpoint, validator?)` — fetch, retries with backoff, error mapping to user-friendly messages, monitoring. Warns in the console when a path isn't in the endpoint list (`src/api/endpoints.ts`); the proxy rejects it anyway.
+- `shared-request.ts`: `BaseApiClient.request(endpoint, validator?)` — one fetch attempt (retries belong to React Query's default in `QueryProvider`: none on 4xx, up to 2 otherwise; don't set a numeric `retry` in a hook), error mapping to user-friendly messages, monitoring. Warns in the console when a path isn't in the endpoint list (`src/api/endpoints.ts`); the proxy rejects it anyway.
 - `basketball-api.ts` → `BasketballApiClient`; `football-api.ts` → `ApiClient extends BasketballApiClient` and the `api` singleton.
 - `api.ts`: re-exports for older imports. Import `api` from `@/services/api` in new code.
 

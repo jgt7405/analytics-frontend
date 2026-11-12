@@ -12,7 +12,6 @@ export const useFootballConfData = (season?: string, initialData?: FootballConfe
     initialDataUpdatedAt: initialData ? 0 : undefined,
     queryFn: () => api.getFootballConfData(season),
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
     refetchOnWindowFocus: false,
   });
 };

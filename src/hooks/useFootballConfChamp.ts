@@ -19,6 +19,5 @@ export const useFootballConfChamp = (
     queryFn: () => api.getFootballConfChamp(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

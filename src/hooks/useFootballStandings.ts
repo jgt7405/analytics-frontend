@@ -30,6 +30,5 @@ export const useFootballStandings = (
     },
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

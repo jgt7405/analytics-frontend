@@ -18,6 +18,5 @@ export const useSchedule = (
     queryFn: () => api.getSchedule(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

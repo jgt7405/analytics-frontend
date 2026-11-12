@@ -20,6 +20,5 @@ export const useFootballCFP = (
     queryFn: () => api.getCFP(conference, season),
     enabled: enabled && !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

@@ -18,6 +18,5 @@ export const useConferenceTourney = (
     queryFn: () => api.getConfTourney(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

@@ -77,7 +77,6 @@ export const useBasketballTeamData = (
     },
     enabled: !!teamName,
     ...queryCachePolicy("currentStandings"),
-    retry: 2,
   });
 
   const allScheduleQuery = useQuery<{ data: AllScheduleGame[] }, Error>({
@@ -90,7 +89,6 @@ export const useBasketballTeamData = (
       return response.json();
     },
     ...queryCachePolicy("currentStandings"),
-    retry: 2,
   });
 
   return {

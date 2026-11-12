@@ -12,6 +12,5 @@ export const useTWV = (conference: string, season?: string, initialData?: TWVApi
     queryFn: () => api.getTWV(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

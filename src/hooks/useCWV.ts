@@ -18,6 +18,5 @@ export const useCWV = (
     queryFn: () => api.getCWV(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

@@ -63,6 +63,5 @@ export const useFootballStandingsHistory = (
     },
     enabled: !!conference,
     ...queryCachePolicy("history"),
-    retry: 3,
   });
 };

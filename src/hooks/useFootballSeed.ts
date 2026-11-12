@@ -19,6 +19,5 @@ export const useFootballSeed = (
     queryFn: () => api.getFootballSeed(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

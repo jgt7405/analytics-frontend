@@ -88,6 +88,5 @@ export const useFootballTeam = (
     queryFn: () => api.getFootballTeam(teamName, season),
     enabled: !!teamName,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

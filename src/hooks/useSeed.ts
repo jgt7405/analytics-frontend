@@ -18,6 +18,5 @@ export const useSeed = (
     queryFn: () => api.getSeedData(conference, season),
     enabled: !!conference,
     ...queryCachePolicy("currentStandings"),
-    retry: 3,
   });
 };

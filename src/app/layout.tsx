@@ -1,4 +1,5 @@
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import ChunkErrorHandler from "@/components/common/ChunkErrorHandler";
 import PerformancePanel from "@/components/debug/PerformancePanel";
 import Header from "@/components/layout/Header";
 import { Providers } from "@/components/providers/Providers";
@@ -26,16 +27,6 @@ export const viewport: Viewport = {
     { color: "#0f172a", media: "(prefers-color-scheme: dark)" },
   ],
 };
-
-// Client component for chunk error handling
-function ChunkErrorHandler() {
-  if (typeof window !== "undefined") {
-    import("@/lib/chunk-error-handler").then(({ setupChunkErrorHandler }) => {
-      setupChunkErrorHandler();
-    });
-  }
-  return null;
-}
 
 export default function RootLayout({
   children,
