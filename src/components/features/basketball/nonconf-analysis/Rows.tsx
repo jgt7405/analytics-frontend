@@ -6,9 +6,21 @@ import TeamLogo from "@/components/ui/TeamLogo";
 import { logger } from "@/lib/logger";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { COLUMNS, conferenceTwv, twvColor, winPctColor } from "./data";
 import SectionCells from "./SectionCells";
 import type { ColorRanges, Conference, TableSizes, Team } from "./types";
+
+/** The name cell's content row, sized to the column so long names ellipsize. */
+function nameCellInner(colWidth: number, paddingLeft: number): CSSProperties {
+  return {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    width: colWidth - paddingLeft - 4,
+    overflow: "hidden",
+  };
+}
 
 interface ConferenceRowProps {
   row: Conference;
@@ -34,7 +46,7 @@ export function ConferenceRow({ row, isExpanded, onToggle, ranges, sizes }: Conf
           minWidth: expandColWidth,
           height: cellHeight,
           position: "sticky",
-          left: 0,
+          left: -1, // as in the header: covers the collapsed left border too
           zIndex: 21,
           overflow: "hidden",
           backgroundColor: "#ffffff",
@@ -56,7 +68,8 @@ export function ConferenceRow({ row, isExpanded, onToggle, ranges, sizes }: Conf
           minWidth: confColWidth,
           height: cellHeight,
           position: "sticky",
-          left: expandColWidth,
+          // 2px over the expand column, so no sliver of scrolled cells shows between them
+          left: expandColWidth - 2,
           zIndex: 21,
           overflow: "hidden",
           backgroundColor: "#ffffff",
@@ -69,40 +82,41 @@ export function ConferenceRow({ row, isExpanded, onToggle, ranges, sizes }: Conf
           textAlign: "left",
           verticalAlign: "middle",
           fontSize: isMobile ? "0.75rem" : "0.875rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
         }}
       >
-        {row.conf_logo_url && (
-          <Image
-            src={row.conf_logo_url}
-            alt={row.team_conf}
-            width={isMobile ? 24 : 32}
-            height={isMobile ? 16 : 20}
-            style={{
-              maxWidth: "100%",
-              height: "auto",
-              objectFit: "contain",
-              flexShrink: 0,
-            }}
-            onError={(e) => {
-              logger.warn(`Failed to load conference logo: ${row.conf_logo_url}`);
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        )}
-        {!isMobile && (
-          <span
-            style={{
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {row.team_conf}
-          </span>
-        )}
+        {/* Flex lives on this div, not the <td>: a display:flex cell stops
+            being a table cell, and Safari then doesn't keep it sticky. */}
+        <div style={nameCellInner(confColWidth, isMobile ? 4 : 8)}>
+          {row.conf_logo_url && (
+            <Image
+              src={row.conf_logo_url}
+              alt={row.team_conf}
+              width={isMobile ? 24 : 32}
+              height={isMobile ? 16 : 20}
+              style={{
+                maxWidth: "100%",
+                height: "auto",
+                objectFit: "contain",
+                flexShrink: 0,
+              }}
+              onError={(e) => {
+                logger.warn(`Failed to load conference logo: ${row.conf_logo_url}`);
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          )}
+          {!isMobile && (
+            <span
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {row.team_conf}
+            </span>
+          )}
+        </div>
       </td>
 
       {COLUMNS.map((column) => {
@@ -147,13 +161,13 @@ export function TeamRow({ team, ranges, sizes }: TeamRowProps) {
           minWidth: expandColWidth,
           height: cellHeight,
           position: "sticky",
-          left: 0,
+          left: -1, // as in the header: covers the collapsed left border too
           zIndex: 20,
           overflow: "hidden",
           backgroundColor: "#ffffff",
           border: "1px solid var(--border-color)",
           borderTop: "none",
-          borderRight: "2px solid var(--border-color)",
+          boxShadow: "inset -2px 0 0 0 var(--border-color)",
         }}
       ></td>
       <td
@@ -162,38 +176,38 @@ export function TeamRow({ team, ranges, sizes }: TeamRowProps) {
           minWidth: confColWidth,
           height: cellHeight,
           position: "sticky",
-          left: expandColWidth,
+          // 2px over the expand column, so no sliver of scrolled cells shows between them
+          left: expandColWidth - 2,
           zIndex: 20,
           overflow: "hidden",
           backgroundColor: "#ffffff",
           border: "1px solid var(--border-color)",
           borderTop: "none",
           borderLeft: "none",
-          borderRight: "2px solid var(--border-color)",
+          boxShadow: "inset -2px 0 0 0 var(--border-color)",
           paddingLeft: isMobile ? "4px" : "28px",
           paddingRight: "4px",
           textAlign: "left",
           verticalAlign: "middle",
           fontSize: isMobile ? "0.75rem" : "0.875rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
         }}
       >
-        {team.logo_url && (
-          <TeamLogo logoUrl={team.logo_url} teamName={team.team_name} size={isMobile ? 16 : 20} />
-        )}
-        {!isMobile && (
-          <span
-            style={{
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {team.team_name}
-          </span>
-        )}
+        <div style={nameCellInner(confColWidth, isMobile ? 4 : 28)}>
+          {team.logo_url && (
+            <TeamLogo logoUrl={team.logo_url} teamName={team.team_name} size={isMobile ? 16 : 20} />
+          )}
+          {!isMobile && (
+            <span
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {team.team_name}
+            </span>
+          )}
+        </div>
       </td>
 
       {COLUMNS.map((column) => {
