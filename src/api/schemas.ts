@@ -37,17 +37,6 @@ export const REQUEST_SCHEMAS = {
   "basketball.nextGameImpact": z.object({ conference, team_id: id }),
   "basketball.whatIfValidationCsv": conferenceAndSelections,
   "football.whatIf": conferenceAndSelections,
-  "football.whatIfExport": conferenceAndSelections.extend({
-    export_options: z
-      .object({
-        include_all_scenarios: z.boolean(),
-        num_scenarios: z.number().int().min(1).max(1000),
-        start_scenario: z.number().int().min(1),
-      })
-      .optional(),
-  }),
-  "football.whatIfStructuredCsv": conferenceAndSelections,
-  "football.whatIfDownload": conferenceAndSelections,
   "football.gameImpacts": z.object({
     conference,
     team_id: id,

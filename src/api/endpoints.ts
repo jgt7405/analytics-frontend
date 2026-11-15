@@ -217,9 +217,6 @@ export const ENDPOINTS = [
   get("bowlScoreboard", "football", ["football/bowl-scoreboard"], "/football/bowl-scoreboard", "live"),
 
   post("whatIf", "football", "football/whatif", 120 * S),
-  post("whatIfExport", "football", "football/whatif/export", 300 * S),
-  post("whatIfStructuredCsv", "football", "football/whatif/structured-csv", 120 * S),
-  post("whatIfDownload", "football", "football/whatif/download", 120 * S),
   post("gameImpacts", "football", "football/whatif/game-impacts", 240 * S),
 ] as const satisfies readonly Endpoint[];
 

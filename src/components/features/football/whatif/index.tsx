@@ -12,7 +12,6 @@ import { useFootballCFP } from "@/hooks/useFootballCFP";
 import { useFootballConfData } from "@/hooks/useFootballConfData";
 import { useFootballFutureGames } from "@/hooks/useFootballFutureGames";
 import {
-  fetchFootballWhatIfDownload,
   GameSelection,
   useFootballWhatIf,
   WhatIfResponse,
@@ -77,9 +76,7 @@ export default function FootballWhatIfContent() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
   const [isScreenshotMode, setIsScreenshotMode] = useState(false);
-  const [exportStatus, setExportStatus] = useState("");
   const [isDark, setIsDark] = useState(false);
-  const [isDownloadingCsv, setIsDownloadingCsv] = useState(false);
   const resultsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -202,40 +199,6 @@ export default function FootballWhatIfContent() {
   const handleOpenScreenshotModal = () => {
     setIsScreenshotMode(true);
     setIsScreenshotModalOpen(true);
-  };
-
-  const handleDownloadCsv = async () => {
-    setIsDownloadingCsv(true);
-    try {
-      const selections = Array.from(gameSelections.entries()).map(
-        ([gameId, winnerId]) => ({
-          game_id: gameId,
-          winner_team_id: winnerId,
-        })
-      );
-
-      const data = await fetchFootballWhatIfDownload(selectedConference, selections);
-      if (data.success) {
-        const blob = new Blob([data.csv_data], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = data.filename;
-        a.click();
-        URL.revokeObjectURL(url);
-        setExportStatus(`✓ Downloaded: ${data.filename}`);
-        setTimeout(() => setExportStatus(""), 5000);
-      } else {
-        throw new Error(data.error || "Failed to generate CSV");
-      }
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to download CSV";
-      setExportStatus(`✗ Error: ${message}`);
-      setTimeout(() => setExportStatus(""), 5000);
-    } finally {
-      setIsDownloadingCsv(false);
-    }
   };
 
   // Prepare data for the tables
@@ -445,9 +408,6 @@ export default function FootballWhatIfContent() {
             showAllCFPTeams={showAllCFPTeams}
             onToggleAllCFPTeams={() => setShowAllCFPTeams(!showAllCFPTeams)}
             selectedGamesWithDetails={selectedGamesWithDetails}
-            exportStatus={exportStatus}
-            onDownloadCsv={handleDownloadCsv}
-            isDownloadingCsv={isDownloadingCsv}
             onOpenScreenshotModal={handleOpenScreenshotModal}
           />
 

@@ -21,13 +21,6 @@ const BODIES: Record<string, unknown> = {
   "basketball.nextGameImpact": { conference: "Big 12", team_id: 7 },
   "basketball.whatIfValidationCsv": { conference: "Big 12", selections },
   "football.whatIf": { conference: "SEC", selections: [{ game_id: 5, winner_team_id: "12" }] },
-  "football.whatIfExport": {
-    conference: "SEC",
-    selections,
-    export_options: { include_all_scenarios: false, num_scenarios: 100, start_scenario: 1 },
-  },
-  "football.whatIfStructuredCsv": { conference: "SEC", selections },
-  "football.whatIfDownload": { conference: "SEC", selections },
   "football.gameImpacts": { conference: "SEC", team_id: 12, days: 7 },
 };
 const bodyFor = (segments: string[]) =>
