@@ -12,6 +12,7 @@ import {
   FootballStandingsApiResponse,
   FootballTeamsApiResponse,
   FootballTWVApiResponse,
+  FootballWhatIfAnalysisResponse,
 } from "@/types/football";
 import { BasketballApiClient } from "./basketball-api";
 import { logger } from "@/lib/logger";
@@ -240,6 +241,19 @@ export class ApiClient extends BasketballApiClient {
       data: data as FootballConferenceApiResponse,
       error: null,
     }));
+  }
+
+  async getFootballWhatIfAnalysis(
+    days: string,
+  ): Promise<FootballWhatIfAnalysisResponse> {
+    return this.request(
+      apiPath("football.whatIfAnalysis", {}, { days }),
+      (data) => ({
+        success: true,
+        data: data as FootballWhatIfAnalysisResponse,
+        error: null,
+      }),
+    );
   }
 
   async getFootballTeam(

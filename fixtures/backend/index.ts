@@ -43,6 +43,7 @@ import footballTeam from "./football.team.json";
 import footballTeams from "./football.teams.json";
 import footballTwv from "./football.twv.json";
 import footballWhatIf from "./football.whatIf.json";
+import footballWhatIfAnalysis from "./football.whatIfAnalysis.json";
 
 type Json = Record<string, unknown>;
 type Row = Record<string, unknown>;
@@ -76,6 +77,7 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   "football.teams": footballTeams,
   "football.twv": footballTwv,
   "football.whatIf": footballWhatIf,
+  "football.whatIfAnalysis": footballWhatIfAnalysis,
 };
 
 export type Scenario = "normal" | "empty" | "missingFields" | "preseason" | "archived";

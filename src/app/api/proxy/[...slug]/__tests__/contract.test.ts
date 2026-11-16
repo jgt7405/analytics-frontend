@@ -42,6 +42,7 @@ const QUERY_SAMPLE: Record<QueryParam, string> = {
   mode: "current",
   date: "2025-11-01",
   teams: "Duke%2CNorth+Carolina",
+  days: "30",
   next_only: "1",
   metric: "twv12",
   twv_weight: "50",

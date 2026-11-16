@@ -1,0 +1,59 @@
+{
+  "period": "30",
+  "timezone": "America/Chicago",
+  "logging_started": true,
+  "summary": {
+    "submissions": 148,
+    "unique_scenarios": 121,
+    "total_picks": 386,
+    "average_picks": 2.6,
+    "conferences": 9,
+    "first_submission": "2026-10-18T15:12:00Z",
+    "latest_submission": "2026-11-16T02:42:00Z"
+  },
+  "daily": [
+    { "date": "2026-11-10", "submissions": 12, "picks": 31 },
+    { "date": "2026-11-11", "submissions": 18, "picks": 42 },
+    { "date": "2026-11-12", "submissions": 9, "picks": 24 },
+    { "date": "2026-11-13", "submissions": 24, "picks": 67 },
+    { "date": "2026-11-14", "submissions": 31, "picks": 88 },
+    { "date": "2026-11-15", "submissions": 42, "picks": 105 },
+    { "date": "2026-11-16", "submissions": 12, "picks": 29 }
+  ],
+  "hourly": [
+    { "hour": 0, "submissions": 3 }, { "hour": 1, "submissions": 1 },
+    { "hour": 2, "submissions": 0 }, { "hour": 3, "submissions": 0 },
+    { "hour": 4, "submissions": 0 }, { "hour": 5, "submissions": 1 },
+    { "hour": 6, "submissions": 2 }, { "hour": 7, "submissions": 4 },
+    { "hour": 8, "submissions": 6 }, { "hour": 9, "submissions": 7 },
+    { "hour": 10, "submissions": 8 }, { "hour": 11, "submissions": 9 },
+    { "hour": 12, "submissions": 11 }, { "hour": 13, "submissions": 12 },
+    { "hour": 14, "submissions": 15 }, { "hour": 15, "submissions": 14 },
+    { "hour": 16, "submissions": 13 }, { "hour": 17, "submissions": 10 },
+    { "hour": 18, "submissions": 9 }, { "hour": 19, "submissions": 8 },
+    { "hour": 20, "submissions": 7 }, { "hour": 21, "submissions": 4 },
+    { "hour": 22, "submissions": 3 }, { "hour": 23, "submissions": 1 }
+  ],
+  "conferences": [
+    { "conference": "SEC", "submissions": 46, "picks": 128 },
+    { "conference": "Big Ten", "submissions": 34, "picks": 92 },
+    { "conference": "Big 12", "submissions": 25, "picks": 69 },
+    { "conference": "ACC", "submissions": 19, "picks": 47 },
+    { "conference": "All FBS", "submissions": 14, "picks": 31 },
+    { "conference": "Mountain West", "submissions": 10, "picks": 19 }
+  ],
+  "teams": [
+    { "team_id": "101", "team_name": "Georgia", "conference": "SEC", "picks": 37 },
+    { "team_id": "102", "team_name": "Ohio State", "conference": "Big Ten", "picks": 32 },
+    { "team_id": "103", "team_name": "Texas", "conference": "SEC", "picks": 28 },
+    { "team_id": "104", "team_name": "Oregon", "conference": "Big Ten", "picks": 24 },
+    { "team_id": "105", "team_name": "Alabama", "conference": "SEC", "picks": 21 },
+    { "team_id": "106", "team_name": "Clemson", "conference": "ACC", "picks": 18 }
+  ],
+  "recent": [
+    { "id": 148, "submitted_at": "2026-11-16T02:42:00+00", "conference": "SEC", "selection_count": 3, "result_source": "calculated", "calculation_ms": 2840 },
+    { "id": 147, "submitted_at": "2026-11-16T02:31:00+00", "conference": "Big Ten", "selection_count": 2, "result_source": "cache", "calculation_ms": null },
+    { "id": 146, "submitted_at": "2026-11-16T01:58:00+00", "conference": "Big 12", "selection_count": 5, "result_source": "calculated", "calculation_ms": 4110 },
+    { "id": 145, "submitted_at": "2026-11-16T01:44:00+00", "conference": "ACC", "selection_count": 1, "result_source": "calculated", "calculation_ms": 1760 }
+  ]
+}

@@ -93,5 +93,7 @@ export const queryKeys = {
     teams: (season: Season) => ["football", "teams", season] as const,
     twv: (conference: string, season: Season) =>
       ["football", "twv", conference, season] as const,
+    whatIfAnalysis: (days: string) =>
+      ["football", "what-if-analysis", days] as const,
   },
 };

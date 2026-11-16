@@ -28,6 +28,7 @@ export type QueryParam =
   | "mode"
   | "date"
   | "teams"
+  | "days"
   | "next_only"
   | "metric"
   | "twv_weight";
@@ -81,6 +82,7 @@ const QUERY_PATTERNS: Record<QueryParam, RegExp> = {
   mode: /^(season|current)$/,
   date: /^\d{4}-\d{2}-\d{2}$/,
   teams: /^[^<>{}\[\]\\/]{1,500}$/,
+  days: /^(7|30|90|365|all)$/,
   next_only: /^1$/,
   metric: /^(cfp|twv12)$/,
   twv_weight: /^(100|[1-9]?\d)$/,
@@ -213,6 +215,7 @@ export const ENDPOINTS = [
   get("futureGames", "football", ["football/future_games"], "/football/future_games", "live"),
   get("allFutureGames", "football", ["football/all_future_games"], "/football/all_future_games", "live"),
   get("seasonHighlights", "football", ["football/season_highlights"], "/football/season_highlights", "currentStandings"),
+  get("whatIfAnalysis", "football", ["football/whatif/analysis"], "/football/whatif/analysis", "live", { query: ["days"] }),
   get("bowlPicks", "football", ["football/bowl-picks"], "/football/bowl-picks", "live"),
   get("bowlScoreboard", "football", ["football/bowl-scoreboard"], "/football/bowl-scoreboard", "live"),
 

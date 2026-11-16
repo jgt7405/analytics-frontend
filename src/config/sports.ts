@@ -315,6 +315,14 @@ export const SPORTS: Record<Sport, SportConfig> = {
         sitemap: weekly(0.75),
       },
       {
+        slug: "whatifanalysis",
+        title: "Football What-If Scenario Analytics",
+        description:
+          "Analyze usage patterns for submitted college football what-if scenarios, including timing, conferences, and selected teams.",
+        archive: false,
+        indexed: false,
+      },
+      {
         slug: "seed",
         title: "Football Conference Seedings",
         description:
