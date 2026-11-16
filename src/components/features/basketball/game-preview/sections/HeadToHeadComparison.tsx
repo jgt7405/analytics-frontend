@@ -14,7 +14,8 @@ export function HeadToHeadComparison({
   homeMetrics,
   awayInfo,
   homeInfo,
-  winProb,
+  awayWinProb,
+  homeWinProb,
   neutralSite,
 }: {
   awayTeam: string;
@@ -23,12 +24,16 @@ export function HeadToHeadComparison({
   homeMetrics: ComputedMetrics;
   awayInfo: TeamInfo;
   homeInfo: TeamInfo;
-  winProb: number | null;
+  awayWinProb: number | null;
+  homeWinProb: number | null;
   neutralSite: boolean;
 }) {
-  const homeWinPct =
-    winProb !== null ? (winProb > 1 ? winProb : winProb * 100) : null;
-  const awayWinPct = homeWinPct !== null ? 100 - homeWinPct : null;
+  const homeWinPct = homeWinProb !== null
+    ? (homeWinProb > 1 ? homeWinProb : homeWinProb * 100)
+    : null;
+  const awayWinPct = awayWinProb !== null
+    ? (awayWinProb > 1 ? awayWinProb : awayWinProb * 100)
+    : null;
 
   const metrics: {
     label: string;

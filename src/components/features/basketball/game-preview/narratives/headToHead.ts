@@ -11,15 +11,16 @@ export function buildHeadToHeadNarrative(
   homeMetrics: ComputedMetrics,
   awayInfo: TeamInfo,
   homeInfo: TeamInfo,
-  winProb: number | null,
+  awayWinProb: number | null,
+  homeWinProb: number | null,
   isConferenceGame: boolean,
   neutralSite: boolean,
 ): string {
   const parts: string[] = [];
 
-  if (winProb !== null) {
-    const homeWinPct = winProb > 1 ? winProb : winProb * 100;
-    const awayWinPct = 100 - homeWinPct;
+  if (awayWinProb !== null && homeWinProb !== null) {
+    const homeWinPct = homeWinProb > 1 ? homeWinProb : homeWinProb * 100;
+    const awayWinPct = awayWinProb > 1 ? awayWinProb : awayWinProb * 100;
     const favorite = homeWinPct > awayWinPct ? homeTeam : awayTeam;
     const favPct = Math.round(Math.max(homeWinPct, awayWinPct));
     if (favPct >= 75) {

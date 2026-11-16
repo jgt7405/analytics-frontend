@@ -70,6 +70,9 @@ export interface UpcomingGame {
   away_team_color: string;
   is_conference_game: boolean;
   location: string;
+  home_win_prob: number | null;
+  away_win_prob: number | null;
+  /** @deprecated Home-side compatibility alias; use the explicit fields. */
   win_prob: number | null;
   label: string;
   is_next_game_for_both: boolean;

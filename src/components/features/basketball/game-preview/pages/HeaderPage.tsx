@@ -85,7 +85,8 @@ export default function HeaderPage({
           homeMetrics,
           awayTeamData.team_info,
           homeTeamData.team_info,
-          selectedGame.win_prob,
+          selectedGame.away_win_prob,
+          selectedGame.home_win_prob,
           selectedGame.is_conference_game,
           selectedGame.location === "Neutral",
         )}
@@ -97,7 +98,8 @@ export default function HeaderPage({
         homeMetrics={homeMetrics}
         awayInfo={awayTeamData.team_info}
         homeInfo={homeTeamData.team_info}
-        winProb={selectedGame.win_prob}
+        awayWinProb={selectedGame.away_win_prob}
+        homeWinProb={selectedGame.home_win_prob}
         neutralSite={selectedGame.location === "Neutral"}
       />
 
