@@ -23,7 +23,10 @@ function hourLabel(hour: number) {
 
 function localDateTime(value: string | null) {
   if (!value) return "—";
-  const date = new Date(value);
+  // PostgreSQL may serialize UTC offsets as `+00`; browsers require
+  // an ISO offset with minutes (`+00:00`) or `Z`.
+  const normalizedValue = value.replace(/([+-]\d{2})$/, "$1:00");
+  const date = new Date(normalizedValue);
   if (Number.isNaN(date.getTime())) return "—";
 
   try {
