@@ -23,13 +23,20 @@ function hourLabel(hour: number) {
 
 function localDateTime(value: string | null) {
   if (!value) return "—";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "America/Chicago",
-  }).format(new Date(value));
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: "America/Chicago",
+    }).format(date);
+  } catch {
+    return "—";
+  }
 }
 
 function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
