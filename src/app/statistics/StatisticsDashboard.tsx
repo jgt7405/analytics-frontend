@@ -19,6 +19,7 @@ const METRICS: Array<[Metric, string]> = [
 ];
 const SPORTS = [["all", "All pages"], ["basketball", "Basketball"], ["football", "Football"], ["other", "Other"]] as const;
 const SCOPES: Array<[Scope, string]> = [["current", "Current"], ["archive", "Archive"], ["all", "Both"]];
+const DETAIL_PERIODS = [["7", "7 days"], ["30", "30 days"], ["90", "90 days"], ["365", "1 year"], ["all", "All time"]] as const;
 const selectClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium dark:border-slate-600 dark:bg-slate-800";
 
 function keyForDate(date: Date, includeTime = false) {
@@ -64,11 +65,16 @@ function BarPanel({ title, rows, metric, count, unit }: { title: string; rows: S
   return <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h2><div className="mt-4 h-72"><BarChart data={data} options={options} /></div></section>;
 }
 
+function DetailTable({ title, rows }: { title: string; rows: Array<{ label: string; value: number; detail?: string | null }> }) {
+  return <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"><div className="border-b border-slate-200 px-3 py-2 dark:border-slate-700"><h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{title}</h2></div><div className="max-h-80 overflow-auto"><table className="w-full text-xs"><thead className="sticky top-0 bg-slate-50 text-slate-500 dark:bg-slate-800"><tr><th className="px-3 py-2 text-left font-semibold">Name</th><th className="px-3 py-2 text-right font-semibold">Count</th></tr></thead><tbody>{rows.map((row) => <tr key={`${row.label}-${row.detail ?? ""}`} className="border-t border-slate-100 dark:border-slate-800"><td className="max-w-56 truncate px-3 py-1.5 text-slate-700 dark:text-slate-200" title={row.label}>{row.label}{row.detail && <span className="ml-1 text-[10px] capitalize text-slate-400">{row.detail}</span>}</td><td className="px-3 py-1.5 text-right font-semibold tabular-nums text-slate-700 dark:text-slate-200">{row.value.toLocaleString()}</td></tr>)}{!rows.length && <tr><td colSpan={2} className="px-3 py-6 text-center text-slate-500">No data</td></tr>}</tbody></table></div></section>;
+}
+
 export default function StatisticsDashboard() {
   const [metric, setMetric] = useState<Metric>("views");
   const [sport, setSport] = useState("all");
-  const [scope, setScope] = useState<Scope>("current");
-  const { data, isLoading, error } = useSiteStatistics("all", sport, scope);
+  const [scope, setScope] = useState<Scope>("all");
+  const [detailPeriod, setDetailPeriod] = useState("30");
+  const { data, isLoading, error } = useSiteStatistics(detailPeriod, sport, scope);
   const comparison = useMemo(() => monthlyComparison(data?.charts?.monthly_24 ?? [], metric), [data, metric]);
   const comparisonData = { labels: comparison.current.map((point) => point.label), datasets: [{ label: "Last 12 months", data: comparison.current.map((point) => point.value), borderColor: "rgb(8, 145, 178)", backgroundColor: "rgba(8, 145, 178, 0.12)", tension: 0.25 }, { label: "Prior 12 months", data: comparison.prior.map((point) => point.value), borderColor: "rgb(100, 116, 139)", backgroundColor: "rgba(100, 116, 139, 0.08)", borderDash: [6, 5], tension: 0.25 }] };
   const lineOptions: ChartOptions<"line"> = { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { ticks: { maxRotation: 0 } } } };
@@ -83,6 +89,8 @@ export default function StatisticsDashboard() {
       <BarPanel title="Past 7 days" rows={data.charts.past_7_days} metric={metric} count={7} unit="day" />
       <BarPanel title="Past 30 days" rows={data.charts.past_30_days} metric={metric} count={30} unit="day" />
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Last 12 months vs prior 12 months</h2><div className="mt-4 h-80"><Line data={comparisonData} options={lineOptions} /></div></section>
+      <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Details</h2><select aria-label="Detail time period" value={detailPeriod} onChange={(event) => setDetailPeriod(event.target.value)} className={selectClass}>{DETAIL_PERIODS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
+      <div className="grid gap-3 lg:grid-cols-3"><DetailTable title="Pages" rows={data.pages.map((row) => ({ label: row.path, value: row.views, detail: row.sport }))} /><DetailTable title="Teams" rows={data.teams.map((row) => ({ label: row.team, value: row.views, detail: row.sport }))} /><DetailTable title="Conferences" rows={data.conferences.map((row) => ({ label: row.conference, value: row.selections }))} /></div>
     </>}
   </section></PageLayoutWrapper>;
 }
