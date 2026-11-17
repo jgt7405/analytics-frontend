@@ -44,6 +44,14 @@ export const REQUEST_SCHEMAS = {
     plan_only: z.boolean().optional(),
     game_ids: z.array(id).max(200).optional(),
   }),
+  "basketball.statisticsEvent": z.object({
+    event_type: z.enum(["page_view", "filter_change"]),
+    path: z.string().startsWith("/").max(240),
+    sport: z.enum(["basketball", "football"]).nullable().optional(),
+    page: z.string().max(80).nullable().optional(),
+    conference: z.string().max(120).nullable().optional(),
+    team: z.string().max(120).nullable().optional(),
+  }),
 } satisfies Partial<Record<EndpointKey, z.ZodTypeAny>>;
 
 /** Largest scatterplot CSV the chart page may upload. */

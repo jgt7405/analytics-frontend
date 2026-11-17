@@ -1,4 +1,5 @@
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import { PageTracker } from "@/components/analytics/PageTracker";
 import ChunkErrorHandler from "@/components/common/ChunkErrorHandler";
 import PerformancePanel from "@/components/debug/PerformancePanel";
 import Header from "@/components/layout/Header";
@@ -7,6 +8,7 @@ import { robotoCondensed } from "@/lib/fonts";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
+import { Suspense } from "react";
 import "./globals.css";
 import { baseMetadata } from "./metadata";
 
@@ -73,6 +75,9 @@ export default function RootLayout({
         <GoogleAnalytics />
         <ChunkErrorHandler />
         <Providers>
+          <Suspense fallback={null}>
+            <PageTracker />
+          </Suspense>
           <div className="main-content">
             <Header />
             <main className="-mt-6 min-h-screen" id="main-content" role="main">

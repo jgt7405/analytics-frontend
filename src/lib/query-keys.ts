@@ -55,6 +55,8 @@ export const queryKeys = {
     twv: (conference: string, season: Season) =>
       ["basketball", "twv", conference, season] as const,
     upcomingGames: () => ["basketball", "upcoming-games"] as const,
+    siteStatistics: (days: string) =>
+      ["basketball", "site-statistics", days] as const,
   },
   football: {
     all: ["football"] as const,

@@ -182,6 +182,7 @@ export const ENDPOINTS = [
   get("compositeRatings", "basketball", ["basketball/composite_ratings"], "/basketball/composite_ratings", "currentStandings"),
   get("compositeRatingsTimeline", "basketball", ["basketball/composite_ratings/timeline"], "/basketball/composite_ratings/timeline", "history", { query: ["teams"] }),
   get("seasonHighlights", "basketball", ["basketball/season_highlights"], "/basketball/season_highlights", "currentStandings"),
+  get("statisticsAnalysis", "basketball", ["statistics/analysis"], "/statistics/analysis", "live", { query: ["days"] }),
   // Chart page's "Download Team Schedule": the whole schedule table as a file.
   get("teamScheduleCsv", "basketball", ["basketball/team_schedule/csv"], "/basketball/team_schedule/csv", "currentStandings", { query: [], response: "csv" }),
 
@@ -190,6 +191,7 @@ export const ENDPOINTS = [
   post("nextGameImpact", "basketball", "basketball/whatif/next-game-impact", 120 * S),
   post("whatIfValidationCsv", "basketball", "basketball/whatif/validation-csv", 300 * S, { response: "csv" }),
   post("chartUpload", "basketball", "basketball/chart/upload", 300 * S, { body: "formData" }),
+  post("statisticsEvent", "basketball", "statistics/event", 10 * S),
 
   // --- Football -------------------------------------------------------------
   get("teams", "football", ["football_teams", "football/teams"], "/football_teams", "referenceData"),
