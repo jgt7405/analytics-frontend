@@ -8,6 +8,7 @@ export interface SiteStatisticsResponse {
     past_30_days: StatisticsBucket[];
     monthly_24: StatisticsBucket[];
   };
+  summary_windows: Record<string, number>;
   summary: {
     page_views: number;
     filter_changes: number;

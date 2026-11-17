@@ -50,6 +50,8 @@ const QUERY_SAMPLE: Record<QueryParam, string> = {
   scope: "current",
   dimension: "page",
   value: "%2Ffootball%2Fwins",
+  dimension2: "conference",
+  value2: "SEC",
   twv_weight: "50",
 };
 const ALL_QUERY = Object.keys(QUERY_SAMPLE) as QueryParam[];
