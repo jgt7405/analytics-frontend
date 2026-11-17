@@ -51,6 +51,8 @@ export const REQUEST_SCHEMAS = {
     page: z.string().max(80).nullable().optional(),
     conference: z.string().max(120).nullable().optional(),
     team: z.string().max(120).nullable().optional(),
+    visitor_id: z.string().uuid().optional(),
+    session_id: z.string().uuid().optional(),
   }),
 } satisfies Partial<Record<EndpointKey, z.ZodTypeAny>>;
 

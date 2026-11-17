@@ -10,6 +10,17 @@ export interface SiteStatisticsResponse {
     first_event: string | null;
     latest_event: string | null;
   };
+  visitors: {
+    unique_visitors: number;
+    new_visitors: number;
+    returning_visitors: number;
+  };
+  visitor_daily: Array<{
+    date: string;
+    unique_visitors: number;
+    new_visitors: number;
+    returning_visitors: number;
+  }>;
   daily: Array<{ date: string; page_views: number }>;
   page_series: Array<{
     date: string;
@@ -32,4 +43,6 @@ export interface SiteUsageEvent {
   page?: string | null;
   conference?: string | null;
   team?: string | null;
+  visitor_id?: string;
+  session_id?: string;
 }

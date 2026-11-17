@@ -22,7 +22,7 @@ const BODIES: Record<string, unknown> = {
   "basketball.whatIfValidationCsv": { conference: "Big 12", selections },
   "football.whatIf": { conference: "SEC", selections: [{ game_id: 5, winner_team_id: "12" }] },
   "football.gameImpacts": { conference: "SEC", team_id: 12, days: 7 },
-  "basketball.statisticsEvent": { event_type: "page_view", path: "/football/wins", sport: "football", page: "wins" },
+  "basketball.statisticsEvent": { event_type: "page_view", path: "/football/wins", sport: "football", page: "wins", visitor_id: "0f2d6e9a-2576-4b36-8846-81b4f94566a1", session_id: "65380de9-0e14-40dd-9228-018c832666d1" },
 };
 const bodyFor = (segments: string[]) =>
   ENDPOINTS.find((e) => e.method === "POST" && e.proxyPaths.includes(segments.join("/")))?.key;
