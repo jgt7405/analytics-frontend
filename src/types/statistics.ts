@@ -11,6 +11,13 @@ export interface SiteStatisticsResponse {
     latest_event: string | null;
   };
   daily: Array<{ date: string; page_views: number }>;
+  page_series: Array<{
+    date: string;
+    path: string;
+    sport: string | null;
+    page: string | null;
+    page_views: number;
+  }>;
   hourly: Array<{ hour: number; page_views: number }>;
   pages: Array<{ path: string; sport: string | null; page: string | null; views: number }>;
   conferences: Array<{ conference: string; selections: number }>;

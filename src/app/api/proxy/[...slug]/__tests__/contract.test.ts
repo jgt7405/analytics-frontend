@@ -22,6 +22,7 @@ const BODIES: Record<string, unknown> = {
   "basketball.whatIfValidationCsv": { conference: "Big 12", selections },
   "football.whatIf": { conference: "SEC", selections: [{ game_id: 5, winner_team_id: "12" }] },
   "football.gameImpacts": { conference: "SEC", team_id: 12, days: 7 },
+  "basketball.statisticsEvent": { event_type: "page_view", path: "/football/wins", sport: "football", page: "wins" },
 };
 const bodyFor = (segments: string[]) =>
   ENDPOINTS.find((e) => e.method === "POST" && e.proxyPaths.includes(segments.join("/")))?.key;
