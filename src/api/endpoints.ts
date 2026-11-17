@@ -33,6 +33,8 @@ export type QueryParam =
   | "metric"
   | "sport"
   | "scope"
+  | "dimension"
+  | "value"
   | "twv_weight";
 
 export interface Endpoint {
@@ -84,11 +86,13 @@ const QUERY_PATTERNS: Record<QueryParam, RegExp> = {
   mode: /^(season|current)$/,
   date: /^\d{4}-\d{2}-\d{2}$/,
   teams: /^[^<>{}\[\]\\/]{1,500}$/,
-  days: /^(7|30|90|365|all)$/,
+  days: /^(hour|24h|yesterday|7|30|90|365|all)$/,
   next_only: /^1$/,
   metric: /^(cfp|twv12)$/,
   sport: /^(all|basketball|football|other)$/,
   scope: /^(all|current|archive)$/,
+  dimension: /^(page|team|conference)$/,
+  value: /^(?!.*\.\.)[^<>{}\[\]]{1,240}$/,
   twv_weight: /^(100|[1-9]?\d)$/,
 };
 
@@ -186,7 +190,7 @@ export const ENDPOINTS = [
   get("compositeRatings", "basketball", ["basketball/composite_ratings"], "/basketball/composite_ratings", "currentStandings"),
   get("compositeRatingsTimeline", "basketball", ["basketball/composite_ratings/timeline"], "/basketball/composite_ratings/timeline", "history", { query: ["teams"] }),
   get("seasonHighlights", "basketball", ["basketball/season_highlights"], "/basketball/season_highlights", "currentStandings"),
-  get("statisticsAnalysis", "basketball", ["statistics/analysis"], "/statistics/analysis", "live", { query: ["days", "sport", "scope"] }),
+  get("statisticsAnalysis", "basketball", ["statistics/analysis"], "/statistics/analysis", "live", { query: ["days", "sport", "scope", "dimension", "value"] }),
   // Chart page's "Download Team Schedule": the whole schedule table as a file.
   get("teamScheduleCsv", "basketball", ["basketball/team_schedule/csv"], "/basketball/team_schedule/csv", "currentStandings", { query: [], response: "csv" }),
 
