@@ -1,5 +1,6 @@
 import {
   CategoryScale,
+  BarElement,
   Chart as ChartJS,
   Legend,
   LinearScale,
@@ -12,6 +13,7 @@ import { registerChartLookup } from "@/lib/export/desktop-layout-state";
 
 ChartJS.register(
   CategoryScale,
+  BarElement,
   LinearScale,
   PointElement,
   LineElement,

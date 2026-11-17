@@ -1,6 +1,13 @@
 export interface SiteStatisticsResponse {
   period: string;
   timezone: string;
+  filters: { sport: string; scope: string };
+  charts: {
+    past_hour: StatisticsBucket[];
+    past_7_days: StatisticsBucket[];
+    past_30_days: StatisticsBucket[];
+    monthly_24: StatisticsBucket[];
+  };
   summary: {
     page_views: number;
     filter_changes: number;
@@ -34,6 +41,13 @@ export interface SiteStatisticsResponse {
   conferences: Array<{ conference: string; selections: number }>;
   teams: Array<{ team: string; sport: string | null; views: number }>;
   sports: Array<{ sport: string; views: number }>;
+}
+
+export interface StatisticsBucket {
+  bucket: string;
+  views: number;
+  total_visitors: number;
+  unique_visitors: number;
 }
 
 export interface SiteUsageEvent {
