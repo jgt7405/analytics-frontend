@@ -256,7 +256,15 @@ export default function FootballHomeContent({ initialData }: { initialData?: Pla
                           ? "Current snapshot based on teams' results and ratings to date."
                           : "CFP projections based on 1,000 season simulations."}
                       </div>
-                      {committeeBasis ? (
+                      {committeeBasis && mode === "current" ? (
+                        <div style={{ marginTop: "6px" }}>
+                          Rank = where the CFP committee&apos;s latest ranking
+                          has each team, plus CFP TWV for games played since
+                          then (wins add, losses subtract). Head-to-head counts
+                          for those games. Change &quot;Ranked by&quot; to rank
+                          on our own formula instead.
+                        </div>
+                      ) : committeeBasis ? (
                         <div style={{ marginTop: "6px" }}>
                           Rank = each team&apos;s projected final standing:
                           where the CFP committee&apos;s latest ranking has it
