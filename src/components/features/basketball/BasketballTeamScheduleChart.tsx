@@ -145,6 +145,10 @@ export default function BasketballTeamScheduleChart({
           {schedule.map((game, index) => {
             const isNextGame = index === nextGameIndex;
             const opponentIsTbd = isTbdOpponent(game.opponent);
+            const opponentRank = game.opp_kp_rank || game.kenpom_rank;
+            const hasTeamPage = !opponentIsTbd
+              && Boolean(opponentRank)
+              && opponentRank !== 999;
             const scoreContent = formatScore(
               game.team_points,
               game.opp_points,
@@ -179,12 +183,12 @@ export default function BasketballTeamScheduleChart({
                 <td className="p-2">
                   <div
                     className={`flex items-center ${
-                      opponentIsTbd
-                        ? "cursor-default"
-                        : "cursor-pointer hover:text-blue-600"
+                      hasTeamPage
+                        ? "cursor-pointer hover:text-blue-600"
+                        : "cursor-default"
                     }`}
                     onClick={() => {
-                      if (!opponentIsTbd) navigateToTeam(game.opponent);
+                      if (hasTeamPage) navigateToTeam(game.opponent);
                     }}
                   >
                     <TeamLogo
@@ -193,15 +197,16 @@ export default function BasketballTeamScheduleChart({
                       }
                       teamName={game.opponent}
                       size={20}
+                      noLink={!hasTeamPage}
                     />
                   </div>
                 </td>
                 <td className="text-center p-2">
                   {opponentIsTbd
                     ? "TBD"
-                    : !game.opp_kp_rank && !game.kenpom_rank
+                    : !opponentRank
                     ? "Non D1"
-                    : formatRank(game.opp_kp_rank || game.kenpom_rank)}
+                    : formatRank(opponentRank)}
                 </td>
                 <td className="text-center p-2">
                   {formatProbability(game.team_win_prob)}

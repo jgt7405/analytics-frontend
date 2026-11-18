@@ -114,7 +114,10 @@ export default function FootballTeamScheduleChart({
           </tr>
         </thead>
         <tbody>
-          {schedule.map((game, index) => (
+          {schedule.map((game, index) => {
+            const opponentRank = game.opp_rnk || game.sagarin_rank;
+            const hasTeamPage = opponentRank !== 999;
+            return (
             <tr
               key={index}
               className={`border-b dark:border-slate-700 ${
@@ -141,8 +144,10 @@ export default function FootballTeamScheduleChart({
               </td>
               <td className="p-2">
                 <div
-                  className="flex items-center cursor-pointer hover:text-blue-600"
-                  onClick={() => navigateToTeam(game.opponent)}
+                  className={`flex items-center ${hasTeamPage ? "cursor-pointer hover:text-blue-600" : "cursor-default"}`}
+                  onClick={() => {
+                    if (hasTeamPage) navigateToTeam(game.opponent);
+                  }}
                 >
                   <TeamLogo
                     logoUrl={
@@ -150,11 +155,12 @@ export default function FootballTeamScheduleChart({
                     }
                     teamName={game.opponent}
                     size={20}
+                    noLink={!hasTeamPage}
                   />
                 </div>
               </td>
               <td className="text-center p-2 font-semibold tabular-nums">
-                {formatRank(game.opp_rnk || game.sagarin_rank)}
+                {formatRank(opponentRank)}
               </td>
               <td className="text-center p-2 font-semibold tabular-nums">
                 {formatProbability(game.team_win_prob)}
@@ -176,7 +182,8 @@ export default function FootballTeamScheduleChart({
                 </span>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

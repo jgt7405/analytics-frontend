@@ -116,13 +116,17 @@ export default function TeamSchedule({
 
           <div className="space-y-2">
             {groupedGames.groups[location].length > 0 ? (
-              groupedGames.groups[location].map((game, idx) => (
+              groupedGames.groups[location].map((game, idx) => {
+                const hasTeamPage = !isTbdOpponent(game.opponent)
+                  && Boolean(game.kenpom_rank)
+                  && game.kenpom_rank !== 999;
+                return (
                 <div
                   key={idx}
                   className={`flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800/60 transition-opacity ${
-                    isTbdOpponent(game.opponent)
-                      ? "cursor-default"
-                      : "cursor-pointer hover:opacity-80"
+                    hasTeamPage
+                      ? "cursor-pointer hover:opacity-80"
+                      : "cursor-default"
                   }`}
                   style={{
                     width: boxWidth,
@@ -130,7 +134,7 @@ export default function TeamSchedule({
                     border: `2px solid ${getBorderColor(game.status)}`,
                   }}
                   onClick={() => {
-                    if (!isTbdOpponent(game.opponent)) {
+                    if (hasTeamPage) {
                       navigateToTeam(game.opponent);
                     }
                   }}
@@ -142,12 +146,14 @@ export default function TeamSchedule({
                     }
                     teamName={game.opponent}
                     size={logoSize}
+                    noLink={!hasTeamPage}
                   />
                   <span className="text-xs text-gray-600 dark:text-gray-300 font-medium text-right">
                     {formatOpponentRank(game)}
                   </span>
                 </div>
-              ))
+                );
+              })
             ) : (
               <div
                 className="flex items-center justify-center text-xs text-gray-400"

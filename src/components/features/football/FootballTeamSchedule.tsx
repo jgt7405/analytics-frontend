@@ -141,6 +141,7 @@ export default function FootballTeamSchedule({
                       }
                       teamName={game.opponent}
                       size={logoSize}
+                      noLink={!isClickable}
                     />
                     <span className="text-xs text-gray-600 dark:text-gray-300 font-bold">
                       {formatRanking(game.sagarin_rank)}
