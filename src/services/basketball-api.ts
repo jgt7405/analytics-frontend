@@ -14,6 +14,7 @@ import {
   NCAATeamApiResponse,
   ScheduleApiResponse,
   StandingsApiResponse,
+  BasketballWhatIfAnalysisResponse,
 } from "@/types/basketball";
 import { BaseApiClient } from "./shared-request";
 import { logger } from "@/lib/logger";
@@ -90,6 +91,19 @@ export interface UnifiedConferenceDataResponse {
 }
 
 export class BasketballApiClient extends BaseApiClient {
+  async getBasketballWhatIfAnalysis(
+    days: string,
+  ): Promise<BasketballWhatIfAnalysisResponse> {
+    return this.request(
+      apiPath("basketball.whatIfAnalysis", {}, { days }),
+      (data) => ({
+        success: true,
+        data: data as BasketballWhatIfAnalysisResponse,
+        error: null,
+      }),
+    );
+  }
+
   async getStandings(
     conference: string,
     season?: string,

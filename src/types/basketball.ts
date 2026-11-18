@@ -712,3 +712,35 @@ export interface BasketballCompositeRatingsTimelineResponse {
   points: Array<{ date: string; team_name: string; ratings: Record<string, number | null> }>;
   error?: string;
 }
+
+export interface BasketballWhatIfAnalysisResponse {
+  period: string;
+  timezone: string;
+  logging_started: boolean;
+  summary: {
+    submissions: number;
+    unique_scenarios: number;
+    total_picks: number;
+    average_picks: number;
+    conferences: number;
+    first_submission: string | null;
+    latest_submission: string | null;
+  };
+  daily: Array<{ date: string; submissions: number; picks: number }>;
+  hourly: Array<{ hour: number; submissions: number }>;
+  conferences: Array<{ conference: string; submissions: number; picks: number }>;
+  teams: Array<{
+    team_id: string;
+    team_name: string;
+    conference: string | null;
+    picks: number;
+  }>;
+  recent: Array<{
+    id: number;
+    submitted_at: string;
+    conference: string;
+    selection_count: number;
+    result_source: "calculated" | "cache";
+    calculation_ms: number | null;
+  }>;
+}

@@ -1,0 +1,50 @@
+{
+  "period": "30",
+  "timezone": "America/Chicago",
+  "logging_started": true,
+  "summary": {
+    "submissions": 84,
+    "unique_scenarios": 69,
+    "total_picks": 211,
+    "average_picks": 2.5,
+    "conferences": 7,
+    "first_submission": "2026-10-21T15:12:00Z",
+    "latest_submission": "2026-11-17T02:42:00Z"
+  },
+  "daily": [
+    { "date": "2026-11-14", "submissions": 18, "picks": 45 },
+    { "date": "2026-11-15", "submissions": 27, "picks": 71 },
+    { "date": "2026-11-16", "submissions": 23, "picks": 58 },
+    { "date": "2026-11-17", "submissions": 16, "picks": 37 }
+  ],
+  "hourly": [
+    { "hour": 0, "submissions": 2 }, { "hour": 1, "submissions": 1 },
+    { "hour": 2, "submissions": 0 }, { "hour": 3, "submissions": 0 },
+    { "hour": 4, "submissions": 0 }, { "hour": 5, "submissions": 1 },
+    { "hour": 6, "submissions": 2 }, { "hour": 7, "submissions": 3 },
+    { "hour": 8, "submissions": 4 }, { "hour": 9, "submissions": 5 },
+    { "hour": 10, "submissions": 6 }, { "hour": 11, "submissions": 7 },
+    { "hour": 12, "submissions": 8 }, { "hour": 13, "submissions": 9 },
+    { "hour": 14, "submissions": 8 }, { "hour": 15, "submissions": 7 },
+    { "hour": 16, "submissions": 6 }, { "hour": 17, "submissions": 5 },
+    { "hour": 18, "submissions": 4 }, { "hour": 19, "submissions": 3 },
+    { "hour": 20, "submissions": 2 }, { "hour": 21, "submissions": 1 },
+    { "hour": 22, "submissions": 0 }, { "hour": 23, "submissions": 0 }
+  ],
+  "conferences": [
+    { "conference": "Big Ten", "submissions": 28, "picks": 74 },
+    { "conference": "SEC", "submissions": 22, "picks": 59 },
+    { "conference": "ACC", "submissions": 18, "picks": 43 },
+    { "conference": "Big 12", "submissions": 16, "picks": 35 }
+  ],
+  "teams": [
+    { "team_id": "102", "team_name": "Illinois", "conference": "Big Ten", "picks": 24 },
+    { "team_id": "97", "team_name": "Michigan State", "conference": "Big Ten", "picks": 21 },
+    { "team_id": "5", "team_name": "Duke", "conference": "ACC", "picks": 18 },
+    { "team_id": "11", "team_name": "Florida", "conference": "SEC", "picks": 16 }
+  ],
+  "recent": [
+    { "id": 84, "submitted_at": "2026-11-17T02:42:00+00", "conference": "Big Ten", "selection_count": 3, "result_source": "calculated", "calculation_ms": 2840 },
+    { "id": 83, "submitted_at": "2026-11-17T02:31:00+00", "conference": "SEC", "selection_count": 2, "result_source": "cache", "calculation_ms": null }
+  ]
+}

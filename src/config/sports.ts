@@ -184,6 +184,14 @@ export const SPORTS: Record<Sport, SportConfig> = {
         sitemap: weekly(0.75),
       },
       {
+        slug: "whatifanalysis",
+        title: "Basketball What-If Scenario Analytics",
+        description:
+          "Analyze usage patterns for submitted college basketball what-if scenarios, including timing, conferences, and selected teams.",
+        archive: false,
+        indexed: false,
+      },
+      {
         slug: "season-info",
         title: "College Basketball Season Info",
         description:

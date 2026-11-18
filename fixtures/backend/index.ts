@@ -32,6 +32,7 @@ import basketballTeam from "./basketball.team.json";
 import basketballTeams from "./basketball.teams.json";
 import basketballUpcomingGames from "./basketball.upcomingGames.json";
 import basketballWhatIfBaseline from "./basketball.whatIfBaseline.json";
+import basketballWhatIfAnalysis from "./basketball.whatIfAnalysis.json";
 import footballConfSchedule from "./football.confSchedule.json";
 import footballConferenceData from "./football.conferenceData.json";
 import footballConferenceDataHistory from "./football.conferenceDataHistory.json";
@@ -66,6 +67,7 @@ export const FIXTURES: Partial<Record<EndpointKey, Json>> = {
   // checks only need one to land (WhatIfTeamSummary renders after it).
   "basketball.whatIf": basketballWhatIfBaseline,
   "basketball.whatIfBaseline": basketballWhatIfBaseline,
+  "basketball.whatIfAnalysis": basketballWhatIfAnalysis,
   "football.confSchedule": footballConfSchedule,
   "football.conferenceData": footballConferenceData,
   "football.conferenceDataHistory": footballConferenceDataHistory,
