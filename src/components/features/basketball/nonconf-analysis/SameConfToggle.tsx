@@ -1,6 +1,8 @@
 "use client";
 
-// Include / Exclude control above the non-conference table: whether games
+import { useId } from "react";
+
+// Include / Exclude control above each non-conference table: whether games
 // between two teams of the same conference are counted. The active option is
 // shaded in the site's teal with white text, the other plain gray.
 
@@ -15,14 +17,16 @@ interface SameConfToggleProps {
 }
 
 export default function SameConfToggle({ includeSameConf, onChange }: SameConfToggleProps) {
+  // Unique per instance: the page has one control above each table
+  const labelId = useId();
   return (
     <div
       role="group"
-      aria-labelledby="same-conf-games-label"
+      aria-labelledby={labelId}
       // Label text matches the explainer under the table (text-xs gray)
       className="mb-3 flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
     >
-      <span id="same-conf-games-label">Games vs Same Conference Opponents:</span>
+      <span id={labelId}>Games vs Same Conference Opponents:</span>
       <div className="inline-flex overflow-hidden rounded border border-solid border-gray-300 bg-white text-xs dark:border-slate-600 dark:bg-slate-800">
         {OPTIONS.map(([label, value]) => {
           const active = includeSameConf === value;

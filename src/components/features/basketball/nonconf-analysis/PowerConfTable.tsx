@@ -4,11 +4,16 @@
 // conference's record, win %, expected win % and TWV against each power
 // conference and against all of them combined, expandable to its teams,
 // sortable by any column. Power conferences are rows too, so they can be
-// compared with each other (their own column is always a dash). Uses the
-// non-conference analysis data's `vs_power` breakdowns (data.ts).
+// compared with each other. Like the table above, games between two teams of
+// the same conference are left out unless the Include option is chosen (then
+// a power conference's own column fills in). Uses the non-conference
+// analysis data's `vs_power` breakdowns (data.ts).
 
 import TableActionButtons from "@/components/common/TableActionButtons";
-import { useBasketballConfData } from "@/hooks/useBasketballConfData";
+import {
+  useBasketballConfData,
+  useBasketballNonconfWithSameConf,
+} from "@/hooks/useBasketballConfData";
 import { useResponsive } from "@/hooks/useResponsive";
 import { logger } from "@/lib/logger";
 import Image from "next/image";
@@ -25,34 +30,54 @@ import {
 import HeaderRows, { type HeaderGroup } from "./HeaderRows";
 import { CARD_CLASS } from "./index";
 import { ConferenceRow, TeamRow } from "./Rows";
-import type { BasketballConfDataResponseWithNonconf, SortOrder, TableSizes } from "./types";
+import SameConfToggle from "./SameConfToggle";
+import type {
+  BasketballConfDataResponseWithNonconf,
+  NonconfResponse,
+  SortOrder,
+  TableSizes,
+} from "./types";
 
 interface PowerConfTableProps {
   /** Conferences to show (the page's top-12 / all filter); all when omitted. */
   conferences?: readonly string[];
+  /** Count games between two teams of the same conference (left out by default). */
+  includeSameConf?: boolean;
 }
 
-function PowerConfTable({ conferences }: PowerConfTableProps) {
+function PowerConfTable({ conferences, includeSameConf = false }: PowerConfTableProps) {
   const { isMobile } = useResponsive();
   const { data } = useBasketballConfData();
+  const withSameConf = useBasketballNonconfWithSameConf(undefined, includeSameConf);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const { opps, rows, logos } = useMemo(() => {
-    const all = (data as BasketballConfDataResponseWithNonconf | undefined)?.nonconfData?.data ?? [];
+    const all =
+      (includeSameConf
+        ? (withSameConf.data as NonconfResponse | undefined)?.data
+        : (data as BasketballConfDataResponseWithNonconf | undefined)?.nonconfData?.data) ?? [];
     const shown = conferences ? new Set(conferences) : undefined;
     return {
       opps: powerConferences(all),
       rows: all.filter((row) => !shown || shown.has(row.team_conf)),
       logos: new Map(all.map((row) => [row.team_conf, row.conf_logo_url])),
     };
-  }, [data, conferences]);
+  }, [data, withSameConf.data, includeSameConf, conferences]);
 
   // One column group per power conference, then the total against all of them
   const columns = useMemo(() => [...opps, POWER_TOTAL], [opps]);
   const ranges = useMemo(() => computePowerRanges(rows, columns), [rows, columns]);
 
+  if (includeSameConf && withSameConf.isLoading) {
+    return <div className="p-8 text-center">Loading...</div>;
+  }
+  if (includeSameConf && withSameConf.error) {
+    return (
+      <div className="p-8 text-center text-red-600">Error: {withSameConf.error.message}</div>
+    );
+  }
   if (opps.length === 0 || rows.length === 0) {
     return (
       <div className="p-8 text-center text-gray-500 dark:text-gray-300">
@@ -190,11 +215,14 @@ interface PowerConfSectionProps extends PowerConfTableProps {
 /** The page section: title, table, explainer and export buttons. */
 export default function PowerConfSection({ conferences, titleClassName }: PowerConfSectionProps) {
   const { isMobile } = useResponsive();
+  // Off by default, as in the non-conference table above (its own setting)
+  const [includeSameConf, setIncludeSameConf] = useState(false);
   return (
     <div className="mb-8">
       <h3 className={titleClassName}>Performance vs Power 5 Conferences</h3>
+      <SameConfToggle includeSameConf={includeSameConf} onChange={setIncludeSameConf} />
       <div className="power-conf-table">
-        <MemoPowerConfTable conferences={conferences} />
+        <MemoPowerConfTable conferences={conferences} includeSameConf={includeSameConf} />
       </div>
       <div className="mt-6">
         <div className="flex flex-row items-start gap-4">
@@ -203,12 +231,17 @@ export default function PowerConfSection({ conferences, titleClassName }: PowerC
               <div>
                 Non-conference results of each conference&apos;s teams against each Power 5
                 conference, and against all five combined. A dash means no games against that
-                conference yet; a Power 5 conference&apos;s own column is always a dash. Expanded
-                conferences list only teams that have played a Power 5 opponent.
+                conference. Expanded conferences list only teams that have played a Power 5
+                opponent.
               </div>
               <div style={{ marginTop: "6px" }}>
                 Exp Win % and TWV 50 are measured against the #50 rated team, as above. For
                 conferences, TWV 50 is the average for the conference&apos;s teams.
+              </div>
+              <div style={{ marginTop: "6px" }}>
+                {includeSameConf
+                  ? "Includes games vs same-conference opponents, so a Power 5 conference's own column shows its non-conference games against its own members."
+                  : "Excludes games vs same-conference opponents, so a Power 5 conference's own column is a dash."}
               </div>
             </div>
           </div>
