@@ -1,6 +1,6 @@
 "use client";
 
-import { sendSiteUsageEvent } from "@/services/statistics-api";
+import type { SiteUsageEvent } from "@/types/statistics";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -34,6 +34,16 @@ function anonymousId(storage: Storage, key: string) {
   return value;
 }
 
+// The sender is loaded on first use rather than imported: it pulls in the
+// backend endpoint list, which would otherwise ship in the root layout and add
+// up to 3.4 kB of first-load JS to every page (the lightest pages went over
+// their bundle budgets). Events are sent after hydration either way.
+function sendEvent(event: SiteUsageEvent) {
+  void import("@/services/statistics-api")
+    .then(({ sendSiteUsageEvent }) => sendSiteUsageEvent(event))
+    .catch(() => undefined);
+}
+
 export function PageTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -56,7 +66,7 @@ export function PageTracker() {
     const visitorId = anonymousId(localStorage, "jthom-anonymous-visitor");
     const sessionId = anonymousId(sessionStorage, "jthom-anonymous-session");
 
-    sendSiteUsageEvent({
+    sendEvent({
       event_type: prior?.path === pathname ? "filter_change" : "page_view",
       path: pathname,
       sport,
