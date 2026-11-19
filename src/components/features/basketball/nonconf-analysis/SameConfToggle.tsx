@@ -19,7 +19,8 @@ export default function SameConfToggle({ includeSameConf, onChange }: SameConfTo
     <div
       role="group"
       aria-labelledby="same-conf-games-label"
-      className="mb-3 flex flex-wrap items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
+      // Label text matches the explainer under the table (text-xs gray)
+      className="mb-3 flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300"
     >
       <span id="same-conf-games-label">Show Games vs Same Conference Opponents:</span>
       <div className="inline-flex overflow-hidden rounded border border-solid border-gray-300 bg-white text-xs dark:border-slate-600 dark:bg-slate-800">
