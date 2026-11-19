@@ -1,9 +1,11 @@
 "use client";
 
 // Performance vs Power 5 Conferences (basketball conference data page): each
-// other conference's record, win %, expected win % and TWV against each
-// power conference, expandable to its teams, sortable by any column. Uses
-// the non-conference analysis data's `vs_power` breakdowns (data.ts).
+// conference's record, win %, expected win % and TWV against each power
+// conference and against all of them combined, expandable to its teams,
+// sortable by any column. Power conferences are rows too, so they can be
+// compared with each other (their own column is always a dash). Uses the
+// non-conference analysis data's `vs_power` breakdowns (data.ts).
 
 import TableActionButtons from "@/components/common/TableActionButtons";
 import { useBasketballConfData } from "@/hooks/useBasketballConfData";
@@ -13,6 +15,7 @@ import Image from "next/image";
 import { memo, useMemo, useState } from "react";
 import {
   computePowerRanges,
+  POWER_TOTAL,
   powerConferences,
   powerConferenceSections,
   powerTeamSections,
@@ -38,17 +41,17 @@ function PowerConfTable({ conferences }: PowerConfTableProps) {
 
   const { opps, rows, logos } = useMemo(() => {
     const all = (data as BasketballConfDataResponseWithNonconf | undefined)?.nonconfData?.data ?? [];
-    const powers = powerConferences(all);
-    const powerSet = new Set(powers);
     const shown = conferences ? new Set(conferences) : undefined;
     return {
-      opps: powers,
-      rows: all.filter((row) => !powerSet.has(row.team_conf) && (!shown || shown.has(row.team_conf))),
+      opps: powerConferences(all),
+      rows: all.filter((row) => !shown || shown.has(row.team_conf)),
       logos: new Map(all.map((row) => [row.team_conf, row.conf_logo_url])),
     };
   }, [data, conferences]);
 
-  const ranges = useMemo(() => computePowerRanges(rows, opps), [rows, opps]);
+  // One column group per power conference, then the total against all of them
+  const columns = useMemo(() => [...opps, POWER_TOTAL], [opps]);
+  const ranges = useMemo(() => computePowerRanges(rows, columns), [rows, columns]);
 
   if (opps.length === 0 || rows.length === 0) {
     return (
@@ -58,18 +61,18 @@ function PowerConfTable({ conferences }: PowerConfTableProps) {
     );
   }
 
-  // Narrower than the table above, so all five power conferences fit a
-  // desktop screen without scrolling sideways.
+  // Narrower than the table above, so all six column groups fit a desktop
+  // screen without scrolling sideways.
   const sizes: TableSizes = {
     isMobile,
     expandColWidth: 32,
-    confColWidth: isMobile ? 50 : 155,
-    dataColWidth: isMobile ? 50 : 52,
+    confColWidth: isMobile ? 50 : 140,
+    dataColWidth: isMobile ? 50 : 44,
     cellHeight: isMobile ? 32 : 36,
     headerHeight: isMobile ? 40 : 48,
   };
 
-  const groups: HeaderGroup[] = opps.map((opp) => {
+  const groups: HeaderGroup[] = opps.map((opp): HeaderGroup => {
     const logo = logos.get(opp);
     return {
       key: opp,
@@ -93,6 +96,7 @@ function PowerConfTable({ conferences }: PowerConfTableProps) {
       ),
     };
   });
+  groups.push({ key: POWER_TOTAL, title: "Total vs Power 5" });
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -150,7 +154,7 @@ function PowerConfTable({ conferences }: PowerConfTableProps) {
                   row={row}
                   isExpanded={isExpanded}
                   onToggle={() => toggle(row.team_conf)}
-                  sections={powerConferenceSections(row, opps, ranges)}
+                  sections={powerConferenceSections(row, columns, ranges)}
                   sizes={sizes}
                 />,
                 ...(isExpanded
@@ -163,7 +167,7 @@ function PowerConfTable({ conferences }: PowerConfTableProps) {
                       <TeamRow
                         key={`team-${row.team_conf}-${team.team_name}`}
                         team={team}
-                        sections={powerTeamSections(team, opps, ranges)}
+                        sections={powerTeamSections(team, columns, ranges)}
                         sizes={sizes}
                       />
                     ))
@@ -197,8 +201,9 @@ export default function PowerConfSection({ conferences, titleClassName }: PowerC
           <div className="flex-1 text-xs text-gray-600 dark:text-gray-300 max-w-none pr-4">
             <div className="power-conf-explainer" style={{ lineHeight: "1.3" }}>
               <div>
-                Non-conference results of each other conference&apos;s teams against each Power 5
-                conference. A dash means no games against that conference yet. Expanded
+                Non-conference results of each conference&apos;s teams against each Power 5
+                conference, and against all five combined. A dash means no games against that
+                conference yet; a Power 5 conference&apos;s own column is always a dash. Expanded
                 conferences list only teams that have played a Power 5 opponent.
               </div>
               <div style={{ marginTop: "6px" }}>

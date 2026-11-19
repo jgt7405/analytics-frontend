@@ -4,6 +4,7 @@ import {
   conferenceTwv,
   expectedWinPct,
   parseRecord,
+  POWER_TOTAL,
   powerConferences,
   powerConferenceSections,
   powerTeamSections,
@@ -136,6 +137,21 @@ describe("performance vs power conferences", () => {
     expect(big12.empty).toBe(true);
     expect(bigTen.record).toBe("1-0");
     expect(bigTen.twv).toBeCloseTo(0.6);
+  });
+
+  it("totals a row against all power conferences from its power_* figures", () => {
+    const columns = ["Big Ten", POWER_TOTAL];
+    const ranges = computePowerRanges([mvc], columns);
+    const [, total] = powerConferenceSections(mvc, columns, ranges);
+    expect(total.record).toBe("4-4");
+    expect(total.winPct).toBe(50);
+    expect(total.twv).toBeCloseTo(0.2); // 0.4 over two teams
+    expect(total.expectedTwv).toBeCloseTo(0.4);
+    const noPowerGames = { ...bradley, power_record: "0-0" };
+    expect(powerTeamSections(noPowerGames, columns, ranges)[1].empty).toBe(true);
+    expect(
+      sortPowerConferences([wcc, mvc], `${POWER_TOTAL}_twv_50`, "desc").map((r) => r.team_conf),
+    ).toEqual(["WCC", "Missouri Valley"]);
   });
 
   it("sorts by a power column with conferences that never played it last", () => {

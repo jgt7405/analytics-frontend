@@ -278,8 +278,25 @@ export function powerConferences(rows: readonly Conference[]): string[] {
   return [...names].sort((a, b) => a.localeCompare(b));
 }
 
-function entryFor(entries: VsPowerEntry[] | undefined, opp: string): VsPowerEntry | undefined {
-  return entries?.find((entry) => entry.opp_conf === opp);
+/** Column key for the total against all power conferences combined. */
+export const POWER_TOTAL = "all_power";
+
+type PowerRow = Pick<Team, "vs_power" | "power_record" | "power_win_pct" | "power_twv_50">;
+
+/** A row's results in one power column: one power conference from its
+ *  `vs_power` breakdown, or (POWER_TOTAL) its combined power_* figures.
+ *  Undefined when it played no one there. */
+function entryFor(row: PowerRow, opp: string): VsPowerEntry | undefined {
+  if (opp === POWER_TOTAL) {
+    if (row.power_record === "0-0") return undefined;
+    return {
+      opp_conf: POWER_TOTAL,
+      record: row.power_record,
+      win_pct: row.power_win_pct,
+      twv_50: row.power_twv_50,
+    };
+  }
+  return row.vs_power?.find((entry) => entry.opp_conf === opp);
 }
 
 /** A conference's TWV vs one power conference, per team (as conferenceTwv). */
@@ -292,7 +309,7 @@ interface RangePair {
   winPct: Range;
 }
 
-/** Color ranges per power conference, over conference rows and over team rows. */
+/** Color ranges per power column, over conference rows and over team rows. */
 export interface PowerRanges {
   conf: Record<string, RangePair>;
   team: Record<string, RangePair>;
@@ -312,13 +329,13 @@ export function computePowerRanges(rows: readonly Conference[], opps: readonly s
     const conf = blank();
     const team = blank();
     for (const row of rows) {
-      const entry = entryFor(row.vs_power, opp);
+      const entry = entryFor(row, opp);
       if (entry) {
         widen(conf.twv, vsPowerConfTwv(row, entry));
         widen(conf.winPct, entry.win_pct);
       }
       for (const t of row.teams ?? []) {
-        const teamEntry = entryFor(t.vs_power, opp);
+        const teamEntry = entryFor(t, opp);
         if (teamEntry) {
           widen(team.twv, teamEntry.twv_50);
           widen(team.winPct, teamEntry.win_pct);
@@ -373,7 +390,7 @@ export function powerConferenceSections(
   ranges: PowerRanges,
 ): SectionValues[] {
   return opps.map((opp) => {
-    const entry = entryFor(conf.vs_power, opp);
+    const entry = entryFor(conf, opp);
     return powerSection(opp, entry, entry ? vsPowerConfTwv(conf, entry) : 0, ranges.conf[opp]);
   });
 }
@@ -381,7 +398,7 @@ export function powerConferenceSections(
 /** A team row's group per power conference. */
 export function powerTeamSections(team: Team, opps: readonly string[], ranges: PowerRanges): SectionValues[] {
   return opps.map((opp) => {
-    const entry = entryFor(team.vs_power, opp);
+    const entry = entryFor(team, opp);
     return powerSection(opp, entry, entry?.twv_50 ?? 0, ranges.team[opp]);
   });
 }
@@ -393,9 +410,9 @@ function splitPowerField(field: string): { opp: string; metric: string } | undef
 }
 
 /** A row's value in a power column; -Infinity when it played no one there. */
-function powerSortValue(entries: VsPowerEntry[] | undefined, field: string, teamCount: number): number {
+function powerSortValue(row: PowerRow, field: string, teamCount: number): number {
   const parts = splitPowerField(field);
-  const entry = parts && entryFor(entries, parts.opp);
+  const entry = parts && entryFor(row, parts.opp);
   if (!parts || !entry) return -Infinity;
   switch (parts.metric) {
     case "record":
@@ -429,10 +446,10 @@ export function sortPowerConferences(
   order: SortOrder,
 ): Conference[] {
   if (!field) return sortBy(rows, (row) => conferenceTwv(row, "power"), order);
-  return sortBy(rows, (row) => powerSortValue(row.vs_power, field, row.teams?.length || 1), order);
+  return sortBy(rows, (row) => powerSortValue(row, field, row.teams?.length || 1), order);
 }
 
 export function sortPowerTeams(teams: readonly Team[], field: string | null, order: SortOrder): Team[] {
   if (!field) return sortBy(teams, (team) => team.power_twv_50, order);
-  return sortBy(teams, (team) => powerSortValue(team.vs_power, field, 1), order);
+  return sortBy(teams, (team) => powerSortValue(team, field, 1), order);
 }
