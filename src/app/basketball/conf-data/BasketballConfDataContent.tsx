@@ -5,7 +5,7 @@ import BballConfBidsHistoryChart from "@/components/features/basketball/BballCon
 import BballConfBoxWhiskerChart from "@/components/features/basketball/BballConfBoxWhiskerChart";
 import BballNonConfAnalysisTable from "@/components/features/basketball/nonconf-analysis";
 import PowerConfSection from "@/components/features/basketball/nonconf-analysis/PowerConfTable";
-import SameConfToggle from "@/components/features/basketball/nonconf-analysis/SameConfToggle";
+import TableOptions from "@/components/features/basketball/nonconf-analysis/TableOptions";
 import ConferenceBidsTable from "@/components/features/basketball/ConferenceBidsTable";
 import ConferenceTeamWinProbLanes, {
   type WinProbLane,
@@ -126,8 +126,10 @@ export default function BasketballConfDataContent({ initialData }: { initialData
   const { isMobile } = useResponsive();
   const [showAll, setShowAll] = useState(false);
   // Non-conference table: count games between two teams of the same
-  // conference? Off by default (the backend leaves them out).
+  // conference? Off by default (the backend leaves them out). Show the Exp
+  // Win % and TWV 50 columns? On by default.
   const [includeSameConf, setIncludeSameConf] = useState(false);
+  const [showTwv, setShowTwv] = useState(true);
 
   const {
     data: confResponse,
@@ -492,9 +494,11 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                 <h3 className={SECTION_TITLE_CLASS}>
                   Non-Conference Opponent Analysis
                 </h3>
-                <SameConfToggle
+                <TableOptions
                   includeSameConf={includeSameConf}
-                  onChange={setIncludeSameConf}
+                  onIncludeSameConfChange={setIncludeSameConf}
+                  showTwv={showTwv}
+                  onShowTwvChange={setShowTwv}
                 />
                 <div className="nonconf-analysis-table">
                   <Suspense
@@ -525,6 +529,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                         className="nonconf-analysis-table"
                         conferences={nonconfConferences}
                         includeSameConf={includeSameConf}
+                        showTwv={showTwv}
                       />
                     ) : (
                       <div className="p-8 text-center text-gray-500 dark:text-gray-300">
@@ -545,16 +550,20 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                           Power conferences include ACC, Big 12, Big East, Big
                           Ten, and SEC.
                         </div>
-                        <div style={{ marginTop: "6px" }}>
-                          Exp Win % reflects the projected win % of the #50
-                          rated team vs the schedule of that conference or team.
-                        </div>
-                        <div style={{ marginTop: "6px" }}>
-                          TWV 50 reflects # of wins above or below the
-                          projected wins for the #50 rated team vs that
-                          schedule. For conferences, this is the average for the
-                          conference&apos;s teams.
-                        </div>
+                        {showTwv && (
+                          <>
+                            <div style={{ marginTop: "6px" }}>
+                              Exp Win % reflects the projected win % of the #50
+                              rated team vs the schedule of that conference or team.
+                            </div>
+                            <div style={{ marginTop: "6px" }}>
+                              TWV 50 reflects # of wins above or below the
+                              projected wins for the #50 rated team vs that
+                              schedule. For conferences, this is the average for the
+                              conference&apos;s teams.
+                            </div>
+                          </>
+                        )}
                         <div style={{ marginTop: "6px" }}>
                           {includeSameConf
                             ? "Includes games vs same-conference opponents."

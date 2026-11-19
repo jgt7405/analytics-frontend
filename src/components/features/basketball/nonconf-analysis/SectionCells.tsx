@@ -1,8 +1,9 @@
 "use client";
 
 // One opponent group's four cells (Record, Win %, Exp Win %, TWV) in a
-// conference row or a team row. Team rows use smaller, grayer text. A group
-// with no games shows a dash in each cell.
+// conference row or a team row (or just Record and Win % when Exp Win % and
+// TWV are hidden). Team rows use smaller, grayer text. A group with no games
+// shows a dash in each cell.
 
 import type { CSSProperties } from "react";
 import { expectedWinPct } from "./data";
@@ -17,6 +18,7 @@ function formatTwv(twv: number): string {
 
 interface SectionCellsProps extends Omit<SectionValues, "key"> {
   isTeamRow: boolean;
+  showTwv: boolean;
   sizes: TableSizes;
 }
 
@@ -29,6 +31,7 @@ export default function SectionCells({
   twvColors,
   empty = false,
   isTeamRow,
+  showTwv,
   sizes,
 }: SectionCellsProps) {
   const { isMobile, dataColWidth, cellHeight } = sizes;
@@ -53,7 +56,7 @@ export default function SectionCells({
     };
     return (
       <>
-        {["record", "win", "exp", "twv"].map((cell) => (
+        {(showTwv ? ["record", "win", "exp", "twv"] : ["record", "win"]).map((cell) => (
           <td key={cell} style={blank}>
             –
           </td>
@@ -74,13 +77,15 @@ export default function SectionCells({
         {record}
       </td>
       <td style={{ ...base, verticalAlign: "middle", ...winPctColors }}>{Math.round(winPct)}%</td>
-      <td style={{ ...base, verticalAlign: "middle", backgroundColor: "#ffffff", color: "#111827" }}>
-        {Math.round(expectedWinPct(record, expectedTwv))}
-        %
-      </td>
-      <td style={{ ...base, verticalAlign: "middle", ...twvColors }}>
-        {formatTwv(twv)}
-      </td>
+      {showTwv && (
+        <>
+          <td style={{ ...base, verticalAlign: "middle", backgroundColor: "#ffffff", color: "#111827" }}>
+            {Math.round(expectedWinPct(record, expectedTwv))}
+            %
+          </td>
+          <td style={{ ...base, verticalAlign: "middle", ...twvColors }}>{formatTwv(twv)}</td>
+        </>
+      )}
     </>
   );
 }

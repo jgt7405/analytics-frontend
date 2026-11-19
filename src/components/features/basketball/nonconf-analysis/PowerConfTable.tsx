@@ -30,7 +30,7 @@ import {
 import HeaderRows, { type HeaderGroup } from "./HeaderRows";
 import { CARD_CLASS } from "./index";
 import { ConferenceRow, TeamRow } from "./Rows";
-import SameConfToggle from "./SameConfToggle";
+import TableOptions from "./TableOptions";
 import type {
   BasketballConfDataResponseWithNonconf,
   NonconfResponse,
@@ -43,9 +43,11 @@ interface PowerConfTableProps {
   conferences?: readonly string[];
   /** Count games between two teams of the same conference (left out by default). */
   includeSameConf?: boolean;
+  /** Show the Exp Win % and TWV 50 columns (default true). */
+  showTwv?: boolean;
 }
 
-function PowerConfTable({ conferences, includeSameConf = false }: PowerConfTableProps) {
+function PowerConfTable({ conferences, includeSameConf = false, showTwv = true }: PowerConfTableProps) {
   const { isMobile } = useResponsive();
   const { data } = useBasketballConfData();
   const withSameConf = useBasketballNonconfWithSameConf(undefined, includeSameConf);
@@ -166,6 +168,7 @@ function PowerConfTable({ conferences, includeSameConf = false }: PowerConfTable
             <HeaderRows
               sizes={sizes}
               groups={groups}
+              showTwv={showTwv}
               onSort={handleSort}
               sortIndicator={(field) => (sortField === field ? (sortOrder === "desc" ? " ↓" : " ↑") : null)}
             />
@@ -180,6 +183,7 @@ function PowerConfTable({ conferences, includeSameConf = false }: PowerConfTable
                   isExpanded={isExpanded}
                   onToggle={() => toggle(row.team_conf)}
                   sections={powerConferenceSections(row, columns, ranges)}
+                  showTwv={showTwv}
                   sizes={sizes}
                 />,
                 ...(isExpanded
@@ -193,6 +197,7 @@ function PowerConfTable({ conferences, includeSameConf = false }: PowerConfTable
                         key={`team-${row.team_conf}-${team.team_name}`}
                         team={team}
                         sections={powerTeamSections(team, columns, ranges)}
+                        showTwv={showTwv}
                         sizes={sizes}
                       />
                     ))
@@ -217,12 +222,22 @@ export default function PowerConfSection({ conferences, titleClassName }: PowerC
   const { isMobile } = useResponsive();
   // Off by default, as in the non-conference table above (its own setting)
   const [includeSameConf, setIncludeSameConf] = useState(false);
+  const [showTwv, setShowTwv] = useState(true);
   return (
     <div className="mb-8">
       <h3 className={titleClassName}>Performance vs Power 5 Conferences</h3>
-      <SameConfToggle includeSameConf={includeSameConf} onChange={setIncludeSameConf} />
+      <TableOptions
+        includeSameConf={includeSameConf}
+        onIncludeSameConfChange={setIncludeSameConf}
+        showTwv={showTwv}
+        onShowTwvChange={setShowTwv}
+      />
       <div className="power-conf-table">
-        <MemoPowerConfTable conferences={conferences} includeSameConf={includeSameConf} />
+        <MemoPowerConfTable
+          conferences={conferences}
+          includeSameConf={includeSameConf}
+          showTwv={showTwv}
+        />
       </div>
       <div className="mt-6">
         <div className="flex flex-row items-start gap-4">
@@ -234,10 +249,13 @@ export default function PowerConfSection({ conferences, titleClassName }: PowerC
                 conference. Expanded conferences list only teams that have played a Power 5
                 opponent.
               </div>
-              <div style={{ marginTop: "6px" }}>
-                Exp Win % and TWV 50 are measured against the #50 rated team, as above. For
-                conferences, TWV 50 is the average for the conference&apos;s teams.
-              </div>
+              {showTwv && (
+                <div style={{ marginTop: "6px" }}>
+                  Exp Win % is the projected win % of the #50 rated team vs the same games; TWV
+                  50 is the # of wins above or below that. For conferences, TWV 50 is the
+                  average for the conference&apos;s teams.
+                </div>
+              )}
               <div style={{ marginTop: "6px" }}>
                 {includeSameConf
                   ? "Includes games vs same-conference opponents, so a Power 5 conference's own column shows its non-conference games against its own members."

@@ -27,10 +27,12 @@ interface ConferenceRowProps {
   isExpanded: boolean;
   onToggle: () => void;
   sections: readonly SectionValues[];
+  /** Show the Exp Win % and TWV cells. */
+  showTwv: boolean;
   sizes: TableSizes;
 }
 
-export function ConferenceRow({ row, isExpanded, onToggle, sections, sizes }: ConferenceRowProps) {
+export function ConferenceRow({ row, isExpanded, onToggle, sections, showTwv, sizes }: ConferenceRowProps) {
   const { isMobile, expandColWidth, confColWidth, cellHeight } = sizes;
   return (
     <tr
@@ -120,7 +122,7 @@ export function ConferenceRow({ row, isExpanded, onToggle, sections, sizes }: Co
       </td>
 
       {sections.map(({ key, ...section }) => (
-        <SectionCells key={key} {...section} isTeamRow={false} sizes={sizes} />
+        <SectionCells key={key} {...section} isTeamRow={false} showTwv={showTwv} sizes={sizes} />
       ))}
     </tr>
   );
@@ -129,10 +131,11 @@ export function ConferenceRow({ row, isExpanded, onToggle, sections, sizes }: Co
 interface TeamRowProps {
   team: Pick<Team, "team_name" | "logo_url">;
   sections: readonly SectionValues[];
+  showTwv: boolean;
   sizes: TableSizes;
 }
 
-export function TeamRow({ team, sections, sizes }: TeamRowProps) {
+export function TeamRow({ team, sections, showTwv, sizes }: TeamRowProps) {
   const { isMobile, expandColWidth, confColWidth, cellHeight } = sizes;
   return (
     <tr
@@ -197,7 +200,7 @@ export function TeamRow({ team, sections, sizes }: TeamRowProps) {
       </td>
 
       {sections.map(({ key, ...section }) => (
-        <SectionCells key={key} {...section} isTeamRow sizes={sizes} />
+        <SectionCells key={key} {...section} isTeamRow showTwv={showTwv} sizes={sizes} />
       ))}
     </tr>
   );

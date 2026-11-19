@@ -21,6 +21,9 @@ const SUB_COLUMNS = [
   { suffix: "twv_50", key: "twv", label: "TWV 50" },
 ] as const;
 
+/** Sub-columns hidden when Exp Win % and TWV 50 are turned off. */
+const TWV_SUFFIXES: ReadonlySet<string> = new Set(["exp_win_pct", "twv_50"]);
+
 export interface HeaderGroup {
   key: string;
   title: ReactNode;
@@ -35,6 +38,8 @@ interface HeaderRowsProps {
   sizes: TableSizes;
   /** Column groups; a sub-column's sort field is `<group key>_<suffix>`. */
   groups?: readonly HeaderGroup[];
+  /** Show the Exp Win % and TWV 50 sub-columns (default true). */
+  showTwv?: boolean;
   onSort: (field: string) => void;
   sortIndicator: (field: string) => string | null;
 }
@@ -42,10 +47,12 @@ interface HeaderRowsProps {
 export default function HeaderRows({
   sizes,
   groups = DEFAULT_GROUPS,
+  showTwv = true,
   onSort,
   sortIndicator,
 }: HeaderRowsProps) {
   const { isMobile, expandColWidth, confColWidth, dataColWidth, headerHeight } = sizes;
+  const subColumns = showTwv ? SUB_COLUMNS : SUB_COLUMNS.filter((c) => !TWV_SUFFIXES.has(c.suffix));
 
   const groupStyle: CSSProperties = {
     position: "sticky",
@@ -129,7 +136,7 @@ export default function HeaderRows({
           {!isMobile && "Conference"}
         </th>
         {groups.map((group) => (
-          <th key={`${group.key}-col-1`} colSpan={4} style={groupStyle}>
+          <th key={`${group.key}-col-1`} colSpan={subColumns.length} style={groupStyle}>
             {group.title}
           </th>
         ))}
@@ -175,7 +182,7 @@ export default function HeaderRows({
           }}
         ></th>
         {groups.flatMap((group) =>
-          SUB_COLUMNS.map(({ suffix, key, label }) => {
+          subColumns.map(({ suffix, key, label }) => {
             const field = `${group.key}_${suffix}`;
             return (
               <th key={`${group.key}-${key}-2`} style={subStyle} onClick={() => onSort(field)}>

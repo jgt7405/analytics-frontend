@@ -28,12 +28,15 @@ interface BballNonConfAnalysisTableProps {
   /** Count non-conference games between two teams of the same conference
    *  (left out by default). */
   includeSameConf?: boolean;
+  /** Show the Exp Win % and TWV 50 columns (default true). */
+  showTwv?: boolean;
 }
 
 function BballNonConfAnalysisTable({
   className: _className = "",
   conferences,
   includeSameConf = false,
+  showTwv = true,
 }: BballNonConfAnalysisTableProps) {
   const { isMobile } = useResponsive();
   const confData = useBasketballConfData();
@@ -140,6 +143,7 @@ function BballNonConfAnalysisTable({
           <thead>
             <HeaderRows
               sizes={sizes}
+              showTwv={showTwv}
               onSort={(field) => handleSort(field as SortField)}
               sortIndicator={(field) => sortIndicator(field as SortField)}
             />
@@ -156,6 +160,7 @@ function BballNonConfAnalysisTable({
                   isExpanded={isExpanded}
                   onToggle={() => toggleConference(row.team_conf)}
                   sections={conferenceSections(row, ranges)}
+                  showTwv={showTwv}
                   sizes={sizes}
                 />,
                 ...(isExpanded && hasTeams
@@ -164,6 +169,7 @@ function BballNonConfAnalysisTable({
                         key={`team-${row.team_conf}-${team.team_name}`}
                         team={team}
                         sections={teamSections(team, ranges)}
+                        showTwv={showTwv}
                         sizes={sizes}
                       />
                     ))
