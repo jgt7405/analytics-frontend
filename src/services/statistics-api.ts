@@ -16,5 +16,10 @@ export function sendSiteUsageEvent(event: SiteUsageEvent): void {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(event),
     keepalive: true,
-  }).catch(() => undefined);
+  })
+    // Read the (tiny) reply: until its body is consumed, Chromium keeps the
+    // request open, so the page never reaches network idle (each smoke test
+    // then waited out its 10 s cap).
+    .then((response) => response.text())
+    .catch(() => undefined);
 }
