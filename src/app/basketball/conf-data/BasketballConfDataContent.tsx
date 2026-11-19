@@ -4,6 +4,7 @@ import TableActionButtons from "@/components/common/TableActionButtons";
 import BballConfBidsHistoryChart from "@/components/features/basketball/BballConfBidsHistoryChart";
 import BballConfBoxWhiskerChart from "@/components/features/basketball/BballConfBoxWhiskerChart";
 import BballNonConfAnalysisTable from "@/components/features/basketball/nonconf-analysis";
+import SameConfToggle from "@/components/features/basketball/nonconf-analysis/SameConfToggle";
 import ConferenceBidsTable from "@/components/features/basketball/ConferenceBidsTable";
 import ConferenceTeamWinProbLanes, {
   type WinProbLane,
@@ -490,24 +491,10 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                 <h3 className={SECTION_TITLE_CLASS}>
                   Non-Conference Opponent Analysis
                 </h3>
-                <label className="mb-3 inline-flex cursor-pointer select-none items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={includeSameConf}
-                    onClick={() => setIncludeSameConf(!includeSameConf)}
-                    className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 ${
-                      includeSameConf ? "bg-sky-600" : "bg-gray-300 dark:bg-slate-600"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                        includeSameConf ? "translate-x-[18px]" : "translate-x-0.5"
-                      }`}
-                    />
-                  </button>
-                  Include games vs same-conference opponents
-                </label>
+                <SameConfToggle
+                  includeSameConf={includeSameConf}
+                  onChange={setIncludeSameConf}
+                />
                 <div className="nonconf-analysis-table">
                   <Suspense
                     fallback={
@@ -569,8 +556,8 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                         </div>
                         <div style={{ marginTop: "6px" }}>
                           {includeSameConf
-                            ? "Includes non-conference games between two teams from the same conference."
-                            : "Excludes non-conference games between two teams from the same conference."}
+                            ? "Includes games vs same-conference opponents."
+                            : "Excludes games vs same-conference opponents."}
                         </div>
                       </div>
                     </div>
