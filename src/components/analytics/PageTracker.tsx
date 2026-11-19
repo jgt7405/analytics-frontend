@@ -1,6 +1,6 @@
 "use client";
 
-import type { SiteUsageEvent } from "@/types/statistics";
+import type { SiteUsageEvent, VisitContext } from "@/types/statistics";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -37,10 +37,11 @@ function anonymousId(storage: Storage, key: string) {
 // The sender is loaded on first use rather than imported: it pulls in the
 // backend endpoint list, which would otherwise ship in the root layout and add
 // up to 3.4 kB of first-load JS to every page (the lightest pages went over
-// their bundle budgets). Events are sent after hydration either way.
-function sendEvent(event: SiteUsageEvent) {
+// their bundle budgets). Events are sent after hydration either way. Working
+// out a visit's source happens in the sender too, for the same reason.
+function sendEvent(event: SiteUsageEvent, visit?: VisitContext) {
   void import("@/services/statistics-api")
-    .then(({ sendSiteUsageEvent }) => sendSiteUsageEvent(event))
+    .then(({ sendSiteUsageEvent }) => sendSiteUsageEvent(event, visit))
     .catch(() => undefined);
 }
 
@@ -66,8 +67,11 @@ export function PageTracker() {
     const visitorId = anonymousId(localStorage, "jthom-anonymous-visitor");
     const sessionId = anonymousId(sessionStorage, "jthom-anonymous-session");
 
+    const eventType = prior?.path === pathname ? "filter_change" : "page_view";
+    // The referrer and query are read now: by the time the sender loads, the
+    // visitor may have moved on.
     sendEvent({
-      event_type: prior?.path === pathname ? "filter_change" : "page_view",
+      event_type: eventType,
       path: pathname,
       sport,
       page,
@@ -75,7 +79,7 @@ export function PageTracker() {
       team,
       visitor_id: visitorId,
       session_id: sessionId,
-    });
+    }, eventType === "page_view" ? { referrer: document.referrer, host: window.location.hostname, search } : undefined);
     previous.current = { path: pathname, search };
   }, [pathname, search, searchParams]);
 
