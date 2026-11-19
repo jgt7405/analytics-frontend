@@ -61,6 +61,8 @@ function HeaderLogo({ src, name, isMobile }: { src: string; name: string; isMobi
         width={width}
         height={height}
         style={{ width, height, objectFit: "contain" }}
+        // The image export squares header logos to 24px; these keep their size
+        data-screenshot-keep-size="true"
         onLoad={(e) => {
           const img = e.currentTarget;
           if (img.naturalWidth && img.naturalHeight) setAspect(img.naturalWidth / img.naturalHeight);

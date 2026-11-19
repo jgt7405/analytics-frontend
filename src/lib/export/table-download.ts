@@ -273,7 +273,7 @@ export async function downloadTableImage({
     .screenshot-expand { max-height: none !important; overflow: visible !important; }
     .sticky { position: static !important; }
     [style*="position: sticky"] { position: static !important; }
-    th img { width: 24px !important; height: 24px !important; }
+    th img:not([data-screenshot-keep-size="true"]) { width: 24px !important; height: 24px !important; }
     canvas { display: block !important; }
     .chartjs-render-monitor { display: block !important; }
     [data-component-type="bball-seed-wins-and-probability"] { height: auto !important; }
