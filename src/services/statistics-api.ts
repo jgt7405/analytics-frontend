@@ -31,5 +31,10 @@ export function sendSiteUsageEvent(event: SiteUsageEvent, visit?: VisitContext):
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(withVisitSource(event, visit)),
     keepalive: true,
-  }).catch(() => undefined);
+  })
+    // Read the (tiny) reply: until its body is consumed, Chromium keeps the
+    // request open, so the page never reaches network idle (each smoke test
+    // then waited out its 10 s cap).
+    .then((response) => response.text())
+    .catch(() => undefined);
 }
