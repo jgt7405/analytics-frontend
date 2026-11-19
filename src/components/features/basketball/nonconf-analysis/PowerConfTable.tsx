@@ -245,9 +245,8 @@ export default function PowerConfSection({ conferences, titleClassName }: PowerC
             <div className="power-conf-explainer" style={{ lineHeight: "1.3" }}>
               <div>
                 Non-conference results of each conference&apos;s teams against each Power 5
-                conference, and against all five combined. A dash means no games against that
-                conference. Expanded conferences list only teams that have played a Power 5
-                opponent.
+                conference, and against all five combined. Expanded conferences list only teams
+                that have played a Power 5 opponent.
               </div>
               {showTwv && (
                 <div style={{ marginTop: "6px" }}>
@@ -259,7 +258,7 @@ export default function PowerConfSection({ conferences, titleClassName }: PowerC
               <div style={{ marginTop: "6px" }}>
                 {includeSameConf
                   ? "Includes games vs same-conference opponents, so a Power 5 conference's own column shows its non-conference games against its own members."
-                  : "Excludes games vs same-conference opponents, so a Power 5 conference's own column is a dash."}
+                  : "Excludes games vs same-conference opponents."}
               </div>
             </div>
           </div>
