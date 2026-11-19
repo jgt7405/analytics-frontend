@@ -545,6 +545,10 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                           schedule. For conferences, this is the average for the
                           conference&apos;s teams.
                         </div>
+                        <div style={{ marginTop: "6px" }}>
+                          Excludes non-conference games between two teams from
+                          the same conference.
+                        </div>
                       </div>
                     </div>
                     <div
