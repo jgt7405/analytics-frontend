@@ -1,4 +1,5 @@
-import { conferenceForTracking, entryAttribution } from "../PageTracker";
+import { entryAttribution } from "@/lib/visit-source";
+import { conferenceForTracking } from "../PageTracker";
 
 describe("conferenceForTracking", () => {
   it("counts Big 12 when a conference page first loads without a query", () => {

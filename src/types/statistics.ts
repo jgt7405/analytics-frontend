@@ -89,3 +89,11 @@ export interface SiteUsageEvent {
   utm_term?: string | null;
   utm_content?: string | null;
 }
+
+/** What the tracker saw when a page view happened; the sender turns the first
+ *  page view of a tab session into a visit's source (src/lib/visit-source.ts). */
+export interface VisitContext {
+  referrer: string;
+  host: string;
+  search: string;
+}

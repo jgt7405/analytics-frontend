@@ -1,6 +1,6 @@
 "use client";
 
-import { sendSiteUsageEvent } from "@/services/statistics-api";
+import type { SiteUsageEvent, VisitContext } from "@/types/statistics";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -26,44 +26,23 @@ export function conferenceForTracking(page: string, searchParams: URLSearchParam
     ?? (CONFERENCE_FILTER_PAGES.has(page) ? "Big 12" : null);
 }
 
-const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
-const ENTRY_KEY = "jthom-anonymous-session-entry";
-
-function bareHost(host: string) {
-  return host.toLowerCase().replace(/^www\./, "");
-}
-
-/**
- * Where this visit came from, sent with its first page view only. The
- * referrer keeps its scheme, host and path; its query string and fragment
- * (where tokens and personal details travel) never leave the browser. A
- * referrer from this site itself (a reload, or a link opened in a new tab)
- * is not a source.
- */
-export function entryAttribution(referrer: string, ownHost: string, searchParams: URLSearchParams) {
-  let source: string | null = null;
-  if (referrer) {
-    try {
-      const url = new URL(referrer);
-      if (bareHost(url.hostname) !== bareHost(ownHost)) {
-        source = `${url.protocol}//${url.host}${url.pathname}`.slice(0, 500);
-      }
-    } catch {
-      source = null;
-    }
-  }
-  const tags = Object.fromEntries(
-    UTM_KEYS.map((key) => [key, searchParams.get(key)?.trim().slice(0, 100) || null]),
-  ) as Record<(typeof UTM_KEYS)[number], string | null>;
-  return { referrer: source, ...tags };
-}
-
 function anonymousId(storage: Storage, key: string) {
   const existing = storage.getItem(key);
   if (existing) return existing;
   const value = crypto.randomUUID();
   storage.setItem(key, value);
   return value;
+}
+
+// The sender is loaded on first use rather than imported: it pulls in the
+// backend endpoint list, which would otherwise ship in the root layout and add
+// up to 3.4 kB of first-load JS to every page (the lightest pages went over
+// their bundle budgets). Events are sent after hydration either way. Working
+// out a visit's source happens in the sender too, for the same reason.
+function sendEvent(event: SiteUsageEvent, visit?: VisitContext) {
+  void import("@/services/statistics-api")
+    .then(({ sendSiteUsageEvent }) => sendSiteUsageEvent(event, visit))
+    .catch(() => undefined);
 }
 
 export function PageTracker() {
@@ -89,11 +68,9 @@ export function PageTracker() {
     const sessionId = anonymousId(sessionStorage, "jthom-anonymous-session");
 
     const eventType = prior?.path === pathname ? "filter_change" : "page_view";
-    // The first page view of a browser-tab session carries the visit's source.
-    const isEntry = eventType === "page_view" && !sessionStorage.getItem(ENTRY_KEY);
-    if (isEntry) sessionStorage.setItem(ENTRY_KEY, "1");
-
-    sendSiteUsageEvent({
+    // The referrer and query are read now: by the time the sender loads, the
+    // visitor may have moved on.
+    sendEvent({
       event_type: eventType,
       path: pathname,
       sport,
@@ -102,10 +79,7 @@ export function PageTracker() {
       team,
       visitor_id: visitorId,
       session_id: sessionId,
-      ...(isEntry
-        ? { entry: true, ...entryAttribution(document.referrer, window.location.hostname, searchParams) }
-        : {}),
-    });
+    }, eventType === "page_view" ? { referrer: document.referrer, host: window.location.hostname, search } : undefined);
     previous.current = { path: pathname, search };
   }, [pathname, search, searchParams]);
 
