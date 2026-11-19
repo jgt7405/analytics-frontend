@@ -38,6 +38,39 @@ import type {
   TableSizes,
 } from "./types";
 
+/**
+ * A power conference's logo in the column header, sized so every logo
+ * covers about the same area: a wide one (ACC) is drawn wider and shorter, a
+ * round one (SEC) narrower and taller, within a maximum width and height.
+ * Fitting them all to one box instead made Big 12 twice the size of ACC.
+ */
+function HeaderLogo({ src, name, isMobile }: { src: string; name: string; isMobile: boolean }) {
+  // Width / height of the image, known once it loads (assume 2:1 until then)
+  const [aspect, setAspect] = useState(2);
+  const area = isMobile ? 420 : 760;
+  const maxWidth = isMobile ? 40 : 54;
+  const maxHeight = isMobile ? 22 : 28;
+  const scale = Math.min(1, maxWidth / Math.sqrt(area * aspect), maxHeight / Math.sqrt(area / aspect));
+  const width = Math.round(Math.sqrt(area * aspect) * scale);
+  const height = Math.round(Math.sqrt(area / aspect) * scale);
+  return (
+    <span className="inline-flex items-center justify-center" title={name}>
+      <Image
+        src={src}
+        alt={name}
+        width={width}
+        height={height}
+        style={{ width, height, objectFit: "contain" }}
+        onLoad={(e) => {
+          const img = e.currentTarget;
+          if (img.naturalWidth && img.naturalHeight) setAspect(img.naturalWidth / img.naturalHeight);
+        }}
+        onError={() => logger.warn(`Failed to load conference logo: ${src}`)}
+      />
+    </span>
+  );
+}
+
 interface PowerConfTableProps {
   /** Conferences to show (the page's top-12 / all filter); all when omitted. */
   conferences?: readonly string[];
@@ -105,20 +138,7 @@ function PowerConfTable({ conferences, includeSameConf = false, showTwv = true }
       key: opp,
       // Logo only (its name is the alt text and hover title); the name
       // only when there is no logo
-      title: logo ? (
-        <span className="inline-flex items-center justify-center" title={opp}>
-          <Image
-            src={logo}
-            alt={opp}
-            width={isMobile ? 32 : 44}
-            height={isMobile ? 22 : 30}
-            style={{ width: "auto", height: isMobile ? 22 : 30, objectFit: "contain" }}
-            onError={() => logger.warn(`Failed to load conference logo: ${logo}`)}
-          />
-        </span>
-      ) : (
-        opp
-      ),
+      title: logo ? <HeaderLogo src={logo} name={opp} isMobile={isMobile} /> : opp,
     };
   });
   groups.push({ key: POWER_TOTAL, title: "Total vs Power 5" });
