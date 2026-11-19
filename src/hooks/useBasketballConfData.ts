@@ -123,3 +123,29 @@ export function useBasketballConfData(season?: string, initialData?: CombinedBas
     ...queryCachePolicy("currentStandings"),
   });
 }
+
+/** The non-conference analysis alone, with games between two teams of the
+ * same conference counted. The default view (those games left out) comes
+ * with useBasketballConfData; this runs only while `enabled`. */
+export function useBasketballNonconfWithSameConf(season?: string, enabled = true) {
+  return useQuery<BasketballNonconfAnalysisResponse>({
+    queryKey: queryKeys.basketball.nonconfAnalysis(season, true),
+    enabled,
+    queryFn: async () => {
+      const response = await fetch(
+        apiUrl(
+          "basketball.nonconfAnalysis",
+          { conference: "All_Teams" },
+          { season, include_same_conf: "1" },
+        ),
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch non-conference analysis data");
+      }
+      const nonconfData: BasketballNonconfAnalysisResponse = await response.json();
+      nonconfData.data.sort((a, b) => b.total_twv_50 - a.total_twv_50);
+      return stripNonD1ConfData({ nonconfData }).nonconfData;
+    },
+    ...queryCachePolicy("currentStandings"),
+  });
+}

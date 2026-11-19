@@ -37,7 +37,8 @@ export type QueryParam =
   | "value"
   | "dimension2"
   | "value2"
-  | "twv_weight";
+  | "twv_weight"
+  | "include_same_conf";
 
 export interface Endpoint {
   /** Unique id, `<sport>.<name>`. */
@@ -98,6 +99,7 @@ const QUERY_PATTERNS: Record<QueryParam, RegExp> = {
   dimension2: /^(page|team|conference)$/,
   value2: /^(?!.*\.\.)[^<>{}\[\]]{1,240}$/,
   twv_weight: /^(100|[1-9]?\d)$/,
+  include_same_conf: /^1$/,
 };
 
 export function isValidQueryValue(name: QueryParam, value: string): boolean {
@@ -185,7 +187,7 @@ export const ENDPOINTS = [
   get("allScheduleData", "basketball", ["basketball/all_schedule_data"], "/basketball/all_schedule_data", "currentStandings"),
   get("teamConfWinsHistory", "basketball", ["basketball/team/:team/history/conf_wins"], "/basketball/team/:team/history/conf_wins", "history", { params: team }),
   get("teamNcaaHistory", "basketball", ["basketball/ncaa/:team/history"], "/basketball/ncaa/:team/history", "history", { params: team }),
-  get("nonconfAnalysis", "basketball", ["basketball/nonconf_analysis/:conference"], "/basketball/nonconf_analysis/:conference", "currentStandings", { params: conference }),
+  get("nonconfAnalysis", "basketball", ["basketball/nonconf_analysis/:conference"], "/basketball/nonconf_analysis/:conference", "currentStandings", { params: conference, query: ["season", "include_same_conf"] }),
   get("confChampAnalysis", "basketball", ["basketball/conf_champ_analysis/:conference"], "/basketball/conf_champ_analysis/:conference", "currentStandings", { params: conference }),
   get("ncaaProjections", "basketball", ["basketball/ncaa-projections"], "/basketball/ncaa-projections", "currentStandings", { query: ["season", "mode"] }),
   // ?next_only=1: only games that are both teams' next game, all the site

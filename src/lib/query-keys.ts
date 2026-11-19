@@ -23,6 +23,8 @@ export const queryKeys = {
     confData: (season: Season) => ["basketball", "conf-data", season] as const,
     confDataHistory: (season: Season) =>
       ["basketball", "conf-data-history", season] as const,
+    nonconfAnalysis: (season: Season, includeSameConf: boolean) =>
+      ["basketball", "nonconf-analysis", season, includeSameConf] as const,
     confTourney: (conference: string, season: Season) =>
       ["basketball", "conf-tourney", conference, season] as const,
     confTourneyHistory: (conference: string, season: Season) =>

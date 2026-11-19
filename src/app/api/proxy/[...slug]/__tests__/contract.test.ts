@@ -53,6 +53,7 @@ const QUERY_SAMPLE: Record<QueryParam, string> = {
   dimension2: "conference",
   value2: "SEC",
   twv_weight: "50",
+  include_same_conf: "1",
 };
 const ALL_QUERY = Object.keys(QUERY_SAMPLE) as QueryParam[];
 

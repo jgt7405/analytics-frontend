@@ -123,6 +123,9 @@ export default function BasketballConfDataContent({ initialData }: { initialData
   const { trackEvent } = useMonitoring();
   const { isMobile } = useResponsive();
   const [showAll, setShowAll] = useState(false);
+  // Non-conference table: count games between two teams of the same
+  // conference? Off by default (the backend leaves them out).
+  const [includeSameConf, setIncludeSameConf] = useState(false);
 
   const {
     data: confResponse,
@@ -487,6 +490,24 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                 <h3 className={SECTION_TITLE_CLASS}>
                   Non-Conference Opponent Analysis
                 </h3>
+                <label className="mb-3 inline-flex cursor-pointer select-none items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={includeSameConf}
+                    onClick={() => setIncludeSameConf(!includeSameConf)}
+                    className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 ${
+                      includeSameConf ? "bg-sky-600" : "bg-gray-300 dark:bg-slate-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                        includeSameConf ? "translate-x-[18px]" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                  Include games vs same-conference opponents
+                </label>
                 <div className="nonconf-analysis-table">
                   <Suspense
                     fallback={
@@ -515,6 +536,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                       <BballNonConfAnalysisTable
                         className="nonconf-analysis-table"
                         conferences={nonconfConferences}
+                        includeSameConf={includeSameConf}
                       />
                     ) : (
                       <div className="p-8 text-center text-gray-500 dark:text-gray-300">
@@ -546,8 +568,9 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                           conference&apos;s teams.
                         </div>
                         <div style={{ marginTop: "6px" }}>
-                          Excludes non-conference games between two teams from
-                          the same conference.
+                          {includeSameConf
+                            ? "Includes non-conference games between two teams from the same conference."
+                            : "Excludes non-conference games between two teams from the same conference."}
                         </div>
                       </div>
                     </div>

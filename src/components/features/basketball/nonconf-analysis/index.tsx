@@ -5,13 +5,16 @@
 // non-power opponents, expandable to its teams, sortable by any column.
 // Calculations are in data.ts.
 
-import { useBasketballConfData } from "@/hooks/useBasketballConfData";
+import {
+  useBasketballConfData,
+  useBasketballNonconfWithSameConf,
+} from "@/hooks/useBasketballConfData";
 import { useResponsive } from "@/hooks/useResponsive";
 import { memo, useMemo, useState } from "react";
 import { computeColorRanges, sortConferences, sortTeams } from "./data";
 import HeaderRows from "./HeaderRows";
 import { ConferenceRow, TeamRow } from "./Rows";
-import type { BasketballConfDataResponseWithNonconf, SortField, SortOrder, TableSizes } from "./types";
+import type { BasketballConfDataResponseWithNonconf, NonconfResponse, SortField, SortOrder, TableSizes } from "./types";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
 // this bespoke file has no CSS module of its own.
@@ -22,25 +25,33 @@ interface BballNonConfAnalysisTableProps {
   className?: string;
   /** Conferences to show (the page's top-12 / all filter); all when omitted. */
   conferences?: readonly string[];
+  /** Count non-conference games between two teams of the same conference
+   *  (left out by default). */
+  includeSameConf?: boolean;
 }
 
 function BballNonConfAnalysisTable({
   className: _className = "",
   conferences,
+  includeSameConf = false,
 }: BballNonConfAnalysisTableProps) {
   const { isMobile } = useResponsive();
-  const { data, isLoading, error } = useBasketballConfData();
+  const confData = useBasketballConfData();
+  const withSameConf = useBasketballNonconfWithSameConf(undefined, includeSameConf);
+  const { isLoading, error } = includeSameConf ? withSameConf : confData;
   const [expandedConferences, setExpandedConferences] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("total_twv_50");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const tableData = useMemo(() => {
-    const response = data as BasketballConfDataResponseWithNonconf | undefined;
-    const rows = response?.nonconfData?.data || [];
+    const response = confData.data as BasketballConfDataResponseWithNonconf | undefined;
+    const sameConfResponse = withSameConf.data as NonconfResponse | undefined;
+    const rows =
+      (includeSameConf ? sameConfResponse?.data : response?.nonconfData?.data) || [];
     if (!conferences) return rows;
     const shown = new Set(conferences);
     return rows.filter((row) => shown.has(row.team_conf));
-  }, [data, conferences]);
+  }, [confData.data, withSameConf.data, includeSameConf, conferences]);
 
   const ranges = useMemo(() => computeColorRanges(tableData), [tableData]);
 
