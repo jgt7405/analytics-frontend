@@ -103,23 +103,21 @@ function PowerConfTable({ conferences, includeSameConf = false, showTwv = true }
     const logo = logos.get(opp);
     return {
       key: opp,
-      title: (
-        <span className="inline-flex items-center justify-center gap-1.5">
-          {logo && (
-            <Image
-              src={logo}
-              alt=""
-              width={isMobile ? 24 : 28}
-              height={isMobile ? 16 : 18}
-              style={{ height: "auto", objectFit: "contain" }}
-              onError={(e) => {
-                logger.warn(`Failed to load conference logo: ${logo}`);
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-          )}
-          {opp}
+      // Logo only (its name is the alt text and hover title); the name
+      // only when there is no logo
+      title: logo ? (
+        <span className="inline-flex items-center justify-center" title={opp}>
+          <Image
+            src={logo}
+            alt={opp}
+            width={isMobile ? 32 : 44}
+            height={isMobile ? 22 : 30}
+            style={{ width: "auto", height: isMobile ? 22 : 30, objectFit: "contain" }}
+            onError={() => logger.warn(`Failed to load conference logo: ${logo}`)}
+          />
         </span>
+      ) : (
+        opp
       ),
     };
   });
