@@ -4,19 +4,17 @@ import "@/lib/chartjs-setup";
 import { useMemo, useState } from "react";
 import type { ChartOptions } from "chart.js";
 import { Bar as BarChart, Line } from "react-chartjs-2";
-import Image from "next/image";
 import PageLayoutWrapper from "@/components/layout/PageLayoutWrapper";
 import { TableSkeleton } from "@/components/ui/LoadingSkeleton";
-import TeamLogo from "@/components/ui/TeamLogo";
 import type { Sport } from "@/config/seasons";
 import { useSiteStatistics } from "@/hooks/useSiteStatistics";
 import { conferenceLogoPath, storedTeamName } from "@/lib/display-names";
 import type { StatisticsBucket } from "@/types/statistics";
+import { DetailTable, type Selection } from "./DetailTable";
+import { TrafficSources } from "./TrafficSources";
 
 type Metric = "views" | "total_visitors" | "unique_visitors";
 type Scope = "current" | "archive" | "all";
-type Dimension = "page" | "team" | "conference";
-type Selection = { dimension: Dimension; value: string; label: string };
 
 const METRICS: Array<[Metric, string]> = [
   ["views", "Views"],
@@ -79,10 +77,6 @@ function BarPanel({ title, rows, metric, count, unit }: { title: string; rows: S
   return <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h2><div className="mt-4 h-72"><BarChart data={data} options={options} /></div></section>;
 }
 
-function DetailTable({ title, dimension, rows, selection, onSelect }: { title: string; dimension: Dimension; rows: Array<{ label: string; value: number; filterValue?: string; logoUrl?: string }>; selection: Selection | null; onSelect: (selection: Selection) => void }) {
-  return <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"><div className="border-b border-slate-200 px-3 py-2 dark:border-slate-700"><h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">{title}</h2></div><div className="max-h-80 overflow-auto"><table className="w-full text-xs"><thead className="sticky top-0 bg-slate-50 text-slate-500 dark:bg-slate-800"><tr><th className="px-3 py-2 text-left font-semibold">Name</th><th className="px-3 py-2 text-right font-semibold">Count</th></tr></thead><tbody>{rows.map((row) => { const filterValue = row.filterValue ?? row.label; const active = selection?.dimension === dimension && selection.value === filterValue; return <tr key={row.label} className={`border-t border-slate-100 dark:border-slate-800 ${active ? "bg-cyan-50 dark:bg-cyan-950/40" : "hover:bg-slate-50 dark:hover:bg-slate-800/60"}`}><td className="max-w-56 p-0"><button type="button" onClick={() => onSelect({ dimension, value: filterValue, label: row.label })} className="flex min-h-9 w-full items-center gap-2 px-3 py-1.5 text-left font-medium text-slate-700 dark:text-slate-200" title={`Show trends for ${row.label}`}>{row.logoUrl && (dimension === "team" ? <TeamLogo logoUrl={row.logoUrl} teamName={row.label} size={18} noLink showTooltip={false} /> : <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white"><Image src={row.logoUrl} alt={`${row.label} logo`} width={18} height={18} className="h-[18px] w-[18px] object-contain" onError={(event) => { event.currentTarget.src = "/images/conf_logos/default.png"; }} /></span>)}<span className="truncate">{row.label}</span></button></td><td className="px-3 py-1.5 text-right font-semibold tabular-nums text-slate-700 dark:text-slate-200">{row.value.toLocaleString()}</td></tr>; })}{!rows.length && <tr><td colSpan={2} className="px-3 py-6 text-center text-slate-500">No data</td></tr>}</tbody></table></div></section>;
-}
-
 export default function StatisticsDashboard() {
   const [metric, setMetric] = useState<Metric>("views");
   const [sport, setSport] = useState("all");
@@ -114,6 +108,7 @@ export default function StatisticsDashboard() {
     {data?.charts && chartSource?.charts && <>
       <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Details</h2>
       <div className="grid gap-2 lg:grid-cols-3"><DetailTable title="Pages" dimension="page" selection={pageFilter ? { dimension: "page", value: pageFilter, label: pageFilter } : null} onSelect={(next) => { setPageFilter(next.value); setSelection(null); }} rows={data.pages.map((row) => ({ label: row.path === "/basketball/team/*" ? "Basketball team pages" : row.path === "/football/team/*" ? "Football team pages" : row.path, filterValue: row.path, value: row.views }))} /><DetailTable title="Teams" dimension="team" selection={selection} onSelect={(next) => { setPageFilter(null); setSelection(next); }} rows={data.teams.map((row) => ({ label: row.team, value: row.views, logoUrl: teamLogoPath(row.team, row.sport) }))} /><DetailTable title={pageFilter ? `Conferences · ${pageFilter}` : "Conferences"} dimension="conference" selection={selection} onSelect={setSelection} rows={conferenceRows.map((row) => ({ label: row.conference, value: row.selections, logoUrl: conferenceLogoPath(row.conference) }))} /></div>
+      <TrafficSources data={pageFilter ? pageData : data} pageFilter={pageFilter} selection={selection} onSelect={setSelection} onSelectPage={(path) => { setPageFilter(path); setSelection(null); }} />
       <BarPanel title="Past hour" rows={chartSource.charts.past_hour} metric={metric} count={60} unit="minute" />
       <BarPanel title="Past 7 days" rows={chartSource.charts.past_7_days} metric={metric} count={7} unit="day" />
       <BarPanel title="Past 30 days" rows={chartSource.charts.past_30_days} metric={metric} count={30} unit="day" />

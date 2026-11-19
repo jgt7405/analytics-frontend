@@ -6,6 +6,7 @@ import {
   buildBackendPath,
   checkQuery,
   isValidParam,
+  isValidQueryValue,
   matchEndpoint,
 } from "../endpoints";
 
@@ -170,4 +171,17 @@ describe("checkQuery", () => {
     "rejects %s on standings",
     (query) => expect(checkQuery(standings, q(query))).toMatchObject({ ok: false }),
   );
+});
+
+describe("statistics traffic-source filters", () => {
+  it("accepts source and channel dimensions with host-name values", () => {
+    for (const name of ["dimension", "dimension2"] as const) {
+      expect(isValidQueryValue(name, "source")).toBe(true);
+      expect(isValidQueryValue(name, "channel")).toBe(true);
+      expect(isValidQueryValue(name, "ip")).toBe(false);
+    }
+    expect(isValidQueryValue("value", "reddit.com")).toBe(true);
+    expect(isValidQueryValue("value", "com.reddit.frontpage")).toBe(true);
+    expect(isValidQueryValue("value2", "Direct")).toBe(true);
+  });
 });

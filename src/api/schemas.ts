@@ -53,6 +53,14 @@ export const REQUEST_SCHEMAS = {
     team: z.string().max(120).nullable().optional(),
     visitor_id: z.string().uuid().optional(),
     session_id: z.string().uuid().optional(),
+    // Sent on the first page view of a visit only (PageTracker).
+    entry: z.boolean().optional(),
+    referrer: z.string().max(500).nullable().optional(),
+    utm_source: z.string().max(100).nullable().optional(),
+    utm_medium: z.string().max(100).nullable().optional(),
+    utm_campaign: z.string().max(100).nullable().optional(),
+    utm_term: z.string().max(100).nullable().optional(),
+    utm_content: z.string().max(100).nullable().optional(),
   }),
 } satisfies Partial<Record<EndpointKey, z.ZodTypeAny>>;
 

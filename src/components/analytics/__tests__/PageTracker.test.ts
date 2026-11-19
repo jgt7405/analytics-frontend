@@ -1,4 +1,4 @@
-import { conferenceForTracking } from "../PageTracker";
+import { conferenceForTracking, entryAttribution } from "../PageTracker";
 
 describe("conferenceForTracking", () => {
   it("counts Big 12 when a conference page first loads without a query", () => {
@@ -15,5 +15,33 @@ describe("conferenceForTracking", () => {
 
   it("does not assign Big 12 to pages without a conference filter", () => {
     expect(conferenceForTracking("home", new URLSearchParams())).toBeNull();
+  });
+});
+
+describe("entryAttribution", () => {
+  const none = { utm_source: null, utm_medium: null, utm_campaign: null, utm_term: null, utm_content: null };
+
+  it("keeps an outside referrer's host and path but drops its query and fragment", () => {
+    expect(entryAttribution("https://www.reddit.com/r/CFB/comments/abc/?share=1#top", "www.jthomanalytics.com", new URLSearchParams()))
+      .toEqual({ referrer: "https://www.reddit.com/r/CFB/comments/abc/", ...none });
+  });
+
+  it("ignores this site as a referrer, with or without www", () => {
+    expect(entryAttribution("https://jthomanalytics.com/basketball/wins/", "www.jthomanalytics.com", new URLSearchParams()).referrer).toBeNull();
+  });
+
+  it("treats a missing or malformed referrer as direct", () => {
+    expect(entryAttribution("", "www.jthomanalytics.com", new URLSearchParams()).referrer).toBeNull();
+    expect(entryAttribution("not a url", "www.jthomanalytics.com", new URLSearchParams()).referrer).toBeNull();
+  });
+
+  it("reads utm tags from the landing URL", () => {
+    expect(entryAttribution("", "www.jthomanalytics.com", new URLSearchParams("utm_source=twitter&utm_campaign=bowl+picks&utm_medium=")))
+      .toEqual({ referrer: null, ...none, utm_source: "twitter", utm_campaign: "bowl picks" });
+  });
+
+  it("keeps Android app referrers", () => {
+    expect(entryAttribution("android-app://com.reddit.frontpage/", "www.jthomanalytics.com", new URLSearchParams()).referrer)
+      .toBe("android-app://com.reddit.frontpage/");
   });
 });
