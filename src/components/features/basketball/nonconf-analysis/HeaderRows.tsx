@@ -1,10 +1,12 @@
 "use client";
 
 // The two sticky header rows: opponent groups, then the sortable columns.
+// The groups default to the non-conference table's three; the Power 5 table
+// passes one per power conference.
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { COLUMNS } from "./data";
-import type { ColumnType, SortField, TableSizes } from "./types";
+import type { ColumnType, TableSizes } from "./types";
 
 const GROUP_TITLES: Record<ColumnType, string> = {
   power: "Power Conf Opponents",
@@ -19,13 +21,30 @@ const SUB_COLUMNS = [
   { suffix: "twv_50", key: "twv", label: "TWV 50" },
 ] as const;
 
-interface HeaderRowsProps {
-  sizes: TableSizes;
-  onSort: (field: SortField) => void;
-  sortIndicator: (field: SortField) => string | null;
+export interface HeaderGroup {
+  key: string;
+  title: ReactNode;
 }
 
-export default function HeaderRows({ sizes, onSort, sortIndicator }: HeaderRowsProps) {
+const DEFAULT_GROUPS: readonly HeaderGroup[] = COLUMNS.map((column) => ({
+  key: column,
+  title: GROUP_TITLES[column],
+}));
+
+interface HeaderRowsProps {
+  sizes: TableSizes;
+  /** Column groups; a sub-column's sort field is `<group key>_<suffix>`. */
+  groups?: readonly HeaderGroup[];
+  onSort: (field: string) => void;
+  sortIndicator: (field: string) => string | null;
+}
+
+export default function HeaderRows({
+  sizes,
+  groups = DEFAULT_GROUPS,
+  onSort,
+  sortIndicator,
+}: HeaderRowsProps) {
   const { isMobile, expandColWidth, confColWidth, dataColWidth, headerHeight } = sizes;
 
   const groupStyle: CSSProperties = {
@@ -109,9 +128,9 @@ export default function HeaderRows({ sizes, onSort, sortIndicator }: HeaderRowsP
         >
           {!isMobile && "Conference"}
         </th>
-        {COLUMNS.map((column) => (
-          <th key={`${column}-col-1`} colSpan={4} style={groupStyle}>
-            {GROUP_TITLES[column]}
+        {groups.map((group) => (
+          <th key={`${group.key}-col-1`} colSpan={4} style={groupStyle}>
+            {group.title}
           </th>
         ))}
       </tr>
@@ -155,11 +174,11 @@ export default function HeaderRows({ sizes, onSort, sortIndicator }: HeaderRowsP
             fontWeight: 400,
           }}
         ></th>
-        {COLUMNS.flatMap((column) =>
+        {groups.flatMap((group) =>
           SUB_COLUMNS.map(({ suffix, key, label }) => {
-            const field = `${column}_${suffix}` as SortField;
+            const field = `${group.key}_${suffix}`;
             return (
-              <th key={`${column}-${key}-2`} style={subStyle} onClick={() => onSort(field)}>
+              <th key={`${group.key}-${key}-2`} style={subStyle} onClick={() => onSort(field)}>
                 {label}
                 {sortIndicator(field)}
               </th>

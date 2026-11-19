@@ -1,15 +1,15 @@
 "use client";
 
-// A conference row (with the expand toggle; TWV per team) and a team row.
+// A conference row (with the expand toggle) and a team row. The caller
+// passes each column group's values (data.ts builds them for each table).
 
 import TeamLogo from "@/components/ui/TeamLogo";
 import { logger } from "@/lib/logger";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import type { CSSProperties } from "react";
-import { COLUMNS, conferenceTwv, twvColor, winPctColor } from "./data";
 import SectionCells from "./SectionCells";
-import type { ColorRanges, Conference, TableSizes, Team } from "./types";
+import type { Conference, SectionValues, TableSizes, Team } from "./types";
 
 /** The name cell's content row, sized to the column so long names ellipsize. */
 function nameCellInner(colWidth: number, paddingLeft: number): CSSProperties {
@@ -23,14 +23,14 @@ function nameCellInner(colWidth: number, paddingLeft: number): CSSProperties {
 }
 
 interface ConferenceRowProps {
-  row: Conference;
+  row: Pick<Conference, "team_conf" | "conf_logo_url">;
   isExpanded: boolean;
   onToggle: () => void;
-  ranges: ColorRanges;
+  sections: readonly SectionValues[];
   sizes: TableSizes;
 }
 
-export function ConferenceRow({ row, isExpanded, onToggle, ranges, sizes }: ConferenceRowProps) {
+export function ConferenceRow({ row, isExpanded, onToggle, sections, sizes }: ConferenceRowProps) {
   const { isMobile, expandColWidth, confColWidth, cellHeight } = sizes;
   return (
     <tr
@@ -119,34 +119,20 @@ export function ConferenceRow({ row, isExpanded, onToggle, ranges, sizes }: Conf
         </div>
       </td>
 
-      {COLUMNS.map((column) => {
-        const { twv, winPct } = ranges.conf[column];
-        const perTeamTwv = conferenceTwv(row, column);
-        return (
-          <SectionCells
-            key={column}
-            record={row[`${column}_record`]}
-            winPct={row[`${column}_win_pct`]}
-            twv={perTeamTwv}
-            expectedTwv={row[`${column}_twv_50`]}
-            winPctColors={winPctColor(row[`${column}_win_pct`], winPct.min, winPct.max)}
-            twvColors={twvColor(perTeamTwv, twv.min, twv.max)}
-            isTeamRow={false}
-            sizes={sizes}
-          />
-        );
-      })}
+      {sections.map(({ key, ...section }) => (
+        <SectionCells key={key} {...section} isTeamRow={false} sizes={sizes} />
+      ))}
     </tr>
   );
 }
 
 interface TeamRowProps {
-  team: Team;
-  ranges: ColorRanges;
+  team: Pick<Team, "team_name" | "logo_url">;
+  sections: readonly SectionValues[];
   sizes: TableSizes;
 }
 
-export function TeamRow({ team, ranges, sizes }: TeamRowProps) {
+export function TeamRow({ team, sections, sizes }: TeamRowProps) {
   const { isMobile, expandColWidth, confColWidth, cellHeight } = sizes;
   return (
     <tr
@@ -210,22 +196,9 @@ export function TeamRow({ team, ranges, sizes }: TeamRowProps) {
         </div>
       </td>
 
-      {COLUMNS.map((column) => {
-        const { twv, winPct } = ranges.team[column];
-        return (
-          <SectionCells
-            key={column}
-            record={team[`${column}_record`]}
-            winPct={team[`${column}_win_pct`]}
-            twv={team[`${column}_twv_50`]}
-            expectedTwv={team[`${column}_twv_50`]}
-            winPctColors={winPctColor(team[`${column}_win_pct`], winPct.min, winPct.max)}
-            twvColors={twvColor(team[`${column}_twv_50`], twv.min, twv.max)}
-            isTeamRow
-            sizes={sizes}
-          />
-        );
-      })}
+      {sections.map(({ key, ...section }) => (
+        <SectionCells key={key} {...section} isTeamRow sizes={sizes} />
+      ))}
     </tr>
   );
 }

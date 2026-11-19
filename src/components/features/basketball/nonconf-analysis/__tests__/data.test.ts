@@ -1,9 +1,14 @@
 import {
   computeColorRanges,
+  computePowerRanges,
   conferenceTwv,
   expectedWinPct,
   parseRecord,
+  powerConferences,
+  powerConferenceSections,
+  powerTeamSections,
   sortConferences,
+  sortPowerConferences,
   sortTeams,
   twvColor,
   winPctColor,
@@ -90,5 +95,62 @@ describe("sorting", () => {
   it("sorts teams by value, or by name", () => {
     expect(sortTeams(data[1].teams, "total_twv_50", "desc").map((t) => t.team_name)).toEqual(["b2", "b1"]);
     expect(sortTeams(data[1].teams, "team_name", "asc").map((t) => t.team_name)).toEqual(["b1", "b2"]);
+  });
+});
+
+describe("performance vs power conferences", () => {
+  const drake = { ...team("Drake", 0.5, 50), vs_power: [{ opp_conf: "Big Ten", record: "1-0", win_pct: 100, twv_50: 0.6 }] };
+  const bradley = { ...team("Bradley", -0.2, 0), vs_power: [] };
+  const mvc: Conference = {
+    ...conf("Missouri Valley", [drake, bradley], 0.4),
+    vs_power: [
+      { opp_conf: "Big Ten", record: "1-1", win_pct: 50, twv_50: 0.4 },
+      { opp_conf: "Big 12", record: "0-2", win_pct: 0, twv_50: -0.8 },
+    ],
+  };
+  const wcc: Conference = {
+    ...conf("WCC", [team("Gonzaga", 1, 100)], 1),
+    vs_power: [{ opp_conf: "SEC", record: "2-0", win_pct: 100, twv_50: 1.2 }],
+  };
+
+  it("lists every power opponent in name order", () => {
+    expect(powerConferences([mvc, wcc])).toEqual(["Big 12", "Big Ten", "SEC"]);
+  });
+
+  it("shows conference TWV per team and leaves unplayed conferences empty", () => {
+    const opps = powerConferences([mvc, wcc]);
+    const ranges = computePowerRanges([mvc, wcc], opps);
+    const [big12, bigTen, sec] = powerConferenceSections(mvc, opps, ranges);
+    expect(big12.record).toBe("0-2");
+    expect(big12.twv).toBeCloseTo(-0.4);
+    expect(bigTen.twv).toBeCloseTo(0.2);
+    expect(bigTen.expectedTwv).toBeCloseTo(0.4);
+    expect(sec.empty).toBe(true);
+    expect(expectedWinPct(bigTen.record, bigTen.expectedTwv)).toBeCloseTo(30);
+  });
+
+  it("gives team rows their own breakdown", () => {
+    const opps = ["Big 12", "Big Ten"];
+    const ranges = computePowerRanges([mvc], opps);
+    const [big12, bigTen] = powerTeamSections(drake, opps, ranges);
+    expect(big12.empty).toBe(true);
+    expect(bigTen.record).toBe("1-0");
+    expect(bigTen.twv).toBeCloseTo(0.6);
+  });
+
+  it("sorts by a power column with conferences that never played it last", () => {
+    const rows = [wcc, mvc];
+    expect(sortPowerConferences(rows, "Big Ten_win_pct", "desc").map((r) => r.team_conf)).toEqual([
+      "Missouri Valley",
+      "WCC",
+    ]);
+    expect(sortPowerConferences(rows, "Big Ten_win_pct", "asc").map((r) => r.team_conf)).toEqual([
+      "Missouri Valley",
+      "WCC",
+    ]);
+    expect(sortPowerConferences(rows, "SEC_twv_50", "desc").map((r) => r.team_conf)).toEqual([
+      "WCC",
+      "Missouri Valley",
+    ]);
   });
 });

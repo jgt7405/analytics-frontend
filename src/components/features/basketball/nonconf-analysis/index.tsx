@@ -11,14 +11,14 @@ import {
 } from "@/hooks/useBasketballConfData";
 import { useResponsive } from "@/hooks/useResponsive";
 import { memo, useMemo, useState } from "react";
-import { computeColorRanges, sortConferences, sortTeams } from "./data";
+import { computeColorRanges, conferenceSections, sortConferences, sortTeams, teamSections } from "./data";
 import HeaderRows from "./HeaderRows";
 import { ConferenceRow, TeamRow } from "./Rows";
 import type { BasketballConfDataResponseWithNonconf, NonconfResponse, SortField, SortOrder, TableSizes } from "./types";
 
 // PAGE_MODERNIZATION_GUIDE.md §8a card shell, as a Tailwind constant since
 // this bespoke file has no CSS module of its own.
-const CARD_CLASS =
+export const CARD_CLASS =
   "relative isolate border border-slate-200/90 dark:border-slate-700/90 rounded-[1.25rem] bg-gradient-to-br from-white to-[#fbfdff] dark:from-[#111827] dark:to-[#0f172a] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:shadow-[0_24px_58px_-34px_rgb(0_0_0_/_0.82)]";
 
 interface BballNonConfAnalysisTableProps {
@@ -138,7 +138,11 @@ function BballNonConfAnalysisTable({
           }}
         >
           <thead>
-            <HeaderRows sizes={sizes} onSort={handleSort} sortIndicator={sortIndicator} />
+            <HeaderRows
+              sizes={sizes}
+              onSort={(field) => handleSort(field as SortField)}
+              sortIndicator={(field) => sortIndicator(field as SortField)}
+            />
           </thead>
           <tbody>
             {sortConferences(tableData, sortField, sortOrder).map((row) => {
@@ -151,7 +155,7 @@ function BballNonConfAnalysisTable({
                   row={row}
                   isExpanded={isExpanded}
                   onToggle={() => toggleConference(row.team_conf)}
-                  ranges={ranges}
+                  sections={conferenceSections(row, ranges)}
                   sizes={sizes}
                 />,
                 ...(isExpanded && hasTeams
@@ -159,7 +163,7 @@ function BballNonConfAnalysisTable({
                       <TeamRow
                         key={`team-${row.team_conf}-${team.team_name}`}
                         team={team}
-                        ranges={ranges}
+                        sections={teamSections(team, ranges)}
                         sizes={sizes}
                       />
                     ))

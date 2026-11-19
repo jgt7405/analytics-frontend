@@ -1,8 +1,20 @@
-// Pure calculations behind the non-conference analysis table: color scales,
-// expected win %, and sorting. No React.
+// Pure calculations behind the non-conference analysis tables (by opponent
+// group, and vs each Power 5 conference): color scales, expected win %,
+// row values and sorting. No React.
 
 import { readableTextColor } from "@/lib/color-utils";
-import type { CellColors, ColorRanges, ColumnType, Conference, SortField, SortOrder, Team } from "./types";
+import type {
+  CellColors,
+  ColorRanges,
+  ColumnType,
+  Conference,
+  Range,
+  SectionValues,
+  SortField,
+  SortOrder,
+  Team,
+  VsPowerEntry,
+} from "./types";
 
 export const COLUMNS: ColumnType[] = ["power", "nonpower", "total"];
 
@@ -218,4 +230,209 @@ export function sortTeams(teams: Team[], sortField: SortField, sortOrder: SortOr
     return sortOrder === "asc" ? aNum - bNum : bNum - aNum;
   });
   return sorted;
+}
+
+// --- Row values -------------------------------------------------------------
+
+/** A conference row's three opponent groups (TWV shown per team). */
+export function conferenceSections(conf: Conference, ranges: ColorRanges): SectionValues[] {
+  return COLUMNS.map((column) => {
+    const { twv, winPct } = ranges.conf[column];
+    const perTeamTwv = conferenceTwv(conf, column);
+    return {
+      key: column,
+      record: conf[`${column}_record`],
+      winPct: conf[`${column}_win_pct`],
+      twv: perTeamTwv,
+      expectedTwv: conf[`${column}_twv_50`],
+      winPctColors: winPctColor(conf[`${column}_win_pct`], winPct.min, winPct.max),
+      twvColors: twvColor(perTeamTwv, twv.min, twv.max),
+    };
+  });
+}
+
+/** A team row's three opponent groups. */
+export function teamSections(team: Team, ranges: ColorRanges): SectionValues[] {
+  return COLUMNS.map((column) => {
+    const { twv, winPct } = ranges.team[column];
+    const value = team[`${column}_twv_50`];
+    return {
+      key: column,
+      record: team[`${column}_record`],
+      winPct: team[`${column}_win_pct`],
+      twv: value,
+      expectedTwv: value,
+      winPctColors: winPctColor(team[`${column}_win_pct`], winPct.min, winPct.max),
+      twvColors: twvColor(value, twv.min, twv.max),
+    };
+  });
+}
+
+// --- Performance vs each Power 5 conference ----------------------------------
+
+/** The power conferences, in name order: every opponent named in a
+ *  `vs_power` breakdown. */
+export function powerConferences(rows: readonly Conference[]): string[] {
+  const names = new Set<string>();
+  for (const row of rows) for (const entry of row.vs_power ?? []) names.add(entry.opp_conf);
+  return [...names].sort((a, b) => a.localeCompare(b));
+}
+
+function entryFor(entries: VsPowerEntry[] | undefined, opp: string): VsPowerEntry | undefined {
+  return entries?.find((entry) => entry.opp_conf === opp);
+}
+
+/** A conference's TWV vs one power conference, per team (as conferenceTwv). */
+function vsPowerConfTwv(conf: Conference, entry: VsPowerEntry): number {
+  return entry.twv_50 / (conf.teams?.length || 1);
+}
+
+interface RangePair {
+  twv: Range;
+  winPct: Range;
+}
+
+/** Color ranges per power conference, over conference rows and over team rows. */
+export interface PowerRanges {
+  conf: Record<string, RangePair>;
+  team: Record<string, RangePair>;
+}
+
+export function computePowerRanges(rows: readonly Conference[], opps: readonly string[]): PowerRanges {
+  const blank = (): RangePair => ({
+    twv: { min: Infinity, max: -Infinity },
+    winPct: { min: Infinity, max: -Infinity },
+  });
+  const widen = (range: Range, value: number) => {
+    range.min = Math.min(range.min, value);
+    range.max = Math.max(range.max, value);
+  };
+  const ranges: PowerRanges = { conf: {}, team: {} };
+  for (const opp of opps) {
+    const conf = blank();
+    const team = blank();
+    for (const row of rows) {
+      const entry = entryFor(row.vs_power, opp);
+      if (entry) {
+        widen(conf.twv, vsPowerConfTwv(row, entry));
+        widen(conf.winPct, entry.win_pct);
+      }
+      for (const t of row.teams ?? []) {
+        const teamEntry = entryFor(t.vs_power, opp);
+        if (teamEntry) {
+          widen(team.twv, teamEntry.twv_50);
+          widen(team.winPct, teamEntry.win_pct);
+        }
+      }
+    }
+    for (const level of [conf, team]) {
+      if (level.twv.min === Infinity) level.twv = { min: -1, max: 1 };
+      if (level.winPct.min === Infinity) level.winPct = { min: 0, max: 100 };
+    }
+    ranges.conf[opp] = conf;
+    ranges.team[opp] = team;
+  }
+  return ranges;
+}
+
+const NO_COLORS: CellColors = { backgroundColor: "#ffffff", color: "#111827" };
+
+function powerSection(
+  opp: string,
+  entry: VsPowerEntry | undefined,
+  twv: number,
+  range: RangePair,
+): SectionValues {
+  if (!entry) {
+    return {
+      key: opp,
+      record: "0-0",
+      winPct: 0,
+      twv: 0,
+      expectedTwv: 0,
+      winPctColors: NO_COLORS,
+      twvColors: NO_COLORS,
+      empty: true,
+    };
+  }
+  return {
+    key: opp,
+    record: entry.record,
+    winPct: entry.win_pct,
+    twv,
+    expectedTwv: entry.twv_50,
+    winPctColors: winPctColor(entry.win_pct, range.winPct.min, range.winPct.max),
+    twvColors: twvColor(twv, range.twv.min, range.twv.max),
+  };
+}
+
+/** A conference row's group per power conference (TWV per team). */
+export function powerConferenceSections(
+  conf: Conference,
+  opps: readonly string[],
+  ranges: PowerRanges,
+): SectionValues[] {
+  return opps.map((opp) => {
+    const entry = entryFor(conf.vs_power, opp);
+    return powerSection(opp, entry, entry ? vsPowerConfTwv(conf, entry) : 0, ranges.conf[opp]);
+  });
+}
+
+/** A team row's group per power conference. */
+export function powerTeamSections(team: Team, opps: readonly string[], ranges: PowerRanges): SectionValues[] {
+  return opps.map((opp) => {
+    const entry = entryFor(team.vs_power, opp);
+    return powerSection(opp, entry, entry?.twv_50 ?? 0, ranges.team[opp]);
+  });
+}
+
+/** Sort field `<power conference>_<record|win_pct|exp_win_pct|twv_50>`. */
+function splitPowerField(field: string): { opp: string; metric: string } | undefined {
+  const match = /^(.*)_(record|win_pct|exp_win_pct|twv_50)$/.exec(field);
+  return match ? { opp: match[1], metric: match[2] } : undefined;
+}
+
+/** A row's value in a power column; -Infinity when it played no one there. */
+function powerSortValue(entries: VsPowerEntry[] | undefined, field: string, teamCount: number): number {
+  const parts = splitPowerField(field);
+  const entry = parts && entryFor(entries, parts.opp);
+  if (!parts || !entry) return -Infinity;
+  switch (parts.metric) {
+    case "record":
+      return parseRecord(entry.record);
+    case "win_pct":
+      return entry.win_pct;
+    case "exp_win_pct":
+      return expectedWinPct(entry.record, entry.twv_50);
+    default:
+      return entry.twv_50 / teamCount;
+  }
+}
+
+/** Sorted by `value`; rows with no games (-Infinity) always last. */
+function sortBy<T>(items: readonly T[], value: (item: T) => number, order: SortOrder): T[] {
+  return [...items].sort((a, b) => {
+    const av = value(a);
+    const bv = value(b);
+    if (av === bv) return 0;
+    if (av === -Infinity) return 1;
+    if (bv === -Infinity) return -1;
+    return order === "asc" ? av - bv : bv - av;
+  });
+}
+
+/** Conference rows by a power column; with no field, by TWV per team against
+ *  all power opponents. */
+export function sortPowerConferences(
+  rows: readonly Conference[],
+  field: string | null,
+  order: SortOrder,
+): Conference[] {
+  if (!field) return sortBy(rows, (row) => conferenceTwv(row, "power"), order);
+  return sortBy(rows, (row) => powerSortValue(row.vs_power, field, row.teams?.length || 1), order);
+}
+
+export function sortPowerTeams(teams: readonly Team[], field: string | null, order: SortOrder): Team[] {
+  if (!field) return sortBy(teams, (team) => team.power_twv_50, order);
+  return sortBy(teams, (team) => powerSortValue(team.vs_power, field, 1), order);
 }

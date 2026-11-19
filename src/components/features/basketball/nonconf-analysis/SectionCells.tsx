@@ -1,21 +1,21 @@
 "use client";
 
 // One opponent group's four cells (Record, Win %, Exp Win %, TWV) in a
-// conference row or a team row. Team rows use smaller, grayer text.
+// conference row or a team row. Team rows use smaller, grayer text. A group
+// with no games shows a dash in each cell.
 
 import type { CSSProperties } from "react";
 import { expectedWinPct } from "./data";
-import type { CellColors, TableSizes } from "./types";
+import type { SectionValues, TableSizes } from "./types";
 
-interface SectionCellsProps {
-  record: string;
-  winPct: number;
-  /** TWV as displayed (per team for conference rows). */
-  twv: number;
-  /** TWV behind the expected win % (the conference sum for conference rows). */
-  expectedTwv: number;
-  winPctColors: CellColors;
-  twvColors: CellColors;
+/** "+0.25", "-0.10", and "0.00" for anything that rounds to zero (not "-0.00"). */
+function formatTwv(twv: number): string {
+  const shown = twv.toFixed(2);
+  if (Number(shown) === 0) return "0.00";
+  return twv > 0 ? `+${shown}` : shown;
+}
+
+interface SectionCellsProps extends Omit<SectionValues, "key"> {
   isTeamRow: boolean;
   sizes: TableSizes;
 }
@@ -27,6 +27,7 @@ export default function SectionCells({
   expectedTwv,
   winPctColors,
   twvColors,
+  empty = false,
   isTeamRow,
   sizes,
 }: SectionCellsProps) {
@@ -42,6 +43,24 @@ export default function SectionCells({
     textAlign: "center",
     fontSize,
   };
+
+  if (empty) {
+    const blank: CSSProperties = {
+      ...base,
+      verticalAlign: "middle",
+      backgroundColor: "#ffffff",
+      color: "#9ca3af",
+    };
+    return (
+      <>
+        {["record", "win", "exp", "twv"].map((cell) => (
+          <td key={cell} style={blank}>
+            –
+          </td>
+        ))}
+      </>
+    );
+  }
 
   return (
     <>
@@ -60,8 +79,7 @@ export default function SectionCells({
         %
       </td>
       <td style={{ ...base, verticalAlign: "middle", ...twvColors }}>
-        {twv > 0 ? "+" : ""}
-        {twv.toFixed(2)}
+        {formatTwv(twv)}
       </td>
     </>
   );

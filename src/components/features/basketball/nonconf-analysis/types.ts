@@ -1,4 +1,13 @@
-// Types for the basketball non-conference analysis table.
+// Types for the basketball non-conference analysis tables.
+
+/** Results against one power conference (the backend's `vs_power`; TWV is a
+ *  sum, as in the other *_twv_50 fields). */
+export interface VsPowerEntry {
+  opp_conf: string;
+  record: string;
+  win_pct: number;
+  twv_50: number;
+}
 
 export interface Team {
   team_name: string;
@@ -13,6 +22,7 @@ export interface Team {
   total_record: string;
   total_win_pct: number;
   total_twv_50: number;
+  vs_power?: VsPowerEntry[];
 }
 
 export interface Conference {
@@ -30,6 +40,7 @@ export interface Conference {
   total_record: string;
   total_win_pct: number;
   total_twv_50: number;
+  vs_power?: VsPowerEntry[];
 }
 
 export interface NonconfResponse {
@@ -72,6 +83,21 @@ export interface ColorRanges {
 export interface CellColors {
   backgroundColor: string;
   color: string;
+}
+
+/** One column group's values in a row (Record, Win %, Exp Win %, TWV). */
+export interface SectionValues {
+  key: string;
+  record: string;
+  winPct: number;
+  /** TWV as displayed (per team for conference rows). */
+  twv: number;
+  /** TWV behind the expected win % (the conference sum for conference rows). */
+  expectedTwv: number;
+  winPctColors: CellColors;
+  twvColors: CellColors;
+  /** No games in this group: the cells show a dash. */
+  empty?: boolean;
 }
 
 /** Sizes that change between phone and desktop. */

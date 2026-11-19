@@ -4,6 +4,7 @@ import TableActionButtons from "@/components/common/TableActionButtons";
 import BballConfBidsHistoryChart from "@/components/features/basketball/BballConfBidsHistoryChart";
 import BballConfBoxWhiskerChart from "@/components/features/basketball/BballConfBoxWhiskerChart";
 import BballNonConfAnalysisTable from "@/components/features/basketball/nonconf-analysis";
+import PowerConfSection from "@/components/features/basketball/nonconf-analysis/PowerConfTable";
 import SameConfToggle from "@/components/features/basketball/nonconf-analysis/SameConfToggle";
 import ConferenceBidsTable from "@/components/features/basketball/ConferenceBidsTable";
 import ConferenceTeamWinProbLanes, {
@@ -575,6 +576,13 @@ export default function BasketballConfDataContent({ initialData }: { initialData
                   </div>
                 </div>
               </div>
+
+              {nonconfData?.data && nonconfData.data.length > 0 && (
+                <PowerConfSection
+                  conferences={nonconfConferences}
+                  titleClassName={SECTION_TITLE_CLASS}
+                />
+              )}
             </>
           )}
         </div>
