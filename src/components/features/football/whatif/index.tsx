@@ -33,7 +33,6 @@ import {
 } from "./data";
 import GameTile from "./GameTile";
 import ResultsCard from "./ResultsCard";
-import { injectStructuredData } from "./structuredData";
 import dynamic from "next/dynamic";
 
 // Loaded on first open: the modal and the export code behind it aren't part
@@ -81,12 +80,6 @@ export default function FootballWhatIfContent() {
 
   useEffect(() => {
     setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  }, []);
-
-  // Inject structured data for SEO
-  useEffect(() => {
-    const cleanup = injectStructuredData();
-    return cleanup;
   }, []);
 
   // Fetch conference list
@@ -245,7 +238,7 @@ export default function FootballWhatIfContent() {
     <div className="container mx-auto px-4 py-4 md:py-6">
       <div className="mb-2 page-header">
         <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
-          What If Calculator
+          CFP What-If Simulator
         </h1>
       </div>
       <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">

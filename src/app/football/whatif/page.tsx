@@ -1,7 +1,18 @@
 import type { Metadata } from "next";
 import { sportPageMetadata } from "@/app/metadata";
 import { Suspense } from "react";
+import Link from "next/link";
 import FootballWhatIfContent from "@/components/features/football/whatif";
+import JsonLd, {
+  ORGANIZATION,
+  SITE_URL,
+  footballBreadcrumb,
+} from "@/components/seo/JsonLd";
+
+// Rendered per request so useSearchParams resolves on the server and the HTML
+// carries the page's heading and copy. Statically rendered, the whole page sat
+// behind the Suspense fallback and the server HTML had no text at all.
+export const dynamic = "force-dynamic";
 
 // Title, description and canonical from src/config/sports.ts; this page adds
 // keywords and its own social-card copy.
@@ -9,6 +20,8 @@ export const metadata: Metadata = {
   ...sportPageMetadata("football", "whatif"),
   keywords: [
     "CFP simulator",
+    "college football playoff simulator",
+    "CFP odds calculator",
     "football what-if scenarios",
     "playoff impact calculator",
     "college football simulator",
@@ -26,12 +39,65 @@ export const metadata: Metadata = {
   },
 };
 
-// FootballWhatIfContent reads useSearchParams, which needs a Suspense boundary
-// on a statically rendered page (Next 16 fails the build without one).
+const STRUCTURED_DATA = [
+  footballBreadcrumb("What-If Simulator", "/football/whatif/"),
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "College Football Playoff What-If Simulator",
+    description:
+      "Pick the winners of upcoming college football games and see how each team's odds of reaching its conference title game and the College Football Playoff change.",
+    applicationCategory: "SportsApplication",
+    url: `${SITE_URL}/football/whatif/`,
+    operatingSystem: "Web",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    author: ORGANIZATION,
+  },
+];
+
+// Plain-language description of the tool, below it. Server-rendered so search
+// engines can tell what the page does without running the simulator.
+function AboutSimulator() {
+  return (
+    <section className="container mx-auto px-4 pb-8">
+      <div className="max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+        <h2 className="mb-2 text-base font-bold text-slate-700 dark:text-slate-300">
+          How the CFP simulator works
+        </h2>
+        <p className="mb-2">
+          Choose a conference, then pick winners for any of its remaining games
+          (or switch to all FBS games, or search for specific teams). Press
+          calculate and the season is re-simulated with your results locked in.
+          The results show each team&apos;s chance of reaching its conference
+          championship game and making the 12-team College Football Playoff,
+          before and after your picks.
+        </p>
+        <p className="mb-2">
+          Every game you don&apos;t pick is played out using win probabilities
+          from a composite of college football rating models, across 1,000
+          simulated seasons, and conference title-game spots follow each
+          conference&apos;s own tiebreaker rules.
+        </p>
+        <p>
+          The game impact board shows which games in the next seven days move
+          playoff odds the most. Current projections without any picks are on
+          the <Link href="/football/cfp/" className="underline">CFP projections</Link>{" "}
+          and <Link href="/football/home/" className="underline">playoff field</Link>{" "}
+          pages.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export default function FootballWhatIfPage() {
   return (
-    <Suspense fallback={null}>
-      <FootballWhatIfContent />
-    </Suspense>
+    <>
+      <JsonLd data={STRUCTURED_DATA} />
+      <Suspense fallback={null}>
+        <FootballWhatIfContent />
+      </Suspense>
+      <AboutSimulator />
+    </>
   );
 }
