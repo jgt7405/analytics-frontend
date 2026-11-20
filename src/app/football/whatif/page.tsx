@@ -86,7 +86,7 @@ const STRUCTURED_DATA = [
 
 // Plain-language description of the tool, below it. Server-rendered so search
 // engines can tell what the page does without running the simulator.
-function AboutSimulator({ conference }: { conference: string | null }) {
+function AboutSimulator() {
   return (
     <section className="container mx-auto px-4 pb-8">
       <div className="max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">
@@ -108,9 +108,6 @@ function AboutSimulator({ conference }: { conference: string | null }) {
           conference&apos;s own tiebreaker rules.
         </p>
         <p>
-          {conference
-            ? `For ${conference} teams, the results show the chance of finishing in the ${conference} Championship Game spots after tiebreakers. `
-            : null}
           The game impact board shows which games in the next seven days move
           playoff odds the most. Current projections without any picks are on
           the <Link href="/football/cfp/" className="underline">CFP projections</Link>{" "}
@@ -146,7 +143,7 @@ export default async function FootballWhatIfPage({
       <Suspense fallback={null}>
         <FootballWhatIfContent initialConference={conference} />
       </Suspense>
-      <AboutSimulator conference={conference} />
+      <AboutSimulator />
     </>
   );
 }
