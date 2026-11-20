@@ -3,9 +3,14 @@
 import BasketballWhatIfScenarios from "@/components/features/basketball/whatif";
 import Footer from "@/components/layout/Footer";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 
-export default function BasketballWhatIfContent() {
+export default function BasketballWhatIfContent({
+  children,
+}: {
+  /** Server-rendered content shown between the tool and the footer. */
+  children?: ReactNode;
+} = {}) {
   return (
     <>
       <Suspense
@@ -17,6 +22,7 @@ export default function BasketballWhatIfContent() {
       >
         <BasketballWhatIfScenarios />
       </Suspense>
+      {children}
       <Footer />
     </>
   );

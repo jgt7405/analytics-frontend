@@ -17,6 +17,8 @@ import {
   WhatIfResponse,
 } from "@/hooks/useFootballWhatIf";
 import { cn } from "@/lib/utils";
+import { conferenceLabel } from "@/lib/display-names";
+import { whatIfConference } from "@/lib/whatif-conferences";
 import { AllTeamCFPEntry, WhatIfGame, WhatIfTeamResult } from "@/types/football";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -42,9 +44,20 @@ const ScreenshotModal = dynamic(() => import("@/components/common/ScreenshotModa
 });
 
 
-export default function FootballWhatIfContent() {
+export default function FootballWhatIfContent({
+  initialConference,
+}: {
+  /** Conference from ?conf=, resolved on the server so the first HTML
+   *  already shows it (page.tsx). */
+  initialConference?: string | null;
+} = {}) {
   const searchParams = useSearchParams();
-  const [selectedConference, setSelectedConference] = useState<string>("Big 12");
+  const [selectedConference, setSelectedConference] = useState<string>(
+    initialConference ?? "Big 12",
+  );
+  // Whether the URL names a conference: the heading then names it too, as the
+  // page title does (page.tsx generateMetadata).
+  const [conferenceInUrl, setConferenceInUrl] = useState(!!initialConference);
   const [showAllCFPTeams, setShowAllCFPTeams] = useState(false);
   const [gameFilter, setGameFilter] = useState<"conference" | "all">("conference");
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -99,8 +112,10 @@ export default function FootballWhatIfContent() {
   useEffect(() => {
     const confParam = searchParams.get("conf");
     if (confParam) {
-      const decodedConf = decodeURIComponent(confParam);
-      setSelectedConference(decodedConf);
+      // Stored names from older links (?conf=Southeastern) become the name
+      // the selector shows (SEC).
+      setSelectedConference(conferenceLabel("football", confParam.replace(/_/g, " ")));
+      setConferenceInUrl(true);
     }
   }, [searchParams]);
 
@@ -133,6 +148,13 @@ export default function FootballWhatIfContent() {
 
   const handleConferenceChange = (conference: string) => {
     setSelectedConference(conference);
+    // Keep the URL on the chosen conference so it can be shared or
+    // bookmarked; each FBS conference has its own indexable view at it.
+    // history.replaceState updates useSearchParams without a server round trip.
+    const params = new URLSearchParams(window.location.search);
+    params.set("conf", conference);
+    window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+    setConferenceInUrl(true);
     // Pending game selections are intentionally kept across conference
     // switches - the user can clear them via "Clear Selections" (handleReset)
     // once they get to the new conference. Only the calculated results are
@@ -234,16 +256,21 @@ export default function FootballWhatIfContent() {
   );
 
 
+  const headingConference = conferenceInUrl ? whatIfConference(selectedConference) : null;
+
   return (
     <div className="container mx-auto px-4 py-4 md:py-6">
       <div className="mb-2 page-header">
         <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
-          CFP What-If Simulator
+          {headingConference
+            ? `${headingConference} Championship Scenarios & CFP Simulator`
+            : "CFP What-If Simulator"}
         </h1>
       </div>
       <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">
-        See how game outcomes impact team's probabilities to make conference
-        championship game and CFP.
+        {headingConference
+          ? `See how game outcomes change each ${headingConference} team's chances of reaching the ${headingConference} Championship Game and making the CFP.`
+          : "See how game outcomes impact team's probabilities to make conference championship game and CFP."}
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

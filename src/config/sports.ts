@@ -42,9 +42,9 @@ export const SPORTS: Record<Sport, SportConfig> = {
     pages: [
       {
         slug: "home",
-        title: "Basketball Tournament Projections",
+        title: "NCAA Tournament Projections & Bracketology",
         description:
-          "NCAA tournament projections based on 1,000 season simulations. See the projected tournament field, seeding, and multi-bid conferences.",
+          "Bracketology from 1,000 simulated seasons: the projected NCAA tournament field, seed lines, last teams in, auto bids and multi-bid conferences, updated daily.",
         navLabel: "Home",
         navDescription: "Basketball home",
         archive: true,
@@ -108,9 +108,9 @@ export const SPORTS: Record<Sport, SportConfig> = {
       },
       {
         slug: "conf-tourney",
-        title: "Conference Tournament Projections",
+        title: "Conference Tournament Odds & Projections",
         description:
-          "Conference tournament projections and predictions for all NCAA Division I conferences.",
+          "College basketball conference tournament odds for all Division I conferences: each team's chances to win its conference tournament and the automatic NCAA bid.",
         navLabel: "Conf Tourney",
         navDescription: "Conference tournament projections",
         archive: true,
@@ -130,9 +130,9 @@ export const SPORTS: Record<Sport, SportConfig> = {
       },
       {
         slug: "ncaa-tourney",
-        title: "NCAA Tournament Projections",
+        title: "NCAA Tournament Odds by Round",
         description:
-          "NCAA tournament seeding and bracket projections from advanced predictive models.",
+          "March Madness odds for every team: chances to make the NCAA tournament and reach each round, from 1,000 simulated seasons with composite ratings. Updated daily.",
         navLabel: "NCAA Tourney",
         navDescription: "NCAA tournament round projections",
         archive: true,
@@ -174,9 +174,9 @@ export const SPORTS: Record<Sport, SportConfig> = {
       },
       {
         slug: "whatif",
-        title: "Basketball What-If Scenarios",
+        title: "College Basketball What-If Simulator | Standings & NCAA Odds",
         description:
-          "Simulate game outcomes and instantly see impact on conference standings and tournament seeding.",
+          "Pick winners of upcoming college basketball games and see how conference standings, conference tournament seeds and NCAA tournament chances change.",
         navLabel: "What If",
         navDescription: "What If Conference Scenarios",
         archive: false,
@@ -236,9 +236,9 @@ export const SPORTS: Record<Sport, SportConfig> = {
     pages: [
       {
         slug: "home",
-        title: "College Football Playoff Projections",
+        title: "CFP Projections: Projected Playoff Field & Bracket",
         description:
-          "College Football Playoff projections based on 1,000 season simulations. See the projected CFP field, seeding, and conference bid totals.",
+          "Latest College Football Playoff projections from 1,000 simulated seasons: the projected 12-team field, seeding and bids by conference, updated daily.",
         navLabel: "Home",
         navDescription: "College Football Playoff projections",
         archive: false,
@@ -313,9 +313,9 @@ export const SPORTS: Record<Sport, SportConfig> = {
       },
       {
         slug: "whatif",
-        title: "College Football What-If Simulator | CFP Impact Calculator",
+        title: "CFP Simulator & Conference Championship Calculator",
         description:
-          "Simulate game outcomes and instantly see how they impact standings, seeding, and CFP playoff chances. Interactive college football prediction tool.",
+          "Free College Football Playoff simulator: pick game winners and see how every team's CFP odds and conference championship game chances change. SEC, Big Ten, Big 12, ACC and more.",
         navLabel: "What If",
         navDescription: "What If Conference Championship Scenarios",
         archive: false,
@@ -343,9 +343,9 @@ export const SPORTS: Record<Sport, SportConfig> = {
       },
       {
         slug: "cfp",
-        title: "College Football Playoff Projections | CFP Bracket Predictions",
+        title: "CFP Odds: Every Team's Playoff Chances by Round",
         description:
-          "Live CFP playoff projections and bracket predictions updated daily. See team-by-team odds for each round based on 1,000 season simulations and advanced analytics.",
+          "College Football Playoff odds for every team: chances to make the playoff, reach the quarterfinals, semifinals and title game, and win it all, from 1,000 simulated seasons. Updated daily.",
         navLabel: "CFP",
         navDescription: "College Football Playoff projections",
         archive: true,

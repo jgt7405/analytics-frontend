@@ -270,7 +270,7 @@ export default function BasketballWhatIfScenarios() {
   if (conferencesLoading || !selectedConference) {
     return (
       <div className="container mx-auto px-4 py-4 md:py-6">
-        <h1 className={styles.title}>What If Calculator</h1>
+        <h1 className={styles.title}>College Basketball What-If Simulator</h1>
         <div className="flex justify-center py-20">
           <LoadingSpinner />
         </div>
@@ -281,7 +281,7 @@ export default function BasketballWhatIfScenarios() {
   if (conferencesError) {
     return (
       <div className="container mx-auto px-4 py-4 md:py-6">
-        <h1 className={styles.title}>What If Calculator</h1>
+        <h1 className={styles.title}>College Basketball What-If Simulator</h1>
         <ErrorMessage message={conferencesError.message} />
       </div>
     );
@@ -290,7 +290,7 @@ export default function BasketballWhatIfScenarios() {
   return (
     <div className="container mx-auto px-4 py-4 md:py-6">
       <div className="mb-6" data-screenshot-hide="true">
-        <h1 className={styles.title}>What If Calculator</h1>
+        <h1 className={styles.title}>College Basketball What-If Simulator</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

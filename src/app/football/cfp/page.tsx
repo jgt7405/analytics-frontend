@@ -12,20 +12,21 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   ...sportPageMetadata("football", "cfp"),
   keywords: [
-    "CFP projections",
-    "College Football Playoff predictions",
+    "CFP odds",
+    "CFP probabilities",
+    "College Football Playoff odds",
     "CFP bracket",
     "playoff seeding",
     "football analytics",
   ],
   openGraph: {
-    title: "CFP Playoff Projections",
-    description: "Live College Football Playoff projections and bracket predictions",
+    title: "CFP Odds: Every Team's Playoff Chances by Round",
+    description: "College Football Playoff odds for every team, round by round, updated daily",
     url: "/football/cfp/",
   },
   twitter: {
-    title: "CFP Playoff Projections",
-    description: "Live CFP bracket predictions updated daily",
+    title: "CFP Odds by Round",
+    description: "Every team's College Football Playoff chances, updated daily",
   },
 };
 
@@ -35,9 +36,9 @@ function structuredData() {
     {
       "@context": "https://schema.org",
       "@type": "AnalysisNewsArticle",
-      headline: "College Football Playoff Projections",
+      headline: "College Football Playoff Odds by Round",
       description:
-        "Live CFP playoff projections and bracket predictions updated daily based on 1,000 season simulations and advanced analytics.",
+        "Every team's chances to make the College Football Playoff and reach each round, updated daily from 1,000 simulated seasons.",
       dateModified: new Date().toISOString().split("T")[0],
       author: ORGANIZATION,
       // A Thing, not an Event: Google's Event rich result requires startDate

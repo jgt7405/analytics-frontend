@@ -24,11 +24,11 @@ describe("page metadata from src/config/sports.ts", () => {
 
   it("team pages: current indexed, archived noindex", () => {
     expect(teamPageMetadata("basketball", "Texas%20A%26M")).toMatchObject({
-      title: "Texas A&M Basketball Analytics & Projections",
+      title: "Texas A&M Basketball: Projections, NCAA Tournament Odds & Ratings",
       alternates: { canonical: "/basketball/team/Texas%20A%26M/" },
     });
     const archived = teamPageMetadata("football", "Alabama", "2025-26");
-    expect(archived.title).toBe("2025-26 Alabama Football Analytics & Projections");
+    expect(archived.title).toBe("2025-26 Alabama Football: Standings, Projected Wins & CFP Odds");
     expect(archived.alternates?.canonical).toBe("/football/2025-26/team/Alabama/");
     expect(archived.robots).toEqual({ index: false, follow: true });
   });

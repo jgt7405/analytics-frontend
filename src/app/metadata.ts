@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import type { Sport } from "@/config/seasons";
-import { SPORTS, sportPage, sportPagePath } from "@/config/sports";
+import { sportPage, sportPagePath } from "@/config/sports";
 
 export const baseMetadata: Metadata = {
   metadataBase: new URL(
@@ -145,10 +145,15 @@ export function teamPageMetadata(
   const teamName = decodeURIComponent(teamSlug).replace(/_/g, " ");
   const description =
     sport === "football"
-      ? `${teamName} football analytics including schedule, CFP projections, standings history, win probabilities, and advanced team statistics.`
-      : `${teamName} basketball analytics including schedule, tournament projections, standings history, win probabilities, and NCAA tournament seeding.`;
+      ? `${teamName} football projected wins, conference standings, College Football Playoff odds, schedule with win probabilities, and ratings, updated daily.`
+      : `${teamName} basketball projected wins, conference standings, NCAA tournament odds and projected seed, schedule with win probabilities, and ratings, updated daily.`;
   const path = `/${sport}${season ? `/${season}` : ""}/team/${teamSlug}/`;
-  const title = `${teamName} ${SPORTS[sport].label} Analytics & Projections`;
+  // Worded the way people search for a team ("rutgers football standings",
+  // "ucf win total", "duke tournament odds").
+  const title =
+    sport === "football"
+      ? `${teamName} Football: Standings, Projected Wins & CFP Odds`
+      : `${teamName} Basketball: Projections, NCAA Tournament Odds & Ratings`;
   if (!season) return generatePageMetadata({ title, description, path });
   return {
     ...generatePageMetadata({
