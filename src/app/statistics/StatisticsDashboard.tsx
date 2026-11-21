@@ -25,6 +25,13 @@ const SPORTS = [["all", "All pages"], ["basketball", "Basketball"], ["football",
 const SCOPES: Array<[Scope, string]> = [["current", "Current"], ["archive", "Archive"], ["all", "Both"]];
 const DETAIL_PERIODS = [["hour", "Past hour"], ["24h", "Past 24 hours"], ["yesterday", "Yesterday"], ["7", "7 days"], ["30", "30 days"], ["90", "90 days"], ["365", "1 year"], ["all", "All time"]] as const;
 const SUMMARY_WINDOWS = [["year", "Past year"], ["month", "Past 30 days"], ["week", "Past 7 days"], ["day", "Past 24 hours"], ["hour", "Past hour"]] as const;
+/** Per-period averages shown under each summary total (the past hour has none). */
+const SUMMARY_AVERAGES: Partial<Record<(typeof SUMMARY_WINDOWS)[number][0], { divisor: number; unit: "hour" | "day" }>> = {
+  day: { divisor: 24, unit: "hour" },
+  week: { divisor: 7, unit: "day" },
+  month: { divisor: 30, unit: "day" },
+  year: { divisor: 365, unit: "day" },
+};
 const selectClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium dark:border-slate-600 dark:bg-slate-800";
 
 function teamLogoPath(name: string, sport: string | null) {
@@ -104,9 +111,9 @@ export default function StatisticsDashboard() {
     {(pageFilter || selection) && <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300"><span>Trends for:</span>{pageFilter && <span className="rounded-md bg-cyan-50 px-2 py-1 text-cyan-900 dark:bg-cyan-950 dark:text-cyan-100">Page: {pageFilter} <button type="button" onClick={() => setPageFilter(null)} className="ml-1 font-bold" aria-label="Clear page filter">×</button></span>}{selection && <span className="rounded-md bg-violet-50 px-2 py-1 text-violet-900 dark:bg-violet-950 dark:text-violet-100">{selection.dimension}: {selection.label} <button type="button" onClick={() => setSelection(null)} className="ml-1 font-bold" aria-label={`Clear ${selection.dimension} filter`}>×</button></span>}</div>}
     {isLoading && <TableSkeleton rows={8} cols={5} />}
     {error && <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">Unable to load site statistics.</div>}
-    {chartSource?.summary_windows && <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">{SUMMARY_WINDOWS.map(([key, label]) => <div key={key} className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900"><p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</p><p className="text-xl font-bold tabular-nums text-slate-900 dark:text-white">{(chartSource.summary_windows[`${key}_${metric}`] ?? 0).toLocaleString()}</p></div>)}</div>}
+    {chartSource?.summary_windows && <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">{SUMMARY_WINDOWS.map(([key, label]) => { const total = chartSource.summary_windows[`${key}_${metric}`] ?? 0; const average = SUMMARY_AVERAGES[key]; return <div key={key} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><p className="text-[11px] font-semibold leading-tight text-slate-500 dark:text-slate-400">{label}</p><p className="text-xl font-bold leading-tight tabular-nums text-slate-900 dark:text-white">{total.toLocaleString()}</p>{average && <p className="text-[10px] leading-tight tabular-nums text-slate-400 dark:text-slate-500">{(total / average.divisor).toLocaleString("en-US", { maximumFractionDigits: 1 })} avg/{average.unit}</p>}</div>; })}</div>}
     {data?.charts && chartSource?.charts && <>
-      <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Details</h2>
+      <h2 className="!mt-1 text-lg font-bold leading-tight text-slate-800 dark:text-slate-100">Details</h2>
       <div className="grid gap-2 lg:grid-cols-3"><DetailTable title="Pages" dimension="page" selection={pageFilter ? { dimension: "page", value: pageFilter, label: pageFilter } : null} onSelect={(next) => { setPageFilter(next.value); setSelection(null); }} rows={data.pages.map((row) => ({ label: row.path === "/basketball/team/*" ? "Basketball team pages" : row.path === "/football/team/*" ? "Football team pages" : row.path, filterValue: row.path, value: row.views }))} /><DetailTable title="Teams" dimension="team" selection={selection} onSelect={(next) => { setPageFilter(null); setSelection(next); }} rows={data.teams.map((row) => ({ label: row.team, value: row.views, logoUrl: teamLogoPath(row.team, row.sport) }))} /><DetailTable title={pageFilter ? `Conferences · ${pageFilter}` : "Conferences"} dimension="conference" selection={selection} onSelect={setSelection} rows={conferenceRows.map((row) => ({ label: row.conference, value: row.selections, logoUrl: conferenceLogoPath(row.conference) }))} /></div>
       <TrafficSources data={pageFilter ? pageData : data} pageFilter={pageFilter} selection={selection} onSelect={setSelection} onSelectPage={(path) => { setPageFilter(path); setSelection(null); }} />
       <BarPanel title="Past hour" rows={chartSource.charts.past_hour} metric={metric} count={60} unit="minute" />
