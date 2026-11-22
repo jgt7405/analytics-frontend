@@ -147,7 +147,10 @@ export function teamPageMetadata(
     sport === "football"
       ? `${teamName} football projected wins, conference standings, College Football Playoff odds, schedule with win probabilities, and ratings, updated daily.`
       : `${teamName} basketball projected wins, conference standings, NCAA tournament odds and projected seed, schedule with win probabilities, and ratings, updated daily.`;
-  const path = `/${sport}${season ? `/${season}` : ""}/team/${teamSlug}/`;
+  // Re-encode from the decoded name: the route param can arrive partly
+  // decoded ("Texas%20A&M"), which made the canonical disagree with the
+  // sitemap's encodeURIComponent form ("Texas%20A%26M").
+  const path = `/${sport}${season ? `/${season}` : ""}/team/${encodeURIComponent(decodeURIComponent(teamSlug))}/`;
   // Worded the way people search for a team ("rutgers football standings",
   // "ucf win total", "duke tournament odds").
   const title =
