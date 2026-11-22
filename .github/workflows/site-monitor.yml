@@ -1,0 +1,38 @@
+name: Site monitor
+
+# Is the production site up? scripts/site-monitor.mjs loads key pages, key
+# data through the proxy and one football what-if calculation. A failed run
+# emails the repo owner (GitHub's default for failed scheduled workflows), so
+# keep "Actions: failed workflows only" on in GitHub's notification settings.
+# GitHub may start a scheduled run a few minutes late.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/site-monitor.mjs
+      - .github/workflows/site-monitor.yml
+
+permissions:
+  contents: read
+
+# A slow run never piles up behind another one.
+concurrency:
+  group: site-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: scripts/site-monitor.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: node scripts/site-monitor.mjs
