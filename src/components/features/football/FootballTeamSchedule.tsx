@@ -1,5 +1,6 @@
 "use client";
 
+import OptionalTeamLink from "@/components/ui/OptionalTeamLink";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMemo } from "react";
@@ -25,7 +26,6 @@ type LocationType = "Away" | "Neutral" | "Home";
 
 export default function FootballTeamSchedule({
   schedule,
-  navigateToTeam,
   className = "",
 }: FootballTeamScheduleProps) {
   const { isMobile } = useResponsive();
@@ -120,8 +120,10 @@ export default function FootballTeamSchedule({
                 const isClickable = !isFCSTeam(game.sagarin_rank);
 
                 return (
-                  <div
+                  <OptionalTeamLink
                     key={idx}
+                    teamName={game.opponent}
+                    enabled={isClickable}
                     className={`flex items-center justify-between p-2 rounded bg-white dark:bg-slate-900 transition-opacity ${
                       isClickable
                         ? "cursor-pointer hover:opacity-80"
@@ -132,7 +134,6 @@ export default function FootballTeamSchedule({
                       height: boxHeight,
                       border: `2px solid ${getBorderColor(game.status)}`,
                     }}
-                    onClick={() => isClickable && navigateToTeam(game.opponent)}
                     title={`${game.opponent} (${formatRankingForTitle(game.sagarin_rank)}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
                   >
                     <TeamLogo
@@ -141,12 +142,13 @@ export default function FootballTeamSchedule({
                       }
                       teamName={game.opponent}
                       size={logoSize}
-                      noLink={!isClickable}
+                      noLink
+                      className={isClickable ? "cursor-pointer" : ""}
                     />
                     <span className="text-xs text-gray-600 dark:text-gray-300 font-bold">
                       {formatRanking(game.sagarin_rank)}
                     </span>
-                  </div>
+                  </OptionalTeamLink>
                 );
               })
             ) : (

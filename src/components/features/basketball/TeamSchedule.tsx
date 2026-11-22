@@ -1,6 +1,7 @@
 // src/components/features/basketball/TeamSchedule.tsx
 "use client";
 
+import OptionalTeamLink from "@/components/ui/OptionalTeamLink";
 import TeamLogo from "@/components/ui/TeamLogo";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useMemo } from "react";
@@ -32,7 +33,6 @@ const formatOpponentRank = (game: TeamGame) => {
 
 export default function TeamSchedule({
   schedule,
-  navigateToTeam,
 }: TeamScheduleProps) {
   const { isMobile } = useResponsive();
 
@@ -121,8 +121,10 @@ export default function TeamSchedule({
                   && Boolean(game.kenpom_rank)
                   && game.kenpom_rank !== 999;
                 return (
-                <div
+                <OptionalTeamLink
                   key={idx}
+                  teamName={game.opponent}
+                  enabled={hasTeamPage}
                   className={`flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800/60 transition-opacity ${
                     hasTeamPage
                       ? "cursor-pointer hover:opacity-80"
@@ -133,11 +135,6 @@ export default function TeamSchedule({
                     height: boxHeight,
                     border: `2px solid ${getBorderColor(game.status)}`,
                   }}
-                  onClick={() => {
-                    if (hasTeamPage) {
-                      navigateToTeam(game.opponent);
-                    }
-                  }}
                   title={`${game.opponent} (${formatOpponentRank(game)}) - ${game.status === "W" ? "Win" : game.status === "L" ? "Loss" : "Scheduled"}`}
                 >
                   <TeamLogo
@@ -146,12 +143,13 @@ export default function TeamSchedule({
                     }
                     teamName={game.opponent}
                     size={logoSize}
-                    noLink={!hasTeamPage}
+                    noLink
+                    className={hasTeamPage ? "cursor-pointer" : ""}
                   />
                   <span className="text-xs text-gray-600 dark:text-gray-300 font-medium text-right">
                     {formatOpponentRank(game)}
                   </span>
-                </div>
+                </OptionalTeamLink>
                 );
               })
             ) : (

@@ -1,6 +1,7 @@
 // src/components/features/basketball/BasketballTeamScheduleChart.tsx
 "use client";
 
+import OptionalTeamLink from "@/components/ui/OptionalTeamLink";
 import TeamLogo from "@/components/ui/TeamLogo";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -40,7 +41,6 @@ const isTbdOpponent = (opponent: string) => opponent.endsWith(" - TBD");
 
 export default function BasketballTeamScheduleChart({
   schedule,
-  navigateToTeam,
   teamName,
 }: BasketballTeamScheduleChartProps) {
   // Upcoming games, for preview links. On failure the links just don't show.
@@ -181,15 +181,14 @@ export default function BasketballTeamScheduleChart({
                   </span>
                 </td>
                 <td className="p-2">
-                  <div
+                  <OptionalTeamLink
+                    teamName={game.opponent}
+                    enabled={hasTeamPage}
                     className={`flex items-center ${
                       hasTeamPage
                         ? "cursor-pointer hover:text-blue-600"
                         : "cursor-default"
                     }`}
-                    onClick={() => {
-                      if (hasTeamPage) navigateToTeam(game.opponent);
-                    }}
                   >
                     <TeamLogo
                       logoUrl={
@@ -197,9 +196,10 @@ export default function BasketballTeamScheduleChart({
                       }
                       teamName={game.opponent}
                       size={20}
-                      noLink={!hasTeamPage}
+                      noLink
+                      className={hasTeamPage ? "cursor-pointer" : ""}
                     />
-                  </div>
+                  </OptionalTeamLink>
                 </td>
                 <td className="text-center p-2">
                   {opponentIsTbd

@@ -1,5 +1,6 @@
 "use client";
 
+import OptionalTeamLink from "@/components/ui/OptionalTeamLink";
 import TeamLogo from "@/components/ui/TeamLogo";
 
 interface FootballTeamGame {
@@ -30,7 +31,6 @@ interface FootballTeamScheduleChartProps {
 
 export default function FootballTeamScheduleChart({
   schedule,
-  navigateToTeam,
   isArchiveSeason = false,
 }: FootballTeamScheduleChartProps) {
   const formatDate = (dateStr: string) => {
@@ -143,11 +143,10 @@ export default function FootballTeamScheduleChart({
                 </span>
               </td>
               <td className="p-2">
-                <div
+                <OptionalTeamLink
+                  teamName={game.opponent}
+                  enabled={hasTeamPage}
                   className={`flex items-center ${hasTeamPage ? "cursor-pointer hover:text-blue-600" : "cursor-default"}`}
-                  onClick={() => {
-                    if (hasTeamPage) navigateToTeam(game.opponent);
-                  }}
                 >
                   <TeamLogo
                     logoUrl={
@@ -155,9 +154,10 @@ export default function FootballTeamScheduleChart({
                     }
                     teamName={game.opponent}
                     size={20}
-                    noLink={!hasTeamPage}
+                    noLink
+                    className={hasTeamPage ? "cursor-pointer" : ""}
                   />
-                </div>
+                </OptionalTeamLink>
               </td>
               <td className="text-center p-2 font-semibold tabular-nums">
                 {formatRank(opponentRank)}
