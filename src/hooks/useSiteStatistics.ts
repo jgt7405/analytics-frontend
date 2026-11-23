@@ -7,6 +7,11 @@ export function useSiteStatistics(days: string, sport = "all", scope = "all", di
   return useQuery({
     queryKey: queryKeys.basketball.siteStatistics(days, sport, scope, dimension, value, dimension2, value2),
     queryFn: () => getSiteStatistics(days, sport, scope, dimension, value, dimension2, value2),
-    ...queryCachePolicy("live"),
+    ...queryCachePolicy("uncached"),
+    refetchInterval: ({ state }) => {
+      const rollover = state.data?.next_calendar_rollover;
+      if (!rollover || state.status === "error") return false;
+      return Math.max(1000, Date.parse(rollover) - Date.now());
+    },
   });
 }

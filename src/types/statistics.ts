@@ -1,6 +1,8 @@
 export interface SiteStatisticsResponse {
   period: string;
   timezone: string;
+  calendar_through?: string;
+  next_calendar_rollover?: string;
   filters: { sport: string; scope: string };
   charts: {
     past_hour: StatisticsBucket[];

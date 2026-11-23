@@ -52,15 +52,15 @@ describe("cacheClassFor", () => {
 });
 
 describe("cache policies", () => {
-  it("never puts scenarios in a shared cache", () => {
-    expect(CACHE_POLICIES.scenario.cacheControl).toMatch(/private/);
-    expect(CACHE_POLICIES.scenario.cacheControl).toMatch(/no-store/);
-    expect(CACHE_POLICIES.scenario.revalidate).toBe(0);
+  it.each(["scenario", "uncached"] as const)("never puts %s responses in a shared cache", (name) => {
+    expect(CACHE_POLICIES[name].cacheControl).toMatch(/private/);
+    expect(CACHE_POLICIES[name].cacheControl).toMatch(/no-store/);
+    expect(CACHE_POLICIES[name].revalidate).toBe(0);
   });
 
   it("keeps each layer's lifetime consistent within a class", () => {
     for (const [name, policy] of Object.entries(CACHE_POLICIES)) {
-      if (name === "scenario") continue;
+      if (policy.cacheControl.includes("no-store")) continue;
       const sMaxAge = Number(/s-maxage=(\d+)/.exec(policy.cacheControl)?.[1]);
       expect({ name, sMaxAge }).toEqual({ name, sMaxAge: policy.revalidate });
       expect({ name, staleMs: policy.staleTime }).toEqual({

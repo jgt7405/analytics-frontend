@@ -21,6 +21,7 @@ export type CacheClass =
   | "history"
   | "historical"
   | "referenceData"
+  | "uncached"
   | "scenario";
 
 interface CachePolicy {
@@ -36,6 +37,12 @@ interface CachePolicy {
 }
 
 const MINUTE = 60 * 1000;
+const NO_STORE_POLICY: CachePolicy = {
+  staleTime: 0,
+  gcTime: 5 * MINUTE,
+  revalidate: 0,
+  cacheControl: "private, no-store",
+};
 
 export const CACHE_POLICIES: Record<CacheClass, CachePolicy> = {
   // Upcoming and in-progress games, bowl scoreboard.
@@ -76,13 +83,10 @@ export const CACHE_POLICIES: Record<CacheClass, CachePolicy> = {
     revalidate: 86400,
     cacheControl: "public, s-maxage=86400, stale-while-revalidate=604800",
   },
+  // Statistics must pick up calendar rollovers without waiting for the CDN.
+  uncached: NO_STORE_POLICY,
   // What-if calculations and exports: per-user input, never in a shared cache.
-  scenario: {
-    staleTime: 0,
-    gcTime: 5 * MINUTE,
-    revalidate: 0,
-    cacheControl: "private, no-store",
-  },
+  scenario: NO_STORE_POLICY,
 };
 
 /**

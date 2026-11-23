@@ -49,19 +49,25 @@ function keyForDate(date: Date, includeTime = false) {
   return `${year}-${month}-${day} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-function fillRecentBuckets(rows: StatisticsBucket[], count: number, unit: "minute" | "day", metric: Metric) {
+function fillRecentBuckets(rows: StatisticsBucket[], count: number, unit: "minute" | "day", metric: Metric, calendarThrough?: string) {
   const values = new Map(rows.map((row) => [row.bucket, row[metric]]));
+  const now = new Date();
+  const lastDay = `${calendarThrough ?? keyForDate(now)}T00:00:00Z`;
   return Array.from({ length: count }, (_, index) => {
-    const date = new Date();
+    const offset = count - 1 - index;
     if (unit === "minute") {
+      const date = new Date(now);
       date.setSeconds(0, 0);
-      date.setMinutes(date.getMinutes() - (count - 1 - index));
-    } else {
-      date.setHours(12, 0, 0, 0);
-      date.setDate(date.getDate() - (count - 1 - index));
+      date.setMinutes(date.getMinutes() - offset);
+      const key = keyForDate(date, true);
+      const label = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      return { key, label, value: values.get(key) ?? 0 };
     }
-    const key = keyForDate(date, unit === "minute");
-    return { key, label: unit === "minute" ? date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : date.toLocaleDateString("en-US", { month: "short", day: "numeric" }), value: values.get(key) ?? 0 };
+    const date = new Date(lastDay);
+    date.setUTCDate(date.getUTCDate() - offset);
+    const key = date.toISOString().slice(0, 10);
+    const label = date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+    return { key, label, value: values.get(key) ?? 0 };
   });
 }
 
@@ -77,8 +83,8 @@ function monthlyComparison(rows: StatisticsBucket[], metric: Metric) {
   return { prior: months.slice(0, 12), current: months.slice(12) };
 }
 
-function BarPanel({ title, rows, metric, count, unit }: { title: string; rows: StatisticsBucket[]; metric: Metric; count: number; unit: "minute" | "day" }) {
-  const points = fillRecentBuckets(rows, count, unit, metric);
+function BarPanel({ title, rows, metric, count, unit, calendarThrough }: { title: string; rows: StatisticsBucket[]; metric: Metric; count: number; unit: "minute" | "day"; calendarThrough?: string }) {
+  const points = fillRecentBuckets(rows, count, unit, metric, calendarThrough);
   const data = { labels: points.map((point) => point.label), datasets: [{ label: METRICS.find(([value]) => value === metric)?.[1], data: points.map((point) => point.value), backgroundColor: "rgba(8, 145, 178, 0.72)", borderColor: "rgb(8, 145, 178)", borderWidth: 1, borderRadius: 3 }] };
   const options: ChartOptions<"bar"> = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { ticks: { maxTicksLimit: unit === "minute" ? 12 : 15, maxRotation: 0 } } } };
   return <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h2><div className="mt-4 h-72"><BarChart data={data} options={options} /></div></section>;
@@ -117,8 +123,8 @@ export default function StatisticsDashboard() {
       <div className="grid gap-2 lg:grid-cols-3"><DetailTable title="Pages" dimension="page" selection={pageFilter ? { dimension: "page", value: pageFilter, label: pageFilter } : null} onSelect={(next) => { setPageFilter(next.value); setSelection(null); }} rows={data.pages.map((row) => ({ label: row.path === "/basketball/team/*" ? "Basketball team pages" : row.path === "/football/team/*" ? "Football team pages" : row.path, filterValue: row.path, value: row.views }))} /><DetailTable title="Teams" dimension="team" selection={selection} onSelect={(next) => { setPageFilter(null); setSelection(next); }} rows={data.teams.map((row) => ({ label: row.team, value: row.views, logoUrl: teamLogoPath(row.team, row.sport) }))} /><DetailTable title={pageFilter ? `Conferences · ${pageFilter}` : "Conferences"} dimension="conference" selection={selection} onSelect={setSelection} rows={conferenceRows.map((row) => ({ label: row.conference, value: row.selections, logoUrl: conferenceLogoPath(row.conference) }))} /></div>
       <TrafficSources data={pageFilter ? pageData : data} pageFilter={pageFilter} selection={selection} onSelect={setSelection} onSelectPage={(path) => { setPageFilter(path); setSelection(null); }} />
       <BarPanel title="Past hour" rows={chartSource.charts.past_hour} metric={metric} count={60} unit="minute" />
-      <BarPanel title="Past 7 days" rows={chartSource.charts.past_7_days} metric={metric} count={7} unit="day" />
-      <BarPanel title="Past 30 days" rows={chartSource.charts.past_30_days} metric={metric} count={30} unit="day" />
+      <BarPanel title="Past 7 days" rows={chartSource.charts.past_7_days} metric={metric} count={7} unit="day" calendarThrough={chartSource.calendar_through} />
+      <BarPanel title="Past 30 days" rows={chartSource.charts.past_30_days} metric={metric} count={30} unit="day" calendarThrough={chartSource.calendar_through} />
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Last 12 months vs prior 12 months</h2><div className="mt-4 h-80"><Line data={comparisonData} options={lineOptions} /></div></section>
     </>}
   </section></PageLayoutWrapper>;
