@@ -83,11 +83,52 @@ function monthlyComparison(rows: StatisticsBucket[], metric: Metric) {
   return { prior: months.slice(0, 12), current: months.slice(12) };
 }
 
-function BarPanel({ title, rows, metric, count, unit, calendarThrough }: { title: string; rows: StatisticsBucket[]; metric: Metric; count: number; unit: "minute" | "day"; calendarThrough?: string }) {
-  const points = fillRecentBuckets(rows, count, unit, metric, calendarThrough);
-  const data = { labels: points.map((point) => point.label), datasets: [{ label: METRICS.find(([value]) => value === metric)?.[1], data: points.map((point) => point.value), backgroundColor: "rgba(8, 145, 178, 0.72)", borderColor: "rgb(8, 145, 178)", borderWidth: 1, borderRadius: 3 }] };
-  const options: ChartOptions<"bar"> = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { ticks: { maxTicksLimit: unit === "minute" ? 12 : 15, maxRotation: 0 } } } };
-  return <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h2><div className="mt-4 h-72"><BarChart data={data} options={options} /></div></section>;
+function hourlyPoints(rows: StatisticsBucket[], metric: Metric, timeZone: string) {
+  const time = new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit" });
+  const timestamp = new Intl.DateTimeFormat("en-US", { timeZone, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  return rows.map((row) => {
+    const start = new Date(row.bucket);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    return { label: time.format(start), detail: `${timestamp.format(start)} – ${timestamp.format(end)}`, value: row[metric] };
+  });
+}
+
+function BarPanel({ title, points, metric, today }: {
+  title: string;
+  points: { label: string; value: number; detail?: string }[];
+  metric: Metric;
+  today?: StatisticsBucket;
+}) {
+  const data = {
+    labels: points.map((point) => point.label).concat(today ? ["Today"] : []),
+    datasets: [{
+      label: METRICS.find(([value]) => value === metric)?.[1],
+      data: points.map((point) => point.value).concat(today ? [today[metric]] : []),
+      backgroundColor: points.map(() => "rgba(8, 145, 178, 0.72)").concat(today ? ["rgba(217, 119, 6, 0.75)"] : []),
+      borderColor: points.map(() => "rgb(8, 145, 178)").concat(today ? ["rgb(217, 119, 6)"] : []),
+      borderWidth: 1,
+      borderRadius: 3,
+    }],
+  };
+  const options: ChartOptions<"bar"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { title: (items) => items.map((item) => points[item.dataIndex]?.detail ?? item.label) } },
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { precision: 0 } },
+      x: { ticks: { maxTicksLimit: 12, maxRotation: 0, includeBounds: true } },
+    },
+  };
+  return <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h2>
+      {today && <span className="inline-flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300"><span aria-hidden="true" className="size-2.5 rounded-sm bg-amber-600" />Today so far · reference only</span>}
+    </div>
+    <div className="mt-4 h-72"><BarChart data={data} options={options} aria-label={title} role="img" /></div>
+  </section>;
 }
 
 export default function StatisticsDashboard() {
@@ -122,9 +163,10 @@ export default function StatisticsDashboard() {
       <h2 className="!mt-1 text-lg font-bold leading-tight text-slate-800 dark:text-slate-100">Details</h2>
       <div className="grid gap-2 lg:grid-cols-3"><DetailTable title="Pages" dimension="page" selection={pageFilter ? { dimension: "page", value: pageFilter, label: pageFilter } : null} onSelect={(next) => { setPageFilter(next.value); setSelection(null); }} rows={data.pages.map((row) => ({ label: row.path === "/basketball/team/*" ? "Basketball team pages" : row.path === "/football/team/*" ? "Football team pages" : row.path, filterValue: row.path, value: row.views }))} /><DetailTable title="Teams" dimension="team" selection={selection} onSelect={(next) => { setPageFilter(null); setSelection(next); }} rows={data.teams.map((row) => ({ label: row.team, value: row.views, logoUrl: teamLogoPath(row.team, row.sport) }))} /><DetailTable title={pageFilter ? `Conferences · ${pageFilter}` : "Conferences"} dimension="conference" selection={selection} onSelect={setSelection} rows={conferenceRows.map((row) => ({ label: row.conference, value: row.selections, logoUrl: conferenceLogoPath(row.conference) }))} /></div>
       <TrafficSources data={pageFilter ? pageData : data} pageFilter={pageFilter} selection={selection} onSelect={setSelection} onSelectPage={(path) => { setPageFilter(path); setSelection(null); }} />
-      <BarPanel title="Past hour" rows={chartSource.charts.past_hour} metric={metric} count={60} unit="minute" />
-      <BarPanel title="Past 7 days" rows={chartSource.charts.past_7_days} metric={metric} count={7} unit="day" calendarThrough={chartSource.calendar_through} />
-      <BarPanel title="Past 30 days" rows={chartSource.charts.past_30_days} metric={metric} count={30} unit="day" calendarThrough={chartSource.calendar_through} />
+      <BarPanel title="Past hour" points={fillRecentBuckets(chartSource.charts.past_hour, 60, "minute", metric)} metric={metric} />
+      {chartSource.charts.past_24_hours && <BarPanel title="Past 24 hours" points={hourlyPoints(chartSource.charts.past_24_hours, metric, chartSource.timezone)} metric={metric} />}
+      <BarPanel title="Past 7 days" points={fillRecentBuckets(chartSource.charts.past_7_days, 7, "day", metric, chartSource.calendar_through)} metric={metric} today={chartSource.charts.today} />
+      <BarPanel title="Past 30 days" points={fillRecentBuckets(chartSource.charts.past_30_days, 30, "day", metric, chartSource.calendar_through)} metric={metric} today={chartSource.charts.today} />
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Last 12 months vs prior 12 months</h2><div className="mt-4 h-80"><Line data={comparisonData} options={lineOptions} /></div></section>
     </>}
   </section></PageLayoutWrapper>;

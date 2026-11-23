@@ -6,8 +6,10 @@ export interface SiteStatisticsResponse {
   filters: { sport: string; scope: string };
   charts: {
     past_hour: StatisticsBucket[];
+    past_24_hours?: StatisticsBucket[];
     past_7_days: StatisticsBucket[];
     past_30_days: StatisticsBucket[];
+    today?: StatisticsBucket;
     monthly_24: StatisticsBucket[];
   };
   summary_windows: Record<string, number>;
