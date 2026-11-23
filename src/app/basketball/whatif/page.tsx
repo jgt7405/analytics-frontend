@@ -1,9 +1,45 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { sportPageMetadata } from "@/app/metadata";
 import JsonLd, { ORGANIZATION, SITE_URL } from "@/components/seo/JsonLd";
+import {
+  BASKETBALL_WHATIF_CONFERENCES,
+  whatIfConference,
+  whatIfConferencePath,
+} from "@/lib/whatif-conferences";
 import BasketballWhatIfContent from "./BasketballWhatIfContent";
 
-export const metadata = sportPageMetadata("basketball", "whatif");
+// Rendered per request so ?conf= is read on the server: the HTML then carries
+// the conference's own title, canonical and heading (as football's what-if).
+export const dynamic = "force-dynamic";
+
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const BASE_METADATA = sportPageMetadata("basketball", "whatif");
+
+// Title, description and canonical from src/config/sports.ts. A ?conf= naming
+// a Division I conference (src/lib/whatif-conferences.ts) is its own page with
+// its own title and a self-referencing canonical; any other ?conf= value
+// canonicalizes to the plain page.
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}): Promise<Metadata> {
+  const conference = whatIfConference((await searchParams).conf, "basketball");
+  if (!conference) return BASE_METADATA;
+  const title = `${conference} Tournament Seeding Scenarios & NCAA Odds Simulator`;
+  const description = `Pick winners of the remaining ${conference} basketball games and see how each team's projected ${conference} standing, ${conference} Tournament seed and NCAA tournament chances change.`;
+  const path = whatIfConferencePath(conference, "basketball");
+  return {
+    ...BASE_METADATA,
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { ...BASE_METADATA.openGraph, title, description, url: path },
+    twitter: { ...BASE_METADATA.twitter, title, description },
+  };
+}
 
 const STRUCTURED_DATA = [
   {
@@ -70,16 +106,33 @@ function AboutSimulator() {
           </Link>{" "}
           pages.
         </p>
+        <h2 className="mb-2 mt-4 text-base font-bold text-slate-700 dark:text-slate-300">
+          Conference tournament seeding scenarios
+        </h2>
+        <ul className="flex flex-wrap gap-x-4 gap-y-1">
+          {BASKETBALL_WHATIF_CONFERENCES.map((name) => (
+            <li key={name}>
+              <Link href={whatIfConferencePath(name, "basketball")} className="underline">
+                {name} scenarios
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
 }
 
-export default function BasketballWhatIfPage() {
+export default async function BasketballWhatIfPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const conference = whatIfConference((await searchParams).conf, "basketball");
   return (
     <>
       <JsonLd data={STRUCTURED_DATA} />
-      <BasketballWhatIfContent>
+      <BasketballWhatIfContent initialConference={conference}>
         <AboutSimulator />
       </BasketballWhatIfContent>
     </>

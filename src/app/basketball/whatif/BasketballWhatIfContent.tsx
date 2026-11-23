@@ -7,9 +7,12 @@ import { Suspense, type ReactNode } from "react";
 
 export default function BasketballWhatIfContent({
   children,
+  initialConference,
 }: {
   /** Server-rendered content shown between the tool and the footer. */
   children?: ReactNode;
+  /** Conference from ?conf=, resolved on the server (page.tsx). */
+  initialConference?: string | null;
 } = {}) {
   return (
     <>
@@ -20,7 +23,7 @@ export default function BasketballWhatIfContent({
           </div>
         }
       >
-        <BasketballWhatIfScenarios />
+        <BasketballWhatIfScenarios initialConference={initialConference} />
       </Suspense>
       {children}
       <Footer />

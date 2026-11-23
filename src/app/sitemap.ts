@@ -5,7 +5,7 @@ import { teamPagePath } from "@/lib/display-names";
 import { logger } from "@/lib/logger";
 import { SPORT_IDS } from "@/config/seasons";
 import { SPORTS, sportPagePath } from "@/config/sports";
-import { WHATIF_CONFERENCES, whatIfConferencePath } from "@/lib/whatif-conferences";
+import { whatIfConferencePath, whatIfConferences } from "@/lib/whatif-conferences";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.jthomanalytics.com';
@@ -22,13 +22,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
   );
 
-  // Each FBS conference's what-if view is its own page (own title and
-  // canonical; src/app/football/whatif/page.tsx).
-  const whatIfConferencePages: MetadataRoute.Sitemap = WHATIF_CONFERENCES.map((conference) => ({
-    url: `${baseUrl}${whatIfConferencePath(conference)}`,
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  // Each conference's what-if view is its own page (own title and canonical;
+  // src/app/{football,basketball}/whatif/page.tsx).
+  const whatIfConferencePages: MetadataRoute.Sitemap = SPORT_IDS.flatMap((sport) =>
+    whatIfConferences(sport).map((conference) => ({
+      url: `${baseUrl}${whatIfConferencePath(conference, sport)}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })),
+  );
 
   // Fetch team pages from backend
   const teamPages: MetadataRoute.Sitemap = [];

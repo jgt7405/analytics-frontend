@@ -18,6 +18,7 @@ import {
 } from "@/hooks/useBasketballWhatIf";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./BasketballWhatIfScenarios.module.css";
 import { GameCard } from "./GameCard";
@@ -28,10 +29,22 @@ import { TeamFilterDropdown } from "./TeamFilterDropdown";
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
 // Main Component
 // ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-export default function BasketballWhatIfScenarios() {
+export default function BasketballWhatIfScenarios({
+  initialConference,
+}: {
+  /** Conference from ?conf=, resolved on the server so the first HTML
+   *  already names it (src/app/basketball/whatif/page.tsx). */
+  initialConference?: string | null;
+} = {}) {
+  const searchParams = useSearchParams();
   const [selectedConference, setSelectedConference] = useState<string | null>(
-    null,
+    initialConference ?? null,
   );
+  // Whether the URL names a conference: the heading then names it too, as the
+  // page title does (page.tsx generateMetadata).
+  const [conferenceInUrl, setConferenceInUrl] = useState(!!initialConference);
+  // Conference whose baseline has been requested, so the first load runs once.
+  const baselineConference = useRef<string | null>(null);
   const [gameSelections, setGameSelections] = useState<Map<number, number>>(
     new Map(),
   );
@@ -84,16 +97,22 @@ export default function BasketballWhatIfScenarios() {
   }, []);
 
   useEffect(() => {
-    if (conferences.length > 0 && !selectedConference) {
-      const def = conferences.includes("Big 12") ? "Big 12" : conferences[0];
-      setSelectedConference(def);
-      fetchBaseline(def);
-    }
+    if (conferences.length === 0 || baselineConference.current) return;
+    const first =
+      selectedConference && conferences.includes(selectedConference)
+        ? selectedConference
+        : conferences.includes("Big 12")
+          ? "Big 12"
+          : conferences[0];
+    baselineConference.current = first;
+    setSelectedConference(first);
+    fetchBaseline(first);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conferences, selectedConference]);
 
-  const handleConferenceChange = useCallback(
+  const switchConference = useCallback(
     (c: string) => {
+      baselineConference.current = c;
       setSelectedConference(c);
       // Pending game selections are intentionally kept across conference
       // switches - the user can clear them via the "Reset" button once they
@@ -108,6 +127,40 @@ export default function BasketballWhatIfScenarios() {
     },
     [fetchBaseline],
   );
+
+  const handleConferenceChange = useCallback(
+    (c: string) => {
+      // Keep the URL on the chosen conference so it can be shared or
+      // bookmarked; each conference has its own indexable view at it.
+      // history.replaceState updates useSearchParams without a server trip.
+      const params = new URLSearchParams(window.location.search);
+      params.set("conf", c);
+      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+      setConferenceInUrl(true);
+      switchConference(c);
+    },
+    [switchConference],
+  );
+
+  // A link to another conference's view (the list under the tool, back and
+  // forward) changes ?conf= while this component stays mounted.
+  // Matched against the selector's own (display-name) list rather than
+  // whatIfConference(): that pulls the display-name tables into this bundle,
+  // and the server already resolved stored names and aliases for first load.
+  const rawConferenceParam = searchParams.get("conf");
+  const conferenceParam =
+    rawConferenceParam && conferences.includes(rawConferenceParam) ? rawConferenceParam : null;
+  useEffect(() => {
+    if (!conferenceParam || conferences.length === 0) return;
+    if (conferenceParam !== baselineConference.current && conferences.includes(conferenceParam)) {
+      switchConference(conferenceParam);
+    }
+  }, [conferenceParam, conferences, switchConference]);
+
+  const headingConference = conferenceInUrl || conferenceParam ? selectedConference : null;
+  const heading = headingConference
+    ? `${headingConference} Tournament Seeding Scenarios & NCAA Odds`
+    : "College Basketball What-If Simulator";
 
   // Build sorted team list from loaded data
   const conferenceTeams = useMemo(() => {
@@ -270,7 +323,7 @@ export default function BasketballWhatIfScenarios() {
   if (conferencesLoading || !selectedConference) {
     return (
       <div className="container mx-auto px-4 py-4 md:py-6">
-        <h1 className={styles.title}>College Basketball What-If Simulator</h1>
+        <h1 className={styles.title}>{heading}</h1>
         <div className="flex justify-center py-20">
           <LoadingSpinner />
         </div>
@@ -281,7 +334,7 @@ export default function BasketballWhatIfScenarios() {
   if (conferencesError) {
     return (
       <div className="container mx-auto px-4 py-4 md:py-6">
-        <h1 className={styles.title}>College Basketball What-If Simulator</h1>
+        <h1 className={styles.title}>{heading}</h1>
         <ErrorMessage message={conferencesError.message} />
       </div>
     );
@@ -290,7 +343,7 @@ export default function BasketballWhatIfScenarios() {
   return (
     <div className="container mx-auto px-4 py-4 md:py-6">
       <div className="mb-6" data-screenshot-hide="true">
-        <h1 className={styles.title}>College Basketball What-If Simulator</h1>
+        <h1 className={styles.title}>{heading}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
