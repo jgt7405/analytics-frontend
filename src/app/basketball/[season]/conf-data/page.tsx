@@ -20,6 +20,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { logger } from "@/lib/logger";
+import { sortConferencesByBids } from "@/lib/conf-bids-order";
 
 export default function ArchiveBasketballConfDataPage() {
   const { trackEvent } = useMonitoring();
@@ -86,9 +87,7 @@ export default function ArchiveBasketballConfDataPage() {
   const filteredConfData = useMemo(() => {
     if (!conferenceData?.data) return [];
 
-    const sorted = [...conferenceData.data].sort(
-      (a, b) => b.average_bids - a.average_bids
-    );
+    const sorted = sortConferencesByBids(conferenceData.data);
 
     return showAll ? sorted : sorted.slice(0, 12);
   }, [conferenceData?.data, showAll]);

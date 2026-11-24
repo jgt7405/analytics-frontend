@@ -29,6 +29,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useMonitoring } from "@/lib/unified-monitoring";
 import { Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { logger } from "@/lib/logger";
+import { sortConferencesByBids } from "@/lib/conf-bids-order";
 
 // PAGE_MODERNIZATION_GUIDE.md §2 title tier - bold slate, not the old
 // gray/normal style.
@@ -189,9 +190,7 @@ export default function BasketballConfDataContent({ initialData }: { initialData
   const filteredConfData = useMemo(() => {
     if (!conferenceData?.data) return [];
 
-    const sorted = [...conferenceData.data].sort(
-      (a, b) => b.average_bids - a.average_bids
-    );
+    const sorted = sortConferencesByBids(conferenceData.data);
 
     return showAll ? sorted : sorted.slice(0, 12);
   }, [conferenceData?.data, showAll]);
