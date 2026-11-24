@@ -122,6 +122,18 @@ export async function downloadTableImage({
         logger.debug(
           `📊 STANDINGS PROGRESSION SCREENSHOT: actualWidth set to ${actualWidth}`,
         );
+      } else if (
+        targetElement.querySelector('[data-screenshot-fit-content="true"]')
+      ) {
+        // Charts that lay out at their own width (the conference swim lanes:
+        // one lane per conference shown). The per-logo fallback below
+        // counted every team logo - ~150 for the top 12 conferences - and
+        // made a ~7,500px-wide image; the content width follows the lanes.
+        actualWidth =
+          Math.max(
+            getFullContentWidth(targetElement),
+            MIN_EXPORT_CONTENT_WIDTH,
+          ) + 40;
       } else if (isSeedWinsComponent) {
         // For seed-wins component, use a narrower width to fit content better
         actualWidth = 700;
