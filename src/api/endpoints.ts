@@ -197,6 +197,8 @@ export const ENDPOINTS = [
   get("compositeRatingsTimeline", "basketball", ["basketball/composite_ratings/timeline"], "/basketball/composite_ratings/timeline", "history", { query: ["teams"] }),
   get("seasonHighlights", "basketball", ["basketball/season_highlights"], "/basketball/season_highlights", "currentStandings"),
   get("statisticsAnalysis", "basketball", ["statistics/analysis"], "/statistics/analysis", "uncached", { query: ["days", "sport", "scope", "dimension", "value", "dimension2", "value2"] }),
+  // The statistics page's second section; same filters as statisticsAnalysis.
+  get("statisticsInsights", "basketball", ["statistics/insights"], "/statistics/insights", "uncached", { query: ["days", "sport", "scope", "dimension", "value", "dimension2", "value2"] }),
   get("whatIfAnalysis", "basketball", ["basketball/whatif/analysis"], "/basketball/whatif/analysis", "live", { query: ["days"] }),
   // Chart page's "Download Team Schedule": the whole schedule table as a file.
   get("teamScheduleCsv", "basketball", ["basketball/team_schedule/csv"], "/basketball/team_schedule/csv", "currentStandings", { query: [], response: "csv" }),

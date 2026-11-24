@@ -1,5 +1,5 @@
 import { entryAttribution } from "@/lib/visit-source";
-import { conferenceForTracking } from "../PageTracker";
+import { conferenceForTracking, conferenceIsDefault } from "../PageTracker";
 
 describe("conferenceForTracking", () => {
   it("counts Big 12 when a conference page first loads without a query", () => {
@@ -16,6 +16,15 @@ describe("conferenceForTracking", () => {
 
   it("does not assign Big 12 to pages without a conference filter", () => {
     expect(conferenceForTracking("home", new URLSearchParams())).toBeNull();
+  });
+});
+
+describe("conferenceIsDefault", () => {
+  it("flags the page's default conference, so chosen conferences can be counted apart", () => {
+    expect(conferenceIsDefault("wins", new URLSearchParams())).toBe(true);
+    expect(conferenceIsDefault("wins", new URLSearchParams("conf=SEC"))).toBe(false);
+    expect(conferenceIsDefault("team", new URLSearchParams("teamConf=Big+12"))).toBe(false);
+    expect(conferenceIsDefault("home", new URLSearchParams())).toBeUndefined();
   });
 });
 

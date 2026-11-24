@@ -279,6 +279,17 @@ async function forwardPost(
   // The backend believes X-Client-IP only alongside this secret (when set).
   const secret = proxySharedSecret();
   if (clientIp && secret) clientHeaders["X-Proxy-Secret"] = secret;
+  // For the site statistics: the visitor's approximate location from Vercel's
+  // geolocation headers (country and region codes, never the address) and
+  // the user agent, which the backend reduces to a yes/no bot flag.
+  for (const [from, to] of [
+    ["x-vercel-ip-country", "X-Client-Country"],
+    ["x-vercel-ip-country-region", "X-Client-Region"],
+    ["user-agent", "X-Client-User-Agent"],
+  ] as const) {
+    const value = request.headers.get(from);
+    if (value) clientHeaders[to] = value.slice(0, 300);
+  }
   const init: RequestInit =
     body.formData !== undefined
       ? { method: "POST", headers: clientHeaders, body: body.formData }

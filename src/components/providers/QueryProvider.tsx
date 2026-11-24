@@ -1,15 +1,28 @@
 // src/components/providers/QueryProvider.tsx
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
 import { queryCachePolicy } from "@/lib/cache-policy";
+
+/** Counts a failed data request in the site statistics, by what was being
+ *  loaded (the query key's first parts) and the status. Loaded on first use. */
+function reportQueryError(error: unknown, queryKey: readonly unknown[]) {
+  const status = (error as { status?: number } | null)?.status;
+  const what = queryKey.slice(0, 3).filter((part) => typeof part === "string").join(" / ");
+  void import("@/lib/usage-tracking")
+    .then(({ trackError }) => trackError("api_error", `${what}${status ? ` (${status})` : ""}`))
+    .catch(() => undefined);
+}
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
+        queryCache: new QueryCache({
+          onError: (error, query) => reportQueryError(error, query.queryKey),
+        }),
         defaultOptions: {
           queries: {
             // Hooks set their own class; this covers queries that don't.

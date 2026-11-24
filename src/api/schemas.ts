@@ -31,6 +31,38 @@ const selections = z
 
 const conferenceAndSelections = z.object({ conference, selections });
 
+// One anonymous usage event (PageTracker, src/lib/usage-tracking.ts).
+const siteUsageEvent = z.object({
+  event_type: z.enum(["page_view", "filter_change", "page_exit", "feature", "web_vital", "error", "outbound"]),
+  path: z.string().startsWith("/").max(240),
+  sport: z.enum(["basketball", "football"]).nullable().optional(),
+  page: z.string().max(80).nullable().optional(),
+  conference: z.string().max(120).nullable().optional(),
+  team: z.string().max(120).nullable().optional(),
+  visitor_id: z.string().uuid().optional(),
+  session_id: z.string().uuid().optional(),
+  // Sent on the first page view of a visit only (PageTracker).
+  entry: z.boolean().optional(),
+  referrer: z.string().max(500).nullable().optional(),
+  utm_source: z.string().max(100).nullable().optional(),
+  utm_medium: z.string().max(100).nullable().optional(),
+  utm_campaign: z.string().max(100).nullable().optional(),
+  utm_term: z.string().max(100).nullable().optional(),
+  utm_content: z.string().max(100).nullable().optional(),
+  // Statistics page, second section: see SiteUsageEvent in src/types/statistics.ts.
+  device: z.enum(["mobile", "tablet", "desktop"]).optional(),
+  display_mode: z.enum(["browser", "standalone"]).optional(),
+  time_zone: z.string().max(64).nullable().optional(),
+  conference_defaulted: z.boolean().optional(),
+  automated: z.boolean().optional(),
+  view_id: z.string().uuid().optional(),
+  engaged_ms: z.number().int().min(0).max(86_400_000).optional(),
+  scroll_pct: z.number().int().min(0).max(100).optional(),
+  detail: z.string().max(120).nullable().optional(),
+  label: z.string().max(500).nullable().optional(),
+  metric_value: z.number().finite().optional(),
+});
+
 export const REQUEST_SCHEMAS = {
   "basketball.whatIf": conferenceAndSelections.extend({ lite: z.boolean().optional() }),
   "basketball.whatIfBaseline": z.object({ conference }),
@@ -44,24 +76,7 @@ export const REQUEST_SCHEMAS = {
     plan_only: z.boolean().optional(),
     game_ids: z.array(id).max(200).optional(),
   }),
-  "basketball.statisticsEvent": z.object({
-    event_type: z.enum(["page_view", "filter_change"]),
-    path: z.string().startsWith("/").max(240),
-    sport: z.enum(["basketball", "football"]).nullable().optional(),
-    page: z.string().max(80).nullable().optional(),
-    conference: z.string().max(120).nullable().optional(),
-    team: z.string().max(120).nullable().optional(),
-    visitor_id: z.string().uuid().optional(),
-    session_id: z.string().uuid().optional(),
-    // Sent on the first page view of a visit only (PageTracker).
-    entry: z.boolean().optional(),
-    referrer: z.string().max(500).nullable().optional(),
-    utm_source: z.string().max(100).nullable().optional(),
-    utm_medium: z.string().max(100).nullable().optional(),
-    utm_campaign: z.string().max(100).nullable().optional(),
-    utm_term: z.string().max(100).nullable().optional(),
-    utm_content: z.string().max(100).nullable().optional(),
-  }),
+  "basketball.statisticsEvent": z.union([siteUsageEvent, z.object({ events: z.array(siteUsageEvent).min(1).max(25) })]),
 } satisfies Partial<Record<EndpointKey, z.ZodTypeAny>>;
 
 /** Largest scatterplot CSV the chart page may upload. */

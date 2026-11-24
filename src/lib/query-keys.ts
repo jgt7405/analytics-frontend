@@ -59,6 +59,8 @@ export const queryKeys = {
     upcomingGames: () => ["basketball", "upcoming-games"] as const,
     siteStatistics: (days: string, sport: string, scope: string, dimension?: string, value?: string, dimension2?: string, value2?: string) =>
       ["basketball", "site-statistics", days, sport, scope, dimension, value, dimension2, value2] as const,
+    siteStatisticsInsights: (days: string, sport: string, scope: string, dimension?: string, value?: string, dimension2?: string, value2?: string) =>
+      ["basketball", "site-statistics-insights", days, sport, scope, dimension, value, dimension2, value2] as const,
     whatIfAnalysis: (days: string) =>
       ["basketball", "what-if-analysis", days] as const,
   },

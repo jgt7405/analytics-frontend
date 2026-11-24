@@ -1,9 +1,11 @@
 // app/not-found.tsx
 import Link from "next/link";
+import { NotFoundTracker } from "@/components/analytics/NotFoundTracker";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center">
+      <NotFoundTracker />
       <h2 className="text-2xl font-semibold mb-4">Not Found</h2>
       <p className="text-gray-600 dark:text-gray-300 mb-6">Could not find the requested page.</p>
       <Link

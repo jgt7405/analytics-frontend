@@ -26,6 +26,13 @@ export function conferenceForTracking(page: string, searchParams: URLSearchParam
     ?? (CONFERENCE_FILTER_PAGES.has(page) ? "Big 12" : null);
 }
 
+/** Whether the conference counted is the page's default (no conference in
+ *  the URL) rather than one the visitor chose; undefined when there is none. */
+export function conferenceIsDefault(page: string, searchParams: URLSearchParams) {
+  if (searchParams.get("conf") ?? searchParams.get("teamConf")) return false;
+  return CONFERENCE_FILTER_PAGES.has(page) ? true : undefined;
+}
+
 function anonymousId(storage: Storage, key: string) {
   const existing = storage.getItem(key);
   if (existing) return existing;
@@ -38,17 +45,19 @@ function anonymousId(storage: Storage, key: string) {
 // backend endpoint list, which would otherwise ship in the root layout and add
 // up to 3.4 kB of first-load JS to every page (the lightest pages went over
 // their bundle budgets). Events are sent after hydration either way. Working
-// out a visit's source happens in the sender too, for the same reason.
+// out a visit's source happens in the sender too, for the same reason, as
+// does the rest of the usage tracking (time on page, clicks, web vitals,
+// errors: src/lib/usage-tracking.ts).
 function sendEvent(event: SiteUsageEvent, visit?: VisitContext) {
-  void import("@/services/statistics-api")
-    .then(({ sendSiteUsageEvent }) => sendSiteUsageEvent(event, visit))
+  void import("@/lib/usage-tracking")
+    .then(({ recordPageEvent }) => recordPageEvent(event, visit))
     .catch(() => undefined);
 }
 
 export function PageTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const previous = useRef<{ path: string; search: string } | null>(null);
+  const previous = useRef<{ path: string; search: string; viewId: string } | null>(null);
   const search = searchParams.toString();
 
   useEffect(() => {
@@ -68,6 +77,7 @@ export function PageTracker() {
     const sessionId = anonymousId(sessionStorage, "jthom-anonymous-session");
 
     const eventType = prior?.path === pathname ? "filter_change" : "page_view";
+    const viewId = eventType === "page_view" || !prior ? crypto.randomUUID() : prior.viewId;
     // The referrer and query are read now: by the time the sender loads, the
     // visitor may have moved on.
     sendEvent({
@@ -79,8 +89,10 @@ export function PageTracker() {
       team,
       visitor_id: visitorId,
       session_id: sessionId,
+      view_id: viewId,
+      conference_defaulted: conferenceIsDefault(page, searchParams),
     }, eventType === "page_view" ? { referrer: document.referrer, host: window.location.hostname, search } : undefined);
-    previous.current = { path: pathname, search };
+    previous.current = { path: pathname, search, viewId };
   }, [pathname, search, searchParams]);
 
   return null;

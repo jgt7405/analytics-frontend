@@ -1,6 +1,7 @@
 "use client";
 
 import "@/lib/chartjs-setup";
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import type { ChartOptions } from "chart.js";
 import { Bar as BarChart, Line } from "react-chartjs-2";
@@ -12,6 +13,10 @@ import { conferenceLogoPath, storedTeamName } from "@/lib/display-names";
 import type { StatisticsBucket } from "@/types/statistics";
 import { DetailTable, type Selection } from "./DetailTable";
 import { TrafficSources } from "./TrafficSources";
+
+// Everything below the original charts (src/app/statistics/insights): its own
+// chunk, so the page's first load stays within its bundle budget.
+const StatisticsInsights = dynamic(() => import("./insights/StatisticsInsights"), { ssr: false });
 
 type Metric = "views" | "total_visitors" | "unique_visitors";
 type Scope = "current" | "archive" | "all";
@@ -168,6 +173,7 @@ export default function StatisticsDashboard() {
       <BarPanel title="Past 7 days" points={fillRecentBuckets(chartSource.charts.past_7_days, 7, "day", metric, chartSource.calendar_through)} metric={metric} today={chartSource.charts.today} />
       <BarPanel title="Past 30 days" points={fillRecentBuckets(chartSource.charts.past_30_days, 30, "day", metric, chartSource.calendar_through)} metric={metric} today={chartSource.charts.today} />
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Last 12 months vs prior 12 months</h2><div className="mt-4 h-80"><Line data={comparisonData} options={lineOptions} /></div></section>
+      <StatisticsInsights metric={metric} visitorDaily={chartSource.visitor_daily ?? []} filters={{ days: detailPeriod, sport, scope, dimension: primaryDimension, value: primaryValue, dimension2: secondaryDimension, value2: secondaryValue }} />
     </>}
   </section></PageLayoutWrapper>;
 }
