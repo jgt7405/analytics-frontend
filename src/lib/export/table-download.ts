@@ -15,6 +15,26 @@ import { conferenceLogoPath } from "@/lib/display-names";
 import { logger } from "@/lib/logger";
 
 const MIN_EXPORT_CONTENT_WIDTH = 660;
+/**
+ * Finish loading every image in `root` before it is measured. Lazy images
+ * scrolled out of view (the last conference lanes on a phone) haven't loaded
+ * in Safari, so the export read no natural size, couldn't letterbox them
+ * (lib/export/layout) and stretched each logo to fill its square box.
+ */
+async function loadLazyImages(root: Element): Promise<void> {
+  const pending = Array.from(root.querySelectorAll("img")).filter(
+    (img) => !img.complete || img.naturalWidth === 0,
+  );
+  if (pending.length === 0) return;
+  pending.forEach((img) => {
+    img.loading = "eager";
+  });
+  await Promise.race([
+    Promise.all(pending.map((img) => img.decode().catch(() => {}))),
+    new Promise((resolve) => setTimeout(resolve, 3000)),
+  ]);
+}
+
 // Card padding and border kept to the right of a fit-content plot.
 const FIT_CONTENT_TRAILING_PX = 24;
 
@@ -82,6 +102,8 @@ export async function downloadTableImage({
   const explainerElement = explainerSelector
     ? document.querySelector(explainerSelector)
     : null;
+
+  await loadLazyImages(targetElement);
 
   // Measure and clone the section as laid out on a desktop, so the image is
   // the same from a phone (lib/export/desktop-layout).
