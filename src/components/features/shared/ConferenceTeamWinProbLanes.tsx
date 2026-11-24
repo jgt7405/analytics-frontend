@@ -34,6 +34,9 @@ interface ConferenceTeamWinProbLanesProps {
   opponentLabel?: string;
 }
 
+const MEDIAN_DASH_PX = 7;
+const MEDIAN_GAP_PX = 4;
+
 const Y_TICKS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
 function withAlpha(color: string | null | undefined, alpha: number, fallback: string): string {
@@ -99,6 +102,12 @@ export default function ConferenceTeamWinProbLanes({
   if (lanes.length === 0) return null;
 
   const laneHeight = headerHeight + plotHeight;
+  // Median line spans the lane minus left-1.5/right-1.5 (6px each side).
+  const medianWidth = laneWidth - 12;
+  const medianDashOffsets: number[] = [];
+  for (let x = 0; x < medianWidth; x += MEDIAN_DASH_PX + MEDIAN_GAP_PX) {
+    medianDashOffsets.push(x);
+  }
   const contentWidth = lanes.length * laneWidth + (lanes.length - 1) * laneGap;
 
   return (
@@ -182,16 +191,27 @@ export default function ConferenceTeamWinProbLanes({
                     </div>
 
                     {/* Conference median */}
-                    {/* Drawn as a gradient, not a dashed border: Chrome renders
-                        2px border dashes as short squares that look doubled. */}
+                    {/* Dashes are solid blocks, not a dashed border (Chrome
+                        draws 2px border dashes as doubled-looking squares) or
+                        a repeating-linear-gradient (html2canvas skips those,
+                        so image exports lost the line). */}
                     <div
                       className="absolute left-1.5 right-1.5 h-0.5"
-                      style={{
-                        top: headerHeight + scale(conf.median) - 1,
-                        backgroundImage: `repeating-linear-gradient(to right, ${accent} 0 7px, transparent 7px 11px)`,
-                      }}
+                      style={{ top: headerHeight + scale(conf.median) - 1 }}
                       title={`${conf.conference_name} median: ${conf.median.toFixed(1)}%`}
-                    />
+                    >
+                      {medianDashOffsets.map((x) => (
+                        <span
+                          key={x}
+                          className="absolute top-0 h-full"
+                          style={{
+                            left: x,
+                            width: Math.min(MEDIAN_DASH_PX, medianWidth - x),
+                            backgroundColor: accent,
+                          }}
+                        />
+                      ))}
+                    </div>
 
                     {placed.map((pos) => {
                       const team = byName.get(pos.id);
