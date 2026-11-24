@@ -102,11 +102,7 @@ export default function ConferenceTeamWinProbLanes({
   const contentWidth = lanes.length * laneWidth + (lanes.length - 1) * laneGap;
 
   return (
-    // data-screenshot-fit-content: the export sizes the image to the lanes
-    // shown (lib/export/table-download), not to the number of team logos.
-    <section
-      data-screenshot-fit-content="true"
-      className="relative rounded-[1.25rem] border border-slate-200/90 bg-gradient-to-br from-white to-[#fbfdff] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:border-slate-700/90 dark:from-[#111827] dark:to-[#0f172a]">
+    <section className="relative rounded-[1.25rem] border border-slate-200/90 bg-gradient-to-br from-white to-[#fbfdff] shadow-[0_22px_55px_-36px_rgb(15_23_42_/_0.36),0_8px_22px_-18px_rgb(15_23_42_/_0.24)] dark:border-slate-700/90 dark:from-[#111827] dark:to-[#0f172a]">
       <div className="px-[1.35rem] pb-4 pt-5 max-md:px-[0.9rem] max-md:pb-3 max-md:pt-4" data-screenshot-hide="true">
         <h2 className="m-0 text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
           {title}
@@ -136,8 +132,11 @@ export default function ConferenceTeamWinProbLanes({
           aria-label={`Team win probability vs ${opponentLabel}, one lane per conference. Scroll horizontally to see every conference.`}
           tabIndex={0}
         >
+          {/* data-screenshot-fit-content: image exports end at the last
+              lane, not at the card's page-wide edge (lib/export/table-download). */}
           <div
             className="relative"
+            data-screenshot-fit-content="true"
             style={{ marginLeft: axisWidth, width: contentWidth, height: laneHeight }}
           >
             {Y_TICKS.map((tick) => (

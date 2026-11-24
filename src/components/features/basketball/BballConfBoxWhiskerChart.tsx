@@ -322,8 +322,11 @@ export default function BballConfBoxWhiskerChart({
           aria-label={`${title} chart. Scroll horizontally to see every conference.`}
           tabIndex={0}
         >
+          {/* data-screenshot-fit-content: image exports end at the last
+              conference, not at the card's page-wide edge. */}
           <div
             className="relative"
+            data-screenshot-fit-content="true"
             style={{
               height: chartHeight + logoHeight + padding.top + padding.bottom,
               minWidth: chartWidth + padding.left + padding.right,

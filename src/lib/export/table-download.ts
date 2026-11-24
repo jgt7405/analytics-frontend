@@ -15,6 +15,33 @@ import { conferenceLogoPath } from "@/lib/display-names";
 import { logger } from "@/lib/logger";
 
 const MIN_EXPORT_CONTENT_WIDTH = 660;
+// Card padding and border kept to the right of a fit-content plot.
+const FIT_CONTENT_TRAILING_PX = 24;
+
+/**
+ * Right edge, relative to `target`, of its `data-screenshot-fit-content`
+ * plots at full (unscrolled) width: layout width via offsetWidth, and any
+ * horizontal scroll a reader left the chart at added back.
+ */
+function fitContentRight(target: Element): number {
+  const targetLeft = target.getBoundingClientRect().left;
+  let right = 0;
+  target
+    .querySelectorAll<HTMLElement>('[data-screenshot-fit-content="true"]')
+    .forEach((plot) => {
+      let scrolled = 0;
+      for (
+        let el = plot.parentElement;
+        el && el !== target;
+        el = el.parentElement
+      ) {
+        scrolled += el.scrollLeft;
+      }
+      const left = plot.getBoundingClientRect().left - targetLeft + scrolled;
+      right = Math.max(right, left + plot.offsetWidth);
+    });
+  return Math.ceil(right + FIT_CONTENT_TRAILING_PX);
+}
 
 export interface TableDownloadOptions {
   contentSelector: string;
@@ -125,15 +152,13 @@ export async function downloadTableImage({
       } else if (
         targetElement.querySelector('[data-screenshot-fit-content="true"]')
       ) {
-        // Charts that lay out at their own width (the conference swim lanes:
-        // one lane per conference shown). The per-logo fallback below
-        // counted every team logo - ~150 for the top 12 conferences - and
-        // made a ~7,500px-wide image; the content width follows the lanes.
+        // Fixed-width plots inside a page-wide card (conf-data box-whiskers
+        // and swim lanes: one column per conference shown). Measuring the
+        // card left blank space to the right of the plot, and the per-logo
+        // fallback below made a ~7,500px image from ~150 team logos.
         actualWidth =
-          Math.max(
-            getFullContentWidth(targetElement),
-            MIN_EXPORT_CONTENT_WIDTH,
-          ) + 40;
+          Math.max(fitContentRight(targetElement), MIN_EXPORT_CONTENT_WIDTH) +
+          40;
       } else if (isSeedWinsComponent) {
         // For seed-wins component, use a narrower width to fit content better
         actualWidth = 700;
