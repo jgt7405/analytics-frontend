@@ -48,6 +48,35 @@ function MoversTable({ title, rows, kind }: { title: string; rows: PageChange[];
   </Card>;
 }
 
+/** The four rising/falling tables. When tracking began partway through the
+ *  previous period, "Before" undercounts and little can fall, so a note says
+ *  so; with no earlier data at all, the note replaces the tables. */
+export function Movers({ movers }: { movers: NonNullable<SiteStatisticsInsights["movers"]> }) {
+  const tables = <div className="grid gap-2 md:grid-cols-2">
+    <MoversTable title="Rising pages" rows={movers.pages.rising} kind="path" />
+    <MoversTable title="Falling pages" rows={movers.pages.falling} kind="path" />
+    <MoversTable title="Rising teams" rows={movers.teams.rising} kind="team" />
+    <MoversTable title="Falling teams" rows={movers.teams.falling} kind="team" />
+  </div>;
+  if (movers.previous_complete !== false) return tables;
+  const since = movers.tracking_since
+    ? new Date(movers.tracking_since).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/Chicago" })
+    : null;
+  const began = since ? `Visit tracking began ${since}` : "Visit tracking began recently";
+  const rows = [...movers.pages.rising, ...movers.pages.falling, ...movers.teams.rising, ...movers.teams.falling];
+  if (rows.every((row) => row.previous === 0)) {
+    return <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+      Rising and falling pages compare this period with the one before it. {began}, so there is no earlier period of this length to compare with yet. Choose a shorter period.
+    </p>;
+  }
+  return <div className="space-y-2">
+    <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+      {began}, partway through the period these are compared with, so &ldquo;Before&rdquo; counts only part of it: rises look larger than they are and few pages can show as falling.
+    </p>
+    {tables}
+  </div>;
+}
+
 /** Every day from the first to the last, with zeros for days without views. */
 function continuousDays(rows: Array<{ date: string; views: number }>) {
   if (!rows.length) return [];
@@ -117,12 +146,7 @@ export function ContentSection({ data }: { data: SiteStatisticsInsights }) {
 
   return <>
     <SectionHeading title="Content and the sports calendar" />
-    {data.movers ? <div className="grid gap-2 md:grid-cols-2">
-      <MoversTable title="Rising pages" rows={data.movers.pages.rising} kind="path" />
-      <MoversTable title="Falling pages" rows={data.movers.pages.falling} kind="path" />
-      <MoversTable title="Rising teams" rows={data.movers.teams.rising} kind="team" />
-      <MoversTable title="Falling teams" rows={data.movers.teams.falling} kind="team" />
-    </div> : <p className="text-sm text-slate-500">Rising and falling pages need a period to compare with; choose one other than All time.</p>}
+    {data.movers ? <Movers movers={data.movers} /> : <p className="text-sm text-slate-500">Rising and falling pages need a period to compare with; choose one other than All time.</p>}
     <Card title="Daily views and the sports calendar" note={<>Dashed lines mark season dates (<span className="text-amber-600">basketball</span>, <span className="text-green-800 dark:text-green-500">football</span>; edit <code>src/config/statistics-calendar.ts</code>). Red points are unusually busy days, explained below.</>}>
       <div className="h-72 p-3"><Line data={dailyData} options={dailyOptions} plugins={[markerPlugin as unknown as Plugin<"line">]} aria-label="Daily views with season dates" role="img" /></div>
       <DataTable maxHeight="max-h-56" rows={data.spikes} rowKey={(row) => row.date} empty="No unusually busy days in this period (more than two standard deviations above the average)" columns={[

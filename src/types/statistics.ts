@@ -172,7 +172,14 @@ export interface SiteStatisticsInsights {
   frequency: { visitors: number; visits_per_visitor: number; visits_1: number; visits_2_5: number; visits_6_20: number; visits_21_plus: number };
   stickiness: { daily_visitors: number; weekly_visitors: number; monthly_visitors: number; dau_mau: number | null; dau_wau: number | null };
   visitor_type_pages: Record<"new" | "returning", Array<{ path: string; views: number; share: number | null }>>;
-  movers: { pages: { rising: PageChange[]; falling: PageChange[] }; teams: { rising: PageChange[]; falling: PageChange[] } } | null;
+  movers: {
+    pages: { rising: PageChange[]; falling: PageChange[] };
+    teams: { rising: PageChange[]; falling: PageChange[] };
+    /** First recorded event; absent from older backend responses. */
+    tracking_since?: string | null;
+    /** False when tracking began after the previous period started. */
+    previous_complete?: boolean;
+  } | null;
   heatmap: Array<{ weekday: number; hour: number; views: number }>;
   content_mix: { unit: "hour" | "day" | "week" | "month"; buckets: Array<{ bucket: string; basketball: number; football: number; other: number; archive: number; total: number }> };
   conference_pages: { pages: string[]; conferences: string[]; cells: number[][] };
