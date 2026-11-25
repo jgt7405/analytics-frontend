@@ -140,10 +140,15 @@ export default async function FootballWhatIfPage({
   return (
     <>
       <JsonLd data={STRUCTURED_DATA} />
-      <Suspense fallback={null}>
+      {/* The simulator streams in after the shell. The description below it
+          sits inside the same boundary: outside it, the description painted
+          first at the top of the page and the simulator then pushed it off
+          screen (a 0.6 layout shift). The fallback holds a screen's height so
+          the footer doesn't jump either. */}
+      <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
         <FootballWhatIfContent initialConference={conference} />
+        <AboutSimulator />
       </Suspense>
-      <AboutSimulator />
     </>
   );
 }

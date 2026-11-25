@@ -28,6 +28,10 @@ export const baseMetadata: Metadata = {
   authors: [{ name: "JThom Analytics" }],
   creator: "JThom Analytics",
   publisher: "JThom Analytics",
+  // iPhone Safari otherwise turns number runs (scores, records, ranks) into
+  // tap-to-call links before React hydrates, which changes the HTML React
+  // checks against (hydration error #418, "HTML").
+  formatDetection: { telephone: false, date: false, address: false, email: false },
   robots: {
     index: true,
     follow: true,

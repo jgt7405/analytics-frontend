@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { apiUrl } from "@/api/urls";
 import { queryCachePolicy } from "@/lib/cache-policy";
+import { useHydrated } from "@/hooks/useHydrated";
 
 interface ConfWinsHistoryResponse {
   data: Array<{
@@ -76,7 +77,8 @@ export const useFootballTeamAllHistory = (
   teamName: string,
   season?: string,
 ) => {
-  return useQuery<AllHistoryData, Error>({
+  const hydrated = useHydrated();
+  const query = useQuery<AllHistoryData, Error>({
     queryKey: queryKeys.football.teamAllHistory(teamName, season),
     queryFn: async () => {
       const [confWinsResponse, cfpResponse] = await Promise.all([
@@ -106,4 +108,11 @@ export const useFootballTeamAllHistory = (
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
+  // The team page's history charts are code-split and hydrate one by one;
+  // the first one starts this query, and a later one can find its data
+  // already loaded. The server rendered every chart's loading state, so
+  // report loading until hydration is done (useHydrated) or React has to
+  // throw the server HTML away (error #418).
+  if (!hydrated) return { ...query, data: undefined, isLoading: true, error: null };
+  return query;
 };
