@@ -11,7 +11,7 @@ jest.mock("@/services/statistics-api", () => ({
   sendSiteUsageEvents: (...args: unknown[]) => sendSiteUsageEvents(...args),
 }));
 
-import { controlName, deviceType, recordPageEvent, scrollPercent, trackError, trackFeature, trackWebVital } from "../usage-tracking";
+import { controlName, deviceType, recordPageEvent, scrollPercent, trackCompare, trackError, trackFeature, trackWebVital } from "../usage-tracking";
 
 const view = (path: string, viewId: string): SiteUsageEvent => ({
   event_type: "page_view", path, sport: "basketball", page: "wins",
@@ -107,6 +107,7 @@ describe("recordPageEvent", () => {
     recordPageEvent(view("/basketball/wins/", "55555555-5555-4555-8555-555555555555"));
     trackFeature("Share this page");
     trackWebVital("INP", 120);
+    trackCompare("basketball", ["Duke", "North Carolina"], "pick");
     trackError("not_found", "/basketball/nope/");
     const schema = REQUEST_SCHEMAS["basketball.statisticsEvent"];
     const events = sentEvents();
@@ -114,5 +115,9 @@ describe("recordPageEvent", () => {
     for (const event of events) expect(schema.safeParse(event).success).toBe(true);
     expect(schema.safeParse({ events }).success).toBe(true);
     expect(schema.safeParse({ events: [] }).success).toBe(false);
+    expect(events).toContainEqual(expect.objectContaining({
+      event_type: "compare", sport: "basketball", detail: "pick", teams: ["Duke", "North Carolina"],
+      view_id: "55555555-5555-4555-8555-555555555555",
+    }));
   });
 });

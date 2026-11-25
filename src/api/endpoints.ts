@@ -200,6 +200,7 @@ export const ENDPOINTS = [
   // The statistics page's second section; same filters as statisticsAnalysis.
   get("statisticsInsights", "basketball", ["statistics/insights"], "/statistics/insights", "uncached", { query: ["days", "sport", "scope", "dimension", "value", "dimension2", "value2"] }),
   get("whatIfAnalysis", "basketball", ["basketball/whatif/analysis"], "/basketball/whatif/analysis", "live", { query: ["days"] }),
+  get("compareAnalysis", "basketball", ["basketball/compare/analysis"], "/basketball/compare/analysis", "live", { query: ["days"] }),
   // Chart page's "Download Team Schedule": the whole schedule table as a file.
   get("teamScheduleCsv", "basketball", ["basketball/team_schedule/csv"], "/basketball/team_schedule/csv", "currentStandings", { query: [], response: "csv" }),
 
@@ -235,6 +236,7 @@ export const ENDPOINTS = [
   get("allFutureGames", "football", ["football/all_future_games"], "/football/all_future_games", "live"),
   get("seasonHighlights", "football", ["football/season_highlights"], "/football/season_highlights", "currentStandings"),
   get("whatIfAnalysis", "football", ["football/whatif/analysis"], "/football/whatif/analysis", "live", { query: ["days"] }),
+  get("compareAnalysis", "football", ["football/compare/analysis"], "/football/compare/analysis", "live", { query: ["days"] }),
   get("bowlPicks", "football", ["football/bowl-picks"], "/football/bowl-picks", "live"),
   get("bowlScoreboard", "football", ["football/bowl-scoreboard"], "/football/bowl-scoreboard", "live"),
 

@@ -19,6 +19,7 @@ import {
 import { BaseApiClient } from "./shared-request";
 import { logger } from "@/lib/logger";
 import { apiPath } from "@/api/urls";
+import type { CompareAnalysisResponse } from "@/types/compare-analysis";
 
 // Basketball-specific response interfaces
 export interface TWVApiResponse {
@@ -91,6 +92,21 @@ export interface UnifiedConferenceDataResponse {
 }
 
 export class BasketballApiClient extends BaseApiClient {
+  /** Usage of the sport's Compare Schedules page (either sport). */
+  async getCompareAnalysis(
+    sport: "basketball" | "football",
+    days: string,
+  ): Promise<CompareAnalysisResponse> {
+    return this.request(
+      apiPath(sport === "basketball" ? "basketball.compareAnalysis" : "football.compareAnalysis", {}, { days }),
+      (data) => ({
+        success: true,
+        data: data as CompareAnalysisResponse,
+        error: null,
+      }),
+    );
+  }
+
   async getBasketballWhatIfAnalysis(
     days: string,
   ): Promise<BasketballWhatIfAnalysisResponse> {

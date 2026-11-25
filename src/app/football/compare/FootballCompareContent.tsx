@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 import { handleListArrowKeys } from "@/lib/a11y/list-arrow-keys";
+import { useCompareTracking } from "@/hooks/useCompareTracking";
 
 // Matches the gradient/border/shadow "card" look used across the
 // modernized Wins/Standings/CWV/etc. pages.
@@ -141,6 +142,7 @@ export default function FootballCompareContent() {
   );
   const [allTeams, setAllTeams] = useState<Team[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<SelectedTeam[]>([]);
+  const markRankAdd = useCompareTracking("football", selectedTeams.map((t) => t.teamName));
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [teamDataCache, setTeamDataCache] = useState<{
     [key: string]: TeamData;
@@ -301,6 +303,7 @@ export default function FootballCompareContent() {
       return next;
     });
     const added = results.filter((data): data is TeamData => data !== null).map(toSelectedTeam);
+    if (added.length) markRankAdd();
     setSelectedTeams((prev) => {
       const present = new Set(prev.map((t) => t.teamName));
       const fresh = added.filter((t) => !present.has(t.teamName));

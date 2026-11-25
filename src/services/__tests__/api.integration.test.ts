@@ -69,6 +69,25 @@ describe('API Client Integration Tests', () => {
     })
   })
 
+  describe('Compare analysis', () => {
+    it.each([
+      ['basketball', '/api/proxy/basketball/compare/analysis/?days=90'],
+      ['football', '/api/proxy/football/compare/analysis/?days=all'],
+    ] as const)('getCompareAnalysis(%s) calls its sport endpoint', async (sport, url) => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ tracking_since: null }),
+      })
+
+      await api.getCompareAnalysis(sport, sport === 'basketball' ? '90' : 'all').catch(() => {})
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining(url),
+        expect.any(Object)
+      )
+    })
+  })
+
   describe('Basketball Team', () => {
     it('loads team details and league schedule data from separate endpoints', async () => {
       ;(global.fetch as jest.Mock)

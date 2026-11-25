@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 import { handleListArrowKeys } from "@/lib/a11y/list-arrow-keys";
+import { useCompareTracking } from "@/hooks/useCompareTracking";
 
 // ============ MAIN PAGE COMPONENT ============
 
@@ -110,6 +111,7 @@ export default function BasketballCompareContent() {
   );
   const [allTeams, setAllTeams] = useState<Team[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<SelectedTeam[]>([]);
+  useCompareTracking("basketball", selectedTeams.map((t) => t.teamName));
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Team[]>([]);

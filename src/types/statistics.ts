@@ -76,7 +76,7 @@ export interface StatisticsBucket {
   unique_visitors: number;
 }
 
-export type SiteUsageEventType = "page_view" | "filter_change" | "page_exit" | "feature" | "web_vital" | "error" | "outbound";
+export type SiteUsageEventType = "page_view" | "filter_change" | "page_exit" | "feature" | "web_vital" | "error" | "outbound" | "compare";
 
 export interface SiteUsageEvent {
   event_type: SiteUsageEventType;
@@ -107,11 +107,15 @@ export interface SiteUsageEvent {
   // page_exit: visible time and furthest scroll on the page.
   engaged_ms?: number;
   scroll_pct?: number;
-  // feature: control name; web_vital: metric name; error: kind.
+  // feature: control name; web_vital: metric name; error: kind;
+  // compare: how the team was added ("pick" by hand, "rank" quick-select).
   detail?: string | null;
   // feature: extra text; error: message; outbound: the link followed.
   label?: string | null;
   metric_value?: number;
+  /** compare: the teams on the page in selection order, ending with the one
+   *  just added (src/hooks/useCompareTracking.ts). */
+  teams?: string[];
 }
 
 /** What the tracker saw when a page view happened; the sender turns the first

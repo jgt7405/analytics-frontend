@@ -33,7 +33,7 @@ const conferenceAndSelections = z.object({ conference, selections });
 
 // One anonymous usage event (PageTracker, src/lib/usage-tracking.ts).
 const siteUsageEvent = z.object({
-  event_type: z.enum(["page_view", "filter_change", "page_exit", "feature", "web_vital", "error", "outbound"]),
+  event_type: z.enum(["page_view", "filter_change", "page_exit", "feature", "web_vital", "error", "outbound", "compare"]),
   path: z.string().startsWith("/").max(240),
   sport: z.enum(["basketball", "football"]).nullable().optional(),
   page: z.string().max(80).nullable().optional(),
@@ -61,6 +61,8 @@ const siteUsageEvent = z.object({
   detail: z.string().max(120).nullable().optional(),
   label: z.string().max(500).nullable().optional(),
   metric_value: z.number().finite().optional(),
+  // compare: the teams on a Compare Schedules page (src/hooks/useCompareTracking.ts).
+  teams: z.array(z.string().min(1).max(60)).min(1).max(10).optional(),
 });
 
 export const REQUEST_SCHEMAS = {

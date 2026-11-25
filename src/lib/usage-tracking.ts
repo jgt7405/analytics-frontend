@@ -94,7 +94,7 @@ function flush() {
   resumeClock();
 }
 
-function enqueue(event: PageEvent) {
+function enqueue(event: PageEvent & Partial<Pick<SiteUsageEvent, "sport">>) {
   const base = current ?? { path: window.location.pathname };
   queue.push({ ...base, ...event } as SiteUsageEvent);
   if (queue.length >= MAX_BATCH) sendQueue();
@@ -103,6 +103,13 @@ function enqueue(event: PageEvent) {
 export function trackFeature(name: string) {
   const detail = name.replace(/\s+/g, " ").trim().slice(0, 80);
   if (detail) enqueue({ event_type: "feature", detail });
+}
+
+/** A team joined a Compare Schedules comparison. `teams` is the comparison
+ *  at that moment in selection order, ending with the team just added. The
+ *  sport is sent too: a team can be added before the page view is recorded. */
+export function trackCompare(sport: "basketball" | "football", teams: string[], method: "pick" | "rank") {
+  if (teams.length) enqueue({ event_type: "compare", sport, detail: method, teams });
 }
 
 export function trackError(kind: "js_error" | "api_error" | "not_found", message?: string) {

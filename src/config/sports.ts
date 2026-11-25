@@ -192,6 +192,14 @@ export const SPORTS: Record<Sport, SportConfig> = {
         indexed: false,
       },
       {
+        slug: "compareanalysis",
+        title: "Basketball Compare Schedules Analytics",
+        description:
+          "Which college basketball teams visitors select on the Compare Schedules page and which teams they compare with each other.",
+        archive: false,
+        indexed: false,
+      },
+      {
         slug: "season-info",
         title: "College Basketball Season Info",
         description:
@@ -327,6 +335,14 @@ export const SPORTS: Record<Sport, SportConfig> = {
         title: "Football What-If Scenario Analytics",
         description:
           "Analyze usage patterns for submitted college football what-if scenarios, including timing, conferences, and selected teams.",
+        archive: false,
+        indexed: false,
+      },
+      {
+        slug: "compareanalysis",
+        title: "Football Compare Schedules Analytics",
+        description:
+          "Which college football teams visitors select on the Compare Schedules page and which teams they compare with each other.",
         archive: false,
         indexed: false,
       },

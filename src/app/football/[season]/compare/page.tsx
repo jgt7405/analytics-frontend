@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "@/api/urls";
 import { logger } from "@/lib/logger";
 import { resizedLogoSrc } from "@/lib/logo-src";
+import { useCompareTracking } from "@/hooks/useCompareTracking";
 
 interface Team {
   team_name: string;
@@ -92,6 +93,7 @@ export default function FootballCompareArchivePage() {
   );
   const [allTeams, setAllTeams] = useState<Team[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<SelectedTeam[]>([]);
+  useCompareTracking("football", selectedTeams.map((t) => t.teamName));
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [teamDataCache, setTeamDataCache] = useState<{
     [key: string]: TeamData;

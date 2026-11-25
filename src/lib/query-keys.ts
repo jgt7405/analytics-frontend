@@ -63,6 +63,8 @@ export const queryKeys = {
       ["basketball", "site-statistics-insights", days, sport, scope, dimension, value, dimension2, value2] as const,
     whatIfAnalysis: (days: string) =>
       ["basketball", "what-if-analysis", days] as const,
+    compareAnalysis: (days: string) =>
+      ["basketball", "compare-analysis", days] as const,
   },
   football: {
     all: ["football"] as const,
@@ -103,5 +105,7 @@ export const queryKeys = {
       ["football", "twv", conference, season] as const,
     whatIfAnalysis: (days: string) =>
       ["football", "what-if-analysis", days] as const,
+    compareAnalysis: (days: string) =>
+      ["football", "compare-analysis", days] as const,
   },
 };
