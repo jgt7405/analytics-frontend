@@ -5,8 +5,11 @@
 // Vercel, so the pipeline needs no mail credentials of its own.
 //
 // POST /api/pipeline-alert/ with JSON:
-//   {"sport": "football" | "basketball",
-//    "kind": "run_completed" | "run_failed" | "source_failed" | "source_stale",
+//   {"sport": "football" | "basketball" | "site",
+//    "kind": "run_completed" | "run_failed" | "source_failed" | "source_stale"
+//            | "site_errors",
+// ("site" / "site_errors" is the daily report of errors visitors hit on the
+// website, from the pipeline repo's site_error_report.py.)
 //    "subject": "...", "text": "..."}
 //
 // No secret, like /api/revalidate: the recipient is fixed, the mail is plain
@@ -25,8 +28,8 @@ const ALERT_RECIPIENT = "jacob@jthomanalytics.com";
 // A bad night can fail several sources in both sports; well above that.
 const ALERTS_PER_HOUR = 40;
 
-const SPORTS = ["football", "basketball"] as const;
-const KINDS = ["run_completed", "run_failed", "source_failed", "source_stale"] as const;
+const SPORTS = ["football", "basketball", "site"] as const;
+const KINDS = ["run_completed", "run_failed", "source_failed", "source_stale", "site_errors"] as const;
 const NO_STORE = { "Cache-Control": "no-store" };
 
 function reply(body: Record<string, unknown>, status = 200) {

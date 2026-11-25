@@ -50,6 +50,12 @@ describe("pipeline-alert route", () => {
     expect(res.headers.get("Cache-Control")).toBe("no-store");
   });
 
+  it("sends the daily website error report", async () => {
+    const res = await POST(post({ sport: "site", kind: "site_errors", subject: "3 website errors (Nov 26)", text: "- Script error" }));
+    expect(res.status).toBe(200);
+    expect(sendMail.mock.calls[0][0].subject).toBe("[JThom site] 3 website errors (Nov 26)");
+  });
+
   it("strips line breaks from the subject so it can't add mail headers", async () => {
     await POST(post({ ...GOOD, subject: "Hi\r\nBcc: someone@example.com" }));
     expect(sendMail.mock.calls[0][0].subject).toBe("[JThom football] Hi Bcc: someone@example.com");
