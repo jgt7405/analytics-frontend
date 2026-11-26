@@ -117,6 +117,13 @@ const nextConfig: NextConfig = {
         destination: sportPagePath(HOME_SPORT, "wins"),
         permanent: false,
       },
+      // A bare sport URL (/basketball/, /football/) has no page of its own;
+      // visitors type it and it 404'd. Send it to the sport's home page.
+      ...SPORT_IDS.map((sport) => ({
+        source: `/${sport}`,
+        destination: sportPagePath(sport, "home"),
+        permanent: false,
+      })),
       // The current season has no season in its URLs
       // (docs/decisions/url-policy.md): /football/2026-27/wins/ is the same
       // page as /football/wins/. Temporary (307), because at rollover the

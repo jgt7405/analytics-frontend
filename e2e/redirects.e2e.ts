@@ -52,6 +52,20 @@ test("/ is a temporary (307) redirect to the home sport", async ({ request }) =>
   expect(response.headers()["location"]).toBe(`/${HOME_SPORT}/wins/`);
 });
 
+for (const sport of SPORT_IDS) {
+  test(`/${sport}/ is a temporary (307) redirect to the ${sport} home page`, async ({ request }) => {
+    const response = await request.get(`/${sport}/`, { maxRedirects: 0 });
+    expect(response.status()).toBe(307);
+    expect(response.headers()["location"]).toBe(`/${sport}/home/`);
+  });
+}
+
+test("the social preview image exists", async ({ request }) => {
+  const response = await request.get("/og-image.png");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-type"]).toBe("image/png");
+});
+
 // Legacy team URLs (Search Console review, docs/baselines/README.md).
 for (const sport of SPORT_IDS) {
   test(`${sport}: team names with a period get the trailing slash in one 308, keeping the query`, async ({ request }) => {
