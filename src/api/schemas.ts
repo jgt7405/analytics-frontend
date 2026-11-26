@@ -62,7 +62,9 @@ const siteUsageEvent = z.object({
   label: z.string().max(500).nullable().optional(),
   metric_value: z.number().finite().optional(),
   // compare: the teams on a Compare Schedules page (src/hooks/useCompareTracking.ts).
-  teams: z.array(z.string().min(1).max(60)).min(1).max(10).optional(),
+  // Football allows 12 teams (basketball 10). Keep in step with the backend's
+  // MAX_COMPARE_TEAMS: one oversized list rejects its whole batch.
+  teams: z.array(z.string().min(1).max(60)).min(1).max(12).optional(),
 });
 
 export const REQUEST_SCHEMAS = {

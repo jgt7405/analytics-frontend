@@ -120,4 +120,17 @@ describe("recordPageEvent", () => {
       view_id: "55555555-5555-4555-8555-555555555555",
     }));
   });
+
+  it("accepts a full 12-team football comparison (a top-12 quick select)", () => {
+    recordPageEvent(view("/football/compare/", "66666666-6666-4666-8666-666666666666"));
+    const teams = Array.from({ length: 12 }, (_, i) => `Team ${i + 1}`);
+    teams.forEach((_, i) => trackCompare("football", teams.slice(0, i + 1), "rank"));
+    // Leaving the page sends the queue.
+    recordPageEvent(view("/football/cfp/", "77777777-7777-4777-8777-777777777777"));
+    const schema = REQUEST_SCHEMAS["basketball.statisticsEvent"];
+    const compares = sentEvents().filter((event) => event.event_type === "compare");
+    expect(compares).toHaveLength(12);
+    expect(schema.safeParse({ events: compares }).success).toBe(true);
+    expect(schema.safeParse({ events: [{ ...compares[11], teams: [...teams, "Team 13"] }] }).success).toBe(false);
+  });
 });
