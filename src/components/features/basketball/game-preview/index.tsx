@@ -23,7 +23,7 @@ import type {
   UpcomingGame,
 } from "@/types/gamePreview";
 import { Download } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useGameInUrl, useIsMobile } from "./hooks";
 import { computeConfPosition, computeMetrics } from "./metrics";
 import { generatePDF } from "./pdf";
@@ -40,12 +40,32 @@ function gameLabel(g: UpcomingGame): string {
 
 // ─── Main Page Component ─────────────────────────────────────────────────────
 
-export default function GamePreviewPageContent() {
-  const [upcomingGames, setUpcomingGames] = useState<UpcomingGame[]>([]);
-  const [conferences, setConferences] = useState<string[]>([]);
+interface GamePreviewPageContentProps {
+  /** Upcoming games fetched on the server; the browser then skips its own
+   *  request for them. */
+  initialData?: { games?: UpcomingGame[]; conferences?: string[] };
+  /** The game ?game= named on the server: the heading names it from the
+   *  first HTML, before the selection is restored in the browser. */
+  initialGame?: UpcomingGame | null;
+  /** Server-rendered text for the page (the game's written prediction, or
+   *  the list of upcoming games), shown under the preview. */
+  children?: ReactNode;
+}
+
+export default function GamePreviewPageContent({
+  initialData,
+  initialGame = null,
+  children,
+}: GamePreviewPageContentProps = {}) {
+  const [upcomingGames, setUpcomingGames] = useState<UpcomingGame[]>(
+    initialData?.games ?? [],
+  );
+  const [conferences, setConferences] = useState<string[]>(
+    initialData?.conferences ?? [],
+  );
   const [selectedGame, setSelectedGame] = useState<UpcomingGame | null>(null);
   const [conferenceFilter, setConferenceFilter] = useState<string>("All");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   const [awayTeamData, setAwayTeamData] = useState<TeamDataResponse | null>(
@@ -80,6 +100,7 @@ export default function GamePreviewPageContent() {
   };
 
   useEffect(() => {
+    if (initialData) return;
     const loadGames = async () => {
       setIsLoading(true);
       try {
@@ -94,7 +115,7 @@ export default function GamePreviewPageContent() {
       }
     };
     loadGames();
-  }, []);
+  }, [initialData]);
 
   useGameInUrl(upcomingGames, selectedGame, setSelectedGame);
 
@@ -249,8 +270,20 @@ export default function GamePreviewPageContent() {
 
   const selectedGameDate = selectedGame?.date_sort || "";
 
+  // Until the browser restores the selection, the server's game stands in.
+  // Same wording as matchupName in src/lib/game-preview-seo.ts (not imported:
+  // that module is server-side and would cost this page's JS budget).
+  const headingGame = selectedGame ?? initialGame;
+  const heading = headingGame
+    ? `${headingGame.away_team} vs ${headingGame.home_team} Prediction & Preview`
+    : "College Basketball Game Previews";
+  // The server's summary describes initialGame; hide it once another game is
+  // picked so it never sits under a different game's preview.
+  const showSummary =
+    !initialGame || !selectedGame || selectedGame.game_id === initialGame.game_id;
+
   return (
-    <PageLayoutWrapper title="Game Preview" isLoading={isLoading}>
+    <PageLayoutWrapper title={heading} isLoading={isLoading}>
       <ErrorBoundary>
         <div style={{ maxWidth: 960 }}>
           <p className="text-sm text-gray-500 dark:text-gray-300 mb-5">
@@ -510,6 +543,7 @@ export default function GamePreviewPageContent() {
               )}
             </>
           )}
+          {showSummary && children}
         </div>
       </ErrorBoundary>
     </PageLayoutWrapper>

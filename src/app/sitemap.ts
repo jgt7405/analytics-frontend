@@ -6,6 +6,8 @@ import { logger } from "@/lib/logger";
 import { SPORT_IDS } from "@/config/seasons";
 import { SPORTS, sportPagePath } from "@/config/sports";
 import { whatIfConferencePath, whatIfConferences } from "@/lib/whatif-conferences";
+import { gamePreviewPath, indexablePreviewGames } from "@/lib/game-preview-seo";
+import { getBasketballUpcomingGamesServer } from "@/lib/server-api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.jthomanalytics.com';
@@ -88,5 +90,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     logger.warn('Could not fetch football teams for sitemap:', error);
   }
 
-  return [...staticPages, ...whatIfConferencePages, ...teamPages];
+  // Each upcoming basketball game's preview is its own page for the few days
+  // until it is played (src/app/basketball/game-preview/page.tsx), so the
+  // sitemap lists the indexable ones among the games in the picker (~100 KB
+  // fetch).
+  const gamePreviewPages: MetadataRoute.Sitemap = indexablePreviewGames(
+    (await getBasketballUpcomingGamesServer())?.games,
+  ).map((game) => ({
+    url: `${baseUrl}${gamePreviewPath(game.game_id)}`,
+    changeFrequency: "daily" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...whatIfConferencePages, ...teamPages, ...gamePreviewPages];
 }

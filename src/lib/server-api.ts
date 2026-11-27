@@ -34,6 +34,7 @@ import type { NCAAProjectionsResponse } from "@/hooks/useNCAAProjections";
 import type { CombinedBasketballConfResponse } from "@/hooks/useBasketballConfData";
 import type { PlayoffRankingsResponse } from "@/types/football";
 import type { TeamListResponse } from "@/hooks/useTeamList";
+import type { UpcomingGame } from "@/types/gamePreview";
 import { BACKEND_API_URL } from "@/config/env";
 import { CACHE_POLICIES, cacheClassFor, sportCacheTag } from "@/lib/cache-policy";
 import type { EndpointKey } from "@/api/endpoints";
@@ -163,6 +164,14 @@ export const getFootballTeamServer = (teamName: string) =>
 // --- Basketball tournament projections (no conference param) ----------------
 export const getNCAAProjectionsServer = (season?: string) =>
   fetchEndpoint<NCAAProjectionsResponse>("basketball.ncaaProjections", {}, { season });
+
+// --- Basketball game preview (each team's next game, ~100 KB) --------------
+export const getBasketballUpcomingGamesServer = () =>
+  fetchEndpoint<{ games?: UpcomingGame[]; conferences?: string[] }>(
+    "basketball.upcomingGames",
+    {},
+    { next_only: "1" },
+  );
 
 // --- Football playoff rankings (season mode) ---------------------------------
 // The backend path has no conference segment; the endpoint list maps the
