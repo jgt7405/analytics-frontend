@@ -61,12 +61,27 @@ async function openTall(page: Page, path: string) {
   await expect(page.locator("#main-content")).toBeVisible();
 }
 
+// Long team names carry soft hyphens (src/lib/formatTeamName.ts) so they
+// wrap cleanly. Assistive tech ignores them, but axe 4.14's
+// label-content-name-mismatch compares the raw text, so "View North
+// Carolina" was flagged against the visible "North Caro\u00ADlina". Removed
+// before the scan; real label/text mismatches still fail.
+async function stripSoftHyphens(page: Page) {
+  await page.evaluate(() => {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (node.nodeValue?.includes("\u00AD")) node.nodeValue = node.nodeValue.replace(/\u00AD/g, "");
+    }
+  });
+}
+
 test.describe("axe", () => {
   test.describe.configure({ timeout: 90_000 });
 
   for (const path of AXE_ROUTES) {
     test(`${path} has no WCAG A/AA violations`, async ({ page }) => {
       await openTall(page, path);
+      await stripSoftHyphens(page);
       const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
       const summary = violations.map(
         (v) => `${v.id} (${v.impact}): ${v.nodes.map((n) => n.target.join(" ")).slice(0, 5).join(", ")}`,

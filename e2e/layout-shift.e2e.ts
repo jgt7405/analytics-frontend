@@ -128,26 +128,28 @@ for (const path of HEADER_PAGES) {
 // script swaps it in; on a slowed phone the taller table skeleton was often
 // painted first, and the page jumped when the table replaced it (0.118, 27
 // of 40 loads on /football/cwv/). Table pages join this list as their table
-// boundaries are removed (plan step 10 streaming notes).
-const TABLES_IN_PAGE_CHUNK: Array<[string, string]> = [
-  ["/football/cwv/", "CWVTable-module"],
-  ["/football/2025-26/cwv/", "CWVTable-module"],
-  ["/football/seed/", "FootballSeedTable-module"],
-  ["/football/2025-26/seed/", "FootballSeedTable-module"],
-  ["/football/standings/", "FootballStandingsTable-module"],
-  ["/football/standings/", "FootballStandingsTableNoTies-module"],
-  ["/football/2025-26/standings/", "FootballStandingsTable-module"],
-  ["/football/2025-26/standings/", "FootballStandingsTableNoTies-module"],
-  ["/football/schedule/", "ScheduleTable-module"],
+// boundaries are removed (plan step 10 streaming notes). Checked by markup,
+// not CSS-module class names (Next 16.4 shortens those in production): the
+// whole page may stream as one chunk behind loading.tsx, but the chunk that
+// carries the table must also carry the page's header block.
+const TABLE_PAGES_IN_ONE_CHUNK = [
+  "/football/cwv/",
+  "/football/2025-26/cwv/",
+  "/football/seed/",
+  "/football/2025-26/seed/",
+  "/football/standings/",
+  "/football/2025-26/standings/",
+  "/football/schedule/",
 ];
 
-for (const [path, table] of TABLES_IN_PAGE_CHUNK) {
-  test(`${path} sends ${table.replace("-module", "")} with the page, not as a separate chunk`, async ({ request }, testInfo) => {
+for (const path of TABLE_PAGES_IN_ONE_CHUNK) {
+  test(`${path} sends its table with the page, not as a separate chunk`, async ({ request }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "checks the HTML only");
     const html = await (await request.get(path, { headers: { "user-agent": UA.phone } })).text();
-    expect(html).toContain(table);
-    const chunkStarts = [...html.matchAll(/<div hidden id="S:\d+">(<[^>]*>)/g)].map((m) => m[1]);
-    expect(chunkStarts.filter((tag) => tag.includes(table))).toEqual([]);
+    expect(html).toContain("<table");
+    const chunks = html.split(/<div hidden id="S:\d+">/).slice(1);
+    const tableOnItsOwn = chunks.filter((chunk) => chunk.includes("<table") && !chunk.includes("page-header"));
+    expect(tableOnItsOwn.map((chunk) => chunk.slice(0, 200))).toEqual([]);
   });
 }
 

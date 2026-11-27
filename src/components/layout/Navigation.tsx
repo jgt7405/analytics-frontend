@@ -190,7 +190,10 @@ function NavigationContent() {
               {isActive && <span className="sr-only">Current page: </span>}
               {isMultiWord ? (
                 <>
-                  <span>{words.slice(0, -1).join(" ")}</span>
+                  {/* The space keeps the visible text "Conf Tourney", not
+                      "ConfTourney", so it matches the aria-label (axe
+                      label-content-name-mismatch); flex items drop it. */}
+                  <span>{words.slice(0, -1).join(" ")}</span>{" "}
                   <span>{words[words.length - 1]}</span>
                 </>
               ) : (
@@ -209,7 +212,7 @@ function NavigationContent() {
             "text-xs flex flex-col items-center justify-center leading-none py-1",
           )}
         >
-          <span>Switch to </span>
+          <span>Switch to</span>{" "}
           <span>{isFootball ? "Basketball" : "Football"}</span>
         </Link>
       </nav>
