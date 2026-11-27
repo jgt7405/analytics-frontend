@@ -26,6 +26,22 @@ const seedToNumeric = (seed: number | string | null | undefined): number => {
   return isNaN(parsed) ? 20 : parsed;
 };
 
+// Hover text for a team's logo. The seed endpoint sends tournament_bid_pct as
+// a 0-1 fraction (older data as 0-100, as SeedTable also accepts). Whole
+// percents; exactly 100% or 0% shows as such, but a rounded 100 or 0 that
+// isn't certain shows as ">99%" / "<1%".
+export function bidTitle(teamName: string, bidPct: number | undefined): string {
+  const raw = bidPct ?? 0;
+  const pct = raw <= 1 ? raw * 100 : raw;
+  let label: string;
+  if (pct >= 100) label = "100%";
+  else if (pct <= 0) label = "0%";
+  else if (pct > 99) label = ">99%";
+  else if (pct < 1) label = "<1%";
+  else label = `${Math.round(pct)}%`;
+  return `${teamName} - ${label} tournament bid`;
+}
+
 const seedLabels: (string | number)[] = [
   1,
   2,
@@ -394,7 +410,7 @@ export default function BballCeiling({
                       height: logoSize,
                       objectFit: "contain",
                     }}
-                    title={`${team.team_name} - ${(team.tournament_bid_pct || 0).toFixed(1)}% tournament bid`}
+                    title={bidTitle(team.team_name, team.tournament_bid_pct)}
                   />
                 )}
               </div>
@@ -473,7 +489,7 @@ export default function BballCeiling({
                       height: logoSize,
                       objectFit: "contain",
                     }}
-                    title={`${team.team_name} - ${(team.tournament_bid_pct || 0).toFixed(1)}% tournament bid`}
+                    title={bidTitle(team.team_name, team.tournament_bid_pct)}
                   />
                 )}
               </div>
