@@ -15,7 +15,7 @@ type CFPRow = FootballCFPApiResponse["data"][number];
 const FOOTBALL_CFP: PostseasonContentConfig<CFPRow> = {
   pageId: "football-cfp",
   actionPageName: "cfp",
-  title: "College Football Playoff Projections",
+  title: "CFP Odds by Round",
   hidePageTitle: true,
   tableClass: "cfp-table",
   skeletonTableType: "standings",

@@ -321,9 +321,11 @@ export const SPORTS: Record<Sport, SportConfig> = {
       },
       {
         slug: "whatif",
-        title: "CFP Simulator & Conference Championship Calculator",
+        // "CFP simulator" leads: it is the top query (rank ~3). "Predictor" is
+        // the most-searched word the title lacked (GSC, Nov 2026).
+        title: "CFP Simulator & Predictor | Conference Championship Calculator",
         description:
-          "Free College Football Playoff simulator: pick game winners and see how every team's CFP odds and conference championship game chances change. SEC, Big Ten, Big 12, ACC and more.",
+          "Free College Football Playoff simulator and predictor: pick game winners and see how every team's CFP odds, conference championship chances and tiebreakers change. SEC, Big Ten, Big 12, ACC and more.",
         navLabel: "What If",
         navDescription: "What If Conference Championship Scenarios",
         archive: false,

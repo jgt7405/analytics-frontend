@@ -3,6 +3,7 @@ import { PageTracker } from "@/components/analytics/PageTracker";
 import ChunkErrorHandler from "@/components/common/ChunkErrorHandler";
 import PerformancePanel from "@/components/debug/PerformancePanel";
 import Header from "@/components/layout/Header";
+import JsonLd, { SITE_IDENTITY } from "@/components/seo/JsonLd";
 import { Providers } from "@/components/providers/Providers";
 import { robotoCondensed } from "@/lib/fonts";
 import { Analytics } from "@vercel/analytics/react";
@@ -72,6 +73,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        <JsonLd data={SITE_IDENTITY} />
         <GoogleAnalytics />
         <ChunkErrorHandler />
         <Providers>

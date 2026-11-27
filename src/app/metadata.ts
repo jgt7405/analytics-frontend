@@ -149,7 +149,7 @@ export function teamPageMetadata(
   const teamName = decodeURIComponent(teamSlug).replace(/_/g, " ");
   const description =
     sport === "football"
-      ? `${teamName} football projected wins, conference standings, College Football Playoff odds, schedule with win probabilities, and ratings, updated daily.`
+      ? `${teamName} football projected wins and win total, conference standings, College Football Playoff odds, schedule with win probabilities, and ratings, updated daily.`
       : `${teamName} basketball projected wins, conference standings, NCAA tournament odds and projected seed, schedule with win probabilities, and ratings, updated daily.`;
   // Re-encode from the decoded name: the route param can arrive partly
   // decoded ("Texas%20A&M"), which made the canonical disagree with the

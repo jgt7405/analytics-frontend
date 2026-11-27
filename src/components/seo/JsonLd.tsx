@@ -41,3 +41,26 @@ export function footballBreadcrumb(name: string, path: string) {
 
 export const ORGANIZATION = { "@type": "Organization", name: "JThom Analytics" };
 export const SITE_URL = SITE;
+
+// Site name for Google's results. The alternate names are how people search
+// for the site ("j thom", "jthom"); "j thom" ranked only ~4.6 (GSC, Nov 2026).
+const ALTERNATE_NAMES = ["JThom", "J Thom Analytics", "J Thom"];
+
+/** WebSite + Organization identity, rendered once per page by the root layout. */
+export const SITE_IDENTITY = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "JThom Analytics",
+    alternateName: ALTERNATE_NAMES,
+    url: `${SITE}/`,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "JThom Analytics",
+    alternateName: ALTERNATE_NAMES,
+    url: `${SITE}/`,
+    logo: `${SITE}/images/apple-touch-icon.png`,
+  },
+];

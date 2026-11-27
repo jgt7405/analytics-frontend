@@ -263,8 +263,8 @@ export default function FootballWhatIfContent({
       <div className="mb-2 page-header">
         <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
           {headingConference
-            ? `${headingConference} Championship Scenarios & CFP Simulator`
-            : "CFP What-If Simulator"}
+            ? `${headingConference} Championship Scenarios & Tiebreaker Calculator`
+            : "CFP Simulator & Predictor"}
         </h1>
       </div>
       <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">

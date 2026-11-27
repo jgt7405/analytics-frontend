@@ -25,8 +25,12 @@ const BASE_METADATA: Metadata = {
   ...sportPageMetadata("football", "whatif"),
   keywords: [
     "CFP simulator",
+    "CFP predictor",
     "college football playoff simulator",
+    "college football playoff predictor",
     "CFP odds calculator",
+    "conference championship scenarios",
+    "tiebreaker calculator",
     "football what-if scenarios",
     "playoff impact calculator",
     "college football simulator",
@@ -55,8 +59,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const conference = whatIfConference((await searchParams).conf);
   if (!conference) return BASE_METADATA;
-  const title = `${conference} Championship Scenarios Calculator & CFP Simulator`;
-  const description = `Pick winners of the remaining ${conference} games and see each team's chances of reaching the ${conference} Championship Game and making the College Football Playoff, with ${conference} tiebreakers applied.`;
+  // "Scenarios" and "calculator" are the words of the best-clicked conference
+  // queries; "tiebreaker" and "standings" were searched but in no title.
+  const title = `${conference} Championship Scenarios & Tiebreaker Calculator`;
+  const description = `Free ${conference} championship predictor: pick winners of the remaining ${conference} games and see the projected standings, each team's chances of reaching the ${conference} Championship Game and making the College Football Playoff, with ${conference} tiebreakers applied.`;
   const path = whatIfConferencePath(conference);
   return {
     ...BASE_METADATA,
@@ -91,7 +97,7 @@ function AboutSimulator() {
     <section className="container mx-auto px-4 pb-8">
       <div className="max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">
         <h2 className="mb-2 text-base font-bold text-slate-700 dark:text-slate-300">
-          How the CFP simulator works
+          How the CFP simulator and predictor works
         </h2>
         <p className="mb-2">
           Choose a conference, then pick winners for any of its remaining games
@@ -105,7 +111,8 @@ function AboutSimulator() {
           Every game you don&apos;t pick is played out using win probabilities
           from a composite of college football rating models, across 1,000
           simulated seasons, and conference title-game spots follow each
-          conference&apos;s own tiebreaker rules.
+          conference&apos;s own tiebreaker rules, so it works as a tiebreaker
+          calculator for two- and three-way ties in the standings.
         </p>
         <p>
           The game impact board shows which games in the next seven days move
@@ -115,7 +122,7 @@ function AboutSimulator() {
           pages.
         </p>
         <h2 className="mb-2 mt-4 text-base font-bold text-slate-700 dark:text-slate-300">
-          Conference championship scenarios
+          Conference championship scenarios and tiebreakers
         </h2>
         <ul className="flex flex-wrap gap-x-4 gap-y-1">
           {WHATIF_CONFERENCES.map((name) => (

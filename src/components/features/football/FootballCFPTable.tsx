@@ -166,7 +166,7 @@ function FootballCFPTable({
     <div className={cn(styles.card, "cfp-table", className)}>
       <div className={styles.cardHeader}>
         <div className={styles.titleGroup} data-screenshot-hide="true">
-          <h1 className={styles.title}>College Football Playoff Projections</h1>
+          <h1 className={styles.title}>CFP Odds by Round</h1>
         </div>
         {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
       </div>
