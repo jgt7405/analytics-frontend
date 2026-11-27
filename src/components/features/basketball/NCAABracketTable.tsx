@@ -310,6 +310,7 @@ function NCAABracketTable({
                             logoUrl={team.conf_logo_url}
                             teamName={team.full_conference_name}
                             size={isMobile ? 20 : 22}
+                            noLink
                           />
                         ) : (
                           <span className={styles.confPlaceholder}>—</span>

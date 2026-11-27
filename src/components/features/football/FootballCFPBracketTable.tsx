@@ -250,6 +250,7 @@ export default function FootballCFPBracketTable({
                             teamName={row.conference}
                             size={22}
                             showTooltip
+                            noLink
                           />
                         ) : (
                           <span className={styles.confPlaceholder}>—</span>

@@ -301,6 +301,7 @@ function MultiBidLeagues({
                     teamName={confData.name}
                     size={confLogoSize}
                     showTooltip
+                    noLink
                   />
                 </div>
               ) : (

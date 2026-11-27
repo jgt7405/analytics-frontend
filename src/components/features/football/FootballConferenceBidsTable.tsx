@@ -188,6 +188,7 @@ export default function FootballConferenceBidsTable({
                     teamName={col.name}
                     size={confLogoSize}
                     showTooltip
+                    noLink
                   />
                 </div>
               ) : (
