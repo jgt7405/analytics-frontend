@@ -59,9 +59,9 @@ export default function BasketballCompositeRatingsContent() {
       >
         <div className="-mt-2 md:-mt-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-            <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
+            <h1 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-bold leading-[1.1] tracking-[-0.035em] text-slate-700 dark:text-slate-300">
               Composite Basketball Ratings
-            </h2>
+            </h1>
           </div>
 
           <div

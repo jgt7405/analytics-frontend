@@ -107,9 +107,9 @@ function ConferenceTourneyTable({
     >
       <div className={styles.cardHeader}>
         <div className={styles.titleGroup} data-screenshot-hide="true">
-          <h2 id="conf-tourney-title" className={styles.title}>
-            Conference Tournament Projections
-          </h2>
+          <h1 id="conf-tourney-title" className={styles.title}>
+            Conference Tournament Odds
+          </h1>
         </div>
         {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
       </div>

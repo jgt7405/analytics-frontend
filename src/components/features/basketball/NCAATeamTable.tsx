@@ -178,9 +178,9 @@ function NCAATeamTable({
     >
       <div className={styles.cardHeader}>
         <div className={styles.titleGroup} data-screenshot-hide="true">
-          <h2 id="ncaa-tourney-title" className={styles.title}>
-            NCAA Tournament Projections
-          </h2>
+          <h1 id="ncaa-tourney-title" className={styles.title}>
+            NCAA Tournament Odds by Round
+          </h1>
         </div>
         {headerRight && <div data-screenshot-hide="true">{headerRight}</div>}
       </div>
