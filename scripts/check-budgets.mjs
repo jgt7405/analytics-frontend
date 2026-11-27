@@ -42,6 +42,11 @@ if (unbudgeted.length) {
 }
 if (over.length) {
   console.error(`Routes over their JS budget:\n  ${over.join("\n  ")}`);
+  // In GitHub Actions, each one also becomes an annotation on the run, which
+  // shows on the run page (and in the API) without opening the job log.
+  if (process.env.GITHUB_ACTIONS) {
+    for (const line of over) console.log(`::error title=Bundle budget::${line}`);
+  }
   process.exit(1);
 }
 console.log(`All ${routes.length - unbudgeted.length} budgeted routes are within budget.`);
