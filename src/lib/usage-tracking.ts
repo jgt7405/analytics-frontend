@@ -112,6 +112,24 @@ export function trackCompare(sport: "basketball" | "football", teams: string[], 
   if (teams.length) enqueue({ event_type: "compare", sport, detail: method, teams });
 }
 
+const EXTENSION_URL = /\b(?:chrome|moz|safari(?:-web)?|ms-browser)-extension:\/\//;
+
+/** Errors that aren't this site's code and that it can do nothing about:
+ *  - "Script error." with no file: the browser hides the details of an error
+ *    from a script on another origin (an extension's content script, an ad or
+ *    analytics tag), so there is nothing to act on;
+ *  - errors thrown from a browser extension's own files, or from a file on
+ *    another origin;
+ *  - crypto-wallet extensions poking at `window.ethereum`, which they inject
+ *    into every page they run on. */
+export function isForeignError(message: string, filename: string, stack: string, origin: string): boolean {
+  const text = message.trim();
+  if ((!text || /^script error\.?$/i.test(text)) && !filename) return true;
+  if (EXTENSION_URL.test(filename) || EXTENSION_URL.test(stack)) return true;
+  if (filename && /^https?:/.test(filename) && !filename.startsWith(origin)) return true;
+  return /\bethereum\b/.test(text);
+}
+
 export function trackError(kind: "js_error" | "api_error" | "not_found", message?: string) {
   if (errorsThisView >= MAX_ERRORS_PER_VIEW) return;
   errorsThisView += 1;
@@ -183,11 +201,17 @@ function listen() {
   document.addEventListener("visibilitychange", onVisibilityChange);
   window.addEventListener("pagehide", flush);
   window.addEventListener("error", (event) => {
+    const stack = event.error instanceof Error ? event.error.stack ?? "" : "";
+    if (isForeignError(event.message ?? "", event.filename ?? "", stack, window.location.origin)) return;
     trackError("js_error", event.message || "Script error");
   });
   window.addEventListener("unhandledrejection", (event) => {
     const reason: unknown = event.reason;
-    trackError("js_error", reason instanceof Error ? reason.message : String(reason ?? "Unhandled rejection"));
+    const message = reason instanceof Error ? reason.message : String(reason ?? "Unhandled rejection");
+    const stack = reason instanceof Error ? reason.stack ?? "" : "";
+    // A rejection has no file name, so only its stack or message can show it isn't ours.
+    if (EXTENSION_URL.test(stack) || /\bethereum\b/.test(message)) return;
+    trackError("js_error", message);
   });
   window.addEventListener("appinstalled", () => trackFeature("App installed"));
   const reportVital = (metric: Metric) => trackWebVital(metric.name, metric.value);

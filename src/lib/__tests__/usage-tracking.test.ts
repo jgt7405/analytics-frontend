@@ -11,7 +11,7 @@ jest.mock("@/services/statistics-api", () => ({
   sendSiteUsageEvents: (...args: unknown[]) => sendSiteUsageEvents(...args),
 }));
 
-import { controlName, deviceType, recordPageEvent, scrollPercent, trackCompare, trackError, trackFeature, trackWebVital } from "../usage-tracking";
+import { controlName, deviceType, isForeignError, recordPageEvent, scrollPercent, trackCompare, trackError, trackFeature, trackWebVital } from "../usage-tracking";
 
 const view = (path: string, viewId: string): SiteUsageEvent => ({
   event_type: "page_view", path, sport: "basketball", page: "wins",
@@ -132,5 +132,22 @@ describe("recordPageEvent", () => {
     expect(compares).toHaveLength(12);
     expect(schema.safeParse({ events: compares }).success).toBe(true);
     expect(schema.safeParse({ events: [{ ...compares[11], teams: [...teams, "Team 13"] }] }).success).toBe(false);
+  });
+});
+
+describe("isForeignError", () => {
+  const origin = "https://www.jthomanalytics.com";
+  it("drops errors the site can't see or fix", () => {
+    expect(isForeignError("Script error.", "", "", origin)).toBe(true);
+    expect(isForeignError("", "", "", origin)).toBe(true);
+    expect(isForeignError("TypeError: undefined is not an object (evaluating 'window.ethereum.selectedAddress = undefined')", `${origin}/basketball/wins/`, "", origin)).toBe(true);
+    expect(isForeignError("boom", "chrome-extension://abc/content.js", "", origin)).toBe(true);
+    expect(isForeignError("boom", `${origin}/x`, "at f (safari-web-extension://abc/inject.js:1:2)", origin)).toBe(true);
+    expect(isForeignError("boom", "https://www.googletagmanager.com/gtag/js", "", origin)).toBe(true);
+  });
+  it("keeps the site's own errors", () => {
+    expect(isForeignError("Minified React error #418", `${origin}/_next/static/chunks/a.js`, "", origin)).toBe(false);
+    expect(isForeignError("Script error.", `${origin}/_next/static/chunks/a.js`, "", origin)).toBe(false);
+    expect(isForeignError("Failed to register a ServiceWorker", "", "", origin)).toBe(false);
   });
 });
